@@ -1,0 +1,5 @@
+[package]
+
+name = "oatie"
+version = "0.0.1"
+authors = ["Tim Cameron Ryan <id@timryan.org>"]
