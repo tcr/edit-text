@@ -1,29 +1,40 @@
+mod doc;
+
 use std::collections::HashMap;
+use doc::{DSpan, DocElement};
+use doc::DocElement::*;
 
-type DSpan<'a> = Vec<&'a DocElement<'a>>;
+pub fn debug_span(val:&DSpan) {
+	for i in val {
+		debug_elem(i);
+	}
+}
 
-enum DocElement<'a> {
-	DString(String),
-	DGroup(HashMap<String, String>, DSpan<'a>),
+pub fn debug_elem(val:&DocElement) {
+	match val {
+		&DString(ref value) => {
+			println!("str({})", value);
+		},
+		&DGroup(ref attrs, ref span) => {
+			println!("attrs({})", attrs.capacity());
+			println!("span({})", span.capacity());
+		},
+	}
+}
+
+pub fn simple() -> DSpan {
+	vec![
+		DString("Hello world!".to_string()),
+		DGroup(HashMap::new(), vec![]),
+	]
 }
 
 #[test]
 fn try_this() {
-	fn it_works(val:DocElement) {
-		match val {
-			DocElement::DString(..) => {},
-			DocElement::DGroup(..) => {},
-		}
-	}
+	let source:DSpan = vec![
+		DString("Hello world!".to_string()),
+		DGroup(HashMap::new(), vec![]),
+	];
 
-	it_works(DocElement::DString("Hello world!".to_string()));
-	it_works(DocElement::DGroup(HashMap::new(), vec![]));
-}
-
-
-fn main() {
-	let val = DocElement::DString("Hello world!".to_string());
-	match val {
-		_ => {},
-	}
+	debug_span(&source);
 }
