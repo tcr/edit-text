@@ -36,3 +36,5 @@ pub enum AddElement {
 	AddChars(String),
 	AddGroup(HashMap<String, String>, AddSpan),
 }
+
+pub type Op = (DelSpan, AddSpan);
