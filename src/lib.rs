@@ -206,6 +206,8 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 							place_chars(&mut res, value[0..count].to_owned());
 							first = DocChars(value[count..len].to_owned());
 							nextfirst = false;
+						} else {
+							place_chars(&mut res, value.clone());
 						}
 					},
 					DocGroup(..) => {
