@@ -76,11 +76,10 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 				match first.clone() {
 					DocChars(ref value) => {
 						let len = value.chars().count();
-						if len == count {
-						} else if len > count {
+						if len > count {
 							first = DocChars(value[count..len].to_owned());
 							nextfirst = false;
-						} else {
+						} else if len < count {
 							panic!("attempted deletion of too much");
 						}
 					},
@@ -120,9 +119,7 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 			},
 			DelGroup => {
 				match first.clone() {
-					DocGroup(..) => {
-						// .. 
-					},
+					DocGroup(..) => {},
 					_ => {
 						panic!("Invalid DelGroup");
 					}
@@ -142,6 +139,10 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 
 		if nextdel {
 			if del.len() == 0 {
+				if !nextfirst {
+					res.push(first)
+				}
+				res.push_all(span);
 				break;
 			}
 
@@ -192,16 +193,25 @@ fn try_this() {
 		panic!("iteration doesnt match");
 	}
 
-	let del:DelSpan = vec![
+	assert_eq!(apply_delete(&vec![
+		DocChars("Hello world!".to_owned()),
+		DocGroup(HashMap::new(), vec![]),
+	], &vec![
 		DelChars(3),
 		WithChars(2),
 		DelChars(1),
 		WithChars(1),
 		DelChars(5),
 		DelGroup,
-	];
-
-	assert_eq!(apply_delete(&source, &del), vec![
+	]), vec![
 		DocChars("low".to_owned()),
+	]);
+
+	assert_eq!(apply_delete(&vec![
+		DocChars("Hello World!".to_owned()),
+	], &vec![
+		DelChars(6),
+	]), vec![
+		DocChars("World!".to_owned()),
 	]);
 }
