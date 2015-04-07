@@ -20,7 +20,7 @@ pub type DelSpan = Vec<DelElement>;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum DelElement {
-	DelSkipChars(usize),
+	DelSkip(usize),
 	DelWithGroup(DelSpan),
 	DelChars(usize),
 	DelGroup,
@@ -31,7 +31,7 @@ pub type AddSpan = Vec<AddElement>;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum AddElement {
-	AddSkipChars(usize),
+	AddSkip(usize),
 	AddWithGroup(AddSpan),
 	AddChars(String),
 }
