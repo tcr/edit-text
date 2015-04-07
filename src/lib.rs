@@ -6,7 +6,7 @@
 mod doc;
 
 use std::collections::HashMap;
-use doc::{DocSpan, DocElement, DelSpan, DelElement, AddSpan, AddElement, Atom};
+use doc::{DocSpan, DocElement, DelSpan, DelElement, AddSpan, AddElement, Atom, Op};
 use doc::DocElement::*;
 use doc::DelElement::*;
 use doc::AddElement::*;
@@ -266,6 +266,10 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 	res
 }
 
+pub fn apply_operation(spanvec:&DocSpan, delvec:&DelSpan, addvec:&AddSpan) -> DocSpan {
+	apply_add(&apply_delete(spanvec, delvec), addvec)
+}
+
 #[test]
 fn try_this() {
 	let source:DocSpan = vec![
@@ -366,13 +370,13 @@ fn try_this() {
 		]),
 	]);
 
-	assert_eq!(apply_add(&vec![], &vec![
-		AddGroup(HashMap::new(), vec![
-			AddChars("Hello World!".to_owned()),
-		]),
+	assert_eq!(apply_operation(&vec![
+		DocChars("Goodbye World!".to_owned()),
+	], &vec![
+		DelChars(7),
+	], &vec![
+		AddChars("Hello".to_owned()),
 	]), vec![
-		DocGroup(HashMap::new(), vec![
-			DocChars("Hello World!".to_owned()),
-		]),
+		DocChars("Hello World!".to_owned()),
 	]);
 }
