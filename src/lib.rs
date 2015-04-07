@@ -75,8 +75,11 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 	let mut span = &spanvec[..];
 	let mut del = &delvec[..];
 
-	let mut first = span[0].clone();
-	span = &span[1..];
+	let mut first = None;
+	if span.len() > 0 {
+		first = Some(span[0].clone());
+		span = &span[1..]
+	}
 
 	let mut res:DocSpan = Vec::with_capacity(span.len());
 	
@@ -89,7 +92,7 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 
 		match d.clone() {
 			AddSkip(count) => {
-				match first.clone() {
+				match first.clone().unwrap() {
 					DocChars(ref value) => {
 						let len = value.chars().count();
 						if len < count {
@@ -97,12 +100,12 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 							nextdel = false;
 						} else if len > count {
 							place_chars(&mut res, value[0..count].to_owned());
-							first = DocChars(value[count..len].to_owned());
+							first = Some(DocChars(value[count..len].to_owned()));
 							nextfirst = false;
 						}
 					},
 					DocGroup(..) => {
-						res.push(first.clone());
+						res.push(first.clone().unwrap());
 						if count > 1 {
 							d = AddSkip(count - 1);
 							nextdel = false;
@@ -111,7 +114,7 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 				}
 			},
 			AddWithGroup(ref delspan) => {
-				match first.clone() {
+				match first.clone().unwrap() {
 					DocGroup(ref attrs, ref span) => {
 						res.push(DocGroup(attrs.clone(), apply_add(span, delspan)));
 					},
@@ -124,15 +127,16 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 				place_chars(&mut res, value);
 				nextfirst = false;
 			},
-			// _ => {
-			// 	panic!("not implemented");
-			// }
+			AddGroup(attrs, innerspan) => {
+				res.push(DocGroup(attrs, apply_add(&vec![], &innerspan)));
+				nextfirst = false;
+			},	
 		}
 
 		if nextdel {
 			if del.len() == 0 {
-				if !nextfirst {
-					place_any(&mut res, &first);
+				if !nextfirst && !first.is_none() {
+					place_any(&mut res, &first.clone().unwrap());
 				}
 				if span.len() > 0 {
 					place_any(&mut res, &span[0]);
@@ -150,7 +154,7 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 				panic!("exhausted document");
 			}
 
-			first = span[0].clone();
+			first = Some(span[0].clone());
 			span = &span[1..];
 		}
 	}
@@ -355,6 +359,16 @@ fn try_this() {
 		AddWithGroup(vec![
 			AddSkip(5),
 			AddChars(" World".to_owned()),
+		]),
+	]), vec![
+		DocGroup(HashMap::new(), vec![
+			DocChars("Hello World!".to_owned()),
+		]),
+	]);
+
+	assert_eq!(apply_add(&vec![], &vec![
+		AddGroup(HashMap::new(), vec![
+			AddChars("Hello World!".to_owned()),
 		]),
 	]), vec![
 		DocGroup(HashMap::new(), vec![
