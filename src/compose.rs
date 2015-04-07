@@ -8,6 +8,7 @@ use std::cmp;
 
 use apply_add;
 use apply_delete;
+use apply_operation;
 
 struct DelSlice<'a> {
 	head:Option<DelElement>,
@@ -88,10 +89,24 @@ fn del_place_chars(res:&mut DelSpan, count:usize) {
 	res.push(DelChars(count));
 }
 
+fn del_place_skip(res:&mut DelSpan, count:usize) {
+	if res.len() > 0 {
+		let idx = res.len() - 1;
+		if let &mut DelSkip(ref mut prefix) = &mut res[idx] {
+			*prefix += count;
+			return;
+		}
+	}
+	res.push(DelSkip(count));
+}
+
 fn del_place_any(res:&mut DelSpan, value:&DelElement) {
 	match value {
 		&DelChars(count) => {
 			del_place_chars(res, count);
+		},
+		&DelSkip(count) => {
+			del_place_skip(res, count);
 		},
 		_ => {
 			res.push(value.clone());
@@ -110,10 +125,24 @@ fn add_place_chars(res:&mut AddSpan, value:String) {
 	res.push(AddChars(value));
 }
 
+fn add_place_skip(res:&mut AddSpan, count:usize) {
+	if res.len() > 0 {
+		let idx = res.len() - 1;
+		if let &mut AddSkip(ref mut prefix) = &mut res[idx] {
+			*prefix += count;
+			return;
+		}
+	}
+	res.push(AddSkip(count));
+}
+
 fn add_place_any(res:&mut AddSpan, value:&AddElement) {
 	match value {
 		&AddChars(ref value) => {
 			add_place_chars(res, value.clone());
+		},
+		&AddSkip(count) => {
+			add_place_skip(res, count);
 		},
 		_ => {
 			res.push(value.clone());
@@ -286,6 +315,102 @@ fn compose_add_add(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
 
 	res
 }
+
+fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
+	let mut delres = Vec::with_capacity(avec.len() + bvec.len());
+	let mut addres = Vec::with_capacity(avec.len() + bvec.len());
+
+	let mut a = AddSlice::new(avec);
+	let mut b = DelSlice::new(bvec);
+
+	while !b.is_done() {
+		match b.get_head() {
+			DelChars(bcount) => {
+				match a.get_head() {
+					AddChars(avalue) => {
+						let alen = avalue.chars().count();
+						if bcount < alen {
+							a.head = Some(AddChars(avalue[bcount..].to_owned()));
+							b.next();
+						} else if bcount > alen {
+							a.next();
+							b.head = Some(DelChars(bcount - alen));
+						} else {
+							a.next();
+							b.next();
+						}
+					},
+					AddSkip(acount) => {
+						if bcount < acount {
+							a.head = Some(AddSkip(acount - bcount));
+							del_place_any(&mut delres, &b.next());
+						} else if bcount > acount {
+							a.next();
+							del_place_any(&mut delres, &DelChars(acount));
+							b.head = Some(DelChars(bcount - acount));
+						} else {
+							a.next();
+							del_place_any(&mut delres, &b.next());
+						}
+					},
+					_ => {
+						panic!("Unimplemented or Unexpected");
+					},
+				}
+			},
+			DelSkip(bcount) => {
+				match a.get_head() {
+					AddChars(avalue) => {
+						let alen = avalue.chars().count();
+						if bcount < alen {
+							add_place_any(&mut addres, &AddChars(avalue[..bcount].to_owned()));
+							a.head = Some(AddChars(avalue[bcount..].to_owned()));
+							b.next();
+						} else if bcount > alen {
+							add_place_any(&mut addres, &a.next());
+							b.head = Some(DelSkip(bcount - alen));
+						} else {
+							add_place_any(&mut addres, &a.get_head());
+							a.next();
+							b.next();
+						}
+					},
+					AddSkip(acount) => {
+						add_place_any(&mut addres, &AddSkip(cmp::min(acount, bcount)));
+						del_place_any(&mut delres, &DelSkip(cmp::min(acount, bcount)));
+						if acount > bcount {
+							a.head = Some(AddSkip(acount - bcount));
+							b.next();
+						} else if acount < bcount {
+							a.next();
+							b.head = Some(DelSkip(bcount - acount));
+						} else {
+							a.next();
+							b.next();
+						}
+					},
+					AddWithGroup(span) => {
+						addres.push(a.next());
+					},
+					_ => {
+						panic!("Unimplemented");
+					}
+				}
+			},
+			_ => {
+				panic!("Unimplemented");
+			},
+		}
+	}
+
+	if !a.is_done() {
+		add_place_any(&mut addres, &a.get_head());
+		addres.push_all(a.rest);
+	}
+
+	(delres, addres)
+}
+
 
 
 #[test]
@@ -508,6 +633,99 @@ fn monkey_del_del() {
 		println!("end {:?}", end);
 
 		println!("composed {:?}", composed);
+		println!("otherend {:?}", otherend);
+
+		assert_eq!(end, otherend);
+	}
+}
+
+#[test]
+fn test_compose_add_del() {
+	assert_eq!(compose_add_del(&vec![
+		AddSkip(4), AddChars("0O".to_owned()), AddSkip(5), AddChars("mnc".to_owned()), AddSkip(3), AddChars("gbL".to_owned()),
+	], &vec![
+		DelSkip(1), DelChars(1), DelSkip(3), DelChars(2), DelSkip(2), DelChars(9), DelSkip(1), DelChars(1),
+	]), (vec![
+		DelSkip(1), DelChars(1), DelSkip(2), DelChars(1), DelSkip(2), DelChars(5),
+	], vec![
+		AddSkip(3), AddChars("0".to_owned()), AddSkip(2), AddChars("b".to_owned()),
+	]));
+}
+
+#[test]
+fn monkey_add_del() {
+	for i in 0..1000 {
+		let start = vec![
+			DocChars("Hello world!".to_owned()),
+		];
+
+		println!("start {:?}", start);
+
+		let a = random_add_span(&start);
+		println!("a {:?}", a);
+
+		let middle = apply_add(&start, &a);
+		let b = random_del_span(&middle);
+		let end = apply_delete(&middle, &b);
+
+		println!("middle {:?}", middle);
+		println!("b {:?}", b);
+		println!("end {:?}", end);
+
+		let (dela, addb) = compose_add_del(&a, &b);
+		println!("dela {:?}", dela);
+		println!("addb {:?}", addb);
+
+		let middle2 = apply_delete(&start, &dela);
+		println!("middle2 {:?}", middle2);
+		let otherend = apply_add(&middle2, &addb);
+		println!("otherend {:?}", otherend);
+
+		assert_eq!(end, otherend);
+	}
+}
+
+fn compose(a:&Op, b:&Op) -> Op {
+	let &(ref adel, ref ains) = a;
+	let &(ref bdel, ref bins) = b;
+
+	let (mdel, mins) = compose_add_del(ains, bdel);
+	(compose_del_del(adel, &mdel), compose_add_add(&mins, bins))
+}
+
+fn random_op(input:&DocSpan) -> Op {
+	let del = random_del_span(input);
+	let middle = apply_delete(input, &del);
+	let ins = random_add_span(&middle);
+	(del, ins)
+}
+
+
+#[test]
+fn monkey_compose() {
+	for i in 0..1000 {
+		let start = vec![
+			DocChars("Hello world!".to_owned()),
+		];
+
+		println!("start {:?}", start);
+
+		let a = random_op(&start);
+		println!("a {:?}", a);
+
+		let middle = apply_operation(&start, &a);
+		println!("middle {:?}", middle);
+
+		let b = random_op(&middle);
+		println!("b {:?}", b);
+
+		let end = apply_operation(&middle, &b);
+		println!("end {:?}", end);
+
+		let composed = compose(&a, &b);
+		println!("composed {:?}", composed);
+
+		let otherend = apply_operation(&start, &composed);
 		println!("otherend {:?}", otherend);
 
 		assert_eq!(end, otherend);

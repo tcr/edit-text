@@ -284,21 +284,9 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 	res
 }
 
-pub fn apply_operation(spanvec:&DocSpan, delvec:&DelSpan, addvec:&AddSpan) -> DocSpan {
+pub fn apply_operation(spanvec:&DocSpan, op:&Op) -> DocSpan {
+	let &(ref delvec, ref addvec) = op;
 	apply_add(&apply_delete(spanvec, delvec), addvec)
-}
-
-#[test]
-fn monkey_test() {
-	assert_eq!(apply_add(&vec![
-		DocChars("Hello world!".to_owned())
-	],
-	&vec![
-		AddSkip(10), AddChars("dd49".to_owned()), AddSkip(2)
-	]),
-	vec![
-		DocChars("Hello worldd49d!".to_owned())
-	]);
 }
 
 #[test]
@@ -403,11 +391,21 @@ fn try_this() {
 
 	assert_eq!(apply_operation(&vec![
 		DocChars("Goodbye World!".to_owned()),
-	], &vec![
+	], &(vec![
 		DelChars(7),
-	], &vec![
+	], vec![
 		AddChars("Hello".to_owned()),
-	]), vec![
+	])), vec![
 		DocChars("Hello World!".to_owned()),
+	]);
+
+	assert_eq!(apply_add(&vec![
+		DocChars("Hello world!".to_owned())
+	],
+	&vec![
+		AddSkip(10), AddChars("dd49".to_owned()), AddSkip(2)
+	]),
+	vec![
+		DocChars("Hello worldd49d!".to_owned())
 	]);
 }
