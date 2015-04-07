@@ -88,12 +88,12 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 		let mut nextfirst = true;
 
 		match d.clone() {
-			AddSkipChars(count) => {
+			AddSkip(count) => {
 				match first.clone() {
 					DocChars(ref value) => {
 						let len = value.chars().count();
 						if len < count {
-							d = AddSkipChars(count - len);
+							d = AddSkip(count - len);
 							nextdel = false;
 						} else if len > count {
 							place_chars(&mut res, value[0..count].to_owned());
@@ -101,9 +101,13 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 							nextfirst = false;
 						}
 					},
-					_ => {
-						panic!("Invalid WithChars");
-					}
+					DocGroup(..) => {
+						res.push(first.clone());
+						if count > 1 {
+							d = AddSkip(count - 1);
+							nextdel = false;
+						}
+					},
 				}
 			},
 			AddWithGroup(ref delspan) => {
@@ -171,12 +175,12 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 		let mut nextfirst = true;
 
 		match d.clone() {
-			DelSkipChars(count) => {
+			DelSkip(count) => {
 				match first.clone() {
 					DocChars(ref value) => {
 						let len = value.chars().count();
 						if len < count {
-							d = DelSkipChars(count - len);
+							d = DelSkip(count - len);
 							nextdel = false;
 						} else if len > count {
 							place_chars(&mut res, value[0..count].to_owned());
@@ -184,9 +188,13 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 							nextfirst = false;
 						}
 					},
-					_ => {
-						panic!("Invalid WithChars");
-					}
+					DocGroup(..) => {
+						res.push(first.clone());
+						if count > 1 {
+							d = DelSkip(count - 1);
+							nextdel = false;
+						}
+					},
 				}
 			},
 			DelWithGroup(ref delspan) => {
@@ -285,9 +293,9 @@ fn try_this() {
 		DocGroup(HashMap::new(), vec![]),
 	], &vec![
 		DelChars(3),
-		DelSkipChars(2),
+		DelSkip(2),
 		DelChars(1),
-		DelSkipChars(1),
+		DelSkip(1),
 		DelChars(5),
 		DelGroup,
 	]), vec![
@@ -314,7 +322,7 @@ fn try_this() {
 		DocGroup(HashMap::new(), vec![]),
 		DocChars("World!".to_owned()),
 	], &vec![
-		AddWithGroup(vec![]),
+		AddSkip(1),
 		AddChars("Hello ".to_owned()),
 	]), vec![
 		DocGroup(HashMap::new(), vec![]),
