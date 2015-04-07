@@ -171,8 +171,11 @@ fn try_this() {
 	];
 
 	debug_span(&source);
-
-	let source_atoms = vec![
+	
+	assert_eq!(iterate(&vec![
+		DocChars("Hello world!".to_owned()),
+		DocGroup(HashMap::new(), vec![]),
+	]), vec![
 		Atom::Char('H'),
 		Atom::Char('e'),
 		Atom::Char('l'),
@@ -187,11 +190,7 @@ fn try_this() {
 		Atom::Char('!'),
 		Atom::Enter(HashMap::new()),
 		Atom::Leave,
-	];
-	
-	if !(iterate(&source) == source_atoms) {
-		panic!("iteration doesnt match");
-	}
+	]);
 
 	assert_eq!(apply_delete(&vec![
 		DocChars("Hello world!".to_owned()),
