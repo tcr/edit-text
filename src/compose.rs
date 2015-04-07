@@ -232,26 +232,39 @@ fn compose_add_add(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
 			AddChars(value) => {
 				add_place_any(&mut res, &b.next());
 			},
-			AddSkip(count) => {
+			AddSkip(bcount) => {
 				match a.get_head() {
 					AddChars(value) => {
 						let len = value.chars().count();
-						if count < len {
-							add_place_any(&mut res, &AddChars(value[..count].to_owned()));
-							a.head = Some(AddChars(value[count..].to_owned()));
+						if bcount < len {
+							add_place_any(&mut res, &AddChars(value[..bcount].to_owned()));
+							a.head = Some(AddChars(value[bcount..].to_owned()));
 							b.next();
-						} else if count > len {
+						} else if bcount > len {
 							a.next();
-							b.head = Some(AddSkip(count - len));
+							b.head = Some(AddSkip(bcount - len));
 						} else {
 							add_place_any(&mut res, &a.get_head());
 							a.next();
 							b.next();
 						}
 					},
-					_ => {
-						panic!("Unimplemented AddSkip _")
+					AddSkip(acount) => {
+						res.push(AddSkip(cmp::min(acount, bcount)));
+						if acount > bcount {
+							a.head = Some(AddSkip(acount - bcount));
+							b.next();
+						} else if acount < bcount {
+							b.head = Some(AddSkip(bcount - acount));
+							a.next();
+						} else {
+							a.next();
+							b.next();
+						}
 					},
+					_ => {
+						panic!("Unimplemented");
+					}
 				}
 			},
 			_ => {
@@ -336,5 +349,16 @@ fn try_this() {
 		AddSkip(1),
 	]), vec![
 		AddChars("deadbeef".to_owned()),
+	]);
+
+	assert_eq!(compose_add_add(&vec![
+		AddSkip(10),
+		AddChars("h".to_owned()),
+	], &vec![
+		AddSkip(11),
+		AddChars("i".to_owned()),
+	]), vec![
+		AddSkip(10),
+		AddChars("hi".to_owned()),
 	]);
 }
