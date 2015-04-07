@@ -34,4 +34,5 @@ pub enum AddElement {
 	AddSkip(usize),
 	AddWithGroup(AddSpan),
 	AddChars(String),
+	// AddGroup(HashMap<String, String>, AddSpan),
 }

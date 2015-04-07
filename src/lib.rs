@@ -199,8 +199,8 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 			},
 			DelWithGroup(ref delspan) => {
 				match first.clone() {
-					DocGroup(..) => {
-						res.push(first.clone());
+					DocGroup(ref attrs, ref span) => {
+						res.push(DocGroup(attrs.clone(), apply_delete(span, delspan)));
 					},
 					_ => {
 						panic!("Invalid DelGroup");
@@ -236,9 +236,12 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 		if nextdel {
 			if del.len() == 0 {
 				if !nextfirst {
-					res.push(first)
+					place_any(&mut res, &first)
 				}
-				res.push_all(span);
+				if span.len() > 0 {
+					place_any(&mut res, &span[0]);
+					res.push_all(&span[1..]);
+				}
 				break;
 			}
 
@@ -327,5 +330,20 @@ fn try_this() {
 	]), vec![
 		DocGroup(HashMap::new(), vec![]),
 		DocChars("Hello World!".to_owned()),
+	]);
+
+	assert_eq!(apply_delete(&vec![
+		DocGroup(HashMap::new(), vec![
+			DocChars("Hello Damned World!".to_owned()),
+		]),
+	], &vec![
+		DelWithGroup(vec![
+			DelSkip(6),
+			DelChars(7),
+		]),
+	]), vec![
+		DocGroup(HashMap::new(), vec![
+			DocChars("Hello World!".to_owned()),
+		]),
 	]);
 }
