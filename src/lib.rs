@@ -112,8 +112,8 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 			},
 			AddWithGroup(ref delspan) => {
 				match first.clone() {
-					DocGroup(..) => {
-						res.push(first.clone());
+					DocGroup(ref attrs, ref span) => {
+						res.push(DocGroup(attrs.clone(), apply_add(span, delspan)));
 					},
 					_ => {
 						panic!("Invalid DelGroup");
@@ -340,6 +340,21 @@ fn try_this() {
 		DelWithGroup(vec![
 			DelSkip(6),
 			DelChars(7),
+		]),
+	]), vec![
+		DocGroup(HashMap::new(), vec![
+			DocChars("Hello World!".to_owned()),
+		]),
+	]);
+
+	assert_eq!(apply_add(&vec![
+		DocGroup(HashMap::new(), vec![
+			DocChars("Hello!".to_owned()),
+		]),
+	], &vec![
+		AddWithGroup(vec![
+			AddSkip(5),
+			AddChars(" World".to_owned()),
 		]),
 	]), vec![
 		DocGroup(HashMap::new(), vec![
