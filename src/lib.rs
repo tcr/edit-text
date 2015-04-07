@@ -1,10 +1,15 @@
 #![feature(collections)]
+#![allow(unused_variables)]
+#![allow(dead_code)]
+#![allow(unused_imports)]
 
 mod doc;
 
 use std::collections::HashMap;
-use doc::{DocSpan, DocElement, Atom};
+use doc::{DocSpan, DocElement, DelSpan, DelElement, Atom};
 use doc::DocElement::*;
+use doc::DelElement::*;
+use std::borrow::ToOwned;
 
 pub fn debug_span(val:&DocSpan) {
 	for i in val {
@@ -26,7 +31,7 @@ pub fn debug_elem(val:&DocElement) {
 
 pub fn simple() -> DocSpan {
 	vec![
-		DocChars("Hello world!".to_string()),
+		DocChars("Hello world!".to_owned()),
 		DocGroup(HashMap::new(), vec![]),
 	]
 }
@@ -50,10 +55,117 @@ pub fn iterate(span:&DocSpan) -> Vec<Atom> {
 	atoms
 }
 
+pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
+	let mut span = &spanvec[..];
+	let mut del = &delvec[..];
+
+	let mut first = span[0].clone();
+	span = &span[1..];
+
+	let mut res:DocSpan = Vec::with_capacity(span.len());
+	
+	let mut d = del[0].clone();
+	del = &del[1..];
+
+	loop {
+		let mut nextdel = true;
+		let mut nextfirst = true;
+
+		match d.clone() {
+			DelChars(count) => {
+				match first.clone() {
+					DocChars(ref value) => {
+						let len = value.chars().count();
+						if len == count {
+						} else if len > count {
+							first = DocChars(value[count..len].to_owned());
+							nextfirst = false;
+						} else {
+							panic!("attempted deletion of too much");
+						}
+					},
+					_ => {
+						panic!("Invalid DelChars");
+					}
+				}
+			},
+			WithChars(count) => {
+				match first.clone() {
+					DocChars(ref value) => {
+						let len = value.chars().count();
+						if len < count {
+							d = WithChars(count - len);
+							nextdel = false;
+						} else if len > count {
+							let mut place_chars = |value:String| {
+								if res.len() > 0 {
+									let idx = res.len() - 1;
+									if let &mut DocChars(ref mut prefix) = &mut res[idx] {
+										prefix.push_str(&value[..]);
+										return;
+									}
+								}
+								res.push(DocChars(value));
+							};
+
+							place_chars(value[0..count].to_owned());
+							first = DocChars(value[count..len].to_owned());
+							nextfirst = false;
+						}
+					},
+					_ => {
+						panic!("Invalid WithChars");
+					}
+				}
+			},
+			DelGroup => {
+				match first.clone() {
+					DocGroup(..) => {
+						// .. 
+					},
+					_ => {
+						panic!("Invalid DelGroup");
+					}
+				}
+			},
+			WithGroup(ref delspan) => {
+				match first.clone() {
+					DocGroup(..) => {
+						res.push(first.clone());
+					},
+					_ => {
+						panic!("Invalid DelGroup");
+					}
+				}
+			},
+		}
+
+		if nextdel {
+			if del.len() == 0 {
+				break;
+			}
+
+			d = del[0].clone();
+			del = &del[1..];
+		}
+
+		if nextfirst {
+			if span.len() == 0 {
+				panic!("exhausted document");
+			}
+
+			first = span[0].clone();
+			span = &span[1..];
+		}
+	}
+
+	res
+}
+
 #[test]
 fn try_this() {
 	let source:DocSpan = vec![
-		DocChars("Hello world!".to_string()),
+		DocChars("Hello world!".to_owned()),
 		DocGroup(HashMap::new(), vec![]),
 	];
 
@@ -79,4 +191,17 @@ fn try_this() {
 	if !(iterate(&source) == source_atoms) {
 		panic!("iteration doesnt match");
 	}
+
+	let del:DelSpan = vec![
+		DelChars(3),
+		WithChars(2),
+		DelChars(1),
+		WithChars(1),
+		DelChars(5),
+		DelGroup,
+	];
+
+	assert_eq!(apply_delete(&source, &del), vec![
+		DocChars("low".to_owned()),
+	]);
 }

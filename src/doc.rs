@@ -9,6 +9,7 @@ pub enum Atom {
 
 pub type DocSpan = Vec<DocElement>;
 
+#[derive(Clone, Debug, PartialEq)]
 pub enum DocElement {
 	DocChars(String),
 	DocGroup(HashMap<String, String>, DocSpan),
@@ -17,9 +18,10 @@ pub enum DocElement {
 
 pub type DelSpan = Vec<DelElement>;
 
+#[derive(Clone, Debug, PartialEq)]
 pub enum DelElement {
-	DelChars(i32),
-	WithChars(i32),
-	DelGroup(DelSpan),
+	DelChars(usize),
+	WithChars(usize),
+	DelGroup,
 	WithGroup(DelSpan),
 }
