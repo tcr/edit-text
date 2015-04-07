@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-#[derive(PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Atom {
 	Char(char),
 	Enter(HashMap<String, String>),
