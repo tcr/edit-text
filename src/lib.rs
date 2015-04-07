@@ -4,6 +4,7 @@
 #![allow(unused_imports)]
 
 mod doc;
+mod compose;
 
 use std::collections::HashMap;
 use doc::{DocSpan, DocElement, DelSpan, DelElement, AddSpan, AddElement, Atom, Op};
