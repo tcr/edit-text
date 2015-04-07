@@ -6,6 +6,8 @@ use doc::AddElement::*;
 use std::borrow::ToOwned;
 use std::cmp;
 
+use apply_add;
+
 struct DelSlice<'a> {
 	head:Option<DelElement>,
 	rest:&'a [DelElement],
@@ -241,7 +243,7 @@ fn compose_add_add(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
 							a.head = Some(AddChars(value[bcount..].to_owned()));
 							b.next();
 						} else if bcount > len {
-							a.next();
+							add_place_any(&mut res, &a.next());
 							b.head = Some(AddSkip(bcount - len));
 						} else {
 							add_place_any(&mut res, &a.get_head());
@@ -261,6 +263,9 @@ fn compose_add_add(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
 							a.next();
 							b.next();
 						}
+					},
+					AddWithGroup(span) => {
+						res.push(a.next());
 					},
 					_ => {
 						panic!("Unimplemented");
@@ -283,7 +288,7 @@ fn compose_add_add(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
 
 
 #[test]
-fn try_this() {
+fn test_compose_del_del() {
 	assert_eq!(compose_del_del(&vec![
 		DelSkip(6),
 		DelChars(6),
@@ -327,7 +332,10 @@ fn try_this() {
 			DelChars(12),
 		]),
 	]);
+}
 
+#[test]
+fn test_compose_add_add() {
 	assert_eq!(compose_add_add(&vec![
 		AddChars("World!".to_owned()),
 	], &vec![
@@ -361,4 +369,74 @@ fn try_this() {
 		AddSkip(10),
 		AddChars("hi".to_owned()),
 	]);
+}
+
+use rand::{thread_rng, Rng};
+
+fn random_add_span(input:&DocSpan) -> AddSpan {
+	let mut rng = thread_rng();
+
+	let mut res = vec![];
+	for elem in input {
+		match elem {
+			&DocChars(ref value) => {
+				let mut n = 0;
+				let max = value.chars().count();
+				while n < max {
+					let slice = rng.gen_range(1, max - n + 1);
+					res.push(AddSkip(slice));
+					if slice < max - n || rng.gen_weighted_bool(2) {
+						let len = rng.gen_range(1, 5);
+						res.push(AddChars(rng.gen_ascii_chars().take(len).collect()));
+					}
+					n += slice;
+				}
+			},
+			_ => {
+				panic!("Unexpected");
+			}
+		}
+	}
+	res
+}
+
+#[test]
+fn monkey_test() {
+	assert_eq!(compose_add_add(&vec![
+		AddSkip(5), AddChars("yEH".to_owned()), AddSkip(1), AddChars("GlG5".to_owned()), AddSkip(4), AddChars("nnG".to_owned()), AddSkip(1), AddChars("ra8c".to_owned()), AddSkip(1)
+	], &vec![
+		AddSkip(10), AddChars("Eh".to_owned()), AddSkip(16),
+	]), vec![
+		AddSkip(5), AddChars("yEH".to_owned()), AddSkip(1), AddChars("GEhlG5".to_owned()), AddSkip(4), AddChars("nnG".to_owned()), AddSkip(1), AddChars("ra8c".to_owned()), AddSkip(1)
+	]);
+}
+
+#[test]
+fn monkey() {
+	for i in 0..1000 {
+		let start = vec![
+			DocChars("Hello world!".to_owned()),
+		];
+
+		println!("start {:?}", start);
+
+		let a = random_add_span(&start);
+		println!("a {:?}", a);
+
+		let middle = apply_add(&start, &a);
+		let b = random_add_span(&middle);
+		let end = apply_add(&middle, &b);
+
+		let composed = compose_add_add(&a, &b);
+		let otherend = apply_add(&start, &composed);
+
+		println!("middle {:?}", middle);
+		println!("b {:?}", b);
+		println!("end {:?}", end);
+
+		println!("composed {:?}", composed);
+		println!("otherend {:?}", otherend);
+
+		assert_eq!(end, otherend);
+	}
 }

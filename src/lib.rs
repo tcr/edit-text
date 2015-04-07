@@ -3,6 +3,8 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
 
+extern crate rand;
+
 mod doc;
 mod compose;
 
@@ -87,9 +89,20 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 	let mut d = del[0].clone();
 	del = &del[1..];
 
+	let mut exhausted = false;
+
 	loop {
 		let mut nextdel = true;
 		let mut nextfirst = true;
+
+		if exhausted {
+			match d {
+				AddSkip(..) | AddWithGroup(..) => {
+					panic!("exhausted document");
+				},
+				_ => {},
+			}
+		}
 
 		match d.clone() {
 			AddSkip(count) => {
@@ -103,6 +116,8 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 							place_chars(&mut res, value[0..count].to_owned());
 							first = Some(DocChars(value[count..len].to_owned()));
 							nextfirst = false;
+						} else {
+							place_chars(&mut res, value.to_owned());
 						}
 					},
 					DocGroup(..) => {
@@ -136,7 +151,7 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 
 		if nextdel {
 			if del.len() == 0 {
-				if !nextfirst && !first.is_none() {
+				if !nextfirst && !first.is_none() && !exhausted {
 					place_any(&mut res, &first.clone().unwrap());
 				}
 				if span.len() > 0 {
@@ -152,11 +167,11 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 
 		if nextfirst {
 			if span.len() == 0 {
-				panic!("exhausted document");
+				exhausted = true;
+			} else {
+				first = Some(span[0].clone());
+				span = &span[1..];
 			}
-
-			first = Some(span[0].clone());
-			span = &span[1..];
 		}
 	}
 
@@ -269,6 +284,19 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 
 pub fn apply_operation(spanvec:&DocSpan, delvec:&DelSpan, addvec:&AddSpan) -> DocSpan {
 	apply_add(&apply_delete(spanvec, delvec), addvec)
+}
+
+#[test]
+fn monkey_test() {
+	assert_eq!(apply_add(&vec![
+		DocChars("Hello world!".to_owned())
+	],
+	&vec![
+		AddSkip(10), AddChars("dd49".to_owned()), AddSkip(2)
+	]),
+	vec![
+		DocChars("Hello worldd49d!".to_owned())
+	]);
 }
 
 #[test]
