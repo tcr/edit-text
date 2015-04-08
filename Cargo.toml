@@ -6,6 +6,8 @@ authors = ["Tim Cameron Ryan <id@timryan.org>"]
 
 [dependencies]
 rand = "0.3.7"
+log = "0.3.1"
+env_logger = "0.3"
 
 [lib]
 name = "oatie"
