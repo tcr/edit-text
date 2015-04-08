@@ -297,10 +297,18 @@ fn compose_add_add(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
 					AddWithGroup(span) => {
 						res.push(a.next());
 					},
-					_ => {
-						panic!("Unimplemented");
-					}
+					AddGroup(..) => {
+						res.push(a.next());
+						if bcount == 1 {
+							b.next();
+						} else {
+							b.head = Some(AddSkip(bcount - 1));
+						}
+					},
 				}
+			},
+			AddGroup(..) => {
+				res.push(b.next());
 			},
 			_ => {
 				panic!("Unimplemented");
@@ -389,12 +397,23 @@ fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
 							b.next();
 						}
 					},
-					AddWithGroup(span) => {
+					AddWithGroup(..) => {
 						addres.push(a.next());
+						del_place_any(&mut delres, &DelSkip(1));
+						if bcount == 1 {
+							b.next();
+						} else {
+							b.head = Some(DelSkip(bcount - 1));
+						}
 					},
-					_ => {
-						panic!("Unimplemented");
-					}
+					AddGroup(..) => {
+						addres.push(a.next());
+						if bcount == 1 {
+							b.next();
+						} else {
+							b.head = Some(DelSkip(bcount - 1));
+						}
+					},
 				}
 			},
 			_ => {
@@ -513,6 +532,19 @@ fn test_compose_add_add() {
 	]);
 }
 
+#[test]
+fn test_compose_add_del() {
+	assert_eq!(compose_add_del(&vec![
+		AddSkip(4), AddChars("0O".to_owned()), AddSkip(5), AddChars("mnc".to_owned()), AddSkip(3), AddChars("gbL".to_owned()),
+	], &vec![
+		DelSkip(1), DelChars(1), DelSkip(3), DelChars(2), DelSkip(2), DelChars(9), DelSkip(1), DelChars(1),
+	]), (vec![
+		DelSkip(1), DelChars(1), DelSkip(2), DelChars(1), DelSkip(2), DelChars(5),
+	], vec![
+		AddSkip(3), AddChars("0".to_owned()), AddSkip(2), AddChars("b".to_owned()),
+	]));
+}
+
 use rand::{thread_rng, Rng};
 
 fn random_add_span(input:&DocSpan) -> AddSpan {
@@ -526,17 +558,25 @@ fn random_add_span(input:&DocSpan) -> AddSpan {
 				let max = value.chars().count();
 				while n < max {
 					let slice = rng.gen_range(1, max - n + 1);
-					res.push(AddSkip(slice));
+					add_place_any(&mut res, &AddSkip(slice));
 					if slice < max - n || rng.gen_weighted_bool(2) {
-						let len = rng.gen_range(1, 5);
-						res.push(AddChars(rng.gen_ascii_chars().take(len).collect()));
+						if rng.gen_weighted_bool(2) {
+							let len = rng.gen_range(1, 5);
+							add_place_any(&mut res, &AddChars(rng.gen_ascii_chars().take(len).collect()));
+						} else {
+							add_place_any(&mut res, &AddGroup(HashMap::new(), vec![]));
+						}
 					}
 					n += slice;
 				}
 			},
-			_ => {
-				panic!("Unexpected");
-			}
+			&DocGroup(ref attrs, ref span) => {
+				if rng.gen_weighted_bool(2) {
+					add_place_any(&mut res, &AddWithGroup(random_add_span(span)));
+				} else {
+					add_place_any(&mut res, &AddSkip(1));
+				}
+			},
 		}
 	}
 	res
@@ -571,9 +611,10 @@ fn random_del_span(input:&DocSpan) -> DelSpan {
 					}
 				}
 			},
-			_ => {
-				panic!("Unexpected");
-			}
+			&DocGroup(..) => {
+				// TODO
+				del_place_any(&mut res, &DelSkip(1));
+			},
 		}
 	}
 	res
@@ -640,19 +681,6 @@ fn monkey_del_del() {
 }
 
 #[test]
-fn test_compose_add_del() {
-	assert_eq!(compose_add_del(&vec![
-		AddSkip(4), AddChars("0O".to_owned()), AddSkip(5), AddChars("mnc".to_owned()), AddSkip(3), AddChars("gbL".to_owned()),
-	], &vec![
-		DelSkip(1), DelChars(1), DelSkip(3), DelChars(2), DelSkip(2), DelChars(9), DelSkip(1), DelChars(1),
-	]), (vec![
-		DelSkip(1), DelChars(1), DelSkip(2), DelChars(1), DelSkip(2), DelChars(5),
-	], vec![
-		AddSkip(3), AddChars("0".to_owned()), AddSkip(2), AddChars("b".to_owned()),
-	]));
-}
-
-#[test]
 fn monkey_add_del() {
 	for i in 0..1000 {
 		let start = vec![
@@ -703,11 +731,11 @@ fn random_op(input:&DocSpan) -> Op {
 
 #[test]
 fn monkey_compose() {
-	for i in 0..1000 {
-		let start = vec![
-			DocChars("Hello world!".to_owned()),
-		];
+	let mut start = vec![
+		DocChars("Hello world!".to_owned()),
+	];
 
+	for i in 0..1000 {
 		println!("start {:?}", start);
 
 		let a = random_op(&start);
@@ -729,5 +757,7 @@ fn monkey_compose() {
 		println!("otherend {:?}", otherend);
 
 		assert_eq!(end, otherend);
+
+		start = end;
 	}
 }
