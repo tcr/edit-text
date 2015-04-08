@@ -85,6 +85,10 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 	}
 
 	let mut res:DocSpan = Vec::with_capacity(span.len());
+
+	if span.len() == 0 && del.len() == 0 {
+		return vec![];
+	}
 	
 	let mut d = del[0].clone();
 	del = &del[1..];
@@ -110,6 +114,7 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 					DocChars(ref value) => {
 						let len = value.chars().count();
 						if len < count {
+							place_chars(&mut res, value.to_owned());
 							d = AddSkip(count - len);
 							nextdel = false;
 						} else if len > count {
@@ -200,6 +205,7 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 					DocChars(ref value) => {
 						let len = value.chars().count();
 						if len < count {
+							place_chars(&mut res, value.clone());
 							d = DelSkip(count - len);
 							nextdel = false;
 						} else if len > count {
@@ -234,7 +240,7 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 					DocChars(ref value) => {
 						let len = value.chars().count();
 						if len > count {
-							first = DocChars(value[count..len].to_owned());
+							first = DocChars(value[count..].to_owned());
 							nextfirst = false;
 						} else if len < count {
 							panic!("attempted deletion of too much");
@@ -286,7 +292,8 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 
 pub fn apply_operation(spanvec:&DocSpan, op:&Op) -> DocSpan {
 	let &(ref delvec, ref addvec) = op;
-	apply_add(&apply_delete(spanvec, delvec), addvec)
+	let postdel = apply_delete(spanvec, delvec);
+	apply_add(&postdel, addvec)
 }
 
 #[test]
@@ -407,5 +414,18 @@ fn try_this() {
 	]),
 	vec![
 		DocChars("Hello worldd49d!".to_owned())
+	]);
+}
+
+#[test]
+fn test_lib_op() {
+	assert_eq!(apply_operation(&vec![
+		DocChars("Heo".to_owned()), DocGroup(HashMap::new(), vec![]), DocChars("!".to_owned())
+	], &(vec![
+		DelSkip(1), DelChars(1), DelSkip(2), DelSkip(1)
+	], vec![
+		AddSkip(3)
+	])), vec![
+		DocChars("Ho".to_owned()), DocGroup(HashMap::new(), vec![]), DocChars("!".to_owned())
 	]);
 }
