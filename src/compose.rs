@@ -9,6 +9,7 @@ use std::cmp;
 use apply_add;
 use apply_delete;
 use apply_operation;
+use test_start;
 
 struct DelSlice<'a> {
 	head:Option<DelElement>,
@@ -17,9 +18,16 @@ struct DelSlice<'a> {
 
 impl<'a> DelSlice<'a> {
 	fn new(span:&'a DelSpan) -> DelSlice {
-		DelSlice {
-			head: Some(span[0].clone()),
-			rest: &span[1..],
+		if span.len() == 0 {
+			DelSlice {
+				head: None,
+				rest: &[],
+			}
+		} else {
+			DelSlice {
+				head: Some(span[0].clone()),
+				rest: &span[1..],
+			}
 		}
 	}
 
@@ -51,9 +59,16 @@ struct AddSlice<'a> {
 
 impl<'a> AddSlice<'a> {
 	fn new(span:&'a AddSpan) -> AddSlice {
-		AddSlice {
-			head: Some(span[0].clone()),
-			rest: &span[1..],
+		if span.len() == 0 {
+			AddSlice {
+				head: None,
+				rest: &[],
+			}
+		} else {
+			AddSlice {
+				head: Some(span[0].clone()),
+				rest: &span[1..],
+			}
 		}
 	}
 
@@ -156,7 +171,7 @@ fn compose_del_del(avec:&DelSpan, bvec:&DelSpan) -> DelSpan {
 	let mut a = DelSlice::new(avec);
 	let mut b = DelSlice::new(bvec);
 
-	while !a.is_done() {
+	while !a.is_done() && !b.is_done() {
 		match a.get_head() {
 			DelSkip(acount) => {
 				match b.head.clone() {
@@ -245,6 +260,11 @@ fn compose_del_del(avec:&DelSpan, bvec:&DelSpan) -> DelSpan {
 		}
 	}
 
+	if !a.is_done() {
+		del_place_any(&mut res, &a.get_head());
+		res.push_all(a.rest);
+	}
+
 	if !b.is_done() {
 		del_place_any(&mut res, &b.get_head());
 		res.push_all(b.rest);
@@ -259,7 +279,7 @@ fn compose_add_add(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
 	let mut a = AddSlice::new(avec);
 	let mut b = AddSlice::new(bvec);
 
-	while !b.is_done() {
+	while !b.is_done() && !a.is_done() {
 		match b.get_head() {
 			AddChars(value) => {
 				add_place_any(&mut res, &b.next());
@@ -296,6 +316,11 @@ fn compose_add_add(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
 					},
 					AddWithGroup(span) => {
 						res.push(a.next());
+						if bcount == 1 {
+							b.next();
+						} else {
+							b.head = Some(AddSkip(bcount - 1));
+						}
 					},
 					AddGroup(..) => {
 						res.push(a.next());
@@ -310,10 +335,37 @@ fn compose_add_add(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
 			AddGroup(..) => {
 				res.push(b.next());
 			},
-			_ => {
-				panic!("Unimplemented");
+			AddWithGroup(ref bspan) => {
+				match a.get_head() {
+					AddChars(value) => {
+						panic!("Cannot compose AddWithGroup with AddChars");
+					}
+					AddSkip(acount) => {
+						if acount == 1 {
+							a.next();
+						} else {
+							a.head = Some(AddSkip(acount - 1));
+						}
+						res.push(b.next());
+					},
+					AddWithGroup(ref aspan) => {
+						res.push(AddWithGroup(compose_add_add(aspan, bspan)));
+						a.next();
+						b.next();
+					},
+					AddGroup(ref attrs, ref aspan) => {
+						res.push(AddGroup(attrs.clone(), compose_add_add(aspan, bspan)));
+						a.next();
+						b.next();
+					},
+				}
 			},
 		}
+	}
+
+	if !b.is_done() {
+		add_place_any(&mut res, &b.get_head());
+		res.push_all(b.rest);
 	}
 
 	if !a.is_done() {
@@ -422,6 +474,11 @@ fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
 		}
 	}
 
+	if !b.is_done() {
+		del_place_any(&mut delres, &b.get_head());
+		delres.push_all(b.rest);
+	}
+
 	if !a.is_done() {
 		add_place_any(&mut addres, &a.get_head());
 		addres.push_all(a.rest);
@@ -434,6 +491,8 @@ fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
 
 #[test]
 fn test_compose_del_del() {
+	test_start();
+	
 	assert_eq!(compose_del_del(&vec![
 		DelSkip(6),
 		DelChars(6),
@@ -534,6 +593,8 @@ fn test_compose_add_add() {
 
 #[test]
 fn test_compose_add_del() {
+	test_start();
+
 	assert_eq!(compose_add_del(&vec![
 		AddSkip(4), AddChars("0O".to_owned()), AddSkip(5), AddChars("mnc".to_owned()), AddSkip(3), AddChars("gbL".to_owned()),
 	], &vec![
@@ -622,15 +683,17 @@ fn random_del_span(input:&DocSpan) -> DelSpan {
 
 #[test]
 fn monkey_add_add() {
+	test_start();
+
 	for i in 0..1000 {
 		let start = vec![
 			DocChars("Hello world!".to_owned()),
 		];
 
-		println!("start {:?}", start);
+		trace!("start {:?}", start);
 
 		let a = random_add_span(&start);
-		println!("a {:?}", a);
+		trace!("a {:?}", a);
 
 		let middle = apply_add(&start, &a);
 		let b = random_add_span(&middle);
@@ -639,12 +702,12 @@ fn monkey_add_add() {
 		let composed = compose_add_add(&a, &b);
 		let otherend = apply_add(&start, &composed);
 
-		println!("middle {:?}", middle);
-		println!("b {:?}", b);
-		println!("end {:?}", end);
+		trace!("middle {:?}", middle);
+		trace!("b {:?}", b);
+		trace!("end {:?}", end);
 
-		println!("composed {:?}", composed);
-		println!("otherend {:?}", otherend);
+		trace!("composed {:?}", composed);
+		trace!("otherend {:?}", otherend);
 
 		assert_eq!(end, otherend);
 	}
@@ -652,15 +715,17 @@ fn monkey_add_add() {
 
 #[test]
 fn monkey_del_del() {
+	test_start();
+
 	for i in 0..1000 {
 		let start = vec![
 			DocChars("Hello world!".to_owned()),
 		];
 
-		println!("start {:?}", start);
+		trace!("start {:?}", start);
 
 		let a = random_del_span(&start);
-		println!("a {:?}", a);
+		trace!("a {:?}", a);
 
 		let middle = apply_delete(&start, &a);
 		let b = random_del_span(&middle);
@@ -669,12 +734,12 @@ fn monkey_del_del() {
 		let composed = compose_del_del(&a, &b);
 		let otherend = apply_delete(&start, &composed);
 
-		println!("middle {:?}", middle);
-		println!("b {:?}", b);
-		println!("end {:?}", end);
+		trace!("middle {:?}", middle);
+		trace!("b {:?}", b);
+		trace!("end {:?}", end);
 
-		println!("composed {:?}", composed);
-		println!("otherend {:?}", otherend);
+		trace!("composed {:?}", composed);
+		trace!("otherend {:?}", otherend);
 
 		assert_eq!(end, otherend);
 	}
@@ -682,32 +747,34 @@ fn monkey_del_del() {
 
 #[test]
 fn monkey_add_del() {
+	test_start();
+
 	for i in 0..1000 {
 		let start = vec![
 			DocChars("Hello world!".to_owned()),
 		];
 
-		println!("start {:?}", start);
+		trace!("start {:?}", start);
 
 		let a = random_add_span(&start);
-		println!("a {:?}", a);
+		trace!("a {:?}", a);
 
 		let middle = apply_add(&start, &a);
 		let b = random_del_span(&middle);
 		let end = apply_delete(&middle, &b);
 
-		println!("middle {:?}", middle);
-		println!("b {:?}", b);
-		println!("end {:?}", end);
+		trace!("middle {:?}", middle);
+		trace!("b {:?}", b);
+		trace!("end {:?}", end);
 
 		let (dela, addb) = compose_add_del(&a, &b);
-		println!("dela {:?}", dela);
-		println!("addb {:?}", addb);
+		trace!("dela {:?}", dela);
+		trace!("addb {:?}", addb);
 
 		let middle2 = apply_delete(&start, &dela);
-		println!("middle2 {:?}", middle2);
+		trace!("middle2 {:?}", middle2);
 		let otherend = apply_add(&middle2, &addb);
-		println!("otherend {:?}", otherend);
+		trace!("otherend {:?}", otherend);
 
 		assert_eq!(end, otherend);
 	}
@@ -731,30 +798,32 @@ fn random_op(input:&DocSpan) -> Op {
 
 #[test]
 fn monkey_compose() {
+	test_start();
+
 	let mut start = vec![
 		DocChars("Hello world!".to_owned()),
 	];
 
-	for i in 0..1000 {
-		println!("start {:?}", start);
+	for i in 0..100 {
+		trace!("start {:?}", start);
 
 		let a = random_op(&start);
-		println!("a {:?}", a);
+		trace!("a {:?}", a);
 
 		let middle = apply_operation(&start, &a);
-		println!("middle {:?}", middle);
+		trace!("middle {:?}", middle);
 
 		let b = random_op(&middle);
-		println!("b {:?}", b);
+		trace!("b {:?}", b);
 
 		let end = apply_operation(&middle, &b);
-		println!("end {:?}", end);
+		trace!("end {:?}", end);
 
 		let composed = compose(&a, &b);
-		println!("composed {:?}", composed);
+		trace!("composed {:?}", composed);
 
 		let otherend = apply_operation(&start, &composed);
-		println!("otherend {:?}", otherend);
+		trace!("otherend {:?}", otherend);
 
 		assert_eq!(end, otherend);
 

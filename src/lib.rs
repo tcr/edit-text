@@ -3,6 +3,9 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
 
+#[macro_use]
+extern crate log;
+extern crate env_logger;
 extern crate rand;
 
 mod doc;
@@ -296,8 +299,16 @@ pub fn apply_operation(spanvec:&DocSpan, op:&Op) -> DocSpan {
 	apply_add(&postdel, addvec)
 }
 
+fn test_start() {
+	if let Ok(_) = env_logger::init() {
+		// good
+	}
+}
+
 #[test]
 fn try_this() {
+	test_start();
+
 	let source:DocSpan = vec![
 		DocChars("Hello world!".to_owned()),
 		DocGroup(HashMap::new(), vec![]),
@@ -419,6 +430,8 @@ fn try_this() {
 
 #[test]
 fn test_lib_op() {
+	test_start();
+
 	assert_eq!(apply_operation(&vec![
 		DocChars("Heo".to_owned()), DocGroup(HashMap::new(), vec![]), DocChars("!".to_owned())
 	], &(vec![
