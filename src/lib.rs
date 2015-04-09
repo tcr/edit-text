@@ -190,10 +190,14 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 	let mut span = &spanvec[..];
 	let mut del = &delvec[..];
 
+	let mut res:DocSpan = Vec::with_capacity(span.len());
+	
+	if span.len() == 0 && del.len() == 0 {
+		return vec![];
+	}
+
 	let mut first = span[0].clone();
 	span = &span[1..];
-
-	let mut res:DocSpan = Vec::with_capacity(span.len());
 	
 	let mut d = del[0].clone();
 	del = &del[1..];

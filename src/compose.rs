@@ -468,8 +468,59 @@ fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
 					},
 				}
 			},
-			_ => {
-				panic!("Unimplemented");
+			DelWithGroup(span) => {
+				match a.get_head() {
+					AddChars(avalue) => {
+						panic!("DelWithGroup by AddChars is ILLEGAL");
+					},
+					AddSkip(acount) => {
+						del_place_any(&mut delres, &b.next());
+						add_place_any(&mut addres, &AddSkip(1));
+						if acount > 1 {
+							a.head = Some(AddSkip(acount - 1));
+						} else {
+							a.next();
+						}
+					},
+					AddWithGroup(insspan) => {
+						a.next();
+						b.next();
+
+						let (del, ins) = compose_add_del(&insspan, &span);
+						del_place_any(&mut delres, &DelWithGroup(del));
+						add_place_any(&mut addres, &AddWithGroup(ins));
+					},
+					AddGroup(attr, insspan) => {
+						a.next();
+						b.next();
+
+						let (_, ins) = compose_add_del(&insspan, &span);
+						add_place_any(&mut addres, &AddGroup(attr, ins));
+					},
+				}
+			},
+			DelGroup => {
+				match a.get_head() {
+					AddChars(avalue) => {
+						panic!("DelGroup by AddChars is ILLEGAL");
+					},
+					AddSkip(acount) => {
+						del_place_any(&mut delres, &b.next());
+						if acount > 1 {
+							a.head = Some(AddSkip(acount - 1));
+						} else {
+							a.next();
+						}
+					},
+					AddWithGroup(insspan) => {
+						a.next();
+						del_place_any(&mut delres, &b.next());
+					},
+					AddGroup(attr, insspan) => {
+						a.next();
+						b.next();
+					},
+				}
 			},
 		}
 	}
@@ -672,9 +723,15 @@ fn random_del_span(input:&DocSpan) -> DelSpan {
 					}
 				}
 			},
-			&DocGroup(..) => {
-				// TODO
-				del_place_any(&mut res, &DelSkip(1));
+			&DocGroup(ref attr, ref span) => {
+				match rng.gen_range(0, 3) {
+					0 => del_place_any(&mut res, &DelWithGroup(random_del_span(span))),
+					1 => del_place_any(&mut res, &DelGroup),
+					2 => del_place_any(&mut res, &DelSkip(1)),
+					_ => {
+						unreachable!();
+					},
+				}
 			},
 		}
 	}
@@ -789,7 +846,9 @@ fn compose(a:&Op, b:&Op) -> Op {
 }
 
 fn random_op(input:&DocSpan) -> Op {
+	trace!("random_op: input {:?}", input);
 	let del = random_del_span(input);
+	trace!("random_op: del {:?}", del);
 	let middle = apply_delete(input, &del);
 	let ins = random_add_span(&middle);
 	(del, ins)
