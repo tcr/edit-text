@@ -7,13 +7,19 @@ pub enum Atom {
 	Leave,
 }
 
+pub type Attrs = HashMap<String, String>;
+
+pub use self::Atom::*;
+
 pub type DocSpan = Vec<DocElement>;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum DocElement {
 	DocChars(String),
-	DocGroup(HashMap<String, String>, DocSpan),
+	DocGroup(Attrs, DocSpan),
 }
+
+pub use self::DocElement::*;
 
 
 pub type DelSpan = Vec<DelElement>;
@@ -26,6 +32,8 @@ pub enum DelElement {
 	DelGroup,
 }
 
+pub use self::DelElement::*;
+
 
 pub type AddSpan = Vec<AddElement>;
 
@@ -34,7 +42,9 @@ pub enum AddElement {
 	AddSkip(usize),
 	AddWithGroup(AddSpan),
 	AddChars(String),
-	AddGroup(HashMap<String, String>, AddSpan),
+	AddGroup(Attrs, AddSpan),
 }
+
+pub use self::AddElement::*;
 
 pub type Op = (DelSpan, AddSpan);

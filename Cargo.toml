@@ -9,5 +9,8 @@ rand = "0.3.7"
 log = "0.3.1"
 env_logger = "0.3"
 
+[dependencies.literator]
+git = "https://github.com/tcr/literator.git"
+
 [lib]
 name = "oatie"
