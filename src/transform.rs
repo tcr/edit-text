@@ -6,7 +6,6 @@ use std::cmp;
 
 use doc::*;
 use stepper::*;
-use string;
 
 
 #[derive(Clone)]
@@ -271,24 +270,24 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
     }
 
     vec![
-        AddGroup(container! { (string("tag"), string("p")) }, vec![AddSkip(4)]),
-        AddGroup(container! { (string("tag"), string("p")) }, vec![AddSkip(2)])
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(4)]),
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)])
     ]
 }
 
 #[test]
 fn test_transform_goose() {
     let a = vec![
-        AddGroup(container! { (string("tag"), string("p")) }, vec![AddSkip(6)])
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(6)])
     ];
     let b = vec![
-        AddGroup(container! { (string("tag"), string("p")) }, vec![AddSkip(4)])
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(4)])
     ];
 
     let result = vec![
-        AddGroup(container! { (string("tag"), string("p")) }, vec![AddSkip(4)]),
-        AddGroup(container! { (string("tag"), string("p")) }, vec![AddSkip(2)])
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(4)]),
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)])
     ];
 
-    transform_insertions(&a, &b);
+    assert_eq!(transform_insertions(&a, &b), result);
 }
