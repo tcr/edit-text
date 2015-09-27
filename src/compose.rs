@@ -70,7 +70,7 @@ fn add_place_skip(res:&mut AddSpan, count:usize) {
 	res.push(AddSkip(count));
 }
 
-fn add_place_any(res:&mut AddSpan, value:&AddElement) {
+pub fn add_place_any(res:&mut AddSpan, value:&AddElement) {
 	match value {
 		&AddChars(ref value) => {
 			add_place_chars(res, value.clone());

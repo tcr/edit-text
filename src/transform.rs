@@ -6,9 +6,10 @@ use std::cmp;
 
 use doc::*;
 use stepper::*;
+use compose;
 
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct AddStepper {
     pub head:Option<AddElement>,
     pub rest:Vec<AddElement>,
@@ -63,13 +64,68 @@ impl AddStepper {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct AddWriter {
+    pub past:Vec<AddElement>,
+    stack: Vec<Vec<AddElement>>,
+}
+
+impl AddWriter {
+    pub fn new() -> AddWriter {
+        AddWriter {
+            past: vec![],
+            stack: vec![],
+        }
+    }
+
+    pub fn begin(&mut self) {
+        let past = self.past.clone();
+        self.past = vec![];
+        self.stack.push(past);
+    }
+
+    pub fn exit(&mut self) {
+        let past = self.past.clone();
+        self.past = self.stack.pop().unwrap();
+        self.past.push(AddWithGroup(past));
+    }
+
+    pub fn close(&mut self, attrs: Attrs) {
+        let past = self.past.clone();
+        self.past = self.stack.pop().unwrap();
+        self.past.push(AddGroup(attrs, past));
+    }
+
+    pub fn skip(&mut self, n: usize) {
+        compose::add_place_any(&mut self.past, &AddSkip(n));
+    }
+
+    pub fn chars(&mut self, chars: &str) {
+        compose::add_place_any(&mut self.past, &AddChars(chars.into()));
+    }
+
+    pub fn result(self) -> AddSpan {
+        if self.stack.len() > 0 {
+            println!("{:?}", self);
+            assert!(false, "cannot get result when stack is still full");
+        }
+        self.past
+    }
+}
+
+
+
+
+
+
+
 #[derive(PartialEq, Clone)]
 enum TrackType {
     NoType,
     TextBlock,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct Track {
     tag_a: Option<String>,
     tag_real: Option<String>,
@@ -83,7 +139,8 @@ fn get_type(attrs:&Attrs) -> TrackType {
 }
 
 struct Transform {
-    tracks: Vec<Track>
+    tracks: Vec<Track>,
+    a_add: AddWriter,
 }
 
 impl Transform {
@@ -101,12 +158,20 @@ impl Transform {
             is_original_a: true,
             is_original_b: true,
         });
+
+        self.a_add.begin();
     }
 
     // Close the topmost track.
     fn abort(&mut self) -> (Option<String>, Option<String>, Option<String>) {
         let track = self.tracks.pop().unwrap();
+        println!("ABORTIN {:?}", track);
         if let Some(ref real) = track.tag_real {
+            // if track.tag_a.is_some() {
+            self.a_add.close(container! { ("tag".into(), real.clone() )}); // fake
+            // } else {
+            //     self.a_add.close(container! { ("tag".into(), track.tag_a.into() )}); // fake
+            // }
             // if (a) {
             //   insrA.alter(r, {}).close();
             // } else {
@@ -120,6 +185,14 @@ impl Transform {
         }
         (track.tag_a, track.tag_real, track.tag_b)
     }
+
+    fn skip_a(&mut self, n: usize) {
+        self.a_add.skip(n);
+    }
+
+    // fn skip_b(&mut self, n: usize) {
+    //     self.b_add.skip(n);
+    // }
 
     fn current(&self) -> Option<Track> {
         let value = self.tracks.last();
@@ -171,10 +244,13 @@ impl Transform {
         // okay do regen
         // Filter for types that are ancestors of the current type.
         // TODO
+        println!("DOING THAT REGEX");
         for track in self.tracks.iter_mut() {
             if track.tag_real.is_none() {
                 if track.tag_a.is_some() || track.tag_b.is_some() {
                     track.tag_real = track.tag_a.clone();
+
+                    self.a_add.begin();
 
                     // if (origA) {
                     //   insrA.enter();
@@ -191,6 +267,19 @@ impl Transform {
             }
         }
     }
+
+    fn result(mut self) -> AddSpan {
+        let mut span = self.a_add;
+        for track in self.tracks.iter_mut().rev() {
+            println!("TRACK RESULT: {:?}", track);
+            if !track.is_original_a {
+                span.close(container! { ("tag".into(), track.tag_a.clone().unwrap() )});
+            } else {
+                span.exit();
+            }
+        }
+        span.result()
+    }
 }
 
 fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
@@ -202,6 +291,7 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
 
     let mut t = Transform {
         tracks: vec![],
+        a_add: AddWriter::new(),
     };
 
     let mut a_type = TrackType::NoType;
@@ -216,6 +306,7 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
             if a.is_done() {
                 match b.head.clone() {
                     Some(AddSkip(b_count)) => {
+                        t.skip_a(b_count);
                         b.next();
                     },
                     None => {
@@ -244,7 +335,7 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
                 (Some(AddSkip(a_count)), Some(AddSkip(b_count))) => {
                     if a_count > b_count {
                         a.head = Some(AddSkip(a_count - b_count));
-                        a.next();
+                        b.next();
                     } else if a_count < b_count {
                         a.next();
                         b.head = Some(AddSkip(b_count - a_count));
@@ -252,6 +343,7 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
                         a.next();
                         b.next();
                     }
+                    t.skip_a(::std::cmp::min(a_count, b_count));
                 },
                 (None, None) => {
                     a.exit();
@@ -262,32 +354,49 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
                     // t.closeA()
                     a.exit()
                 },
+                (Some(AddSkip(a_count)), None) => {
+                    t.interrupt(b_type.clone());
+                    // t.closeA()
+                    b.exit()
+                },
+                (Some(AddChars(ref a_chars)), _) => {
+                    // do some chars
+                },
                 _ => {
-                    panic!("No idea");
+                    panic!("No idea: {:?}, {:?}", a.head, b.head);
                 },
             }
         }
     }
 
-    vec![
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(4)]),
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)])
-    ]
+    // Ugh really
+    // vec![
+    //     AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(4)]),
+    //     AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)])
+    // ]
+
+    t.result()
 }
 
 #[test]
 fn test_transform_goose() {
-    let a = vec![
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(6)])
-    ];
-    let b = vec![
+    assert_eq!(transform_insertions(&vec![
         AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(4)])
-    ];
-
-    let result = vec![
+    ], &vec![
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(6)])
+    ]), vec![
         AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(4)]),
         AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)])
-    ];
-
-    assert_eq!(transform_insertions(&a, &b), result);
+    ]);
 }
+
+// #[test]
+// fn test_transform_cory() {
+//     assert_eq!(transform_insertions(&vec![
+//         AddSkip(1), AddChars("1".into())
+//     ], &vec![
+//         AddSkip(1), AddChars("2".into())
+//     ]), vec![
+//         AddSkip(1), AddChars("12".into()),
+//     ]);
+// }
