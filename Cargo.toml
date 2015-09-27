@@ -6,6 +6,12 @@ authors = ["Tim Cameron Ryan <id@timryan.org>"]
 
 [dependencies]
 rand = "0.3.7"
+log = "0.3.1"
+env_logger = "0.3"
+
+[dependencies.literator]
+git = "https://github.com/kmcallister/literator.git"
+rev = "e4d34d8d41e03d42d4cf7054e8b731e88efa8c6c"
 
 [lib]
 name = "oatie"

@@ -3,17 +3,18 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
 
+#[macro_use] extern crate log;
+extern crate env_logger;
 extern crate rand;
+#[macro_use] extern crate literator;
 
 mod doc;
 mod compose;
+mod transform;
+mod stepper;
 
 use std::collections::HashMap;
-use doc::{DocSpan, DocElement, DelSpan, DelElement, AddSpan, AddElement, Atom, Op};
-use doc::DocElement::*;
-use doc::DelElement::*;
-use doc::AddElement::*;
-use std::borrow::ToOwned;
+use doc::*;
 
 pub fn debug_span(val:&DocSpan) {
 	for i in val {
@@ -85,6 +86,10 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 	}
 
 	let mut res:DocSpan = Vec::with_capacity(span.len());
+
+	if span.len() == 0 && del.len() == 0 {
+		return vec![];
+	}
 	
 	let mut d = del[0].clone();
 	del = &del[1..];
@@ -110,6 +115,7 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 					DocChars(ref value) => {
 						let len = value.chars().count();
 						if len < count {
+							place_chars(&mut res, value.to_owned());
 							d = AddSkip(count - len);
 							nextdel = false;
 						} else if len > count {
@@ -182,10 +188,14 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 	let mut span = &spanvec[..];
 	let mut del = &delvec[..];
 
+	let mut res:DocSpan = Vec::with_capacity(span.len());
+	
+	if span.len() == 0 && del.len() == 0 {
+		return vec![];
+	}
+
 	let mut first = span[0].clone();
 	span = &span[1..];
-
-	let mut res:DocSpan = Vec::with_capacity(span.len());
 	
 	let mut d = del[0].clone();
 	del = &del[1..];
@@ -200,6 +210,7 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 					DocChars(ref value) => {
 						let len = value.chars().count();
 						if len < count {
+							place_chars(&mut res, value.clone());
 							d = DelSkip(count - len);
 							nextdel = false;
 						} else if len > count {
@@ -234,7 +245,7 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 					DocChars(ref value) => {
 						let len = value.chars().count();
 						if len > count {
-							first = DocChars(value[count..len].to_owned());
+							first = DocChars(value[count..].to_owned());
 							nextfirst = false;
 						} else if len < count {
 							panic!("attempted deletion of too much");
@@ -286,126 +297,167 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 
 pub fn apply_operation(spanvec:&DocSpan, op:&Op) -> DocSpan {
 	let &(ref delvec, ref addvec) = op;
-	apply_add(&apply_delete(spanvec, delvec), addvec)
+	let postdel = apply_delete(spanvec, delvec);
+	apply_add(&postdel, addvec)
 }
 
-#[test]
-fn try_this() {
-	let source:DocSpan = vec![
-		DocChars("Hello world!".to_owned()),
-		DocGroup(HashMap::new(), vec![]),
-	];
+fn test_start() {
+	if let Ok(_) = env_logger::init() {
+		// good
+	}
+}
 
-	debug_span(&source);
-	
-	assert_eq!(iterate(&vec![
-		DocChars("Hello world!".to_owned()),
-		DocGroup(HashMap::new(), vec![]),
-	]), vec![
-		Atom::Char('H'),
-		Atom::Char('e'),
-		Atom::Char('l'),
-		Atom::Char('l'),
-		Atom::Char('o'),
-		Atom::Char(' '),
-		Atom::Char('w'),
-		Atom::Char('o'),
-		Atom::Char('r'),
-		Atom::Char('l'),
-		Atom::Char('d'),
-		Atom::Char('!'),
-		Atom::Enter(HashMap::new()),
-		Atom::Leave,
-	]);
+#[cfg(test)] mod tests {
+	use std::collections::HashMap;
+	use doc::{DocSpan, DocElement, DelSpan, DelElement, AddSpan, AddElement, Atom, Op};
+	use doc::DocElement::*;
+	use doc::DelElement::*;
+	use doc::AddElement::*;
+	use std::borrow::ToOwned;
 
-	assert_eq!(apply_delete(&vec![
-		DocChars("Hello world!".to_owned()),
-		DocGroup(HashMap::new(), vec![]),
-	], &vec![
-		DelChars(3),
-		DelSkip(2),
-		DelChars(1),
-		DelSkip(1),
-		DelChars(5),
-		DelGroup,
-	]), vec![
-		DocChars("low".to_owned()),
-	]);
+	use debug_span;
+	use debug_elem;
+	use apply_delete;
+	use apply_add;
+	use apply_operation;
+	use test_start;
+	use iterate;
 
-	assert_eq!(apply_delete(&vec![
-		DocChars("Hello World!".to_owned()),
-	], &vec![
-		DelChars(6),
-	]), vec![
-		DocChars("World!".to_owned()),
-	]);
+	#[test]
+	fn try_this() {
+		test_start();
 
-	assert_eq!(apply_add(&vec![
-		DocChars("World!".to_owned()),
-	], &vec![
-		AddChars("Hello ".to_owned()),
-	]), vec![
-		DocChars("Hello World!".to_owned()),
-	]);
+		let source:DocSpan = vec![
+			DocChars("Hello world!".to_owned()),
+			DocGroup(HashMap::new(), vec![]),
+		];
 
-	assert_eq!(apply_add(&vec![
-		DocGroup(HashMap::new(), vec![]),
-		DocChars("World!".to_owned()),
-	], &vec![
-		AddSkip(1),
-		AddChars("Hello ".to_owned()),
-	]), vec![
-		DocGroup(HashMap::new(), vec![]),
-		DocChars("Hello World!".to_owned()),
-	]);
+		debug_span(&source);
+		
+		assert_eq!(iterate(&vec![
+			DocChars("Hello world!".to_owned()),
+			DocGroup(HashMap::new(), vec![]),
+		]), vec![
+			Atom::Char('H'),
+			Atom::Char('e'),
+			Atom::Char('l'),
+			Atom::Char('l'),
+			Atom::Char('o'),
+			Atom::Char(' '),
+			Atom::Char('w'),
+			Atom::Char('o'),
+			Atom::Char('r'),
+			Atom::Char('l'),
+			Atom::Char('d'),
+			Atom::Char('!'),
+			Atom::Enter(HashMap::new()),
+			Atom::Leave,
+		]);
 
-	assert_eq!(apply_delete(&vec![
-		DocGroup(HashMap::new(), vec![
-			DocChars("Hello Damned World!".to_owned()),
-		]),
-	], &vec![
-		DelWithGroup(vec![
-			DelSkip(6),
+		assert_eq!(apply_delete(&vec![
+			DocChars("Hello world!".to_owned()),
+			DocGroup(HashMap::new(), vec![]),
+		], &vec![
+			DelChars(3),
+			DelSkip(2),
+			DelChars(1),
+			DelSkip(1),
+			DelChars(5),
+			DelGroup,
+		]), vec![
+			DocChars("low".to_owned()),
+		]);
+
+		assert_eq!(apply_delete(&vec![
+			DocChars("Hello World!".to_owned()),
+		], &vec![
+			DelChars(6),
+		]), vec![
+			DocChars("World!".to_owned()),
+		]);
+
+		assert_eq!(apply_add(&vec![
+			DocChars("World!".to_owned()),
+		], &vec![
+			AddChars("Hello ".to_owned()),
+		]), vec![
+			DocChars("Hello World!".to_owned()),
+		]);
+
+		assert_eq!(apply_add(&vec![
+			DocGroup(HashMap::new(), vec![]),
+			DocChars("World!".to_owned()),
+		], &vec![
+			AddSkip(1),
+			AddChars("Hello ".to_owned()),
+		]), vec![
+			DocGroup(HashMap::new(), vec![]),
+			DocChars("Hello World!".to_owned()),
+		]);
+
+		assert_eq!(apply_delete(&vec![
+			DocGroup(HashMap::new(), vec![
+				DocChars("Hello Damned World!".to_owned()),
+			]),
+		], &vec![
+			DelWithGroup(vec![
+				DelSkip(6),
+				DelChars(7),
+			]),
+		]), vec![
+			DocGroup(HashMap::new(), vec![
+				DocChars("Hello World!".to_owned()),
+			]),
+		]);
+
+		assert_eq!(apply_add(&vec![
+			DocGroup(HashMap::new(), vec![
+				DocChars("Hello!".to_owned()),
+			]),
+		], &vec![
+			AddWithGroup(vec![
+				AddSkip(5),
+				AddChars(" World".to_owned()),
+			]),
+		]), vec![
+			DocGroup(HashMap::new(), vec![
+				DocChars("Hello World!".to_owned()),
+			]),
+		]);
+
+		assert_eq!(apply_operation(&vec![
+			DocChars("Goodbye World!".to_owned()),
+		], &(vec![
 			DelChars(7),
-		]),
-	]), vec![
-		DocGroup(HashMap::new(), vec![
+		], vec![
+			AddChars("Hello".to_owned()),
+		])), vec![
 			DocChars("Hello World!".to_owned()),
-		]),
-	]);
+		]);
 
-	assert_eq!(apply_add(&vec![
-		DocGroup(HashMap::new(), vec![
-			DocChars("Hello!".to_owned()),
+		assert_eq!(apply_add(&vec![
+			DocChars("Hello world!".to_owned())
+		],
+		&vec![
+			AddSkip(10), AddChars("dd49".to_owned()), AddSkip(2)
 		]),
-	], &vec![
-		AddWithGroup(vec![
-			AddSkip(5),
-			AddChars(" World".to_owned()),
-		]),
-	]), vec![
-		DocGroup(HashMap::new(), vec![
-			DocChars("Hello World!".to_owned()),
-		]),
-	]);
+		vec![
+			DocChars("Hello worldd49d!".to_owned())
+		]);
+	}
 
-	assert_eq!(apply_operation(&vec![
-		DocChars("Goodbye World!".to_owned()),
-	], &(vec![
-		DelChars(7),
-	], vec![
-		AddChars("Hello".to_owned()),
-	])), vec![
-		DocChars("Hello World!".to_owned()),
-	]);
+	#[test]
+	fn test_lib_op() {
+		test_start();
 
-	assert_eq!(apply_add(&vec![
-		DocChars("Hello world!".to_owned())
-	],
-	&vec![
-		AddSkip(10), AddChars("dd49".to_owned()), AddSkip(2)
-	]),
-	vec![
-		DocChars("Hello worldd49d!".to_owned())
-	]);
+		assert_eq!(apply_operation(&vec![
+			DocChars("Heo".to_owned()), DocGroup(HashMap::new(), vec![]), DocChars("!".to_owned())
+		], &(vec![
+			DelSkip(1), DelChars(1), DelSkip(2), DelSkip(1)
+		], vec![
+			AddSkip(3)
+		])), vec![
+			DocChars("Ho".to_owned()), DocGroup(HashMap::new(), vec![]), DocChars("!".to_owned())
+		]);
+	}
 }
