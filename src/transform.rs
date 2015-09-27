@@ -190,6 +190,10 @@ impl Transform {
         self.a_add.skip(n);
     }
 
+    fn chars_a(&mut self, chars: &str) {
+        self.a_add.chars(chars);
+    }
+
     // fn skip_b(&mut self, n: usize) {
     //     self.b_add.skip(n);
     // }
@@ -244,7 +248,6 @@ impl Transform {
         // okay do regen
         // Filter for types that are ancestors of the current type.
         // TODO
-        println!("DOING THAT REGEX");
         for track in self.tracks.iter_mut() {
             if track.tag_real.is_none() {
                 if track.tag_a.is_some() || track.tag_b.is_some() {
@@ -305,6 +308,10 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
 
             if a.is_done() {
                 match b.head.clone() {
+                    Some(AddChars(ref b_chars)) => {
+                        t.chars_a(b_chars);
+                        b.next();
+                    },
                     Some(AddSkip(b_count)) => {
                         t.skip_a(b_count);
                         b.next();
@@ -360,7 +367,8 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
                     b.exit()
                 },
                 (Some(AddChars(ref a_chars)), _) => {
-                    // do some chars
+                    t.skip_a(a_chars.len());
+                    a.next();
                 },
                 _ => {
                     panic!("No idea: {:?}, {:?}", a.head, b.head);
@@ -369,13 +377,9 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
         }
     }
 
-    // Ugh really
-    // vec![
-    //     AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(4)]),
-    //     AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)])
-    // ]
-
-    t.result()
+    let res = t.result();
+    println!("RESULT {:?}", res);
+    res
 }
 
 #[test]
@@ -390,13 +394,13 @@ fn test_transform_goose() {
     ]);
 }
 
-// #[test]
-// fn test_transform_cory() {
-//     assert_eq!(transform_insertions(&vec![
-//         AddSkip(1), AddChars("1".into())
-//     ], &vec![
-//         AddSkip(1), AddChars("2".into())
-//     ]), vec![
-//         AddSkip(1), AddChars("12".into()),
-//     ]);
-// }
+#[test]
+fn test_transform_cory() {
+    assert_eq!(transform_insertions(&vec![
+        AddSkip(1), AddChars("1".into())
+    ], &vec![
+        AddSkip(1), AddChars("2".into())
+    ]), vec![
+        AddSkip(2), AddChars("2".into()),
+    ]);
+}
