@@ -15,12 +15,6 @@ mod stepper;
 
 use std::collections::HashMap;
 use doc::*;
-use std::borrow::ToOwned;
-
-#[inline(always)]
-fn string(value: &str) -> String {
-    value.to_owned()
-}
 
 pub fn debug_span(val:&DocSpan) {
 	for i in val {
