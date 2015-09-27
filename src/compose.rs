@@ -9,74 +9,8 @@ use std::cmp;
 use apply_add;
 use apply_delete;
 use apply_operation;
-
-struct DelSlice<'a> {
-	head:Option<DelElement>,
-	rest:&'a [DelElement],
-}
-
-impl<'a> DelSlice<'a> {
-	fn new(span:&'a DelSpan) -> DelSlice {
-		DelSlice {
-			head: Some(span[0].clone()),
-			rest: &span[1..],
-		}
-	}
-
-	fn next(&mut self) -> DelElement  {
-		let res = self.head.clone().unwrap();
-		if self.rest.len() == 0 {
-			self.head = None;
-			self.rest = &[];
-		} else {
-			self.head = Some(self.rest[0].clone());
-			self.rest = &self.rest[1..];
-		}
-		res
-	}
-
-	fn get_head(&self) -> DelElement {
-		self.head.clone().unwrap()
-	}
-
-	fn is_done(&self) -> bool {
-		self.head.is_none()
-	}
-}
-
-struct AddSlice<'a> {
-	head:Option<AddElement>,
-	rest:&'a [AddElement],
-}
-
-impl<'a> AddSlice<'a> {
-	fn new(span:&'a AddSpan) -> AddSlice {
-		AddSlice {
-			head: Some(span[0].clone()),
-			rest: &span[1..],
-		}
-	}
-
-	fn next(&mut self) -> AddElement  {
-		let res = self.head.clone().unwrap();
-		if self.rest.len() == 0 {
-			self.head = None;
-			self.rest = &[];
-		} else {
-			self.head = Some(self.rest[0].clone());
-			self.rest = &self.rest[1..];
-		}
-		res
-	}
-
-	fn get_head(&self) -> AddElement {
-		self.head.clone().unwrap()
-	}
-
-	fn is_done(&self) -> bool {
-		self.head.is_none()
-	}
-}
+use test_start;
+use stepper::*;
 
 fn del_place_chars(res:&mut DelSpan, count:usize) {
 	if res.len() > 0 {
@@ -136,7 +70,7 @@ fn add_place_skip(res:&mut AddSpan, count:usize) {
 	res.push(AddSkip(count));
 }
 
-fn add_place_any(res:&mut AddSpan, value:&AddElement) {
+pub fn add_place_any(res:&mut AddSpan, value:&AddElement) {
 	match value {
 		&AddChars(ref value) => {
 			add_place_chars(res, value.clone());
@@ -156,7 +90,7 @@ fn compose_del_del(avec:&DelSpan, bvec:&DelSpan) -> DelSpan {
 	let mut a = DelSlice::new(avec);
 	let mut b = DelSlice::new(bvec);
 
-	while !a.is_done() {
+	while !a.is_done() && !b.is_done() {
 		match a.get_head() {
 			DelSkip(acount) => {
 				match b.head.clone() {
@@ -245,6 +179,11 @@ fn compose_del_del(avec:&DelSpan, bvec:&DelSpan) -> DelSpan {
 		}
 	}
 
+	if !a.is_done() {
+		del_place_any(&mut res, &a.get_head());
+		res.push_all(a.rest);
+	}
+
 	if !b.is_done() {
 		del_place_any(&mut res, &b.get_head());
 		res.push_all(b.rest);
@@ -259,7 +198,7 @@ fn compose_add_add(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
 	let mut a = AddSlice::new(avec);
 	let mut b = AddSlice::new(bvec);
 
-	while !b.is_done() {
+	while !b.is_done() && !a.is_done() {
 		match b.get_head() {
 			AddChars(value) => {
 				add_place_any(&mut res, &b.next());
@@ -296,16 +235,56 @@ fn compose_add_add(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
 					},
 					AddWithGroup(span) => {
 						res.push(a.next());
+						if bcount == 1 {
+							b.next();
+						} else {
+							b.head = Some(AddSkip(bcount - 1));
+						}
 					},
-					_ => {
-						panic!("Unimplemented");
-					}
+					AddGroup(..) => {
+						res.push(a.next());
+						if bcount == 1 {
+							b.next();
+						} else {
+							b.head = Some(AddSkip(bcount - 1));
+						}
+					},
 				}
 			},
-			_ => {
-				panic!("Unimplemented");
+			AddGroup(..) => {
+				res.push(b.next());
+			},
+			AddWithGroup(ref bspan) => {
+				match a.get_head() {
+					AddChars(value) => {
+						panic!("Cannot compose AddWithGroup with AddChars");
+					}
+					AddSkip(acount) => {
+						if acount == 1 {
+							a.next();
+						} else {
+							a.head = Some(AddSkip(acount - 1));
+						}
+						res.push(b.next());
+					},
+					AddWithGroup(ref aspan) => {
+						res.push(AddWithGroup(compose_add_add(aspan, bspan)));
+						a.next();
+						b.next();
+					},
+					AddGroup(ref attrs, ref aspan) => {
+						res.push(AddGroup(attrs.clone(), compose_add_add(aspan, bspan)));
+						a.next();
+						b.next();
+					},
+				}
 			},
 		}
+	}
+
+	if !b.is_done() {
+		add_place_any(&mut res, &b.get_head());
+		res.push_all(b.rest);
 	}
 
 	if !a.is_done() {
@@ -389,18 +368,85 @@ fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
 							b.next();
 						}
 					},
-					AddWithGroup(span) => {
+					AddWithGroup(..) => {
 						addres.push(a.next());
+						del_place_any(&mut delres, &DelSkip(1));
+						if bcount == 1 {
+							b.next();
+						} else {
+							b.head = Some(DelSkip(bcount - 1));
+						}
 					},
-					_ => {
-						panic!("Unimplemented");
-					}
+					AddGroup(..) => {
+						addres.push(a.next());
+						if bcount == 1 {
+							b.next();
+						} else {
+							b.head = Some(DelSkip(bcount - 1));
+						}
+					},
 				}
 			},
-			_ => {
-				panic!("Unimplemented");
+			DelWithGroup(span) => {
+				match a.get_head() {
+					AddChars(avalue) => {
+						panic!("DelWithGroup by AddChars is ILLEGAL");
+					},
+					AddSkip(acount) => {
+						del_place_any(&mut delres, &b.next());
+						add_place_any(&mut addres, &AddSkip(1));
+						if acount > 1 {
+							a.head = Some(AddSkip(acount - 1));
+						} else {
+							a.next();
+						}
+					},
+					AddWithGroup(insspan) => {
+						a.next();
+						b.next();
+
+						let (del, ins) = compose_add_del(&insspan, &span);
+						del_place_any(&mut delres, &DelWithGroup(del));
+						add_place_any(&mut addres, &AddWithGroup(ins));
+					},
+					AddGroup(attr, insspan) => {
+						a.next();
+						b.next();
+
+						let (_, ins) = compose_add_del(&insspan, &span);
+						add_place_any(&mut addres, &AddGroup(attr, ins));
+					},
+				}
+			},
+			DelGroup => {
+				match a.get_head() {
+					AddChars(avalue) => {
+						panic!("DelGroup by AddChars is ILLEGAL");
+					},
+					AddSkip(acount) => {
+						del_place_any(&mut delres, &b.next());
+						if acount > 1 {
+							a.head = Some(AddSkip(acount - 1));
+						} else {
+							a.next();
+						}
+					},
+					AddWithGroup(insspan) => {
+						a.next();
+						del_place_any(&mut delres, &b.next());
+					},
+					AddGroup(attr, insspan) => {
+						a.next();
+						b.next();
+					},
+				}
 			},
 		}
+	}
+
+	if !b.is_done() {
+		del_place_any(&mut delres, &b.get_head());
+		delres.push_all(b.rest);
 	}
 
 	if !a.is_done() {
@@ -415,6 +461,8 @@ fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
 
 #[test]
 fn test_compose_del_del() {
+	test_start();
+	
 	assert_eq!(compose_del_del(&vec![
 		DelSkip(6),
 		DelChars(6),
@@ -513,6 +561,21 @@ fn test_compose_add_add() {
 	]);
 }
 
+#[test]
+fn test_compose_add_del() {
+	test_start();
+
+	assert_eq!(compose_add_del(&vec![
+		AddSkip(4), AddChars("0O".to_owned()), AddSkip(5), AddChars("mnc".to_owned()), AddSkip(3), AddChars("gbL".to_owned()),
+	], &vec![
+		DelSkip(1), DelChars(1), DelSkip(3), DelChars(2), DelSkip(2), DelChars(9), DelSkip(1), DelChars(1),
+	]), (vec![
+		DelSkip(1), DelChars(1), DelSkip(2), DelChars(1), DelSkip(2), DelChars(5),
+	], vec![
+		AddSkip(3), AddChars("0".to_owned()), AddSkip(2), AddChars("b".to_owned()),
+	]));
+}
+
 use rand::{thread_rng, Rng};
 
 fn random_add_span(input:&DocSpan) -> AddSpan {
@@ -526,17 +589,25 @@ fn random_add_span(input:&DocSpan) -> AddSpan {
 				let max = value.chars().count();
 				while n < max {
 					let slice = rng.gen_range(1, max - n + 1);
-					res.push(AddSkip(slice));
+					add_place_any(&mut res, &AddSkip(slice));
 					if slice < max - n || rng.gen_weighted_bool(2) {
-						let len = rng.gen_range(1, 5);
-						res.push(AddChars(rng.gen_ascii_chars().take(len).collect()));
+						if rng.gen_weighted_bool(2) {
+							let len = rng.gen_range(1, 5);
+							add_place_any(&mut res, &AddChars(rng.gen_ascii_chars().take(len).collect()));
+						} else {
+							add_place_any(&mut res, &AddGroup(HashMap::new(), vec![]));
+						}
 					}
 					n += slice;
 				}
 			},
-			_ => {
-				panic!("Unexpected");
-			}
+			&DocGroup(ref attrs, ref span) => {
+				if rng.gen_weighted_bool(2) {
+					add_place_any(&mut res, &AddWithGroup(random_add_span(span)));
+				} else {
+					add_place_any(&mut res, &AddSkip(1));
+				}
+			},
 		}
 	}
 	res
@@ -571,9 +642,16 @@ fn random_del_span(input:&DocSpan) -> DelSpan {
 					}
 				}
 			},
-			_ => {
-				panic!("Unexpected");
-			}
+			&DocGroup(ref attr, ref span) => {
+				match rng.gen_range(0, 3) {
+					0 => del_place_any(&mut res, &DelWithGroup(random_del_span(span))),
+					1 => del_place_any(&mut res, &DelGroup),
+					2 => del_place_any(&mut res, &DelSkip(1)),
+					_ => {
+						unreachable!();
+					},
+				}
+			},
 		}
 	}
 	res
@@ -581,15 +659,17 @@ fn random_del_span(input:&DocSpan) -> DelSpan {
 
 #[test]
 fn monkey_add_add() {
+	test_start();
+
 	for i in 0..1000 {
 		let start = vec![
 			DocChars("Hello world!".to_owned()),
 		];
 
-		println!("start {:?}", start);
+		trace!("start {:?}", start);
 
 		let a = random_add_span(&start);
-		println!("a {:?}", a);
+		trace!("a {:?}", a);
 
 		let middle = apply_add(&start, &a);
 		let b = random_add_span(&middle);
@@ -598,12 +678,12 @@ fn monkey_add_add() {
 		let composed = compose_add_add(&a, &b);
 		let otherend = apply_add(&start, &composed);
 
-		println!("middle {:?}", middle);
-		println!("b {:?}", b);
-		println!("end {:?}", end);
+		trace!("middle {:?}", middle);
+		trace!("b {:?}", b);
+		trace!("end {:?}", end);
 
-		println!("composed {:?}", composed);
-		println!("otherend {:?}", otherend);
+		trace!("composed {:?}", composed);
+		trace!("otherend {:?}", otherend);
 
 		assert_eq!(end, otherend);
 	}
@@ -611,15 +691,17 @@ fn monkey_add_add() {
 
 #[test]
 fn monkey_del_del() {
+	test_start();
+
 	for i in 0..1000 {
 		let start = vec![
 			DocChars("Hello world!".to_owned()),
 		];
 
-		println!("start {:?}", start);
+		trace!("start {:?}", start);
 
 		let a = random_del_span(&start);
-		println!("a {:?}", a);
+		trace!("a {:?}", a);
 
 		let middle = apply_delete(&start, &a);
 		let b = random_del_span(&middle);
@@ -628,58 +710,47 @@ fn monkey_del_del() {
 		let composed = compose_del_del(&a, &b);
 		let otherend = apply_delete(&start, &composed);
 
-		println!("middle {:?}", middle);
-		println!("b {:?}", b);
-		println!("end {:?}", end);
+		trace!("middle {:?}", middle);
+		trace!("b {:?}", b);
+		trace!("end {:?}", end);
 
-		println!("composed {:?}", composed);
-		println!("otherend {:?}", otherend);
+		trace!("composed {:?}", composed);
+		trace!("otherend {:?}", otherend);
 
 		assert_eq!(end, otherend);
 	}
 }
 
 #[test]
-fn test_compose_add_del() {
-	assert_eq!(compose_add_del(&vec![
-		AddSkip(4), AddChars("0O".to_owned()), AddSkip(5), AddChars("mnc".to_owned()), AddSkip(3), AddChars("gbL".to_owned()),
-	], &vec![
-		DelSkip(1), DelChars(1), DelSkip(3), DelChars(2), DelSkip(2), DelChars(9), DelSkip(1), DelChars(1),
-	]), (vec![
-		DelSkip(1), DelChars(1), DelSkip(2), DelChars(1), DelSkip(2), DelChars(5),
-	], vec![
-		AddSkip(3), AddChars("0".to_owned()), AddSkip(2), AddChars("b".to_owned()),
-	]));
-}
-
-#[test]
 fn monkey_add_del() {
+	test_start();
+
 	for i in 0..1000 {
 		let start = vec![
 			DocChars("Hello world!".to_owned()),
 		];
 
-		println!("start {:?}", start);
+		trace!("start {:?}", start);
 
 		let a = random_add_span(&start);
-		println!("a {:?}", a);
+		trace!("a {:?}", a);
 
 		let middle = apply_add(&start, &a);
 		let b = random_del_span(&middle);
 		let end = apply_delete(&middle, &b);
 
-		println!("middle {:?}", middle);
-		println!("b {:?}", b);
-		println!("end {:?}", end);
+		trace!("middle {:?}", middle);
+		trace!("b {:?}", b);
+		trace!("end {:?}", end);
 
 		let (dela, addb) = compose_add_del(&a, &b);
-		println!("dela {:?}", dela);
-		println!("addb {:?}", addb);
+		trace!("dela {:?}", dela);
+		trace!("addb {:?}", addb);
 
 		let middle2 = apply_delete(&start, &dela);
-		println!("middle2 {:?}", middle2);
+		trace!("middle2 {:?}", middle2);
 		let otherend = apply_add(&middle2, &addb);
-		println!("otherend {:?}", otherend);
+		trace!("otherend {:?}", otherend);
 
 		assert_eq!(end, otherend);
 	}
@@ -694,7 +765,9 @@ fn compose(a:&Op, b:&Op) -> Op {
 }
 
 fn random_op(input:&DocSpan) -> Op {
+	trace!("random_op: input {:?}", input);
 	let del = random_del_span(input);
+	trace!("random_op: del {:?}", del);
 	let middle = apply_delete(input, &del);
 	let ins = random_add_span(&middle);
 	(del, ins)
@@ -703,31 +776,35 @@ fn random_op(input:&DocSpan) -> Op {
 
 #[test]
 fn monkey_compose() {
-	for i in 0..1000 {
-		let start = vec![
-			DocChars("Hello world!".to_owned()),
-		];
+	test_start();
 
-		println!("start {:?}", start);
+	let mut start = vec![
+		DocChars("Hello world!".to_owned()),
+	];
+
+	for i in 0..100 {
+		trace!("start {:?}", start);
 
 		let a = random_op(&start);
-		println!("a {:?}", a);
+		trace!("a {:?}", a);
 
 		let middle = apply_operation(&start, &a);
-		println!("middle {:?}", middle);
+		trace!("middle {:?}", middle);
 
 		let b = random_op(&middle);
-		println!("b {:?}", b);
+		trace!("b {:?}", b);
 
 		let end = apply_operation(&middle, &b);
-		println!("end {:?}", end);
+		trace!("end {:?}", end);
 
 		let composed = compose(&a, &b);
-		println!("composed {:?}", composed);
+		trace!("composed {:?}", composed);
 
 		let otherend = apply_operation(&start, &composed);
-		println!("otherend {:?}", otherend);
+		trace!("otherend {:?}", otherend);
 
 		assert_eq!(end, otherend);
+
+		start = end;
 	}
 }
