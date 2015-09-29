@@ -215,6 +215,69 @@ impl Transform {
         }
     }
 
+    fn close_a(&mut self) {
+        let mut track = self.tracks.last_mut().unwrap();
+
+        self.a_add.exit();
+        self.b_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+
+        track.is_original_a = false;
+        track.tag_a = None;
+        track.tag_real = None;
+    }
+
+    fn close_b(&mut self) {
+        let mut track = self.tracks.last_mut().unwrap();
+
+        track.is_original_a = false;
+        track.tag_a = None;
+        track.tag_real = None;
+
+        println!("CLOSES THE B {:?}", self.b_add);
+
+        self.b_add.exit();
+
+      // var layer = schema.findType(tran.currentB()[2]);
+      // var like = layer.like, unlike = layer.unlike;
+      // var strategy = a == b ? like : unlike;
+
+      // var track = tran.currentB(), a = track[0], r = track[1], b = track[2], origA = track[3], origB = track[4];
+
+      // debugLog('  closeB():', a, r, b, like, unlike, origA, origB, demote);
+
+      // tran.popB(like != 'split' || demote);
+
+      // If client A is not open, or client A is open but we split along element bounds, close.
+      // if (((!a && r) || (a && like == 'split')) && !demote) {
+      //   if (origB) {
+      //     // Preserve unmodified insertions.
+      //     insrB.alter('', null);
+      //   }
+      //   insrB.leave();
+      // }
+
+      // If the other client is still open, we must switch to a close statement.
+      // if ((a && like == 'split') && !demote) {
+      //   insrA.alter(a, {}).close();
+      // } else if ((!a && r) && !demote) {
+      //   insrA.alter(r, {}).close();
+      // }
+
+      // if (!origB || (a && like == 'combine') || demote) {
+      //   delrB.alter(b, {});
+      // }
+      // delrB.leave();
+      
+      // iterB.next();
+
+      // if (demote) {
+      //   tran.push(null, r, null);
+      // }
+      // if (tran.top() && !tran.top()[0] && !tran.top()[2] && tran.top()[1]) {
+      //   insrA.close(); insrB.close(); tran.pop();
+      // }
+    }
+
     // Interrupt all tracks up the ancestry until we get to
     // a particular type, OR a type than could be an ancestor
     // of the given type
@@ -229,7 +292,7 @@ impl Transform {
             }
 
             if let Some(track) = value {
-                if track.tag_real.is_some() {
+                if track.tag_real.is_some() && false {
                     // schema.findType(tran.current()[1]) != type && schema.getAncestors(type).indexOf(schema.findType(tran.current()[1])) == -1
                     let aborted = self.abort();
                     regen.push(aborted);
@@ -258,8 +321,17 @@ impl Transform {
         // TODO
         for track in self.tracks.iter_mut() {
             if track.tag_real.is_none() {
-                if track.tag_a.is_some() || track.tag_b.is_some() {
+                if track.tag_a.is_some() {
                     track.tag_real = track.tag_a.clone();
+                    track.tag_a = track.tag_a.clone();;
+                    track.is_original_a = false;
+
+                    self.a_add.begin();
+                    self.b_add.begin();
+                } else if track.tag_b.is_some() {
+                    track.tag_real = track.tag_b.clone();
+                    track.tag_a = track.tag_b.clone();
+                    track.is_original_b = false;
 
                     self.a_add.begin();
                     self.b_add.begin();
@@ -320,6 +392,7 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (AddSpan, AddSpan) {
         println!("FACED WITH {:?} {:?}", a.head, b.head);
 
         if a.is_done() || b.is_done() {
+            println!("DONE ZO");
             t.regenerate();
 
             if a.is_done() {
@@ -377,11 +450,13 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (AddSpan, AddSpan) {
                 },
                 (None, Some(AddSkip(b_count))) => {
                     t.interrupt(a_type.clone());
-                    // t.closeA()
-                    a.exit()
+                    t.close_a();
+                    a.exit();
+                    println!("WHERE ARE WE WITH A {:?}", a);
                 },
                 (Some(AddSkip(a_count)), None) => {
                     t.interrupt(b_type.clone());
+                    t.close_b();
                     // t.closeA()
                     b.exit()
                 },
@@ -404,17 +479,29 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (AddSpan, AddSpan) {
 
 #[test]
 fn test_transform_goose() {
-    assert_eq!(transform_insertions(&vec![
+    let a = vec![
         AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(4)])
-    ], &vec![
+    ];
+    let b = vec![
         AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(6)])
-    ]), (vec![
+    ];
+
+    let (a_, b_) = transform_insertions(&a, &b);
+
+    assert_eq!((a_.clone(), b_.clone()), (vec![
         AddWithGroup(vec![AddSkip(4)]),
         AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)])
     ], vec![
         AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(4)]),
         AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)])
     ]));
+
+    let res = vec![
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(4)]),
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)])
+    ];
+
+    assert_eq!(compose::compose(&(vec![], a), &(vec![], a_)), (vec![], res));
 }
 
 // #[test]

@@ -756,7 +756,7 @@ fn monkey_add_del() {
 	}
 }
 
-fn compose(a:&Op, b:&Op) -> Op {
+pub fn compose(a:&Op, b:&Op) -> Op {
 	let &(ref adel, ref ains) = a;
 	let &(ref bdel, ref bins) = b;
 
