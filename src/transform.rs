@@ -106,7 +106,7 @@ impl AddWriter {
 
     pub fn result(self) -> AddSpan {
         if self.stack.len() > 0 {
-            println!("{:?}", self);
+            trace!("{:?}", self);
             assert!(false, "cannot get result when stack is still full");
         }
         self.past
@@ -167,7 +167,7 @@ impl Transform {
     // Close the topmost track.
     fn abort(&mut self) -> (Option<String>, Option<String>, Option<String>) {
         let track = self.tracks.pop().unwrap();
-        println!("ABORTIN {:?}", track);
+        trace!("ABORTIN {:?}", track);
         if let Some(ref real) = track.tag_real {
             // if track.tag_a.is_some() {
             self.a_add.close(container! { ("tag".into(), real.clone() )}); // fake
@@ -233,7 +233,7 @@ impl Transform {
         track.tag_a = None;
         track.tag_real = None;
 
-        println!("CLOSES THE B {:?}", self.b_add);
+        trace!("CLOSES THE B {:?}", self.b_add);
 
         self.b_add.exit();
 
@@ -356,7 +356,7 @@ impl Transform {
         let mut a_add = self.a_add;
         let mut b_add = self.b_add;
         for track in self.tracks.iter_mut().rev() {
-            println!("TRACK RESULT: {:?}", track);
+            trace!("TRACK RESULT: {:?}", track);
             if !track.is_original_a {
                 a_add.close(container! { ("tag".into(), track.tag_a.clone().unwrap() )});
             } else {
@@ -389,10 +389,10 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (AddSpan, AddSpan) {
     let mut b_type = TrackType::NoType;
 
     while !(a.is_done() && b.is_done()) {
-        println!("FACED WITH {:?} {:?}", a.head, b.head);
+        trace!("FACED WITH {:?} {:?}", a.head, b.head);
 
         if a.is_done() || b.is_done() {
-            println!("DONE ZO");
+            trace!("DONE ZO");
             t.regenerate();
 
             if a.is_done() {
@@ -423,7 +423,7 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (AddSpan, AddSpan) {
                     b_type = get_type(b_attrs);
 
                     if a_type == b_type {
-                        println!("My");
+                        trace!("My");
                     }
 
                     a.enter();
@@ -452,7 +452,7 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (AddSpan, AddSpan) {
                     t.interrupt(a_type.clone());
                     t.close_a();
                     a.exit();
-                    println!("WHERE ARE WE WITH A {:?}", a);
+                    trace!("WHERE ARE WE WITH A {:?}", a);
                 },
                 (Some(AddSkip(a_count)), None) => {
                     t.interrupt(b_type.clone());
@@ -473,7 +473,7 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (AddSpan, AddSpan) {
     }
 
     let res = t.result();
-    println!("RESULT {:?}", res);
+    trace!("RESULT {:?}", res);
     res
 }
 
@@ -504,13 +504,27 @@ fn test_transform_goose() {
     assert_eq!(compose::compose(&(vec![], a), &(vec![], a_)), (vec![], res));
 }
 
-// #[test]
-// fn test_transform_cory() {
-//     assert_eq!(transform_insertions(&vec![
-//         AddSkip(1), AddChars("1".into())
-//     ], &vec![
-//         AddSkip(1), AddChars("2".into())
-//     ]), vec![
-//         AddSkip(2), AddChars("2".into()),
-//     ]);
-// }
+#[test]
+fn test_transform_cory() {
+    let a = vec![
+        AddSkip(1), AddChars("1".into())
+    ];
+    let b = vec![
+        AddSkip(1), AddChars("2".into())
+    ];
+
+    let (a_, b_) = transform_insertions(&a, &b);
+
+    assert_eq!((a_.clone(), b_.clone()), (vec![
+        AddSkip(2), AddChars("2".into()),
+    ], vec![
+        AddSkip(1), AddChars("1".into()), AddSkip(1),
+    ]));
+
+    let res = vec![
+        AddSkip(1), AddChars("12".into()),
+    ];
+
+    assert_eq!(compose::compose(&(vec![], a), &(vec![], a_)), (vec![], res.clone()));
+    assert_eq!(compose::compose(&(vec![], b), &(vec![], b_)), (vec![], res.clone()));
+}
