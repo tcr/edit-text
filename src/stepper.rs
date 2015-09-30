@@ -3,6 +3,7 @@ use doc::*;
 use std::borrow::ToOwned;
 use std::cmp;
 
+#[derive(Clone, Debug)]
 pub struct DelSlice<'a> {
 	pub head:Option<DelElement>,
 	pub rest:&'a [DelElement],
@@ -44,7 +45,7 @@ impl<'a> DelSlice<'a> {
 	}
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct AddSlice<'a> {
 	pub head:Option<AddElement>,
 	pub rest:&'a [AddElement],
