@@ -29,7 +29,8 @@ pub enum DelElement {
 	DelSkip(usize),
 	DelWithGroup(DelSpan),
 	DelChars(usize),
-	DelGroup,
+	// DelGroup(DelSpan),
+	DelGroupAll,
 }
 
 pub use self::DelElement::*;
