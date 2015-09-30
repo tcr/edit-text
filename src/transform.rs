@@ -562,6 +562,26 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
     (op_a, op_b)
 }
 
+fn normalize_del (del:DelSpan) -> DelSpan {
+    let mut tail = true;
+    del.into_iter().rev().map(|x| {
+        //TODO
+        x
+    }).filter(move |x| {
+        match x {
+            &DelSkip(_) => {
+                false
+            },
+            _ => true
+        }
+    }).rev().collect()
+}
+
+fn normalize (op:Op) -> Op {
+    // TODO all
+    (normalize_del(op.0), op.1)
+}
+
 #[test]
 fn test_transform_goose() {
     let a = vec![
@@ -571,7 +591,9 @@ fn test_transform_goose() {
         AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(6)])
     ];
 
-    let (a_, b_) = transform_insertions(&a, &b);
+    let (mut a_, b_) = transform_insertions(&a, &b);
+
+    a_ = normalize(a_);
 
     // assert_eq!((a_.clone(), b_.clone()), (vec![
     //     AddWithGroup(vec![AddSkip(4)]),
@@ -586,54 +608,55 @@ fn test_transform_goose() {
         AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)])
     ];
 
-    assert_eq!(compose::compose(&(vec![], a), &a_), (vec![DelSkip(2)], res));
+    //TODO normalize the delskip out
+    assert_eq!(compose::compose(&(vec![], a), &a_), (vec![], res));
 }
 
-// #[test]
-// fn test_transform_gander() {
-//     let a = vec![
-//         AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(6)])
-//     ];
-//     let b = vec![
-//         AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(6)])
-//     ];
+#[test]
+fn test_transform_gander() {
+    let a = vec![
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(6)])
+    ];
+    let b = vec![
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(6)])
+    ];
 
-//     let (a_, b_) = transform_insertions(&a, &b);
+    let (a_, b_) = transform_insertions(&a, &b);
 
-//     assert_eq!((a_.clone(), b_.clone()), (vec![
-//         AddWithGroup(vec![AddSkip(6)]),
-//     ], vec![
-//         AddWithGroup(vec![AddSkip(6)]),
-//     ]));
+    // assert_eq!((a_.clone(), b_.clone()), (vec![
+    //     AddWithGroup(vec![AddSkip(6)]),
+    // ], vec![
+    //     AddWithGroup(vec![AddSkip(6)]),
+    // ]));
 
-//     let res = vec![
-//         AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(6)]),
-//     ];
+    // let res = vec![
+    //     AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(6)]),
+    // ];
 
-//     assert_eq!(compose::compose(&(vec![], a), &(vec![], a_)), (vec![], res));
-// }
+    // assert_eq!(compose::compose(&(vec![], a), &(vec![], a_)), (vec![], res));
+}
 
-// #[test]
-// fn test_transform_cory() {
-//     let a = vec![
-//         AddSkip(1), AddChars("1".into())
-//     ];
-//     let b = vec![
-//         AddSkip(1), AddChars("2".into())
-//     ];
+#[test]
+fn test_transform_cory() {
+    let a = vec![
+        AddSkip(1), AddChars("1".into())
+    ];
+    let b = vec![
+        AddSkip(1), AddChars("2".into())
+    ];
 
-//     let (a_, b_) = transform_insertions(&a, &b);
+    let (a_, b_) = transform_insertions(&a, &b);
 
-//     assert_eq!((a_.clone(), b_.clone()), (vec![
-//         AddSkip(2), AddChars("2".into()),
-//     ], vec![
-//         AddSkip(1), AddChars("1".into()), AddSkip(1),
-//     ]));
+    // assert_eq!((a_.clone(), b_.clone()), (vec![
+    //     AddSkip(2), AddChars("2".into()),
+    // ], vec![
+    //     AddSkip(1), AddChars("1".into()), AddSkip(1),
+    // ]));
 
-//     let res = vec![
-//         AddSkip(1), AddChars("12".into()),
-//     ];
+    // let res = vec![
+    //     AddSkip(1), AddChars("12".into()),
+    // ];
 
-//     assert_eq!(compose::compose(&(vec![], a), &(vec![], a_)), (vec![], res.clone()));
-//     assert_eq!(compose::compose(&(vec![], b), &(vec![], b_)), (vec![], res.clone()));
-// }
+    // assert_eq!(compose::compose(&(vec![], a), &(vec![], a_)), (vec![], res.clone()));
+    // assert_eq!(compose::compose(&(vec![], b), &(vec![], b_)), (vec![], res.clone()));
+}
