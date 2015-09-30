@@ -141,7 +141,7 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 						res.push(DocGroup(attrs.clone(), apply_add(span, delspan)));
 					},
 					_ => {
-						panic!("Invalid DelGroup");
+						panic!("Invalid DelGroupAll");
 					}
 				}
 			},
@@ -236,7 +236,7 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 						res.push(DocGroup(attrs.clone(), apply_delete(span, delspan)));
 					},
 					_ => {
-						panic!("Invalid DelGroup");
+						panic!("Invalid DelGroupAll");
 					}
 				}
 			},
@@ -256,11 +256,11 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 					}
 				}
 			},
-			DelGroup => {
+			DelGroupAll => {
 				match first.clone() {
 					DocGroup(..) => {},
 					_ => {
-						panic!("Invalid DelGroup");
+						panic!("Invalid DelGroupAll");
 					}
 				}
 			},
@@ -363,7 +363,7 @@ fn test_start() {
 			DelChars(1),
 			DelSkip(1),
 			DelChars(5),
-			DelGroup,
+			DelGroupAll,
 		]), vec![
 			DocChars("low".to_owned()),
 		]);

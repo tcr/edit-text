@@ -34,7 +34,7 @@ fn del_place_skip(res:&mut DelSpan, count:usize) {
 	res.push(DelSkip(count));
 }
 
-fn del_place_any(res:&mut DelSpan, value:&DelElement) {
+pub fn del_place_any(res:&mut DelSpan, value:&DelElement) {
 	match value {
 		&DelChars(count) => {
 			del_place_chars(res, count);
@@ -128,7 +128,7 @@ fn compose_del_del(avec:&DelSpan, bvec:&DelSpan) -> DelSpan {
 							b.next();
 						}
 					},
-					Some(DelGroup) => {
+					Some(DelGroupAll) => {
 						if acount > 1 {
 							a.head = Some(DelSkip(acount - 1));
 						} else {
@@ -159,7 +159,7 @@ fn compose_del_del(avec:&DelSpan, bvec:&DelSpan) -> DelSpan {
 					Some(DelChars(bcount)) => {
 						panic!("DelWithGroup vs DelChars is bad");
 					},
-					Some(DelGroup) => {
+					Some(DelGroupAll) => {
 						a.next();
 						res.push(b.next());
 					},
@@ -172,8 +172,8 @@ fn compose_del_del(avec:&DelSpan, bvec:&DelSpan) -> DelSpan {
 				del_place_any(&mut res, &DelChars(count));
 				a.next();
 			},
-			DelGroup => {
-				res.push(DelGroup);
+			DelGroupAll => {
+				res.push(DelGroupAll);
 				a.next();
 			},
 		}
@@ -418,10 +418,10 @@ fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
 					},
 				}
 			},
-			DelGroup => {
+			DelGroupAll => {
 				match a.get_head() {
 					AddChars(avalue) => {
-						panic!("DelGroup by AddChars is ILLEGAL");
+						panic!("DelGroupAll by AddChars is ILLEGAL");
 					},
 					AddSkip(acount) => {
 						del_place_any(&mut delres, &b.next());
@@ -488,9 +488,9 @@ fn test_compose_del_del() {
 			DelChars(6),
 		]),
 	], &vec![
-		DelGroup,
+		DelGroupAll,
 	]), vec![
-		DelGroup,
+		DelGroupAll,
 	]);
 
 	assert_eq!(compose_del_del(&vec![
@@ -645,7 +645,7 @@ fn random_del_span(input:&DocSpan) -> DelSpan {
 			&DocGroup(ref attr, ref span) => {
 				match rng.gen_range(0, 3) {
 					0 => del_place_any(&mut res, &DelWithGroup(random_del_span(span))),
-					1 => del_place_any(&mut res, &DelGroup),
+					1 => del_place_any(&mut res, &DelGroupAll),
 					2 => del_place_any(&mut res, &DelSkip(1)),
 					_ => {
 						unreachable!();
