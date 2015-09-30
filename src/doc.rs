@@ -29,7 +29,7 @@ pub enum DelElement {
 	DelSkip(usize),
 	DelWithGroup(DelSpan),
 	DelChars(usize),
-	// DelGroup(DelSpan),
+	DelGroup(DelSpan),
 	DelGroupAll,
 }
 

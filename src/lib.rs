@@ -240,6 +240,16 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 					}
 				}
 			},
+			DelGroup(ref delspan) => {
+				match first.clone() {
+					DocGroup(ref attrs, ref span) => {
+						res.push_all(&apply_delete(span, delspan)[..]);
+					},
+					_ => {
+						panic!("Invalid DelGroup");
+					}
+				}
+			},
 			DelChars(count) => {
 				match first.clone() {
 					DocChars(ref value) => {

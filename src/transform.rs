@@ -145,7 +145,7 @@ impl DelWriter {
     pub fn close(&mut self) {
         let past = self.past.clone();
         self.past = self.stack.pop().unwrap();
-        self.past.push(DelGroupAll);
+        self.past.push(DelGroup(past));
     }
 
     pub fn skip(&mut self, n: usize) {
@@ -460,9 +460,8 @@ impl Transform {
     }
 }
 
-fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (AddSpan, AddSpan) {
+fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
     // let mut res = Vec::with_capacity(avec.len() + bvec.len());
-
 
     let mut a = AddStepper::new(avec);
     let mut b = AddStepper::new(bvec);
@@ -560,7 +559,7 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (AddSpan, AddSpan) {
     let (op_a, op_b) = t.result();
     println!("RESULT A: {:?}", op_a.clone());
     println!("RESULT B: {:?}", op_b.clone());
-    (op_a.1, op_b.1)
+    (op_a, op_b)
 }
 
 #[test]
@@ -574,20 +573,20 @@ fn test_transform_goose() {
 
     let (a_, b_) = transform_insertions(&a, &b);
 
-    assert_eq!((a_.clone(), b_.clone()), (vec![
-        AddWithGroup(vec![AddSkip(4)]),
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)])
-    ], vec![
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(4)]),
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)])
-    ]));
+    // assert_eq!((a_.clone(), b_.clone()), (vec![
+    //     AddWithGroup(vec![AddSkip(4)]),
+    //     AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)])
+    // ], vec![
+    //     AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(4)]),
+    //     AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)])
+    // ]));
 
     let res = vec![
         AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(4)]),
         AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)])
     ];
 
-    assert_eq!(compose::compose(&(vec![], a), &(vec![], a_)), (vec![], res));
+    assert_eq!(compose::compose(&(vec![], a), &a_), (vec![DelSkip(2)], res));
 }
 
 // #[test]
