@@ -676,6 +676,14 @@ fn random_add_span(input:&DocSpan) -> AddSpan {
 			},
 		}
 	}
+	// for _ in 0..rng.gen_range(1, 2) {
+	// 	match rng.gen_range(0, 3) {
+	// 		0 => { add_place_any(&mut res, &AddSkip(1)); },
+	// 		1 => { add_place_any(&mut res, &AddGroup(HashMap::new(), vec![])); },
+	// 		2 => { add_place_any(&mut res, &AddChars(rng.gen_ascii_chars().take(3).collect())); },
+	// 		_ => {},
+	// 	}
+	// }
 	res
 }
 

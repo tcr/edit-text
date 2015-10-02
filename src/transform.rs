@@ -210,22 +210,26 @@ impl Transform {
         }
     }
 
-    fn enter(&mut self, name:String) {
+    fn enter(&mut self, name:String, is_a:bool, is_b:bool) {
     //   iterA.apply(insrA);
     //   iterA.apply(insrB);
     //   delrA.enter();
     //   delrB.enter();
         self.tracks.push(Track {
-            tag_a: Some(name.clone()),
+            tag_a: if is_a { Some(name.clone()) } else { None },
             tag_real: Some(name.clone()),
-            tag_b: Some(name.clone()),
-            is_original_a: true,
-            is_original_b: true,
+            tag_b: if is_b { Some(name.clone()) } else { None },
+            is_original_a: is_a,
+            is_original_b: is_b,
         });
 
-        self.a_del.begin();
+        if is_a {
+            self.a_del.begin();
+        }
         self.a_add.begin();
-        self.b_del.begin();
+        if is_b {
+            self.b_del.begin();
+        }
         self.b_add.begin();
     }
 
@@ -285,40 +289,53 @@ impl Transform {
     }
 
     fn close_a(&mut self) {
-        let mut track = self.tracks.last_mut().unwrap();
+        if {
+            let mut track = self.tracks.last_mut().unwrap();
 
-        if track.is_original_a {
-            self.a_del.exit();
-        } else {
-            self.a_del.close();
+            if track.is_original_a {
+                self.a_del.exit();
+                self.a_add.exit();
+            } else {
+                self.a_del.close();
+                self.a_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+            }
+
+            self.b_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+
+            track.is_original_a = false;
+            track.tag_a = None;
+            track.tag_real = None;
+
+            track.tag_b.is_none()
+        } {
+            self.tracks.pop();
         }
-        self.a_add.exit();
-
-        self.b_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
-
-        track.is_original_a = false;
-        track.tag_a = None;
-        track.tag_real = None;
     }
 
     fn close_b(&mut self) {
-        let mut track = self.tracks.last_mut().unwrap();
+        if {
+            let mut track = self.tracks.last_mut().unwrap();
 
-        println!("CLOSES THE B {:?}", self.b_add);
+            println!("CLOSES THE B {:?}", self.b_add);
 
-        if track.is_original_b {
-            self.b_del.exit();
-            self.b_add.exit();
-        } else {
-            self.b_del.close();
-            self.b_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+            if track.is_original_b {
+                self.b_del.exit();
+                self.b_add.exit();
+            } else {
+                self.b_del.close();
+                self.b_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+            }
+
+            self.a_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+
+            track.is_original_b = false;
+            track.tag_b = None;
+            track.tag_real = None;
+
+            track.tag_a.is_none()
+        } {
+            self.tracks.pop();
         }
-
-        self.a_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
-
-        track.is_original_b = false;
-        track.tag_b = None;
-        track.tag_real = None;
 
       // var layer = schema.findType(tran.currentB()[2]);
       // var like = layer.like, unlike = layer.unlike;
@@ -475,55 +492,56 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
     while !(a.is_done() && b.is_done()) {
         println!("FACED WITH {:?} {:?}", a.head, b.head);
 
-        if a.is_done() || b.is_done() {
-            println!("DONE ZO");
+        if a.is_done() {
             t.regenerate();
-
-            if a.is_done() {
-                match b.head.clone() {
-                    Some(AddChars(ref b_chars)) => {
-                        t.chars_a(b_chars);
-                        t.skip_b(b_chars.len());
-                        b.next();
-                    },
-                    Some(AddSkip(b_count)) => {
-                        t.skip_a(b_count);
-                        t.skip_b(b_count);
-                        b.next();
-                    },
-                    None => {
-                        t.close_b();
-                        b.exit();
-                    },
-                    _ => {
-                        panic!("What");
-                    }
+            println!("A IS DONE: {:?}", b.head.clone());
+            
+            match b.head.clone() {
+                Some(AddChars(ref b_chars)) => {
+                    t.chars_a(b_chars);
+                    t.skip_b(b_chars.len());
+                    b.next();
+                },
+                Some(AddSkip(b_count)) => {
+                    t.skip_a(b_count);
+                    t.skip_b(b_count);
+                    b.next();
+                },
+                None => {
+                    t.close_b();
+                    b.exit();
+                },
+                _ => {
+                    panic!("What");
                 }
-            } else if b.is_done() {
-                match a.head.clone() {
-                    Some(AddChars(ref a_chars)) => {
-                        t.skip_a(a_chars.len());
-                        t.chars_b(a_chars);
-                        a.next();
-                    },
-                    Some(AddSkip(a_count)) => {
-                        t.skip_a(a_count);
-                        t.skip_b(a_count);
-                        a.next();
-                    },
-                    None => {
-                        t.close_a();
-                        a.exit();
-                    },
-                    _ => {
-                        panic!("What");
-                    }
-                }
+            }
+        } else if b.is_done() {
+            t.regenerate();
+            println!("B IS DONE: {:?}", a.head.clone());
 
+            match a.head.clone() {
+                Some(AddChars(ref a_chars)) => {
+                    t.skip_a(a_chars.len());
+                    t.chars_b(a_chars);
+                    a.next();
+                },
+                Some(AddSkip(a_count)) => {
+                    t.skip_a(a_count);
+                    t.skip_b(a_count);
+                    a.next();
+                },
+                None => {
+                    t.close_a();
+                    a.exit();
+                },
+                _ => {
+                    panic!("What");
+                }
             }
 
         } else {
             match (a.head.clone(), b.head.clone()) {
+                // Opening
                 (Some(AddGroup(ref a_attrs, _)), Some(AddGroup(ref b_attrs, _))) => {
                     a_type = get_type(a_attrs);
                     b_type = get_type(b_attrs);
@@ -534,9 +552,34 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
 
                     a.enter();
                     b.enter();
-                    t.enter(a_attrs.get("tag").unwrap().clone())
+                    t.enter(a_attrs.get("tag").unwrap().clone(), true, true)
                 },
+                (Some(AddGroup(ref a_attrs, _)), Some(AddSkip(..))) => {
+                    a.enter();
+                    t.enter(a_attrs.get("tag").unwrap().clone(), true, false)
+                },
+
+                // Closing
+                (None, None) => {
+                    a.exit();
+                    b.exit();
+                },
+                (None, Some(AddSkip(b_count))) => {
+                    t.interrupt(a_type.clone());
+                    t.close_a();
+                    a.exit();
+                    println!("WHERE ARE WE WITH A {:?}", a);
+                },
+                (Some(AddSkip(a_count)), None) => {
+                    t.interrupt(b_type.clone());
+                    t.close_b();
+                    // t.closeA()
+                    b.exit()
+                },
+
+                // Rest
                 (Some(AddSkip(a_count)), Some(AddSkip(b_count))) => {
+                    // t.regenerate();
                     if a_count > b_count {
                         a.head = Some(AddSkip(a_count - b_count));
                         b.next();
@@ -555,27 +598,13 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     t.chars_a(b_chars);
                     t.skip_b(b_chars.len());
                 },
-                (None, None) => {
-                    a.exit();
-                    b.exit();
-                },
-                (None, Some(AddSkip(b_count))) => {
-                    t.interrupt(a_type.clone());
-                    t.close_a();
-                    a.exit();
-                    println!("WHERE ARE WE WITH A {:?}", a);
-                },
-                (Some(AddSkip(a_count)), None) => {
-                    t.interrupt(b_type.clone());
-                    t.close_b();
-                    // t.closeA()
-                    b.exit()
-                },
                 (Some(AddChars(ref a_chars)), _) => {
                     t.skip_a(a_chars.len());
                     t.chars_b(a_chars);
                     a.next();
                 },
+
+                // ???
                 _ => {
                     panic!("No idea: {:?}, {:?}", a.head, b.head);
                 },
@@ -663,11 +692,49 @@ fn test_transform_wheat() {
 
     let (a_, b_) = transform_insertions(&a, &b);
 
-    println!("A: {:?}", a_);
-    println!("B: {:?}", b_);
-
     let res = (vec![], vec![
         AddSkip(5), AddChars("D".into()), AddSkip(7), AddChars("_".into())
+    ]);
+
+    assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
+    assert_eq!(normalize(compose::compose(&(vec![], b), &b_)), res.clone());
+}
+
+#[test]
+fn test_transform_rice() {
+    let a = vec![
+        AddSkip(1), AddChars("a".into())
+    ];
+    let b = vec![
+        AddSkip(2), AddChars("c".into())
+    ];
+
+    let (a_, b_) = transform_insertions(&a, &b);
+
+    let res = (vec![], vec![
+        AddSkip(1), AddChars("a".into()), AddSkip(1), AddChars("c".into())
+    ]);
+
+    assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
+    assert_eq!(normalize(compose::compose(&(vec![], b), &b_)), res.clone());
+}
+
+#[test]
+fn test_transform_bacon() {
+    let a = vec![
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(5)]),
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(5)]),
+    ];
+    let b = vec![
+        AddSkip(11), AddChars("_".into())
+    ];
+
+    let (a_, b_) = transform_insertions(&a, &b);
+
+    let res = (vec![], vec![
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(5)]),
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(5)]),
+        AddSkip(1), AddChars("_".into()),
     ]);
 
     assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
