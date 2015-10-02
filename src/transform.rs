@@ -499,6 +499,27 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                         panic!("What");
                     }
                 }
+            } else if b.is_done() {
+                match a.head.clone() {
+                    Some(AddChars(ref a_chars)) => {
+                        t.skip_a(a_chars.len());
+                        t.chars_b(a_chars);
+                        a.next();
+                    },
+                    Some(AddSkip(a_count)) => {
+                        t.skip_a(a_count);
+                        t.skip_b(a_count);
+                        a.next();
+                    },
+                    None => {
+                        t.close_a();
+                        a.exit();
+                    },
+                    _ => {
+                        panic!("What");
+                    }
+                }
+
             }
 
         } else {
@@ -528,6 +549,11 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     }
                     t.skip_a(::std::cmp::min(a_count, b_count));
                     t.skip_b(::std::cmp::min(a_count, b_count));
+                },
+                (Some(AddSkip(a_count)), Some(AddChars(ref b_chars))) => {
+                    b.next();
+                    t.chars_a(b_chars);
+                    t.skip_b(b_chars.len());
                 },
                 (None, None) => {
                     a.exit();
@@ -625,3 +651,26 @@ fn test_transform_cory() {
     assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
     assert_eq!(normalize(compose::compose(&(vec![], b), &b_)), res.clone());
 }
+
+#[test]
+fn test_transform_wheat() {
+    let a = vec![
+        AddSkip(12), AddChars("_".into())
+    ];
+    let b = vec![
+        AddSkip(5), AddChars("D".into())
+    ];
+
+    let (a_, b_) = transform_insertions(&a, &b);
+
+    println!("A: {:?}", a_);
+    println!("B: {:?}", b_);
+
+    let res = (vec![], vec![
+        AddSkip(5), AddChars("D".into()), AddSkip(7), AddChars("_".into())
+    ]);
+
+    assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
+    assert_eq!(normalize(compose::compose(&(vec![], b), &b_)), res.clone());
+}
+
