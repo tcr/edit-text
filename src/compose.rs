@@ -11,6 +11,7 @@ use apply_delete;
 use apply_operation;
 use test_start;
 use stepper::*;
+use normalize;
 
 fn del_place_chars(res:&mut DelSpan, count:usize) {
 	if res.len() > 0 {
@@ -180,6 +181,7 @@ fn compose_del_del_inner(res:&mut DelSpan, a:&mut DelSlice, b:&mut DelSlice) {
 			DelGroup(ref span) => {
 				let mut c = DelSlice::new(span);
 				compose_del_del_inner(res, &mut c, b);
+				a.next();
 			},
 			DelChars(count) => {
 				del_place_any(res, &DelChars(count));
@@ -214,30 +216,25 @@ fn compose_del_del(avec:&DelSpan, bvec:&DelSpan) -> DelSpan {
 	res
 }
 
-fn compose_add_add(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
-	let mut res = Vec::with_capacity(avec.len() + bvec.len());
-
-	let mut a = AddSlice::new(avec);
-	let mut b = AddSlice::new(bvec);
-
+fn compose_add_add_inner(res:&mut AddSpan, a:&mut AddSlice, b:&mut AddSlice) {
 	while !b.is_done() && !a.is_done() {
 		match b.get_head() {
 			AddChars(value) => {
-				add_place_any(&mut res, &b.next());
+				add_place_any(res, &b.next());
 			},
 			AddSkip(bcount) => {
 				match a.get_head() {
 					AddChars(value) => {
 						let len = value.chars().count();
 						if bcount < len {
-							add_place_any(&mut res, &AddChars(value[..bcount].to_owned()));
+							add_place_any(res, &AddChars(value[..bcount].to_owned()));
 							a.head = Some(AddChars(value[bcount..].to_owned()));
 							b.next();
 						} else if bcount > len {
-							add_place_any(&mut res, &a.next());
+							add_place_any(res, &a.next());
 							b.head = Some(AddSkip(bcount - len));
 						} else {
-							add_place_any(&mut res, &a.get_head());
+							add_place_any(res, &a.get_head());
 							a.next();
 							b.next();
 						}
@@ -273,8 +270,12 @@ fn compose_add_add(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
 					},
 				}
 			},
-			AddGroup(..) => {
-				res.push(b.next());
+			AddGroup(ref attrs, ref bspan) => {
+				let mut c = AddSlice::new(bspan);
+				let mut inner = vec![];
+				compose_add_add_inner(&mut inner, a, &mut c);
+				res.push(AddGroup(attrs.clone(), inner));
+				b.next();
 			},
 			AddWithGroup(ref bspan) => {
 				match a.get_head() {
@@ -303,6 +304,15 @@ fn compose_add_add(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
 			},
 		}
 	}
+}
+
+fn compose_add_add(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
+	let mut res = Vec::with_capacity(avec.len() + bvec.len());
+
+	let mut a = AddSlice::new(avec);
+	let mut b = AddSlice::new(bvec);
+
+	compose_add_add_inner(&mut res, &mut a, &mut b);
 
 	if !b.is_done() {
 		add_place_any(&mut res, &b.get_head());
@@ -468,7 +478,8 @@ fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
 						b.next();
 
 						let (del, ins) = compose_add_del(&insspan, &span);
-						del_place_any(&mut delres, &DelGroup(del));
+						//TODO this isn't right, should be pushing but combining?
+						delres.push_all(&del[..]);
 						addres.push_all(&ins[..]);
 					},
 				}
@@ -826,6 +837,23 @@ fn random_op(input:&DocSpan) -> Op {
 	let middle = apply_delete(input, &del);
 	let ins = random_add_span(&middle);
 	(del, ins)
+}
+
+#[test]
+fn test_compose() {
+	test_start();
+
+	assert_eq!(normalize(compose(&(vec![], vec![
+		AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(6)])
+	]), &(vec![
+		DelGroup(vec![DelSkip(6)])
+	], vec![
+		AddGroup(container! { ("tag".into(), "p".into() )}, vec![AddSkip(4)]),
+		AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)])
+	]))), (vec![], vec![
+		AddGroup(container! { ("tag".into(), "p".into() )}, vec![AddSkip(4)]),
+		AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)])
+	]));
 }
 
 

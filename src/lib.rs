@@ -471,3 +471,23 @@ fn test_start() {
 		]);
 	}
 }
+
+fn normalize_del (del:DelSpan) -> DelSpan {
+    // let mut tail = true;
+    del.into_iter().rev().map(|x| {
+        //TODO
+        x
+    }).filter(move |x| {
+        match x {
+            &DelSkip(_) => {
+                false
+            },
+            _ => true
+        }
+    }).rev().collect()
+}
+
+pub fn normalize (op:Op) -> Op {
+    // TODO all
+    (normalize_del(op.0), op.1)
+}
