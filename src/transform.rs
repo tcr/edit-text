@@ -106,6 +106,14 @@ impl AddWriter {
         compose::add_place_any(&mut self.past, &AddChars(chars.into()));
     }
 
+    pub fn group(&mut self, attrs: &Attrs, span: &AddSpan) {
+        compose::add_place_any(&mut self.past, &AddGroup(attrs.clone(), span.clone()));
+    }
+
+    pub fn with_group(&mut self, span: &AddSpan) {
+        compose::add_place_any(&mut self.past, &AddWithGroup(span.clone()));
+    }
+
     pub fn result(self) -> AddSpan {
         if self.stack.len() > 0 {
             println!("{:?}", self);
@@ -269,6 +277,14 @@ impl Transform {
     fn skip_b(&mut self, n: usize) {
         self.b_del.skip(n);
         self.b_add.skip(n);
+    }
+
+    fn group_a(&mut self, attrs: &Attrs, span: &AddSpan) {
+        self.a_add.group(attrs, span);
+    }
+
+    fn group_b(&mut self, attrs: &Attrs, span: &AddSpan) {
+        self.b_add.group(attrs, span);
     }
 
     fn chars_a(&mut self, chars: &str) {
@@ -520,6 +536,11 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
             println!("B IS DONE: {:?}", a.head.clone());
 
             match a.head.clone() {
+                Some(AddGroup(ref attrs, ref span)) => {
+                    t.skip_a(1);
+                    t.group_b(attrs, span);
+                    a.next();
+                },
                 Some(AddChars(ref a_chars)) => {
                     t.skip_a(a_chars.len());
                     t.chars_b(a_chars);
@@ -535,7 +556,7 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     a.exit();
                 },
                 _ => {
-                    panic!("What");
+                    panic!("Unknown value: {:?}", a.head.clone());
                 }
             }
 
@@ -735,6 +756,26 @@ fn test_transform_bacon() {
         AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(5)]),
         AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(5)]),
         AddSkip(1), AddChars("_".into()),
+    ]);
+
+    assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
+    assert_eq!(normalize(compose::compose(&(vec![], b), &b_)), res.clone());
+}
+
+#[test]
+fn test_transform_berry() {
+    let a = vec![
+        AddGroup(container! { ("tag".into(), "h1".into()) }, vec![AddSkip(15)]),
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(15)]),
+    ];
+    let b = vec![
+    ];
+
+    let (a_, b_) = transform_insertions(&a, &b);
+
+    let res = (vec![], vec![
+        AddGroup(container! { ("tag".into(), "h1".into()) }, vec![AddSkip(15)]),
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(15)]),
     ]);
 
     assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
