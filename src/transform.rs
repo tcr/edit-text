@@ -99,19 +99,19 @@ impl AddWriter {
     }
 
     pub fn skip(&mut self, n: usize) {
-        compose::add_place_any(&mut self.past, &AddSkip(n));
+        self.past.place(&AddSkip(n));
     }
 
     pub fn chars(&mut self, chars: &str) {
-        compose::add_place_any(&mut self.past, &AddChars(chars.into()));
+        self.past.place(&AddChars(chars.into()));
     }
 
     pub fn group(&mut self, attrs: &Attrs, span: &AddSpan) {
-        compose::add_place_any(&mut self.past, &AddGroup(attrs.clone(), span.clone()));
+        self.past.place(&AddGroup(attrs.clone(), span.clone()));
     }
 
     pub fn with_group(&mut self, span: &AddSpan) {
-        compose::add_place_any(&mut self.past, &AddWithGroup(span.clone()));
+        self.past.place(&AddWithGroup(span.clone()));
     }
 
     pub fn result(self) -> AddSpan {
@@ -158,11 +158,11 @@ impl DelWriter {
     }
 
     pub fn skip(&mut self, n: usize) {
-        compose::del_place_any(&mut self.past, &DelSkip(n));
+        self.past.place(&DelSkip(n));
     }
 
     pub fn chars(&mut self, count: usize) {
-        compose::del_place_any(&mut self.past, &DelChars(count));
+        self.past.place(&DelChars(count));
     }
 
     pub fn result(self) -> DelSpan {
@@ -183,7 +183,13 @@ impl DelWriter {
 #[derive(PartialEq, Clone)]
 enum TrackType {
     NoType,
-    TextBlock,
+    Lists,
+    ListItems,
+    BlockQuotes,
+    Blocks,
+    BlockObjects,
+    Inlines,
+    InlineObjects,
 }
 
 #[derive(Clone, Debug)]
@@ -195,8 +201,8 @@ struct Track {
     is_original_b: bool,
 }
 
-fn get_type(attrs:&Attrs) -> TrackType {
-    TrackType::TextBlock    
+fn get_type(attrs:&Attrs) -> Option<TrackType> {
+    Some(TrackType::Blocks)
 }
 
 struct Transform {
@@ -267,6 +273,18 @@ impl Transform {
             // }
         }
         (track.tag_a, track.tag_real, track.tag_b)
+    }
+
+    fn unenter_a(&mut self) {
+        self.a_del.begin();
+        let track = self.tracks.last_mut().unwrap();
+        track.tag_a = track.tag_real.clone();
+    }
+
+    fn unenter_b(&mut self) {
+        self.b_del.begin();
+        let track = self.tracks.last_mut().unwrap();
+        track.tag_b = track.tag_real.clone();
     }
 
     fn skip_a(&mut self, n: usize) {
@@ -492,6 +510,15 @@ impl Transform {
         }
         ((a_del.result(), a_add.result()), (b_del.result(), b_add.result()))
     }
+
+    fn current_type(&self) -> Option<TrackType> {
+        // TODO
+        // self.tracks.last().unwrap().
+        let attrs: Attrs = container! {
+            ("tag".to_string(), self.tracks.last().clone().unwrap().tag_real.clone().unwrap() )
+        };
+        get_type(&attrs)
+    }
 }
 
 fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
@@ -564,8 +591,8 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
             match (a.head.clone(), b.head.clone()) {
                 // Opening
                 (Some(AddGroup(ref a_attrs, _)), Some(AddGroup(ref b_attrs, _))) => {
-                    a_type = get_type(a_attrs);
-                    b_type = get_type(b_attrs);
+                    a_type = get_type(a_attrs).unwrap();
+                    b_type = get_type(b_attrs).unwrap();
 
                     if a_type == b_type {
                         println!("My");
@@ -575,9 +602,20 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     b.enter();
                     t.enter(a_attrs.get("tag").unwrap().clone(), true, true)
                 },
-                (Some(AddGroup(ref a_attrs, _)), Some(AddSkip(..))) => {
+                (Some(AddGroup(ref a_attrs, _)), _) => {
                     a.enter();
                     t.enter(a_attrs.get("tag").unwrap().clone(), true, false)
+                },
+                (_, Some(AddGroup(ref b_attrs, _))) => {
+                    // t.regenerate();
+                    b.enter();
+                    let b_type = get_type(b_attrs);
+
+                    if t.current_type() == b_type {
+                        t.unenter_b();
+                    } else {
+                        t.enter(b_attrs.get("tag").unwrap().clone(), false, true);
+                    }
                 },
 
                 // Closing
@@ -776,6 +814,27 @@ fn test_transform_berry() {
     let res = (vec![], vec![
         AddGroup(container! { ("tag".into(), "h1".into()) }, vec![AddSkip(15)]),
         AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(15)]),
+    ]);
+
+    assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
+    assert_eq!(normalize(compose::compose(&(vec![], b), &b_)), res.clone());
+}
+
+#[test]
+fn test_transform_brown() {
+    let a = vec![
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(5)]),
+    ];
+    let b = vec![
+        AddSkip(2),
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)]),
+    ];
+
+    let (a_, b_) = transform_insertions(&a, &b);
+
+    let res = (vec![], vec![
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(4)]),
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(1)]),
     ]);
 
     assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());

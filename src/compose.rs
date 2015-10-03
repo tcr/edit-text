@@ -1,8 +1,5 @@
 use std::collections::HashMap;
-use doc::{DocSpan, DocElement, DelSpan, DelElement, AddSpan, AddElement, Atom, Op};
-use doc::DocElement::*;
-use doc::DelElement::*;
-use doc::AddElement::*;
+use doc::*;
 use std::borrow::ToOwned;
 use std::cmp;
 
@@ -13,86 +10,13 @@ use test_start;
 use stepper::*;
 use normalize;
 
-fn del_place_chars(res:&mut DelSpan, count:usize) {
-	if res.len() > 0 {
-		let idx = res.len() - 1;
-		if let &mut DelChars(ref mut prefix) = &mut res[idx] {
-			*prefix += count;
-			return;
-		}
-	}
-	res.push(DelChars(count));
-}
-
-fn del_place_skip(res:&mut DelSpan, count:usize) {
-	if res.len() > 0 {
-		let idx = res.len() - 1;
-		if let &mut DelSkip(ref mut prefix) = &mut res[idx] {
-			*prefix += count;
-			return;
-		}
-	}
-	res.push(DelSkip(count));
-}
-
-pub fn del_place_any(res:&mut DelSpan, value:&DelElement) {
-	match value {
-		&DelChars(count) => {
-			del_place_chars(res, count);
-		},
-		&DelSkip(count) => {
-			del_place_skip(res, count);
-		},
-		_ => {
-			res.push(value.clone());
-		}
-	}
-}
-
-fn add_place_chars(res:&mut AddSpan, value:String) {
-	if res.len() > 0 {
-		let idx = res.len() - 1;
-		if let &mut AddChars(ref mut prefix) = &mut res[idx] {
-			prefix.push_str(&value[..]);
-			return;
-		}
-	}
-	res.push(AddChars(value));
-}
-
-fn add_place_skip(res:&mut AddSpan, count:usize) {
-	if res.len() > 0 {
-		let idx = res.len() - 1;
-		if let &mut AddSkip(ref mut prefix) = &mut res[idx] {
-			*prefix += count;
-			return;
-		}
-	}
-	res.push(AddSkip(count));
-}
-
-pub fn add_place_any(res:&mut AddSpan, value:&AddElement) {
-	match value {
-		&AddChars(ref value) => {
-			add_place_chars(res, value.clone());
-		},
-		&AddSkip(count) => {
-			add_place_skip(res, count);
-		},
-		_ => {
-			res.push(value.clone());
-		}
-	}
-}
-
-
 fn compose_del_del_inner(res:&mut DelSpan, a:&mut DelSlice, b:&mut DelSlice) {
 	while !a.is_done() && !b.is_done() {
 		match a.get_head() {
 			DelSkip(acount) => {
 				match b.head.clone() {
 					Some(DelSkip(bcount)) => {
-						res.push(DelSkip(cmp::min(acount, bcount)));
+						res.place(&DelSkip(cmp::min(acount, bcount)));
 						if acount > bcount {
 							a.head = Some(DelSkip(acount - bcount));
 							b.next();
@@ -110,7 +34,7 @@ fn compose_del_del_inner(res:&mut DelSpan, a:&mut DelSlice, b:&mut DelSlice) {
 						} else {
 							a.next();
 						}
-						res.push(b.next());
+						res.place(&b.next());
 					},
 					Some(DelGroup(ref span)) => {
 						if acount > 1 {
@@ -118,10 +42,10 @@ fn compose_del_del_inner(res:&mut DelSpan, a:&mut DelSlice, b:&mut DelSlice) {
 						} else {
 							a.next();
 						}
-						res.push(b.next());
+						res.place(&b.next());
 					},
 					Some(DelChars(bcount)) => {
-						del_place_any(res, &DelChars(cmp::min(acount, bcount)));
+						res.place(&DelChars(cmp::min(acount, bcount)));
 						if acount > bcount {
 							a.head = Some(DelSkip(acount - bcount));
 							b.next();
@@ -139,10 +63,10 @@ fn compose_del_del_inner(res:&mut DelSpan, a:&mut DelSlice, b:&mut DelSlice) {
 						} else {
 							a.next();
 						}
-						res.push(b.next());
+						res.place(&b.next());
 					},
 					None => {
-						res.push(a.next());
+						res.place(&a.next());
 					}
 				}
 			},
@@ -154,15 +78,15 @@ fn compose_del_del_inner(res:&mut DelSpan, a:&mut DelSlice, b:&mut DelSlice) {
 						} else {
 							b.next();
 						}
-						res.push(a.next());
+						res.place(&a.next());
 					},
 					Some(DelWithGroup(ref bspan)) => {
-						res.push(DelWithGroup(compose_del_del(span, bspan)));
+						res.place(&DelWithGroup(compose_del_del(span, bspan)));
 						a.next();
 						b.next();
 					},
 					Some(DelGroup(ref bspan)) => {
-						res.push(DelGroup(compose_del_del(span, bspan)));
+						res.place(&DelGroup(compose_del_del(span, bspan)));
 						a.next();
 						b.next();
 					},
@@ -171,10 +95,10 @@ fn compose_del_del_inner(res:&mut DelSpan, a:&mut DelSlice, b:&mut DelSlice) {
 					},
 					Some(DelGroupAll) => {
 						a.next();
-						res.push(b.next());
+						res.place(&b.next());
 					},
 					None => {
-						res.push(a.next());
+						res.place(&a.next());
 					}
 				}
 			},
@@ -184,11 +108,11 @@ fn compose_del_del_inner(res:&mut DelSpan, a:&mut DelSlice, b:&mut DelSlice) {
 				a.next();
 			},
 			DelChars(count) => {
-				del_place_any(res, &DelChars(count));
+				res.place(&DelChars(count));
 				a.next();
 			},
 			DelGroupAll => {
-				res.push(DelGroupAll);
+				res.place(&DelGroupAll);
 				a.next();
 			},
 		}
@@ -204,13 +128,13 @@ fn compose_del_del(avec:&DelSpan, bvec:&DelSpan) -> DelSpan {
 	compose_del_del_inner(&mut res, &mut a, &mut b);
 
 	if !a.is_done() {
-		del_place_any(&mut res, &a.get_head());
-		res.push_all(a.rest);
+		res.place(&a.get_head());
+		res.place_all(a.rest);
 	}
 
 	if !b.is_done() {
-		del_place_any(&mut res, &b.get_head());
-		res.push_all(b.rest);
+		res.place(&b.get_head());
+		res.place_all(b.rest);
 	}
 
 	res
@@ -220,21 +144,21 @@ fn compose_add_add_inner(res:&mut AddSpan, a:&mut AddSlice, b:&mut AddSlice) {
 	while !b.is_done() && !a.is_done() {
 		match b.get_head() {
 			AddChars(value) => {
-				add_place_any(res, &b.next());
+				res.place(&b.next());
 			},
 			AddSkip(bcount) => {
 				match a.get_head() {
 					AddChars(value) => {
 						let len = value.chars().count();
 						if bcount < len {
-							add_place_any(res, &AddChars(value[..bcount].to_owned()));
+							res.place(&AddChars(value[..bcount].to_owned()));
 							a.head = Some(AddChars(value[bcount..].to_owned()));
 							b.next();
 						} else if bcount > len {
-							add_place_any(res, &a.next());
+							res.place(&a.next());
 							b.head = Some(AddSkip(bcount - len));
 						} else {
-							add_place_any(res, &a.get_head());
+							res.place(&a.get_head());
 							a.next();
 							b.next();
 						}
@@ -315,27 +239,26 @@ fn compose_add_add(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
 	compose_add_add_inner(&mut res, &mut a, &mut b);
 
 	if !b.is_done() {
-		add_place_any(&mut res, &b.get_head());
-		res.push_all(b.rest);
+		res.place(&b.get_head());
+		res.place_all(b.rest);
 	}
 
 	if !a.is_done() {
-		add_place_any(&mut res, &a.get_head());
-		res.push_all(a.rest);
+		res.place(&a.get_head());
+		res.place_all(a.rest);
 	}
 
 	res
 }
 
 fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
-	let mut delres = Vec::with_capacity(avec.len() + bvec.len());
-	let mut addres = Vec::with_capacity(avec.len() + bvec.len());
+	let mut delres: DelSpan = Vec::with_capacity(avec.len() + bvec.len());
+	let mut addres: AddSpan = Vec::with_capacity(avec.len() + bvec.len());
 
 	let mut a = AddSlice::new(avec);
 	let mut b = DelSlice::new(bvec);
 
 	while !b.is_done() && !a.is_done() {
-		println!("composeadddel {:?} {:?}", b.get_head(), a.get_head());
 		match b.get_head() {
 			DelChars(bcount) => {
 				match a.get_head() {
@@ -355,14 +278,14 @@ fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
 					AddSkip(acount) => {
 						if bcount < acount {
 							a.head = Some(AddSkip(acount - bcount));
-							del_place_any(&mut delres, &b.next());
+							delres.place(&b.next());
 						} else if bcount > acount {
 							a.next();
-							del_place_any(&mut delres, &DelChars(acount));
+							delres.place(&DelChars(acount));
 							b.head = Some(DelChars(bcount - acount));
 						} else {
 							a.next();
-							del_place_any(&mut delres, &b.next());
+							delres.place(&b.next());
 						}
 					},
 					_ => {
@@ -375,21 +298,21 @@ fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
 					AddChars(avalue) => {
 						let alen = avalue.chars().count();
 						if bcount < alen {
-							add_place_any(&mut addres, &AddChars(avalue[..bcount].to_owned()));
+							addres.place(&AddChars(avalue[..bcount].to_owned()));
 							a.head = Some(AddChars(avalue[bcount..].to_owned()));
 							b.next();
 						} else if bcount > alen {
-							add_place_any(&mut addres, &a.next());
+							addres.place(&a.next());
 							b.head = Some(DelSkip(bcount - alen));
 						} else {
-							add_place_any(&mut addres, &a.get_head());
+							addres.place(&a.get_head());
 							a.next();
 							b.next();
 						}
 					},
 					AddSkip(acount) => {
-						add_place_any(&mut addres, &AddSkip(cmp::min(acount, bcount)));
-						del_place_any(&mut delres, &DelSkip(cmp::min(acount, bcount)));
+						addres.place(&AddSkip(cmp::min(acount, bcount)));
+						delres.place(&DelSkip(cmp::min(acount, bcount)));
 						if acount > bcount {
 							a.head = Some(AddSkip(acount - bcount));
 							b.next();
@@ -402,8 +325,8 @@ fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
 						}
 					},
 					AddWithGroup(..) => {
-						addres.push(a.next());
-						del_place_any(&mut delres, &DelSkip(1));
+						addres.place(&a.next());
+						delres.place(&DelSkip(1));
 						if bcount == 1 {
 							b.next();
 						} else {
@@ -411,7 +334,7 @@ fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
 						}
 					},
 					AddGroup(..) => {
-						addres.push(a.next());
+						addres.place(&a.next());
 						if bcount == 1 {
 							b.next();
 						} else {
@@ -426,8 +349,8 @@ fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
 						panic!("DelWithGroup by AddChars is ILLEGAL");
 					},
 					AddSkip(acount) => {
-						del_place_any(&mut delres, &b.next());
-						add_place_any(&mut addres, &AddSkip(1));
+						delres.place(&b.next());
+						addres.place(&AddSkip(1));
 						if acount > 1 {
 							a.head = Some(AddSkip(acount - 1));
 						} else {
@@ -439,15 +362,15 @@ fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
 						b.next();
 
 						let (del, ins) = compose_add_del(&insspan, &span);
-						del_place_any(&mut delres, &DelWithGroup(del));
-						add_place_any(&mut addres, &AddWithGroup(ins));
+						delres.place(&DelWithGroup(del));
+						addres.place(&AddWithGroup(ins));
 					},
 					AddGroup(attr, insspan) => {
 						a.next();
 						b.next();
 
 						let (_, ins) = compose_add_del(&insspan, &span);
-						add_place_any(&mut addres, &AddGroup(attr, ins));
+						addres.place(&AddGroup(attr, ins));
 					},
 				}
 			},
@@ -457,8 +380,8 @@ fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
 						panic!("DelGroup by AddChars is ILLEGAL");
 					},
 					AddSkip(acount) => {
-						del_place_any(&mut delres, &b.next());
-						add_place_any(&mut addres, &AddSkip(1));
+						delres.place(&b.next());
+						addres.place(&AddSkip(1));
 						if acount > 1 {
 							a.head = Some(AddSkip(acount - 1));
 						} else {
@@ -470,17 +393,16 @@ fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
 						b.next();
 
 						let (del, ins) = compose_add_del(&insspan, &span);
-						del_place_any(&mut delres, &DelGroup(del));
-						addres.push_all(&ins[..]);
+						delres.place(&DelGroup(del));
+						addres.place_all(&ins[..]);
 					},
 					AddGroup(attr, insspan) => {
 						a.next();
 						b.next();
 
 						let (del, ins) = compose_add_del(&insspan, &span);
-						//TODO this isn't right, should be pushing but combining?
-						delres.push_all(&del[..]);
-						addres.push_all(&ins[..]);
+						delres.place_all(&del[..]);
+						addres.place_all(&ins[..]);
 					},
 				}
 			},
@@ -490,7 +412,7 @@ fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
 						panic!("DelGroupAll by AddChars is ILLEGAL");
 					},
 					AddSkip(acount) => {
-						del_place_any(&mut delres, &b.next());
+						delres.place(&b.next());
 						if acount > 1 {
 							a.head = Some(AddSkip(acount - 1));
 						} else {
@@ -499,7 +421,7 @@ fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
 					},
 					AddWithGroup(insspan) => {
 						a.next();
-						del_place_any(&mut delres, &b.next());
+						delres.place(&b.next());
 					},
 					AddGroup(attr, insspan) => {
 						a.next();
@@ -511,13 +433,13 @@ fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
 	}
 
 	if !b.is_done() {
-		del_place_any(&mut delres, &b.get_head());
-		delres.push_all(b.rest);
+		delres.place(&b.get_head());
+		delres.place_all(b.rest);
 	}
 
 	if !a.is_done() {
-		add_place_any(&mut addres, &a.get_head());
-		addres.push_all(a.rest);
+		addres.place(&a.get_head());
+		addres.place_all(a.rest);
 	}
 
 	(delres, addres)
@@ -647,7 +569,7 @@ use rand::{thread_rng, Rng};
 fn random_add_span(input:&DocSpan) -> AddSpan {
 	let mut rng = thread_rng();
 
-	let mut res = vec![];
+	let mut res: AddSpan = vec![];
 	for elem in input {
 		match elem {
 			&DocChars(ref value) => {
@@ -655,13 +577,13 @@ fn random_add_span(input:&DocSpan) -> AddSpan {
 				let max = value.chars().count();
 				while n < max {
 					let slice = rng.gen_range(1, max - n + 1);
-					add_place_any(&mut res, &AddSkip(slice));
+					res.place(&AddSkip(slice));
 					if slice < max - n || rng.gen_weighted_bool(2) {
 						if rng.gen_weighted_bool(2) {
 							let len = rng.gen_range(1, 5);
-							add_place_any(&mut res, &AddChars(rng.gen_ascii_chars().take(len).collect()));
+							res.place(&AddChars(rng.gen_ascii_chars().take(len).collect()));
 						} else {
-							add_place_any(&mut res, &AddGroup(HashMap::new(), vec![]));
+							res.place(&AddGroup(HashMap::new(), vec![]));
 						}
 					}
 					n += slice;
@@ -669,9 +591,9 @@ fn random_add_span(input:&DocSpan) -> AddSpan {
 			},
 			&DocGroup(ref attrs, ref span) => {
 				if rng.gen_weighted_bool(2) {
-					add_place_any(&mut res, &AddWithGroup(random_add_span(span)));
+					res.place(&AddWithGroup(random_add_span(span)));
 				} else {
-					add_place_any(&mut res, &AddSkip(1));
+					res.place(&AddSkip(1));
 				}
 			},
 		}
@@ -718,9 +640,9 @@ fn random_del_span(input:&DocSpan) -> DelSpan {
 			},
 			&DocGroup(ref attr, ref span) => {
 				match rng.gen_range(0, 3) {
-					0 => del_place_any(&mut res, &DelWithGroup(random_del_span(span))),
-					1 => del_place_any(&mut res, &DelGroupAll),
-					2 => del_place_any(&mut res, &DelSkip(1)),
+					0 => res.place(&DelWithGroup(random_del_span(span))),
+					1 => res.place(&DelGroupAll),
+					2 => res.place(&DelSkip(1)),
 					_ => {
 						unreachable!();
 					},
