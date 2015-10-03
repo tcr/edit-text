@@ -49,3 +49,110 @@ pub enum AddElement {
 pub use self::AddElement::*;
 
 pub type Op = (DelSpan, AddSpan);
+
+
+fn del_place_chars(res:&mut DelSpan, count:usize) {
+	if res.len() > 0 {
+		let idx = res.len() - 1;
+		if let &mut DelChars(ref mut prefix) = &mut res[idx] {
+			*prefix += count;
+			return;
+		}
+	}
+	res.push(DelChars(count));
+}
+
+fn del_place_skip(res:&mut DelSpan, count:usize) {
+	if res.len() > 0 {
+		let idx = res.len() - 1;
+		if let &mut DelSkip(ref mut prefix) = &mut res[idx] {
+			*prefix += count;
+			return;
+		}
+	}
+	res.push(DelSkip(count));
+}
+
+fn del_place_any(res:&mut DelSpan, value:&DelElement) {
+	match value {
+		&DelChars(count) => {
+			del_place_chars(res, count);
+		},
+		&DelSkip(count) => {
+			del_place_skip(res, count);
+		},
+		_ => {
+			res.push(value.clone());
+		}
+	}
+}
+
+fn add_place_chars(res:&mut AddSpan, value:String) {
+	if res.len() > 0 {
+		let idx = res.len() - 1;
+		if let &mut AddChars(ref mut prefix) = &mut res[idx] {
+			prefix.push_str(&value[..]);
+			return;
+		}
+	}
+	res.push(AddChars(value));
+}
+
+fn add_place_skip(res:&mut AddSpan, count:usize) {
+	if res.len() > 0 {
+		let idx = res.len() - 1;
+		if let &mut AddSkip(ref mut prefix) = &mut res[idx] {
+			*prefix += count;
+			return;
+		}
+	}
+	res.push(AddSkip(count));
+}
+
+fn add_place_any(res:&mut AddSpan, value:&AddElement) {
+	match value {
+		&AddChars(ref value) => {
+			add_place_chars(res, value.clone());
+		},
+		&AddSkip(count) => {
+			add_place_skip(res, count);
+		},
+		_ => {
+			res.push(value.clone());
+		}
+	}
+}
+
+pub trait DelPlaceable {
+	fn place_all(&mut self, all: &[DelElement]);
+	fn place(&mut self, value:&DelElement);
+}
+
+impl DelPlaceable for DelSpan {
+	fn place_all(&mut self, all: &[DelElement]) {
+		for i in all {
+			self.place(i);
+		}
+	}
+
+	fn place(&mut self, value:&DelElement) {
+		del_place_any(self, value);
+	}
+}
+
+pub trait AddPlaceable {
+	fn place_all(&mut self, all: &[AddElement]);
+	fn place(&mut self, value:&AddElement);
+}
+
+impl AddPlaceable for AddSpan {
+	fn place_all(&mut self, all: &[AddElement]) {
+		for i in all {
+			self.place(i);
+		}
+	}
+
+	fn place(&mut self, value:&AddElement) {
+		add_place_any(self, value);
+	}
+}
