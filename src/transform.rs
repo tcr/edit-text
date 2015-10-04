@@ -224,26 +224,56 @@ impl Transform {
         }
     }
 
-    fn enter(&mut self, name:String, is_a:bool, is_b:bool) {
+    fn enter(&mut self, name:String) {
     //   iterA.apply(insrA);
     //   iterA.apply(insrB);
     //   delrA.enter();
     //   delrB.enter();
         self.tracks.push(Track {
-            tag_a: if is_a { Some(name.clone()) } else { None },
+            tag_a: Some(name.clone()),
             tag_real: Some(name.clone()),
-            tag_b: if is_b { Some(name.clone()) } else { None },
-            is_original_a: is_a,
-            is_original_b: is_b,
+            tag_b: Some(name.clone()),
+            is_original_a: true,
+            is_original_b: true,
         });
 
-        if is_a {
+        self.a_del.begin();
+        self.a_add.begin();
+        self.b_del.begin();
+        self.b_add.begin();
+    }
+
+    fn enter_a(&mut self, a: String, b: Option<String>) {
+        self.tracks.push(Track {
+            tag_a: Some(a.clone()),
+            tag_real: Some(a.clone()),
+            tag_b: b.clone(),
+            is_original_a: true,
+            is_original_b: b.is_some(),
+        });
+
+        self.a_del.begin();
+        self.a_add.begin();
+        if b.is_some() {
+            self.b_del.begin();
+        }
+        self.b_add.begin();
+    }
+
+    fn enter_b(&mut self, a: Option<String>, b: String) {
+        self.tracks.push(Track {
+            tag_a: a.clone(),
+            tag_real: Some(b.clone()),
+            tag_b: Some(b.clone()),
+            is_original_a: a.is_some(),
+            is_original_b: true,
+        });
+
+        if a.is_some() {
             self.a_del.begin();
         }
         self.a_add.begin();
-        if is_b {
-            self.b_del.begin();
-        }
+        self.b_del.begin();
         self.b_add.begin();
     }
 
@@ -322,11 +352,35 @@ impl Transform {
         }
     }
 
+    fn close(&mut self) {
+        {
+            let mut track = self.tracks.last_mut().unwrap();
+
+            if track.is_original_a && track.tag_real == track.tag_a {
+                self.a_del.exit();
+                self.a_add.exit();
+            } else {
+                self.a_del.close();
+                self.a_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+            }
+
+            if track.is_original_b && track.tag_real == track.tag_b {
+                self.b_del.exit();
+                self.b_add.exit();
+            } else {
+                self.b_del.close();
+                self.b_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+            }
+        }
+        
+        self.tracks.pop();
+    }
+
     fn close_a(&mut self) {
         if {
             let mut track = self.tracks.last_mut().unwrap();
 
-            if track.is_original_a {
+            if track.is_original_a { // && track.tag_real == track.tag_a {
                 self.a_del.exit();
                 self.a_add.exit();
             } else {
@@ -352,7 +406,7 @@ impl Transform {
 
             println!("CLOSES THE B {:?}", self.b_add);
 
-            if track.is_original_b {
+            if track.is_original_b { // && track.tag_real == track.tag_b {
                 self.b_del.exit();
                 self.b_add.exit();
             } else {
@@ -598,13 +652,26 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                         println!("My");
                     }
 
-                    a.enter();
-                    b.enter();
-                    t.enter(a_attrs.get("tag").unwrap().clone(), true, true)
+                    if a_attrs.get("tag").unwrap() == b_attrs.get("tag").unwrap() {
+                        a.enter();
+                        b.enter();
+                        t.enter(a_attrs.get("tag").unwrap().clone());
+                    } else {
+                        a.enter();
+                        b.enter();
+                        let btag = match b_attrs.get("tag") {
+                            Some(name) => Some(name.clone()),
+                            None => None,
+                        };
+                        t.enter_a(a_attrs.get("tag").unwrap().clone(), btag);
+                    }
+
+                    // TODO if they are different tags THEN WHAT
+
                 },
                 (Some(AddGroup(ref a_attrs, _)), _) => {
                     a.enter();
-                    t.enter(a_attrs.get("tag").unwrap().clone(), true, false)
+                    t.enter_a(a_attrs.get("tag").unwrap().clone(), None)
                 },
                 (_, Some(AddGroup(ref b_attrs, _))) => {
                     // t.regenerate();
@@ -614,7 +681,7 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     if t.current_type() == b_type {
                         t.unenter_b();
                     } else {
-                        t.enter(b_attrs.get("tag").unwrap().clone(), false, true);
+                        t.enter_b(None, b_attrs.get("tag").unwrap().clone());
                     }
                 },
 
@@ -622,6 +689,7 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                 (None, None) => {
                     a.exit();
                     b.exit();
+                    t.close();
                 },
                 (None, Some(AddSkip(b_count))) => {
                     t.interrupt(a_type.clone());
@@ -835,6 +903,26 @@ fn test_transform_brown() {
     let res = (vec![], vec![
         AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(4)]),
         AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(1)]),
+    ]);
+
+    assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
+    assert_eq!(normalize(compose::compose(&(vec![], b), &b_)), res.clone());
+}
+
+
+#[test]
+fn test_transform_sonic() {
+    let a = vec![
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(30)]),
+    ];
+    let b = vec![
+        AddGroup(container! { ("tag".into(), "h1".into()) }, vec![AddSkip(30)]),
+    ];
+
+    let (a_, b_) = transform_insertions(&a, &b);
+
+    let res = (vec![], vec![
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(30)]),
     ]);
 
     assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
