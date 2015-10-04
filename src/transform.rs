@@ -909,7 +909,6 @@ fn test_transform_brown() {
     assert_eq!(normalize(compose::compose(&(vec![], b), &b_)), res.clone());
 }
 
-
 #[test]
 fn test_transform_sonic() {
     let a = vec![
@@ -929,3 +928,22 @@ fn test_transform_sonic() {
     assert_eq!(normalize(compose::compose(&(vec![], b), &b_)), res.clone());
 }
 
+#[test]
+fn test_transform_tails() {
+    let a = vec![
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(15)]),
+    ];
+    let b = vec![
+        AddGroup(container! { ("tag".into(), "h1".into()) }, vec![AddSkip(30)]),
+    ];
+
+    let (a_, b_) = transform_insertions(&a, &b);
+
+    let res = (vec![], vec![
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(15)]),
+        AddGroup(container! { ("tag".into(), "h1".into()) }, vec![AddSkip(15)]),
+    ]);
+
+    assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
+    assert_eq!(normalize(compose::compose(&(vec![], b), &b_)), res.clone());
+}
