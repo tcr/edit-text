@@ -176,6 +176,20 @@ impl DelWriter {
 
 
 
+trait Named {
+    fn get_name(&self) -> Option<String>;
+}
+
+impl Named for Attrs {
+    fn get_name(&self) -> Option<String> {
+        match self.get("tag") {
+            Some(value) => Some(value.clone()),
+            None => None,
+        }
+    }
+}
+
+
 
 
 
@@ -191,6 +205,10 @@ enum TrackType {
     Inlines,
     InlineObjects,
 }
+
+
+
+
 
 #[derive(Clone, Debug)]
 struct Track {
@@ -652,18 +670,14 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                         println!("My");
                     }
 
-                    if a_attrs.get("tag").unwrap() == b_attrs.get("tag").unwrap() {
+                    if a_attrs.get_name() == b_attrs.get_name() {
                         a.enter();
                         b.enter();
-                        t.enter(a_attrs.get("tag").unwrap().clone());
+                        t.enter(a_attrs.get_name().unwrap());
                     } else {
                         a.enter();
                         b.enter();
-                        let btag = match b_attrs.get("tag") {
-                            Some(name) => Some(name.clone()),
-                            None => None,
-                        };
-                        t.enter_a(a_attrs.get("tag").unwrap().clone(), btag);
+                        t.enter_a(a_attrs.get_name().unwrap(), b_attrs.get_name());
                     }
 
                     // TODO if they are different tags THEN WHAT
@@ -671,7 +685,7 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                 },
                 (Some(AddGroup(ref a_attrs, _)), _) => {
                     a.enter();
-                    t.enter_a(a_attrs.get("tag").unwrap().clone(), None)
+                    t.enter_a(a_attrs.get_name().unwrap(), None)
                 },
                 (_, Some(AddGroup(ref b_attrs, _))) => {
                     // t.regenerate();
@@ -681,7 +695,7 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     if t.current_type() == b_type {
                         t.unenter_b();
                     } else {
-                        t.enter_b(None, b_attrs.get("tag").unwrap().clone());
+                        t.enter_b(None, b_attrs.get_name().unwrap());
                     }
                 },
 
