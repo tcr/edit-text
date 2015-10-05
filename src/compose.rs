@@ -105,6 +105,10 @@ fn compose_del_del_inner(res:&mut DelSpan, a:&mut DelSlice, b:&mut DelSlice) {
 			DelGroup(ref span) => {
 				let mut c = DelSlice::new(span);
 				compose_del_del_inner(res, &mut c, b);
+				if !c.is_done() {
+					res.place(&c.get_head());
+					res.place_all(c.rest);
+				}
 				a.next();
 			},
 			DelChars(count) => {
@@ -198,6 +202,10 @@ fn compose_add_add_inner(res:&mut AddSpan, a:&mut AddSlice, b:&mut AddSlice) {
 				let mut c = AddSlice::new(bspan);
 				let mut inner = vec![];
 				compose_add_add_inner(&mut inner, a, &mut c);
+				if !c.is_done() {
+					inner.place(&c.get_head());
+					inner.place_all(c.rest);
+				}
 				res.push(AddGroup(attrs.clone(), inner));
 				b.next();
 			},
