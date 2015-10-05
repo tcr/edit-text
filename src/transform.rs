@@ -348,14 +348,14 @@ impl Transform {
 
         println!("aborting: {:?}", track);
         if let Some(ref real) = track.tag_real {
-            if track.tag_a.is_some() {
-                self.a_del.close();
-            }
+            // if track.tag_a.is_some() {
+            //     self.a_del.close();
+            // }
             self.a_add.close(container! { ("tag".into(), real.clone() )}); // fake
 
-            if track.tag_b.is_some() {
-                self.b_del.close();
-            }
+            // if track.tag_b.is_some() {
+            //     self.b_del.close();
+            // }
             self.b_add.close(container! { ("tag".into(), real.clone() )}); // fake
             // } else {
             //     self.a_add.close(container! { ("tag".into(), track.tag_a.into() )}); // fake
@@ -422,27 +422,25 @@ impl Transform {
     }
 
     fn close(&mut self) {
-        {
-            let mut track = self.tracks.last_mut().unwrap();
+        let (mut track, index) = self.top_track_a();
 
-            if track.is_original_a && track.tag_real == track.tag_a {
-                self.a_del.exit();
-                self.a_add.exit();
-            } else {
-                self.a_del.close();
-                self.a_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
-            }
-
-            if track.is_original_b && track.tag_real == track.tag_b {
-                self.b_del.exit();
-                self.b_add.exit();
-            } else {
-                self.b_del.close();
-                self.b_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
-            }
+        if track.is_original_a && track.tag_real == track.tag_a {
+            self.a_del.exit();
+            self.a_add.exit();
+        } else {
+            self.a_del.close();
+            self.a_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
         }
-        
-        self.tracks.pop();
+
+        if track.is_original_b && track.tag_real == track.tag_b {
+            self.b_del.exit();
+            self.b_add.exit();
+        } else {
+            self.b_del.close();
+            self.b_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+        }
+
+        self.tracks.remove(index);
     }
 
     fn top_track_a(&mut self) -> (Track, usize) {
@@ -456,50 +454,64 @@ impl Transform {
     }
 
     fn close_a(&mut self) {
+        println!("TRACKS CLOSE A: {:?}", self.tracks);
         let (mut track, index) = self.top_track_a();
+
+        println!("CLOSES THE A {:?}", self.a_del);
+        println!("CLOSES THE A {:?}", self.a_add);
 
         if track.is_original_a { // && track.tag_real == track.tag_a {
             self.a_del.exit();
             self.a_add.exit();
         } else {
-            //TODO is this real?
             self.a_del.close();
             self.a_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
         }
 
+        // if track.is_original_b {
+        //     self.b_del.close();
+        // }
         self.b_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
-
-        track.is_original_a = false;
-        track.tag_a = None;
-        track.tag_real = None;
 
         if track.tag_b.is_none() {
             self.tracks.remove(index);
+        } else {
+            self.tracks[index].is_original_a = false;
+            self.tracks[index].is_original_b = false;
+            self.tracks[index].tag_a = None;
+            self.tracks[index].tag_real = None;
         }
     }
 
     fn close_b(&mut self) {
-        println!("TRACKS: {:?}", self.tracks);
+        println!("TRACKS CLOSE B: {:?}", self.tracks);
         let (mut track, index) = self.top_track_b();
 
+        println!("CLOSES THE B {:?}", self.b_del);
         println!("CLOSES THE B {:?}", self.b_add);
 
         if track.is_original_b { // && track.tag_real == track.tag_b {
             self.b_del.exit();
             self.b_add.exit();
         } else {
-            // self.b_del.close();
+            println!("1");
+            self.b_del.close();
             self.b_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+            println!("2");
         }
 
+        // if track.is_original_a {
+        //     self.a_del.close();
+        // }
         self.a_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
-
-        track.is_original_b = false;
-        track.tag_b = None;
-        track.tag_real = None;
 
         if track.tag_a.is_none() {
             self.tracks.remove(index);
+        } else {
+            self.tracks[index].is_original_a = false;
+            self.tracks[index].is_original_b = false;
+            self.tracks[index].tag_b = None;
+            self.tracks[index].tag_real = None;
         }
     }
 
@@ -544,7 +556,7 @@ impl Transform {
                 if track.tag_b.is_some() {
                     track.tag_real = track.tag_b.clone();
                     // track.tag_a = track.tag_b.clone();
-                    track.is_original_b = false;
+                    // track.is_original_b = false;
 
                     // if (origA) {
                     //   insrA.enter();
@@ -561,7 +573,7 @@ impl Transform {
                 if track.tag_a.is_some() {
                     track.tag_real = track.tag_a.clone();
                     // track.tag_a = track.tag_a.clone();
-                    track.is_original_a = false;
+                    // track.is_original_a = false;
                 }
 
                 self.a_add.begin();
@@ -616,8 +628,12 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
 
     while !(a.is_done() && b.is_done()) {
         if a.is_done() {
+            println!("tracks {:?}", t.tracks);
             t.regenerate();
             println!("A IS DONE: {:?}", b.head.clone());
+
+            println!("WHAT IS UP {:?}", t.b_add);
+            println!("`````` tracks {:?}", t.tracks);
             
             match b.head.clone() {
                 Some(AddChars(ref b_chars)) => {
@@ -719,7 +735,7 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                         (t.tag_a.clone(), t.tag_b.clone())
                     };
 
-                    if a_tag == b_tag {
+                    if a_tag.is_some() && b_tag.is_some() && get_tag_type(&a_tag.clone().unwrap()[..]) == get_tag_type(&b_tag.clone().unwrap()[..]) {
                         // t.interrupt(a_tag || b_tag);
                         a.exit();
                         b.exit();
@@ -740,9 +756,11 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     println!("FIRST TIME {:?}", t.tracks);
                     // println!("... {:?} {:?}", t.a_del, t.a_add);
                     // println!("... {:?} {:?}", t.b_del, t.b_add);
+                    println!("~~~> tracks {:?}", t.tracks);
                     t.close_a();
                     // println!("...");
                     a.exit();
+                    println!("<~~~ tracks {:?}", t.tracks);
                     // println!("WHERE ARE WE WITH A {:?}", a);
                 },
                 (Some(AddSkip(a_count)), None) => {
