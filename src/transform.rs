@@ -750,7 +750,7 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                         t.close_b();
                     }
                 },
-                (None, Some(AddSkip(b_count))) => {
+                (None, _) => {
                     let a_typ = get_tag_type(&t.tracks.iter().rev().find(|t| t.tag_a.is_some()).unwrap().tag_a.clone().unwrap()[..]).unwrap();
                     t.interrupt(a_typ);
                     println!("FIRST TIME {:?}", t.tracks);
@@ -763,7 +763,7 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     println!("<~~~ tracks {:?}", t.tracks);
                     // println!("WHERE ARE WE WITH A {:?}", a);
                 },
-                (Some(AddSkip(a_count)), None) => {
+                (_, None) => {
                     // println!("... {:?} {:?}", t.a_del, t.a_add);
                     // println!("... {:?} {:?}", t.b_del, t.b_add);
                     let b_typ = get_tag_type(&t.tracks.iter().rev().find(|t| t.tag_b.is_some()).unwrap().tag_b.clone().unwrap()[..]).unwrap();
@@ -1097,3 +1097,33 @@ fn test_transform_anthem() {
     assert_eq!(a_res, res.clone());
     assert_eq!(b_res, res.clone());
 }
+
+// #[test]
+// fn test_transform_yellow() {
+//     let a = vec![
+//         AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
+//             AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+//                 AddSkip(5)
+//             ])
+//         ]),
+//     ];
+//     let b = vec![
+//         AddSkip(3),
+//         AddGroup(container! { ("tag".into(), "p".into()) }, vec![
+//             AddSkip(2)
+//         ]),
+//         AddGroup(container! { ("tag".into(), "p".into()) }, vec![
+//             AddSkip(3)
+//         ]),
+//     ];
+
+//     let (a_, b_) = transform_insertions(&a, &b);
+
+//     let res = (vec![], vec![
+//     ]);
+
+//     let a_res = normalize(compose::compose(&(vec![], a), &a_));
+//     let b_res = normalize(compose::compose(&(vec![], b.clone()), &b_));
+//     assert_eq!(a_res, res.clone());
+//     assert_eq!(b_res, res.clone());
+// }
