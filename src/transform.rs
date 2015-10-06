@@ -522,7 +522,10 @@ impl Transform {
         let mut regen = vec![];
         loop {
             if let Some(track) = self.current() {
-                if track.tag_real.is_some() && get_tag_type(&track.tag_real.unwrap()).unwrap().ancestors().iter().position(|x| *x == itype).is_some() {
+                if track.tag_real.is_some() && {
+                    let tag_type = get_tag_type(&track.tag_real.unwrap()).unwrap();
+                    tag_type != itype && tag_type.ancestors().iter().position(|x| *x == itype).is_some()
+                } {
                     // schema.findType(tran.current()[1]) != type && schema.getAncestors(type).indexOf(schema.findType(tran.current()[1])) == -1
                     println!("aborting by {:?}", itype);
                     let aborted = self.abort();
@@ -636,6 +639,11 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
             println!("`````` tracks {:?}", t.tracks);
             
             match b.head.clone() {
+                Some(AddGroup(ref attrs, ref span)) => {
+                    t.skip_b(1);
+                    t.group_a(attrs, span);
+                    b.next();
+                },
                 Some(AddChars(ref b_chars)) => {
                     t.chars_a(b_chars);
                     t.skip_b(b_chars.len());
@@ -651,7 +659,7 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     b.exit();
                 },
                 _ => {
-                    panic!("What");
+                    panic!("What: {:?}", b.head);
                 }
             }
         } else if b.is_done() {
@@ -685,6 +693,51 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
 
         } else {
             match (a.head.clone(), b.head.clone()) {
+                // Closing
+                (None, None) => {
+                    let (a_tag, b_tag) = {
+                        let t = t.tracks.last().unwrap();
+                        (t.tag_a.clone(), t.tag_b.clone())
+                    };
+
+                    if a_tag.is_some() && b_tag.is_some() && get_tag_type(&a_tag.clone().unwrap()[..]) == get_tag_type(&b_tag.clone().unwrap()[..]) {
+                        // t.interrupt(a_tag || b_tag);
+                        a.exit();
+                        b.exit();
+                        t.close();
+                    } else if a_tag.is_some() && (b_tag.is_none() || get_tag_type(&a_tag.clone().unwrap()[..]).unwrap().ancestors().iter().position(|x| *x == get_tag_type(&b_tag.clone().unwrap()[..]).unwrap()).is_some()) {
+                        // t.interrupt(a_tag);
+                        a.exit();
+                        t.close_a();
+                    } else if b_tag.is_some() {
+                        // t.interrupt(b_tag);
+                        b.exit();
+                        t.close_b();
+                    }
+                },
+                (None, _) => {
+                    let a_typ = get_tag_type(&t.tracks.iter().rev().find(|t| t.tag_a.is_some()).unwrap().tag_a.clone().unwrap()[..]).unwrap();
+                    println!("what is up with a {:?}", t.a_add);
+                    t.interrupt(a_typ);
+                    // println!("... {:?} {:?}", t.a_del, t.a_add);
+                    // println!("... {:?} {:?}", t.b_del, t.b_add);
+                    println!("~~~> tracks {:?}", t.tracks);
+                    t.close_a();
+                    // println!("...");
+                    a.exit();
+                    println!("<~~~ tracks {:?}", t.tracks);
+                    // println!("WHERE ARE WE WITH A {:?}", a);
+                },
+                (_, None) => {
+                    // println!("... {:?} {:?}", t.a_del, t.a_add);
+                    // println!("... {:?} {:?}", t.b_del, t.b_add);
+                    let b_typ = get_tag_type(&t.tracks.iter().rev().find(|t| t.tag_b.is_some()).unwrap().tag_b.clone().unwrap()[..]).unwrap();
+                    t.interrupt(b_typ);
+                    t.close_b();
+                    // t.closeA()
+                    b.exit();
+                },
+
                 // Opening
                 (Some(AddGroup(ref a_attrs, _)), Some(AddGroup(ref b_attrs, _))) => {
                     let a_type = get_type(a_attrs).unwrap();
@@ -726,51 +779,6 @@ fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     } else {
                         t.enter_b(None, b_attrs.get_name().unwrap());
                     }
-                },
-
-                // Closing
-                (None, None) => {
-                    let (a_tag, b_tag) = {
-                        let t = t.tracks.last().unwrap();
-                        (t.tag_a.clone(), t.tag_b.clone())
-                    };
-
-                    if a_tag.is_some() && b_tag.is_some() && get_tag_type(&a_tag.clone().unwrap()[..]) == get_tag_type(&b_tag.clone().unwrap()[..]) {
-                        // t.interrupt(a_tag || b_tag);
-                        a.exit();
-                        b.exit();
-                        t.close();
-                    } else if a_tag.is_some() && (b_tag.is_none() || get_tag_type(&b_tag.clone().unwrap()[..]).unwrap().ancestors().iter().position(|x| *x == get_tag_type(&a_tag.clone().unwrap()[..]).unwrap()).is_some()) {
-                        // t.interrupt(a_tag);
-                        a.exit();
-                        t.close_a();
-                    } else if b_tag.is_some() {
-                        // t.interrupt(b_tag);
-                        b.exit();
-                        t.close_b();
-                    }
-                },
-                (None, _) => {
-                    let a_typ = get_tag_type(&t.tracks.iter().rev().find(|t| t.tag_a.is_some()).unwrap().tag_a.clone().unwrap()[..]).unwrap();
-                    t.interrupt(a_typ);
-                    println!("FIRST TIME {:?}", t.tracks);
-                    // println!("... {:?} {:?}", t.a_del, t.a_add);
-                    // println!("... {:?} {:?}", t.b_del, t.b_add);
-                    println!("~~~> tracks {:?}", t.tracks);
-                    t.close_a();
-                    // println!("...");
-                    a.exit();
-                    println!("<~~~ tracks {:?}", t.tracks);
-                    // println!("WHERE ARE WE WITH A {:?}", a);
-                },
-                (_, None) => {
-                    // println!("... {:?} {:?}", t.a_del, t.a_add);
-                    // println!("... {:?} {:?}", t.b_del, t.b_add);
-                    let b_typ = get_tag_type(&t.tracks.iter().rev().find(|t| t.tag_b.is_some()).unwrap().tag_b.clone().unwrap()[..]).unwrap();
-                    t.interrupt(b_typ);
-                    t.close_b();
-                    // t.closeA()
-                    b.exit()
                 },
 
                 // Rest
@@ -1098,32 +1106,43 @@ fn test_transform_anthem() {
     assert_eq!(b_res, res.clone());
 }
 
-// #[test]
-// fn test_transform_yellow() {
-//     let a = vec![
-//         AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
-//             AddGroup(container! { ("tag".into(), "li".into()) }, vec![
-//                 AddSkip(5)
-//             ])
-//         ]),
-//     ];
-//     let b = vec![
-//         AddSkip(3),
-//         AddGroup(container! { ("tag".into(), "p".into()) }, vec![
-//             AddSkip(2)
-//         ]),
-//         AddGroup(container! { ("tag".into(), "p".into()) }, vec![
-//             AddSkip(3)
-//         ]),
-//     ];
+#[test]
+fn test_transform_yellow() {
+    let a = vec![
+        AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
+            AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+                AddSkip(5)
+            ])
+        ]),
+    ];
+    let b = vec![
+        AddSkip(3),
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![
+            AddSkip(2)
+        ]),
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![
+            AddSkip(3)
+        ]),
+    ];
 
-//     let (a_, b_) = transform_insertions(&a, &b);
+    let (a_, b_) = transform_insertions(&a, &b);
 
-//     let res = (vec![], vec![
-//     ]);
+    let res = (vec![], vec![
+        AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
+            AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+                AddSkip(3),
+                AddGroup(container! { ("tag".into(), "p".into()) }, vec![
+                    AddSkip(2)
+                ]),
+            ])
+        ]),
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![
+            AddSkip(3)
+        ]),
+    ]);
 
-//     let a_res = normalize(compose::compose(&(vec![], a), &a_));
-//     let b_res = normalize(compose::compose(&(vec![], b.clone()), &b_));
-//     assert_eq!(a_res, res.clone());
-//     assert_eq!(b_res, res.clone());
-// }
+    let a_res = normalize(compose::compose(&(vec![], a), &a_));
+    let b_res = normalize(compose::compose(&(vec![], b.clone()), &b_));
+    assert_eq!(a_res, res.clone());
+    assert_eq!(b_res, res.clone());
+}
