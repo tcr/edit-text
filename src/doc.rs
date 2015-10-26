@@ -13,7 +13,7 @@ pub use self::Atom::*;
 
 pub type DocSpan = Vec<DocElement>;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, RustcEncodable, RustcDecodable)]
 pub enum DocElement {
 	DocChars(String),
 	DocGroup(Attrs, DocSpan),
@@ -24,7 +24,7 @@ pub use self::DocElement::*;
 
 pub type DelSpan = Vec<DelElement>;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, RustcEncodable, RustcDecodable)]
 pub enum DelElement {
 	DelSkip(usize),
 	DelWithGroup(DelSpan),
@@ -38,7 +38,7 @@ pub use self::DelElement::*;
 
 pub type AddSpan = Vec<AddElement>;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, RustcEncodable, RustcDecodable)]
 pub enum AddElement {
 	AddSkip(usize),
 	AddWithGroup(AddSpan),
