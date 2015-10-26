@@ -210,7 +210,7 @@ fn get_tag_type(tag: &str) -> Option<TrackType> {
     match tag {
         "ul" => Some(TrackType::Lists),
         "li" => Some(TrackType::ListItems),
-        "p" | "h1" => Some(TrackType::Blocks),
+        "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => Some(TrackType::Blocks),
         "b" => Some(TrackType::Inlines),
         _ => None,
     }
@@ -621,7 +621,7 @@ impl Transform {
     }
 }
 
-fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
+pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
     // let mut res = Vec::with_capacity(avec.len() + bvec.len());
 
     let mut a = AddStepper::new(avec);
@@ -1145,4 +1145,61 @@ fn test_transform_yellow() {
     let b_res = normalize(compose::compose(&(vec![], b.clone()), &b_));
     assert_eq!(a_res, res.clone());
     assert_eq!(b_res, res.clone());
+}
+
+#[test]
+fn test_transform_black() {
+    let a = vec![
+        AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
+            AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+                AddSkip(5)
+            ])
+        ]),
+    ];
+    let b = vec![
+        AddSkip(2),
+        AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
+            AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+                AddSkip(2)
+            ])
+        ]),
+    ];
+
+    let (a_, b_) = transform_insertions(&a, &b);
+
+    let res = (vec![], vec![
+        AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
+            AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+                AddSkip(5)
+            ])
+        ]),
+    ]);
+
+    let a_res = normalize(compose::compose(&(vec![], a), &a_));
+    let b_res = normalize(compose::compose(&(vec![], b.clone()), &b_));
+    assert_eq!(a_res, res.clone());
+    assert_eq!(b_res, res.clone());
+}
+
+#[test]
+fn test_transform_ferociously() {
+    let a = vec![
+        AddGroup(container! { ("tag".into(), "h1".into()) }, vec![
+            AddSkip(8)
+        ]),
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![
+            AddSkip(5)
+        ]),
+    ];
+    let b = vec![
+        AddGroup(container! { ("tag".into(), "h3".into()) }, vec![
+            AddSkip(8)
+        ]),
+    ];
+
+    let (a_, b_) = transform_insertions(&a, &b);
+
+    let a_res = normalize(compose::compose(&(vec![], a), &a_));
+    let b_res = normalize(compose::compose(&(vec![], b), &b_));
+    assert_eq!(a_res, b_res);
 }

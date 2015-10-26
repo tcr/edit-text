@@ -1,4 +1,5 @@
-#![feature(collections)]
+#![feature(append)]
+#![feature(vec_push_all)]
 #![allow(unused_variables)]
 #![allow(dead_code)]
 #![allow(unused_imports)]
@@ -7,11 +8,12 @@
 extern crate env_logger;
 extern crate rand;
 #[macro_use] extern crate literator;
+extern crate rustc_serialize;
 
-mod doc;
-mod compose;
-mod transform;
-mod stepper;
+pub mod doc;
+pub mod compose;
+pub mod transform;
+pub mod stepper;
 
 use std::collections::HashMap;
 use doc::*;
@@ -87,8 +89,8 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 
 	let mut res:DocSpan = Vec::with_capacity(span.len());
 
-	if span.len() == 0 && del.len() == 0 {
-		return vec![];
+	if del.len() == 0 {
+		return spanvec.clone().to_vec();
 	}
 	
 	let mut d = del[0].clone();
@@ -150,8 +152,9 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 				nextfirst = false;
 			},
 			AddGroup(attrs, innerspan) => {
-				res.push(DocGroup(attrs, apply_add(&vec![], &innerspan)));
-				nextfirst = false;
+				// TODO fix this for real!
+				res.push(DocGroup(attrs, apply_add(&spanvec, &innerspan)));
+				nextfirst = true;
 			},	
 		}
 
@@ -189,9 +192,9 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 	let mut del = &delvec[..];
 
 	let mut res:DocSpan = Vec::with_capacity(span.len());
-	
-	if span.len() == 0 && del.len() == 0 {
-		return vec![];
+
+	if del.len() == 0 {
+		return span.clone().to_vec();
 	}
 
 	let mut first = span[0].clone();
