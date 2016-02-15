@@ -18,4 +18,4 @@ git = "https://github.com/kmcallister/literator.git"
 rev = "632309dd4baf7ac0c079f44de94c0449fdab23ad"
 
 [dependencies.oatie]
-path = "../oatie"
+path = "../"
