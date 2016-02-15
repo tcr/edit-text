@@ -1,0 +1,25 @@
+use std::collections::HashMap;
+
+enum ALL<'a> {
+    CAddSkip(usize),
+    CAddChars(&'a str),
+}
+
+macro_rules! CAddGroup(
+    { { $($key:expr => $value:expr),* }, $($body:expr),* } => {
+        {
+            let mut m = ::std::collections::HashMap::new();
+            $(
+                m.insert($key, $value);
+            )+
+            let b: &[ALL] = &[$($body),*];
+            CAddGroup(m, None)
+        }
+     };
+);
+
+use ALL::*;
+
+fn main() {
+    let _ = [CAddGroup![{"tag" => "p"}, CAddSkip(1), CAddSkip(1)], CAddSkip(1), CAddChars("1")];
+}
