@@ -206,8 +206,9 @@ enum TrackType {
     InlineObjects,
 }
 
-fn get_tag_type(tag: &str) -> Option<TrackType> {
-    match tag {
+fn get_tag_type<T: TagLike>(tag: T) -> Option<TrackType> {
+    let tag = tag.tag();
+    match tag.as_ref() {
         "ul" => Some(TrackType::Lists),
         "li" => Some(TrackType::ListItems),
         "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => Some(TrackType::Blocks),
@@ -222,6 +223,41 @@ fn get_type(attrs: &Attrs) -> Option<TrackType> {
         _ => None
     }
 }
+
+trait TagLike {
+    fn tag(&self) -> String;
+}
+
+impl TagLike for String {
+    fn tag(&self) -> String {
+        self.clone()
+    }
+}
+
+impl<'a> TagLike for &'a String {
+    fn tag(&self) -> String {
+        (*self).clone()
+    }
+}
+
+impl<'a> TagLike for &'a str {
+    fn tag(&self) -> String {
+        (*self).into()
+    }
+}
+
+impl TagLike for Attrs {
+    fn tag(&self) -> String {
+        self.get_name().unwrap_or("".into())
+    }
+}
+
+impl TagLike for Option<String> {
+    fn tag(&self) -> String {
+        self.clone().unwrap_or("".into())
+    }
+}
+
 
 impl TrackType {
     fn parents(&self) -> Vec<TrackType> {
@@ -284,7 +320,10 @@ impl Transform {
     }
 
     fn enter(&mut self, name:String) {
-        let last = self.tracks.iter().rposition(|x| x.tag_real.is_some()).and_then(|x| Some(x + 1)).unwrap_or(0);
+        let last = self.tracks.iter()
+            .rposition(|x| x.tag_real.is_some())
+            .and_then(|x| Some(x + 1))
+            .unwrap_or(0);
 
     //   iterA.apply(insrA);
     //   iterA.apply(insrB);
@@ -305,7 +344,10 @@ impl Transform {
     }
 
     fn enter_a(&mut self, a: String, b: Option<String>) {
-        let last = self.tracks.iter().rposition(|x| x.tag_real.is_some()).and_then(|x| Some(x + 1)).unwrap_or(0);
+        let last = self.tracks.iter()
+            .rposition(|x| x.tag_real.is_some())
+            .and_then(|x| Some(x + 1))
+            .unwrap_or(0);
 
         self.tracks.insert(last, Track {
             tag_a: Some(a.clone()),
@@ -324,7 +366,10 @@ impl Transform {
     }
 
     fn enter_b(&mut self, a: Option<String>, b: String) {
-        let last = self.tracks.iter().rposition(|x| x.tag_real.is_some()).and_then(|x| Some(x + 1)).unwrap_or(0);
+        let last = self.tracks.iter()
+            .rposition(|x| x.tag_real.is_some())
+            .and_then(|x| Some(x + 1))
+            .unwrap_or(0);
 
         self.tracks.insert(last, Track {
             tag_a: a.clone(),
@@ -444,12 +489,16 @@ impl Transform {
     }
 
     fn top_track_a(&mut self) -> (Track, usize) {
-        let index = self.tracks.iter().rposition(|x| x.tag_a.is_some()).unwrap();
+        let index = self.tracks.iter()
+            .rposition(|x| x.tag_a.is_some())
+            .unwrap();
         (self.tracks[index].clone(), index)
     }
 
     fn top_track_b(&mut self) -> (Track, usize) {
-        let index = self.tracks.iter().rposition(|x| x.tag_b.is_some()).unwrap();
+        let index = self.tracks.iter()
+            .rposition(|x| x.tag_b.is_some())
+            .unwrap();
         (self.tracks[index].clone(), index)
     }
 
@@ -490,28 +539,45 @@ impl Transform {
         println!("CLOSES THE B {:?}", self.b_del);
         println!("CLOSES THE B {:?}", self.b_add);
 
+        // Determine whether to split tags for this track type.
+        // TODO do the same for track opening.
+        let track_split = if let Some(tag) = track.tag_real.clone() {
+            get_tag_type(&tag) != Some(TrackType::Lists)
+        } else {
+            true
+        };
+
         if track.is_original_b { // && track.tag_real == track.tag_b {
             self.b_del.exit();
             self.b_add.exit();
         } else {
             println!("1");
+
             self.b_del.close();
-            self.b_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+            if track_split {
+                self.b_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+            }
             println!("2");
         }
 
         // if track.is_original_a {
         //     self.a_del.close();
         // }
-        self.a_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+        if track_split {
+            self.a_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+        }
 
         if track.tag_a.is_none() {
             self.tracks.remove(index);
         } else {
-            self.tracks[index].is_original_a = false;
+            if track_split {
+                self.tracks[index].is_original_a = false;
+            }
             self.tracks[index].is_original_b = false;
             self.tracks[index].tag_b = None;
-            self.tracks[index].tag_real = None;
+            if track_split {
+                self.tracks[index].tag_real = None;
+            }
         }
     }
 
@@ -692,6 +758,7 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
             }
 
         } else {
+            println!("next step: {:?}", (a.head.clone(), b.head.clone()));
             match (a.head.clone(), b.head.clone()) {
                 // Closing
                 (None, None) => {
@@ -773,6 +840,11 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     // t.regenerate();
                     b.enter();
                     let b_type = get_type(b_attrs);
+
+                    // TODO for test_transform_black, have to dig deeply
+                    for t in &t.tracks {
+                        println!("okay {:?}", t);
+                    }
 
                     if t.current_type() == b_type {
                         t.unenter_b();
@@ -1147,39 +1219,50 @@ fn test_transform_yellow() {
     assert_eq!(b_res, res.clone());
 }
 
-// #[test]
-// fn test_transform_black() {
-//     let a = vec![
-//         AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
-//             AddGroup(container! { ("tag".into(), "li".into()) }, vec![
-//                 AddSkip(5)
-//             ])
-//         ]),
-//     ];
-//     let b = vec![
-//         AddSkip(2),
-//         AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
-//             AddGroup(container! { ("tag".into(), "li".into()) }, vec![
-//                 AddSkip(2)
-//             ])
-//         ]),
-//     ];
-//
-//     let (a_, b_) = transform_insertions(&a, &b);
-//
-//     let res = (vec![], vec![
-//         AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
-//             AddGroup(container! { ("tag".into(), "li".into()) }, vec![
-//                 AddSkip(5)
-//             ])
-//         ]),
-//     ]);
-//
-//     let a_res = normalize(compose::compose(&(vec![], a), &a_));
-//     let b_res = normalize(compose::compose(&(vec![], b.clone()), &b_));
-//     assert_eq!(a_res, res.clone());
-//     assert_eq!(b_res, res.clone());
-// }
+#[test]
+fn test_transform_black() {
+    // TODO revert back to things with li's
+    let a = vec![
+        AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
+            // AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+                AddSkip(5)
+            // ])
+        ]),
+    ];
+    let b = vec![
+        AddSkip(2),
+        AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
+            // AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+                AddSkip(2)
+            // ])
+        ]),
+    ];
+
+    println!("HERE IS A: {:?}", a);
+    println!("HERE IS B: {:?}", b);
+
+    let (a_, b_) = transform_insertions(&a, &b);
+
+    println!("lol");
+
+    let res = (vec![], vec![
+        AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
+            // AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+                AddSkip(5)
+            // ])
+        ]),
+    ]);
+
+    let a_res = normalize(compose::compose(&(vec![], a), &a_));
+    let b_res = normalize(compose::compose(&(vec![], b.clone()), &b_));
+
+    println!("A : {:?}", a_res);
+    println!("B : {:?}", b_res);
+    println!("r : {:?}", res);
+
+    assert_eq!(a_res, res.clone());
+    assert_eq!(b_res, res.clone());
+}
 
 #[test]
 fn test_transform_ferociously() {
