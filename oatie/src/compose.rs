@@ -458,7 +458,7 @@ fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
 #[test]
 fn test_compose_del_del() {
 	test_start();
-	
+
 	assert_eq!(compose_del_del(&vec![
 		DelSkip(6),
 		DelChars(6),
@@ -574,7 +574,9 @@ fn test_compose_add_del() {
 
 use rand::{thread_rng, Rng};
 
-fn random_add_span(input:&DocSpan) -> AddSpan {
+/// Given a document span, create a random Add operation that can be applied
+/// to the span.
+fn random_add_span(input: &DocSpan) -> AddSpan {
 	let mut rng = thread_rng();
 
 	let mut res: AddSpan = vec![];
@@ -583,10 +585,16 @@ fn random_add_span(input:&DocSpan) -> AddSpan {
 			&DocChars(ref value) => {
 				let mut n = 0;
 				let max = value.chars().count();
+
+				// Iterate up to `max` characters.
 				while n < max {
+					// Skip a random number of characters.
 					let slice = rng.gen_range(1, max - n + 1);
 					res.place(&AddSkip(slice));
-					if slice < max - n || rng.gen_weighted_bool(2) {
+					n += slice;
+
+					// Decide whether to add new characters or a new (empty) group.
+					if n < max || rng.gen_weighted_bool(2) {
 						if rng.gen_weighted_bool(2) {
 							let len = rng.gen_range(1, 5);
 							res.place(&AddChars(rng.gen_ascii_chars().take(len).collect()));
@@ -594,7 +602,6 @@ fn random_add_span(input:&DocSpan) -> AddSpan {
 							res.place(&AddGroup(HashMap::new(), vec![]));
 						}
 					}
-					n += slice;
 				}
 			},
 			&DocGroup(ref attrs, ref span) => {
@@ -673,13 +680,15 @@ fn monkey_add_add() {
 		trace!("start {:?}", start);
 
 		let a = random_add_span(&start);
-		trace!("a {:?}", a);
+		trace!("Random A: {:?}", a);
 
 		let middle = apply_add(&start, &a);
 		let b = random_add_span(&middle);
+		trace!("Random B: {:?}", a);
 		let end = apply_add(&middle, &b);
 
 		let composed = compose_add_add(&a, &b);
+		trace!("Composed: {:?}", composed);
 		let otherend = apply_add(&start, &composed);
 
 		trace!("middle {:?}", middle);
@@ -690,6 +699,8 @@ fn monkey_add_add() {
 		trace!("otherend {:?}", otherend);
 
 		assert_eq!(end, otherend);
+
+		trace!("-----");
 	}
 }
 

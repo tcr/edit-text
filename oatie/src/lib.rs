@@ -1,5 +1,3 @@
-#![feature(append)]
-#![feature(vec_push_all)]
 #![allow(unused_variables)]
 #![allow(dead_code)]
 #![allow(unused_imports)]
@@ -77,7 +75,14 @@ fn place_any(res:&mut DocSpan, value:&DocElement) {
 	}
 }
 
-pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
+fn place_many(res: &mut DocSpan, values: &[DocElement]) {
+	if values.len() > 0 {
+		place_any(res, &values[0]);
+		res.extend_from_slice(&values[1..]);
+	}
+}
+
+pub fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan) {
 	let mut span = &spanvec[..];
 	let mut del = &delvec[..];
 
@@ -87,29 +92,34 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 		span = &span[1..]
 	}
 
-	let mut res:DocSpan = Vec::with_capacity(span.len());
+	let mut res: DocSpan = Vec::with_capacity(span.len());
 
 	if del.len() == 0 {
-		return spanvec.clone().to_vec();
+		return (vec![], spanvec.clone().to_vec());
 	}
-	
+
 	let mut d = del[0].clone();
 	del = &del[1..];
 
-	let mut exhausted = false;
+	let mut exhausted = first.is_none();
+
+	trace!("ABOUT TO APPLY ADD {:?} {:?}", first, span);
 
 	loop {
+		// Flags for whether we have partially or fully consumed an atom.
 		let mut nextdel = true;
 		let mut nextfirst = true;
 
 		if exhausted {
 			match d {
 				AddSkip(..) | AddWithGroup(..) => {
-					panic!("exhausted document");
+					panic!("exhausted document on {:?}", d);
 				},
 				_ => {},
 			}
 		}
+
+		trace!("next {:?} {:?} {:?}", d, first, exhausted);
 
 		match d.clone() {
 			AddSkip(count) => {
@@ -152,22 +162,33 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 				nextfirst = false;
 			},
 			AddGroup(attrs, innerspan) => {
-				// TODO fix this for real!
-				res.push(DocGroup(attrs, apply_add(&spanvec, &innerspan)));
-				nextfirst = true;
-			},	
+				let mut subdoc = vec![];
+				if !exhausted {
+					subdoc.push(first.clone().unwrap());
+					subdoc.extend_from_slice(span);
+				}
+				trace!("CALLING INNER {:?} {:?}", subdoc, innerspan);
+
+				let (inner, rest) = apply_add_inner(&subdoc, &innerspan);
+				place_any(&mut res, &DocGroup(attrs, inner));
+
+				trace!("REST OF INNER {:?} {:?}", rest, del);
+
+				let inner = apply_add(&rest, &del.to_vec());
+				place_many(&mut res, &inner);
+				return (res, vec![]);
+			},
 		}
 
 		if nextdel {
 			if del.len() == 0 {
+				let mut remaining = vec![];
 				if !nextfirst && !first.is_none() && !exhausted {
-					place_any(&mut res, &first.clone().unwrap());
+					remaining.push(first.clone().unwrap());
+					// place_any(&mut res, &first.clone().unwrap());
 				}
-				if span.len() > 0 {
-					place_any(&mut res, &span[0]);
-					res.push_all(&span[1..]);
-				}
-				break;
+				remaining.extend_from_slice(span);
+				return (res, remaining);
 			}
 
 			d = del[0].clone();
@@ -183,7 +204,15 @@ pub fn apply_add(spanvec:&DocSpan, delvec:&AddSpan) -> DocSpan {
 			}
 		}
 	}
+}
 
+pub fn apply_add(spanvec: &DocSpan, delvec: &AddSpan) -> DocSpan {
+	let (res, remaining) = apply_add_inner(spanvec, delvec);
+
+	// TODO just drop unbalanced components?
+	if !remaining.is_empty() {
+		panic!("Unbalanced apply_add");
+	}
 	res
 }
 
@@ -199,7 +228,7 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 
 	let mut first = span[0].clone();
 	span = &span[1..];
-	
+
 	let mut d = del[0].clone();
 	del = &del[1..];
 
@@ -246,7 +275,7 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 			DelGroup(ref delspan) => {
 				match first.clone() {
 					DocGroup(ref attrs, ref span) => {
-						res.push_all(&apply_delete(span, delspan)[..]);
+						res.extend_from_slice(&apply_delete(span, delspan)[..]);
 					},
 					_ => {
 						panic!("Invalid DelGroup");
@@ -286,7 +315,7 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 				}
 				if span.len() > 0 {
 					place_any(&mut res, &span[0]);
-					res.push_all(&span[1..]);
+					res.extend_from_slice(&span[1..]);
 				}
 				break;
 			}
@@ -320,7 +349,8 @@ fn test_start() {
 	}
 }
 
-#[cfg(test)] mod tests {
+#[cfg(test)]
+mod tests {
 	use std::collections::HashMap;
 	use doc::{DocSpan, DocElement, DelSpan, DelElement, AddSpan, AddElement, Atom, Op};
 	use doc::DocElement::*;
@@ -346,7 +376,7 @@ fn test_start() {
 		];
 
 		debug_span(&source);
-		
+
 		assert_eq!(iterate(&vec![
 			DocChars("Hello world!".to_owned()),
 			DocGroup(HashMap::new(), vec![]),

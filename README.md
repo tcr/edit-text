@@ -1,7 +1,7 @@
 # oatie
 
 ```
-multirust override nightly-2015-05-01
+multirust override nightly-2016-01-28
 ```
 
 # mote

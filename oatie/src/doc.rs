@@ -135,7 +135,7 @@ impl DelPlaceable for DelSpan {
 		}
 	}
 
-	fn place(&mut self, value:&DelElement) {
+	fn place(&mut self, value: &DelElement) {
 		del_place_any(self, value);
 	}
 }
@@ -152,7 +152,7 @@ impl AddPlaceable for AddSpan {
 		}
 	}
 
-	fn place(&mut self, value:&AddElement) {
+	fn place(&mut self, value: &AddElement) {
 		add_place_any(self, value);
 	}
 }
