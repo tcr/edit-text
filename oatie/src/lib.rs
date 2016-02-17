@@ -207,11 +207,12 @@ pub fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan
 }
 
 pub fn apply_add(spanvec: &DocSpan, delvec: &AddSpan) -> DocSpan {
-	let (res, remaining) = apply_add_inner(spanvec, delvec);
+	let (mut res, remaining) = apply_add_inner(spanvec, delvec);
 
-	// TODO just drop unbalanced components?
+	// TODO never accept unbalanced components?
 	if !remaining.is_empty() {
-		panic!("Unbalanced apply_add");
+		place_many(&mut res, &remaining);
+		// panic!("Unbalanced apply_add");
 	}
 	res
 }
