@@ -176,23 +176,6 @@ impl DelWriter {
 
 
 
-trait Named {
-    fn get_name(&self) -> Option<String>;
-}
-
-impl Named for Attrs {
-    fn get_name(&self) -> Option<String> {
-        match self.get("tag") {
-            Some(value) => Some(value.clone()),
-            None => None,
-        }
-    }
-}
-
-
-
-
-
 
 #[derive(PartialEq, Clone, Debug)]
 enum TrackType {
@@ -208,53 +191,62 @@ enum TrackType {
 
 fn get_tag_type<T: TagLike>(tag: T) -> Option<TrackType> {
     let tag = tag.tag();
-    match tag.as_ref() {
-        "ul" => Some(TrackType::Lists),
-        "li" => Some(TrackType::ListItems),
-        "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => Some(TrackType::Blocks),
-        "b" => Some(TrackType::Inlines),
-        _ => None,
-    }
-}
-
-fn get_type(attrs: &Attrs) -> Option<TrackType> {
-    match attrs.get_name() {
-        Some(tag) => get_tag_type(&tag[..]),
-        _ => None
+    if let Some(tag) = tag {
+        match tag.as_ref() {
+            "ul" => Some(TrackType::Lists),
+            "li" => Some(TrackType::ListItems),
+            "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => Some(TrackType::Blocks),
+            "b" => Some(TrackType::Inlines),
+            _ => None,
+        }
+    } else {
+        None
     }
 }
 
 trait TagLike {
-    fn tag(&self) -> String;
+    fn tag(&self) -> Option<String>;
 }
 
 impl TagLike for String {
-    fn tag(&self) -> String {
-        self.clone()
+    fn tag(&self) -> Option<String> {
+        Some(self.clone())
     }
 }
 
 impl<'a> TagLike for &'a String {
-    fn tag(&self) -> String {
-        (*self).clone()
+    fn tag(&self) -> Option<String> {
+        Some((*self).clone())
     }
 }
 
 impl<'a> TagLike for &'a str {
-    fn tag(&self) -> String {
-        (*self).into()
+    fn tag(&self) -> Option<String> {
+        Some((*self).into())
     }
 }
 
 impl TagLike for Attrs {
-    fn tag(&self) -> String {
-        self.get_name().unwrap_or("".into())
+    fn tag(&self) -> Option<String> {
+        match self.get("tag") {
+            Some(value) => Some(value.clone()),
+            None => None,
+        }
+    }
+}
+
+impl<'a> TagLike for &'a Attrs {
+    fn tag(&self) -> Option<String> {
+        match self.get("tag") {
+            Some(value) => Some(value.clone()),
+            None => None,
+        }
     }
 }
 
 impl TagLike for Option<String> {
-    fn tag(&self) -> String {
-        self.clone().unwrap_or("".into())
+    fn tag(&self) -> Option<String> {
+        self.clone()
     }
 }
 
@@ -683,7 +675,7 @@ impl Transform {
         let attrs: Attrs = container! {
             ("tag".to_string(), self.tracks.last().clone().unwrap().tag_real.clone().unwrap() )
         };
-        get_type(&attrs)
+        get_tag_type(&attrs)
     }
 }
 
@@ -807,24 +799,24 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
 
                 // Opening
                 (Some(AddGroup(ref a_attrs, _)), Some(AddGroup(ref b_attrs, _))) => {
-                    let a_type = get_type(a_attrs).unwrap();
-                    let b_type = get_type(b_attrs).unwrap();
+                    let a_type = get_tag_type(a_attrs).unwrap();
+                    let b_type = get_tag_type(b_attrs).unwrap();
 
                     println!("groupgruop {:?} {:?}", a_type, b_type);
                     if a_type == b_type {
                         a.enter();
                         b.enter();
-                        if a_attrs.get_name() == b_attrs.get_name() {
-                            t.enter(a_attrs.get_name().unwrap());
+                        if a_attrs.tag() == b_attrs.tag() {
+                            t.enter(a_attrs.tag().unwrap());
                         } else {
-                            t.enter_a(a_attrs.get_name().unwrap(), b_attrs.get_name());
+                            t.enter_a(a_attrs.tag().unwrap(), b_attrs.tag());
                         }
-                    } else if get_type(b_attrs).unwrap().ancestors().iter().position(|x| *x == get_type(a_attrs).unwrap()).is_some() {
+                    } else if get_tag_type(b_attrs).unwrap().ancestors().iter().position(|x| *x == get_tag_type(a_attrs).unwrap()).is_some() {
                         a.enter();
-                        t.enter_a(a_attrs.get_name().unwrap(), None);
+                        t.enter_a(a_attrs.tag().unwrap(), None);
                     } else {
                         b.enter();
-                        t.enter_b(None, b_attrs.get_name().unwrap());
+                        t.enter_b(None, b_attrs.tag().unwrap());
                     }
 
                     // TODO if they are different tags THEN WHAT
@@ -832,14 +824,14 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                 },
                 (Some(AddGroup(ref a_attrs, _)), _) => {
                     a.enter();
-                    t.enter_a(a_attrs.get_name().unwrap(), None);
+                    t.enter_a(a_attrs.tag().unwrap(), None);
                     println!("TRACKS: {:?}", t.tracks);
                 },
                 (_, Some(AddGroup(ref b_attrs, _))) => {
                     // println!("groupgruop {:?} {:?}", a_type, b_type);
                     // t.regenerate();
                     b.enter();
-                    let b_type = get_type(b_attrs);
+                    let b_type = get_tag_type(b_attrs);
 
                     // TODO for test_transform_black, have to dig deeply
                     for t in &t.tracks {
@@ -849,7 +841,7 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     if t.current_type() == b_type {
                         t.unenter_b();
                     } else {
-                        t.enter_b(None, b_attrs.get_name().unwrap());
+                        t.enter_b(None, b_attrs.tag().unwrap());
                     }
                 },
 
