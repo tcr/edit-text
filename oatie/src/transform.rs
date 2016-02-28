@@ -419,7 +419,7 @@ impl Transform {
 
     fn unenter_b(&mut self) {
         self.b_del.begin();
-        let track = self.tracks.last_mut().unwrap();
+        let track = self.next_track_b().unwrap();
         track.tag_b = track.tag_real.clone();
     }
 
@@ -493,6 +493,22 @@ impl Transform {
             .unwrap();
         (self.tracks[index].clone(), index)
     }
+    
+    fn next_track_b(&mut self) -> Option<&mut Track> {
+        if let Some(index) = self.tracks.iter().position(|x| x.tag_b.is_none()) {
+            Some(&mut self.tracks[index])
+        } else {
+            None
+        }
+    }
+    
+    fn next_track_b_type(&mut self) -> Option<TrackType> {
+        if let Some(track) = self.next_track_b() {
+            get_tag_type(track.tag_real.clone())
+        } else {
+            None
+        }
+    }
 
     fn close_a(&mut self) {
         println!("TRACKS CLOSE A: {:?}", self.tracks);
@@ -512,6 +528,7 @@ impl Transform {
         // if track.is_original_b {
         //     self.b_del.close();
         // }
+        println!("CLOSES THE B {:?}", self.b_add);
         self.b_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
 
         if track.tag_b.is_none() {
@@ -525,7 +542,11 @@ impl Transform {
     }
 
     fn close_b(&mut self) {
-        println!("TRACKS CLOSE B: {:?}", self.tracks);
+        println!("close_b:");
+        for t in &self.tracks {
+            println!(" - {:?}", t);
+        }
+        
         let (mut track, index) = self.top_track_b();
 
         println!("CLOSES THE B {:?}", self.b_del);
@@ -576,18 +597,25 @@ impl Transform {
     // Interrupt all tracks up the ancestry until we get to
     // a particular type, OR a type than could be an ancestor
     // of the given type
-    fn interrupt(&mut self, itype:TrackType) {
+    fn interrupt(&mut self, itype: TrackType, inclusive: bool) {
         let mut regen = vec![];
         loop {
             if let Some(track) = self.current() {
-                if track.tag_real.is_some() && {
-                    let tag_type = get_tag_type(&track.tag_real.unwrap()).unwrap();
-                    tag_type != itype && tag_type.ancestors().iter().position(|x| *x == itype).is_some()
-                } {
+                let (istag, hasparent) = if let Some(ref real) = track.tag_real {
+                    println!("WOW {:?} {:?}", real, itype);
+                    let tag_type = get_tag_type(real).unwrap();
+                    (tag_type == itype, tag_type.ancestors().iter().position(|x| *x == itype).is_some())
+                } else {
+                    (false, false)
+                };
+                if track.tag_real.is_some() && ((!istag && hasparent) || (istag && inclusive)) {
                     // schema.findType(tran.current()[1]) != type && schema.getAncestors(type).indexOf(schema.findType(tran.current()[1])) == -1
-                    println!("aborting by {:?}", itype);
+                    println!("aborting by {:?} {:?} {:?}", itype, inclusive, istag);
                     let aborted = self.abort();
                     regen.push(aborted);
+                    if istag && inclusive {
+                        break;
+                    }
                 } else {
                     break;
                 }
@@ -637,10 +665,17 @@ impl Transform {
                     // track.is_original_a = false;
                 }
 
-                self.a_add.begin();
-                self.b_add.begin();
+                // This only happens when opening split elements.
+                // if !track.is_original_a {
+                    self.a_add.begin();
+                // }
+                // if !track.is_original_b {
+                    self.b_add.begin();
+                // }
             }
         }
+        
+        println!("TIMMY {:?}", self.b_del);
     }
 
     fn result(mut self) -> (Op, Op) {
@@ -741,7 +776,9 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     a.next();
                 },
                 None => {
+                    println!("hi :)");
                     t.close_a();
+                    println!("hey :(");
                     a.exit();
                 },
                 _ => {
@@ -777,7 +814,7 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                 (None, _) => {
                     let a_typ = get_tag_type(&t.tracks.iter().rev().find(|t| t.tag_a.is_some()).unwrap().tag_a.clone().unwrap()[..]).unwrap();
                     println!("what is up with a {:?}", t.a_add);
-                    t.interrupt(a_typ);
+                    t.interrupt(a_typ, false);
                     // println!("... {:?} {:?}", t.a_del, t.a_add);
                     // println!("... {:?} {:?}", t.b_del, t.b_add);
                     println!("~~~> tracks {:?}", t.tracks);
@@ -791,7 +828,7 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     // println!("... {:?} {:?}", t.a_del, t.a_add);
                     // println!("... {:?} {:?}", t.b_del, t.b_add);
                     let b_typ = get_tag_type(&t.tracks.iter().rev().find(|t| t.tag_b.is_some()).unwrap().tag_b.clone().unwrap()[..]).unwrap();
-                    t.interrupt(b_typ);
+                    t.interrupt(b_typ, false);
                     t.close_b();
                     // t.closeA()
                     b.exit();
@@ -825,7 +862,11 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                 (Some(AddGroup(ref a_attrs, _)), _) => {
                     a.enter();
                     t.enter_a(a_attrs.tag().unwrap(), None);
-                    println!("TRACKS: {:?}", t.tracks);
+                    
+                    println!("adding left group:");
+                    for t in &t.tracks {
+                        println!(" - {:?}", t);
+                    }
                 },
                 (_, Some(AddGroup(ref b_attrs, _))) => {
                     // println!("groupgruop {:?} {:?}", a_type, b_type);
@@ -833,16 +874,29 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     b.enter();
                     let b_type = get_tag_type(b_attrs);
 
-                    // TODO for test_transform_black, have to dig deeply
-                    for t in &t.tracks {
-                        println!("okay {:?}", t);
-                    }
-
-                    if t.current_type() == b_type {
-                        t.unenter_b();
+                    if t.next_track_b_type() == b_type {
+                        if b_type == Some(TrackType::ListItems) {
+                            println!("INTERRUPTING");
+                            t.interrupt(b_type.unwrap(), true);
+                            if let Some(j) = t.next_track_b() {
+                                j.tag_b = b_attrs.tag();
+                                j.is_original_b = true;
+                            }
+                            t.b_del.begin();
+                        } else {
+                            t.unenter_b();
+                        }
                     } else {
                         t.enter_b(None, b_attrs.tag().unwrap());
                     }
+
+                    // TODO for test_transform_black, have to dig deeply
+                    println!("adding right group:");
+                    for t in &t.tracks {
+                        println!(" - {:?}", t);
+                    }
+                    
+                    println!("IMPORTANT {:?}", t.b_del);
                 },
 
                 // Rest
@@ -1216,17 +1270,17 @@ fn test_transform_black() {
     // TODO revert back to things with li's
     let a = vec![
         AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
-            // AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+            AddGroup(container! { ("tag".into(), "li".into()) }, vec![
                 AddSkip(5)
-            // ])
+            ])
         ]),
     ];
     let b = vec![
         AddSkip(2),
         AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
-            // AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+            AddGroup(container! { ("tag".into(), "li".into()) }, vec![
                 AddSkip(2)
-            // ])
+            ])
         ]),
     ];
 
@@ -1239,9 +1293,15 @@ fn test_transform_black() {
 
     let res = (vec![], vec![
         AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
-            // AddGroup(container! { ("tag".into(), "li".into()) }, vec![
-                AddSkip(5)
-            // ])
+            AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+                AddSkip(2)
+            ]),
+            AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+                AddSkip(2)
+            ]),
+            AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+                AddSkip(1)
+            ])
         ]),
     ]);
 
