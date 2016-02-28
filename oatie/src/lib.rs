@@ -7,6 +7,7 @@ extern crate env_logger;
 extern crate rand;
 #[macro_use] extern crate literator;
 extern crate rustc_serialize;
+extern crate term_painter;
 
 pub mod doc;
 pub mod compose;
