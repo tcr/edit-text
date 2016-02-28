@@ -930,6 +930,21 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     t.chars_b(a_chars);
                     a.next();
                 },
+                
+                // With Groups
+                (Some(AddWithGroup(inner)), Some(AddSkip(b_count))) => {
+                    t.a_del.skip(1);
+                    t.a_add.skip(1);
+                    t.b_del.skip(1);
+                    t.b_add.with_group(&inner);
+                    
+                    a.next();
+                    if b_count > 1 {
+                        b.head = Some(AddSkip(b_count - 1));
+                    } else {
+                        b.next();
+                    }
+                },
 
                 // ???
                 _ => {
@@ -1339,28 +1354,28 @@ fn test_transform_ferociously() {
     assert_eq!(a_res, b_res);
 }
 
-// #[test]
-// fn test_transform_tony() {
-//     let a = vec![
-//         AddWithGroup(vec![
-//             AddWithGroup(vec![
-//                 AddWithGroup(vec![
-//                 ]),
-//             ])
-//         ]),
-//         AddGroup(container! { ("tag".into(), "p".into()) }, vec![
-//             AddSkip(5)
-//         ]),
-//     ];
-//     let b = vec![
-//         AddGroup(container! { ("tag".into(), "h3".into()) }, vec![
-//             AddSkip(8)
-//         ]),
-//     ];
-//
-//     let (a_, b_) = transform_insertions(&a, &b);
-//
-//     let a_res = normalize(compose::compose(&(vec![], a), &a_));
-//     let b_res = normalize(compose::compose(&(vec![], b), &b_));
-//     assert_eq!(a_res, b_res);
-// }
+#[test]
+fn test_transform_tony() {
+    let a = vec![
+        AddWithGroup(vec![
+            AddWithGroup(vec![
+                AddWithGroup(vec![
+                ]),
+            ])
+        ]),
+        AddGroup(container! { ("tag".into(), "p".into()) }, vec![
+            AddSkip(5)
+        ]),
+    ];
+    let b = vec![
+        AddGroup(container! { ("tag".into(), "h3".into()) }, vec![
+            AddSkip(8)
+        ]),
+    ];
+
+    let (a_, b_) = transform_insertions(&a, &b);
+
+    let a_res = normalize(compose::compose(&(vec![], a), &a_));
+    let b_res = normalize(compose::compose(&(vec![], b), &b_));
+    assert_eq!(a_res, b_res);
+}
