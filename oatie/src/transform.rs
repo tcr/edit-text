@@ -557,9 +557,9 @@ impl Transform {
         println!("CLOSES THE B {:?}", self.b_add);
 
         // Determine whether to split tags for this track type.
-        // TODO do the same for track opening.
+        // TODO do the same for track opening?
         let track_split = if let Some(tag) = track.tag_real.clone() {
-            get_tag_type(&tag) != Some(TrackType::Lists)
+            get_tag_type(&tag) != Some(TrackType::Lists) || get_tag_type(&tag) != Some(TrackType::Inlines)
         } else {
             true
         };
