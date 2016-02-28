@@ -535,7 +535,7 @@ impl Transform {
             self.a_add.exit();
         } else {
             self.a_del.close();
-            if track_split { // TODO track.tag_a.is_none() ? like in close_b
+            if track_split || track.tag_b.is_none() {
                 self.a_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
             }
         }
@@ -544,7 +544,7 @@ impl Transform {
         //     self.b_del.close();
         // }
         println!("CLOSES THE B {:?}", self.b_add);
-        if track_split {
+        if track_split || track.tag_b.is_none() {
             self.b_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
         }
 
