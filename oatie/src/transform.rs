@@ -517,32 +517,47 @@ impl Transform {
     fn close_a(&mut self) {
         println!("TRACKS CLOSE A: {:?}", self.tracks);
         let (mut track, index) = self.top_track_a();
+        
+        // Determine whether to split tags for this track type.
+        // TODO do the same for track opening?
+        let track_split = if let Some(tag) = track.tag_real.clone() {
+            get_tag_type(&tag) != Some(TrackType::Lists) && get_tag_type(&tag) != Some(TrackType::Inlines)
+        } else {
+            true
+        };
 
-        println!("CLOSES THE A {:?}", self.a_del);
-        println!("CLOSES THE A {:?}", self.a_add);
-
-        if track.is_original_a { // && track.tag_real == track.tag_a {
+        if track.is_original_a && (track_split || track.tag_b.is_none()) { // && track.tag_real == track.tag_a {
             self.a_del.exit();
             self.a_add.exit();
         } else {
             self.a_del.close();
-            self.a_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+            if track_split { // TODO track.tag_a.is_none() ? like in close_b
+                self.a_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+            }
         }
 
         // if track.is_original_b {
         //     self.b_del.close();
         // }
         println!("CLOSES THE B {:?}", self.b_add);
-        self.b_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+        if track_split {
+            self.b_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+        }
 
         if track.tag_b.is_none() {
             self.tracks.remove(index);
         } else {
             self.tracks[index].is_original_a = false;
-            self.tracks[index].is_original_b = false;
+            if track_split {
+                self.tracks[index].is_original_b = false;
+            }
             self.tracks[index].tag_a = None;
-            self.tracks[index].tag_real = None;
+            if track_split {
+                self.tracks[index].tag_real = None;
+            }
         }
+        
+        println!("A ADD NOW {:?}", self.a_add);
     }
 
     fn close_b(&mut self) {
@@ -558,20 +573,21 @@ impl Transform {
 
         // Determine whether to split tags for this track type.
         // TODO do the same for track opening?
+        // NOTE i might have done this already
         let track_split = if let Some(tag) = track.tag_real.clone() {
-            get_tag_type(&tag) != Some(TrackType::Lists) || get_tag_type(&tag) != Some(TrackType::Inlines)
+            get_tag_type(&tag) != Some(TrackType::Lists) && get_tag_type(&tag) != Some(TrackType::Inlines)
         } else {
             true
         };
 
-        if track.is_original_b { // && track.tag_real == track.tag_b {
+        if track.is_original_b && (track_split || track.tag_a.is_none()) { // && track.tag_real == track.tag_b {
             self.b_del.exit();
             self.b_add.exit();
         } else {
             println!("1");
 
             self.b_del.close();
-            if track_split {
+            if track_split || track.tag_a.is_none() {
                 self.b_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
             }
             println!("2 {:?}", self.b_del);
@@ -580,7 +596,7 @@ impl Transform {
         // if track.is_original_a {
         //     self.a_del.close();
         // }
-        if track_split {
+        if track_split || track.tag_a.is_none() {
             self.a_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
         }
 
@@ -727,13 +743,20 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
     let mut t = Transform::new();
 
     while !(a.is_done() && b.is_done()) {
+        println!("Tracks:");
+        for t in &t.tracks {
+            println!(" - {:?}", t);
+        }
+        
+        println!(" @ a_del: {:?}", t.a_del);
+        println!(" @ a_add: {:?}", t.a_add);
+        println!(" @ b_del: {:?}", t.b_del);
+        println!(" @ b_add: {:?}", t.b_add);
+
         if a.is_done() {
-            println!("tracks {:?}", t.tracks);
+            // println!("tracks {:?}", t.tracks);
             t.regenerate();
             println!("A IS DONE: {:?}", b.head.clone());
-
-            println!("WHAT IS UP {:?}", t.b_add);
-            println!("`````` tracks {:?}", t.tracks);
 
             match b.head.clone() {
                 Some(AddGroup(ref attrs, ref span)) => {
@@ -780,9 +803,7 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     a.next();
                 },
                 None => {
-                    println!("hi :)");
                     t.close_a();
-                    println!("hey :(");
                     a.exit();
                 },
                 _ => {
@@ -867,10 +888,10 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     a.enter();
                     t.enter_a(a_attrs.tag().unwrap(), None);
                     
-                    println!("adding left group:");
-                    for t in &t.tracks {
-                        println!(" - {:?}", t);
-                    }
+                    // println!("adding left group:");
+                    // for t in &t.tracks {
+                    //     println!(" - {:?}", t);
+                    // }
                 },
                 (_, Some(AddGroup(ref b_attrs, _))) => {
                     // println!("groupgruop {:?} {:?}", a_type, b_type);
