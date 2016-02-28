@@ -9,6 +9,10 @@ use stepper::*;
 use compose;
 use normalize;
 
+use term_painter::ToStyle;
+use term_painter::Color::*;
+use term_painter::Attr::*;
+
 
 #[derive(Clone, Debug)]
 pub struct AddStepper {
@@ -743,20 +747,20 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
     let mut t = Transform::new();
 
     while !(a.is_done() && b.is_done()) {
-        println!("Tracks:");
+        println!("{}", Green.bold().paint("Tracks:"));
         for t in &t.tracks {
-            println!(" - {:?}", t);
+            println!("{}", BrightGreen.paint(format!(" - {:?}", t)));
         }
         
-        println!(" @ a_del: {:?}", t.a_del);
-        println!(" @ a_add: {:?}", t.a_add);
-        println!(" @ b_del: {:?}", t.b_del);
-        println!(" @ b_add: {:?}", t.b_add);
+        println!("{}", BrightGreen.paint(format!(" @ a_del: {:?}", t.a_del)));
+        println!("{}", BrightGreen.paint(format!(" @ a_add: {:?}", t.a_add)));
+        println!("{}", BrightGreen.paint(format!(" @ b_del: {:?}", t.b_del)));
+        println!("{}", BrightGreen.paint(format!(" @ b_add: {:?}", t.b_add)));
 
         if a.is_done() {
             // println!("tracks {:?}", t.tracks);
             t.regenerate();
-            println!("A IS DONE: {:?}", b.head.clone());
+            println!("{}", BrightYellow.paint(format!("Finishing B: {:?}", b.head.clone())));
 
             match b.head.clone() {
                 Some(AddGroup(ref attrs, ref span)) => {
@@ -784,7 +788,7 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
             }
         } else if b.is_done() {
             t.regenerate();
-            println!("B IS DONE: {:?}", a.head.clone());
+            println!("{}", BrightYellow.paint(format!("Finishing A: {:?}", a.head.clone())));
 
             match a.head.clone() {
                 Some(AddGroup(ref attrs, ref span)) => {
@@ -812,7 +816,8 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
             }
 
         } else {
-            println!("next step: {:?}", (a.head.clone(), b.head.clone()));
+            println!("{}", BrightYellow.paint(format!("Next step: {:?}", (a.head.clone(), b.head.clone()))));
+
             match (a.head.clone(), b.head.clone()) {
                 // Closing
                 (None, None) => {
