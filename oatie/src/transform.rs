@@ -165,6 +165,10 @@ impl DelWriter {
         self.past.place(&DelChars(count));
     }
 
+    pub fn with_group(&mut self, span: &DelSpan) {
+        self.past.place(&DelWithGroup(span.clone()));
+    }
+
     pub fn result(self) -> DelSpan {
         if self.stack.len() > 0 {
             println!("{:?}", self);
@@ -570,7 +574,7 @@ impl Transform {
             if track_split {
                 self.b_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
             }
-            println!("2");
+            println!("2 {:?}", self.b_del);
         }
 
         // if track.is_original_a {
@@ -932,11 +936,11 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                 },
                 
                 // With Groups
-                (Some(AddWithGroup(inner)), Some(AddSkip(b_count))) => {
+                (Some(AddWithGroup(a_inner)), Some(AddSkip(b_count))) => {
                     t.a_del.skip(1);
                     t.a_add.skip(1);
                     t.b_del.skip(1);
-                    t.b_add.with_group(&inner);
+                    t.b_add.with_group(&a_inner);
                     
                     a.next();
                     if b_count > 1 {
@@ -944,6 +948,17 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     } else {
                         b.next();
                     }
+                },
+                (Some(AddWithGroup(a_inner)), Some(AddWithGroup(b_inner))) => {
+                    let (a_op, b_op) = transform_insertions(&a_inner, &b_inner);
+                    
+                    t.a_del.with_group(&a_op.0);
+                    t.a_add.with_group(&a_op.1);
+                    t.b_del.with_group(&b_op.0);
+                    t.b_add.with_group(&b_op.1);
+                    
+                    a.next();
+                    b.next();
                 },
 
                 // ???
@@ -1378,4 +1393,64 @@ fn test_transform_tony() {
     let a_res = normalize(compose::compose(&(vec![], a), &a_));
     let b_res = normalize(compose::compose(&(vec![], b), &b_));
     assert_eq!(a_res, b_res);
+}
+
+#[test]
+fn test_transform_drone() {
+    let a = vec![
+        AddWithGroup(vec![
+            AddWithGroup(vec![
+                AddWithGroup(vec![
+                    AddSkip(4),
+                    AddChars("a".into()),
+                ]),
+            ])
+        ]),
+    ];
+    let b = vec![
+        AddWithGroup(vec![
+            AddWithGroup(vec![
+                AddWithGroup(vec![
+                    AddSkip(4),
+                    AddChars("b".into()),
+                ]),
+            ])
+        ]),
+    ];
+
+    let (a_, b_) = transform_insertions(&a, &b);
+
+    let a_res = normalize(compose::compose(&(vec![], a), &a_));
+    let b_res = normalize(compose::compose(&(vec![], b), &b_));
+    assert_eq!(a_res, b_res);
+}
+
+#[test]
+fn test_transform_feedback() {
+    let a = vec![
+        // AddWithGroup(vec![
+        //     AddWithGroup(vec![
+                AddWithGroup(vec![
+                    AddSkip(1),
+                    AddGroup(container! { ("tag".into(), "b".into()) }, vec![AddSkip(3)]),
+                ]),
+        //     ])
+        // ]),
+    ];
+    let b = vec![
+        // AddWithGroup(vec![
+        //     AddWithGroup(vec![
+                AddWithGroup(vec![
+                    AddSkip(2),
+                    AddGroup(container! { ("tag".into(), "b".into()) }, vec![AddSkip(3)]),
+                ]),
+        //     ])
+        // ]),
+    ];
+
+    let (a_, b_) = transform_insertions(&a, &b);
+
+    let a_res = normalize(compose::compose(&(vec![], a), &a_));
+    let b_res = normalize(compose::compose(&(vec![], b), &b_));
+    assert_eq!(a_res.1, b_res.1); // TODO fix the normalize case for deletes??
 }
