@@ -494,6 +494,22 @@ impl Transform {
             .unwrap();
         (self.tracks[index].clone(), index)
     }
+    
+    fn next_track_a(&mut self) -> Option<&mut Track> {
+        if let Some(index) = self.tracks.iter().position(|x| x.tag_a.is_none()) {
+            Some(&mut self.tracks[index])
+        } else {
+            None
+        }
+    }
+    
+    fn next_track_a_type(&mut self) -> Option<TrackType> {
+        if let Some(track) = self.next_track_a() {
+            get_tag_type(track.tag_real.clone())
+        } else {
+            None
+        }
+    }
 
     fn top_track_b(&mut self) -> (Track, usize) {
         let index = self.tracks.iter()
@@ -891,7 +907,23 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                 },
                 (Some(AddGroup(ref a_attrs, _)), _) => {
                     a.enter();
-                    t.enter_a(a_attrs.tag().unwrap(), None);
+                    let a_type = get_tag_type(a_attrs);
+
+                    if t.next_track_a_type() == a_type {
+                        if a_type == Some(TrackType::ListItems) {
+                            println!("INTERRUPTING");
+                            t.interrupt(a_type.unwrap(), true);
+                            if let Some(j) = t.next_track_a() {
+                                j.tag_a = a_attrs.tag();
+                                j.is_original_a = true;
+                            }
+                            t.a_del.begin();
+                        } else {
+                            t.unenter_a();
+                        }
+                    } else {
+                        t.enter_a(a_attrs.tag().unwrap(), None);
+                    }
                     
                     // println!("adding left group:");
                     // for t in &t.tracks {
@@ -919,14 +951,6 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     } else {
                         t.enter_b(None, b_attrs.tag().unwrap());
                     }
-
-                    // TODO for test_transform_black, have to dig deeply
-                    println!("adding right group:");
-                    for t in &t.tracks {
-                        println!(" - {:?}", t);
-                    }
-                    
-                    println!("IMPORTANT {:?}", t.b_del);
                 },
 
                 // Rest
@@ -1474,9 +1498,16 @@ fn test_transform_feedback() {
         // ]),
     ];
 
-    let (a_, b_) = transform_insertions(&a, &b);
+    // let (a_, b_) = transform_insertions(&a, &b);
+    // 
+    // let a_res = normalize(compose::compose(&(vec![], a.clone()), &a_));
+    // let b_res = normalize(compose::compose(&(vec![], b.clone()), &b_));
+    // assert_eq!(a_res.1, b_res.1); // TODO fix the normalize case for deletes??
+    
 
-    let a_res = normalize(compose::compose(&(vec![], a), &a_));
-    let b_res = normalize(compose::compose(&(vec![], b), &b_));
+    let (b_, a_) = transform_insertions(&b, &a);
+
+    let a_res = normalize(compose::compose(&(vec![], b.clone()), &b_));
+    let b_res = normalize(compose::compose(&(vec![], a.clone()), &a_));
     assert_eq!(a_res.1, b_res.1); // TODO fix the normalize case for deletes??
 }
