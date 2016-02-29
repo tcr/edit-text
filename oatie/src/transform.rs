@@ -15,6 +15,62 @@ use term_painter::Attr::*;
 
 
 #[derive(Clone, Debug)]
+pub struct DelStepper {
+    pub head:Option<DelElement>,
+    pub rest:Vec<DelElement>,
+    pub stack:Vec<Vec<DelElement>>,
+}
+
+impl DelStepper {
+    pub fn new(span:&DelSpan) -> DelStepper {
+        let mut ret = DelStepper {
+            head: None,
+            rest: span.to_vec(),
+            stack: vec![],
+        };
+        ret.next();
+        ret
+    }
+
+    pub fn next(&mut self) -> Option<DelElement> {
+        let res = self.head.clone();
+        self.head = if self.rest.len() > 0 { Some(self.rest.remove(0)) } else { None };
+        res
+    }
+
+    pub fn get_head(&self) -> DelElement {
+        self.head.clone().unwrap()
+    }
+
+    pub fn is_done(&self) -> bool {
+        self.head.is_none() && self.stack.len() == 0
+    }
+
+    pub fn enter(&mut self) {
+        let head = self.head.clone();
+        self.stack.push(self.rest.clone());
+        let span = match head {
+            Some(DelGroup(ref span)) |
+            Some(DelWithGroup(ref span)) => {
+                self.head = None;
+                self.rest = span.to_vec();
+                self.next();
+            },
+            _ => {
+                panic!("Entered wrong thing")
+            }
+        };
+    }
+
+    pub fn exit(&mut self) {
+        let last = self.stack.pop().unwrap();
+        self.rest = last;
+        self.next();
+    }
+}
+
+
+#[derive(Clone, Debug)]
 pub struct AddStepper {
     pub head:Option<AddElement>,
     pub rest:Vec<AddElement>,
@@ -755,8 +811,6 @@ impl Transform {
 }
 
 pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
-    // let mut res = Vec::with_capacity(avec.len() + bvec.len());
-
     let mut a = AddStepper::new(avec);
     let mut b = AddStepper::new(bvec);
 
@@ -967,8 +1021,8 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                         a.next();
                         b.next();
                     }
-                    t.skip_a(::std::cmp::min(a_count, b_count));
-                    t.skip_b(::std::cmp::min(a_count, b_count));
+                    t.skip_a(cmp::min(a_count, b_count));
+                    t.skip_b(cmp::min(a_count, b_count));
                 },
                 (Some(AddSkip(a_count)), Some(AddChars(ref b_chars))) => {
                     t.regenerate();
@@ -1028,4 +1082,150 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
     println!("RESULT A: {:?}", op_a.clone());
     println!("RESULT B: {:?}", op_b.clone());
     (op_a, op_b)
+}
+
+pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan) {
+    let mut a = DelStepper::new(avec);
+    let mut b = DelStepper::new(bvec);
+    
+    let mut a_del = DelWriter::new();
+    let mut b_del = DelWriter::new();
+
+    while !(a.is_done() && b.is_done()) {
+        println!("{}", Green.bold().paint("transform_deletions:"));
+        println!("{}", BrightGreen.paint(format!(" @ a_del: {:?}", a_del)));
+        println!("{}", BrightGreen.paint(format!(" @ b_del: {:?}", b_del)));
+
+        if a.is_done() {
+            println!("{}", BrightYellow.paint(format!("Finishing B: {:?}", b.head.clone())));
+
+            match b.head.clone() {
+                Some(DelGroup(ref span)) => {
+                    // t.skip_b(1);
+                    // t.group_a(attrs, span);
+                    a_del.with_group(span);
+                    b.next();
+                },
+                Some(DelChars(b_chars)) => {
+                    // t.chars_a(b_chars);
+                    // t.skip_b(b_chars.len());
+                    a_del.chars(b_chars);
+                    b.next();
+                },
+                Some(DelSkip(b_count)) => {
+                    // t.skip_a(b_count);
+                    // t.skip_b(b_count);
+                    a_del.skip(b_count);
+                    b.next();
+                },
+                None => {
+                    // t.close_b();
+                    b.exit();
+                },
+                _ => {
+                    panic!("What: {:?}", b.head);
+                }
+            }
+        } else if b.is_done() {
+            println!("{}", BrightYellow.paint(format!("Finishing A: {:?}", a.head.clone())));
+
+            match a.head.clone() {
+                Some(DelGroup(ref span)) => {
+                    // t.skip_a(1);
+                    // t.group_b(attrs, span);
+                    a.next();
+                },
+                Some(DelChars(ref a_chars)) => {
+                    // t.skip_a(a_chars.len());
+                    // t.chars_b(a_chars);
+                    a.next();
+                },
+                Some(DelSkip(a_count)) => {
+                    // t.skip_a(a_count);
+                    // t.skip_b(a_count);
+                    a.next();
+                },
+                None => {
+                    // t.close_a();
+                    a.exit();
+                },
+                _ => {
+                    panic!("Unknown value: {:?}", a.head.clone());
+                }
+            }
+
+        } else {
+            println!("{}", BrightYellow.paint(format!("Next step: {:?}", (a.head.clone(), b.head.clone()))));
+
+            match (a.head.clone(), b.head.clone()) {
+                
+                // Rest
+                (Some(DelSkip(a_count)), Some(DelSkip(b_count))) => {
+                    if a_count > b_count {
+                        a.head = Some(DelSkip(a_count - b_count));
+                        b.next();
+                    } else if a_count < b_count {
+                        a.next();
+                        b.head = Some(DelSkip(b_count - a_count));
+                    } else {
+                        a.next();
+                        b.next();
+                    }
+                    
+                    a_del.skip(cmp::min(a_count, b_count));
+                    b_del.skip(cmp::min(a_count, b_count));
+                },
+                (Some(DelSkip(a_count)), Some(DelChars(b_chars))) => {
+                    b.next();
+                    a_del.chars(b_chars);
+                },
+                (Some(DelChars(a_chars)), Some(DelChars(b_chars))) => {
+                    if a_chars > b_chars {
+                        a.head = Some(DelChars(a_chars - b_chars));
+                        b.next();
+                    } else if a_chars < b_chars {
+                        a.next();
+                        b.head = Some(DelChars(b_chars - a_chars));
+                    } else {
+                        a.next();
+                        b.next();
+                    }
+                    
+                    a_del.skip(cmp::min(a_chars, b_chars));
+                    b_del.skip(cmp::min(a_chars, b_chars));
+                },
+                (Some(DelChars(a_chars)), Some(DelSkip(b_count))) => {
+                    if a_chars > b_count {
+                        a.head = Some(DelChars(a_chars - b_count));
+                        b.next();
+                    } else if a_chars < b_count {
+                        a.next();
+                        b.head = Some(DelSkip(b_count - a_chars));
+                    } else {
+                        a.next();
+                        b.next();
+                    }
+                    
+                    // a_del.skip(cmp::min(a_chars, b_chars));
+                    b_del.chars(cmp::min(a_chars, b_count));
+                },
+                (Some(DelChars(a_chars)), _) => {
+                    a.next();
+                    b_del.chars(a_chars);
+                },
+                
+                _ => {
+                    unreachable!();
+                }
+            }
+        }
+    }
+    
+    let a_res = a_del.result();
+    let b_res = b_del.result();
+    
+    println!("{}", BrightYellow.paint(format!("Result A: {:?}", a_res)));
+    println!("{}", BrightYellow.paint(format!("Result B: {:?}", b_res)));
+    
+    (a_res, b_res)
 }

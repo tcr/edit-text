@@ -490,3 +490,61 @@ fn test_transform_feedback() {
     let b_res = normalize(compose::compose(&(vec![], a.clone()), &a_));
     assert_eq!(a_res.1, b_res.1); // TODO fix the normalize case for deletes??
 }
+
+#[test]
+fn test_transform_dawn() {
+    let a = vec![
+        DelSkip(2),
+        DelChars(1),
+    ];
+    let b = vec![
+        DelSkip(2),
+        DelChars(1),
+    ];
+
+    let (a_, b_) = transform_deletions(&a, &b);
+
+    let res = (vec![
+        DelSkip(2),
+        DelChars(1),
+    ], vec![]);
+
+    let a_res = normalize(compose::compose(&(a, vec![]), &(a_, vec![])));
+    let b_res = normalize(compose::compose(&(b, vec![]), &(b_, vec![])));
+
+    println!("A : {:?}", a_res);
+    println!("B : {:?}", b_res);
+    println!("r : {:?}", res);
+
+    assert_eq!(a_res, res.clone());
+    assert_eq!(b_res, res.clone());
+}
+
+#[test]
+fn test_transform_zone() {
+    let a = vec![
+        DelSkip(1),
+        DelChars(1),
+    ];
+    let b = vec![
+        DelSkip(2),
+        DelChars(1),
+    ];
+
+    let (a_, b_) = transform_deletions(&a, &b);
+
+    let res = (vec![
+        DelSkip(1),
+        DelChars(2),
+    ], vec![]);
+
+    let a_res = normalize(compose::compose(&(a, vec![]), &(a_, vec![])));
+    let b_res = normalize(compose::compose(&(b, vec![]), &(b_, vec![])));
+
+    println!("A : {:?}", a_res);
+    println!("B : {:?}", b_res);
+    println!("r : {:?}", res);
+
+    assert_eq!(a_res, res.clone());
+    assert_eq!(b_res, res.clone());
+}
