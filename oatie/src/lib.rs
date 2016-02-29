@@ -507,19 +507,23 @@ mod tests {
 	}
 }
 
-fn normalize_del (del:DelSpan) -> DelSpan {
+fn normalize_del (mut del: DelSpan) -> DelSpan {
     // let mut tail = true;
-    del.into_iter().rev().map(|x| {
-        //TODO
-        x
-    }).filter(move |x| {
-        match x {
-            &DelSkip(_) => {
-                false
-            },
-            _ => true
-        }
-    }).rev().collect()
+    // del.into_iter().rev().map(|x| {
+    //     //TODO
+    //     x
+    // }).filter(move |x| {
+    //     match x {
+    //         &DelSkip(_) => {
+    //             false
+    //         },
+    //         _ => true
+    //     }
+    // }).rev().collect()
+	if let Some(&DelSkip(..)) = del.last() {
+		del.pop();
+	}
+	del
 }
 
 pub fn normalize (op:Op) -> Op {
