@@ -225,6 +225,10 @@ impl DelWriter {
         self.past.place(&DelChars(count));
     }
 
+    pub fn group(&mut self, span: &DelSpan) {
+        self.past.place(&DelGroup(span.clone()));
+    }
+
     pub fn with_group(&mut self, span: &DelSpan) {
         self.past.place(&DelWithGroup(span.clone()));
     }
@@ -1159,6 +1163,17 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
 
             match (a.head.clone(), b.head.clone()) {
                 
+                // Groups
+                (Some(DelGroup(a_inner)), Some(DelGroup(b_inner))) => {
+                    let (a_del_inner, b_del_inner) = transform_deletions(&a_inner, &b_inner);
+                    
+                    a_del.group(&a_del_inner);
+                    b_del.group(&b_del_inner);
+                    
+                    a.next();
+                    b.next();
+                },
+                
                 // Rest
                 (Some(DelSkip(a_count)), Some(DelSkip(b_count))) => {
                     if a_count > b_count {
@@ -1214,6 +1229,17 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                     b_del.chars(a_chars);
                 },
                 
+                // With Groups
+                (Some(DelWithGroup(a_inner)), Some(DelWithGroup(b_inner))) => {
+                    let (a_del_inner, b_del_inner) = transform_deletions(&a_inner, &b_inner);
+                    
+                    a_del.with_group(&a_del_inner);
+                    b_del.with_group(&b_del_inner);
+                    
+                    a.next();
+                    b.next();
+                },
+                
                 _ => {
                     unreachable!();
                 }
@@ -1228,4 +1254,14 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
     println!("{}", BrightYellow.paint(format!("Result B: {:?}", b_res)));
     
     (a_res, b_res)
+}
+
+pub fn transform(a: &Op, b: &Op) -> (Op, Op) {
+    let (a_del, b_del) = transform_deletions(&a.0, &b.0);
+    
+    // TODO this
+
+    let (a_, b_) = transform_insertions(&a.1, &b.1);
+    
+    (a_, b_)
 }

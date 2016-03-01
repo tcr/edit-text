@@ -548,3 +548,35 @@ fn test_transform_zone() {
     assert_eq!(a_res, res.clone());
     assert_eq!(b_res, res.clone());
 }
+
+#[test]
+fn test_transform_everyday() {
+    let a = vec![
+        DelWithGroup(vec![
+            DelGroup(vec![]),
+        ]),
+    ];
+    let b = vec![
+        DelWithGroup(vec![
+            DelGroup(vec![]),
+        ]),
+    ];
+
+    let (a_, b_) = transform_deletions(&a, &b);
+
+    let res = (vec![
+        DelWithGroup(vec![
+            DelGroup(vec![]),
+        ]),
+    ], vec![]);
+
+    let a_res = normalize(compose::compose(&(a, vec![]), &(a_, vec![])));
+    let b_res = normalize(compose::compose(&(b, vec![]), &(b_, vec![])));
+
+    println!("A : {:?}", a_res);
+    println!("B : {:?}", b_res);
+    println!("r : {:?}", res);
+
+    assert_eq!(a_res, res.clone());
+    assert_eq!(b_res, res.clone());
+}
