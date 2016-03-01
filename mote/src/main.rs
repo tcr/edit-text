@@ -25,7 +25,7 @@ use rustc_serialize::json;
 
 use oatie::doc::*;
 use oatie::compose::compose;
-use oatie::transform::transform_insertions;
+use oatie::transform::transform;
 use oatie::apply_operation;
 
 fn default_doc() -> DocElement {
@@ -107,6 +107,7 @@ fn sync_thing(req: &mut Request) -> IronResult<Response> {
         Ok(Some(struct_body)) => {
             let (mut ops_a, mut ops_b) = struct_body;
 
+            // Flatten client A operations.
             let op_a = if ops_a.len() == 0 {
                 (vec![], vec![])
             } else {
@@ -117,6 +118,7 @@ fn sync_thing(req: &mut Request) -> IronResult<Response> {
                 op
             };
 
+            // Flatten client B operations.
             let op_b = if ops_b.len() == 0 {
                 (vec![], vec![])
             } else {
@@ -130,10 +132,8 @@ fn sync_thing(req: &mut Request) -> IronResult<Response> {
             println!("OP A {:?}", op_a);
             println!("OP B {:?}", op_b);
 
-            let (_, ins_a) = op_a.clone();
-            let (_, ins_b) = op_b.clone();
-
-            let (a_, b_) = transform_insertions(&ins_a, &ins_b);
+            // Tranform
+            let (a_, b_) = transform(&op_a, &op_b);
 
             println!("OP A' {:?}", a_);
             println!("OP B' {:?}", b_);
