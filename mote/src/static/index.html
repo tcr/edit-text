@@ -3,7 +3,8 @@
 <h1>mote editor <button id="sync">sync!</button></h1>
 
 <pre>
-  command+, - add new group
+  command + . - rename group
+  command + , - add new group
   shift + delete - delete group saving contents
   meta + delete - delete group with contents
 </pre>
@@ -307,6 +308,7 @@ function init (m) {
   var ophistory = []
 
   function op (d, a) {
+    console.log(JSON.stringify([d, a]));
     ophistory.push([d, a]);
     // console.log(JSON.stringify(j));
     setTimeout(function () {
@@ -353,10 +355,10 @@ function init (m) {
     //   }
     //   return false;
     // }
-
+    
     // command+,
     if (e.keyCode == 188 && e.metaKey) {
-      if (active) {
+      if (isBlock(active)) {
         var tag = prompt("Tag name:", "p");
         if (tag) {
           var out = active.nextAll().add(active).not($('.target').nextAll());
@@ -375,6 +377,54 @@ function init (m) {
               ]],
             }
           ));
+        }
+      }
+      return false;
+    }
+
+    // command+.
+    if (e.keyCode == 190 && e.metaKey) {
+      if (active) {
+        var tag = prompt("Tag name:", "p");
+        if (tag) {
+          op(delto(active,
+            {
+              "variant": "DelGroup",
+              "fields": [[]],
+            }
+          ), navto(active,
+            {
+              "variant": "AddGroup",
+              "fields": [{"tag": tag}, [
+                {
+                  "variant": "AddSkip",
+                  "fields": [active.children().length]
+                }
+              ]],
+            }
+          ));
+          
+          console.log('hi');
+          active.attr('data-tag', tag);
+          console.log('uh');
+          
+          // 
+          // var out = active.nextAll().add(active).not($('.target').nextAll());
+          // clearActive();
+          // clearTarget();
+          // out.wrapAll($('<div>').attr('data-tag', tag));
+          // active = out.parent().addClass('active').addClass('target');
+          // op([], navto(active,
+          //   {
+          //     "variant": "AddGroup",
+          //     "fields": [{"tag": tag}, [
+          //       {
+          //         "variant": "AddSkip",
+          //         "fields": [out.length]
+          //       }
+          //     ]],
+          //   }
+          // ));
         }
       }
       return false;
@@ -419,6 +469,7 @@ function init (m) {
           clearTarget();
         }
       } else {
+        // Delete characters.
         if (isChar(active)) {
           clearActive();
           clearTarget();
