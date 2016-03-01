@@ -123,7 +123,7 @@ fn compose_del_del_inner(res:&mut DelSpan, a:&mut DelSlice, b:&mut DelSlice) {
 	}
 }
 
-fn compose_del_del(avec:&DelSpan, bvec:&DelSpan) -> DelSpan {
+pub fn compose_del_del(avec: &DelSpan, bvec: &DelSpan) -> DelSpan {
 	let mut res = Vec::with_capacity(avec.len() + bvec.len());
 
 	let mut a = DelSlice::new(avec);
@@ -259,7 +259,7 @@ fn compose_add_add(avec:&AddSpan, bvec:&AddSpan) -> AddSpan {
 	res
 }
 
-fn compose_add_del(avec:&AddSpan, bvec:&DelSpan) -> Op {
+pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
 	let mut delres: DelSpan = Vec::with_capacity(avec.len() + bvec.len());
 	let mut addres: AddSpan = Vec::with_capacity(avec.len() + bvec.len());
 

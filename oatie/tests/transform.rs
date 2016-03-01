@@ -580,3 +580,40 @@ fn test_transform_everyday() {
     assert_eq!(a_res, res.clone());
     assert_eq!(b_res, res.clone());
 }
+
+
+#[test]
+fn test_transform_pick() {
+    let a = (vec![
+        DelWithGroup(vec![
+            DelGroup(vec![]),
+        ]),
+    ], vec![]);
+    let b = (vec![], vec![
+        AddWithGroup(vec![
+            AddWithGroup(vec![
+                AddChars("hi".into()),
+            ]),
+        ]),
+    ]);
+
+    let (a_, b_) = transform(&a, &b);
+
+    // let res = (vec![
+    //     DelWithGroup(vec![
+    //         DelGroup(vec![]),
+    //     ]),
+    // ], vec![]);
+
+    let a_res = normalize(compose::compose(&a, &a_));
+    let b_res = normalize(compose::compose(&b, &b_));
+
+    // println!("A : {:?}", a_res);
+    // println!("B : {:?}", b_res);
+    // println!("r : {:?}", res);
+    // 
+    // assert_eq!(a_res, res.clone());
+    // assert_eq!(b_res, res.clone());
+    
+    assert_eq!(a_res, b_res);
+}
