@@ -501,6 +501,14 @@ impl Transform {
         self.b_add.skip(n);
     }
 
+    fn with_group_a(&mut self, span: &AddSpan) {
+        self.a_add.with_group(span);
+    }
+
+    fn with_group_b(&mut self, span: &AddSpan) {
+        self.b_add.with_group(span);
+    }
+
     fn group_a(&mut self, attrs: &Attrs, span: &AddSpan) {
         self.a_add.group(attrs, span);
     }
@@ -842,6 +850,11 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     t.group_a(attrs, span);
                     b.next();
                 },
+                Some(AddWithGroup(ref span)) => {
+                    t.skip_b(1);
+                    t.with_group_a(span);
+                    b.next();
+                },
                 Some(AddChars(ref b_chars)) => {
                     t.chars_a(b_chars);
                     t.skip_b(b_chars.len());
@@ -856,9 +869,6 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     t.close_b();
                     b.exit();
                 },
-                _ => {
-                    panic!("What: {:?}", b.head);
-                }
             }
         } else if b.is_done() {
             t.regenerate();
@@ -1137,6 +1147,15 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                 Some(DelGroup(ref span)) => {
                     // t.skip_a(1);
                     // t.group_b(attrs, span);
+                    a_del.skip(1);
+                    b_del.group(span);
+                    a.next();
+                },
+                Some(DelWithGroup(ref span)) => {
+                    // t.skip_a(1);
+                    // t.group_b(attrs, span);
+                    b_del.with_group(span);
+                    a_del.skip(1);
                     a.next();
                 },
                 Some(DelChars(ref a_chars)) => {
@@ -1256,12 +1275,92 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
     (a_res, b_res)
 }
 
-pub fn transform(a: &Op, b: &Op) -> (Op, Op) {
-    let (a_del, b_del) = transform_deletions(&a.0, &b.0);
-    
-    // TODO this
+/// Transforms a insertion preceding a deletion into a deletion preceding an insertion.
+/// After this, sequential deletions and insertions can be composed together in one operation.
 
-    let (a_, b_) = transform_insertions(&a.1, &b.1);
+/*
+function delAfterIns (insA, delB, schema) {
+  var c, delr, insr, iterA, iterB, _ref;
+  _ref = oatie.record(), delr = _ref[0], insr = _ref[1];
+  iterA = new oatie.OpIterator(insA);
+  iterB = new oatie.OpIterator(delB);
+  iterA.next();
+  iterB.next();
+  c = oatie._combiner([delr, insr], iterA, true, iterB, false);
+  c.delAfterIns = function () {
+    var _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+    while (!(iterA.isExit() || iterB.isExit())) {
+      if ((_ref1 = iterA.type) === 'text') {
+        c.useA();
+        delr.retain();
+      }
+      if ((_ref2 = iterA.type) === 'open') {
+        delr.enter(iterA.tag, iterA.attrs);
+        c.useA();
+      }
+      if (iterA.type === 'retain' && (iterB.type === 'remove' || iterB.type === 'retain')) {
+        c.pickB();
+      } else if (iterA.type === 'retain' && (iterB.type === 'unopen' || iterB.type === 'enter')) {
+        c.nextA().consumeB();
+      } else if (((_ref6 = iterA.type) === 'enter' || _ref6 === 'attrs') && (iterB.type === 'remove')) {
+        c.retainA();
+      } else if (((_ref6 = iterA.type) === 'enter' || _ref6 === 'attrs') && (iterB.type === 'retain')) {
+        c.retainA().nextB();
+      } else if (((_ref8 = iterA.type) === 'enter' || _ref8 === 'attrs') && ((_ref9 = iterB.type) === 'enter' || _ref9 === 'unopen')) {
+        c.pickB().delAfterIns().pickB();
+      }
+    }
+
+    while (!iterA.isExit()) {
+      c.retainA();
+    }
+    // Catch .close() ending.
+    if (iterA.type == 'close') {
+      delr.leave();
+      c.useA();
+      return this.delAfterIns();
+    }
+    while (!iterB.isExit()) {
+      if (iterB.type === 'retain') {
+        c.useB();
+      } else {
+        c.consumeB();
+      }
+    }
+    return this;
+  };
+  return c.delAfterIns().toJSON();
+}
+*/
+
+/// Transform two operations according to a schema.
+
+pub fn transform(a: &Op, b: &Op) -> (Op, Op) {
+    // Transform deletions A and B against each other to get delA` and delB`.
+    let (a_del_0, b_del_0) = transform_deletions(&a.0, &b.0);
     
-    (a_, b_)
+    // The result will be applied after the client's insert operations had already been performed.
+    // Reverse the impact of insA with delA` to not affect already newly added elements or text.
+    // var _ = delAfterIns(insA, delA_0, schema), delA_1 = _[0];
+    // var _ = delAfterIns(insB, delB_0), delB_1 = _[0];
+    let (a_del_1, a_ins_1) = compose::compose_add_del(&a.1, &a_del_0);
+    let (b_del_1, b_ins_1) = compose::compose_add_del(&b.1, &b_del_0);
+    
+    // Insertions from both clients must be composed as though they happened against delA` and delB`
+    // so that we don't have phantom elements.
+    //var _ = oatie._composer(insA, true, delA_1, false).compose().toJSON(), insA1 = _[1];
+    // var _ = oatie._composer(insB, true, delB_1, false).compose().toJSON(), insB1 = _[1];
+    // let a_ins_1 = a.clone().1;
+    // let b_ins_1 = b.clone().1;
+
+    // Transform insert operations together.
+    let ((a_del_2, a_ins_2), (b_del_2, b_ins_2)) = transform_insertions(&a_ins_1, &b_ins_1);
+    
+    // Our delete operations are now subsequent operations, and so can be composed.
+    //var _ = oatie._composer(delA_1, false, delA_2, false).compose().toJSON(), delA_3 = _[0], _ = _[1];
+    //var _ = oatie._composer(delB_1, false, delB_2, false).compose().toJSON(), delB_3 = _[0], _ = _[1];
+    let a_del_3 = compose::compose_del_del(&a_del_1, &a_del_2);
+    let b_del_3 = compose::compose_del_del(&b_del_1, &b_del_2);
+    
+    ((a_del_3, a_ins_2), (b_del_3, b_ins_2))
 }
