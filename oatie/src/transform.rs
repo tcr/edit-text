@@ -782,8 +782,6 @@ impl Transform {
                 // }
             }
         }
-        
-        println!("TIMMY {:?}", self.b_del);
     }
 
     fn result(mut self) -> (Op, Op) {
@@ -1337,14 +1335,34 @@ function delAfterIns (insA, delB, schema) {
 
 pub fn transform(a: &Op, b: &Op) -> (Op, Op) {
     // Transform deletions A and B against each other to get delA` and delB`.
+    println!(" # transform[1]");
+    println!(" a_del   {:?}", a.0);
+    println!(" b_del   {:?}", b.0);
     let (a_del_0, b_del_0) = transform_deletions(&a.0, &b.0);
+    println!(" == a_del_0 {:?}", a_del_0);
+    println!(" == b_del_0 {:?}", b_del_0);
+    println!("");
     
     // The result will be applied after the client's insert operations had already been performed.
     // Reverse the impact of insA with delA` to not affect already newly added elements or text.
     // var _ = delAfterIns(insA, delA_0, schema), delA_1 = _[0];
     // var _ = delAfterIns(insB, delB_0), delB_1 = _[0];
+    println!(" # transform[2]");
+    println!(" a_ins   {:?}", a.1);
+    println!(" a_del_0 {:?}", a_del_0);
     let (a_del_1, a_ins_1) = compose::compose_add_del(&a.1, &a_del_0);
+    println!(" == a_del_1 {:?}", a_del_1);
+    println!(" == a_ins_1 {:?}", a_ins_1);
+    println!("");
+    
+    println!(" # transform[3]");
+    println!(" b_ins   {:?}", b.1);
+    println!(" b_del_0 {:?}", b_del_0);
+    println!(" ~ compose_add_del()");
     let (b_del_1, b_ins_1) = compose::compose_add_del(&b.1, &b_del_0);
+    println!(" == b_del_1 {:?}", b_del_1);
+    println!(" == b_ins_1 {:?}", b_ins_1);
+    println!("");
     
     // Insertions from both clients must be composed as though they happened against delA` and delB`
     // so that we don't have phantom elements.
@@ -1354,13 +1372,43 @@ pub fn transform(a: &Op, b: &Op) -> (Op, Op) {
     // let b_ins_1 = b.clone().1;
 
     // Transform insert operations together.
+    println!(" # transform[4] insertions");
+    println!(" a_ins_1 {:?}", a_ins_1);
+    println!(" b_ins_1 {:?}", b_ins_1);
     let ((a_del_2, a_ins_2), (b_del_2, b_ins_2)) = transform_insertions(&a_ins_1, &b_ins_1);
+    println!(" == a_del_2 {:?}", a_del_2);
+    println!(" == a_ins_2 {:?}", a_ins_2); // == a_ins_2 [AddWithGroup([AddWithGroup([AddWithGroup([AddSkip(8)]), AddChars("a")])])]
+    println!(" == b_del_2 {:?}", b_del_2);
+    println!(" == b_ins_2 {:?}", b_ins_2);
+    println!("");
     
     // Our delete operations are now subsequent operations, and so can be composed.
     //var _ = oatie._composer(delA_1, false, delA_2, false).compose().toJSON(), delA_3 = _[0], _ = _[1];
     //var _ = oatie._composer(delB_1, false, delB_2, false).compose().toJSON(), delB_3 = _[0], _ = _[1];
+    println!(" # transform[5]");
+    println!(" a_del_1 {:?}", a_del_1);
+    println!(" a_del_2 {:?}", a_del_2);
     let a_del_3 = compose::compose_del_del(&a_del_1, &a_del_2);
+    println!(" == a_del_3 {:?}", a_del_3);
+    println!("");
+    println!(" # transform[6]");
+    println!(" b_del_1 {:?}", b_del_1);
+    println!(" b_del_2 {:?}", b_del_2);
     let b_del_3 = compose::compose_del_del(&b_del_1, &b_del_2);
+    println!(" == b_del_3 {:?}", b_del_3);
+    println!("");
+
+    println!(" # transform[result]");
+    println!(" a_del   {:?}", a.0);
+    println!(" a_ins   {:?}", a.1);
+    println!(" a_del_3  {:?}", a_del_3);
+    println!(" a_ins_2  {:?}", a_ins_2);
+    println!(" ---");
+    println!(" b_del   {:?}", b.0);
+    println!(" b_ins   {:?}", b.1);
+    println!(" b_del_3  {:?}", b_del_3); // wrong
+    println!(" b_ins_2  {:?}", b_ins_2);
+    println!("");
     
     ((a_del_3, a_ins_2), (b_del_3, b_ins_2))
 }

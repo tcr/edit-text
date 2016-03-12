@@ -617,3 +617,47 @@ fn test_transform_pick() {
     
     assert_eq!(a_res, b_res);
 }
+
+#[test]
+fn test_transform_hot() {
+    let a = (vec![
+        DelWithGroup(vec![
+            DelWithGroup(vec![
+                DelGroup(vec![
+                    DelSkip(6),
+                ]),
+            ]),
+        ]),
+    ], vec![
+        AddWithGroup(vec![
+            AddWithGroup(vec![
+                AddGroup(container! { ("tag".into(), "p".into())}, vec![
+                    AddChars("hi".into()),
+                    AddSkip(6),
+                ]),
+            ]),
+        ]),
+    ]);
+    let b = (vec![], vec![
+        AddWithGroup(vec![
+            AddWithGroup(vec![
+                AddWithGroup(vec![
+                    AddSkip(6),
+                    AddChars("a".into()),
+                ]),
+            ]),
+        ]),
+    ]);
+
+    let (a_, b_) = transform(&a, &b);
+
+    let a_res = normalize(compose::compose(&a, &a_));
+    let b_res = normalize(compose::compose(&b, &b_));
+    
+    println!("");
+    println!("A' {:?}", a_res);
+    println!("B' {:?}", b_res);
+    println!("");
+    
+    assert_eq!(a_res, b_res);
+}
