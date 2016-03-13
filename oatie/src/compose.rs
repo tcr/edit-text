@@ -103,15 +103,25 @@ fn compose_del_del_inner(res:&mut DelSpan, a:&mut DelSlice, b:&mut DelSlice) {
                 }
             },
             DelGroup(ref span) => {
-                let mut c = DelSlice::new(span);
-                let mut inner: DelSpan = vec![];
-                compose_del_del_inner(&mut inner, &mut c, b);
-                res.place(&DelGroup(inner));
-                if !c.is_done() {
-                    res.place(&c.head.unwrap());
-                    res.place_all(c.rest);
+                match b.head.clone() {
+                    // TODO more of these :(
+                    Some(DelGroup(ref bspan)) => {
+                        res.place(&DelGroup(compose_del_del(span, bspan)));
+                        a.next();
+                        b.next();
+                    },
+                    _ => {
+                        let mut c = DelSlice::new(span);
+                        let mut inner: DelSpan = vec![];
+                        compose_del_del_inner(&mut inner, &mut c, b);
+                        res.place(&DelGroup(inner));
+                        if !c.is_done() {
+                            res.place(&c.head.unwrap());
+                            res.place_all(c.rest);
+                        }
+                        a.next();
+                    }
                 }
-                a.next();
             },
             DelChars(count) => {
                 res.place(&DelChars(count));
