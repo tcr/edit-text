@@ -519,11 +519,18 @@ $('#sync').on('click', function () {
     contentType : 'application/json',
     type : 'POST',
   })
-  .done(function () {
+  .done(function (data, _2, obj) {
     console.log('success', arguments);
+    if (obj.status == 200 && data != '') {
+      window.location.reload();
+    } else {
+      alert('Error in syncing. Check the console.')
+    }
+    // 
   })
   .fail(function () {
     console.log('failure', arguments);
+    alert('Error in syncing. Check the console.')
   });
 })
 

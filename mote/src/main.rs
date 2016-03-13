@@ -13,6 +13,7 @@ extern crate bodyparser;
 // point your browser to http://127.0.0.1:3000/doc/
 
 use std::path::Path;
+use std::sync::{Arc, Mutex};
 
 use iron::mime::Mime;
 use iron::status;
@@ -41,23 +42,24 @@ fn default_doc() -> DocElement {
     ])
 }
 
-fn say_hello(req: &mut Request) -> IronResult<Response> {
+fn say_hello(req: &mut Request, globdoc: &Arc<Mutex<DocElement>>) -> IronResult<Response> {
     println!("Running send_hello handler, URL path: {}", req.url.path.join("/"));
 
     let content_type = "application/json".parse::<Mime>().unwrap();
-    Ok(Response::with((content_type, status::Ok, json::encode(&default_doc()).unwrap())))
+    Ok(Response::with((content_type, status::Ok, json::encode(&*globdoc.lock().unwrap()).unwrap())))
 }
 
 type TestAlias = (Vec<Op>, Vec<DocElement>);
 
-fn test_thing(req: &mut Request) -> IronResult<Response> {
+fn test_thing(req: &mut Request, globdoc: &Arc<Mutex<DocElement>>) -> IronResult<Response> {
     println!("Running test_thing handler, URL path: {}", req.url.path.join("/"));
 
     let struct_body = req.get::<bodyparser::Struct<TestAlias>>();
     let success = match struct_body {
         Ok(Some(struct_body)) => {
             let (mut ops, doc) = struct_body;
-            let start = vec![default_doc()];
+            let glob = globdoc.lock().unwrap();
+            let start = vec![glob.clone()];
 
             let res = if ops.len() > 0 {
                 let mut op = ops.remove(0);
@@ -99,7 +101,7 @@ fn test_thing(req: &mut Request) -> IronResult<Response> {
 
 type SyncAlias = (Vec<Op>, Vec<Op>);
 
-fn sync_thing(req: &mut Request) -> IronResult<Response> {
+fn sync_thing(req: &mut Request, doc: &Arc<Mutex<DocElement>>) -> IronResult<Response> {
     println!("Running sync thing handler, URL path: {}", req.url.path.join("/"));
 
     let struct_body = req.get::<bodyparser::Struct<SyncAlias>>();
@@ -140,8 +142,8 @@ fn sync_thing(req: &mut Request) -> IronResult<Response> {
 
             println!("testing...");
 
-            let doc_a = apply_operation(&vec![default_doc()], &op_a);
-            let doc_b = apply_operation(&vec![default_doc()], &op_b);
+            let doc_a = apply_operation(&vec![doc.lock().unwrap().clone()], &op_a);
+            let doc_b = apply_operation(&vec![doc.lock().unwrap().clone()], &op_b);
             println!("DOC A {:?}", doc_a);
             println!("DOC B {:?}", doc_b);
 
@@ -153,7 +155,12 @@ fn sync_thing(req: &mut Request) -> IronResult<Response> {
 
             println!("equal? {:?}", a_res == b_res);
 
-            a_res == b_res
+            if a_res != b_res {
+                false
+            } else {
+                *doc.lock().unwrap() = a_res[0].clone();
+                true
+            }
         }
         Ok(None) => {
             println!("No body");
@@ -178,11 +185,22 @@ fn main() {
     // let a: TestAlias = (vec![], vec![DocGroup(container! { }, vec![DocChars("hi".into())])]);
     // println!("lets see it: {:?}", json::encode(&a).unwrap());
 
+    let mydoc = Arc::new(Mutex::new(default_doc()));
+
     let mut router = Router::new();
     router
-        .get("/hello", say_hello)
-        .post("/confirm", test_thing)
-        .post("/sync", sync_thing);
+        .get("/hello", {
+            let mydoc = mydoc.clone();
+            move |r: &mut Request| say_hello(r, &mydoc)
+        })
+        .post("/confirm", {
+            let mydoc = mydoc.clone();
+            move |r: &mut Request| test_thing(r, &mydoc)
+        })
+        .post("/sync", {
+            let mydoc = mydoc.clone();
+            move |r: &mut Request| sync_thing(r, &mydoc)
+        });
 
     let mut mount = Mount::new();
 
