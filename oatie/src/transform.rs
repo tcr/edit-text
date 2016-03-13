@@ -923,6 +923,11 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                         t.close_b();
                     }
                 },
+                (None, Some(AddChars(ref b_chars))) => {
+                    t.chars_a(b_chars);
+                    t.skip_b(b_chars.len());
+                    b.next();
+                }
                 (None, _) => {
                     let a_typ = get_tag_type(&t.tracks.iter().rev().find(|t| t.tag_a.is_some()).unwrap().tag_a.clone().unwrap()[..]).unwrap();
                     println!("what is up with a {:?}", t.a_add);
