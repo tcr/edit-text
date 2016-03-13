@@ -162,7 +162,7 @@ fn random_add_span(input: &DocSpan) -> AddSpan {
                     }
                 }
             },
-            &DocGroup(ref attrs, ref span) => {
+            &DocGroup(_, ref span) => {
                 if rng.gen_weighted_bool(2) {
                     res.place(&AddWithGroup(random_add_span(span)));
                 } else {
@@ -211,7 +211,7 @@ fn random_del_span(input:&DocSpan) -> DelSpan {
                     }
                 }
             },
-            &DocGroup(ref attr, ref span) => {
+            &DocGroup(_, ref span) => {
                 match rng.gen_range(0, 3) {
                     0 => res.place(&DelWithGroup(random_del_span(span))),
                     1 => res.place(&DelGroupAll),
@@ -230,7 +230,7 @@ fn random_del_span(input:&DocSpan) -> DelSpan {
 fn monkey_add_add() {
     test_start();
 
-    for i in 0..1000 {
+    for _ in 0..1000 {
         let start = vec![
             DocChars("Hello world!".to_owned()),
         ];
@@ -266,7 +266,7 @@ fn monkey_add_add() {
 fn monkey_del_del() {
     test_start();
 
-    for i in 0..1000 {
+    for _ in 0..1000 {
         let start = vec![
             DocChars("Hello world!".to_owned()),
         ];
@@ -298,7 +298,7 @@ fn monkey_del_del() {
 fn monkey_add_del() {
     test_start();
 
-    for i in 0..1000 {
+    for _ in 0..1000 {
         let start = vec![
             DocChars("Hello world!".to_owned()),
         ];
@@ -364,7 +364,7 @@ fn monkey_compose() {
         DocChars("Hello world!".to_owned()),
     ];
 
-    for i in 0..100 {
+    for _ in 0..100 {
         trace!("start {:?}", start);
 
         let a = random_op(&start);
