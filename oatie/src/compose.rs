@@ -104,11 +104,11 @@ fn compose_del_del_inner(res:&mut DelSpan, a:&mut DelSlice, b:&mut DelSlice) {
             },
             DelGroup(ref span) => {
                 let mut c = DelSlice::new(span);
-				let mut inner: DelSpan = vec![];
+                let mut inner: DelSpan = vec![];
                 compose_del_del_inner(&mut inner, &mut c, b);
                 res.place(&DelGroup(inner));
                 if !c.is_done() {
-					res.place(&c.head.unwrap());
+                    res.place(&c.head.unwrap());
                     res.place_all(c.rest);
                 }
                 a.next();
@@ -443,14 +443,13 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
     }
 
     if !b.is_done() {
-        delres.place(&b.get_head());
-        delres.place_all(b.rest);
+        delres.place_all(&b.into_span());
     }
 
     if !a.is_done() {
-		delres.place(&DelSkip(1 + a.rest.len()));
-        addres.place(&a.get_head());
-        addres.place_all(a.rest);
+        let rest = a.into_span();
+        delres.place(&DelSkip(rest.skip_len()));
+        addres.place_all(&rest);
     }
 
     (delres, addres)
