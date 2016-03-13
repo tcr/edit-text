@@ -3,11 +3,17 @@
 extern crate oatie;
 extern crate term_painter;
 #[macro_use] extern crate literator;
+extern crate log;
+#[macro_use] extern crate env_logger;
 
 use oatie::doc::*;
 use oatie::compose;
 use oatie::normalize;
 use oatie::transform::*;
+
+fn test_start() {
+    let _ = env_logger::init();
+}
 
 #[test]
 fn test_transform_goose() {
