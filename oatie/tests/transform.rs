@@ -17,6 +17,8 @@ fn test_start() {
 
 #[test]
 fn test_transform_goose() {
+    test_start();
+
     let a = vec![
         AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(4)])
     ];

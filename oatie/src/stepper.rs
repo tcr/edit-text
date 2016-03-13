@@ -60,25 +60,19 @@ impl<'a> DelSlice<'a> {
 pub struct AddSlice<'a> {
     pub head: Option<AddElement>,
     pub rest: &'a [AddElement],
-	// TODO deprecate stack?
-    stack: AddSliceStack<'a>,
 }
 
-type AddSliceStack<'a> = Vec<(Option<AddElement>, &'a [AddElement])>;
-
 impl<'a> AddSlice<'a> {
-    fn new_with_stack(span:&'a AddSpan, stack:AddSliceStack<'a>) -> AddSlice<'a> {
+    pub fn new(span: &'a AddSpan) -> AddSlice<'a> {
         if span.len() == 0 {
             AddSlice {
                 head: None,
                 rest: &[],
-                stack: stack,
             }
         } else {
             AddSlice {
                 head: Some(span[0].clone()),
                 rest: &span[1..],
-                stack: stack,
             }
         }
     }
@@ -91,10 +85,6 @@ impl<'a> AddSlice<'a> {
             *head = Some(span[0].clone());
             *rest = &span[1..];
         }
-    }
-
-    pub fn new(span:&'a AddSpan) -> AddSlice {
-        AddSlice::new_with_stack(span, vec![])
     }
 
     pub fn next(&mut self) -> AddElement  {
