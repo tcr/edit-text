@@ -2,7 +2,7 @@ extern crate iron;
 extern crate staticfile;
 extern crate mount;
 extern crate router;
-extern crate oatie;
+#[macro_use] extern crate oatie;
 extern crate rustc_serialize;
 extern crate bodyparser;
 #[macro_use] extern crate literator;
@@ -30,16 +30,16 @@ use oatie::transform::transform;
 use oatie::apply_operation;
 
 fn default_doc() -> DocElement {
-    DocGroup(container! { ("tag".into(), "ul".into()) }, vec![
-        DocGroup(container! { ("tag".into(), "li".into()) }, vec![
-            DocGroup(container! { ("tag".into(), "h1".into()) }, vec![
-                DocChars("Hello!".into()),
+    doc_span![DocGroup({"tag": "ul"}, [
+        DocGroup({"tag": "li"}, [
+            DocGroup({"tag": "h1"}, [
+                DocChars("Hello!"),
             ]),
-            DocGroup(container! { ("tag".into(), "p".into()) }, vec![
-                DocChars("World!".into()),
+            DocGroup({"tag": "p"}, [
+                DocChars("World!"),
             ]),
         ]),
-    ])
+    ])].pop().unwrap()
 }
 
 fn say_hello(req: &mut Request, globdoc: &Arc<Mutex<DocElement>>) -> IronResult<Response> {
