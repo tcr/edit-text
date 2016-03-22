@@ -878,6 +878,11 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     t.group_b(attrs, span);
                     a.next();
                 },
+                Some(AddWithGroup(ref span)) => {
+                    t.skip_a(1);
+                    t.with_group_b(span);
+                    a.next();
+                },
                 Some(AddChars(ref a_chars)) => {
                     t.skip_a(a_chars.len());
                     t.chars_b(a_chars);
@@ -892,9 +897,6 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     t.close_a();
                     a.exit();
                 },
-                _ => {
-                    panic!("Unknown value: {:?}", a.head.clone());
-                }
             }
 
         } else {

@@ -1,13 +1,13 @@
 #![allow(unused_mut)]
 
-extern crate oatie;
-extern crate term_painter;
-#[macro_use] extern crate literator;
-extern crate log;
 #[macro_use] extern crate env_logger;
+#[macro_use] extern crate literator;
+#[macro_use] extern crate oatie;
+extern crate log;
+extern crate term_painter;
 
-use oatie::doc::*;
 use oatie::compose;
+use oatie::doc::*;
 use oatie::normalize;
 use oatie::transform::*;
 
@@ -19,18 +19,18 @@ fn test_start() {
 fn test_transform_goose() {
     test_start();
 
-    let a = vec![
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(4)])
+    let a = add_span![
+        AddGroup({"tag": "p"}, [AddSkip(4)]),
     ];
-    let b = vec![
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(6)])
+    let b = add_span![
+        AddGroup({"tag": "p"}, [AddSkip(6)]),
     ];
 
     let (a_, b_) = transform_insertions(&a, &b);
 
-    let res = (vec![], vec![
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(4)]),
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)])
+    let res = (del_span![], add_span![
+        AddGroup({"tag": "p"}, [AddSkip(4)]),
+        AddGroup({"tag": "p"}, [AddSkip(2)]),
     ]);
 
     assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
@@ -672,26 +672,26 @@ fn test_transform_hot() {
 
 #[test]
 fn test_transform_potato() {
-    let a = (vec![], vec![
-        AddGroup(container! { ("tag".into(), "p".into())}, vec![
-            AddChars("hi".into()),
+    let a = (del_span![], add_span![
+        AddGroup({"tag": "p"}, [
+            AddChars("hi"),
             AddSkip(6),
         ]),
     ]);
-    let b = (vec![], vec![
+    let b = (del_span![], add_span![
         AddSkip(6),
-        AddChars("a".into()),
+        AddChars("a"),
     ]);
 
     let (a_, b_) = transform(&a, &b);
 
     let a_res = normalize(compose::compose(&a, &a_));
     let b_res = normalize(compose::compose(&b, &b_));
-    
+
     println!("");
     println!("A' {:?}", a_res);
     println!("B' {:?}", b_res);
     println!("");
-    
+
     assert_eq!(a_res, b_res);
 }
