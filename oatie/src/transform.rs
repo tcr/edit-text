@@ -174,6 +174,10 @@ impl AddWriter {
         self.past.place(&AddWithGroup(span.clone()));
     }
 
+    pub fn place_all(&mut self, span: &AddSpan) {
+        self.past.place_all(span);
+    }
+
     pub fn result(self) -> AddSpan {
         if self.stack.len() > 0 {
             println!("{:?}", self);
@@ -231,6 +235,10 @@ impl DelWriter {
 
     pub fn with_group(&mut self, span: &DelSpan) {
         self.past.place(&DelWithGroup(span.clone()));
+    }
+
+    pub fn place_all(&mut self, span: &DelSpan) {
+        self.past.place_all(span);
     }
 
     pub fn result(self) -> DelSpan {
@@ -1195,8 +1203,8 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                 (Some(DelGroup(a_inner)), Some(DelGroup(b_inner))) => {
                     let (a_del_inner, b_del_inner) = transform_deletions(&a_inner, &b_inner);
 
-                    a_del.group(&a_del_inner);
-                    b_del.group(&b_del_inner);
+                    a_del.place_all(&a_del_inner);
+                    b_del.place_all(&b_del_inner);
 
                     a.next();
                     b.next();
@@ -1365,13 +1373,7 @@ function delAfterIns (insA, delB, schema) {
 }
 */
 
-pub fn transform_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
-    let mut delres: DelSpan = Vec::with_capacity(avec.len() + bvec.len());
-    let mut addres: AddSpan = Vec::with_capacity(avec.len() + bvec.len());
-
-    let mut a = AddSlice::new(avec);
-    let mut b = DelSlice::new(bvec);
-
+pub fn transform_add_del_inner(delres: &mut DelSpan, addres: &mut AddSpan, a: &mut AddSlice, b: &mut DelSlice) {
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
             DelChars(bcount) => {
@@ -1429,13 +1431,18 @@ pub fn transform_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
                             b.head = Some(DelSkip(bcount - 1));
                         }
                     },
-                    AddGroup(..) => {
-                        addres.place(&a.next());
-                        if bcount == 1 {
-                            b.next();
-                        } else {
-                            b.head = Some(DelSkip(bcount - 1));
+                    AddGroup(tags, span) => {
+                        let mut a_inner = AddSlice::new(&span);
+                        let mut delres_inner: DelSpan = vec![];
+                        let mut addres_inner: AddSpan = vec![];
+                        transform_add_del_inner(&mut delres_inner, &mut addres_inner, &mut a_inner, b);
+                        if !a_inner.is_done() {
+                            addres_inner.place(&a_inner.head.unwrap());
+                            addres_inner.place_all(a_inner.rest);
                         }
+                        addres.place(&AddGroup(tags, addres_inner));
+                        delres.place(&DelWithGroup(delres_inner));
+                        a.next();
                     },
                 }
             },
@@ -1527,6 +1534,17 @@ pub fn transform_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
             },
         }
     }
+}
+
+
+pub fn transform_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
+    let mut delres: DelSpan = Vec::with_capacity(avec.len() + bvec.len());
+    let mut addres: AddSpan = Vec::with_capacity(avec.len() + bvec.len());
+
+    let mut a = AddSlice::new(avec);
+    let mut b = DelSlice::new(bvec);
+
+    transform_add_del_inner(&mut delres, &mut addres, &mut a, &mut b);
 
     if !b.is_done() {
         delres.place_all(&b.into_span());
@@ -1612,13 +1630,15 @@ pub fn transform(a: &Op, b: &Op) -> (Op, Op) {
     println!(" # transform[result]");
     println!(" a_del   {:?}", a.0);
     println!(" a_ins   {:?}", a.1);
-    println!(" a_del_3  {:?}", a_del_3);
-    println!(" a_ins_2  {:?}", a_ins_2);
+    println!(" ~ transform()");
+    println!(" =a_del_3  {:?}", a_del_3);
+    println!(" =a_ins_2  {:?}", a_ins_2);
     println!(" ---");
     println!(" b_del   {:?}", b.0);
     println!(" b_ins   {:?}", b.1);
-    println!(" b_del_3  {:?}", b_del_3); // wrong
-    println!(" b_ins_2  {:?}", b_ins_2);
+    println!(" ~ transform()");
+    println!(" =b_del_3  {:?}", b_del_3); // wrong
+    println!(" =b_ins_2  {:?}", b_ins_2);
     println!("");
 
     ((a_del_3, a_ins_2), (b_del_3, b_ins_2))

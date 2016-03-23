@@ -9,7 +9,7 @@ use apply_operation;
 use stepper::*;
 use normalize;
 
-fn compose_del_del_inner(res:&mut DelSpan, a:&mut DelSlice, b:&mut DelSlice) {
+fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelSlice, b: &mut DelSlice) {
     while !a.is_done() && !b.is_done() {
         match a.get_head() {
             DelSkip(acount) => {
