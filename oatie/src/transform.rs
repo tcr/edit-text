@@ -1106,7 +1106,7 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
 pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan) {
     let mut a = DelStepper::new(avec);
     let mut b = DelStepper::new(bvec);
-    
+
     let mut a_del = DelWriter::new();
     let mut b_del = DelWriter::new();
 
@@ -1122,6 +1122,10 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                 Some(DelGroup(ref span)) => {
                     // t.skip_b(1);
                     // t.group_a(attrs, span);
+                    a_del.group(span);
+                    b.next();
+                },
+                Some(DelWithGroup(ref span)) => {
                     a_del.with_group(span);
                     b.next();
                 },

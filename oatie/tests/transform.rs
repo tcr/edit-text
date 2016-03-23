@@ -714,3 +714,17 @@ fn test_transform_flesh() {
         )
     )
 }
+
+#[test]
+fn test_transform_bones() {
+    op_transform_compare(
+        (
+            del_span![],
+            add_span![AddWithGroup([AddWithGroup([AddWithGroup([AddSkip(6), AddChars("a")])])])]
+        ),
+        (
+            del_span![DelWithGroup([DelWithGroup([DelGroup([DelSkip(6)])])])],
+            add_span![]
+        )
+    )
+}

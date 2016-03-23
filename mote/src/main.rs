@@ -142,7 +142,7 @@ fn test_transform_???() {{
             del_span!");
             print!("{:?}", op_a.0);
             print!(",
-        add_span!");
+            add_span!");
             print!("{:?}", op_a.1);
             print!("
         ),
