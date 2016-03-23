@@ -728,3 +728,17 @@ fn test_transform_bones() {
         )
     )
 }
+
+#[test]
+fn test_transform_helium() {
+    op_transform_compare(
+        (
+            del_span![DelWithGroup([DelWithGroup([DelGroup([DelSkip(6)])])])],
+            add_span![AddWithGroup([AddWithGroup([AddGroup({"tag": "p"}, [AddSkip(6)])])])]
+        ),
+        (
+            del_span![DelSkip(1)],
+            add_span![AddWithGroup([AddWithGroup([AddWithGroup([AddSkip(2), AddChars("1"), AddSkip(2), AddChars("2"), AddSkip(2), AddChars("3")])])])]
+        )
+    )
+}

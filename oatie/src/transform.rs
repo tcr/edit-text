@@ -1267,7 +1267,6 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                     a.next();
                     b.next();
                 },
-
                 (Some(DelSkip(a_count)), Some(DelWithGroup(b_inner))) => {
                     a_del.with_group(&b_inner);
                     b_del.skip(1);
@@ -1278,6 +1277,17 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                         a.next();
                     }
                     b.next();
+                },
+                (Some(DelWithGroup(a_inner)), Some(DelSkip(b_count))) => {
+                    a_del.skip(1);
+                    b_del.with_group(&a_inner);
+
+                    a.next();
+                    if b_count > 1 {
+                        b.head = Some(DelSkip(b_count - 1));
+                    } else {
+                        b.next();
+                    }
                 },
 
                 unimplemented => {
@@ -1392,19 +1402,9 @@ pub fn transform_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
             DelSkip(bcount) => {
                 match a.get_head() {
                     AddChars(avalue) => {
-                        let alen = avalue.chars().count();
-                        if bcount < alen {
-                            addres.place(&AddChars(avalue[..bcount].to_owned()));
-                            a.head = Some(AddChars(avalue[bcount..].to_owned()));
-                            b.next();
-                        } else if bcount > alen {
-                            addres.place(&a.next());
-                            b.head = Some(DelSkip(bcount - alen));
-                        } else {
-                            addres.place(&a.get_head());
-                            a.next();
-                            b.next();
-                        }
+                        addres.place(&AddChars(avalue.clone()));
+                        delres.place(&DelSkip(avalue.len()));
+                        a.next();
                     },
                     AddSkip(acount) => {
                         addres.place(&AddSkip(cmp::min(acount, bcount)));
@@ -1560,6 +1560,7 @@ pub fn transform(a: &Op, b: &Op) -> (Op, Op) {
     println!(" # transform[2] transform_add_del");
     println!(" a_ins   {:?}", a.1);
     println!(" a_del_0 {:?}", a_del_0);
+    println!(" ~ transform_add_del()");
     let (a_del_1, a_ins_1) = transform_add_del(&a.1, &a_del_0);
     println!(" == a_del_1 {:?}", a_del_1);
     println!(" == a_ins_1 {:?}", a_ins_1);
@@ -1568,7 +1569,7 @@ pub fn transform(a: &Op, b: &Op) -> (Op, Op) {
     println!(" # transform[3] transform_add_del");
     println!(" b_ins   {:?}", b.1);
     println!(" b_del_0 {:?}", b_del_0);
-    println!(" ~ compose_add_del()");
+    println!(" ~ transform_add_del()");
     let (b_del_1, b_ins_1) = transform_add_del(&b.1, &b_del_0);
     println!(" == b_del_1 {:?}", b_del_1);
     println!(" == b_ins_1 {:?}", b_ins_1);
