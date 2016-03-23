@@ -1,11 +1,11 @@
+#[macro_use] extern crate literator;
+#[macro_use] extern crate oatie;
+extern crate bodyparser;
 extern crate iron;
-extern crate staticfile;
 extern crate mount;
 extern crate router;
-#[macro_use] extern crate oatie;
 extern crate rustc_serialize;
-extern crate bodyparser;
-#[macro_use] extern crate literator;
+extern crate staticfile;
 
 // This example serves the docs from target/doc/staticfile at /doc/
 //
@@ -133,6 +133,31 @@ fn sync_thing(req: &mut Request, doc: &Arc<Mutex<DocElement>>) -> IronResult<Res
 
             println!("OP A {:?}", op_a);
             println!("OP B {:?}", op_b);
+
+            print!("
+#[test]
+fn test_transform_???() {{
+    op_transform_compare(
+        (
+            del_span!");
+            print!("{:?}", op_a.0);
+            print!(",
+        add_span!");
+            print!("{:?}", op_a.1);
+            print!("
+        ),
+        (
+            del_span!");
+            print!("{:?}", op_b.0);
+            print!(",
+            add_span!");
+            print!("{:?}", op_b.1);
+            print!("
+        )
+    )
+}}
+
+");
 
             // Tranform
             let (a_, b_) = transform(&op_a, &op_b);
