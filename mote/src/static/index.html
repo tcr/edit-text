@@ -149,7 +149,7 @@ function load (el) {
   return h;
 }
 
-function navto (el, then) {
+function addto (el, then) {
   var p = el.parents('.mote');
   var cur = [then];
   while (!el.is(p)) {
@@ -284,7 +284,7 @@ function init (m) {
       active.prepend(span);
       active = span;
 
-      op([], navto(active,
+      op([], addto(active,
         {
           "variant": "AddChars",
           "fields": [txt]
@@ -296,7 +296,7 @@ function init (m) {
       span.insertAfter(active);
       active = span;
 
-      op([], navto(active,
+      op([], addto(active,
         {
           "variant": "AddChars",
           "fields": [txt]
@@ -318,7 +318,7 @@ function init (m) {
         ophistory,
         match
       ];
-      
+
       $.ajax('/api/confirm', {
         data : JSON.stringify(packet),
         contentType : 'application/json',
@@ -355,7 +355,7 @@ function init (m) {
     //   }
     //   return false;
     // }
-    
+
     // command+,
     if (e.keyCode == 188 && e.metaKey) {
       if (isBlock(active)) {
@@ -366,7 +366,7 @@ function init (m) {
           clearTarget();
           out.wrapAll($('<div>').attr('data-tag', tag));
           active = out.parent().addClass('active').addClass('target');
-          op([], navto(active,
+          op([], addto(active,
             {
               "variant": "AddGroup",
               "fields": [{"tag": tag}, [
@@ -378,6 +378,8 @@ function init (m) {
             }
           ));
         }
+      } else {
+        alert('Not implemented?')
       }
       return false;
     }
@@ -390,9 +392,14 @@ function init (m) {
           op(delto(active,
             {
               "variant": "DelGroup",
-              "fields": [[]],
+              "fields": [[
+                {
+                  "variant": "DelSkip",
+                  "fields": [active.children().length]
+                }
+              ]],
             }
-          ), navto(active,
+          ), addto(active,
             {
               "variant": "AddGroup",
               "fields": [{"tag": tag}, [
@@ -403,18 +410,18 @@ function init (m) {
               ]],
             }
           ));
-          
+
           console.log('hi');
           active.attr('data-tag', tag);
           console.log('uh');
-          
-          // 
+
+          //
           // var out = active.nextAll().add(active).not($('.target').nextAll());
           // clearActive();
           // clearTarget();
           // out.wrapAll($('<div>').attr('data-tag', tag));
           // active = out.parent().addClass('active').addClass('target');
-          // op([], navto(active,
+          // op([], addto(active,
           //   {
           //     "variant": "AddGroup",
           //     "fields": [{"tag": tag}, [
@@ -439,7 +446,12 @@ function init (m) {
           op(delto(active,
             {
               "variant": "DelGroup",
-              "fields": [[]],
+              "fields": [[
+                {
+                  "variant": "DelSkip",
+                  "fields": [active.children().length]
+                }
+              ]],
             }
           ), []);
 
