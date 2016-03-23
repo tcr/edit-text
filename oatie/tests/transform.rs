@@ -661,28 +661,16 @@ fn test_transform_hot() {
 
     let a_res = normalize(compose::compose(&a, &a_));
     let b_res = normalize(compose::compose(&b, &b_));
-    
+
     println!("");
     println!("A' {:?}", a_res);
     println!("B' {:?}", b_res);
     println!("");
-    
+
     assert_eq!(a_res, b_res);
 }
 
-#[test]
-fn test_transform_potato() {
-    let a = (del_span![], add_span![
-        AddGroup({"tag": "p"}, [
-            AddChars("hi"),
-            AddSkip(6),
-        ]),
-    ]);
-    let b = (del_span![], add_span![
-        AddSkip(6),
-        AddChars("a"),
-    ]);
-
+fn op_transform_compare(a: Op, b: Op) {
     let (a_, b_) = transform(&a, &b);
 
     let a_res = normalize(compose::compose(&a, &a_));
@@ -694,4 +682,35 @@ fn test_transform_potato() {
     println!("");
 
     assert_eq!(a_res, b_res);
+}
+
+
+#[test]
+fn test_transform_potato() {
+    op_transform_compare(
+        (del_span![], add_span![
+            AddGroup({"tag": "p"}, [
+                AddChars("hi"),
+                AddSkip(6),
+            ]),
+        ]),
+        (del_span![], add_span![
+            AddSkip(6),
+            AddChars("a"),
+        ])
+    )
+}
+
+#[test]
+fn test_transform_flesh() {
+    op_transform_compare(
+        (
+            del_span![DelSkip(1)],
+            add_span![AddWithGroup([AddWithGroup([AddWithGroup([AddChars("1234"), AddSkip(6)])])])]
+        ),
+        (
+            del_span![DelWithGroup([DelWithGroup([DelWithGroup([DelChars(4), DelSkip(2)])])])],
+            add_span![]
+        )
+    )
 }

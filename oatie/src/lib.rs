@@ -34,7 +34,7 @@ macro_rules! add_span {
     ( @kind AddChars $b:expr $(,)* ) => {
         AddChars($b.to_owned())
     };
-    ( @kind AddWithGroup { $( $e:tt : $b:expr ),+  $(,)* } , [ $( $v:tt )* ] $(,)* ) => {
+    ( @kind AddWithGroup [ $( $v:tt )* ] $(,)* ) => {
         AddWithGroup(add_span![ $( $v )* ])
     };
     ( @kind AddGroup { $( $e:tt : $b:expr ),+  $(,)* } , [ $( $v:tt )* ] $(,)* ) => {
@@ -63,7 +63,7 @@ macro_rules! del_span {
     ( @kind DelChars $b:expr $(,)* ) => {
         DelChars($b.to_owned())
     };
-    ( @kind DelWithGroup { $( $e:tt : $b:expr ),+  $(,)* } , [ $( $v:tt )* ] $(,)* ) => {
+    ( @kind DelWithGroup [ $( $v:tt )* ] $(,)* ) => {
         DelWithGroup(del_span![ $( $v )* ])
     };
     ( @kind DelGroup { $( $e:tt : $b:expr ),+  $(,)* } , [ $( $v:tt )* ] $(,)* ) => {

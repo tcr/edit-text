@@ -1186,18 +1186,18 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
             println!("{}", BrightYellow.paint(format!("Next step: {:?}", (a.head.clone(), b.head.clone()))));
 
             match (a.head.clone(), b.head.clone()) {
-                
+
                 // Groups
                 (Some(DelGroup(a_inner)), Some(DelGroup(b_inner))) => {
                     let (a_del_inner, b_del_inner) = transform_deletions(&a_inner, &b_inner);
-                    
+
                     a_del.group(&a_del_inner);
                     b_del.group(&b_del_inner);
-                    
+
                     a.next();
                     b.next();
                 },
-                
+
                 // Rest
                 (Some(DelSkip(a_count)), Some(DelSkip(b_count))) => {
                     if a_count > b_count {
@@ -1210,7 +1210,7 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                         a.next();
                         b.next();
                     }
-                    
+
                     a_del.skip(cmp::min(a_count, b_count));
                     b_del.skip(cmp::min(a_count, b_count));
                 },
@@ -1229,7 +1229,7 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                         a.next();
                         b.next();
                     }
-                    
+
                     a_del.skip(cmp::min(a_chars, b_chars));
                     b_del.skip(cmp::min(a_chars, b_chars));
                 },
@@ -1244,7 +1244,7 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                         a.next();
                         b.next();
                     }
-                    
+
                     // a_del.skip(cmp::min(a_chars, b_chars));
                     b_del.chars(cmp::min(a_chars, b_count));
                 },
@@ -1252,31 +1252,44 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                     a.next();
                     b_del.chars(a_chars);
                 },
-                
+
                 // With Groups
                 (Some(DelWithGroup(a_inner)), Some(DelWithGroup(b_inner))) => {
                     let (a_del_inner, b_del_inner) = transform_deletions(&a_inner, &b_inner);
-                    
+
                     a_del.with_group(&a_del_inner);
                     b_del.with_group(&b_del_inner);
-                    
+
                     a.next();
                     b.next();
                 },
-                
-                _ => {
+
+                (Some(DelSkip(a_count)), Some(DelWithGroup(b_inner))) => {
+                    a_del.with_group(&b_inner);
+                    b_del.skip(1);
+
+                    if a_count > 1 {
+                        a.head = Some(DelSkip(a_count - 1));
+                    } else {
+                        a.next();
+                    }
+                    b.next();
+                },
+
+                unimplemented => {
+                    println!("Not reachable: {:?}", unimplemented);
                     unreachable!();
                 }
             }
         }
     }
-    
+
     let a_res = a_del.result();
     let b_res = b_del.result();
-    
+
     println!("{}", BrightYellow.paint(format!("Result A: {:?}", a_res)));
     println!("{}", BrightYellow.paint(format!("Result B: {:?}", b_res)));
-    
+
     (a_res, b_res)
 }
 
@@ -1338,39 +1351,225 @@ function delAfterIns (insA, delB, schema) {
 }
 */
 
+pub fn transform_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
+    let mut delres: DelSpan = Vec::with_capacity(avec.len() + bvec.len());
+    let mut addres: AddSpan = Vec::with_capacity(avec.len() + bvec.len());
+
+    let mut a = AddSlice::new(avec);
+    let mut b = DelSlice::new(bvec);
+
+    while !b.is_done() && !a.is_done() {
+        match b.get_head() {
+            DelChars(bcount) => {
+                match a.get_head() {
+                    AddChars(avalue) => {
+                        addres.place(&AddChars(avalue.clone()));
+                        delres.place(&DelSkip(avalue.len()));
+                        a.next();
+                    },
+                    AddSkip(acount) => {
+                        if bcount < acount {
+                            a.head = Some(AddSkip(acount - bcount));
+                            delres.place(&b.next());
+                        } else if bcount > acount {
+                            a.next();
+                            delres.place(&DelChars(acount));
+                            b.head = Some(DelChars(bcount - acount));
+                        } else {
+                            a.next();
+                            delres.place(&b.next());
+                        }
+                    },
+                    _ => {
+                        panic!("Unimplemented or Unexpected");
+                    },
+                }
+            },
+            DelSkip(bcount) => {
+                match a.get_head() {
+                    AddChars(avalue) => {
+                        let alen = avalue.chars().count();
+                        if bcount < alen {
+                            addres.place(&AddChars(avalue[..bcount].to_owned()));
+                            a.head = Some(AddChars(avalue[bcount..].to_owned()));
+                            b.next();
+                        } else if bcount > alen {
+                            addres.place(&a.next());
+                            b.head = Some(DelSkip(bcount - alen));
+                        } else {
+                            addres.place(&a.get_head());
+                            a.next();
+                            b.next();
+                        }
+                    },
+                    AddSkip(acount) => {
+                        addres.place(&AddSkip(cmp::min(acount, bcount)));
+                        delres.place(&DelSkip(cmp::min(acount, bcount)));
+                        if acount > bcount {
+                            a.head = Some(AddSkip(acount - bcount));
+                            b.next();
+                        } else if acount < bcount {
+                            a.next();
+                            b.head = Some(DelSkip(bcount - acount));
+                        } else {
+                            a.next();
+                            b.next();
+                        }
+                    },
+                    AddWithGroup(..) => {
+                        addres.place(&a.next());
+                        delres.place(&DelSkip(1));
+                        if bcount == 1 {
+                            b.next();
+                        } else {
+                            b.head = Some(DelSkip(bcount - 1));
+                        }
+                    },
+                    AddGroup(..) => {
+                        addres.place(&a.next());
+                        if bcount == 1 {
+                            b.next();
+                        } else {
+                            b.head = Some(DelSkip(bcount - 1));
+                        }
+                    },
+                }
+            },
+            DelWithGroup(span) => {
+                match a.get_head() {
+                    AddChars(avalue) => {
+                        panic!("DelWithGroup by AddChars is ILLEGAL");
+                    },
+                    AddSkip(acount) => {
+                        delres.place(&b.next());
+                        addres.place(&AddSkip(1));
+                        if acount > 1 {
+                            a.head = Some(AddSkip(acount - 1));
+                        } else {
+                            a.next();
+                        }
+                    },
+                    AddWithGroup(insspan) => {
+                        a.next();
+                        b.next();
+
+                        let (del, ins) = transform_add_del(&insspan, &span);
+                        delres.place(&DelWithGroup(del));
+                        addres.place(&AddWithGroup(ins));
+                    },
+                    AddGroup(attr, insspan) => {
+                        a.next();
+                        b.next();
+
+                        let (_, ins) = transform_add_del(&insspan, &span);
+                        addres.place(&AddGroup(attr, ins));
+                    },
+                }
+            },
+            DelGroup(span) => {
+                match a.get_head() {
+                    AddChars(avalue) => {
+                        panic!("DelGroup by AddChars is ILLEGAL");
+                    },
+                    AddSkip(acount) => {
+                        delres.place(&b.next());
+                        addres.place(&AddSkip(1));
+                        if acount > 1 {
+                            a.head = Some(AddSkip(acount - 1));
+                        } else {
+                            a.next();
+                        }
+                    },
+                    AddWithGroup(insspan) => {
+                        a.next();
+                        b.next();
+
+                        let (del, ins) = transform_add_del(&insspan, &span);
+                        delres.place(&DelGroup(del));
+                        addres.place_all(&ins[..]);
+                    },
+                    AddGroup(attr, insspan) => {
+                        a.next();
+                        b.next();
+
+                        let (del, ins) = transform_add_del(&insspan, &span);
+                        delres.place_all(&del[..]);
+                        addres.place_all(&ins[..]);
+                    },
+                }
+            },
+            DelGroupAll => {
+                match a.get_head() {
+                    AddChars(avalue) => {
+                        panic!("DelGroupAll by AddChars is ILLEGAL");
+                    },
+                    AddSkip(acount) => {
+                        delres.place(&b.next());
+                        if acount > 1 {
+                            a.head = Some(AddSkip(acount - 1));
+                        } else {
+                            a.next();
+                        }
+                    },
+                    AddWithGroup(insspan) => {
+                        a.next();
+                        delres.place(&b.next());
+                    },
+                    AddGroup(attr, insspan) => {
+                        a.next();
+                        b.next();
+                    },
+                }
+            },
+        }
+    }
+
+    if !b.is_done() {
+        delres.place_all(&b.into_span());
+    }
+
+    if !a.is_done() {
+        let rest = a.into_span();
+        delres.place(&DelSkip(rest.skip_len()));
+        addres.place_all(&rest);
+    }
+
+    (delres, addres)
+}
+
 /// Transform two operations according to a schema.
 
 pub fn transform(a: &Op, b: &Op) -> (Op, Op) {
     // Transform deletions A and B against each other to get delA` and delB`.
-    println!(" # transform[1]");
+    println!(" # transform[1] transform_deletions");
     println!(" a_del   {:?}", a.0);
     println!(" b_del   {:?}", b.0);
     let (a_del_0, b_del_0) = transform_deletions(&a.0, &b.0);
     println!(" == a_del_0 {:?}", a_del_0);
     println!(" == b_del_0 {:?}", b_del_0);
     println!("");
-    
+
     // The result will be applied after the client's insert operations had already been performed.
     // Reverse the impact of insA with delA` to not affect already newly added elements or text.
     // var _ = delAfterIns(insA, delA_0, schema), delA_1 = _[0];
     // var _ = delAfterIns(insB, delB_0), delB_1 = _[0];
-    println!(" # transform[2]");
+    println!(" # transform[2] transform_add_del");
     println!(" a_ins   {:?}", a.1);
     println!(" a_del_0 {:?}", a_del_0);
-    let (a_del_1, a_ins_1) = compose::compose_add_del(&a.1, &a_del_0);
+    let (a_del_1, a_ins_1) = transform_add_del(&a.1, &a_del_0);
     println!(" == a_del_1 {:?}", a_del_1);
     println!(" == a_ins_1 {:?}", a_ins_1);
     println!("");
-    
-    println!(" # transform[3]");
+
+    println!(" # transform[3] transform_add_del");
     println!(" b_ins   {:?}", b.1);
     println!(" b_del_0 {:?}", b_del_0);
     println!(" ~ compose_add_del()");
-    let (b_del_1, b_ins_1) = compose::compose_add_del(&b.1, &b_del_0);
+    let (b_del_1, b_ins_1) = transform_add_del(&b.1, &b_del_0);
     println!(" == b_del_1 {:?}", b_del_1);
     println!(" == b_ins_1 {:?}", b_ins_1);
     println!("");
-    
+
     // Insertions from both clients must be composed as though they happened against delA` and delB`
     // so that we don't have phantom elements.
     //var _ = oatie._composer(insA, true, delA_1, false).compose().toJSON(), insA1 = _[1];
@@ -1379,7 +1578,7 @@ pub fn transform(a: &Op, b: &Op) -> (Op, Op) {
     // let b_ins_1 = b.clone().1;
 
     // Transform insert operations together.
-    println!(" # transform[4] insertions");
+    println!(" # transform[4] transform_insertions");
     println!(" a_ins_1 {:?}", a_ins_1);
     println!(" b_ins_1 {:?}", b_ins_1);
     let ((a_del_2, a_ins_2), (b_del_2, b_ins_2)) = transform_insertions(&a_ins_1, &b_ins_1);
@@ -1388,17 +1587,17 @@ pub fn transform(a: &Op, b: &Op) -> (Op, Op) {
     println!(" == b_del_2 {:?}", b_del_2);
     println!(" == b_ins_2 {:?}", b_ins_2);
     println!("");
-    
+
     // Our delete operations are now subsequent operations, and so can be composed.
     //var _ = oatie._composer(delA_1, false, delA_2, false).compose().toJSON(), delA_3 = _[0], _ = _[1];
     //var _ = oatie._composer(delB_1, false, delB_2, false).compose().toJSON(), delB_3 = _[0], _ = _[1];
-    println!(" # transform[5]");
+    println!(" # transform[5] compose_del_del");
     println!(" a_del_1 {:?}", a_del_1);
     println!(" a_del_2 {:?}", a_del_2);
     let a_del_3 = compose::compose_del_del(&a_del_1, &a_del_2);
     println!(" == a_del_3 {:?}", a_del_3);
     println!("");
-    println!(" # transform[6]");
+    println!(" # transform[6] compose_del_del");
     println!(" b_del_1 {:?}", b_del_1);
     println!(" b_del_2 {:?}", b_del_2);
     let b_del_3 = compose::compose_del_del(&b_del_1, &b_del_2);
@@ -1416,6 +1615,6 @@ pub fn transform(a: &Op, b: &Op) -> (Op, Op) {
     println!(" b_del_3  {:?}", b_del_3); // wrong
     println!(" b_ins_2  {:?}", b_ins_2);
     println!("");
-    
+
     ((a_del_3, a_ins_2), (b_del_3, b_ins_2))
 }
