@@ -66,7 +66,7 @@ macro_rules! del_span {
     ( @kind DelWithGroup [ $( $v:tt )* ] $(,)* ) => {
         DelWithGroup(del_span![ $( $v )* ])
     };
-    ( @kind DelGroup { $( $e:tt : $b:expr ),+  $(,)* } , [ $( $v:tt )* ] $(,)* ) => {
+    ( @kind DelGroup [ $( $v:tt )* ] $(,)* ) => {
         DelGroup(del_span![ $( $v )* ])
     };
     ( @kind DelGroupAll , [ $( $v:tt )* ] $(,)* ) => {
