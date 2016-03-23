@@ -742,3 +742,17 @@ fn test_transform_helium() {
         )
     )
 }
+
+#[test]
+fn test_transform_cigarette() {
+    op_transform_compare(
+        (
+            del_span![DelWithGroup([DelWithGroup([DelGroup([DelSkip(9)])])])],
+            add_span![AddWithGroup([AddWithGroup([AddGroup({"tag": "h1"}, [AddSkip(9)])])])]
+        ),
+        (
+            del_span![DelWithGroup([DelWithGroup([DelGroup([DelSkip(9)])])])],
+            add_span![AddWithGroup([AddWithGroup([AddGroup({"tag": "h2"}, [AddSkip(9)])])])]
+        )
+    )
+}
