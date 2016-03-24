@@ -358,7 +358,7 @@ function init (m) {
 
     // command+,
     if (e.keyCode == 188 && e.metaKey) {
-      if (isBlock(active)) {
+      // if (isBlock(active)) {
         var tag = prompt("Tag name:", "p");
         if (tag) {
           var out = active.nextAll().add(active).not($('.target').nextAll());
@@ -378,9 +378,9 @@ function init (m) {
             }
           ));
         }
-      } else {
-        alert('Not implemented?')
-      }
+      // } else {
+      //   alert('Not implemented?')
+      // }
       return false;
     }
 

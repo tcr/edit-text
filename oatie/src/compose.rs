@@ -104,11 +104,11 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelSlice, b: &mut DelSlice) 
             DelGroup(ref span) => {
                 match b.head.clone() {
                     // TODO more of these :(
-                    Some(DelGroup(ref bspan)) => {
-                        res.place(&DelGroup(compose_del_del(span, bspan)));
-                        a.next();
-                        b.next();
-                    },
+                    // Some(DelGroup(ref bspan)) => {
+                    //     res.place(&DelGroup(compose_del_del(span, bspan)));
+                    //     a.next();
+                    //     b.next();
+                    // },
                     _ => {
                         let mut c = DelSlice::new(span);
                         let mut inner: DelSpan = vec![];
@@ -388,8 +388,9 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
                         a.next();
                         b.next();
 
-                        let (_, ins) = compose_add_del(&insspan, &span);
+                        let (del, ins) = compose_add_del(&insspan, &span);
                         addres.place(&AddGroup(attr, ins));
+                        delres.place_all(&del);
                     },
                 }
             },
@@ -464,10 +465,26 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
     (delres, addres)
 }
 
-pub fn compose(a:&Op, b:&Op) -> Op {
+pub fn compose(a: &Op, b: &Op) -> Op {
     let &(ref adel, ref ains) = a;
     let &(ref bdel, ref bins) = b;
 
+    // println!("`````````````` compose_add_del");
+    // println!("``````````````     {:?}", ains);
+    // println!("``````````````     {:?}", bdel);
     let (mdel, mins) = compose_add_del(ains, bdel);
-    (compose_del_del(adel, &mdel), compose_add_add(&mins, bins))
+    // println!("``````````````  => {:?}", mdel);
+    // println!("``````````````  => {:?}", mins);
+
+    // println!("`````````````` del {:?}", adel);
+    // println!("``````````````     {:?}", mdel);
+    let a_ = compose_del_del(adel, &mdel);
+    // println!("``````````````  a' {:?}", a_);
+
+    println!("`````````````` ins {:?}", mins);
+    println!("``````````````     {:?}", bins);
+    let b_ = compose_add_add(&mins, bins);
+    println!("``````````````  b' {:?}", b_);
+
+    (a_, b_)
 }
