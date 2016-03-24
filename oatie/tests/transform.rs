@@ -619,10 +619,10 @@ fn test_transform_pick() {
     // println!("A : {:?}", a_res);
     // println!("B : {:?}", b_res);
     // println!("r : {:?}", res);
-    // 
+    //
     // assert_eq!(a_res, res.clone());
     // assert_eq!(b_res, res.clone());
-    
+
     assert_eq!(a_res, b_res);
 }
 
@@ -767,6 +767,34 @@ fn test_transform_wind() {
         (
             del_span![DelWithGroup([DelWithGroup([DelGroup([DelSkip(3)]), DelSkip(1)])])],
             add_span![AddWithGroup([AddWithGroup([AddGroup({"tag": "h1"}, [AddSkip(3)]), AddSkip(1)])])]
+        )
+    )
+}
+
+#[test]
+fn test_transform_soldier() {
+    op_transform_compare(
+        (
+            del_span![DelWithGroup([DelWithGroup([DelGroupAll])])],
+            add_span![]
+        ),
+        (
+            del_span![DelWithGroup([DelWithGroup([DelWithGroup([DelSkip(5), DelChars(1)])])])],
+            add_span![]
+        )
+    )
+}
+
+#[test]
+fn test_transform_forest() {
+    op_transform_compare(
+        (
+            del_span![DelWithGroup([DelWithGroup([DelWithGroup([DelSkip(2), DelChars(4)])])])],
+            add_span![]
+        ),
+        (
+            del_span![DelWithGroup([DelWithGroup([DelGroupAll])])],
+            add_span![]
         )
     )
 }

@@ -233,6 +233,10 @@ impl DelWriter {
         self.past.place(&DelGroup(span.clone()));
     }
 
+    pub fn group_all(&mut self) {
+        self.past.place(&DelGroupAll);
+    }
+
     pub fn with_group(&mut self, span: &DelSpan) {
         self.past.place(&DelWithGroup(span.clone()));
     }
@@ -1316,6 +1320,20 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                     } else {
                         b.next();
                     }
+                },
+
+                // DelGroupAll
+                (Some(DelGroupAll), Some(DelWithGroup(_))) => {
+                    b_del.group_all();
+
+                    a.next();
+                    b.next();
+                },
+                (Some(DelWithGroup(_)), Some(DelGroupAll)) => {
+                    a_del.group_all();
+
+                    a.next();
+                    b.next();
                 },
 
                 unimplemented => {

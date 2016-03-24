@@ -69,7 +69,7 @@ macro_rules! del_span {
     ( @kind DelGroup [ $( $v:tt )* ] $(,)* ) => {
         DelGroup(del_span![ $( $v )* ])
     };
-    ( @kind DelGroupAll , [ $( $v:tt )* ] $(,)* ) => {
+    ( @kind DelGroupAll $(,)* ) => {
         DelGroupAll
     };
     ( ) => {
@@ -78,6 +78,11 @@ macro_rules! del_span {
     ( $( $i:ident ( $( $b:tt )+ ) ),+ $(,)* ) => {
         vec![
             $( del_span!(@kind $i $( $b )* , ) ),*
+        ]
+    };
+    ( $( $i:ident ),+ $(,)* ) => {
+        vec![
+            $( del_span!(@kind $i , ) ),*
         ]
     };
 }

@@ -481,10 +481,10 @@ pub fn compose(a: &Op, b: &Op) -> Op {
     let a_ = compose_del_del(adel, &mdel);
     // println!("``````````````  a' {:?}", a_);
 
-    println!("`````````````` ins {:?}", mins);
-    println!("``````````````     {:?}", bins);
+    // println!("`````````````` ins {:?}", mins);
+    // println!("``````````````     {:?}", bins);
     let b_ = compose_add_add(&mins, bins);
-    println!("``````````````  b' {:?}", b_);
+    // println!("``````````````  b' {:?}", b_);
 
     (a_, b_)
 }
