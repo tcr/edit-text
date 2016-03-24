@@ -756,3 +756,17 @@ fn test_transform_cigarette() {
         )
     )
 }
+
+#[test]
+fn test_transform_wind() {
+    op_transform_compare(
+        (
+            del_span![DelWithGroup([DelGroup([DelSkip(2)])])],
+            add_span![AddWithGroup([AddGroup({"tag": "li"}, [AddSkip(1)]), AddGroup({"tag": "li"}, [AddSkip(1)])])]
+        ),
+        (
+            del_span![DelWithGroup([DelWithGroup([DelGroup([DelSkip(3)]), DelSkip(1)])])],
+            add_span![AddWithGroup([AddWithGroup([AddGroup({"tag": "h1"}, [AddSkip(3)]), AddSkip(1)])])]
+        )
+    )
+}

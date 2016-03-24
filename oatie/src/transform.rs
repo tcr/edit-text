@@ -1209,6 +1209,26 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                     a.next();
                     b.next();
                 },
+                (Some(DelGroup(a_inner)), Some(DelWithGroup(b_inner))) => {
+                    let (a_del_inner, b_del_inner) = transform_deletions(&a_inner, &b_inner);
+
+                    a_del.place_all(&a_del_inner);
+                    b_del.group(&b_del_inner);
+
+                    a.next();
+                    b.next();
+                },
+                (Some(DelSkip(a_count)), Some(DelGroup(b_inner))) => {
+                    a_del.group(&b_inner);
+                    if a_count > 1 {
+                        a.head = Some(DelSkip(a_count - 1));
+                    } else {
+                        a.next();
+                    }
+
+                    b_del.skip(b_inner.skip_len());
+                    b.next();
+                },
 
                 // Rest
                 (Some(DelSkip(a_count)), Some(DelSkip(b_count))) => {
@@ -1433,8 +1453,8 @@ pub fn transform_add_del_inner(delres: &mut DelSpan, addres: &mut AddSpan, a: &m
                     },
                     AddGroup(tags, span) => {
                         let mut a_inner = AddSlice::new(&span);
-                        let mut delres_inner: DelSpan = vec![];
                         let mut addres_inner: AddSpan = vec![];
+                        let mut delres_inner: DelSpan = vec![];
                         transform_add_del_inner(&mut delres_inner, &mut addres_inner, &mut a_inner, b);
                         if !a_inner.is_done() {
                             addres_inner.place(&a_inner.head.unwrap());
@@ -1484,7 +1504,7 @@ pub fn transform_add_del_inner(delres: &mut DelSpan, addres: &mut AddSpan, a: &m
                     },
                     AddSkip(acount) => {
                         delres.place(&b.next());
-                        addres.place(&AddSkip(1));
+                        addres.place(&AddSkip(span.skip_len()));
                         if acount > 1 {
                             a.head = Some(AddSkip(acount - 1));
                         } else {
@@ -1499,13 +1519,18 @@ pub fn transform_add_del_inner(delres: &mut DelSpan, addres: &mut AddSpan, a: &m
                         delres.place(&DelGroup(del));
                         addres.place_all(&ins[..]);
                     },
-                    AddGroup(attr, insspan) => {
+                    AddGroup(tags, ins_span) => {
+                        let mut a_inner = AddSlice::new(&ins_span);
+                        let mut delres_inner: DelSpan = vec![];
+                        let mut addres_inner: AddSpan = vec![];
+                        transform_add_del_inner(&mut delres_inner, &mut addres_inner, &mut a_inner, b);
+                        if !a_inner.is_done() {
+                            addres_inner.place(&a_inner.head.unwrap());
+                            addres_inner.place_all(a_inner.rest);
+                        }
+                        addres.place(&AddGroup(tags, addres_inner));
+                        delres.place(&DelWithGroup(delres_inner));
                         a.next();
-                        b.next();
-
-                        let (del, ins) = transform_add_del(&insspan, &span);
-                        delres.place_all(&del[..]);
-                        addres.place_all(&ins[..]);
                     },
                 }
             },
