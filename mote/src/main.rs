@@ -1,10 +1,9 @@
-#[macro_use] extern crate literator;
 #[macro_use] extern crate oatie;
 extern crate bodyparser;
 extern crate iron;
 extern crate mount;
 extern crate router;
-extern crate rustc_serialize;
+extern crate serde_json;
 extern crate staticfile;
 
 // This example serves the docs from target/doc/staticfile at /doc/
@@ -22,7 +21,6 @@ use iron::prelude::*;
 use mount::Mount;
 use router::Router;
 use staticfile::Static;
-use rustc_serialize::json;
 
 use oatie::doc::*;
 use oatie::compose::compose;
@@ -33,7 +31,9 @@ fn default_doc() -> DocElement {
     doc_span![DocGroup({"tag": "ul"}, [
         DocGroup({"tag": "li"}, [
             DocGroup({"tag": "h1"}, [
-                DocChars("Hello!"),
+                DocChars("Hello! "),
+                DocGroup({"tag": "b"}, [DocChars("what's")]),
+                DocChars("up?"),
             ]),
             DocGroup({"tag": "p"}, [
                 DocChars("World!"),
@@ -43,16 +43,16 @@ fn default_doc() -> DocElement {
 }
 
 fn say_hello(req: &mut Request, globdoc: &Arc<Mutex<DocElement>>) -> IronResult<Response> {
-    println!("Running send_hello handler, URL path: {}", req.url.path.join("/"));
+    println!("Running send_hello handler, URL path: {}", req.url.path().join("/"));
 
     let content_type = "application/json".parse::<Mime>().unwrap();
-    Ok(Response::with((content_type, status::Ok, json::encode(&*globdoc.lock().unwrap()).unwrap())))
+    Ok(Response::with((content_type, status::Ok, serde_json::to_string(&*globdoc.lock().unwrap()).unwrap())))
 }
 
 type TestAlias = (Vec<Op>, Vec<DocElement>);
 
 fn test_thing(req: &mut Request, globdoc: &Arc<Mutex<DocElement>>) -> IronResult<Response> {
-    println!("Running test_thing handler, URL path: {}", req.url.path.join("/"));
+    println!("Running test_thing handler, URL path: {}", req.url.path().join("/"));
 
     let struct_body = req.get::<bodyparser::Struct<TestAlias>>();
     let success = match struct_body {
@@ -61,11 +61,19 @@ fn test_thing(req: &mut Request, globdoc: &Arc<Mutex<DocElement>>) -> IronResult
             let glob = globdoc.lock().unwrap();
             let start = vec![glob.clone()];
 
+            for op in &ops {
+                println!("OPP add {:?}", op.0);
+                println!("   del {:?}", op.1);
+            }
+
             let res = if ops.len() > 0 {
                 let mut op = ops.remove(0);
                 for i in ops.into_iter() {
                     op = compose(&op, &i);
                 }
+
+                println!("CMP add {:?}", op.0);
+                println!("    del {:?}", op.1);
 
                 println!("start obj {:?}", start);
                 println!("apply op {:?}", op);
@@ -102,7 +110,7 @@ fn test_thing(req: &mut Request, globdoc: &Arc<Mutex<DocElement>>) -> IronResult
 type SyncAlias = (Vec<Op>, Vec<Op>);
 
 fn sync_thing(req: &mut Request, doc: &Arc<Mutex<DocElement>>) -> IronResult<Response> {
-    println!("Running sync thing handler, URL path: {}", req.url.path.join("/"));
+    println!("Running sync thing handler, URL path: {}", req.url.path().join("/"));
 
     let struct_body = req.get::<bodyparser::Struct<SyncAlias>>();
     let success = match struct_body {
@@ -217,15 +225,15 @@ fn main() {
         .get("/hello", {
             let mydoc = mydoc.clone();
             move |r: &mut Request| say_hello(r, &mydoc)
-        })
+        }, "hello")
         .post("/confirm", {
             let mydoc = mydoc.clone();
             move |r: &mut Request| test_thing(r, &mydoc)
-        })
+        }, "confirm")
         .post("/sync", {
             let mydoc = mydoc.clone();
             move |r: &mut Request| sync_thing(r, &mydoc)
-        });
+        }, "sync");
 
     let mut mount = Mount::new();
 

@@ -4,18 +4,14 @@ version = "0.1.0"
 authors = ["Tim Ryan <tim@3drobotics.com>"]
 
 [dependencies]
-staticfile = "*"
-iron = "*"
-mount = "*"
-router = "*"
-rustc-serialize = "0.3"
-
-[dependencies.bodyparser]
-git = "https://github.com/iron/body-parser.git"
-
-[dependencies.literator]
-git = "https://github.com/kmcallister/literator.git"
-rev = "632309dd4baf7ac0c079f44de94c0449fdab23ad"
+bodyparser = "0.4"
+iron = "0.4"
+mount = "0.2"
+router = "0.4"
+serde = "0.8"
+serde_derive = "0.8"
+serde_json = "0.8"
+staticfile = "0.3"
 
 [dependencies.oatie]
 path = "../oatie"

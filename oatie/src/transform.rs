@@ -1,3 +1,5 @@
+//! Performs operational transform.
+
 #![allow(unused_mut)]
 
 use std::collections::HashMap;
@@ -468,14 +470,14 @@ impl Transform {
             // if track.tag_a.is_some() {
             //     self.a_del.close();
             // }
-            self.a_add.close(container! { ("tag".into(), real.clone() )}); // fake
+            self.a_add.close(map! { "tag" => real.clone() }); // fake
 
             // if track.tag_b.is_some() {
             //     self.b_del.close();
             // }
-            self.b_add.close(container! { ("tag".into(), real.clone() )}); // fake
+            self.b_add.close(map! { "tag" => real.clone() }); // fake
             // } else {
-            //     self.a_add.close(container! { ("tag".into(), track.tag_a.into() )}); // fake
+            //     self.a_add.close(map! { "tag" => track.tag_a}); // fake
             // }
             // if (a) {
             //   insrA.alter(r, {}).close();
@@ -554,7 +556,7 @@ impl Transform {
             self.a_add.exit();
         } else {
             self.a_del.close();
-            self.a_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+            self.a_add.close(map! { "tag" => track.tag_real.clone().unwrap() });
         }
 
         if track.is_original_b && track.tag_real == track.tag_b {
@@ -562,7 +564,7 @@ impl Transform {
             self.b_add.exit();
         } else {
             self.b_del.close();
-            self.b_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+            self.b_add.close(map! { "tag" => track.tag_real.clone().unwrap() });
         }
 
         self.tracks.remove(index);
@@ -574,7 +576,7 @@ impl Transform {
             .unwrap();
         (self.tracks[index].clone(), index)
     }
-    
+
     fn next_track_a(&mut self) -> Option<&mut Track> {
         if let Some(index) = self.tracks.iter().position(|x| x.tag_a.is_none()) {
             Some(&mut self.tracks[index])
@@ -582,7 +584,7 @@ impl Transform {
             None
         }
     }
-    
+
     fn next_track_a_type(&mut self) -> Option<TrackType> {
         if let Some(track) = self.next_track_a() {
             get_tag_type(track.tag_real.clone())
@@ -597,7 +599,7 @@ impl Transform {
             .unwrap();
         (self.tracks[index].clone(), index)
     }
-    
+
     fn next_track_b(&mut self) -> Option<&mut Track> {
         if let Some(index) = self.tracks.iter().position(|x| x.tag_b.is_none()) {
             Some(&mut self.tracks[index])
@@ -605,7 +607,7 @@ impl Transform {
             None
         }
     }
-    
+
     fn next_track_b_type(&mut self) -> Option<TrackType> {
         if let Some(track) = self.next_track_b() {
             get_tag_type(track.tag_real.clone())
@@ -617,7 +619,7 @@ impl Transform {
     fn close_a(&mut self) {
         println!("TRACKS CLOSE A: {:?}", self.tracks);
         let (mut track, index) = self.top_track_a();
-        
+
         // Determine whether to split tags for this track type.
         // TODO do the same for track opening?
         let track_split = if let Some(tag) = track.tag_real.clone() {
@@ -632,7 +634,7 @@ impl Transform {
         } else {
             self.a_del.close();
             if track_split || track.tag_b.is_none() {
-                self.a_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+                self.a_add.close(map! { "tag" => track.tag_real.clone().unwrap() });
             }
         }
 
@@ -641,7 +643,7 @@ impl Transform {
         // }
         println!("CLOSES THE B {:?}", self.b_add);
         if track_split || track.tag_b.is_none() {
-            self.b_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+            self.b_add.close(map! { "tag" => track.tag_real.clone().unwrap() });
         }
 
         if track.tag_b.is_none() {
@@ -656,7 +658,7 @@ impl Transform {
                 self.tracks[index].tag_real = None;
             }
         }
-        
+
         println!("A ADD NOW {:?}", self.a_add);
     }
 
@@ -665,7 +667,7 @@ impl Transform {
         for t in &self.tracks {
             println!(" - {:?}", t);
         }
-        
+
         let (mut track, index) = self.top_track_b();
 
         println!("CLOSES THE B {:?}", self.b_del);
@@ -688,7 +690,7 @@ impl Transform {
 
             self.b_del.close();
             if track_split || track.tag_a.is_none() {
-                self.b_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+                self.b_add.close(map! { "tag" => track.tag_real.clone().unwrap() });
             }
             println!("2 {:?}", self.b_del);
         }
@@ -697,7 +699,7 @@ impl Transform {
         //     self.a_del.close();
         // }
         if track_split || track.tag_a.is_none() {
-            self.a_add.close(container! { ("tag".into(), track.tag_real.clone().unwrap().into()) });
+            self.a_add.close(map! { "tag" => track.tag_real.clone().unwrap() });
         }
 
         if track.tag_a.is_none() {
@@ -805,14 +807,14 @@ impl Transform {
         for track in self.tracks.iter_mut().rev() {
             println!("TRACK RESULT: {:?}", track);
             if !track.is_original_a && track.tag_real.is_some() {
-                a_add.close(container! { ("tag".into(), track.tag_a.clone().unwrap() )});
+                a_add.close(map! { "tag" => track.tag_a.clone().unwrap() });
             }
             if track.is_original_a {
                 a_del.exit();
                 a_add.exit();
             }
             if !track.is_original_b && track.tag_real.is_some() {
-                b_add.close(container! { ("tag".into(), track.tag_b.clone().unwrap() )});
+                b_add.close(map! { "tag" => track.tag_b.clone().unwrap() });
             }
             if track.is_original_b {
                 b_del.exit();
@@ -825,8 +827,8 @@ impl Transform {
     fn current_type(&self) -> Option<TrackType> {
         // TODO
         // self.tracks.last().unwrap().
-        let attrs: Attrs = container! {
-            ("tag".to_string(), self.tracks.last().clone().unwrap().tag_real.clone().unwrap() )
+        let attrs: Attrs = map! {
+            "tag" => self.tracks.last().clone().unwrap().tag_real.clone().unwrap()
         };
         get_tag_type(&attrs)
     }
@@ -843,7 +845,7 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
         for t in &t.tracks {
             println!("{}", BrightGreen.paint(format!(" - {:?}", t)));
         }
-        
+
         println!("{}", BrightGreen.paint(format!(" @ a_del: {:?}", t.a_del)));
         println!("{}", BrightGreen.paint(format!(" @ a_add: {:?}", t.a_add)));
         println!("{}", BrightGreen.paint(format!(" @ b_del: {:?}", t.b_del)));
@@ -1009,7 +1011,7 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     } else {
                         t.enter_a(a_attrs.tag().unwrap(), None);
                     }
-                    
+
                     // println!("adding left group:");
                     // for t in &t.tracks {
                     //     println!(" - {:?}", t);
@@ -1069,14 +1071,14 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                     t.chars_b(a_chars);
                     a.next();
                 },
-                
+
                 // With Groups
                 (Some(AddWithGroup(a_inner)), Some(AddSkip(b_count))) => {
                     t.a_del.skip(1);
                     t.a_add.skip(1);
                     t.b_del.skip(1);
                     t.b_add.with_group(&a_inner);
-                    
+
                     a.next();
                     if b_count > 1 {
                         b.head = Some(AddSkip(b_count - 1));
@@ -1086,12 +1088,12 @@ pub fn transform_insertions(avec:&AddSpan, bvec:&AddSpan) -> (Op, Op) {
                 },
                 (Some(AddWithGroup(a_inner)), Some(AddWithGroup(b_inner))) => {
                     let (a_op, b_op) = transform_insertions(&a_inner, &b_inner);
-                    
+
                     t.a_del.with_group(&a_op.0);
                     t.a_add.with_group(&a_op.1);
                     t.b_del.with_group(&b_op.0);
                     t.b_add.with_group(&b_op.1);
-                    
+
                     a.next();
                     b.next();
                 },
@@ -1434,7 +1436,21 @@ pub fn transform_add_del_inner(delres: &mut DelSpan, addres: &mut AddSpan, a: &m
                             delres.place(&b.next());
                         }
                     },
-                    _ => {
+                    AddGroup(attrs, a_span) => {
+                        let mut a_inner = AddSlice::new(&a_span);
+                        let mut addres_inner: AddSpan = vec![];
+                        let mut delres_inner: DelSpan = vec![];
+                        transform_add_del_inner(&mut delres_inner, &mut addres_inner, &mut a_inner, b);
+                        if !a_inner.is_done() {
+                            addres_inner.place(&a_inner.head.unwrap());
+                            addres_inner.place_all(a_inner.rest);
+                        }
+                        addres.place(&AddGroup(attrs, addres_inner));
+                        delres.place(&DelWithGroup(delres_inner));
+                        a.next();
+                    }
+                    unknown => {
+                        println!("Compare: {:?} {:?}", DelChars(bcount), unknown);
                         panic!("Unimplemented or Unexpected");
                     },
                 }
@@ -1469,8 +1485,8 @@ pub fn transform_add_del_inner(delres: &mut DelSpan, addres: &mut AddSpan, a: &m
                             b.head = Some(DelSkip(bcount - 1));
                         }
                     },
-                    AddGroup(tags, span) => {
-                        let mut a_inner = AddSlice::new(&span);
+                    AddGroup(attrs, a_span) => {
+                        let mut a_inner = AddSlice::new(&a_span);
                         let mut addres_inner: AddSpan = vec![];
                         let mut delres_inner: DelSpan = vec![];
                         transform_add_del_inner(&mut delres_inner, &mut addres_inner, &mut a_inner, b);
@@ -1478,7 +1494,7 @@ pub fn transform_add_del_inner(delres: &mut DelSpan, addres: &mut AddSpan, a: &m
                             addres_inner.place(&a_inner.head.unwrap());
                             addres_inner.place_all(a_inner.rest);
                         }
-                        addres.place(&AddGroup(tags, addres_inner));
+                        addres.place(&AddGroup(attrs, addres_inner));
                         delres.place(&DelWithGroup(delres_inner));
                         a.next();
                     },

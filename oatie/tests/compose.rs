@@ -1,6 +1,5 @@
-extern crate oatie;
+#[macro_use] extern crate oatie;
 extern crate term_painter;
-#[macro_use] extern crate literator;
 #[macro_use] extern crate log;
 extern crate env_logger;
 extern crate rand;
@@ -343,15 +342,15 @@ fn test_compose() {
     test_start();
 
     assert_eq!(normalize(compose(&(vec![], vec![
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(6)])
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(6)])
     ]), &(vec![
         DelGroup(vec![DelSkip(6)])
     ], vec![
-        AddGroup(container! { ("tag".into(), "p".into() )}, vec![AddSkip(4)]),
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)])
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(4)]),
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(2)])
     ]))), (vec![], vec![
-        AddGroup(container! { ("tag".into(), "p".into() )}, vec![AddSkip(4)]),
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)])
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(4)]),
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(2)])
     ]));
 }
 

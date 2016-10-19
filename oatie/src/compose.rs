@@ -1,3 +1,5 @@
+//! Composes two operations together.
+
 use std::collections::HashMap;
 use doc::*;
 use std::borrow::ToOwned;

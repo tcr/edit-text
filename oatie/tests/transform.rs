@@ -1,7 +1,6 @@
 #![allow(unused_mut)]
 
 #[macro_use] extern crate env_logger;
-#[macro_use] extern crate literator;
 #[macro_use] extern crate oatie;
 extern crate log;
 extern crate term_painter;
@@ -45,16 +44,16 @@ fn test_transform_goose() {
 #[test]
 fn test_transform_gander() {
     let a = vec![
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(6)])
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(6)])
     ];
     let b = vec![
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(6)])
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(6)])
     ];
 
     let (a_, b_) = transform_insertions(&a, &b);
 
     let res = (vec![], vec![
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(6)]),
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(6)]),
     ]);
 
     assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
@@ -121,8 +120,8 @@ fn test_transform_rice() {
 #[test]
 fn test_transform_bacon() {
     let a = vec![
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(5)]),
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(5)]),
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(5)]),
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(5)]),
     ];
     let b = vec![
         AddSkip(11), AddChars("_".into())
@@ -131,8 +130,8 @@ fn test_transform_bacon() {
     let (a_, b_) = transform_insertions(&a, &b);
 
     let res = (vec![], vec![
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(5)]),
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(5)]),
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(5)]),
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(5)]),
         AddSkip(1), AddChars("_".into()),
     ]);
 
@@ -143,8 +142,8 @@ fn test_transform_bacon() {
 #[test]
 fn test_transform_berry() {
     let a = vec![
-        AddGroup(container! { ("tag".into(), "h1".into()) }, vec![AddSkip(15)]),
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(15)]),
+        AddGroup(map! { "tag" => "h1" }, vec![AddSkip(15)]),
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(15)]),
     ];
     let b = vec![
     ];
@@ -152,8 +151,8 @@ fn test_transform_berry() {
     let (a_, b_) = transform_insertions(&a, &b);
 
     let res = (vec![], vec![
-        AddGroup(container! { ("tag".into(), "h1".into()) }, vec![AddSkip(15)]),
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(15)]),
+        AddGroup(map! { "tag" => "h1" }, vec![AddSkip(15)]),
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(15)]),
     ]);
 
     assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
@@ -163,18 +162,18 @@ fn test_transform_berry() {
 #[test]
 fn test_transform_brown() {
     let a = vec![
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(5)]),
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(5)]),
     ];
     let b = vec![
         AddSkip(2),
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(2)]),
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(2)]),
     ];
 
     let (a_, b_) = transform_insertions(&a, &b);
 
     let res = (vec![], vec![
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(4)]),
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(1)]),
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(4)]),
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(1)]),
     ]);
 
     assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
@@ -184,16 +183,16 @@ fn test_transform_brown() {
 #[test]
 fn test_transform_sonic() {
     let a = vec![
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(30)]),
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(30)]),
     ];
     let b = vec![
-        AddGroup(container! { ("tag".into(), "h1".into()) }, vec![AddSkip(30)]),
+        AddGroup(map! { "tag" => "h1" }, vec![AddSkip(30)]),
     ];
 
     let (a_, b_) = transform_insertions(&a, &b);
 
     let res = (vec![], vec![
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(30)]),
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(30)]),
     ]);
 
     assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
@@ -203,17 +202,17 @@ fn test_transform_sonic() {
 #[test]
 fn test_transform_tails() {
     let a = vec![
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(15)]),
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(15)]),
     ];
     let b = vec![
-        AddGroup(container! { ("tag".into(), "h1".into()) }, vec![AddSkip(30)]),
+        AddGroup(map! { "tag" => "h1" }, vec![AddSkip(30)]),
     ];
 
     let (a_, b_) = transform_insertions(&a, &b);
 
     let res = (vec![], vec![
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![AddSkip(15)]),
-        AddGroup(container! { ("tag".into(), "h1".into()) }, vec![AddSkip(15)]),
+        AddGroup(map! { "tag" => "p" }, vec![AddSkip(15)]),
+        AddGroup(map! { "tag" => "h1" }, vec![AddSkip(15)]),
     ]);
 
     assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
@@ -223,14 +222,14 @@ fn test_transform_tails() {
 #[test]
 fn test_transform_snippet() {
     let a = vec![
-        AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
-            AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+        AddGroup(map! { "tag" => "ul" }, vec![
+            AddGroup(map! { "tag" => "li" }, vec![
                 AddSkip(15)
             ])
         ]),
     ];
     let b = vec![
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![
+        AddGroup(map! { "tag" => "p" }, vec![
             AddSkip(15)
         ]),
     ];
@@ -238,9 +237,9 @@ fn test_transform_snippet() {
     let (a_, b_) = transform_insertions(&a, &b);
 
     let res = (vec![], vec![
-        AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
-            AddGroup(container! { ("tag".into(), "li".into()) }, vec![
-                AddGroup(container! { ("tag".into(), "p".into()) }, vec![
+        AddGroup(map! { "tag" => "ul" }, vec![
+            AddGroup(map! { "tag" => "li" }, vec![
+                AddGroup(map! { "tag" => "p" }, vec![
                     AddSkip(15)
                 ]),
             ])
@@ -254,16 +253,16 @@ fn test_transform_snippet() {
 #[test]
 fn test_transform_anthem() {
     let a = vec![
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![
+        AddGroup(map! { "tag" => "p" }, vec![
             AddSkip(10)
         ]),
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![
+        AddGroup(map! { "tag" => "p" }, vec![
             AddSkip(10)
         ]),
     ];
     let b = vec![
         AddSkip(5),
-        AddGroup(container! { ("tag".into(), "b".into()) }, vec![
+        AddGroup(map! { "tag" => "b" }, vec![
             AddSkip(10)
         ]),
     ];
@@ -271,14 +270,14 @@ fn test_transform_anthem() {
     let (a_, b_) = transform_insertions(&a, &b);
 
     let res = (vec![], vec![
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![
+        AddGroup(map! { "tag" => "p" }, vec![
             AddSkip(5),
-            AddGroup(container! { ("tag".into(), "b".into()) }, vec![
+            AddGroup(map! { "tag" => "b" }, vec![
                 AddSkip(5),
             ]),
         ]),
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![
-            AddGroup(container! { ("tag".into(), "b".into()) }, vec![
+        AddGroup(map! { "tag" => "p" }, vec![
+            AddGroup(map! { "tag" => "b" }, vec![
                 AddSkip(5),
             ]),
             AddSkip(5),
@@ -294,18 +293,18 @@ fn test_transform_anthem() {
 #[test]
 fn test_transform_yellow() {
     let a = vec![
-        AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
-            AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+        AddGroup(map! { "tag" => "ul" }, vec![
+            AddGroup(map! { "tag" => "li" }, vec![
                 AddSkip(5)
             ])
         ]),
     ];
     let b = vec![
         AddSkip(3),
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![
+        AddGroup(map! { "tag" => "p" }, vec![
             AddSkip(2)
         ]),
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![
+        AddGroup(map! { "tag" => "p" }, vec![
             AddSkip(3)
         ]),
     ];
@@ -313,15 +312,15 @@ fn test_transform_yellow() {
     let (a_, b_) = transform_insertions(&a, &b);
 
     let res = (vec![], vec![
-        AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
-            AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+        AddGroup(map! { "tag" => "ul" }, vec![
+            AddGroup(map! { "tag" => "li" }, vec![
                 AddSkip(3),
-                AddGroup(container! { ("tag".into(), "p".into()) }, vec![
+                AddGroup(map! { "tag" => "p" }, vec![
                     AddSkip(2)
                 ]),
             ])
         ]),
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![
+        AddGroup(map! { "tag" => "p" }, vec![
             AddSkip(3)
         ]),
     ]);
@@ -336,16 +335,16 @@ fn test_transform_yellow() {
 fn test_transform_black() {
     // TODO revert back to things with li's
     let a = vec![
-        AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
-            AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+        AddGroup(map! { "tag" => "ul" }, vec![
+            AddGroup(map! { "tag" => "li" }, vec![
                 AddSkip(5)
             ])
         ]),
     ];
     let b = vec![
         AddSkip(2),
-        AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
-            AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+        AddGroup(map! { "tag" => "ul" }, vec![
+            AddGroup(map! { "tag" => "li" }, vec![
                 AddSkip(2)
             ])
         ]),
@@ -359,14 +358,14 @@ fn test_transform_black() {
     println!("lol");
 
     let res = (vec![], vec![
-        AddGroup(container! { ("tag".into(), "ul".into()) }, vec![
-            AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+        AddGroup(map! { "tag" => "ul" }, vec![
+            AddGroup(map! { "tag" => "li" }, vec![
                 AddSkip(2)
             ]),
-            AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+            AddGroup(map! { "tag" => "li" }, vec![
                 AddSkip(2)
             ]),
-            AddGroup(container! { ("tag".into(), "li".into()) }, vec![
+            AddGroup(map! { "tag" => "li" }, vec![
                 AddSkip(1)
             ])
         ]),
@@ -386,15 +385,15 @@ fn test_transform_black() {
 #[test]
 fn test_transform_ferociously() {
     let a = vec![
-        AddGroup(container! { ("tag".into(), "h1".into()) }, vec![
+        AddGroup(map! { "tag" => "h1" }, vec![
             AddSkip(8)
         ]),
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![
+        AddGroup(map! { "tag" => "p" }, vec![
             AddSkip(5)
         ]),
     ];
     let b = vec![
-        AddGroup(container! { ("tag".into(), "h3".into()) }, vec![
+        AddGroup(map! { "tag" => "h3" }, vec![
             AddSkip(8)
         ]),
     ];
@@ -415,12 +414,12 @@ fn test_transform_tony() {
                 ]),
             ])
         ]),
-        AddGroup(container! { ("tag".into(), "p".into()) }, vec![
+        AddGroup(map! { "tag" => "p" }, vec![
             AddSkip(5)
         ]),
     ];
     let b = vec![
-        AddGroup(container! { ("tag".into(), "h3".into()) }, vec![
+        AddGroup(map! { "tag" => "h3" }, vec![
             AddSkip(8)
         ]),
     ];
@@ -469,7 +468,7 @@ fn test_transform_feedback() {
         //     AddWithGroup(vec![
                 AddWithGroup(vec![
                     AddSkip(1),
-                    AddGroup(container! { ("tag".into(), "b".into()) }, vec![AddSkip(3)]),
+                    AddGroup(map! { "tag" => "b" }, vec![AddSkip(3)]),
                 ]),
         //     ])
         // ]),
@@ -479,18 +478,18 @@ fn test_transform_feedback() {
         //     AddWithGroup(vec![
                 AddWithGroup(vec![
                     AddSkip(2),
-                    AddGroup(container! { ("tag".into(), "b".into()) }, vec![AddSkip(3)]),
+                    AddGroup(map! { "tag" => "b" }, vec![AddSkip(3)]),
                 ]),
         //     ])
         // ]),
     ];
 
     let (a_, b_) = transform_insertions(&a, &b);
-    
+
     let a_res = normalize(compose::compose(&(vec![], a.clone()), &a_));
     let b_res = normalize(compose::compose(&(vec![], b.clone()), &b_));
     assert_eq!(a_res.1, b_res.1); // TODO fix the normalize case for deletes??
-    
+
 
     let (b_, a_) = transform_insertions(&b, &a);
 
@@ -639,7 +638,7 @@ fn test_transform_hot() {
     ], vec![
         AddWithGroup(vec![
             AddWithGroup(vec![
-                AddGroup(container! { ("tag".into(), "p".into())}, vec![
+                AddGroup(map! { "tag" => "p"}, vec![
                     AddChars("hi".into()),
                     AddSkip(6),
                 ]),
@@ -794,6 +793,37 @@ fn test_transform_forest() {
         ),
         (
             del_span![DelWithGroup([DelWithGroup([DelGroupAll])])],
+            add_span![]
+        )
+    )
+}
+
+#[test]
+fn test_transform_twenties() {
+    op_transform_compare(
+        (
+            del_span![DelWithGroup([DelWithGroup([DelGroup([DelSkip(17)])])])],
+            add_span![AddWithGroup([AddWithGroup([AddGroup({"tag": "h1"}, [AddSkip(6)]), AddGroup({"tag": "p"}, [AddSkip(11)])])])]
+        ),
+        (
+            del_span![DelWithGroup([DelWithGroup([DelWithGroup([DelSkip(6), DelChars(1), DelSkip(10)])])])],
+            add_span![]
+        )
+    )
+}
+
+#[test]
+fn test_transform_slipper() {
+    op_transform_compare(
+        (
+            del_span![DelWithGroup([DelGroup([DelSkip(7), DelGroup([DelSkip(6)]), DelSkip(3)])])],
+            add_span![AddWithGroup([
+                AddGroup({"tag": "h1"}, [AddSkip(7), AddGroup({"tag": "b"}, [AddSkip(3)])]),
+                AddGroup({"tag": "p"}, [AddGroup({"tag": "b"}, [AddSkip(3)]), AddSkip(3)])
+            ])]
+        ),
+        (
+            del_span![DelWithGroup([DelWithGroup([DelSkip(7), DelGroup([DelSkip(6)]), DelSkip(3)])])],
             add_span![]
         )
     )
