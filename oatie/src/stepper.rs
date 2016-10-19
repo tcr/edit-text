@@ -1,3 +1,5 @@
+//! Enables stepping through a span operation.
+
 use std::collections::HashMap;
 use doc::*;
 use std::borrow::ToOwned;

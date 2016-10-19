@@ -1,19 +1,17 @@
 [package]
 
 name = "oatie"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["Tim Cameron Ryan <id@timryan.org>"]
 
 [dependencies]
 rand = "0.3.7"
 log = "0.3.1"
 env_logger = "0.3"
-rustc-serialize = "0.3"
+serde = "0.8"
+serde_derive = "0.8"
+serde_json = "0.8"
 term-painter = "0.2.2"
-
-[dependencies.literator]
-git = "https://github.com/kmcallister/literator.git"
-rev = "632309dd4baf7ac0c079f44de94c0449fdab23ad"
 
 [lib]
 name = "oatie"

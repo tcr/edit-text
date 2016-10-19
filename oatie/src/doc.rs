@@ -1,3 +1,5 @@
+//! Document definitions.
+
 use std::collections::HashMap;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -13,7 +15,7 @@ pub use self::Atom::*;
 
 pub type DocSpan = Vec<DocElement>;
 
-#[derive(Clone, Debug, PartialEq, RustcEncodable, RustcDecodable)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum DocElement {
     DocChars(String),
     DocGroup(Attrs, DocSpan),
@@ -24,7 +26,7 @@ pub use self::DocElement::*;
 
 pub type DelSpan = Vec<DelElement>;
 
-#[derive(Clone, Debug, PartialEq, RustcEncodable, RustcDecodable)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum DelElement {
     DelSkip(usize),
     DelWithGroup(DelSpan),
@@ -38,7 +40,7 @@ pub use self::DelElement::*;
 
 pub type AddSpan = Vec<AddElement>;
 
-#[derive(Clone, Debug, PartialEq, RustcEncodable, RustcDecodable)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum AddElement {
     AddSkip(usize),
     AddWithGroup(AddSpan),
@@ -155,7 +157,7 @@ impl DelPlaceable for DelSpan {
 
 pub trait AddPlaceable {
     fn place_all(&mut self, all: &[AddElement]);
-    fn place(&mut self, value:&AddElement);
+    fn place(&mut self, value: &AddElement);
     fn skip_len(&self) -> usize;
 }
 

@@ -1,6 +1,28 @@
+//! Defines utility functions and operation application.
+
+#![feature(proc_macro)]
 #![allow(unused_variables)]
 #![allow(dead_code)]
 #![allow(unused_imports)]
+
+#[macro_export]
+/// Create a **HashMap** from a list of key-value pairs
+macro_rules! map {
+    (@single $($x:tt)*) => (());
+    (@count $($rest:expr),*) => (<[()]>::len(&[$(map!(@single $rest)),*]));
+
+    ($($key:expr => $value:expr,)+) => { map!($($key => $value),+) };
+    ($($key:expr => $value:expr),*) => {
+        {
+            let _cap = map!(@count $($key),*);
+            let mut _map = ::std::collections::HashMap::with_capacity(_cap);
+            $(
+                _map.insert($key.into(), $value.into());
+            )*
+            _map
+        }
+    };
+}
 
 #[macro_export]
 macro_rules! doc_span {
@@ -90,9 +112,9 @@ macro_rules! del_span {
 #[macro_use] extern crate log;
 extern crate env_logger;
 extern crate rand;
-#[macro_use] extern crate literator;
-extern crate rustc_serialize;
 extern crate term_painter;
+#[macro_use] extern crate serde_derive;
+extern crate serde_json;
 
 pub mod doc;
 pub mod compose;

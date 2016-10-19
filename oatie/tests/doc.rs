@@ -1,6 +1,5 @@
 extern crate oatie;
 extern crate term_painter;
-#[macro_use] extern crate literator;
 #[macro_use] extern crate log;
 extern crate env_logger;
 extern crate rand;
