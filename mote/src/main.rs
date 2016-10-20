@@ -54,6 +54,34 @@ type TestAlias = (Vec<Op>, Vec<DocElement>);
 fn test_thing(req: &mut Request, globdoc: &Arc<Mutex<DocElement>>) -> IronResult<Response> {
     println!("Running test_thing handler, URL path: {}", req.url.path().join("/"));
 
+    println!("SHOULD MATCH {:?}", serde_json::to_string::<TestAlias>(&(vec![
+        (vec![], vec![
+            AddWithGroup(vec![
+                AddWithGroup(vec![
+                    AddWithGroup(vec![
+                        AddSkip(11),
+                        AddChars("?".into())
+                        ])
+                    ])
+                ])
+        ])
+        ], vec![
+        DocGroup(map!{"tag" => "ul"}, vec![
+            DocGroup(map!{"tag" => "li"}, vec![
+                DocGroup(map!{"tag" => "h1"}, vec![
+                    DocChars("Hello! ".to_string()),
+                    DocGroup(map!{"tag" => "b"}, vec![
+                        DocChars("what's ".to_string())
+                        ]),
+                    DocChars("up??".to_string()),
+                    ]),
+                DocGroup(map!{"tag" => "p"}, vec![
+                    DocChars("World!".to_string()),
+                    ])
+                ])
+            ])
+        ])));
+
     let struct_body = req.get::<bodyparser::Struct<TestAlias>>();
     let success = match struct_body {
         Ok(Some(struct_body)) => {
