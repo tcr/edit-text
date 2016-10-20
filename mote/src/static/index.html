@@ -138,14 +138,15 @@ button {
 
 function load (el) {
   // TODO act like doc
-  var h = $('<div>').attr('data-tag', el.fields[0].tag);
-  for (var i = 0; i < el.fields[1].length; i++) {
-    if (el.fields[1][i].variant == 'DocChars') {
-      for (var j = 0; j < el.fields[1][i].fields[0].length; j++) {
-        h.append($('<span>').text(el.fields[1][i].fields[0][j]));
+  console.log(el);
+  var h = $('<div>').attr('data-tag', el.DocGroup[0].tag);
+  for (var i = 0; i < el.DocGroup[1].length; i++) {
+    if (Object.keys(el.DocGroup[1][i])[0] == 'DocChars') {
+      for (var j = 0; j < el.DocGroup[1][i].DocChars.length; j++) {
+        h.append($('<span>').text(el.DocGroup[1][i].DocChars[j]));
       }
     } else {
-      h.append(load(el.fields[1][i]));
+      h.append(load(el.DocGroup[1][i]));
     }
   }
   return h;
@@ -161,8 +162,7 @@ function addto (el, then) {
   while (!el.is(p)) {
     if (el.prevAll().length > 0) {
       cur.unshift({
-        "variant": "AddSkip",
-        "fields": [el.prevAll().length]
+        "AddSkip": el.prevAll().length,
       });
     }
     el = el.parent();
@@ -170,8 +170,7 @@ function addto (el, then) {
       break;
     }
     cur = [{
-      "variant": "AddWithGroup",
-      "fields": [cur],
+      "AddWithGroup": cur,
     }];
   }
   return cur;
@@ -187,8 +186,7 @@ function delto (el, then) {
   while (!el.is(p)) {
     if (el.prevAll().length > 0) {
       cur.unshift({
-        "variant": "DelSkip",
-        "fields": [el.prevAll().length],
+        "DelSkip": el.prevAll().length,
       });
     }
     el = el.parent();
@@ -196,8 +194,7 @@ function delto (el, then) {
       break;
     }
     cur = [{
-      "variant": "DelWithGroup",
-      "fields": [cur],
+      "DelWithGroup": cur,
     }];
   }
   return cur;
@@ -213,17 +210,15 @@ function init (m) {
     $(parent).children().each(function () {
       if ($(this).is('div')) {
         out.push({
-          "variant": 'DocGroup',
-          "fields": [{"tag": $(this).attr('data-tag')}, serialize(this)],
+          "DocGroup": [{"tag": $(this).attr('data-tag')}, serialize(this)],
         });
       } else {
         var txt = this.innerText
-        if ((out[out.length - 1] || {}).variant == 'DocChars') {
-          txt = out.pop().fields[0] + txt;
+        if (Object.keys(out[out.length - 1] || {})[0] == 'DocChars') {
+          txt = out.pop().DocChars + txt;
         }
         out.push({
-          "variant": 'DocChars',
-          "fields": [txt]
+          "DocChars": txt
         });
       }
     })
@@ -300,8 +295,7 @@ function init (m) {
 
       op([], addto(active,
         {
-          "variant": "AddChars",
-          "fields": [txt]
+          "AddChars": txt
         }
       ));
     } else if (isChar(active)) {
@@ -312,8 +306,7 @@ function init (m) {
 
       op([], addto(active,
         {
-          "variant": "AddChars",
-          "fields": [txt]
+          "AddChars": txt
         }
       ));
     }
@@ -324,7 +317,6 @@ function init (m) {
   function op (d, a) {
     console.log(JSON.stringify([d, a]));
     ophistory.push([d, a]);
-    // console.log(JSON.stringify(j));
     setTimeout(function () {
       var match = serialize();
       // test
@@ -332,6 +324,7 @@ function init (m) {
         ophistory,
         match
       ];
+      console.log(JSON.stringify(packet));
 
       $.ajax('/api/confirm', {
         data : JSON.stringify(packet),
@@ -385,11 +378,9 @@ function init (m) {
           active = out.parent().addClass('active').addClass('target');
           op([], addto(active,
             {
-              "variant": "AddGroup",
-              "fields": [{"tag": tag}, [
+              "AddGroup": [{"tag": tag}, [
                 {
-                  "variant": "AddSkip",
-                  "fields": [out.length]
+                  "AddSkip": [out.length]
                 }
               ]],
             }
@@ -408,21 +399,17 @@ function init (m) {
         if (tag) {
           op(delto(active,
             {
-              "variant": "DelGroup",
-              "fields": [[
+              "DelGroup": [
                 {
-                  "variant": "DelSkip",
-                  "fields": [active.children().length]
+                  "DelSkip": active.children().length
                 }
-              ]],
+              ],
             }
           ), addto(active,
             {
-              "variant": "AddGroup",
-              "fields": [{"tag": tag}, [
+              "AddGroup": [{"tag": tag}, [
                 {
-                  "variant": "AddSkip",
-                  "fields": [active.children().length]
+                  "AddSkip": active.children().length
                 }
               ]],
             }
@@ -462,13 +449,11 @@ function init (m) {
 
           op(delto(active,
             {
-              "variant": "DelGroup",
-              "fields": [[
+              "DelGroup": [
                 {
-                  "variant": "DelSkip",
-                  "fields": [active.children().length]
+                  "DelSkip": active.children().length
                 }
-              ]],
+              ],
             }
           ), []);
 
@@ -487,8 +472,7 @@ function init (m) {
         if (isBlock(active)) {
           op(delto(active,
             {
-              "variant": "DelGroupAll",
-              "fields": [],
+              "DelGroupAll": [],
             }
           ), []);
 
@@ -505,8 +489,7 @@ function init (m) {
 
           op(delto(active,
             {
-              "variant": "DelChars",
-              "fields": [1],
+              "DelChars": 1,
             }
           ), []);
 
@@ -532,8 +515,7 @@ function init (m) {
 
           op([], addto(active.next(),
             {
-              "variant": "AddGroup",
-              "fields": [{"tag": tag}, []],
+              "AddGroup": [{"tag": tag}, []],
             }
           ));
         }
@@ -547,30 +529,24 @@ function init (m) {
 
           var operation = [delto(parent, [
             {
-              "variant": "DelGroup",
-              "fields": [[
+              "DelGroup": [
                 {
-                  "variant": "DelSkip",
-                  "fields": [prev.length + next.length]
+                  "DelSkip": prev.length + next.length
                 }
-              ]],
+              ],
             },
           ]), addto(parent, [
             {
-              "variant": "AddGroup",
-              "fields": [{"tag": parent.data('tag')}, [
+              "AddGroup": [{"tag": parent.data('tag')}, [
                 {
-                  "variant": "AddSkip",
-                  "fields": [prev.length]
+                  "AddSkip": prev.length
                 }
               ]],
             },
             {
-              "variant": "AddGroup",
-              "fields": [{"tag": tag}, [
+              "AddGroup": [{"tag": tag}, [
                 {
-                  "variant": "AddSkip",
-                  "fields": [next.length]
+                  "AddSkip": next.length
                 }
               ]],
             }
@@ -624,7 +600,7 @@ $('#sync').on('click', function () {
     } else {
       alert('Error in syncing. Check the console.')
     }
-    // 
+    //
   })
   .fail(function () {
     console.log('failure', arguments);
