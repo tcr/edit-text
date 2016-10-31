@@ -384,7 +384,7 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
             DelGroup(ref delspan) => {
                 match first.clone() {
                     DocGroup(ref attrs, ref span) => {
-                        res.extend_from_slice(&apply_delete(span, delspan)[..]);
+                        place_many(&mut res, &apply_delete(span, delspan)[..]);
                     },
                     _ => {
                         panic!("Invalid DelGroup");
