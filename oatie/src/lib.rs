@@ -97,7 +97,7 @@ macro_rules! del_span {
     ( ) => {
         vec![]
     };
-    ( $( $i:ident ( $( $b:tt )+ ) ),+ $(,)* ) => {
+    ( $( $i:ident ( $( $b:tt )* ) ),+ $(,)* ) => {
         vec![
             $( del_span!(@kind $i $( $b )* , ) ),*
         ]

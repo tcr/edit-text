@@ -1235,6 +1235,16 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                     b_del.skip(b_inner.skip_len());
                     b.next();
                 },
+                (Some(DelSkip(a_count)), Some(DelGroupAll)) => {
+                    a_del.group_all();
+                    if a_count > 1 {
+                        a.head = Some(DelSkip(a_count - 1));
+                    } else {
+                        a.next();
+                    }
+
+                    b.next();
+                },
 
                 // Rest
                 (Some(DelSkip(a_count)), Some(DelSkip(b_count))) => {
@@ -1253,8 +1263,19 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                     b_del.skip(cmp::min(a_count, b_count));
                 },
                 (Some(DelSkip(a_count)), Some(DelChars(b_chars))) => {
-                    b.next();
-                    a_del.chars(b_chars);
+                    if a_count > b_chars {
+                        a.head = Some(DelSkip(a_count - b_chars));
+                        b.next();
+                        a_del.chars(b_chars);
+                    } else if a_count < b_chars {
+                        a.next();
+                        b.head = Some(DelChars(b_chars - a_count));
+                        a_del.chars(a_count);
+                    } else {
+                        a.next();
+                        b.next();
+                        a_del.chars(b_chars);
+                    }
                 },
                 (Some(DelChars(a_chars)), Some(DelChars(b_chars))) => {
                     if a_chars > b_chars {

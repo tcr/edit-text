@@ -828,3 +828,17 @@ fn test_transform_slipper() {
         )
     )
 }
+
+#[test]
+fn test_transform_piece() {
+    op_transform_compare(
+        (
+            del_span![DelWithGroup([DelWithGroup([DelWithGroup([DelSkip(10), DelChars(5)])])])],
+            add_span![]
+        ),
+        (
+            del_span![DelWithGroup([DelWithGroup([DelWithGroup([DelSkip(7), DelGroupAll(), DelChars(7)])])])],
+            add_span![]
+        )
+    )
+}
