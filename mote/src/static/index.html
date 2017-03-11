@@ -12,6 +12,9 @@
 </pre>
 
 <script src="jquery.min.js"></script>
+<link href="bootstrap.min.css" rel="stylesheet">
+<script src="bootstrap.min.js"></script>
+<script src="bootbox.min.js"></script>
 
 <style>
 body {
@@ -138,7 +141,7 @@ button {
 
 function load (el) {
   // TODO act like doc
-  console.log(el);
+  // console.log(el);
   var h = $('<div>').attr('data-tag', el.DocGroup[0].tag);
   for (var i = 0; i < el.DocGroup[1].length; i++) {
     if (Object.keys(el.DocGroup[1][i])[0] == 'DocChars') {
@@ -274,6 +277,10 @@ function init (m) {
   })
 
   $(document).on('keypress', function (e) {
+    if ($(e.target).closest('.modal').length) {
+      return;
+    }
+
     var active = getActive();
     var target = getTarget();
 
@@ -344,6 +351,10 @@ function init (m) {
   }
 
   $(document).on('keydown', function (e) {
+    if ($(e.target).closest('.modal').length) {
+      return;
+    }
+
     var active = getActive();
     var target = getTarget();
 
@@ -354,7 +365,7 @@ function init (m) {
     // enter
     // if (e.keyCode == 13) {
     //   if (active) {
-    //     var tag = prompt("Tag name:", "p");
+    //     var tag = prm("Tag name:", "p");
     //     if (tag) {
     //       var out = active.nextAll().add(active);
     //       var parent = active.parent();
@@ -369,23 +380,28 @@ function init (m) {
     // command+,
     if (e.keyCode == 188 && e.metaKey) {
       // if (isBlock(active)) {
-        var tag = prompt("Tag name:", "p");
-        if (tag) {
-          var out = active.nextAll().add(active).not($('.target').nextAll());
-          clearActive();
-          clearTarget();
-          out.wrapAll($('<div>').attr('data-tag', tag));
-          active = out.parent().addClass('active').addClass('target');
-          op([], addto(active,
-            {
-              "AddGroup": [{"tag": tag}, [
+        bootbox.prompt({
+          title: "Tag name:",
+          value: "p",
+          callback: function (tag) {
+            if (tag) {
+              var out = active.nextAll().add(active).not($('.target').nextAll());
+              clearActive();
+              clearTarget();
+              out.wrapAll($('<div>').attr('data-tag', tag));
+              active = out.parent().addClass('active').addClass('target');
+              op([], addto(active,
                 {
-                  "AddSkip": [out.length]
+                  "AddGroup": [{"tag": tag}, [
+                    {
+                      "AddSkip": [out.length]
+                    }
+                  ]],
                 }
-              ]],
+              ));
             }
-          ));
-        }
+          },
+        });
       // } else {
       //   alert('Not implemented?')
       // }
@@ -395,48 +411,53 @@ function init (m) {
     // command+.
     if (e.keyCode == 190 && e.metaKey) {
       if (active) {
-        var tag = prompt("Tag name:", "p");
-        if (tag) {
-          op(delto(active,
-            {
-              "DelGroup": [
+        bootbox.prompt({
+          title: "Tag name:",
+          value: "p",
+          callback: function (tag) {
+            if (tag) {
+              op(delto(active,
                 {
-                  "DelSkip": active.children().length
+                  "DelGroup": [
+                    {
+                      "DelSkip": active.children().length
+                    }
+                  ],
                 }
-              ],
-            }
-          ), addto(active,
-            {
-              "AddGroup": [{"tag": tag}, [
+              ), addto(active,
                 {
-                  "AddSkip": active.children().length
+                  "AddGroup": [{"tag": tag}, [
+                    {
+                      "AddSkip": active.children().length
+                    }
+                  ]],
                 }
-              ]],
+              ));
+
+              console.log('hi');
+              active.attr('data-tag', tag);
+              console.log('uh');
+
+              //
+              // var out = active.nextAll().add(active).not($('.target').nextAll());
+              // clearActive();
+              // clearTarget();
+              // out.wrapAll($('<div>').attr('data-tag', tag));
+              // active = out.parent().addClass('active').addClass('target');
+              // op([], addto(active,
+              //   {
+              //     "variant": "AddGroup",
+              //     "fields": [{"tag": tag}, [
+              //       {
+              //         "variant": "AddSkip",
+              //         "fields": [out.length]
+              //       }
+              //     ]],
+              //   }
+              // ));
             }
-          ));
-
-          console.log('hi');
-          active.attr('data-tag', tag);
-          console.log('uh');
-
-          //
-          // var out = active.nextAll().add(active).not($('.target').nextAll());
-          // clearActive();
-          // clearTarget();
-          // out.wrapAll($('<div>').attr('data-tag', tag));
-          // active = out.parent().addClass('active').addClass('target');
-          // op([], addto(active,
-          //   {
-          //     "variant": "AddGroup",
-          //     "fields": [{"tag": tag}, [
-          //       {
-          //         "variant": "AddSkip",
-          //         "fields": [out.length]
-          //       }
-          //     ]],
-          //   }
-          // ));
-        }
+          },
+        });
       }
       return false;
     }
@@ -500,68 +521,79 @@ function init (m) {
           active.addClass('active').addClass('target');
         }
       }
+
       return false;
     }
 
     // <enter>
     if (e.keyCode == 13) {
       if (e.shiftKey && isBlock(active)) {
-        var tag = prompt("Tag name:", active.data('tag').toLowerCase());
-        if (tag) {
-          clearActive();
-          clearTarget();
+        bootbox.prompt({
+          title: "Tag name:",
+          value: active.data('tag').toLowerCase(),
+          callback: function (tag) {
+            if (tag) {
+              clearActive();
+              clearTarget();
 
-          $('<div data-tag="' + tag + '">').insertAfter(active).addClass('active').addClass('target');
+              $('<div data-tag="' + tag + '">').insertAfter(active).addClass('active').addClass('target');
 
-          op([], addto(active.next(),
-            {
-              "AddGroup": [{"tag": tag}, []],
+              op([], addto(active.next(),
+                {
+                  "AddGroup": [{"tag": tag}, []],
+                }
+              ));
             }
-          ));
-        }
+          }
+        });
       } else if (!e.shiftKey) {
-        var tag = prompt("Tag name:", active.parent().data('tag').toLowerCase());
-        if (tag) {
-          var prev = active.prevAll().add(active);
-          var next = active.nextAll();
+        bootbox.prompt({
+          title: "Tag name:",
+          value: active.parent().data('tag').toLowerCase(),
+          callback: function (tag) {
+            if (tag) {
+              var prev = active.prevAll().add(active);
+              var next = active.nextAll();
 
-          var parent = active.parent();
+              var parent = active.parent();
 
-          var operation = [delto(parent, [
-            {
-              "DelGroup": [
+              var operation = [delto(parent, [
                 {
-                  "DelSkip": prev.length + next.length
-                }
-              ],
-            },
-          ]), addto(parent, [
-            {
-              "AddGroup": [{"tag": parent.data('tag')}, [
+                  "DelGroup": [
+                    {
+                      "DelSkip": prev.length + next.length
+                    }
+                  ],
+                },
+              ]), addto(parent, [
                 {
-                  "AddSkip": prev.length
-                }
-              ]],
-            },
-            {
-              "AddGroup": [{"tag": tag}, [
+                  "AddGroup": [{"tag": parent.data('tag')}, [
+                    {
+                      "AddSkip": prev.length
+                    }
+                  ]],
+                },
                 {
-                  "AddSkip": next.length
+                  "AddGroup": [{"tag": tag}, [
+                    {
+                      "AddSkip": next.length
+                    }
+                  ]],
                 }
-              ]],
+              ])];
+
+              clearActive();
+              clearTarget();
+
+              console.log(prev);
+              prev.wrapAll('<div data-tag="' + parent.data('tag') + '">');
+              next.wrapAll('<div data-tag="' + tag + '" class="active target">');
+              parent.contents().unwrap();
+
+              op(operation[0], operation[1]);
             }
-          ])];
-
-          clearActive();
-          clearTarget();
-
-          console.log(prev);
-          prev.wrapAll('<div data-tag="' + parent.data('tag') + '">');
-          next.wrapAll('<div data-tag="' + tag + '" class="active target">');
-          parent.contents().unwrap();
-
-          op(operation[0], operation[1]);
-        }
+          },
+        });
       }
     }
   })
