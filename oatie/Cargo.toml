@@ -1,17 +1,19 @@
 [package]
 
 name = "oatie"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Tim Cameron Ryan <id@timryan.org>"]
 
 [dependencies]
 rand = "0.3.7"
 log = "0.3.1"
 env_logger = "0.3"
-serde = "0.8"
-serde_derive = "0.8"
-serde_json = "0.8"
+serde = "0.9"
+serde_derive = "0.9"
+serde_json = "0.9"
 term-painter = "0.2.2"
+afl = "0.1"
+afl-plugin = "0.1"
 
 [lib]
 name = "oatie"
