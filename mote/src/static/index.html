@@ -1,3 +1,7 @@
+<!DOCTYPE html>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
 <title>Mote</title>
 
 <h1>mote editor <button id="sync">sync!</button></h1>
@@ -19,6 +23,7 @@
 <style>
 body {
   font-family: Helvetica;
+  padding: 10px 30px;
 }
 
 h4 {
@@ -292,7 +297,7 @@ function init (m) {
       return;
     }
 
-    var txt = String.fromCharCode(e.keyCode);
+    var txt = String.fromCharCode(e.charCode);
     var span = $('<span>').text(txt).addClass('active').addClass('target');
     if (isBlock(active)) {
       clearActive();

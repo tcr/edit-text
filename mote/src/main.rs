@@ -6,11 +6,6 @@ extern crate router;
 extern crate serde_json;
 extern crate staticfile;
 
-// This example serves the docs from target/doc/staticfile at /doc/
-//
-// Run `cargo doc && cargo test && ./target/doc_server`, then
-// point your browser to http://127.0.0.1:3000/doc/
-
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
