@@ -1,12 +1,7 @@
-
-#![feature(plugin)]
-#![plugin(afl_plugin)]
-
-extern crate afl;
-
 extern crate oatie;
 
 use std::io;
+use std::io::prelude::*;
 
 use oatie::compose;
 use oatie::doc::*;
@@ -238,15 +233,17 @@ fn op_transform_compare(a: Op, b: Op) {
 // See `LICENSE` in this repository.
 
 fn main() {
-    afl::handle_string(|input| {
-        match run(&input) {
-            Ok(..) => {
-                println!("all set!");
-            }
-            Err(err) => {
-                println!("Sad error: {}", err);
-                ::std::process::exit(1);
-            }
+    let mut input = String::new();
+    let stdin = io::stdin();
+    stdin.lock().read_to_string(&mut input).expect("Could not read stdin");
+
+    match run(&input) {
+        Ok(..) => {
+            println!("all set!");
         }
-    })
+        Err(err) => {
+            println!("transform error: {}", err);
+            ::std::process::exit(1);
+        }
+    }
 }
