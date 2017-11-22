@@ -8,9 +8,7 @@ use oatie::doc::*;
 use oatie::normalize;
 use oatie::transform::*;
 
-// This is a simple macro named `say_hello`.
 macro_rules! comma_seq {
-    // `()` indicates that the macro takes no argument.
     ($strval: expr, $target: expr, $fnv: expr) => (
         let mut inner = $strval;
         while inner.len() > 0 {
@@ -37,7 +35,7 @@ macro_rules! comma_seq {
                 }
             }
             if item.is_none() {
-                return Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid data in group"));
+                return Err(io::Error::new(io::ErrorKind::InvalidData, "Group has no readable data"));
             }
             $target.push(item.unwrap());
         }
@@ -124,9 +122,10 @@ fn parse_add(mut value: &str) -> io::Result<AddElement> {
     if value.starts_with("AddWithGroup([") && value.ends_with("])") {
         cap = Some(("AddWithGroup", &value["AddWithGroup([".len()..value.len()-2]));
     }
-    //if value.starts_with("AddGroup([") && value.ends_with("])") {
+    if value.starts_with("AddGroup(") && value.ends_with("])") {
+        panic!("this doesnt work yet");
     //    cap = Some(("AddGroup", &value["AddGroup([".len()..value.len()-2]));
-    //}
+    }
 
     if let Some((key, inner)) = cap {
         let mut args = vec![];
