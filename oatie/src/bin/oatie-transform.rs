@@ -1,7 +1,11 @@
 extern crate oatie;
+extern crate serde_json;
+#[macro_use] extern crate maplit;
 
 use std::io;
 use std::io::prelude::*;
+use serde_json::Value;
+use std::collections::HashMap;
 
 use oatie::compose;
 use oatie::doc::*;
@@ -118,25 +122,51 @@ fn parse_add(mut value: &str) -> io::Result<AddElement> {
         });
     }
 
-    let mut cap = None;
+    // let mut cap = None;
     if value.starts_with("AddWithGroup([") && value.ends_with("])") {
-        cap = Some(("AddWithGroup", &value["AddWithGroup([".len()..value.len()-2]));
-    }
-    if value.starts_with("AddGroup(") && value.ends_with("])") {
-        panic!("this doesnt work yet");
-    //    cap = Some(("AddGroup", &value["AddGroup([".len()..value.len()-2]));
-    }
+        let inner = &value["AddWithGroup([".len()..value.len()-2];
 
-    if let Some((key, inner)) = cap {
         let mut args = vec![];
         comma_seq!(inner, args, parse_add);
 
-        return Ok(match key {
-            //"DelGroup" => DelElement::DelGroup(args),
-            "AddWithGroup" => AddElement::AddWithGroup(args),
-            _ => unreachable!(),
-        });
+        return Ok(AddElement::AddWithGroup(args));
     }
+
+    if value.starts_with("AddGroup({") && value.ends_with("])") {
+        println!("value {:?}", value);
+        // panic!("this doesnt work yet");
+
+        let right_index = value.find('}').unwrap();
+        let body = &value["AddGroup(".len()..right_index+1];
+
+        // Find ending } then subslice then
+        let v: Value = serde_json::from_str(body).unwrap();
+        let mut map: HashMap<String, String> = hashmap![];
+        for (key, value) in v.as_object().unwrap() {
+            map.insert(key.to_string(), value.as_str().unwrap().to_string());
+        }
+
+        let next_index = value[right_index+1..].find('[').unwrap();
+        let inner = &value[right_index+1+next_index+1..value.len()-2];
+        println!("what {:?}", inner);
+        let mut args = vec![];
+        println!("------>");
+        comma_seq!(inner, args, parse_add);
+
+        return Ok(AddElement::AddGroup(map, args));
+    }
+
+    // if let Some((key, inner)) = cap {
+    //     let mut args = vec![];
+    //     comma_seq!(inner, args, parse_add);
+
+    //     return Ok(match key {
+    //         //"DelGroup" => DelElement::DelGroup(args),
+    //         "AddWithGroup" => AddElement::AddWithGroup(args),
+    //         _ => unreachable!(),
+    //     });
+    // }
+
     Err(malformed("Invalid data"))
 }
 
