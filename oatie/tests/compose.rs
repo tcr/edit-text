@@ -69,6 +69,12 @@ fn test_compose_del_del() {
     ]), vec![
         DelSkip(1), DelChars(7), DelSkip(1), DelChars(2), DelSkip(1)
     ]);
+
+
+    assert_eq!(compose_del_del(
+        &del_span![DelGroup([DelSkip(11)])],
+        &del_span![DelSkip(6), DelChars(1)],
+    ), del_span![DelGroup([DelSkip(6), DelChars(1), DelSkip(4)])]);
 }
 
 #[test]

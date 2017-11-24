@@ -15,243 +15,9 @@ fn test_start() {
 }
 
 #[test]
-fn test_transform_goose() {
-    test_start();
-
-    let a = add_span![
-        AddGroup({"tag": "p"}, [AddSkip(4)]),
-    ];
-    let b = add_span![
-        AddGroup({"tag": "p"}, [AddSkip(6)]),
-    ];
-
-    let (a_, b_) = transform_insertions(&a, &b);
-
-    let res = (del_span![], add_span![
-        AddGroup({"tag": "p"}, [AddSkip(4)]),
-        AddGroup({"tag": "p"}, [AddSkip(2)]),
-    ]);
-
-    assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
-
-    println!("what {:?}", b_);
-    // assert_eq!(normalize(compose::compose(&(vec![], b), &b_)), res.clone());
-
-    //TODO this is a bug.
-    // println!("why {:?}", compose::compose(&(vec![], vec![AddSkip(6)]), &(b_.0, b_.1)));
-}
-
-#[test]
-fn test_transform_gander() {
-    let a = vec![
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(6)])
-    ];
-    let b = vec![
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(6)])
-    ];
-
-    let (a_, b_) = transform_insertions(&a, &b);
-
-    let res = (vec![], vec![
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(6)]),
-    ]);
-
-    assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
-    assert_eq!(normalize(compose::compose(&(vec![], b), &b_)), res.clone());
-}
-
-#[test]
-fn test_transform_cory() {
-    let a = vec![
-        AddSkip(1), AddChars("1".into())
-    ];
-    let b = vec![
-        AddSkip(1), AddChars("2".into())
-    ];
-
-    let (a_, b_) = transform_insertions(&a, &b);
-
-    let res = (vec![], vec![
-        AddSkip(1), AddChars("12".into()),
-    ]);
-
-    assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
-    assert_eq!(normalize(compose::compose(&(vec![], b), &b_)), res.clone());
-}
-
-#[test]
-fn test_transform_wheat() {
-    let a = vec![
-        AddSkip(12), AddChars("_".into())
-    ];
-    let b = vec![
-        AddSkip(5), AddChars("D".into())
-    ];
-
-    let (a_, b_) = transform_insertions(&a, &b);
-
-    let res = (vec![], vec![
-        AddSkip(5), AddChars("D".into()), AddSkip(7), AddChars("_".into())
-    ]);
-
-    assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
-    assert_eq!(normalize(compose::compose(&(vec![], b), &b_)), res.clone());
-}
-
-#[test]
-fn test_transform_rice() {
-    let a = vec![
-        AddSkip(1), AddChars("a".into())
-    ];
-    let b = vec![
-        AddSkip(2), AddChars("c".into())
-    ];
-
-    let (a_, b_) = transform_insertions(&a, &b);
-
-    let res = (vec![], vec![
-        AddSkip(1), AddChars("a".into()), AddSkip(1), AddChars("c".into())
-    ]);
-
-    assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
-    assert_eq!(normalize(compose::compose(&(vec![], b), &b_)), res.clone());
-}
-
-#[test]
-fn test_transform_bacon() {
-    let a = vec![
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(5)]),
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(5)]),
-    ];
-    let b = vec![
-        AddSkip(11), AddChars("_".into())
-    ];
-
-    let (a_, b_) = transform_insertions(&a, &b);
-
-    let res = (vec![], vec![
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(5)]),
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(5)]),
-        AddSkip(1), AddChars("_".into()),
-    ]);
-
-    assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
-    assert_eq!(normalize(compose::compose(&(vec![], b), &b_)), res.clone());
-}
-
-#[test]
-fn test_transform_berry() {
-    let a = vec![
-        AddGroup(map! { "tag" => "h1" }, vec![AddSkip(15)]),
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(15)]),
-    ];
-    let b = vec![
-    ];
-
-    let (a_, b_) = transform_insertions(&a, &b);
-
-    let res = (vec![], vec![
-        AddGroup(map! { "tag" => "h1" }, vec![AddSkip(15)]),
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(15)]),
-    ]);
-
-    assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
-    assert_eq!(normalize(compose::compose(&(vec![], b), &b_)), res.clone());
-}
-
-#[test]
-fn test_transform_brown() {
-    let a = vec![
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(5)]),
-    ];
-    let b = vec![
-        AddSkip(2),
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(2)]),
-    ];
-
-    let (a_, b_) = transform_insertions(&a, &b);
-
-    let res = (vec![], vec![
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(4)]),
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(1)]),
-    ]);
-
-    assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
-    assert_eq!(normalize(compose::compose(&(vec![], b), &b_)), res.clone());
-}
-
-#[test]
-fn test_transform_sonic() {
-    let a = vec![
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(30)]),
-    ];
-    let b = vec![
-        AddGroup(map! { "tag" => "h1" }, vec![AddSkip(30)]),
-    ];
-
-    let (a_, b_) = transform_insertions(&a, &b);
-
-    let res = (vec![], vec![
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(30)]),
-    ]);
-
-    assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
-    assert_eq!(normalize(compose::compose(&(vec![], b), &b_)), res.clone());
-}
-
-#[test]
-fn test_transform_tails() {
-    let a = vec![
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(15)]),
-    ];
-    let b = vec![
-        AddGroup(map! { "tag" => "h1" }, vec![AddSkip(30)]),
-    ];
-
-    let (a_, b_) = transform_insertions(&a, &b);
-
-    let res = (vec![], vec![
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(15)]),
-        AddGroup(map! { "tag" => "h1" }, vec![AddSkip(15)]),
-    ]);
-
-    assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
-    assert_eq!(normalize(compose::compose(&(vec![], b), &b_)), res.clone());
-}
-
-#[test]
-fn test_transform_snippet() {
-    let a = vec![
-        AddGroup(map! { "tag" => "ul" }, vec![
-            AddGroup(map! { "tag" => "li" }, vec![
-                AddSkip(15)
-            ])
-        ]),
-    ];
-    let b = vec![
-        AddGroup(map! { "tag" => "p" }, vec![
-            AddSkip(15)
-        ]),
-    ];
-
-    let (a_, b_) = transform_insertions(&a, &b);
-
-    let res = (vec![], vec![
-        AddGroup(map! { "tag" => "ul" }, vec![
-            AddGroup(map! { "tag" => "li" }, vec![
-                AddGroup(map! { "tag" => "p" }, vec![
-                    AddSkip(15)
-                ]),
-            ])
-        ]),
-    ]);
-
-    assert_eq!(normalize(compose::compose(&(vec![], a), &a_)), res.clone());
-    assert_eq!(normalize(compose::compose(&(vec![], b), &b_)), res.clone());
-}
-
-#[test]
 fn test_transform_anthem() {
+    test_start();
+    
     let a = vec![
         AddGroup(map! { "tag" => "p" }, vec![
             AddSkip(10)
@@ -687,16 +453,22 @@ fn op_transform_compare(a: Op, b: Op) {
 #[test]
 fn test_transform_potato() {
     op_transform_compare(
-        (del_span![], add_span![
-            AddGroup({"tag": "p"}, [
-                AddChars("hi"),
+        op_span!(
+            [], 
+            [
+                AddGroup({"tag": "p"}, [
+                    AddChars("hi"),
+                    AddSkip(6),
+                ]),
+            ]
+        ),
+        op_span!(
+            [], 
+            [
                 AddSkip(6),
-            ]),
-        ]),
-        (del_span![], add_span![
-            AddSkip(6),
-            AddChars("a"),
-        ])
+                AddChars("a"),
+            ]
+        ),
     )
 }
 

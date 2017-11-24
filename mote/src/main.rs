@@ -28,7 +28,7 @@ fn default_doc() -> DocElement {
             DocGroup({"tag": "h1"}, [
                 DocChars("Hello! "),
                 DocGroup({"tag": "b"}, [DocChars("what's")]),
-                DocChars("up?"),
+                DocChars(" up?"),
             ]),
             DocGroup({"tag": "p"}, [
                 DocChars("World!"),
@@ -85,8 +85,8 @@ fn test_thing(req: &mut Request, globdoc: &Arc<Mutex<DocElement>>) -> IronResult
             let start = vec![glob.clone()];
 
             for op in &ops {
-                println!("OPP add {:?}", op.0);
-                println!("   del {:?}", op.1);
+                println!("OPP del {:?}", op.0);
+                println!("    add {:?}", op.1);
             }
 
             let res = if ops.len() > 0 {
@@ -238,9 +238,6 @@ fn test_transform_???() {{
 
 
 fn main() {
-    // let a: TestAlias = (vec![], vec![DocGroup(container! { }, vec![DocChars("hi".into())])]);
-    // println!("lets see it: {:?}", json::encode(&a).unwrap());
-
     let mydoc = Arc::new(Mutex::new(default_doc()));
 
     let mut router = Router::new();
