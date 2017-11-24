@@ -1,0 +1,6 @@
+[DelWithGroup([DelWithGroup([DelGroup([DelSkip(6)])])])]
+[AddWithGroup([AddWithGroup([AddGroup({"tag": "p"}, [AddSkip(6)])])])]
+
+
+[DelSkip(1)]
+[AddWithGroup([AddWithGroup([AddWithGroup([AddSkip(2), AddChars("1"), AddSkip(2), AddChars("2"), AddSkip(2), AddChars("3")])])])]

@@ -1,0 +1,5 @@
+[DelSkip(1)]
+[AddWithGroup([AddWithGroup([AddWithGroup([AddChars("1234"), AddSkip(6)])])])]
+
+[DelWithGroup([DelWithGroup([DelWithGroup([DelChars(4), DelSkip(2)])])])]
+[]
