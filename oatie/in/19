@@ -1,0 +1,5 @@
+[]
+[AddWithGroup([AddWithGroup([AddWithGroup([AddSkip(6), AddChars("a")])])])]
+
+[DelWithGroup([DelWithGroup([DelGroup([DelSkip(6)])])])]
+[]

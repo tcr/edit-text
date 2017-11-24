@@ -1,0 +1,5 @@
+[]
+[AddGroup({"tag": "p"}, [AddChars("hi"), AddSkip(6)])]
+
+[]
+[AddSkip(6), AddChars("a")]

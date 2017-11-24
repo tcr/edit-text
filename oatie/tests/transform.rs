@@ -17,7 +17,7 @@ fn test_start() {
 #[test]
 fn test_transform_anthem() {
     test_start();
-    
+
     let a = vec![
         AddGroup(map! { "tag" => "p" }, vec![
             AddSkip(10)
@@ -449,168 +449,16 @@ fn op_transform_compare(a: Op, b: Op) {
     assert_eq!(a_res, b_res);
 }
 
-
-#[test]
-fn test_transform_potato() {
-    op_transform_compare(
-        op_span!(
-            [], 
-            [
-                AddGroup({"tag": "p"}, [
-                    AddChars("hi"),
-                    AddSkip(6),
-                ]),
-            ]
-        ),
-        op_span!(
-            [], 
-            [
-                AddSkip(6),
-                AddChars("a"),
-            ]
-        ),
-    )
-}
-
-#[test]
-fn test_transform_flesh() {
-    op_transform_compare(
-        (
-            del_span![DelSkip(1)],
-            add_span![AddWithGroup([AddWithGroup([AddWithGroup([AddChars("1234"), AddSkip(6)])])])]
-        ),
-        (
-            del_span![DelWithGroup([DelWithGroup([DelWithGroup([DelChars(4), DelSkip(2)])])])],
-            add_span![]
-        )
-    )
-}
-
-#[test]
-fn test_transform_bones() {
-    op_transform_compare(
-        (
-            del_span![],
-            add_span![AddWithGroup([AddWithGroup([AddWithGroup([AddSkip(6), AddChars("a")])])])]
-        ),
-        (
-            del_span![DelWithGroup([DelWithGroup([DelGroup([DelSkip(6)])])])],
-            add_span![]
-        )
-    )
-}
-
-#[test]
-fn test_transform_helium() {
-    op_transform_compare(
-        (
-            del_span![DelWithGroup([DelWithGroup([DelGroup([DelSkip(6)])])])],
-            add_span![AddWithGroup([AddWithGroup([AddGroup({"tag": "p"}, [AddSkip(6)])])])]
-        ),
-        (
-            del_span![DelSkip(1)],
-            add_span![AddWithGroup([AddWithGroup([AddWithGroup([AddSkip(2), AddChars("1"), AddSkip(2), AddChars("2"), AddSkip(2), AddChars("3")])])])]
-        )
-    )
-}
-
-#[test]
-fn test_transform_cigarette() {
-    op_transform_compare(
-        (
-            del_span![DelWithGroup([DelWithGroup([DelGroup([DelSkip(9)])])])],
-            add_span![AddWithGroup([AddWithGroup([AddGroup({"tag": "h1"}, [AddSkip(9)])])])]
-        ),
-        (
-            del_span![DelWithGroup([DelWithGroup([DelGroup([DelSkip(9)])])])],
-            add_span![AddWithGroup([AddWithGroup([AddGroup({"tag": "h2"}, [AddSkip(9)])])])]
-        )
-    )
-}
-
-#[test]
-fn test_transform_wind() {
-    op_transform_compare(
-        (
-            del_span![DelWithGroup([DelGroup([DelSkip(2)])])],
-            add_span![AddWithGroup([AddGroup({"tag": "li"}, [AddSkip(1)]), AddGroup({"tag": "li"}, [AddSkip(1)])])]
-        ),
-        (
-            del_span![DelWithGroup([DelWithGroup([DelGroup([DelSkip(3)]), DelSkip(1)])])],
-            add_span![AddWithGroup([AddWithGroup([AddGroup({"tag": "h1"}, [AddSkip(3)]), AddSkip(1)])])]
-        )
-    )
-}
-
-#[test]
-fn test_transform_soldier() {
-    op_transform_compare(
-        (
-            del_span![DelWithGroup([DelWithGroup([DelGroupAll])])],
-            add_span![]
-        ),
-        (
-            del_span![DelWithGroup([DelWithGroup([DelWithGroup([DelSkip(5), DelChars(1)])])])],
-            add_span![]
-        )
-    )
-}
-
-#[test]
-fn test_transform_forest() {
-    op_transform_compare(
-        (
-            del_span![DelWithGroup([DelWithGroup([DelWithGroup([DelSkip(2), DelChars(4)])])])],
-            add_span![]
-        ),
-        (
-            del_span![DelWithGroup([DelWithGroup([DelGroupAll])])],
-            add_span![]
-        )
-    )
-}
-
-#[test]
-fn test_transform_twenties() {
-    op_transform_compare(
-        (
-            del_span![DelWithGroup([DelWithGroup([DelGroup([DelSkip(17)])])])],
-            add_span![AddWithGroup([AddWithGroup([AddGroup({"tag": "h1"}, [AddSkip(6)]), AddGroup({"tag": "p"}, [AddSkip(11)])])])]
-        ),
-        (
-            del_span![DelWithGroup([DelWithGroup([DelWithGroup([DelSkip(6), DelChars(1), DelSkip(10)])])])],
-            add_span![]
-        )
-    )
-}
-
-#[test]
-fn test_transform_slipper() {
-    op_transform_compare(
-        (
-            del_span![DelWithGroup([DelGroup([DelSkip(7), DelGroup([DelSkip(6)]), DelSkip(3)])])],
-            add_span![AddWithGroup([
-                AddGroup({"tag": "h1"}, [AddSkip(7), AddGroup({"tag": "b"}, [AddSkip(3)])]),
-                AddGroup({"tag": "p"}, [AddGroup({"tag": "b"}, [AddSkip(3)]), AddSkip(3)])
-            ])]
-        ),
-        (
-            del_span![DelWithGroup([DelWithGroup([DelSkip(7), DelGroup([DelSkip(6)]), DelSkip(3)])])],
-            add_span![]
-        )
-    )
-}
-
 #[test]
 fn test_transform_piece() {
     op_transform_compare(
-        (
-            del_span![DelWithGroup([DelWithGroup([DelWithGroup([DelSkip(10), DelChars(5)])])])],
-            add_span![]
+        op_span!(
+            [DelWithGroup([DelWithGroup([DelWithGroup([DelSkip(10), DelChars(5)])])])],
+            [],
         ),
-        (
-            del_span![DelWithGroup([DelWithGroup([DelWithGroup([DelSkip(7), DelGroupAll(), DelChars(7)])])])],
-            add_span![]
+        op_span!(
+            [DelWithGroup([DelWithGroup([DelWithGroup([DelSkip(7), DelGroupAll(), DelChars(7)])])])],
+            [],
         )
     )
 }

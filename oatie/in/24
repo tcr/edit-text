@@ -1,0 +1,5 @@
+[DelWithGroup([DelWithGroup([DelWithGroup([DelSkip(2), DelChars(4)])])])]
+[]
+
+[DelWithGroup([DelWithGroup([DelGroupAll])])]
+[]

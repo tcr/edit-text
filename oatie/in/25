@@ -1,0 +1,5 @@
+[DelWithGroup([DelWithGroup([DelGroup([DelSkip(17)])])])]
+[AddWithGroup([AddWithGroup([AddGroup({"tag": "h1"}, [AddSkip(6)]), AddGroup({"tag": "p"}, [AddSkip(11)])])])]
+
+[DelWithGroup([DelWithGroup([DelWithGroup([DelSkip(6), DelChars(1), DelSkip(10)])])])]
+[]
