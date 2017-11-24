@@ -185,8 +185,8 @@ fn run(input: &str) -> io::Result<()> {
 //"#;
 
     let four = input.lines().filter(|x| x.len() > 0).collect::<Vec<_>>();
-    if four.len() != 4 {
-        return Err(malformed("Needed four lines as input"));
+    if four.len() != 4 && four.len() != 6 {
+        return Err(malformed("Needed four or six lines as input"));
     }
 
     let a = four[0].clone();
@@ -226,12 +226,35 @@ fn run(input: &str) -> io::Result<()> {
 
     let a = (del_a, add_a);
     let b = (del_b, add_b);
-    op_transform_compare(a, b);
+    let confirm = op_transform_compare(a, b);
+
+    // Check validating lines
+    if four.len() == 6 {
+        let a = four[4].clone();
+        if !(a.starts_with("[") && a.ends_with("]")) {
+            return Err(malformed("Expected array"));
+        }
+        let inner = &a[1..a.len()-1];
+        let mut confirm_del = vec![];
+        comma_seq!(inner, confirm_del, parse_del);
+
+        let a = four[5].clone();
+        if !(a.starts_with("[") && a.ends_with("]")) {
+            return Err(malformed("Expected array"));
+        }
+        let inner = &a[1..a.len()-1];
+        let mut confirm_add = vec![];
+        comma_seq!(inner, confirm_add, parse_add);
+
+        println!("Validating...");
+        assert_eq!(confirm, (confirm_del, confirm_add));
+        println!("Valid!");
+    }
 
     Ok(())
 }
 
-fn op_transform_compare(a: Op, b: Op) {
+fn op_transform_compare(a: Op, b: Op) -> Op {
     let (a_, b_) = transform(&a, &b);
 
     let a_res = normalize(compose::compose(&a, &a_));
@@ -243,6 +266,8 @@ fn op_transform_compare(a: Op, b: Op) {
     println!("");
 
     assert_eq!(a_res, b_res);
+
+    a_res
 }
 
 //fn main() {

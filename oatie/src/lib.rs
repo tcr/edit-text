@@ -109,6 +109,16 @@ macro_rules! del_span {
     };
 }
 
+#[macro_export]
+macro_rules! op_span {
+    ( [ $( $d:tt )* ], [ $( $a:tt )* ] $(,)* ) => {
+        (
+            del_span![ $( $d )* ],
+            add_span![ $( $a )* ],
+        )
+    };
+}
+
 #[macro_use] extern crate log;
 extern crate env_logger;
 extern crate rand;
@@ -261,7 +271,7 @@ pub fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan
                         res.push(DocGroup(attrs.clone(), apply_add(span, delspan)));
                     },
                     _ => {
-                        panic!("Invalid DelGroupAll");
+                        panic!("Invalid AddWithGroup");
                     }
                 }
             },
@@ -377,7 +387,7 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
                         res.push(DocGroup(attrs.clone(), apply_delete(span, delspan)));
                     },
                     _ => {
-                        panic!("Invalid DelGroupAll");
+                        panic!("Invalid DelWithGroup");
                     }
                 }
             },
@@ -446,7 +456,7 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
     res
 }
 
-pub fn apply_operation(spanvec:&DocSpan, op:&Op) -> DocSpan {
+pub fn apply_operation(spanvec: &DocSpan, op: &Op) -> DocSpan {
     let &(ref delvec, ref addvec) = op;
     let postdel = apply_delete(spanvec, delvec);
     apply_add(&postdel, addvec)

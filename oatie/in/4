@@ -1,0 +1,8 @@
+[]
+[AddGroup({"tag": "p"}, [AddSkip(4)])]
+
+[]
+[AddGroup({"tag": "p"}, [AddSkip(6)])]
+
+[]
+[AddGroup({"tag": "p"}, [AddSkip(4)]), AddGroup({"tag": "p"}, [AddSkip(2)])]

@@ -1,0 +1,8 @@
+[]
+[AddSkip(1), AddChars("a")]
+
+[]
+[AddSkip(2), AddChars("c")]
+
+[]
+[AddSkip(1), AddChars("a"), AddSkip(1), AddChars("c")]

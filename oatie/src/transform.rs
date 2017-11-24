@@ -1190,6 +1190,7 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                     // t.skip_a(a_count);
                     // t.skip_b(a_count);
                     a.next();
+                    b_del.skip(a_count);
                 },
                 None => {
                     // t.close_a();

@@ -1,0 +1,8 @@
+[]
+[AddSkip(12), AddChars("_")]
+
+[]
+[AddSkip(5), AddChars("D")]
+
+[]
+[AddSkip(5), AddChars("D"), AddSkip(7), AddChars("_")]
