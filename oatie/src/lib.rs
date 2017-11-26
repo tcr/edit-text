@@ -6,25 +6,6 @@
 #![allow(unused_imports)]
 
 #[macro_export]
-/// Create a **HashMap** from a list of key-value pairs
-macro_rules! map {
-    (@single $($x:tt)*) => (());
-    (@count $($rest:expr),*) => (<[()]>::len(&[$(map!(@single $rest)),*]));
-
-    ($($key:expr => $value:expr,)+) => { map!($($key => $value),+) };
-    ($($key:expr => $value:expr),*) => {
-        {
-            let _cap = map!(@count $($key),*);
-            let mut _map = ::std::collections::HashMap::with_capacity(_cap);
-            $(
-                _map.insert($key.into(), $value.into());
-            )*
-            _map
-        }
-    };
-}
-
-#[macro_export]
 macro_rules! doc_span {
     ( @str_literal $e:expr ) => { $e };
     ( @kind DocChars $b:expr $(,)* ) => {
@@ -119,6 +100,7 @@ macro_rules! op_span {
     };
 }
 
+#[macro_use] extern crate maplit;
 #[macro_use] extern crate log;
 extern crate env_logger;
 extern crate rand;

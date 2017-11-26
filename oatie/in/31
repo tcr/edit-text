@@ -1,0 +1,5 @@
+[DelWithGroup([DelGroup([])])]
+[]
+
+[]
+[AddWithGroup([AddWithGroup([AddChars("hi")])])]
