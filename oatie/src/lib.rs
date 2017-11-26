@@ -1,6 +1,5 @@
 //! Defines utility functions and operation application.
 
-#![feature(proc_macro)]
 #![allow(unused_variables)]
 #![allow(dead_code)]
 #![allow(unused_imports)]
