@@ -9,6 +9,7 @@ use oatie::compose;
 use oatie::doc::*;
 use oatie::normalize;
 use oatie::transform::*;
+use oatie::apply_operation;
 
 fn test_start() {
     let _ = env_logger::init();
@@ -461,4 +462,44 @@ fn test_transform_piece() {
             [],
         )
     )
+}
+
+#[test]
+fn test_transform_del() {
+    let mut doc = doc_span![
+        DocGroup({"tag": "li"}, [
+            DocGroup({"tag": "h1"}, [
+                DocChars("Hello! Sup?"),
+            ]),
+            DocGroup({"tag": "p"}, [
+                DocChars("World!"),
+            ]),
+        ]),
+    ];
+
+    // Flatten client A operations.
+    let op_a = op_span!(
+        [DelWithGroup([DelGroup([DelSkip(6), DelChars(1), DelSkip(4)])])],
+        [AddWithGroup([AddGroup({"tag": "h1"}, [AddSkip(6)]), AddGroup({"tag": "p"}, [AddSkip(4)])])],
+    );
+
+    // Flatten client B operations.
+    let op_b = op_span!(
+        [DelSkip(1)],
+        [AddWithGroup([AddGroup({"tag": "ul"}, [AddGroup({"tag": "li"}, [AddSkip(1)])])])],
+    );
+
+    // Tranform
+    let (a_, b_) = transform(&op_a, &op_b);
+
+    // Apply original ops
+    let doc_a = apply_operation(&doc, &op_a);
+    let doc_b = apply_operation(&doc, &op_b);
+
+    // Apply transformed ops
+    let a_res = apply_operation(&doc_a, &a_);
+    let b_res = apply_operation(&doc_b, &b_);
+
+    // Compare
+    assert_eq!(a_res, b_res);
 }
