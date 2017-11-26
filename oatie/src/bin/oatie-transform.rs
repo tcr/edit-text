@@ -133,7 +133,6 @@ fn parse_add(mut value: &str) -> io::Result<AddElement> {
     }
 
     if value.starts_with("AddGroup({") && value.ends_with("])") {
-        println!("value {:?}", value);
         // panic!("this doesnt work yet");
 
         let right_index = value.find('}').unwrap();
@@ -148,9 +147,7 @@ fn parse_add(mut value: &str) -> io::Result<AddElement> {
 
         let next_index = value[right_index+1..].find('[').unwrap();
         let inner = &value[right_index+1+next_index+1..value.len()-2];
-        println!("what {:?}", inner);
         let mut args = vec![];
-        println!("------>");
         comma_seq!(inner, args, parse_add);
 
         return Ok(AddElement::AddGroup(map, args));
@@ -221,11 +218,10 @@ fn run(input: &str) -> io::Result<()> {
     let mut add_b = vec![];
     comma_seq!(inner, add_b, parse_add);
 
-    println!("op {:?} {:?}", del_a, del_b);
-    println!("okay!");
-
     let a = (del_a, add_a);
     let b = (del_b, add_b);
+
+    println!("transform start!");
     let confirm = op_transform_compare(a, b);
 
     // Check validating lines

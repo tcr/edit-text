@@ -129,6 +129,7 @@ pub trait DelPlaceable {
     fn place_all(&mut self, all: &[DelElement]);
     fn place(&mut self, value:&DelElement);
     fn skip_len(&self) -> usize;
+    fn skip_post_len(&self) -> usize;
 }
 
 impl DelPlaceable for DelSpan {
@@ -149,6 +150,19 @@ impl DelPlaceable for DelSpan {
                 &DelSkip(len) => len,
                 &DelChars(len) => len,
                 &DelGroup(..) | &DelGroupAll | &DelWithGroup(..) => 1,
+            };
+        }
+        ret
+    }
+
+    fn skip_post_len(&self) -> usize {
+        let mut ret = 0;
+        for item in self {
+            ret += match item {
+                &DelSkip(len) => len,
+                &DelChars(..) => 0,
+                &DelGroup(..) | &DelGroupAll => 0,
+                &DelWithGroup(..) => 1,
             };
         }
         ret

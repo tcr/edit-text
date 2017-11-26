@@ -335,11 +335,11 @@ pub fn apply_add(spanvec: &DocSpan, delvec: &AddSpan) -> DocSpan {
     res
 }
 
-pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
+pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
     let mut span = &spanvec[..];
     let mut del = &delvec[..];
 
-    let mut res:DocSpan = Vec::with_capacity(span.len());
+    let mut res: DocSpan = Vec::with_capacity(span.len());
 
     if del.len() == 0 {
         return span.clone().to_vec();
@@ -370,6 +370,7 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
                             nextfirst = false;
                         } else {
                             place_chars(&mut res, value.clone());
+                            nextdel = true;
                         }
                     },
                     DocGroup(..) => {
@@ -445,7 +446,7 @@ pub fn apply_delete(spanvec:&DocSpan, delvec:&DelSpan) -> DocSpan {
 
         if nextfirst {
             if span.len() == 0 {
-                panic!("exhausted document");
+                panic!("exhausted document\n -->{:?}\n -->{:?}", first, span);
             }
 
             first = span[0].clone();

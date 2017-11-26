@@ -1246,6 +1246,17 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
 
                     b.next();
                 },
+                (Some(DelGroup(a_inner)), Some(DelSkip(b_count))) => {
+                    a_del.skip(a_inner.skip_len());
+                    b_del.group(&a_inner);
+
+                    a.next();
+                    if b_count > 1 {
+                        b.head = Some(DelSkip(b_count - 1));
+                    } else {
+                        b.next();
+                    }
+                },
 
                 // Rest
                 (Some(DelSkip(a_count)), Some(DelSkip(b_count))) => {
@@ -1355,6 +1366,15 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                 },
                 (Some(DelWithGroup(_)), Some(DelGroupAll)) => {
                     a_del.group_all();
+
+                    a.next();
+                    b.next();
+                },
+                (Some(DelWithGroup(a_inner)), Some(DelGroup(b_inner))) => {
+                    let (a_del_inner, b_del_inner) = transform_deletions(&a_inner, &b_inner);
+
+                    a_del.group(&a_del_inner);
+                    b_del.place_all(&b_del_inner);
 
                     a.next();
                     b.next();
@@ -1560,7 +1580,7 @@ pub fn transform_add_del_inner(delres: &mut DelSpan, addres: &mut AddSpan, a: &m
                     },
                     AddSkip(acount) => {
                         delres.place(&b.next());
-                        addres.place(&AddSkip(span.skip_len()));
+                        addres.place(&AddSkip(span.skip_post_len()));
                         if acount > 1 {
                             a.head = Some(AddSkip(acount - 1));
                         } else {
