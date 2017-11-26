@@ -470,12 +470,12 @@ impl Transform {
             // if track.tag_a.is_some() {
             //     self.a_del.close();
             // }
-            self.a_add.close(map! { "tag" => real.clone() }); // fake
+            self.a_add.close(hashmap!{"tag".to_string() => real.clone()}); // fake
 
             // if track.tag_b.is_some() {
             //     self.b_del.close();
             // }
-            self.b_add.close(map! { "tag" => real.clone() }); // fake
+            self.b_add.close(hashmap!{"tag".to_string() => real.clone()}); // fake
             // } else {
             //     self.a_add.close(map! { "tag" => track.tag_a}); // fake
             // }
@@ -556,7 +556,7 @@ impl Transform {
             self.a_add.exit();
         } else {
             self.a_del.close();
-            self.a_add.close(map! { "tag" => track.tag_real.clone().unwrap() });
+            self.a_add.close(hashmap! { "tag".to_string() => track.tag_real.clone().unwrap() });
         }
 
         if track.is_original_b && track.tag_real == track.tag_b {
@@ -564,7 +564,7 @@ impl Transform {
             self.b_add.exit();
         } else {
             self.b_del.close();
-            self.b_add.close(map! { "tag" => track.tag_real.clone().unwrap() });
+            self.b_add.close(hashmap! { "tag".to_string() => track.tag_real.clone().unwrap() });
         }
 
         self.tracks.remove(index);
@@ -634,7 +634,7 @@ impl Transform {
         } else {
             self.a_del.close();
             if track_split || track.tag_b.is_none() {
-                self.a_add.close(map! { "tag" => track.tag_real.clone().unwrap() });
+                self.a_add.close(hashmap! { "tag".to_string() => track.tag_real.clone().unwrap() });
             }
         }
 
@@ -643,7 +643,7 @@ impl Transform {
         // }
         println!("CLOSES THE B {:?}", self.b_add);
         if track_split || track.tag_b.is_none() {
-            self.b_add.close(map! { "tag" => track.tag_real.clone().unwrap() });
+            self.b_add.close(hashmap! { "tag".to_string() => track.tag_real.clone().unwrap() });
         }
 
         if track.tag_b.is_none() {
@@ -690,7 +690,7 @@ impl Transform {
 
             self.b_del.close();
             if track_split || track.tag_a.is_none() {
-                self.b_add.close(map! { "tag" => track.tag_real.clone().unwrap() });
+                self.b_add.close(hashmap! { "tag".to_string() => track.tag_real.clone().unwrap() });
             }
             println!("2 {:?}", self.b_del);
         }
@@ -699,7 +699,7 @@ impl Transform {
         //     self.a_del.close();
         // }
         if track_split || track.tag_a.is_none() {
-            self.a_add.close(map! { "tag" => track.tag_real.clone().unwrap() });
+            self.a_add.close(hashmap! { "tag".to_string() => track.tag_real.clone().unwrap() });
         }
 
         if track.tag_a.is_none() {
@@ -807,14 +807,14 @@ impl Transform {
         for track in self.tracks.iter_mut().rev() {
             println!("TRACK RESULT: {:?}", track);
             if !track.is_original_a && track.tag_real.is_some() {
-                a_add.close(map! { "tag" => track.tag_a.clone().unwrap() });
+                a_add.close(hashmap! { "tag".to_string() => track.tag_a.clone().unwrap() });
             }
             if track.is_original_a {
                 a_del.exit();
                 a_add.exit();
             }
             if !track.is_original_b && track.tag_real.is_some() {
-                b_add.close(map! { "tag" => track.tag_b.clone().unwrap() });
+                b_add.close(hashmap! { "tag".to_string() => track.tag_b.clone().unwrap() });
             }
             if track.is_original_b {
                 b_del.exit();
@@ -827,8 +827,8 @@ impl Transform {
     fn current_type(&self) -> Option<TrackType> {
         // TODO
         // self.tracks.last().unwrap().
-        let attrs: Attrs = map! {
-            "tag" => self.tracks.last().clone().unwrap().tag_real.clone().unwrap()
+        let attrs: Attrs = hashmap! {
+            "tag".to_string() => self.tracks.last().clone().unwrap().tag_real.clone().unwrap()
         };
         get_tag_type(&attrs)
     }

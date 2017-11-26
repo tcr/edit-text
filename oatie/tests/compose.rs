@@ -396,16 +396,16 @@ fn random_op(input:&DocSpan) -> Op {
 fn test_compose() {
     test_start();
 
-    assert_eq!(normalize(compose(&(vec![], vec![
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(6)])
-    ]), &(vec![
-        DelGroup(vec![DelSkip(6)])
-    ], vec![
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(4)]),
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(2)])
-    ]))), (vec![], vec![
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(4)]),
-        AddGroup(map! { "tag" => "p" }, vec![AddSkip(2)])
+    assert_eq!(normalize(compose(&op_span!([], [
+        AddGroup({"tag": "p"}, [AddSkip(6)])
+    ]), &op_span!([
+        DelGroup([DelSkip(6)])
+    ], [
+        AddGroup({"tag": "p"}, [AddSkip(4)]),
+        AddGroup({"tag": "p"}, [AddSkip(2)])
+    ]))), op_span!([], [
+        AddGroup({"tag": "p"}, [AddSkip(4)]),
+        AddGroup({"tag": "p"}, [AddSkip(2)])
     ]));
 }
 
