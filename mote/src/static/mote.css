@@ -15,6 +15,7 @@ h4 {
 
 #clients td {
     width: 50%;
+    vertical-align: top;
 }
 
 .mote {
