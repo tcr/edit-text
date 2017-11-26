@@ -168,8 +168,8 @@ fn compose_add_add_inner(res:&mut AddSpan, a:&mut AddSlice, b:&mut AddSlice) {
                     AddChars(value) => {
                         let len = value.chars().count();
                         if bcount < len {
-                            res.place(&AddChars(value[..bcount].to_owned()));
-                            a.head = Some(AddChars(value[bcount..].to_owned()));
+                            res.place(&AddChars(value.chars().take(bcount).collect()));
+                            a.head = Some(AddChars(value.chars().skip(bcount).collect()));
                             b.next();
                         } else if bcount > len {
                             res.place(&a.next());
@@ -286,7 +286,7 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
                     AddChars(avalue) => {
                         let alen = avalue.chars().count();
                         if bcount < alen {
-                            a.head = Some(AddChars(avalue[bcount..].to_owned()));
+                            a.head = Some(AddChars(avalue.chars().skip(bcount).collect()));
                             b.next();
                         } else if bcount > alen {
                             a.next();
@@ -319,8 +319,8 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
                     AddChars(avalue) => {
                         let alen = avalue.chars().count();
                         if bcount < alen {
-                            addres.place(&AddChars(avalue[..bcount].to_owned()));
-                            a.head = Some(AddChars(avalue[bcount..].to_owned()));
+                            addres.place(&AddChars(avalue.chars().take(bcount).collect()));
+                            a.head = Some(AddChars(avalue.chars().skip(bcount).collect()));
                             b.next();
                         } else if bcount > alen {
                             addres.place(&a.next());
@@ -354,8 +354,9 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
                             b.head = Some(DelSkip(bcount - 1));
                         }
                     },
-                    AddGroup(..) => {
+                    AddGroup(_, aspan) => {
                         addres.place(&a.next());
+                        delres.place(&DelSkip(aspan.skip_len()));
                         if bcount == 1 {
                             b.next();
                         } else {

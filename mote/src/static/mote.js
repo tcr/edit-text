@@ -255,7 +255,7 @@ function init (m) {
                 {
                   "AddGroup": [{"tag": tag}, [
                     {
-                      "AddSkip": [out.length]
+                      "AddSkip": out.length
                     }
                   ]],
                 }
