@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+
 #[macro_use] extern crate log;
 #[macro_use] extern crate oatie;
 extern crate env_logger;
@@ -7,6 +9,7 @@ extern crate term_painter;
 use oatie::*;
 use oatie::compose::*;
 use oatie::doc::*;
+use oatie::random::*;
 use rand::{thread_rng, Rng};
 use std::collections::HashMap;
 

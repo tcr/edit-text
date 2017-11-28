@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 
 // #[test]
 // fn test_multiple_compose_1() {

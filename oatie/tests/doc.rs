@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+
 extern crate oatie;
 extern crate term_painter;
 #[macro_use] extern crate log;
