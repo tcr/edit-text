@@ -148,7 +148,11 @@ function init (m) {
       return
     }
 
-    if (e.keyCode == 13) {
+    if ([13, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+      return;
+    }
+
+    if (e.metaKey) {
       return;
     }
 
@@ -223,7 +227,7 @@ function init (m) {
       return
     }
 
-    console.log(e.keyCode);
+    console.log('KEY:', e.keyCode);
 
     // enter
     // if (e.keyCode == 13) {
@@ -457,6 +461,51 @@ function init (m) {
             }
           },
         });
+      }
+    }
+
+    // Arrow keys
+    if ([37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+      e.preventDefault();
+
+      var keyCode = e.keyCode;
+
+      // left
+      if (keyCode == 37) {
+        if (active.prev()[0]) {
+          var prev = active.prev()[0];
+          clearActive();
+          clearTarget();
+          $(prev).addClass('active').addClass('target')
+        }
+      }
+      // right
+      if (keyCode == 39) {
+        if (active.next()[0]) {
+          var prev = active.next()[0];
+          clearActive();
+          clearTarget();
+          $(prev).addClass('active').addClass('target')
+        }
+      }
+
+      // up
+      if (keyCode == 38) {
+        if (active.parent()[0] && !active.parent().hasClass('mote')) {
+          var prev = active.parent()[0];
+          clearActive();
+          clearTarget();
+          $(prev).addClass('active').addClass('target')
+        }
+      }
+      // down
+      if (keyCode == 40) {
+        if (active.children()[0]) {
+          var prev = active.children()[0];
+          clearActive();
+          clearTarget();
+          $(prev).addClass('active').addClass('target')
+        }
       }
     }
   })
