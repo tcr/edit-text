@@ -1,265 +1,18 @@
 //! Performs operational transform.
 
-#![allow(unused_mut)]
-
 use std::collections::HashMap;
 use std::borrow::ToOwned;
 use std::cmp;
 
-use doc::*;
-use stepper::*;
-use compose;
-use normalize;
+use super::doc::*;
+use super::stepper::*;
+use super::compose;
+use super::normalize;
+use super::writer::*;
 
 use term_painter::ToStyle;
 use term_painter::Color::*;
 use term_painter::Attr::*;
-
-
-#[derive(Clone, Debug)]
-pub struct DelStepper {
-    pub head: Option<DelElement>,
-    pub rest: Vec<DelElement>,
-    pub stack: Vec<Vec<DelElement>>,
-}
-
-impl DelStepper {
-    pub fn new(span: &DelSpan) -> DelStepper {
-        let mut ret = DelStepper {
-            head: None,
-            rest: span.to_vec(),
-            stack: vec![],
-        };
-        ret.next();
-        ret
-    }
-
-    pub fn next(&mut self) -> Option<DelElement> {
-        let res = self.head.clone();
-        self.head = if self.rest.len() > 0 {
-            Some(self.rest.remove(0))
-        } else {
-            None
-        };
-        res
-    }
-
-    pub fn get_head(&self) -> DelElement {
-        self.head.clone().unwrap()
-    }
-
-    pub fn is_done(&self) -> bool {
-        self.head.is_none() && self.stack.len() == 0
-    }
-
-    pub fn enter(&mut self) {
-        let head = self.head.clone();
-        self.stack.push(self.rest.clone());
-        let span = match head {
-            Some(DelGroup(ref span)) | Some(DelWithGroup(ref span)) => {
-                self.head = None;
-                self.rest = span.to_vec();
-                self.next();
-            }
-            _ => panic!("Entered wrong thing"),
-        };
-    }
-
-    pub fn exit(&mut self) {
-        let last = self.stack.pop().unwrap();
-        self.rest = last;
-        self.next();
-    }
-}
-
-
-#[derive(Clone, Debug)]
-pub struct AddStepper {
-    pub head: Option<AddElement>,
-    pub rest: Vec<AddElement>,
-    pub stack: Vec<Vec<AddElement>>,
-}
-
-impl AddStepper {
-    pub fn new(span: &AddSpan) -> AddStepper {
-        let mut ret = AddStepper {
-            head: None,
-            rest: span.to_vec(),
-            stack: vec![],
-        };
-        ret.next();
-        ret
-    }
-
-    pub fn next(&mut self) -> Option<AddElement> {
-        let res = self.head.clone();
-        self.head = if self.rest.len() > 0 {
-            Some(self.rest.remove(0))
-        } else {
-            None
-        };
-        res
-    }
-
-    pub fn get_head(&self) -> AddElement {
-        self.head.clone().unwrap()
-    }
-
-    pub fn is_done(&self) -> bool {
-        self.head.is_none() && self.stack.len() == 0
-    }
-
-    pub fn enter(&mut self) {
-        let head = self.head.clone();
-        self.stack.push(self.rest.clone());
-        let span = match head {
-            Some(AddGroup(_, ref span)) | Some(AddWithGroup(ref span)) => {
-                self.head = None;
-                self.rest = span.to_vec();
-                self.next();
-            }
-            _ => panic!("Entered wrong thing"),
-        };
-    }
-
-    pub fn exit(&mut self) {
-        let last = self.stack.pop().unwrap();
-        self.rest = last;
-        self.next();
-    }
-}
-
-
-#[derive(Clone, Debug)]
-pub struct AddWriter {
-    pub past: Vec<AddElement>,
-    stack: Vec<Vec<AddElement>>,
-}
-
-impl AddWriter {
-    pub fn new() -> AddWriter {
-        AddWriter {
-            past: vec![],
-            stack: vec![],
-        }
-    }
-
-    pub fn begin(&mut self) {
-        let past = self.past.clone();
-        self.past = vec![];
-        self.stack.push(past);
-    }
-
-    pub fn exit(&mut self) {
-        let past = self.past.clone();
-        self.past = self.stack.pop().unwrap();
-        self.past.push(AddWithGroup(past));
-    }
-
-    pub fn close(&mut self, attrs: Attrs) {
-        let past = self.past.clone();
-        self.past = self.stack.pop().unwrap();
-        self.past.push(AddGroup(attrs, past));
-    }
-
-    pub fn skip(&mut self, n: usize) {
-        self.past.place(&AddSkip(n));
-    }
-
-    pub fn chars(&mut self, chars: &str) {
-        self.past.place(&AddChars(chars.into()));
-    }
-
-    pub fn group(&mut self, attrs: &Attrs, span: &AddSpan) {
-        self.past.place(&AddGroup(attrs.clone(), span.clone()));
-    }
-
-    pub fn with_group(&mut self, span: &AddSpan) {
-        self.past.place(&AddWithGroup(span.clone()));
-    }
-
-    pub fn place_all(&mut self, span: &AddSpan) {
-        self.past.place_all(span);
-    }
-
-    pub fn result(self) -> AddSpan {
-        if self.stack.len() > 0 {
-            println!("{:?}", self);
-            assert!(false, "cannot get result when stack is still full");
-        }
-        self.past
-    }
-}
-
-
-
-#[derive(Clone, Debug)]
-pub struct DelWriter {
-    pub past: Vec<DelElement>,
-    stack: Vec<Vec<DelElement>>,
-}
-
-impl DelWriter {
-    pub fn new() -> DelWriter {
-        DelWriter {
-            past: vec![],
-            stack: vec![],
-        }
-    }
-
-    pub fn begin(&mut self) {
-        let past = self.past.clone();
-        self.past = vec![];
-        self.stack.push(past);
-    }
-
-    pub fn exit(&mut self) {
-        let past = self.past.clone();
-        self.past = self.stack.pop().unwrap();
-        self.past.push(DelWithGroup(past));
-    }
-
-    pub fn close(&mut self) {
-        let past = self.past.clone();
-        self.past = self.stack.pop().unwrap();
-        self.past.push(DelGroup(past));
-    }
-
-    pub fn skip(&mut self, n: usize) {
-        self.past.place(&DelSkip(n));
-    }
-
-    pub fn chars(&mut self, count: usize) {
-        self.past.place(&DelChars(count));
-    }
-
-    pub fn group(&mut self, span: &DelSpan) {
-        self.past.place(&DelGroup(span.clone()));
-    }
-
-    pub fn group_all(&mut self) {
-        self.past.place(&DelGroupAll);
-    }
-
-    pub fn with_group(&mut self, span: &DelSpan) {
-        self.past.place(&DelWithGroup(span.clone()));
-    }
-
-    pub fn place_all(&mut self, span: &DelSpan) {
-        self.past.place_all(span);
-    }
-
-    pub fn result(self) -> DelSpan {
-        if self.stack.len() > 0 {
-            println!("{:?}", self);
-            assert!(false, "cannot get result when stack is still full");
-        }
-        self.past
-    }
-}
-
-
-
 
 #[derive(PartialEq, Clone, Debug)]
 enum TrackType {
@@ -361,6 +114,10 @@ impl TagLike for Attrs {
             None => None,
         }
     }
+}
+
+fn gen_attrs(tag: &str) -> Attrs {
+    hashmap! { "tag".to_string() => tag.to_string() }
 }
 
 
@@ -484,13 +241,13 @@ impl Transform {
             //     self.a_del.close();
             // }
             self.a_add
-                .close(hashmap!{"tag".to_string() => real.clone()}); // fake
+                .close(gen_attrs(real)); // fake
 
             // if track.tag_b.is_some() {
             //     self.b_del.close();
             // }
             self.b_add
-                .close(hashmap!{"tag".to_string() => real.clone()}); // fake
+                .close(gen_attrs(real)); // fake
 
             // } else {
             //     self.a_add.close(map! { "tag" => track.tag_a}); // fake
@@ -565,7 +322,7 @@ impl Transform {
     }
 
     fn close(&mut self) {
-        let (mut track, index) = self.top_track_a();
+        let (track, index) = self.top_track_a();
 
         if track.is_original_a && track.tag_real == track.tag_a {
             self.a_del.exit();
@@ -573,7 +330,7 @@ impl Transform {
         } else {
             self.a_del.close();
             self.a_add
-                .close(hashmap! { "tag".to_string() => track.tag_real.clone().unwrap() });
+                .close(gen_attrs(&track.tag_real.clone().unwrap()));
         }
 
         if track.is_original_b && track.tag_real == track.tag_b {
@@ -582,7 +339,7 @@ impl Transform {
         } else {
             self.b_del.close();
             self.b_add
-                .close(hashmap! { "tag".to_string() => track.tag_real.clone().unwrap() });
+                .close(gen_attrs(&track.tag_real.clone().unwrap()));
         }
 
         self.tracks.remove(index);
@@ -632,7 +389,7 @@ impl Transform {
 
     fn close_a(&mut self) {
         println!("TRACKS CLOSE A: {:?}", self.tracks);
-        let (mut track, index) = self.top_track_a();
+        let (track, index) = self.top_track_a();
 
         // Determine whether to split tags for this track type.
         // TODO do the same for track opening?
@@ -650,7 +407,7 @@ impl Transform {
             self.a_del.close();
             if track_split || track.tag_b.is_none() {
                 self.a_add
-                    .close(hashmap! { "tag".to_string() => track.tag_real.clone().unwrap() });
+                    .close(gen_attrs(&track.tag_real.clone().unwrap()));
             }
         }
 
@@ -660,7 +417,7 @@ impl Transform {
         println!("CLOSES THE B {:?}", self.b_add);
         if track_split || track.tag_b.is_none() {
             self.b_add
-                .close(hashmap! { "tag".to_string() => track.tag_real.clone().unwrap() });
+                .close(gen_attrs(&track.tag_real.clone().unwrap()));
         }
 
         if track.tag_b.is_none() {
@@ -685,7 +442,7 @@ impl Transform {
             println!(" - {:?}", t);
         }
 
-        let (mut track, index) = self.top_track_b();
+        let (track, index) = self.top_track_b();
 
         println!("CLOSES THE B {:?}", self.b_del);
         println!("CLOSES THE B {:?}", self.b_add);
@@ -709,7 +466,7 @@ impl Transform {
             self.b_del.close();
             if track_split || track.tag_a.is_none() {
                 self.b_add
-                    .close(hashmap! { "tag".to_string() => track.tag_real.clone().unwrap() });
+                    .close(gen_attrs(&track.tag_real.clone().unwrap()));
             }
             println!("2 {:?}", self.b_del);
         }
@@ -719,7 +476,7 @@ impl Transform {
         // }
         if track_split || track.tag_a.is_none() {
             self.a_add
-                .close(hashmap! { "tag".to_string() => track.tag_real.clone().unwrap() });
+                .close(gen_attrs(&track.tag_real.clone().unwrap()));
         }
 
         if track.tag_a.is_none() {
@@ -834,14 +591,14 @@ impl Transform {
         for track in self.tracks.iter_mut().rev() {
             println!("TRACK RESULT: {:?}", track);
             if !track.is_original_a && track.tag_real.is_some() {
-                a_add.close(hashmap! { "tag".to_string() => track.tag_a.clone().unwrap() });
+                a_add.close(gen_attrs(&track.tag_a.clone().unwrap()));
             }
             if track.is_original_a {
                 a_del.exit();
                 a_add.exit();
             }
             if !track.is_original_b && track.tag_real.is_some() {
-                b_add.close(hashmap! { "tag".to_string() => track.tag_b.clone().unwrap() });
+                b_add.close(gen_attrs(&track.tag_b.clone().unwrap()));
             }
             if track.is_original_b {
                 b_del.exit();
@@ -857,9 +614,7 @@ impl Transform {
     fn current_type(&self) -> Option<TrackType> {
         // TODO
         // self.tracks.last().unwrap().
-        let attrs: Attrs = hashmap! {
-            "tag".to_string() => self.tracks.last().clone().unwrap().tag_real.clone().unwrap()
-        };
+        let attrs = gen_attrs(&self.tracks.last().clone().unwrap().tag_real.clone().unwrap());
         get_tag_type(&attrs)
     }
 }
