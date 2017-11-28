@@ -2,16 +2,7 @@
 
 use std::collections::HashMap;
 
-#[derive(Clone, Debug, PartialEq)]
-pub enum Atom {
-    Char(char),
-    Enter(HashMap<String, String>),
-    Leave,
-}
-
 pub type Attrs = HashMap<String, String>;
-
-pub use self::Atom::*;
 
 pub type DocSpan = Vec<DocElement>;
 

@@ -10,7 +10,7 @@ extern crate term_painter;
 use std::collections::HashMap;
 
 use oatie::*;
-use oatie::doc::{Atom, DocSpan};
+use oatie::doc::DocSpan;
 use oatie::doc::DocElement::*;
 use oatie::doc::DelElement::*;
 use oatie::doc::AddElement::*;
@@ -31,29 +31,6 @@ fn try_this() {
     ];
 
     debug_span(&source);
-
-    assert_eq!(
-        iterate(&vec![
-            DocChars("Hello world!".to_owned()),
-            DocGroup(HashMap::new(), vec![]),
-        ]),
-        vec![
-            Atom::Char('H'),
-            Atom::Char('e'),
-            Atom::Char('l'),
-            Atom::Char('l'),
-            Atom::Char('o'),
-            Atom::Char(' '),
-            Atom::Char('w'),
-            Atom::Char('o'),
-            Atom::Char('r'),
-            Atom::Char('l'),
-            Atom::Char('d'),
-            Atom::Char('!'),
-            Atom::Enter(HashMap::new()),
-            Atom::Leave,
-        ]
-    );
 
     assert_eq!(
         apply_delete(

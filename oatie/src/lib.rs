@@ -137,23 +137,6 @@ pub fn debug_elem(val: &DocElement) {
     }
 }
 
-pub fn iterate(span: &DocSpan) -> Vec<Atom> {
-    let mut atoms = vec![];
-    for elem in span {
-        match elem {
-            &DocChars(ref value) => for c in value.chars() {
-                atoms.push(Atom::Char(c));
-            },
-            &DocGroup(ref attrs, ref span) => {
-                atoms.push(Atom::Enter(attrs.clone()));
-                atoms.append(&mut iterate(span));
-                atoms.push(Atom::Leave);
-            }
-        }
-    }
-    atoms
-}
-
 fn place_chars(res: &mut DocSpan, value: String) {
     if res.len() > 0 {
         let idx = res.len() - 1;
