@@ -223,6 +223,8 @@ function init (m) {
       return
     }
 
+    console.log(e.keyCode);
+
     // enter
     // if (e.keyCode == 13) {
     //   if (active) {
@@ -354,7 +356,7 @@ function init (m) {
         if (isBlock(active)) {
           op(delto(active,
             {
-              "DelGroupAll": [],
+              "DelGroupAll": null,
             }
           ), []);
 
