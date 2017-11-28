@@ -363,12 +363,6 @@ impl TagLike for Attrs {
     }
 }
 
-impl TagLike for Option<String> {
-    fn tag(&self) -> Option<String> {
-        self.clone()
-    }
-}
-
 
 
 
@@ -609,7 +603,7 @@ impl Transform {
 
     fn next_track_a_type(&mut self) -> Option<TrackType> {
         if let Some(track) = self.next_track_a() {
-            get_tag_type(&track.tag_real)
+            track.tag_real.as_ref().and_then(|x| get_tag_type(x))
         } else {
             None
         }
@@ -630,7 +624,7 @@ impl Transform {
 
     fn next_track_b_type(&mut self) -> Option<TrackType> {
         if let Some(track) = self.next_track_b() {
-            get_tag_type(&track.tag_real)
+            track.tag_real.as_ref().and_then(|x| get_tag_type(x))
         } else {
             None
         }
