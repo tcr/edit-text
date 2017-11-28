@@ -53,7 +53,7 @@ pub use self::AddElement::*;
 pub type Op = (DelSpan, AddSpan);
 
 
-fn del_place_chars(res:&mut DelSpan, count:usize) {
+fn del_place_chars(res: &mut DelSpan, count: usize) {
     if res.len() > 0 {
         let idx = res.len() - 1;
         if let &mut DelChars(ref mut prefix) = &mut res[idx] {
@@ -64,7 +64,7 @@ fn del_place_chars(res:&mut DelSpan, count:usize) {
     res.push(DelChars(count));
 }
 
-fn del_place_skip(res:&mut DelSpan, count:usize) {
+fn del_place_skip(res: &mut DelSpan, count: usize) {
     if res.len() > 0 {
         let idx = res.len() - 1;
         if let &mut DelSkip(ref mut prefix) = &mut res[idx] {
@@ -75,21 +75,21 @@ fn del_place_skip(res:&mut DelSpan, count:usize) {
     res.push(DelSkip(count));
 }
 
-fn del_place_any(res:&mut DelSpan, value:&DelElement) {
+fn del_place_any(res: &mut DelSpan, value: &DelElement) {
     match value {
         &DelChars(count) => {
             del_place_chars(res, count);
-        },
+        }
         &DelSkip(count) => {
             del_place_skip(res, count);
-        },
+        }
         _ => {
             res.push(value.clone());
         }
     }
 }
 
-fn add_place_chars(res:&mut AddSpan, value:String) {
+fn add_place_chars(res: &mut AddSpan, value: String) {
     if res.len() > 0 {
         let idx = res.len() - 1;
         if let &mut AddChars(ref mut prefix) = &mut res[idx] {
@@ -100,7 +100,7 @@ fn add_place_chars(res:&mut AddSpan, value:String) {
     res.push(AddChars(value));
 }
 
-fn add_place_skip(res:&mut AddSpan, count:usize) {
+fn add_place_skip(res: &mut AddSpan, count: usize) {
     if res.len() > 0 {
         let idx = res.len() - 1;
         if let &mut AddSkip(ref mut prefix) = &mut res[idx] {
@@ -111,14 +111,14 @@ fn add_place_skip(res:&mut AddSpan, count:usize) {
     res.push(AddSkip(count));
 }
 
-fn add_place_any(res:&mut AddSpan, value:&AddElement) {
+fn add_place_any(res: &mut AddSpan, value: &AddElement) {
     match value {
         &AddChars(ref value) => {
             add_place_chars(res, value.clone());
-        },
+        }
         &AddSkip(count) => {
             add_place_skip(res, count);
-        },
+        }
         _ => {
             res.push(value.clone());
         }
@@ -127,7 +127,7 @@ fn add_place_any(res:&mut AddSpan, value:&AddElement) {
 
 pub trait DelPlaceable {
     fn place_all(&mut self, all: &[DelElement]);
-    fn place(&mut self, value:&DelElement);
+    fn place(&mut self, value: &DelElement);
     fn skip_len(&self) -> usize;
     fn skip_post_len(&self) -> usize;
 }

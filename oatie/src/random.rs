@@ -33,13 +33,11 @@ pub fn random_add_span(input: &DocSpan) -> AddSpan {
                         }
                     }
                 }
-            },
-            &DocGroup(_, ref span) => {
-                if rng.gen_weighted_bool(2) {
-                    res.place(&AddWithGroup(random_add_span(span)));
-                } else {
-                    res.place(&AddSkip(1));
-                }
+            }
+            &DocGroup(_, ref span) => if rng.gen_weighted_bool(2) {
+                res.place(&AddWithGroup(random_add_span(span)));
+            } else {
+                res.place(&AddSkip(1));
             },
         }
     }
@@ -54,7 +52,7 @@ pub fn random_add_span(input: &DocSpan) -> AddSpan {
     res
 }
 
-pub fn random_del_span(input:&DocSpan) -> DelSpan {
+pub fn random_del_span(input: &DocSpan) -> DelSpan {
     let mut rng = thread_rng();
 
     let mut res = vec![];
@@ -81,15 +79,13 @@ pub fn random_del_span(input:&DocSpan) -> DelSpan {
                         }
                     }
                 }
-            },
-            &DocGroup(_, ref span) => {
-                match rng.gen_range(0, 3) {
-                    0 => res.place(&DelWithGroup(random_del_span(span))),
-                    1 => res.place(&DelGroupAll),
-                    2 => res.place(&DelSkip(1)),
-                    _ => {
-                        unreachable!();
-                    },
+            }
+            &DocGroup(_, ref span) => match rng.gen_range(0, 3) {
+                0 => res.place(&DelWithGroup(random_del_span(span))),
+                1 => res.place(&DelGroupAll),
+                2 => res.place(&DelSkip(1)),
+                _ => {
+                    unreachable!();
                 }
             },
         }

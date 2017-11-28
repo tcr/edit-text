@@ -1,9 +1,10 @@
 #![feature(plugin)]
 #![plugin(rocket_codegen)]
 
+#[macro_use]
+extern crate oatie;
 extern crate rocket;
 extern crate rocket_contrib;
-#[macro_use] extern crate oatie;
 
 #[macro_use]
 extern crate serde_derive;
@@ -33,7 +34,8 @@ fn default_doc() -> DocElement {
                 DocChars("World!"),
             ]),
         ]),
-    ])].pop().unwrap()
+    ])].pop()
+        .unwrap()
 }
 
 #[derive(Serialize)]
@@ -175,9 +177,7 @@ fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<Confir
         true
     };
 
-    Json(ConfirmResponse {
-        ok: success,
-    })
+    Json(ConfirmResponse { ok: success })
 }
 
 #[get("/api/hello")]
@@ -188,14 +188,16 @@ fn api_hello(mote: State<MoteState>) -> Json<DocElement> {
 
 #[get("/")]
 fn root() -> Option<NamedFile> {
-    Path::new(file!()).parent()
+    Path::new(file!())
+        .parent()
         .map(|x| x.join("static/").join("index.html"))
         .and_then(|x| NamedFile::open(x).ok())
 }
 
-#[get("/<file..>", rank=2)]
+#[get("/<file..>", rank = 2)]
 fn files(file: PathBuf) -> Option<NamedFile> {
-    Path::new(file!()).parent()
+    Path::new(file!())
+        .parent()
         .map(|x| x.join("static/").join(file))
         .and_then(|x| NamedFile::open(x).ok())
 }
@@ -209,13 +211,7 @@ fn main() {
         .manage(MoteState {
             body: Arc::new(Mutex::new(default_doc())),
         })
-        .mount("/", routes![
-            api_hello,
-            api_confirm,
-            api_sync,
-            root,
-            files
-        ])
+        .mount("/", routes![api_hello, api_confirm, api_sync, root, files])
         .launch();
 }
 

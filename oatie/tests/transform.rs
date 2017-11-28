@@ -1,8 +1,10 @@
 #![allow(unused_imports)]
 
-#[macro_use] extern crate env_logger;
-#[macro_use] extern crate oatie;
+#[macro_use]
+extern crate env_logger;
 extern crate log;
+#[macro_use]
+extern crate oatie;
 extern crate term_painter;
 
 use oatie::compose;
@@ -186,24 +188,10 @@ fn test_transform_tony() {
 #[test]
 fn test_transform_drone() {
     let a = add_span![
-        AddWithGroup([
-            AddWithGroup([
-                AddWithGroup([
-                    AddSkip(4),
-                    AddChars("a"),
-                ]),
-            ])
-        ]),
+        AddWithGroup([AddWithGroup([AddWithGroup([AddSkip(4), AddChars("a")])])]),
     ];
     let b = add_span![
-        AddWithGroup([
-            AddWithGroup([
-                AddWithGroup([
-                    AddSkip(4),
-                    AddChars("b"),
-                ]),
-            ])
-        ]),
+        AddWithGroup([AddWithGroup([AddWithGroup([AddSkip(4), AddChars("b")])])]),
     ];
 
     let (a_, b_) = transform_insertions(&a, &b);
@@ -252,21 +240,12 @@ fn test_transform_feedback() {
 
 #[test]
 fn test_transform_dawn() {
-    let a = del_span![
-        DelSkip(2),
-        DelChars(1),
-    ];
-    let b = del_span![
-        DelSkip(2),
-        DelChars(1),
-    ];
+    let a = del_span![DelSkip(2), DelChars(1),];
+    let b = del_span![DelSkip(2), DelChars(1),];
 
     let (a_, b_) = transform_deletions(&a, &b);
 
-    let res = op_span!([
-        DelSkip(2),
-        DelChars(1),
-    ], []);
+    let res = op_span!([DelSkip(2), DelChars(1)], []);
 
     let a_res = normalize(compose::compose(&(a, vec![]), &(a_, vec![])));
     let b_res = normalize(compose::compose(&(b, vec![]), &(b_, vec![])));
@@ -281,21 +260,12 @@ fn test_transform_dawn() {
 
 #[test]
 fn test_transform_zone() {
-    let a = del_span![
-        DelSkip(1),
-        DelChars(1),
-    ];
-    let b = del_span![
-        DelSkip(2),
-        DelChars(1),
-    ];
+    let a = del_span![DelSkip(1), DelChars(1),];
+    let b = del_span![DelSkip(2), DelChars(1),];
 
     let (a_, b_) = transform_deletions(&a, &b);
 
-    let res = op_span!([
-        DelSkip(1),
-        DelChars(2),
-    ], []);
+    let res = op_span!([DelSkip(1), DelChars(2)], []);
 
     let a_res = normalize(compose::compose(&(a, vec![]), &(a_, vec![])));
     let b_res = normalize(compose::compose(&(b, vec![]), &(b_, vec![])));
@@ -310,24 +280,12 @@ fn test_transform_zone() {
 
 #[test]
 fn test_transform_everyday() {
-    let a = del_span![
-        DelWithGroup([
-            DelGroup([]),
-        ]),
-    ];
-    let b = del_span![
-        DelWithGroup([
-            DelGroup([]),
-        ]),
-    ];
+    let a = del_span![DelWithGroup([DelGroup([])]),];
+    let b = del_span![DelWithGroup([DelGroup([])]),];
 
     let (a_, b_) = transform_deletions(&a, &b);
 
-    let res = op_span!([
-        DelWithGroup([
-            DelGroup([]),
-        ]),
-    ], []);
+    let res = op_span!([DelWithGroup([DelGroup([])])], []);
 
     let a_res = normalize(compose::compose(&(a, vec![]), &(a_, vec![])));
     let b_res = normalize(compose::compose(&(b, vec![]), &(b_, vec![])));
