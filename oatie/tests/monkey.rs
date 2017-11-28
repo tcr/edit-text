@@ -1,8 +1,10 @@
 #![allow(unused_imports)]
 
-#[macro_use] extern crate log;
-#[macro_use] extern crate oatie;
 extern crate env_logger;
+#[macro_use]
+extern crate log;
+#[macro_use]
+extern crate oatie;
 extern crate rand;
 extern crate term_painter;
 
@@ -22,9 +24,7 @@ fn monkey_add_add() {
     test_start();
 
     for _ in 0..1000 {
-        let start = vec![
-            DocChars("Hello world!".to_owned()),
-        ];
+        let start = vec![DocChars("Hello world!".to_owned())];
 
         trace!("start {:?}", start);
 
@@ -58,9 +58,7 @@ fn monkey_del_del() {
     test_start();
 
     for _ in 0..1000 {
-        let start = vec![
-            DocChars("Hello world!".to_owned()),
-        ];
+        let start = vec![DocChars("Hello world!".to_owned())];
 
         trace!("start {:?}", start);
 
@@ -90,9 +88,7 @@ fn monkey_add_del() {
     test_start();
 
     for _ in 0..1000 {
-        let start = vec![
-            DocChars("Hello world!".to_owned()),
-        ];
+        let start = vec![DocChars("Hello world!".to_owned())];
 
         trace!("start {:?}", start);
 
@@ -120,7 +116,7 @@ fn monkey_add_del() {
     }
 }
 
-fn random_op(input:&DocSpan) -> Op {
+fn random_op(input: &DocSpan) -> Op {
     trace!("random_op: input {:?}", input);
     let del = random_del_span(input);
     trace!("random_op: del {:?}", del);
@@ -133,9 +129,7 @@ fn random_op(input:&DocSpan) -> Op {
 fn monkey_compose() {
     test_start();
 
-    let mut start = vec![
-        DocChars("Hello world!".to_owned()),
-    ];
+    let mut start = vec![DocChars("Hello world!".to_owned())];
 
     for _ in 0..100 {
         trace!("start {:?}", start);

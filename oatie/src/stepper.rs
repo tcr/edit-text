@@ -7,12 +7,12 @@ use std::cmp;
 
 #[derive(Clone, Debug)]
 pub struct DelSlice<'a> {
-    pub head:Option<DelElement>,
-    pub rest:&'a [DelElement],
+    pub head: Option<DelElement>,
+    pub rest: &'a [DelElement],
 }
 
 impl<'a> DelSlice<'a> {
-    pub fn new(span:&'a DelSpan) -> DelSlice {
+    pub fn new(span: &'a DelSpan) -> DelSlice {
         if span.len() == 0 {
             DelSlice {
                 head: None,
@@ -26,7 +26,7 @@ impl<'a> DelSlice<'a> {
         }
     }
 
-    pub fn next(&mut self) -> DelElement  {
+    pub fn next(&mut self) -> DelElement {
         let res = self.head.clone().unwrap();
         if self.rest.len() == 0 {
             self.head = None;
@@ -79,7 +79,7 @@ impl<'a> AddSlice<'a> {
         }
     }
 
-    fn assign(head:&mut Option<AddElement>, rest:&mut &'a [AddElement], span:&'a AddSpan) {
+    fn assign(head: &mut Option<AddElement>, rest: &mut &'a [AddElement], span: &'a AddSpan) {
         if span.len() == 0 {
             *head = None;
             *rest = &[];
@@ -89,7 +89,7 @@ impl<'a> AddSlice<'a> {
         }
     }
 
-    pub fn next(&mut self) -> AddElement  {
+    pub fn next(&mut self) -> AddElement {
         let res = self.head.clone().unwrap();
         if self.rest.len() == 0 {
             self.head = None;
