@@ -1,4 +1,4 @@
-#![allow(unused_mut)]
+#![allow(unused_imports)]
 
 #[macro_use] extern crate env_logger;
 #[macro_use] extern crate oatie;
@@ -342,7 +342,7 @@ fn test_transform_everyday() {
 
 #[test]
 fn test_transform_del() {
-    let mut doc = doc_span![
+    let doc = doc_span![
         DocGroup({"tag": "li"}, [
             DocGroup({"tag": "h1"}, [
                 DocChars("Hello! Sup?"),

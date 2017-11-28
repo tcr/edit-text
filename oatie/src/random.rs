@@ -1,7 +1,12 @@
+use super::*;
+use super::compose::*;
+use super::doc::*;
+use rand::{thread_rng, Rng};
+use std::collections::HashMap;
 
 /// Given a document span, create a random Add operation that can be applied
 /// to the span.
-fn random_add_span(input: &DocSpan) -> AddSpan {
+pub fn random_add_span(input: &DocSpan) -> AddSpan {
     let mut rng = thread_rng();
 
     let mut res: AddSpan = vec![];
@@ -49,8 +54,7 @@ fn random_add_span(input: &DocSpan) -> AddSpan {
     res
 }
 
-
-fn random_del_span(input:&DocSpan) -> DelSpan {
+pub fn random_del_span(input:&DocSpan) -> DelSpan {
     let mut rng = thread_rng();
 
     let mut res = vec![];

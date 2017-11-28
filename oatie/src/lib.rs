@@ -4,6 +4,23 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
 
+#[macro_use] extern crate log;
+#[macro_use] extern crate maplit;
+#[macro_use] extern crate serde_derive;
+extern crate env_logger;
+extern crate rand;
+extern crate serde_json;
+extern crate term_painter;
+
+pub mod compose;
+pub mod doc;
+pub mod random;
+pub mod stepper;
+pub mod transform;
+
+use doc::*;
+use std::collections::HashMap;
+
 #[macro_export]
 macro_rules! doc_span {
     ( @str_literal $e:expr ) => { $e };
@@ -98,22 +115,6 @@ macro_rules! op_span {
         )
     };
 }
-
-#[macro_use] extern crate maplit;
-#[macro_use] extern crate log;
-extern crate env_logger;
-extern crate rand;
-extern crate term_painter;
-#[macro_use] extern crate serde_derive;
-extern crate serde_json;
-
-pub mod doc;
-pub mod compose;
-pub mod transform;
-pub mod stepper;
-
-use std::collections::HashMap;
-use doc::*;
 
 pub fn debug_span(val:&DocSpan) {
     for i in val {

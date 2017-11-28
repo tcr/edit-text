@@ -356,7 +356,9 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
                     },
                     AddGroup(_, aspan) => {
                         addres.place(&a.next());
-                        delres.place(&DelSkip(aspan.skip_len()));
+                        if aspan.skip_len() > 0 {
+                            delres.place(&DelSkip(aspan.skip_len()));
+                        }
                         if bcount == 1 {
                             b.next();
                         } else {
