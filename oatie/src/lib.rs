@@ -20,6 +20,7 @@ pub mod doc;
 pub mod random;
 pub mod stepper;
 pub mod transform;
+pub mod writer;
 
 use doc::*;
 use std::collections::HashMap;
