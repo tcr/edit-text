@@ -273,69 +273,25 @@ enum TrackType {
     InlineObjects,
 }
 
-fn get_tag_type<T: TagLike>(tag: T) -> Option<TrackType> {
-    let tag = tag.tag();
-    if let Some(tag) = tag {
-        match tag.as_ref() {
-            "ul" => Some(TrackType::Lists),
-            "li" => Some(TrackType::ListItems),
-            "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => Some(TrackType::Blocks),
-            "b" => Some(TrackType::Inlines),
-            _ => None,
-        }
-    } else {
-        None
-    }
-}
-
-trait TagLike {
-    fn tag(&self) -> Option<String>;
-}
-
-impl TagLike for String {
-    fn tag(&self) -> Option<String> {
-        Some(self.clone())
-    }
-}
-
-impl<'a> TagLike for &'a String {
-    fn tag(&self) -> Option<String> {
-        Some((*self).clone())
-    }
-}
-
-impl<'a> TagLike for &'a str {
-    fn tag(&self) -> Option<String> {
-        Some((*self).into())
-    }
-}
-
-impl TagLike for Attrs {
-    fn tag(&self) -> Option<String> {
-        match self.get("tag") {
-            Some(value) => Some(value.clone()),
-            None => None,
-        }
-    }
-}
-
-impl<'a> TagLike for &'a Attrs {
-    fn tag(&self) -> Option<String> {
-        match self.get("tag") {
-            Some(value) => Some(value.clone()),
-            None => None,
-        }
-    }
-}
-
-impl TagLike for Option<String> {
-    fn tag(&self) -> Option<String> {
-        self.clone()
-    }
-}
-
-
 impl TrackType {
+    // Rename this do close split? if applicable?
+    fn do_split(&self) -> bool {
+        use transform::TrackType::*;
+        match *self {
+            TrackType::Lists | TrackType::Inlines => false,
+            _ => true,
+        }
+    }
+
+    // Unsure about this naming
+    fn do_open_split(&self) -> bool {
+        use transform::TrackType::*;
+        match *self {
+            TrackType::ListItems => true,
+            _ => false,
+        }
+    }
+
     fn parents(&self) -> Vec<TrackType> {
         use transform::TrackType::*;
         match *self {
@@ -367,6 +323,51 @@ impl TrackType {
     }
 }
 
+fn get_tag_type<T: TagLike>(tag: &T) -> Option<TrackType> {
+    let tag = tag.tag();
+    if let Some(tag) = tag {
+        match tag.as_ref() {
+            "ul" => Some(TrackType::Lists),
+            "li" => Some(TrackType::ListItems),
+            "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => Some(TrackType::Blocks),
+            "b" => Some(TrackType::Inlines),
+            _ => None,
+        }
+    } else {
+        None
+    }
+}
+
+trait TagLike {
+    fn tag(&self) -> Option<String>;
+}
+
+impl TagLike for str {
+    fn tag(&self) -> Option<String> {
+        Some((*self).into())
+    }
+}
+
+impl TagLike for String {
+    fn tag(&self) -> Option<String> {
+        Some(self.clone())
+    }
+}
+
+impl TagLike for Attrs {
+    fn tag(&self) -> Option<String> {
+        match self.get("tag") {
+            Some(value) => Some(value.clone()),
+            None => None,
+        }
+    }
+}
+
+impl TagLike for Option<String> {
+    fn tag(&self) -> Option<String> {
+        self.clone()
+    }
+}
 
 
 
@@ -496,19 +497,20 @@ impl Transform {
             // }
             self.b_add
                 .close(hashmap!{"tag".to_string() => real.clone()}); // fake
-                                                                     // } else {
-                                                                     //     self.a_add.close(map! { "tag" => track.tag_a}); // fake
-                                                                     // }
-                                                                     // if (a) {
-                                                                     //   insrA.alter(r, {}).close();
-                                                                     // } else {
-                                                                     //   insrA.close();
-                                                                     // }
-                                                                     // if (b) {
-                                                                     //   insrB.alter(r, {}).close();
-                                                                     // } else {
-                                                                     //   insrB.close();
-                                                                     // }
+
+            // } else {
+            //     self.a_add.close(map! { "tag" => track.tag_a}); // fake
+            // }
+            // if (a) {
+            //   insrA.alter(r, {}).close();
+            // } else {
+            //   insrA.close();
+            // }
+            // if (b) {
+            //   insrB.alter(r, {}).close();
+            // } else {
+            //   insrB.close();
+            // }
         }
         (track.tag_a, track.tag_real, track.tag_b)
     }
@@ -607,7 +609,7 @@ impl Transform {
 
     fn next_track_a_type(&mut self) -> Option<TrackType> {
         if let Some(track) = self.next_track_a() {
-            get_tag_type(track.tag_real.clone())
+            get_tag_type(&track.tag_real)
         } else {
             None
         }
@@ -628,7 +630,7 @@ impl Transform {
 
     fn next_track_b_type(&mut self) -> Option<TrackType> {
         if let Some(track) = self.next_track_b() {
-            get_tag_type(track.tag_real.clone())
+            get_tag_type(&track.tag_real)
         } else {
             None
         }
@@ -641,8 +643,7 @@ impl Transform {
         // Determine whether to split tags for this track type.
         // TODO do the same for track opening?
         let track_split = if let Some(tag) = track.tag_real.clone() {
-            get_tag_type(&tag) != Some(TrackType::Lists)
-                && get_tag_type(&tag) != Some(TrackType::Inlines)
+            get_tag_type(&tag).map_or(false, |x| x.do_split())
         } else {
             true
         };
@@ -699,8 +700,7 @@ impl Transform {
         // TODO do the same for track opening?
         // NOTE i might have done this already
         let track_split = if let Some(tag) = track.tag_real.clone() {
-            get_tag_type(&tag) != Some(TrackType::Lists)
-                && get_tag_type(&tag) != Some(TrackType::Inlines)
+            get_tag_type(&tag).map_or(false, |x| x.do_split())
         } else {
             true
         };
@@ -969,8 +969,8 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     };
 
                     if a_tag.is_some() && b_tag.is_some()
-                        && get_tag_type(&a_tag.clone().unwrap()[..])
-                            == get_tag_type(&b_tag.clone().unwrap()[..])
+                        && get_tag_type(&a_tag.clone().unwrap())
+                            == get_tag_type(&b_tag.clone().unwrap())
                     {
                         // t.interrupt(a_tag || b_tag);
                         a.exit();
@@ -978,12 +978,12 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                         t.close();
                     } else if a_tag.is_some()
                         && (b_tag.is_none()
-                            || get_tag_type(&a_tag.clone().unwrap()[..])
+                            || get_tag_type(&a_tag.clone().unwrap())
                                 .unwrap()
                                 .ancestors()
                                 .iter()
                                 .position(
-                                    |x| *x == get_tag_type(&b_tag.clone().unwrap()[..]).unwrap(),
+                                    |x| *x == get_tag_type(&b_tag.clone().unwrap()).unwrap(),
                                 )
                                 .is_some())
                     {
@@ -1010,7 +1010,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                             .unwrap()
                             .tag_a
                             .clone()
-                            .unwrap()[..],
+                            .unwrap(),
                     ).unwrap();
                     println!("what is up with a {:?}", t.a_add);
                     t.interrupt(a_typ, false);
@@ -1034,7 +1034,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                             .unwrap()
                             .tag_b
                             .clone()
-                            .unwrap()[..],
+                            .unwrap(),
                     ).unwrap();
                     t.interrupt(b_typ, false);
                     t.close_b();
@@ -1077,7 +1077,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     let a_type = get_tag_type(a_attrs);
 
                     if t.next_track_a_type() == a_type {
-                        if a_type == Some(TrackType::ListItems) {
+                        if a_type.clone().map_or(false, |x| x.do_open_split()) {
                             println!("INTERRUPTING");
                             t.interrupt(a_type.unwrap(), true);
                             if let Some(j) = t.next_track_a() {
