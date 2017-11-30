@@ -28,14 +28,7 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelSlice, b: &mut DelSlice) 
                         b.next();
                     }
                 }
-                Some(DelWithGroup(ref span)) => {
-                    if acount > 1 {
-                        a.head = Some(DelSkip(acount - 1));
-                    } else {
-                        a.next();
-                    }
-                    res.place(&b.next());
-                }
+                Some(DelWithGroup(ref span)) |
                 Some(DelGroup(ref span)) => {
                     if acount > 1 {
                         a.head = Some(DelSkip(acount - 1));

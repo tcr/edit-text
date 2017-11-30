@@ -4,6 +4,7 @@ use std::collections::HashMap;
 
 pub type Attrs = HashMap<String, String>;
 
+
 pub type DocSpan = Vec<DocElement>;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -47,7 +48,7 @@ pub type Op = (DelSpan, AddSpan);
 fn del_place_chars(res: &mut DelSpan, count: usize) {
     if res.len() > 0 {
         let idx = res.len() - 1;
-        if let &mut DelChars(ref mut prefix) = &mut res[idx] {
+        if let DelChars(ref mut prefix) = res[idx] {
             *prefix += count;
             return;
         }
@@ -58,7 +59,7 @@ fn del_place_chars(res: &mut DelSpan, count: usize) {
 fn del_place_skip(res: &mut DelSpan, count: usize) {
     if res.len() > 0 {
         let idx = res.len() - 1;
-        if let &mut DelSkip(ref mut prefix) = &mut res[idx] {
+        if let DelSkip(ref mut prefix) = res[idx] {
             *prefix += count;
             return;
         }
