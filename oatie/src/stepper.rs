@@ -219,14 +219,14 @@ impl DelStepper {
     pub fn enter(&mut self) {
         let head = self.head.clone();
         self.stack.push(self.rest.clone());
-        let span = match head {
+        match head {
             Some(DelGroup(ref span)) | Some(DelWithGroup(ref span)) => {
                 self.head = None;
                 self.rest = span.to_vec();
                 self.next();
             }
             _ => panic!("Entered wrong thing"),
-        };
+        }
     }
 
     pub fn exit(&mut self) {
@@ -276,14 +276,14 @@ impl AddStepper {
     pub fn enter(&mut self) {
         let head = self.head.clone();
         self.stack.push(self.rest.clone());
-        let span = match head {
+        match head {
             Some(AddGroup(_, ref span)) | Some(AddWithGroup(ref span)) => {
                 self.head = None;
                 self.rest = span.to_vec();
                 self.next();
             }
             _ => panic!("Entered wrong thing"),
-        };
+        }
     }
 
     pub fn exit(&mut self) {

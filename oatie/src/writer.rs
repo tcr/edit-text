@@ -11,7 +11,7 @@ use term_painter::ToStyle;
 use term_painter::Color::*;
 use term_painter::Attr::*;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct AddWriter {
     pub past: Vec<AddElement>,
     stack: Vec<Vec<AddElement>>,
@@ -74,7 +74,7 @@ impl AddWriter {
 
 
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct DelWriter {
     pub past: Vec<DelElement>,
     stack: Vec<Vec<DelElement>>,

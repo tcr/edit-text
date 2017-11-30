@@ -1,5 +1,6 @@
 //! Defines utility functions and operation application.
 
+#![allow(ptr_arg)]
 #![allow(unused_variables)]
 #![allow(dead_code)]
 #![allow(unused_imports)]
@@ -18,6 +19,7 @@ extern crate term_painter;
 pub mod compose;
 pub mod doc;
 pub mod random;
+pub mod schema;
 pub mod stepper;
 pub mod transform;
 pub mod writer;
