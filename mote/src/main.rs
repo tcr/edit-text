@@ -27,7 +27,7 @@ fn default_doc() -> DocElement {
         DocGroup({"tag": "li"}, [
             DocGroup({"tag": "h1"}, [
                 DocChars("Hello! "),
-                DocGroup({"tag": "b"}, [DocChars("what's")]),
+                DocGroup({"tag": "span", "class": "bold"}, [DocChars("what's")]),
                 DocChars(" up?"),
             ]),
             DocGroup({"tag": "p"}, [

@@ -1,8 +1,13 @@
+function newElem(attrs) {
+  return $('<div>')
+    .attr('data-tag', attrs.tag);
+}
+
 
 function load (el) {
   // TODO act like doc
   // console.log(el);
-  var h = $('<div>').attr('data-tag', el.DocGroup[0].tag);
+  var h = newElem(el.DocGroup[0]);
   for (var i = 0; i < el.DocGroup[1].length; i++) {
     if (Object.keys(el.DocGroup[1][i])[0] == 'DocChars') {
       for (var j = 0; j < el.DocGroup[1][i].DocChars.length; j++) {
@@ -255,7 +260,7 @@ function init (m) {
               var out = active.nextAll().add(active).not($('.target').nextAll());
               clearActive();
               clearTarget();
-              out.wrapAll($('<div>').attr('data-tag', tag));
+              out.wrapAll(newElem({tag: tag}));
               active = out.parent().addClass('active').addClass('target');
               op([], addto(active,
                 {
@@ -403,7 +408,10 @@ function init (m) {
               clearActive();
               clearTarget();
 
-              $('<div data-tag="' + tag + '">').insertAfter(active).addClass('active').addClass('target');
+              newElem({tag: tag})
+                .insertAfter(active)
+                .addClass('active')
+                .addClass('target');
 
               op([], addto(active.next(),
                 {
@@ -453,8 +461,8 @@ function init (m) {
               clearTarget();
 
               console.log(prev);
-              prev.wrapAll('<div data-tag="' + parent.data('tag') + '">');
-              next.wrapAll('<div data-tag="' + tag + '" class="active target">');
+              prev.wrapAll(newElem({tag: parent.data('tag')}));
+              next.wrapAll(newElem({tag: tag}).addClass('active').addClass('target'));
               parent.contents().unwrap();
 
               op(operation[0], operation[1]);

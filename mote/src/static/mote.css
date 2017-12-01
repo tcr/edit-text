@@ -97,15 +97,13 @@ button {
     padding-bottom: 9px;
 }
 
-.mote div[data-tag="b"],
-.mote div[data-tag="i"] {
+.mote div[data-tag="span"] {
     display: inline-block;
     margin-left: 1px;
     padding: 4px 4px 1px;
 }
 
-.mote div[data-tag="b"]::before,
-.mote div[data-tag="i"]::before {
+.mote div[data-tag="span"]::before {
     float: left;
     margin-top: 2px;
     margin-right: 2px;
