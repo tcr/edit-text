@@ -23,6 +23,7 @@ pub mod schema;
 pub mod stepper;
 pub mod transform;
 pub mod writer;
+pub mod transform_test;
 
 use doc::*;
 use std::collections::HashMap;

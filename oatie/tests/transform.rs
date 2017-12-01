@@ -12,6 +12,10 @@ use oatie::doc::*;
 use oatie::normalize;
 use oatie::transform::*;
 use oatie::apply_operation;
+use oatie::transform_test::run_transform_test;
+use std::path::Path;
+use std::fs::{read_dir, File};
+use std::io::prelude::*;
 
 fn test_start() {
     let _ = env_logger::init();
@@ -336,4 +340,19 @@ fn test_transform_del() {
 
     // Compare
     assert_eq!(a_res, b_res);
+}
+
+// TODO how do you ? this
+#[test]
+fn test_transform_folder() {
+    let folder = Path::new(file!()).parent().unwrap().parent().unwrap().join("in");
+    for path in read_dir(folder).unwrap() {
+        // Load the test file
+        let mut f = File::open(path.unwrap().path()).unwrap();
+        let mut s = String::new();
+        f.read_to_string(&mut s).unwrap();
+
+        // TODO this should include some result
+        run_transform_test(&s).unwrap();
+    }
 }
