@@ -98,7 +98,7 @@ impl Tag {
             "ul" => Some(TrackType::Lists),
             "li" => Some(TrackType::ListItems),
             "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => Some(TrackType::Blocks),
-            "b" => Some(TrackType::Inlines),
+            "span" => Some(TrackType::Inlines),
             _ => None,
         }
     }
