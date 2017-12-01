@@ -1,5 +1,6 @@
 //! Defines utility functions and operation application.
 
+#![allow(unknown_lints)]
 #![allow(ptr_arg)]
 #![allow(unused_variables)]
 #![allow(dead_code)]

@@ -908,9 +908,10 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                     a_del.skip(1);
                     a.next();
                 }
-                Some(DelChars(ref a_chars)) => {
+                Some(DelChars(a_chars)) => {
                     // t.skip_a(a_chars.len());
                     // t.chars_b(a_chars);
+                    b_del.chars(a_chars);
                     a.next();
                 }
                 Some(DelSkip(a_count)) => {
@@ -919,12 +920,13 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                     a.next();
                     b_del.skip(a_count);
                 }
+                Some(DelGroupAll) => {
+                    a.next();
+                    b_del.group_all();
+                }
                 None => {
                     // t.close_a();
                     a.exit();
-                }
-                _ => {
-                    panic!("Unknown value: {:?}", a.head.clone());
                 }
             }
         } else {
@@ -1104,6 +1106,16 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
 
                     a.next();
                     b.next();
+                }
+                (Some(DelGroupAll), Some(DelSkip(b_count))) => {
+                    b_del.group_all();
+
+                    a.next();
+                    if b_count > 1 {
+                        b.head = Some(DelSkip(b_count - 1));
+                    } else {
+                        b.next();
+                    }
                 }
 
                 unimplemented => {
