@@ -878,12 +878,13 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                     a_del.skip(b_count);
                     b.next();
                 }
+                Some(DelGroupAll) => {
+                    a_del.group_all();
+                    b.next();
+                }
                 None => {
                     // t.close_b();
                     b.exit();
-                }
-                _ => {
-                    panic!("What: {:?}", b.head);
                 }
             }
         } else if b.is_done() {

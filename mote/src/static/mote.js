@@ -68,6 +68,36 @@ function delto (el, then) {
   return cur;
 }
 
+function getActive() {
+  var a = $('.active')
+  return a[0] ? a : null;
+}
+
+function getTarget() {
+  var a = $('.active')
+  return a[0] ? a : null;
+}
+
+function isBlock ($active) {
+  return $active && $active[0].tagName == 'DIV';
+}
+
+function isChar ($active) {
+  return $active && $active[0].tagName == 'SPAN';
+}
+
+function isInline ($active) {
+  return $active && $active.data('tag') == 'span';
+}
+
+function clearActive () {
+  $(document).find('.active').removeClass('active');
+}
+
+function clearTarget () {
+  $(document).find('.target').removeClass('target');
+}
+
 function init (m) {
 
   function serialize (parent) {
@@ -78,7 +108,12 @@ function init (m) {
     $(parent).children().each(function () {
       if ($(this).is('div')) {
         out.push({
-          "DocGroup": [{"tag": $(this).attr('data-tag')}, serialize(this)],
+          "DocGroup": [
+            {
+              "tag": $(this).attr('data-tag'),
+            },
+            serialize(this),
+          ],
         });
       } else {
         var txt = this.innerText
@@ -91,36 +126,6 @@ function init (m) {
       }
     })
     return out;
-  }
-
-  function getActive() {
-    var a = $('.active')
-    return a[0] ? a : null;
-  }
-
-  function getTarget() {
-    var a = $('.active')
-    return a[0] ? a : null;
-  }
-
-  function isBlock ($active) {
-    return $active && $active[0].tagName == 'DIV'
-  }
-
-  function isChar ($active) {
-    return $active && $active[0].tagName == 'SPAN'
-  }
-
-  function isInline ($active) {
-    return $active && ($active.data('tag') == 'b' || $active.data('tag') == 'i')
-  }
-
-  function clearActive () {
-    $(document).find('.active').removeClass('active');
-  }
-
-  function clearTarget () {
-    $(document).find('.target').removeClass('target');
   }
 
   m.on('click', 'span, div', function (e) {
@@ -532,7 +537,22 @@ $.get('/api/hello', function (data) {
   m2.empty().append(load(data));
 })
 
-$('#sync').on('click', function () {
+$('#action-reset').on('click', function () {
+  $.ajax('/api/reset', {
+    contentType : 'application/json',
+    type : 'POST',
+  })
+  .done(function (data, _2, obj) {
+    if (obj.status == 200 && data != '') {
+      window.location.reload();
+    } else {
+      alert('Error in resetting. Check the console.')
+    }
+    //
+  })
+});
+
+$('#action-sync').on('click', function () {
   var packet = [
     ops_a,
     ops_b
@@ -550,12 +570,12 @@ $('#sync').on('click', function () {
     if (obj.status == 200 && data != '') {
       window.location.reload();
     } else {
-      alert('Error in syncing. Check the console.')
+      alert('Error in syncing. Check the command line.')
     }
     //
   })
   .fail(function () {
     console.log('failure', arguments);
-    alert('Error in syncing. Check the console.')
+    alert('Error in syncing. Check the command line.')
   });
 })
