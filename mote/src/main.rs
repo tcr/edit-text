@@ -10,7 +10,7 @@ extern crate rocket_contrib;
 extern crate serde_derive;
 
 extern crate serde;
-extern crate serde_json;
+#[macro_use] extern crate serde_json;
 
 use std::sync::{Arc, Mutex};
 use oatie::doc::*;
@@ -19,6 +19,7 @@ use oatie::compose::compose;
 use rocket_contrib::Json;
 use rocket::State;
 use rocket::response::NamedFile;
+use serde_json::{Value};
 use std::path::{Path, PathBuf};
 use oatie::transform::transform;
 
@@ -186,6 +187,15 @@ fn api_hello(mote: State<MoteState>) -> Json<DocElement> {
     Json(doc.clone())
 }
 
+#[post("/api/reset")]
+fn api_reset(mote: State<MoteState>) -> Json<Value> {
+    let mut doc = mote.body.lock().unwrap();
+    *doc = default_doc();
+    Json(json!({
+        "ok": true,
+    }))
+}
+
 #[get("/")]
 fn root() -> Option<NamedFile> {
     Path::new(file!())
@@ -211,7 +221,7 @@ fn main() {
         .manage(MoteState {
             body: Arc::new(Mutex::new(default_doc())),
         })
-        .mount("/", routes![api_hello, api_confirm, api_sync, root, files])
+        .mount("/", routes![api_hello, api_confirm, api_sync, api_reset, root, files])
         .launch();
 }
 
