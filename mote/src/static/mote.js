@@ -1,6 +1,16 @@
 function newElem(attrs) {
-  return $('<div>')
+  return modifyElem($('<div>'), attrs);
+}
+
+function modifyElem(elem, attrs) {
+  return elem
     .attr('data-tag', attrs.tag);
+}
+
+function serializeAttrs(elem) {
+  return {
+    "tag": String(elem.attr('data-tag') || ''),
+  };
 }
 
 
@@ -109,9 +119,7 @@ function init (m) {
       if ($(this).is('div')) {
         out.push({
           "DocGroup": [
-            {
-              "tag": $(this).attr('data-tag'),
-            },
+            serializeAttrs($(this)),
             serialize(this),
           ],
         });
@@ -312,7 +320,7 @@ function init (m) {
               ));
 
               console.log('hi');
-              active.attr('data-tag', tag);
+              modifyElem(active, {tag: tag});
               console.log('uh');
 
               //
