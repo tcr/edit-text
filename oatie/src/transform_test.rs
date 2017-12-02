@@ -226,7 +226,12 @@ pub fn run_transform_test(input: &str) -> io::Result<()> {
     let b = (del_b, add_b);
 
     println!("transform start!");
-    let confirm = op_transform_compare(a, b);
+    let confirm = op_transform_compare(a.clone(), b.clone());
+
+    // ALSO CHECK THE REVERSE
+    // The result may be different, so we don't care it to 
+    // that, but we can check that the transform is at least normalized.
+    let _ = op_transform_compare(b.clone(), a.clone());
 
     // Check validating lines
     if four.len() == 6 {

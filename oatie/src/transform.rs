@@ -86,7 +86,7 @@ impl Transform {
                 tag_real: Some(a.clone()),
                 tag_b: b.clone(),
                 is_original_a: true,
-                is_original_b: b.is_some(),
+                is_original_b: false,
             },
         );
 
@@ -111,7 +111,7 @@ impl Transform {
                 tag_a: a.clone(),
                 tag_real: Some(b.clone()),
                 tag_b: Some(b.clone()),
-                is_original_a: a.is_some(),
+                is_original_a: false,
                 is_original_b: true,
             },
         );
@@ -817,10 +817,23 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     a.next();
                     b.next();
                 }
+                (Some(AddSkip(a_count)), Some(AddWithGroup(b_inner))) => {
+                    t.a_del.skip(1);
+                    t.a_add.with_group(&b_inner);
+                    t.b_del.skip(1);
+                    t.b_add.skip(1);
 
-                // ???
-                _ => {
-                    panic!("No idea: {:?}, {:?}", a.head, b.head);
+                    if a_count > 1 {
+                        a.head = Some(AddSkip(a_count - 1));
+                    } else {
+                        a.next();
+                    }
+                    b.next();
+                }
+
+                // Invalid
+                (Some(AddWithGroup(_)), Some(AddChars(_))) => {
+                    panic!("bad formation: {:?} {:?}", a.head, b.head);
                 }
             }
         }
