@@ -14,6 +14,20 @@ use super::writer::*;
 use term_painter::ToStyle;
 use term_painter::Color::*;
 use term_painter::Attr::*;
+use std::collections::HashSet;
+
+
+
+fn parse_classes(input: &str) -> HashSet<String> {
+    input.split_whitespace().filter(|x| x.len() > 0).map(|x| x.to_owned()).collect()
+}
+
+fn format_classes(set: &HashSet<String>) -> String {
+    let mut classes: Vec<String> = set.iter().cloned().collect();
+    classes.sort();
+    classes.join(" ")
+}
+
 
 
 #[derive(Clone, Debug)]
@@ -31,6 +45,23 @@ struct Transform {
     a_add: AddWriter,
     b_del: DelWriter,
     b_add: AddWriter,
+}
+
+// TODO move to schema
+fn get_real_merge(a: &Tag, b: &Tag) -> Option<Tag> {
+    if a.0.get("tag") == b.0.get("tag") && a.0.get("tag").map(|x| x == "span").unwrap_or(false) {
+        let c_a: String = a.0.get("class").unwrap_or(&"".to_string()).clone();
+        let c_b: String = b.0.get("class").unwrap_or(&"".to_string()).clone();
+
+        let mut c = parse_classes(&c_a);
+        c.extend(parse_classes(&c_b));
+        Some(Tag(hashmap! {
+            "tag".to_string() => "span".to_string(),
+            "class".to_string() => format_classes(&c),
+        }))
+    } else {
+        None
+    }
 }
 
 impl Transform {
@@ -72,18 +103,26 @@ impl Transform {
         self.b_add.begin();
     }
 
+    // TODO maybe take "real" value as input?
     fn enter_a(&mut self, a: Tag, b: Option<Tag>) {
         let last = self.tracks
             .iter()
             .rposition(|x| x.tag_real.is_some())
             .and_then(|x| Some(x + 1))
             .unwrap_or(0);
+        
+        // TODO merge this functionality elsewhere
+        let real = if let Some(ref b) = b {
+            Some(get_real_merge(&a, b).unwrap_or(a.clone()))
+        } else {
+            Some(a.clone())
+        };
 
         self.tracks.insert(
             last,
             Track {
                 tag_a: Some(a.clone()),
-                tag_real: Some(a.clone()),
+                tag_real: real,
                 tag_b: b.clone(),
                 is_original_a: true,
                 is_original_b: false,
@@ -99,17 +138,26 @@ impl Transform {
     }
 
     fn enter_b(&mut self, a: Option<Tag>, b: Tag) {
+        println!("ENTER B");
+
         let last = self.tracks
             .iter()
             .rposition(|x| x.tag_real.is_some())
             .and_then(|x| Some(x + 1))
             .unwrap_or(0);
+                    
+        // TODO merge this functionality elsewhere
+        let real = if let Some(ref a) = a {
+            Some(get_real_merge(a, &b).unwrap_or(b.clone()))
+        } else {
+            Some(b.clone())
+        };
 
         self.tracks.insert(
             last,
             Track {
                 tag_a: a.clone(),
-                tag_real: Some(b.clone()),
+                tag_real: real,
                 tag_b: Some(b.clone()),
                 is_original_a: false,
                 is_original_b: true,
@@ -218,18 +266,22 @@ impl Transform {
         let (track, index) = self.top_track_a();
 
         if track.is_original_a && track.tag_real == track.tag_a {
+            println!("hey {:?} {:?}", track.tag_real, track.tag_a);
             self.a_del.exit();
             self.a_add.exit();
         } else {
+            println!("LOVE");
             self.a_del.close();
             self.a_add
                 .close(track.tag_real.clone().unwrap().to_attrs());
         }
 
         if track.is_original_b && track.tag_real == track.tag_b {
+            println!("hey");
             self.b_del.exit();
             self.b_add.exit();
         } else {
+            println!("NO");
             self.b_del.close();
             self.b_add
                 .close(track.tag_real.clone().unwrap().to_attrs());
@@ -326,8 +378,6 @@ impl Transform {
                 self.tracks[index].tag_real = None;
             }
         }
-
-        println!("A ADD NOW {:?}", self.a_add);
     }
 
     fn close_b(&mut self) {
@@ -350,6 +400,7 @@ impl Transform {
         } else {
             true
         };
+            println!("tag {:?}", track.tag_real.clone().unwrap().tag_type().unwrap().do_split());
 
         if track.is_original_b && (track_split || track.tag_a.is_none()) {
             // && track.tag_real == track.tag_b {
@@ -438,7 +489,11 @@ impl Transform {
         for track in &mut self.tracks {
             if track.tag_real.is_none() {
                 println!("REGENERATE: {:?}", track);
-                if track.tag_b.is_some() {
+                if let (&Some(ref a), &Some(ref b)) = (&track.tag_a, &track.tag_b) {
+                    track.tag_real = Some(get_real_merge(a, b).unwrap_or(a.clone()));
+                    track.is_original_a = false;
+                    track.is_original_b = false;
+                } else if track.tag_b.is_some() {
                     track.tag_real = track.tag_b.clone();
                     // track.tag_a = track.tag_b.clone();
                     // track.is_original_b = false;
@@ -454,8 +509,7 @@ impl Transform {
                     // } else {
                     //   insrB.open(a || b, {});
                     // }
-                }
-                if track.tag_a.is_some() {
+                } else if track.tag_a.is_some() {
                     track.tag_real = track.tag_a.clone();
                     // track.tag_a = track.tag_a.clone();
                     // track.is_original_a = false;
@@ -564,7 +618,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
             t.regenerate();
             println!(
                 "{}",
-                BrightYellow.paint(format!("Finishing A: {:?}", a.head.clone()))
+                BrightYellow.paint(format!("Finishing A (add): {:?}", a.head.clone()))
             );
 
             match a.head.clone() {
@@ -744,7 +798,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     let b_type = Tag::from_attrs(b_attrs).tag_type();
 
                     if t.next_track_b_type() == b_type {
-                        if b_type == Some(TrackType::ListItems) {
+                        if b_type.clone().map_or(false, |x| x.do_open_split()) {
                             println!("INTERRUPTING");
                             t.interrupt(b_type.unwrap(), true);
                             if let Some(j) = t.next_track_b() {
@@ -903,7 +957,7 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
         } else if b.is_done() {
             println!(
                 "{}",
-                BrightYellow.paint(format!("Finishing A: {:?}", a.head.clone()))
+                BrightYellow.paint(format!("Finishing A (del): {:?}", a.head.clone()))
             );
 
             match a.head.clone() {

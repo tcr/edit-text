@@ -1,0 +1,8 @@
+[]
+[AddGroup({"tag": "span", "class": "bold"}, [AddSkip(16)])]
+
+[]
+[AddSkip(6), AddGroup({"tag": "span", "class": "italic"}, [AddSkip(18)])]
+
+[]
+[AddGroup({"tag": "span", "class": "bold"}, [AddSkip(6)]),AddGroup({"tag": "span", "class": "bold italic"}, [AddSkip(10)]),AddGroup({"tag": "span", "class": "italic"}, [AddSkip(8)])]

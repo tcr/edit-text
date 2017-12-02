@@ -32,6 +32,9 @@ fn default_doc() -> DocElement {
                 DocChars(" up?"),
             ]),
             DocGroup({"tag": "p"}, [
+                DocChars("Three adjectives strong."),
+            ]),
+            DocGroup({"tag": "p"}, [
                 DocChars("World!"),
             ]),
         ]),

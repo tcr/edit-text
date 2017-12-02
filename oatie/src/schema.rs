@@ -30,18 +30,17 @@ pub enum TrackType {
 impl TrackType {
     // Rename this do close split? if applicable?
     pub fn do_split(&self) -> bool {
-        use self::TrackType::*;
         match *self {
-            TrackType::Lists | TrackType::Inlines => false,
+            TrackType::Lists => false,
             _ => true,
         }
     }
 
     // Unsure about this naming
     pub fn do_open_split(&self) -> bool {
-        use self::TrackType::*;
         match *self {
             TrackType::ListItems => true,
+            TrackType::Inlines => true,
             _ => false,
         }
     }
