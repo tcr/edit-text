@@ -64,7 +64,7 @@ button {
 }
 
 .mote span {
-    background: rgb(100, 200, 100);
+    background: rgb(125, 200, 125);
     padding: 3px 5px;
     /*border: 1px solid rgba(0, 0, 0, .3);*/
     display: inline-block;
@@ -100,23 +100,46 @@ button {
 .mote div[data-tag="span"] {
     display: inline-block;
     margin-left: 1px;
-    padding: 4px 4px 1px;
+    padding: 4px 6px 1px;
+    margin-bottom: 3px;
+    background: rgba(255, 0, 0, .25);
+}
+
+.mote div[data-tag="span"].active {
+    margin-bottom: 0;
+    background: #98e;
 }
 
 .mote div[data-tag="span"]::before {
     float: left;
     margin-top: 2px;
     margin-right: 2px;
+    display: none;
 }
+
+.mote div.bold {
+    font-weight: 900;
+}
+.mote div.italic {
+    font-style: italic;
+}
+
+/******* targets *********/
 
 .mote .active ~ * {
     background: red;
 }
 
 .mote .target ~ span {
-    background: rgb(100, 200, 100);
+    background: rgb(125, 200, 125);
 }
+
+/* reset previous changes*/
 
 .mote .target ~ div {
     background: rgba(0, 0, 0, .15);
+}
+
+.mote .target ~ div[data-tag="span"] {
+    background: rgba(255, 0, 0, .25);
 }

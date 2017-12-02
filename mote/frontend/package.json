@@ -1,0 +1,30 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack ./app.ts ../src/static/mote.js",
+    "watch": "webpack --watch ./app.ts ../src/static/mote.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/bootbox": "^4.4.35",
+    "@types/bootstrap": "^3.3.36",
+    "@types/jquery": "^3.2.16",
+    "css-loader": "^0.28.7",
+    "file-loader": "^1.1.5",
+    "style-loader": "^0.19.0",
+    "ts-loader": "^3.2.0",
+    "typescript": "^2.6.2",
+    "webpack": "^3.9.1"
+  },
+  "dependencies": {
+    "bootbox": "^4.4.0",
+    "bootstrap": "^3.3.7",
+    "jquery": "^3.2.1"
+  }
+}
