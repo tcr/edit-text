@@ -347,6 +347,14 @@ fn test_transform_del() {
 fn test_transform_folder() {
     let folder = Path::new(file!()).parent().unwrap().parent().unwrap().join("in");
     for path in read_dir(folder).unwrap() {
+        println!();
+        println!();
+        println!();
+        println!();
+        println!();
+        println!("{:?}", path);
+        println!();
+
         // Load the test file
         let mut f = File::open(path.unwrap().path()).unwrap();
         let mut s = String::new();
