@@ -162,6 +162,8 @@ button {
     -ms-user-select: none;
     user-select: none;
 
+    font-size: 16px;
+
     div {
         /*border: 1px solid #444;*/
         margin: 8px 0;
@@ -258,6 +260,6 @@ button {
 
     div[data-tag="li"] {
         display: list-item;
-        margin-left: 15px;
+        margin-left: 25px;
     }
 }

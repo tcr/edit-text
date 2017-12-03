@@ -442,20 +442,27 @@ function splitBlock(m: Editor) {
             ]],
           },
           {
-            "AddGroup": [{"tag": tag}, [
-              {
-                "AddSkip": next.length
-              }
-            ]],
+            "AddGroup": [{"tag": tag},
+              next.length ?
+                [{
+                  "AddSkip": next.length
+                }]
+                : []
+            ],
           }
         ])];
 
         clearActive();
         clearTarget();
 
-        console.log(prev);
-        prev.wrapAll(newElem({tag: parent.data('tag')}));
-        next.wrapAll(newElem({tag: tag}).addClass('active').addClass('target'));
+        let newPrev = newElem({tag: parent.data('tag')});
+        let newNext = newElem({tag: tag}).addClass('active').addClass('target');
+        prev.wrapAll(newPrev);
+        if (next.length) {
+          next.wrapAll(newNext);
+        } else {
+          newNext.insertAfter(parent);
+        }
         parent.contents().unwrap();
 
         m.op(operation[0], operation[1]);
@@ -516,6 +523,7 @@ function init ($elem) {
       return
     }
 
+    // Unless the keys are enter or arrow keys, just return.
     if ([13, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
       return;
     }
@@ -527,6 +535,8 @@ function init ($elem) {
     let txt = String.fromCharCode(e.charCode);
     let span = $('<span>').text(txt).addClass('active').addClass('target');
     if (isBlock(active)) {
+      e.preventDefault();
+
       clearActive();
       clearTarget();
       active.prepend(span);
@@ -536,7 +546,10 @@ function init ($elem) {
           "AddChars": txt
         }
       ));
+      return false;
     } else if (isChar(active)) {
+      e.preventDefault();
+
       clearActive();
       clearTarget();
       span.insertAfter(active);
@@ -546,6 +559,8 @@ function init ($elem) {
           "AddChars": txt
         }
       ));
+
+      return false;
     }
   });
 
@@ -591,8 +606,16 @@ function init ($elem) {
     // <enter>
     if (e.keyCode == 13) {
       e.preventDefault();
-      if (e.shiftKey && isBlock(active)) {
-        addBlockAfter(m);
+      if (e.shiftKey) {
+        if (isBlock(active)) {
+          addBlockAfter(m);
+        } else if (isBlock(active.parent())) {
+          let newActive = active.parent();
+          clearActive();
+          clearTarget();
+          newActive.addClass('active').addClass('target');
+          addBlockAfter(m);
+        }
       } else if (!e.shiftKey) {
         splitBlock(m);
       }
