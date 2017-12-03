@@ -10463,96 +10463,44 @@ function clearActive() {
 function clearTarget() {
     __WEBPACK_IMPORTED_MODULE_1_jquery___default()(document).find('.target').removeClass('target');
 }
-function init(m) {
-    function serialize(parent) {
-        if (!parent) {
-            parent = m[0];
-        }
-        var out = [];
-        __WEBPACK_IMPORTED_MODULE_1_jquery___default()(parent).children().each(function () {
-            if (__WEBPACK_IMPORTED_MODULE_1_jquery___default()(this).is('div')) {
-                out.push({
-                    "DocGroup": [
-                        serializeAttrs(__WEBPACK_IMPORTED_MODULE_1_jquery___default()(this)),
-                        serialize(this),
-                    ],
-                });
-            }
-            else {
-                var txt = this.innerText;
-                if (Object.keys(out[out.length - 1] || {})[0] == 'DocChars') {
-                    txt = out.pop().DocChars + txt;
-                }
-                out.push({
-                    "DocChars": txt
-                });
-            }
-        });
-        return out;
-    }
-    m.on('click', 'span, div', function (e) {
-        var active = getActive();
-        var target = getTarget();
-        if (e.shiftKey) {
-            if (active && active.nextAll().add(active).is(this)) {
-                clearTarget();
-                __WEBPACK_IMPORTED_MODULE_1_jquery___default()(this).addClass('target');
-            }
+function serialize(parent) {
+    var out = [];
+    __WEBPACK_IMPORTED_MODULE_1_jquery___default()(parent).children().each(function () {
+        if (__WEBPACK_IMPORTED_MODULE_1_jquery___default()(this).is('div')) {
+            out.push({
+                "DocGroup": [
+                    serializeAttrs(__WEBPACK_IMPORTED_MODULE_1_jquery___default()(this)),
+                    serialize(this),
+                ],
+            });
         }
         else {
-            clearActive();
-            clearTarget();
-            __WEBPACK_IMPORTED_MODULE_1_jquery___default()(this).addClass('active').addClass('target');
-            active = __WEBPACK_IMPORTED_MODULE_1_jquery___default()(this);
-        }
-        return false;
-    });
-    __WEBPACK_IMPORTED_MODULE_1_jquery___default()(document).on('keypress', function (e) {
-        if (__WEBPACK_IMPORTED_MODULE_1_jquery___default()(e.target).closest('.modal').length) {
-            return;
-        }
-        var active = getActive();
-        var target = getTarget();
-        if (active && !active.parents('.mote').is(m)) {
-            return;
-        }
-        if ([13, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
-            return;
-        }
-        if (e.metaKey) {
-            return;
-        }
-        var txt = String.fromCharCode(e.charCode);
-        var span = __WEBPACK_IMPORTED_MODULE_1_jquery___default()('<span>').text(txt).addClass('active').addClass('target');
-        if (isBlock(active)) {
-            clearActive();
-            clearTarget();
-            active.prepend(span);
-            active = span;
-            op([], addto(active, {
-                "AddChars": txt
-            }));
-        }
-        else if (isChar(active)) {
-            clearActive();
-            clearTarget();
-            span.insertAfter(active);
-            active = span;
-            op([], addto(active, {
-                "AddChars": txt
-            }));
+            var txt = this.innerText;
+            if (Object.keys(out[out.length - 1] || {})[0] == 'DocChars') {
+                txt = out.pop().DocChars + txt;
+            }
+            out.push({
+                "DocChars": txt
+            });
         }
     });
-    var ophistory = [];
-    // Confirm that the operation is a valid one.
-    function op(d, a) {
+    return out;
+}
+var Editor = /** @class */ (function () {
+    function Editor($elem) {
+        this.$elem = $elem;
+        this.ophistory = [];
+    }
+    Editor.prototype.op = function (d, a) {
+        var _this = this;
         console.log(JSON.stringify([d, a]));
-        ophistory.push([d, a]);
+        this.ophistory.push([d, a]);
         setTimeout(function () {
-            var match = serialize(null);
+            // Serialize by default the root element
+            var match = serialize(_this.$elem[0]);
             // test
             var packet = [
-                ophistory,
+                _this.ophistory,
                 match
             ];
             console.log(JSON.stringify(packet));
@@ -10571,232 +10519,290 @@ function init(m) {
                 console.log('failure', arguments);
             });
         });
+    };
+    return Editor;
+}());
+function init($elem) {
+    var m = new Editor($elem);
+    function wrapContent() {
+        var active = getActive();
+        var target = getTarget();
+        // if (isBlock(active)) {
+        __WEBPACK_IMPORTED_MODULE_2_bootbox___default.a.prompt({
+            title: "Wrap selected in tag:",
+            value: "p",
+            callback: function (tag) {
+                if (tag) {
+                    var attrs = intoAttrs(tag);
+                    var out = active.nextAll().add(active).not(__WEBPACK_IMPORTED_MODULE_1_jquery___default()('.target').nextAll());
+                    clearActive();
+                    clearTarget();
+                    out.wrapAll(newElem(attrs));
+                    active = out.parent().addClass('active').addClass('target');
+                    m.op([], addto(active, {
+                        "AddGroup": [attrs, [
+                                {
+                                    "AddSkip": out.length
+                                }
+                            ]],
+                    }));
+                }
+            },
+        }).on("shown.bs.modal", function () {
+            __WEBPACK_IMPORTED_MODULE_1_jquery___default()(this).find('input').select();
+        });
+        // } else {
+        //   alert('Not implemented?')
+        // }
     }
+    function renameBlock() {
+        var active = getActive();
+        var target = getTarget();
+        if (active) {
+            __WEBPACK_IMPORTED_MODULE_2_bootbox___default.a.prompt({
+                title: "Rename tag group:",
+                value: "p",
+                callback: function (tag) {
+                    if (tag) {
+                        var attrs = intoAttrs(tag);
+                        m.op(delto(active, {
+                            "DelGroup": [
+                                {
+                                    "DelSkip": active.children().length
+                                }
+                            ],
+                        }), addto(active, {
+                            "AddGroup": [attrs, [
+                                    {
+                                        "AddSkip": active.children().length
+                                    }
+                                ]],
+                        }));
+                        modifyElem(active, attrs);
+                    }
+                },
+            }).on("shown.bs.modal", function () {
+                __WEBPACK_IMPORTED_MODULE_1_jquery___default()(this).find('input').select();
+            });
+        }
+    }
+    function deleteBlockPreservingContent() {
+        var active = getActive();
+        var target = getTarget();
+        // Delete group while saving contents.
+        if (isBlock(active)) {
+            clearActive();
+            clearTarget();
+            m.op(delto(active, {
+                "DelGroup": [
+                    {
+                        "DelSkip": active.children().length
+                    }
+                ],
+            }), []);
+            var first = active.children().first();
+            var last = active.children().last();
+            if (active.contents().length) {
+                active.contents().unwrap();
+            }
+            else {
+                active.remove();
+            }
+            active = first.addClass('active')[0] ? first : null;
+            last.addClass('target');
+        }
+    }
+    function deleteBlock() {
+        var active = getActive();
+        var target = getTarget();
+        // Delete whole block.
+        if (isBlock(active)) {
+            m.op(delto(active, {
+                "DelGroupAll": null,
+            }), []);
+            active.remove();
+            clearActive();
+            clearTarget();
+        }
+    }
+    function deleteChars() {
+        var active = getActive();
+        var target = getTarget();
+        // Delete characters.
+        if (isChar(active)) {
+            clearActive();
+            clearTarget();
+            m.op(delto(active, {
+                "DelChars": 1,
+            }), []);
+            var prev = active.prev();
+            var dad = active.parent();
+            active.remove();
+            __WEBPACK_IMPORTED_MODULE_1_jquery___default()(prev[0] ? prev : dad[0] ? dad : null)
+                .addClass('active')
+                .addClass('target');
+        }
+    }
+    function addBlockAfter() {
+        var active = getActive();
+        var target = getTarget();
+        __WEBPACK_IMPORTED_MODULE_2_bootbox___default.a.prompt({
+            title: "New tag to add after:",
+            value: active.data('tag').toLowerCase(),
+            callback: function (tag) {
+                if (tag) {
+                    clearActive();
+                    clearTarget();
+                    newElem({ tag: tag })
+                        .insertAfter(active)
+                        .addClass('active')
+                        .addClass('target');
+                    m.op([], addto(active.next(), {
+                        "AddGroup": [{ "tag": tag }, []],
+                    }));
+                }
+            }
+        }).on("shown.bs.modal", function () {
+            __WEBPACK_IMPORTED_MODULE_1_jquery___default()(this).find('input').select();
+        });
+    }
+    function splitBlock() {
+        var active = getActive();
+        var target = getTarget();
+        __WEBPACK_IMPORTED_MODULE_2_bootbox___default.a.prompt({
+            title: "New tag to split this into:",
+            value: active.parent().data('tag').toLowerCase(),
+            callback: function (tag) {
+                if (tag) {
+                    var prev = active.prevAll().add(active);
+                    var next = active.nextAll();
+                    var parent = active.parent();
+                    var operation = [delto(parent, [
+                            {
+                                "DelGroup": [
+                                    {
+                                        "DelSkip": prev.length + next.length
+                                    }
+                                ],
+                            },
+                        ]), addto(parent, [
+                            {
+                                "AddGroup": [{ "tag": parent.data('tag') }, [
+                                        {
+                                            "AddSkip": prev.length
+                                        }
+                                    ]],
+                            },
+                            {
+                                "AddGroup": [{ "tag": tag }, [
+                                        {
+                                            "AddSkip": next.length
+                                        }
+                                    ]],
+                            }
+                        ])];
+                    clearActive();
+                    clearTarget();
+                    console.log(prev);
+                    prev.wrapAll(newElem({ tag: parent.data('tag') }));
+                    next.wrapAll(newElem({ tag: tag }).addClass('active').addClass('target'));
+                    parent.contents().unwrap();
+                    m.op(operation[0], operation[1]);
+                }
+            },
+        }).on("shown.bs.modal", function () {
+            __WEBPACK_IMPORTED_MODULE_1_jquery___default()(this).find('input').select();
+        });
+    }
+    m.$elem.on('click', 'span, div', function (e) {
+        var active = getActive();
+        var target = getTarget();
+        if (e.shiftKey) {
+            if (active && active.nextAll().add(active).is(this)) {
+                clearTarget();
+                __WEBPACK_IMPORTED_MODULE_1_jquery___default()(this).addClass('target');
+            }
+        }
+        else {
+            clearActive();
+            clearTarget();
+            __WEBPACK_IMPORTED_MODULE_1_jquery___default()(this).addClass('active').addClass('target');
+        }
+        return false;
+    });
+    __WEBPACK_IMPORTED_MODULE_1_jquery___default()(document).on('keypress', function (e) {
+        if (__WEBPACK_IMPORTED_MODULE_1_jquery___default()(e.target).closest('.modal').length) {
+            return;
+        }
+        var active = getActive();
+        var target = getTarget();
+        if (active && !active.parents('.mote').is(m.$elem)) {
+            return;
+        }
+        if ([13, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+            return;
+        }
+        if (e.metaKey) {
+            return;
+        }
+        var txt = String.fromCharCode(e.charCode);
+        var span = __WEBPACK_IMPORTED_MODULE_1_jquery___default()('<span>').text(txt).addClass('active').addClass('target');
+        if (isBlock(active)) {
+            clearActive();
+            clearTarget();
+            active.prepend(span);
+            m.op([], addto(span, {
+                "AddChars": txt
+            }));
+        }
+        else if (isChar(active)) {
+            clearActive();
+            clearTarget();
+            span.insertAfter(active);
+            m.op([], addto(span, {
+                "AddChars": txt
+            }));
+        }
+    });
     __WEBPACK_IMPORTED_MODULE_1_jquery___default()(document).on('keydown', function (e) {
         if (__WEBPACK_IMPORTED_MODULE_1_jquery___default()(e.target).closest('.modal').length) {
             return;
         }
         var active = getActive();
         var target = getTarget();
-        if (active && !active.parents('.mote').is(m)) {
+        if (active && !active.parents('.mote').is(m.$elem)) {
             return;
         }
         console.log('KEY:', e.keyCode);
-        // enter
-        // if (e.keyCode == 13) {
-        //   if (active) {
-        //     var tag = prm("Tag name:", "p");
-        //     if (tag) {
-        //       var out = active.nextAll().add(active);
-        //       var parent = active.parent();
-        //       var newparent = $('<div>').attr('data-tag', tag).insertAfter(parent);
-        //       newparent.append(out);
-        //       // TODO what in OP form
-        //     }
-        //   }
-        //   return false;
-        // }
         // command+,
         if (e.keyCode == 188 && e.metaKey) {
-            // if (isBlock(active)) {
-            __WEBPACK_IMPORTED_MODULE_2_bootbox___default.a.prompt({
-                title: "Wrap selected in tag:",
-                value: "p",
-                callback: function (tag) {
-                    if (tag) {
-                        var attrs = intoAttrs(tag);
-                        var out = active.nextAll().add(active).not(__WEBPACK_IMPORTED_MODULE_1_jquery___default()('.target').nextAll());
-                        clearActive();
-                        clearTarget();
-                        out.wrapAll(newElem(attrs));
-                        active = out.parent().addClass('active').addClass('target');
-                        op([], addto(active, {
-                            "AddGroup": [attrs, [
-                                    {
-                                        "AddSkip": out.length
-                                    }
-                                ]],
-                        }));
-                    }
-                },
-            }).on("shown.bs.modal", function () {
-                __WEBPACK_IMPORTED_MODULE_1_jquery___default()(this).find('input').select();
-            });
-            // } else {
-            //   alert('Not implemented?')
-            // }
+            wrapContent();
             return false;
         }
         // command+.
         if (e.keyCode == 190 && e.metaKey) {
-            if (active) {
-                __WEBPACK_IMPORTED_MODULE_2_bootbox___default.a.prompt({
-                    title: "Rename tag group:",
-                    value: "p",
-                    callback: function (tag) {
-                        if (tag) {
-                            var attrs = intoAttrs(tag);
-                            op(delto(active, {
-                                "DelGroup": [
-                                    {
-                                        "DelSkip": active.children().length
-                                    }
-                                ],
-                            }), addto(active, {
-                                "AddGroup": [attrs, [
-                                        {
-                                            "AddSkip": active.children().length
-                                        }
-                                    ]],
-                            }));
-                            modifyElem(active, attrs);
-                            //
-                            // var out = active.nextAll().add(active).not($('.target').nextAll());
-                            // clearActive();
-                            // clearTarget();
-                            // out.wrapAll($('<div>').attr('data-tag', tag));
-                            // active = out.parent().addClass('active').addClass('target');
-                            // op([], addto(active,
-                            //   {
-                            //     "variant": "AddGroup",
-                            //     "fields": [{"tag": tag}, [
-                            //       {
-                            //         "variant": "AddSkip",
-                            //         "fields": [out.length]
-                            //       }
-                            //     ]],
-                            //   }
-                            // ));
-                        }
-                    },
-                }).on("shown.bs.modal", function () {
-                    __WEBPACK_IMPORTED_MODULE_1_jquery___default()(this).find('input').select();
-                });
-            }
+            renameBlock();
             return false;
         }
         if (e.keyCode == 8) {
             if (e.shiftKey) {
-                // Delete group while saving contents.
-                if (isBlock(active)) {
-                    clearActive();
-                    clearTarget();
-                    op(delto(active, {
-                        "DelGroup": [
-                            {
-                                "DelSkip": active.children().length
-                            }
-                        ],
-                    }), []);
-                    var first = active.children().first();
-                    var last = active.children().last();
-                    if (active.contents().length) {
-                        active.contents().unwrap();
-                    }
-                    else {
-                        active.remove();
-                    }
-                    active = first.addClass('active')[0] ? first : null;
-                    last.addClass('target');
-                }
+                deleteBlockPreservingContent();
             }
             else if (e.metaKey) {
-                // Delete whole block.
-                if (isBlock(active)) {
-                    op(delto(active, {
-                        "DelGroupAll": null,
-                    }), []);
-                    active.remove();
-                    active = null;
-                    clearActive();
-                    clearTarget();
-                }
+                deleteBlock();
             }
             else {
-                // Delete characters.
-                if (isChar(active)) {
-                    clearActive();
-                    clearTarget();
-                    op(delto(active, {
-                        "DelChars": 1,
-                    }), []);
-                    var prev = active.prev();
-                    var dad = active.parent();
-                    active.remove();
-                    active = prev[0] ? prev : dad[0] ? dad : null;
-                    active.addClass('active').addClass('target');
-                }
+                deleteChars();
             }
             return false;
         }
         // <enter>
         if (e.keyCode == 13) {
             if (e.shiftKey && isBlock(active)) {
-                __WEBPACK_IMPORTED_MODULE_2_bootbox___default.a.prompt({
-                    title: "New tag to add after:",
-                    value: active.data('tag').toLowerCase(),
-                    callback: function (tag) {
-                        if (tag) {
-                            clearActive();
-                            clearTarget();
-                            newElem({ tag: tag })
-                                .insertAfter(active)
-                                .addClass('active')
-                                .addClass('target');
-                            op([], addto(active.next(), {
-                                "AddGroup": [{ "tag": tag }, []],
-                            }));
-                        }
-                    }
-                }).on("shown.bs.modal", function () {
-                    __WEBPACK_IMPORTED_MODULE_1_jquery___default()(this).find('input').select();
-                });
+                addBlockAfter();
             }
             else if (!e.shiftKey) {
-                __WEBPACK_IMPORTED_MODULE_2_bootbox___default.a.prompt({
-                    title: "New tag to split this into:",
-                    value: active.parent().data('tag').toLowerCase(),
-                    callback: function (tag) {
-                        if (tag) {
-                            var prev = active.prevAll().add(active);
-                            var next = active.nextAll();
-                            var parent = active.parent();
-                            var operation = [delto(parent, [
-                                    {
-                                        "DelGroup": [
-                                            {
-                                                "DelSkip": prev.length + next.length
-                                            }
-                                        ],
-                                    },
-                                ]), addto(parent, [
-                                    {
-                                        "AddGroup": [{ "tag": parent.data('tag') }, [
-                                                {
-                                                    "AddSkip": prev.length
-                                                }
-                                            ]],
-                                    },
-                                    {
-                                        "AddGroup": [{ "tag": tag }, [
-                                                {
-                                                    "AddSkip": next.length
-                                                }
-                                            ]],
-                                    }
-                                ])];
-                            clearActive();
-                            clearTarget();
-                            console.log(prev);
-                            prev.wrapAll(newElem({ tag: parent.data('tag') }));
-                            next.wrapAll(newElem({ tag: tag }).addClass('active').addClass('target'));
-                            parent.contents().unwrap();
-                            op(operation[0], operation[1]);
-                        }
-                    },
-                }).on("shown.bs.modal", function () {
-                    __WEBPACK_IMPORTED_MODULE_1_jquery___default()(this).find('input').select();
-                });
+                splitBlock();
             }
         }
         // Arrow keys
@@ -10806,42 +10812,42 @@ function init(m) {
             // left
             if (keyCode == 37) {
                 if (active.prev()[0]) {
-                    var prev_1 = active.prev()[0];
+                    var prev = active.prev()[0];
                     clearActive();
                     clearTarget();
-                    __WEBPACK_IMPORTED_MODULE_1_jquery___default()(prev_1).addClass('active').addClass('target');
+                    __WEBPACK_IMPORTED_MODULE_1_jquery___default()(prev).addClass('active').addClass('target');
                 }
             }
             // right
             if (keyCode == 39) {
                 if (active.next()[0]) {
-                    var prev_2 = active.next()[0];
+                    var prev = active.next()[0];
                     clearActive();
                     clearTarget();
-                    __WEBPACK_IMPORTED_MODULE_1_jquery___default()(prev_2).addClass('active').addClass('target');
+                    __WEBPACK_IMPORTED_MODULE_1_jquery___default()(prev).addClass('active').addClass('target');
                 }
             }
             // up
             if (keyCode == 38) {
                 if (active.parent()[0] && !active.parent().hasClass('mote')) {
-                    var prev_3 = active.parent()[0];
+                    var prev = active.parent()[0];
                     clearActive();
                     clearTarget();
-                    __WEBPACK_IMPORTED_MODULE_1_jquery___default()(prev_3).addClass('active').addClass('target');
+                    __WEBPACK_IMPORTED_MODULE_1_jquery___default()(prev).addClass('active').addClass('target');
                 }
             }
             // down
             if (keyCode == 40) {
                 if (active.children()[0]) {
-                    var prev_4 = active.children()[0];
+                    var prev = active.children()[0];
                     clearActive();
                     clearTarget();
-                    __WEBPACK_IMPORTED_MODULE_1_jquery___default()(prev_4).addClass('active').addClass('target');
+                    __WEBPACK_IMPORTED_MODULE_1_jquery___default()(prev).addClass('active').addClass('target');
                 }
             }
         }
     });
-    return ophistory;
+    return m.ophistory;
 }
 var m1 = __WEBPACK_IMPORTED_MODULE_1_jquery___default()('#mote-1');
 var m2 = __WEBPACK_IMPORTED_MODULE_1_jquery___default()('#mote-2');
