@@ -14,13 +14,13 @@ function modifyElem(elem, attrs) {
     .attr('class', attrs.class || '');
 }
 
-function serializeAttrs(elem) {
+function serializeAttrs(elem: JQuery) {
   return {
     "tag": String(elem.attr('data-tag') || ''),
   };
 }
 
-function intoAttrs(str) {
+function intoAttrs(str: string) {
   if (str == 'i') {
     return {
       "tag": "span",
@@ -113,11 +113,11 @@ function getTarget() {
   return a[0] ? a : null;
 }
 
-function isBlock ($active) {
+function isBlock ($active: JQuery) {
   return $active && $active[0].tagName == 'DIV';
 }
 
-function isChar ($active) {
+function isChar ($active: JQuery) {
   return $active && $active[0].tagName == 'SPAN';
 }
 
@@ -133,110 +133,47 @@ function clearTarget () {
   $(document).find('.target').removeClass('target');
 }
 
-function init (m) {
-
-  function serialize (parent) {
-    if (!parent) {
-      parent = m[0];
-    }
-    var out = []
-    $(parent).children().each(function () {
-      if ($(this).is('div')) {
-        out.push({
-          "DocGroup": [
-            serializeAttrs($(this)),
-            serialize(this),
-          ],
-        });
-      } else {
-        var txt = this.innerText
-        if (Object.keys(out[out.length - 1] || {})[0] == 'DocChars') {
-          txt = out.pop().DocChars + txt;
-        }
-        out.push({
-          "DocChars": txt
-        });
+function serialize (parent) {
+  var out = []
+  $(parent).children().each(function () {
+    if ($(this).is('div')) {
+      out.push({
+        "DocGroup": [
+          serializeAttrs($(this)),
+          serialize(this),
+        ],
+      });
+    } else {
+      var txt = this.innerText
+      if (Object.keys(out[out.length - 1] || {})[0] == 'DocChars') {
+        txt = out.pop().DocChars + txt;
       }
-    })
-    return out;
+      out.push({
+        "DocChars": txt
+      });
+    }
+  })
+  return out;
+}
+
+class Editor {
+  $elem: JQuery;
+  ophistory;
+
+  constructor($elem: JQuery) {
+    this.$elem = $elem;
+    this.ophistory = [];
   }
 
-  m.on('click', 'span, div', function (e) {
-    var active = getActive();
-    var target = getTarget();
-
-    if (e.shiftKey) {
-      if (active && active.nextAll().add(active).is(this)) {
-        clearTarget();
-        $(this).addClass('target');
-      }
-    } else {
-      clearActive();
-      clearTarget();
-      $(this).addClass('active').addClass('target')
-      active = $(this);
-    }
-    return false;
-  })
-
-  $(document).on('keypress', function (e) {
-    if ($(e.target).closest('.modal').length) {
-      return;
-    }
-
-    var active = getActive();
-    var target = getTarget();
-
-    if (active && !active.parents('.mote').is(m)) {
-      return
-    }
-
-    if ([13, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
-      return;
-    }
-
-    if (e.metaKey) {
-      return;
-    }
-
-    var txt = String.fromCharCode(e.charCode);
-    var span = $('<span>').text(txt).addClass('active').addClass('target');
-    if (isBlock(active)) {
-      clearActive();
-      clearTarget();
-      active.prepend(span);
-      active = span;
-
-      op([], addto(active,
-        {
-          "AddChars": txt
-        }
-      ));
-    } else if (isChar(active)) {
-      clearActive();
-      clearTarget();
-      span.insertAfter(active);
-      active = span;
-
-      op([], addto(active,
-        {
-          "AddChars": txt
-        }
-      ));
-    }
-  })
-
-  var ophistory = []
-
-  // Confirm that the operation is a valid one.
-  function op (d, a) {
+  op(d, a) {
     console.log(JSON.stringify([d, a]));
-    ophistory.push([d, a]);
-    setTimeout(function () {
-      var match = serialize(null);
+    this.ophistory.push([d, a]);
+    setTimeout(() => {
+      // Serialize by default the root element
+      var match = serialize(this.$elem[0]);
       // test
       var packet = [
-        ophistory,
+        this.ophistory,
         match
       ];
       console.log(JSON.stringify(packet));
@@ -257,185 +194,338 @@ function init (m) {
       });
     })
   }
+}
 
-  $(document).on('keydown', function (e) {
+function init ($elem) {
+
+  let m = new Editor($elem);
+
+  function wrapContent() {
+    let active = getActive();
+    let target = getTarget();
+
+    // if (isBlock(active)) {
+      bootbox.prompt({
+        title: "Wrap selected in tag:",
+        value: "p",
+        callback: (tag) => {
+          if (tag) {
+            var attrs = intoAttrs(tag);
+
+            var out = active.nextAll().add(active).not($('.target').nextAll());
+            clearActive();
+            clearTarget();
+            out.wrapAll(newElem(attrs));
+            active = out.parent().addClass('active').addClass('target');
+            m.op([], addto(active,
+              {
+                "AddGroup": [attrs, [
+                  {
+                    "AddSkip": out.length
+                  }
+                ]],
+              }
+            ));
+          }
+        },
+      }).on("shown.bs.modal", function() {
+        $(this).find('input').select();
+      });
+    // } else {
+    //   alert('Not implemented?')
+    // }
+  }
+
+  function renameBlock() {
+    let active = getActive();
+    let target = getTarget();
+
+    if (active) {
+      bootbox.prompt({
+        title: "Rename tag group:",
+        value: "p",
+        callback: (tag) => {
+          if (tag) {
+            let attrs = intoAttrs(tag);
+
+            m.op(delto(active,
+              {
+                "DelGroup": [
+                  {
+                    "DelSkip": active.children().length
+                  }
+                ],
+              }
+            ), addto(active,
+              {
+                "AddGroup": [attrs, [
+                  {
+                    "AddSkip": active.children().length
+                  }
+                ]],
+              }
+            ));
+
+            modifyElem(active, attrs);
+          }
+        },
+      }).on("shown.bs.modal", function() {
+        $(this).find('input').select();
+      });
+    }
+  }
+
+  function deleteBlockPreservingContent() {
+    let active = getActive();
+    let target = getTarget();
+
+    // Delete group while saving contents.
+    if (isBlock(active)) {
+      clearActive();
+      clearTarget();
+
+      m.op(delto(active,
+        {
+          "DelGroup": [
+            {
+              "DelSkip": active.children().length
+            }
+          ],
+        }
+      ), []);
+
+      var first = active.children().first();
+      var last = active.children().last();
+      if (active.contents().length) {
+        active.contents().unwrap();
+      } else {
+        active.remove();
+      }
+      active = first.addClass('active')[0] ? first : null;
+      last.addClass('target');
+    }
+  }
+
+  function deleteBlock() {
+    const active = getActive();
+    const target = getTarget();
+
+    // Delete whole block.
+    if (isBlock(active)) {
+      m.op(delto(active,
+        {
+          "DelGroupAll": null,
+        }
+      ), []);
+
+      active.remove();
+      clearActive();
+      clearTarget();
+    }
+  }
+
+  function deleteChars() {
+    const active = getActive();
+    const target = getTarget();
+
+    // Delete characters.
+    if (isChar(active)) {
+      clearActive();
+      clearTarget();
+
+      m.op(delto(active,
+        {
+          "DelChars": 1,
+        }
+      ), []);
+
+      var prev = active.prev();
+      var dad = active.parent();
+      active.remove();
+      $(prev[0] ? prev : dad[0] ? dad : null)
+        .addClass('active')
+        .addClass('target');
+    }
+  }
+
+  function addBlockAfter() {
+    const active = getActive();
+    const target = getTarget();
+
+    bootbox.prompt({
+      title: "New tag to add after:",
+      value: active.data('tag').toLowerCase(),
+      callback: function (tag) {
+        if (tag) {
+          clearActive();
+          clearTarget();
+
+          newElem({tag: tag})
+            .insertAfter(active)
+            .addClass('active')
+            .addClass('target');
+
+          m.op([], addto(active.next(),
+            {
+              "AddGroup": [{"tag": tag}, []],
+            }
+          ));
+        }
+      }
+    }).on("shown.bs.modal", function() {
+      $(this).find('input').select();
+    });
+  }
+
+  function splitBlock() {
+    const active = getActive();
+    const target = getTarget();
+
+    bootbox.prompt({
+      title: "New tag to split this into:",
+      value: active.parent().data('tag').toLowerCase(),
+      callback: function (tag) {
+        if (tag) {
+          var prev = active.prevAll().add(active);
+          var next = active.nextAll();
+
+          var parent = active.parent();
+
+          var operation = [delto(parent, [
+            {
+              "DelGroup": [
+                {
+                  "DelSkip": prev.length + next.length
+                }
+              ],
+            },
+          ]), addto(parent, [
+            {
+              "AddGroup": [{"tag": parent.data('tag')}, [
+                {
+                  "AddSkip": prev.length
+                }
+              ]],
+            },
+            {
+              "AddGroup": [{"tag": tag}, [
+                {
+                  "AddSkip": next.length
+                }
+              ]],
+            }
+          ])];
+
+          clearActive();
+          clearTarget();
+
+          console.log(prev);
+          prev.wrapAll(newElem({tag: parent.data('tag')}));
+          next.wrapAll(newElem({tag: tag}).addClass('active').addClass('target'));
+          parent.contents().unwrap();
+
+          m.op(operation[0], operation[1]);
+        }
+      },
+    }).on("shown.bs.modal", function() {
+      $(this).find('input').select();
+    });
+  }
+
+  m.$elem.on('click', 'span, div', function (e) {
+    const active = getActive();
+    const target = getTarget();
+
+    if (e.shiftKey) {
+      if (active && active.nextAll().add(active).is(this)) {
+        clearTarget();
+        $(this).addClass('target');
+      }
+    } else {
+      clearActive();
+      clearTarget();
+      $(this).addClass('active').addClass('target')
+    }
+    return false;
+  })
+
+  $(document).on('keypress', (e) => {
     if ($(e.target).closest('.modal').length) {
       return;
     }
 
-    var active = getActive();
-    var target = getTarget();
+    const active = getActive();
+    const target = getTarget();
 
-    if (active && !active.parents('.mote').is(m)) {
+    if (active && !active.parents('.mote').is(m.$elem)) {
+      return
+    }
+
+    if ([13, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+      return;
+    }
+
+    if (e.metaKey) {
+      return;
+    }
+
+    let txt = String.fromCharCode(e.charCode);
+    let span = $('<span>').text(txt).addClass('active').addClass('target');
+    if (isBlock(active)) {
+      clearActive();
+      clearTarget();
+      active.prepend(span);
+
+      m.op([], addto(span,
+        {
+          "AddChars": txt
+        }
+      ));
+    } else if (isChar(active)) {
+      clearActive();
+      clearTarget();
+      span.insertAfter(active);
+
+      m.op([], addto(span,
+        {
+          "AddChars": txt
+        }
+      ));
+    }
+  });
+
+  $(document).on('keydown', (e) => {
+    if ($(e.target).closest('.modal').length) {
+      return;
+    }
+
+    const active = getActive();
+    const target = getTarget();
+
+    if (active && !active.parents('.mote').is(m.$elem)) {
       return
     }
 
     console.log('KEY:', e.keyCode);
 
-    // enter
-    // if (e.keyCode == 13) {
-    //   if (active) {
-    //     var tag = prm("Tag name:", "p");
-    //     if (tag) {
-    //       var out = active.nextAll().add(active);
-    //       var parent = active.parent();
-    //       var newparent = $('<div>').attr('data-tag', tag).insertAfter(parent);
-    //       newparent.append(out);
-    //       // TODO what in OP form
-    //     }
-    //   }
-    //   return false;
-    // }
-
     // command+,
     if (e.keyCode == 188 && e.metaKey) {
-      // if (isBlock(active)) {
-        bootbox.prompt({
-          title: "Wrap selected in tag:",
-          value: "p",
-          callback: function (tag) {
-            if (tag) {
-              var attrs = intoAttrs(tag);
-
-              var out = active.nextAll().add(active).not($('.target').nextAll());
-              clearActive();
-              clearTarget();
-              out.wrapAll(newElem(attrs));
-              active = out.parent().addClass('active').addClass('target');
-              op([], addto(active,
-                {
-                  "AddGroup": [attrs, [
-                    {
-                      "AddSkip": out.length
-                    }
-                  ]],
-                }
-              ));
-            }
-          },
-        }).on("shown.bs.modal", function() {
-          $(this).find('input').select();
-        });
-      // } else {
-      //   alert('Not implemented?')
-      // }
+      wrapContent();
       return false;
     }
 
     // command+.
     if (e.keyCode == 190 && e.metaKey) {
-      if (active) {
-        bootbox.prompt({
-          title: "Rename tag group:",
-          value: "p",
-          callback: function (tag) {
-            if (tag) {
-              let attrs = intoAttrs(tag);
-
-              op(delto(active,
-                {
-                  "DelGroup": [
-                    {
-                      "DelSkip": active.children().length
-                    }
-                  ],
-                }
-              ), addto(active,
-                {
-                  "AddGroup": [attrs, [
-                    {
-                      "AddSkip": active.children().length
-                    }
-                  ]],
-                }
-              ));
-
-              modifyElem(active, attrs);
-
-              //
-              // var out = active.nextAll().add(active).not($('.target').nextAll());
-              // clearActive();
-              // clearTarget();
-              // out.wrapAll($('<div>').attr('data-tag', tag));
-              // active = out.parent().addClass('active').addClass('target');
-              // op([], addto(active,
-              //   {
-              //     "variant": "AddGroup",
-              //     "fields": [{"tag": tag}, [
-              //       {
-              //         "variant": "AddSkip",
-              //         "fields": [out.length]
-              //       }
-              //     ]],
-              //   }
-              // ));
-            }
-          },
-        }).on("shown.bs.modal", function() {
-          $(this).find('input').select();
-        });
-      }
+      renameBlock();
       return false;
     }
     if (e.keyCode == 8) {
       if (e.shiftKey) {
-        // Delete group while saving contents.
-        if (isBlock(active)) {
-          clearActive();
-          clearTarget();
-
-          op(delto(active,
-            {
-              "DelGroup": [
-                {
-                  "DelSkip": active.children().length
-                }
-              ],
-            }
-          ), []);
-
-          var first = active.children().first();
-          var last = active.children().last();
-          if (active.contents().length) {
-            active.contents().unwrap();
-          } else {
-            active.remove();
-          }
-          active = first.addClass('active')[0] ? first : null;
-          last.addClass('target');
-        }
+        deleteBlockPreservingContent();
       } else if (e.metaKey) {
-        // Delete whole block.
-        if (isBlock(active)) {
-          op(delto(active,
-            {
-              "DelGroupAll": null,
-            }
-          ), []);
-
-          active.remove();
-          active = null;
-          clearActive();
-          clearTarget();
-        }
+        deleteBlock();
       } else {
-        // Delete characters.
-        if (isChar(active)) {
-          clearActive();
-          clearTarget();
-
-          op(delto(active,
-            {
-              "DelChars": 1,
-            }
-          ), []);
-
-          var prev = active.prev();
-          var dad = active.parent();
-          active.remove();
-          active = prev[0] ? prev : dad[0] ? dad : null;
-          active.addClass('active').addClass('target');
-        }
+        deleteChars();
       }
 
       return false;
@@ -444,79 +534,9 @@ function init (m) {
     // <enter>
     if (e.keyCode == 13) {
       if (e.shiftKey && isBlock(active)) {
-        bootbox.prompt({
-          title: "New tag to add after:",
-          value: active.data('tag').toLowerCase(),
-          callback: function (tag) {
-            if (tag) {
-              clearActive();
-              clearTarget();
-
-              newElem({tag: tag})
-                .insertAfter(active)
-                .addClass('active')
-                .addClass('target');
-
-              op([], addto(active.next(),
-                {
-                  "AddGroup": [{"tag": tag}, []],
-                }
-              ));
-            }
-          }
-        }).on("shown.bs.modal", function() {
-          $(this).find('input').select();
-        });
+        addBlockAfter();
       } else if (!e.shiftKey) {
-        bootbox.prompt({
-          title: "New tag to split this into:",
-          value: active.parent().data('tag').toLowerCase(),
-          callback: function (tag) {
-            if (tag) {
-              var prev = active.prevAll().add(active);
-              var next = active.nextAll();
-
-              var parent = active.parent();
-
-              var operation = [delto(parent, [
-                {
-                  "DelGroup": [
-                    {
-                      "DelSkip": prev.length + next.length
-                    }
-                  ],
-                },
-              ]), addto(parent, [
-                {
-                  "AddGroup": [{"tag": parent.data('tag')}, [
-                    {
-                      "AddSkip": prev.length
-                    }
-                  ]],
-                },
-                {
-                  "AddGroup": [{"tag": tag}, [
-                    {
-                      "AddSkip": next.length
-                    }
-                  ]],
-                }
-              ])];
-
-              clearActive();
-              clearTarget();
-
-              console.log(prev);
-              prev.wrapAll(newElem({tag: parent.data('tag')}));
-              next.wrapAll(newElem({tag: tag}).addClass('active').addClass('target'));
-              parent.contents().unwrap();
-
-              op(operation[0], operation[1]);
-            }
-          },
-        }).on("shown.bs.modal", function() {
-          $(this).find('input').select();
-        });
+        splitBlock();
       }
     }
 
@@ -524,7 +544,7 @@ function init (m) {
     if ([37, 38, 39, 40].indexOf(e.keyCode) > -1) {
       e.preventDefault();
 
-      var keyCode = e.keyCode;
+      const keyCode = e.keyCode;
 
       // left
       if (keyCode == 37) {
@@ -566,7 +586,7 @@ function init (m) {
     }
   })
 
-  return ophistory;
+  return m.ophistory;
 }
 
 var m1 = $('#mote-1');
@@ -575,12 +595,12 @@ var m2 = $('#mote-2');
 var ops_a = init(m1);
 var ops_b = init(m2);
 
-$.get('/api/hello', function (data) {
+$.get('/api/hello', (data) => {
   m1.empty().append(load(data));
   m2.empty().append(load(data));
 })
 
-$('#action-reset').on('click', function () {
+$('#action-reset').on('click', () => {
   $.ajax('/api/reset', {
     contentType : 'application/json',
     type : 'POST',
@@ -595,8 +615,8 @@ $('#action-reset').on('click', function () {
   })
 });
 
-$('#action-sync').on('click', function () {
-  var packet = [
+$('#action-sync').on('click', () => {
+  let packet = [
     ops_a,
     ops_b
   ];
