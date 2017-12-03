@@ -12,9 +12,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/bootbox": "^4.4.35",
-    "@types/bootstrap": "^3.3.36",
-    "@types/jquery": "^3.2.16",
     "css-loader": "^0.28.7",
     "file-loader": "^1.1.5",
     "style-loader": "^0.19.0",
@@ -23,8 +20,13 @@
     "webpack": "^3.9.1"
   },
   "dependencies": {
+    "@types/bootbox": "^4.4.35",
+    "@types/bootstrap": "^3.3.36",
+    "@types/jquery": "^3.2.16",
     "bootbox": "^4.4.0",
     "bootstrap": "^3.3.7",
-    "jquery": "^3.2.1"
+    "jquery": "^3.2.1",
+    "node-sass": "^4.7.2",
+    "sass-loader": "^6.0.6"
   }
 }

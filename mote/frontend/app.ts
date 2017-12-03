@@ -1,8 +1,12 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './mote.scss';
 
 import $ from 'jquery';
 import bootstrap from 'bootstrap';
 import bootbox from 'bootbox';
+
+// Consume bootstrap so bootbox works.
+bootstrap;
 
 function newElem(attrs) {
   return modifyElem($('<div>'), attrs);
@@ -39,6 +43,7 @@ function intoAttrs(str: string) {
 }
 
 
+// Creates an HTML tree from a document tree.
 function load (el) {
   // TODO act like doc
   // console.log(el);
@@ -196,241 +201,252 @@ class Editor {
   }
 }
 
-function init ($elem) {
 
-  let m = new Editor($elem);
+function wrapContent(m: Editor) {
+  let active = getActive();
+  let target = getTarget();
 
-  function wrapContent() {
-    let active = getActive();
-    let target = getTarget();
-
-    // if (isBlock(active)) {
-      bootbox.prompt({
-        title: "Wrap selected in tag:",
-        value: "p",
-        callback: (tag) => {
-          if (tag) {
-            var attrs = intoAttrs(tag);
-
-            var out = active.nextAll().add(active).not($('.target').nextAll());
-            clearActive();
-            clearTarget();
-            out.wrapAll(newElem(attrs));
-            active = out.parent().addClass('active').addClass('target');
-            m.op([], addto(active,
-              {
-                "AddGroup": [attrs, [
-                  {
-                    "AddSkip": out.length
-                  }
-                ]],
-              }
-            ));
-          }
-        },
-      }).on("shown.bs.modal", function() {
-        $(this).find('input').select();
-      });
-    // } else {
-    //   alert('Not implemented?')
-    // }
-  }
-
-  function renameBlock() {
-    let active = getActive();
-    let target = getTarget();
-
-    if (active) {
-      bootbox.prompt({
-        title: "Rename tag group:",
-        value: "p",
-        callback: (tag) => {
-          if (tag) {
-            let attrs = intoAttrs(tag);
-
-            m.op(delto(active,
-              {
-                "DelGroup": [
-                  {
-                    "DelSkip": active.children().length
-                  }
-                ],
-              }
-            ), addto(active,
-              {
-                "AddGroup": [attrs, [
-                  {
-                    "AddSkip": active.children().length
-                  }
-                ]],
-              }
-            ));
-
-            modifyElem(active, attrs);
-          }
-        },
-      }).on("shown.bs.modal", function() {
-        $(this).find('input').select();
-      });
-    }
-  }
-
-  function deleteBlockPreservingContent() {
-    let active = getActive();
-    let target = getTarget();
-
-    // Delete group while saving contents.
-    if (isBlock(active)) {
-      clearActive();
-      clearTarget();
-
-      m.op(delto(active,
-        {
-          "DelGroup": [
-            {
-              "DelSkip": active.children().length
-            }
-          ],
-        }
-      ), []);
-
-      var first = active.children().first();
-      var last = active.children().last();
-      if (active.contents().length) {
-        active.contents().unwrap();
-      } else {
-        active.remove();
-      }
-      active = first.addClass('active')[0] ? first : null;
-      last.addClass('target');
-    }
-  }
-
-  function deleteBlock() {
-    const active = getActive();
-    const target = getTarget();
-
-    // Delete whole block.
-    if (isBlock(active)) {
-      m.op(delto(active,
-        {
-          "DelGroupAll": null,
-        }
-      ), []);
-
-      active.remove();
-      clearActive();
-      clearTarget();
-    }
-  }
-
-  function deleteChars() {
-    const active = getActive();
-    const target = getTarget();
-
-    // Delete characters.
-    if (isChar(active)) {
-      clearActive();
-      clearTarget();
-
-      m.op(delto(active,
-        {
-          "DelChars": 1,
-        }
-      ), []);
-
-      var prev = active.prev();
-      var dad = active.parent();
-      active.remove();
-      $(prev[0] ? prev : dad[0] ? dad : null)
-        .addClass('active')
-        .addClass('target');
-    }
-  }
-
-  function addBlockAfter() {
-    const active = getActive();
-    const target = getTarget();
-
+  // if (isBlock(active)) {
     bootbox.prompt({
-      title: "New tag to add after:",
-      value: active.data('tag').toLowerCase(),
-      callback: function (tag) {
+      title: "Wrap selected in tag:",
+      value: "p",
+      callback: (tag) => {
         if (tag) {
+          var attrs = intoAttrs(tag);
+
+          var out = active.nextAll().add(active).not($('.target').nextAll());
           clearActive();
           clearTarget();
-
-          newElem({tag: tag})
-            .insertAfter(active)
-            .addClass('active')
-            .addClass('target');
-
-          m.op([], addto(active.next(),
+          out.wrapAll(newElem(attrs));
+          active = out.parent().addClass('active').addClass('target');
+          m.op([], addto(active,
             {
-              "AddGroup": [{"tag": tag}, []],
+              "AddGroup": [attrs, [
+                {
+                  "AddSkip": out.length
+                }
+              ]],
             }
           ));
         }
-      }
+      },
     }).on("shown.bs.modal", function() {
       $(this).find('input').select();
     });
-  }
+  // } else {
+  //   alert('Not implemented?')
+  // }
+}
 
-  function splitBlock() {
-    const active = getActive();
-    const target = getTarget();
+function renameBlock(m: Editor) {
+  let active = getActive();
+  let target = getTarget();
 
+  if (active) {
     bootbox.prompt({
-      title: "New tag to split this into:",
-      value: active.parent().data('tag').toLowerCase(),
-      callback: function (tag) {
+      title: "Rename tag group:",
+      value: "p",
+      callback: (tag) => {
         if (tag) {
-          var prev = active.prevAll().add(active);
-          var next = active.nextAll();
+          let attrs = intoAttrs(tag);
 
-          var parent = active.parent();
-
-          var operation = [delto(parent, [
+          m.op(delto(active,
             {
               "DelGroup": [
                 {
-                  "DelSkip": prev.length + next.length
+                  "DelSkip": active.children().length
                 }
               ],
-            },
-          ]), addto(parent, [
+            }
+          ), addto(active,
             {
-              "AddGroup": [{"tag": parent.data('tag')}, [
+              "AddGroup": [attrs, [
                 {
-                  "AddSkip": prev.length
-                }
-              ]],
-            },
-            {
-              "AddGroup": [{"tag": tag}, [
-                {
-                  "AddSkip": next.length
+                  "AddSkip": active.children().length
                 }
               ]],
             }
-          ])];
+          ));
 
-          clearActive();
-          clearTarget();
-
-          console.log(prev);
-          prev.wrapAll(newElem({tag: parent.data('tag')}));
-          next.wrapAll(newElem({tag: tag}).addClass('active').addClass('target'));
-          parent.contents().unwrap();
-
-          m.op(operation[0], operation[1]);
+          modifyElem(active, attrs);
         }
       },
     }).on("shown.bs.modal", function() {
       $(this).find('input').select();
     });
   }
+}
+
+function deleteBlockPreservingContent(m: Editor) {
+  let active = getActive();
+  let target = getTarget();
+
+  // Delete group while saving contents.
+  if (isBlock(active)) {
+    clearActive();
+    clearTarget();
+
+    m.op(delto(active,
+      {
+        "DelGroup": [
+          {
+            "DelSkip": active.children().length
+          }
+        ],
+      }
+    ), []);
+
+    var first = active.children().first();
+    var last = active.children().last();
+    if (active.contents().length) {
+      active.contents().unwrap();
+    } else {
+      active.remove();
+    }
+    active = first.addClass('active')[0] ? first : null;
+    last.addClass('target');
+  }
+}
+
+function deleteBlock(m: Editor) {
+  const active = getActive();
+  const target = getTarget();
+
+  // Delete whole block.
+  if (isBlock(active)) {
+    m.op(delto(active,
+      {
+        "DelGroupAll": null,
+      }
+    ), []);
+
+    active.remove();
+    clearActive();
+    clearTarget();
+  }
+}
+
+function deleteChars(m: Editor) {
+  const active = getActive();
+  const target = getTarget();
+
+  // Delete characters.
+  if (isChar(active)) {
+    clearActive();
+    clearTarget();
+
+    m.op(delto(active,
+      {
+        "DelChars": 1,
+      }
+    ), []);
+
+    var prev = active.prev();
+    var dad = active.parent();
+    active.remove();
+    $(prev[0] ? prev : dad[0] ? dad : null)
+      .addClass('active')
+      .addClass('target');
+  }
+}
+
+function addBlockAfter(m: Editor) {
+  const active = getActive();
+  const target = getTarget();
+
+  bootbox.prompt({
+    title: "New tag to add after:",
+    value: active.data('tag').toLowerCase(),
+    callback: function (tag) {
+      if (tag) {
+        clearActive();
+        clearTarget();
+
+        newElem({tag: tag})
+          .insertAfter(active)
+          .addClass('active')
+          .addClass('target');
+
+        m.op([], addto(active.next(),
+          {
+            "AddGroup": [{"tag": tag}, []],
+          }
+        ));
+      }
+    }
+  }).on("shown.bs.modal", function() {
+    $(this).find('input').select();
+  });
+}
+
+function splitBlock(m: Editor) {
+  const active = getActive();
+  const target = getTarget();
+
+  bootbox.prompt({
+    title: "New tag to split this into:",
+    value: active.parent().data('tag').toLowerCase(),
+    callback: function (tag) {
+      if (tag) {
+        var prev = active.prevAll().add(active);
+        var next = active.nextAll();
+
+        var parent = active.parent();
+
+        var operation = [delto(parent, [
+          {
+            "DelGroup": [
+              {
+                "DelSkip": prev.length + next.length
+              }
+            ],
+          },
+        ]), addto(parent, [
+          {
+            "AddGroup": [{"tag": parent.data('tag')}, [
+              {
+                "AddSkip": prev.length
+              }
+            ]],
+          },
+          {
+            "AddGroup": [{"tag": tag}, [
+              {
+                "AddSkip": next.length
+              }
+            ]],
+          }
+        ])];
+
+        clearActive();
+        clearTarget();
+
+        console.log(prev);
+        prev.wrapAll(newElem({tag: parent.data('tag')}));
+        next.wrapAll(newElem({tag: tag}).addClass('active').addClass('target'));
+        parent.contents().unwrap();
+
+        m.op(operation[0], operation[1]);
+      }
+    },
+  }).on("shown.bs.modal", function() {
+    $(this).find('input').select();
+  });
+}
+
+function init ($elem) {
+  const m = new Editor($elem);
+
+  // switching button
+  $('<button>Style Switch</button>')
+    .appendTo($elem.prev())
+    .on('click', function () {
+      $elem.toggleClass('theme-mock');
+      $elem.toggleClass('theme-block');    
+    })
+
+  // theme
+  $elem.addClass('theme-block');
 
   m.$elem.on('click', 'span, div', function (e) {
     const active = getActive();
@@ -510,34 +526,38 @@ function init ($elem) {
 
     // command+,
     if (e.keyCode == 188 && e.metaKey) {
-      wrapContent();
+      e.preventDefault();
+      wrapContent(m);
       return false;
     }
 
     // command+.
     if (e.keyCode == 190 && e.metaKey) {
-      renameBlock();
+      e.preventDefault();
+      renameBlock(m);
       return false;
     }
     if (e.keyCode == 8) {
+      e.preventDefault();
       if (e.shiftKey) {
-        deleteBlockPreservingContent();
+        deleteBlockPreservingContent(m);
       } else if (e.metaKey) {
-        deleteBlock();
+        deleteBlock(m);
       } else {
-        deleteChars();
+        deleteChars(m);
       }
-
       return false;
     }
 
     // <enter>
     if (e.keyCode == 13) {
+      e.preventDefault();
       if (e.shiftKey && isBlock(active)) {
-        addBlockAfter();
+        addBlockAfter(m);
       } else if (!e.shiftKey) {
-        splitBlock();
+        splitBlock(m);
       }
+      return false;
     }
 
     // Arrow keys
@@ -548,8 +568,12 @@ function init ($elem) {
 
       // left
       if (keyCode == 37) {
-        if (active.prev()[0]) {
-          let prev = active.prev()[0];
+        let last = active.prevAll().find('span').addBack('span').last();
+        if (!last[0] && serializeAttrs(active.parent()).tag == 'span') {
+          last = active.parent().prevAll().find('span').addBack('span').last();
+        }
+        if (last[0]) {
+          let prev = last[0];
           clearActive();
           clearTarget();
           $(prev).addClass('active').addClass('target')
@@ -557,8 +581,12 @@ function init ($elem) {
       }
       // right
       if (keyCode == 39) {
-        if (active.next()[0]) {
-          let prev = active.next()[0];
+        let next = active.nextAll().find('span').addBack('span').first();
+        if (!next[0] && serializeAttrs(active.parent()).tag == 'span') {
+          next = active.parent().nextAll().find('span').addBack('span').first();
+        }
+        if (next[0]) {
+          let prev = next[0];
           clearActive();
           clearTarget();
           $(prev).addClass('active').addClass('target')
@@ -595,10 +623,10 @@ var m2 = $('#mote-2');
 var ops_a = init(m1);
 var ops_b = init(m2);
 
-$.get('/api/hello', (data) => {
-  m1.empty().append(load(data));
-  m2.empty().append(load(data));
-})
+$.get('/api/hello', data => {
+    m1.empty().append(load(data));
+    m2.empty().append(load(data));
+});
 
 $('#action-reset').on('click', () => {
   $.ajax('/api/reset', {

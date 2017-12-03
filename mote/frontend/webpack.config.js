@@ -9,17 +9,25 @@ module.exports = {
         }),
     ],
     module: {
-        loaders: [
-            { test: /\.css$/, loader: "style-loader!css-loader" },
-            {
-                test   : /\.(ttf|eot|svg|woff2?)(\?[a-z0-9]+)?$/,
-                loader : 'file-loader'
-            },
-            {
-              test: /\.tsx?$/,
-              loader: 'ts-loader',
-              exclude: /node_modules/
-            }
-        ]
+        rules: [{
+            test: /\.scss$/,
+            use: [{
+                loader: "style-loader" // creates style nodes from JS strings 
+            }, {
+                loader: "css-loader" // translates CSS into CommonJS 
+            }, {
+                loader: "sass-loader" // compiles Sass to CSS 
+            }]
+        },
+        { test: /\.css$/, use: [{loader: "style-loader" }, { loader: "css-loader" }] },
+        {
+            test   : /\.(ttf|eot|svg|woff2?)(\?[a-z0-9]+)?$/,
+            use : [{loader: 'file-loader' }],
+        },
+        {
+            test: /\.tsx?$/,
+            use: [{loader: 'ts-loader'}],
+            exclude: /node_modules/
+        }]
     },
 };
