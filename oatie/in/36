@@ -1,0 +1,5 @@
+[DelWithGroup([DelWithGroup([DelSkip(1), DelWithGroup([DelSkip(24)])])])]
+[AddWithGroup([AddWithGroup([AddSkip(1), AddWithGroup([AddSkip(24), AddChars(" This is part of the goals of collaborative editing.")])])])]
+
+[DelWithGroup([DelWithGroup([DelSkip(1), DelWithGroup([DelSkip(6), DelChars(10)])])])]
+[AddWithGroup([AddWithGroup([AddSkip(1), AddWithGroup([AddSkip(6), AddChars("nouns")])])])]

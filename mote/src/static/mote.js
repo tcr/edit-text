@@ -11186,18 +11186,26 @@ function splitBlock(m) {
                                 ]],
                         },
                         {
-                            "AddGroup": [{ "tag": tag }, [
-                                    {
-                                        "AddSkip": next.length
-                                    }
-                                ]],
+                            "AddGroup": [{ "tag": tag },
+                                next.length ?
+                                    [{
+                                            "AddSkip": next.length
+                                        }]
+                                    : []
+                            ],
                         }
                     ])];
                 clearActive();
                 clearTarget();
-                console.log(prev);
-                prev.wrapAll(newElem({ tag: parent.data('tag') }));
-                next.wrapAll(newElem({ tag: tag }).addClass('active').addClass('target'));
+                var newPrev = newElem({ tag: parent.data('tag') });
+                var newNext = newElem({ tag: tag }).addClass('active').addClass('target');
+                prev.wrapAll(newPrev);
+                if (next.length) {
+                    next.wrapAll(newNext);
+                }
+                else {
+                    newNext.insertAfter(parent);
+                }
                 parent.contents().unwrap();
                 m.op(operation[0], operation[1]);
             }
@@ -11248,6 +11256,7 @@ function init($elem) {
         if (active && !active.parents('.mote').is(m.$elem)) {
             return;
         }
+        // Unless the keys are enter or arrow keys, just return.
         if ([13, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
             return;
         }
@@ -11257,20 +11266,24 @@ function init($elem) {
         var txt = String.fromCharCode(e.charCode);
         var span = __WEBPACK_IMPORTED_MODULE_2_jquery___default()('<span>').text(txt).addClass('active').addClass('target');
         if (isBlock(active)) {
+            e.preventDefault();
             clearActive();
             clearTarget();
             active.prepend(span);
             m.op([], addto(span, {
                 "AddChars": txt
             }));
+            return false;
         }
         else if (isChar(active)) {
+            e.preventDefault();
             clearActive();
             clearTarget();
             span.insertAfter(active);
             m.op([], addto(span, {
                 "AddChars": txt
             }));
+            return false;
         }
     });
     __WEBPACK_IMPORTED_MODULE_2_jquery___default()(document).on('keydown', function (e) {
@@ -11311,8 +11324,17 @@ function init($elem) {
         // <enter>
         if (e.keyCode == 13) {
             e.preventDefault();
-            if (e.shiftKey && isBlock(active)) {
-                addBlockAfter(m);
+            if (e.shiftKey) {
+                if (isBlock(active)) {
+                    addBlockAfter(m);
+                }
+                else if (isBlock(active.parent())) {
+                    var newActive = active.parent();
+                    clearActive();
+                    clearTarget();
+                    newActive.addClass('active').addClass('target');
+                    addBlockAfter(m);
+                }
             }
             else if (!e.shiftKey) {
                 splitBlock(m);
@@ -11626,7 +11648,7 @@ exports = module.exports = __webpack_require__(1)(undefined);
 
 
 // module
-exports.push([module.i, "body {\n  font-family: Helvetica;\n  padding: 10px 30px; }\n\nh4 {\n  margin-bottom: 0; }\n\n#clients {\n  width: 100%;\n  border-spacing: 20px;\n  border-collapse: separate; }\n\n#clients td {\n  width: 50%;\n  vertical-align: top; }\n\nbutton {\n  font: inherit;\n  font-size: 0.6em; }\n\n.mote.theme-block {\n  font-family: monospace;\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  /**\n     * targets\n     */\n  /**\n     * span styles\n     */ }\n  .mote.theme-block div {\n    /*border: 1px solid #444;*/\n    background: rgba(0, 0, 0, 0.15);\n    padding: 12px 12px 12px 16px;\n    margin: 8px 0;\n    position: relative;\n    min-height: 14px; }\n    .mote.theme-block div::before {\n      display: block;\n      content: attr(data-tag);\n      opacity: 0.5;\n      background: black;\n      color: white;\n      padding: 2px 4px;\n      width: -webkit-max-content;\n      margin-bottom: 6px;\n      text-align: center; }\n  .mote.theme-block * {\n    clear: both; }\n  .mote.theme-block span {\n    background: #7dc87d;\n    padding: 3px 5px;\n    /*border: 1px solid rgba(0, 0, 0, .3);*/\n    display: inline-block;\n    width: 20px;\n    height: 1.8em;\n    box-sizing: border-box;\n    margin-left: 1px;\n    margin-bottom: 2px;\n    cursor: pointer;\n    white-space: pre; }\n  .mote.theme-block span:hover {\n    -webkit-filter: brightness(150%); }\n  .mote.theme-block .active {\n    background: #98e; }\n  .mote.theme-block span.active,\n  .mote.theme-block span.target {\n    border-right: 3px solid rgba(0, 0, 0, 0.3);\n    margin-right: -1px;\n    width: 21px; }\n  .mote.theme-block div.active,\n  .mote.theme-block div.target {\n    border-bottom: 3px solid rgba(0, 0, 0, 0.3);\n    padding-bottom: 9px; }\n  .mote.theme-block div.active > div {\n    background: #ccc; }\n  .mote.theme-block div[data-tag=\"span\"] {\n    display: inline-block;\n    margin-left: 1px;\n    padding: 4px 6px 1px;\n    margin-bottom: 3px;\n    background: rgba(255, 0, 0, 0.25); }\n    .mote.theme-block div[data-tag=\"span\"].active {\n      margin-bottom: 0;\n      background: #98e; }\n    .mote.theme-block div[data-tag=\"span\"]::before {\n      float: left;\n      margin-top: 2px;\n      margin-right: 2px;\n      display: none; }\n  .mote.theme-block .active ~ * {\n    background: red; }\n  .mote.theme-block .target ~ span {\n    background: #7dc87d; }\n  .mote.theme-block .target ~ div {\n    background: rgba(0, 0, 0, 0.15); }\n  .mote.theme-block .target ~ div[data-tag=\"span\"] {\n    background: rgba(255, 0, 0, 0.25); }\n  .mote.theme-block div.bold {\n    font-weight: 900; }\n  .mote.theme-block div.italic {\n    font-style: italic; }\n\n.mote.theme-mock {\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  /**\n     * targets\n     */\n  /**\n     * span styles\n     */ }\n  .mote.theme-mock div {\n    /*border: 1px solid #444;*/\n    margin: 8px 0;\n    position: relative;\n    min-height: 14px; }\n  .mote.theme-mock * {\n    clear: both; }\n  .mote.theme-mock span {\n    background: #dcffdc;\n    /*border: 1px solid rgba(0, 0, 0, .3);*/\n    display: inline;\n    cursor: pointer;\n    white-space: pre-wrap;\n    z-index: 10; }\n  .mote.theme-mock span:hover {\n    -webkit-filter: brightness(150%); }\n  .mote.theme-mock div.active {\n    background: #98e; }\n  .mote.theme-mock span.active,\n  .mote.theme-mock span.target {\n    border-right: 3px solid black;\n    z-index: 100; }\n  .mote.theme-mock div.active,\n  .mote.theme-mock div.target {\n    border-bottom: 3px solid rgba(0, 0, 0, 0.3);\n    padding-bottom: 9px; }\n  .mote.theme-mock div.active > div {\n    background: #ccc; }\n  .mote.theme-mock div[data-tag=\"span\"] {\n    display: inline; }\n    .mote.theme-mock div[data-tag=\"span\"].active {\n      background: #98e; }\n  .mote.theme-mock .active ~ * {\n    background: red; }\n  .mote.theme-mock .target ~ span {\n    background: #dcffdc; }\n  .mote.theme-mock .target ~ div {\n    background: rgba(0, 0, 0, 0.15); }\n  .mote.theme-mock .target ~ div[data-tag=\"span\"] {\n    background: rgba(255, 0, 0, 0.25); }\n  .mote.theme-mock div.bold {\n    font-weight: 900; }\n  .mote.theme-mock div.italic {\n    font-style: italic; }\n  .mote.theme-mock div[data-tag=\"h1\"] {\n    font-size: 2.0em; }\n  .mote.theme-mock div[data-tag=\"ul\"] {\n    list-style: disc outside none; }\n  .mote.theme-mock div[data-tag=\"li\"] {\n    display: list-item;\n    margin-left: 15px; }\n", ""]);
+exports.push([module.i, "body {\n  font-family: Helvetica;\n  padding: 10px 30px; }\n\nh4 {\n  margin-bottom: 0; }\n\n#clients {\n  width: 100%;\n  border-spacing: 20px;\n  border-collapse: separate; }\n\n#clients td {\n  width: 50%;\n  vertical-align: top; }\n\nbutton {\n  font: inherit;\n  font-size: 0.6em; }\n\n.mote.theme-block {\n  font-family: monospace;\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  /**\n     * targets\n     */\n  /**\n     * span styles\n     */ }\n  .mote.theme-block div {\n    /*border: 1px solid #444;*/\n    background: rgba(0, 0, 0, 0.15);\n    padding: 12px 12px 12px 16px;\n    margin: 8px 0;\n    position: relative;\n    min-height: 14px; }\n    .mote.theme-block div::before {\n      display: block;\n      content: attr(data-tag);\n      opacity: 0.5;\n      background: black;\n      color: white;\n      padding: 2px 4px;\n      width: -webkit-max-content;\n      margin-bottom: 6px;\n      text-align: center; }\n  .mote.theme-block * {\n    clear: both; }\n  .mote.theme-block span {\n    background: #7dc87d;\n    padding: 3px 5px;\n    /*border: 1px solid rgba(0, 0, 0, .3);*/\n    display: inline-block;\n    width: 20px;\n    height: 1.8em;\n    box-sizing: border-box;\n    margin-left: 1px;\n    margin-bottom: 2px;\n    cursor: pointer;\n    white-space: pre; }\n  .mote.theme-block span:hover {\n    -webkit-filter: brightness(150%); }\n  .mote.theme-block .active {\n    background: #98e; }\n  .mote.theme-block span.active,\n  .mote.theme-block span.target {\n    border-right: 3px solid rgba(0, 0, 0, 0.3);\n    margin-right: -1px;\n    width: 21px; }\n  .mote.theme-block div.active,\n  .mote.theme-block div.target {\n    border-bottom: 3px solid rgba(0, 0, 0, 0.3);\n    padding-bottom: 9px; }\n  .mote.theme-block div.active > div {\n    background: #ccc; }\n  .mote.theme-block div[data-tag=\"span\"] {\n    display: inline-block;\n    margin-left: 1px;\n    padding: 4px 6px 1px;\n    margin-bottom: 3px;\n    background: rgba(255, 0, 0, 0.25); }\n    .mote.theme-block div[data-tag=\"span\"].active {\n      margin-bottom: 0;\n      background: #98e; }\n    .mote.theme-block div[data-tag=\"span\"]::before {\n      float: left;\n      margin-top: 2px;\n      margin-right: 2px;\n      display: none; }\n  .mote.theme-block .active ~ * {\n    background: red; }\n  .mote.theme-block .target ~ span {\n    background: #7dc87d; }\n  .mote.theme-block .target ~ div {\n    background: rgba(0, 0, 0, 0.15); }\n  .mote.theme-block .target ~ div[data-tag=\"span\"] {\n    background: rgba(255, 0, 0, 0.25); }\n  .mote.theme-block div.bold {\n    font-weight: 900; }\n  .mote.theme-block div.italic {\n    font-style: italic; }\n\n.mote.theme-mock {\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  font-size: 16px;\n  /**\n     * targets\n     */\n  /**\n     * span styles\n     */ }\n  .mote.theme-mock div {\n    /*border: 1px solid #444;*/\n    margin: 8px 0;\n    position: relative;\n    min-height: 14px; }\n  .mote.theme-mock * {\n    clear: both; }\n  .mote.theme-mock span {\n    background: #dcffdc;\n    /*border: 1px solid rgba(0, 0, 0, .3);*/\n    display: inline;\n    cursor: pointer;\n    white-space: pre-wrap;\n    z-index: 10; }\n  .mote.theme-mock span:hover {\n    -webkit-filter: brightness(150%); }\n  .mote.theme-mock div.active {\n    background: #98e; }\n  .mote.theme-mock span.active,\n  .mote.theme-mock span.target {\n    border-right: 3px solid black;\n    z-index: 100; }\n  .mote.theme-mock div.active,\n  .mote.theme-mock div.target {\n    border-bottom: 3px solid rgba(0, 0, 0, 0.3);\n    padding-bottom: 9px; }\n  .mote.theme-mock div.active > div {\n    background: #ccc; }\n  .mote.theme-mock div[data-tag=\"span\"] {\n    display: inline; }\n    .mote.theme-mock div[data-tag=\"span\"].active {\n      background: #98e; }\n  .mote.theme-mock .active ~ * {\n    background: red; }\n  .mote.theme-mock .target ~ span {\n    background: #dcffdc; }\n  .mote.theme-mock .target ~ div {\n    background: rgba(0, 0, 0, 0.15); }\n  .mote.theme-mock .target ~ div[data-tag=\"span\"] {\n    background: rgba(255, 0, 0, 0.25); }\n  .mote.theme-mock div.bold {\n    font-weight: 900; }\n  .mote.theme-mock div.italic {\n    font-style: italic; }\n  .mote.theme-mock div[data-tag=\"h1\"] {\n    font-size: 2.0em; }\n  .mote.theme-mock div[data-tag=\"ul\"] {\n    list-style: disc outside none; }\n  .mote.theme-mock div[data-tag=\"li\"] {\n    display: list-item;\n    margin-left: 25px; }\n", ""]);
 
 // exports
 
