@@ -199,6 +199,38 @@ class Editor {
       });
     })
   }
+
+  monkey() {
+    let self = this;
+
+    setTimeout(() => {
+      // Serialize by default the root element
+      var match = serialize(this.$elem[0]);
+      // test
+      var packet = [
+        this.ophistory,
+        match
+      ];
+      console.log(JSON.stringify(packet));
+
+      $.ajax('/api/random', {
+        data : JSON.stringify(packet),
+        contentType : 'application/json',
+        type : 'POST',
+      })
+      .done(function (data) {
+        if (arguments[0] == '') {
+          alert('Operation seemed to fail! Check console')
+        } else {
+          self.$elem.empty().append(load(data.doc[0]));
+          self.ophistory.push(data.op);
+        }
+      })
+      .fail(function () {
+        console.log('failure', arguments);
+      });
+    })
+  }
 }
 
 
@@ -443,7 +475,14 @@ function init ($elem) {
     .on('click', function () {
       $elem.toggleClass('theme-mock');
       $elem.toggleClass('theme-block');    
-    })
+    });
+    
+  // monkey button
+  $('<button>Monkey</button>')
+    .appendTo($elem.prev())
+    .on('click', function () {
+      m.monkey();
+    });
 
   // theme
   $elem.addClass('theme-block');

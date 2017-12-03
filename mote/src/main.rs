@@ -105,6 +105,81 @@ fn api_confirm(struct_body: Json<ConfirmInput>, mote: State<MoteState>) -> Json<
     })
 }
 
+#[derive(Serialize)]
+struct RandomResponse {
+    ok: bool,
+    op: Op,
+    doc: DocSpan,
+}
+
+type RandomInput = (Vec<Op>, Vec<DocElement>);
+
+// TODO should return HTTP error code on failure?
+#[post("/api/random", data = "<struct_body>")]
+fn api_random(struct_body: Json<RandomInput>, mote: State<MoteState>) -> Json<RandomResponse> {
+    let (ops, compare_doc) = struct_body.0;
+
+    let doc = mote.body.lock().unwrap();
+    let start = vec![doc.clone()];
+
+    println!("");
+    for op in &ops {
+        println!("input: op_span!(");
+        println!("  {:?},", op.0);
+        println!("  {:?},", op.1);
+        println!(")");
+    }
+    println!("");
+
+    let mut op = op_span!([], []);
+
+    let res = if ops.len() > 0 {
+        let mut res = start.clone();
+        for i in ops.into_iter() {
+            println!("combining: op_span!(");
+            println!("  {:?},", i.0);
+            println!("  {:?},", i.1);
+            println!(")");
+
+            op = compose(&op, &i);
+
+            println!("combined: op_span!(");
+            println!("  {:?},", op.0);
+            println!("  {:?},", op.1);
+            println!(")");
+
+            println!("CMP add {:?}", op.0);
+            println!("    del {:?}", op.1);
+
+            println!("start obj {:?}", start);
+            println!("apply op {:?}", op);
+
+            res = apply_operation(&start, &op)
+        }
+        res
+    } else {
+        start
+    };
+
+    println!("COMPARE {:?}", res);
+    println!("EXPECTD {:?}", compare_doc);
+    println!("success? {:?}", res == compare_doc);
+
+    // TODO add op from random generator
+    let new_op = op_span!(
+        [],
+        [AddGroup({"tag": "div"}, [AddSkip(1)])],
+    );
+
+    let compare_doc = apply_operation(&compare_doc, &new_op);
+
+    Json(RandomResponse {
+        ok: res == compare_doc,
+        op: new_op,
+        doc: compare_doc,
+    })
+}
+
 type SyncInput = (Vec<Op>, Vec<Op>);
 
 // TODO should return HTTP error code on failure?
@@ -224,7 +299,7 @@ fn main() {
         .manage(MoteState {
             body: Arc::new(Mutex::new(default_doc())),
         })
-        .mount("/", routes![api_hello, api_confirm, api_sync, api_reset, root, files])
+        .mount("/", routes![api_hello, api_confirm, api_sync, api_reset, api_random, root, files])
         .launch();
 }
 

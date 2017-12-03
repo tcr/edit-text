@@ -10983,6 +10983,37 @@ var Editor = /** @class */ (function () {
             });
         });
     };
+    Editor.prototype.monkey = function () {
+        var _this = this;
+        var self = this;
+        setTimeout(function () {
+            // Serialize by default the root element
+            var match = serialize(_this.$elem[0]);
+            // test
+            var packet = [
+                _this.ophistory,
+                match
+            ];
+            console.log(JSON.stringify(packet));
+            __WEBPACK_IMPORTED_MODULE_2_jquery___default.a.ajax('/api/random', {
+                data: JSON.stringify(packet),
+                contentType: 'application/json',
+                type: 'POST',
+            })
+                .done(function (data) {
+                if (arguments[0] == '') {
+                    alert('Operation seemed to fail! Check console');
+                }
+                else {
+                    self.$elem.empty().append(load(data.doc[0]));
+                    self.ophistory.push(data.op);
+                }
+            })
+                .fail(function () {
+                console.log('failure', arguments);
+            });
+        });
+    };
     return Editor;
 }());
 function wrapContent(m) {
@@ -11183,6 +11214,12 @@ function init($elem) {
         .on('click', function () {
         $elem.toggleClass('theme-mock');
         $elem.toggleClass('theme-block');
+    });
+    // monkey button
+    __WEBPACK_IMPORTED_MODULE_2_jquery___default()('<button>Monkey</button>')
+        .appendTo($elem.prev())
+        .on('click', function () {
+        m.monkey();
     });
     // theme
     $elem.addClass('theme-block');
