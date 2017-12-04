@@ -1542,3 +1542,109 @@ pub fn transform(a: &Op, b: &Op) -> (Op, Op) {
 
     ((a_del_3, a_ins_2), (b_del_3, b_ins_2))
 }
+
+// transform with corrections
+// TODO
+
+/*
+pub fn transform_validate(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan) {
+    let mut span = &spanvec[..];
+
+    let mut first = None;
+    if span.len() > 0 {
+        first = Some(span[0].clone());
+        span = &span[1..]
+    }
+
+    let mut exhausted = first.is_none();
+
+    trace!("ABOUT TO APPLY ADD {:?} {:?}", first, span);
+
+    loop {
+        // Flags for whether we have partially or fully consumed an atom.
+        let mut nextdel = true;
+        let mut nextfirst = true;
+
+        trace!("next {:?} {:?} {:?}", d, first, exhausted);
+
+        match d.clone() {
+            AddSkip(count) => match first.clone().unwrap() {
+                DocChars(ref value) => {
+                    let len = value.chars().count();
+                    if len < count {
+                        place_chars(&mut res, value.to_owned());
+                        d = AddSkip(count - len);
+                        nextdel = false;
+                    } else if len > count {
+                        place_chars(&mut res, value[0..count].to_owned());
+                        first = Some(DocChars(value[count..len].to_owned()));
+                        nextfirst = false;
+                    } else {
+                        place_chars(&mut res, value.to_owned());
+                    }
+                }
+                DocGroup(..) => {
+                    res.push(first.clone().unwrap());
+                    if count > 1 {
+                        d = AddSkip(count - 1);
+                        nextdel = false;
+                    }
+                }
+            },
+            AddWithGroup(ref delspan) => match first.clone().unwrap() {
+                DocGroup(ref attrs, ref span) => {
+                    res.push(DocGroup(attrs.clone(), apply_add(span, delspan)));
+                }
+                _ => {
+                    panic!("Invalid AddWithGroup");
+                }
+            },
+            AddChars(value) => {
+                place_chars(&mut res, value);
+                nextfirst = false;
+            }
+            AddGroup(attrs, innerspan) => {
+                let mut subdoc = vec![];
+                if !exhausted {
+                    subdoc.push(first.clone().unwrap());
+                    subdoc.extend_from_slice(span);
+                }
+                trace!("CALLING INNER {:?} {:?}", subdoc, innerspan);
+
+                let (inner, rest) = apply_add_inner(&subdoc, &innerspan);
+                place_any(&mut res, &DocGroup(attrs, inner));
+
+                trace!("REST OF INNER {:?} {:?}", rest, del);
+
+                let inner = apply_add(&rest, &del.to_vec());
+                place_many(&mut res, &inner);
+                return (res, vec![]);
+            }
+        }
+
+        if nextdel {
+            if del.len() == 0 {
+                let mut remaining = vec![];
+                if !nextfirst && !first.is_none() && !exhausted {
+                    remaining.push(first.clone().unwrap());
+                    // place_any(&mut res, &first.clone().unwrap());
+                }
+                remaining.extend_from_slice(span);
+                return (res, remaining);
+            }
+
+            d = del[0].clone();
+            del = &del[1..];
+        }
+
+        if nextfirst {
+            if span.len() == 0 {
+                exhausted = true;
+            } else {
+                first = Some(span[0].clone());
+                span = &span[1..];
+            }
+        }
+    }
+}
+*/
