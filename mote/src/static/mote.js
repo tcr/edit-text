@@ -10806,6 +10806,18 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 // Consume bootstrap so bootbox works.
 __WEBPACK_IMPORTED_MODULE_3_bootstrap___default.a;
+// Hashtag state
+function hashState() {
+    return new Set((location.hash || '')
+        .replace(/^#/, '')
+        .split(',')
+        .map(x => x.replace(/^\s+|\s+$/g, ''))
+        .filter(x => x.length));
+}
+function setHashState(input) {
+    location.hash = Array.from(input).join(',');
+}
+// Elements
 function newElem(attrs) {
     return modifyElem(__WEBPACK_IMPORTED_MODULE_2_jquery___default()('<div>'), attrs);
 }
@@ -10949,21 +10961,20 @@ function serialize(parent) {
     });
     return out;
 }
-var Editor = /** @class */ (function () {
-    function Editor($elem) {
+class Editor {
+    constructor($elem) {
         this.$elem = $elem;
         this.ophistory = [];
     }
-    Editor.prototype.op = function (d, a) {
-        var _this = this;
+    op(d, a) {
         console.log(JSON.stringify([d, a]));
         this.ophistory.push([d, a]);
-        setTimeout(function () {
+        setTimeout(() => {
             // Serialize by default the root element
-            var match = serialize(_this.$elem[0]);
+            var match = serialize(this.$elem[0]);
             // test
             var packet = [
-                _this.ophistory,
+                this.ophistory,
                 match
             ];
             console.log(JSON.stringify(packet));
@@ -10982,16 +10993,15 @@ var Editor = /** @class */ (function () {
                 console.log('failure', arguments);
             });
         });
-    };
-    Editor.prototype.monkey = function () {
-        var _this = this;
-        var self = this;
-        setTimeout(function () {
+    }
+    monkey() {
+        let self = this;
+        setTimeout(() => {
             // Serialize by default the root element
-            var match = serialize(_this.$elem[0]);
+            var match = serialize(this.$elem[0]);
             // test
             var packet = [
-                _this.ophistory,
+                this.ophistory,
                 match
             ];
             console.log(JSON.stringify(packet));
@@ -11013,17 +11023,16 @@ var Editor = /** @class */ (function () {
                 console.log('failure', arguments);
             });
         });
-    };
-    return Editor;
-}());
+    }
+}
 function wrapContent(m) {
-    var active = getActive();
-    var target = getTarget();
+    let active = getActive();
+    let target = getTarget();
     // if (isBlock(active)) {
     __WEBPACK_IMPORTED_MODULE_4_bootbox___default.a.prompt({
         title: "Wrap selected in tag:",
         value: "p",
-        callback: function (tag) {
+        callback: (tag) => {
             if (tag) {
                 var attrs = intoAttrs(tag);
                 var out = active.nextAll().add(active).not(__WEBPACK_IMPORTED_MODULE_2_jquery___default()('.target').nextAll());
@@ -11048,15 +11057,15 @@ function wrapContent(m) {
     // }
 }
 function renameBlock(m) {
-    var active = getActive();
-    var target = getTarget();
+    let active = getActive();
+    let target = getTarget();
     if (active) {
         __WEBPACK_IMPORTED_MODULE_4_bootbox___default.a.prompt({
             title: "Rename tag group:",
             value: "p",
-            callback: function (tag) {
+            callback: (tag) => {
                 if (tag) {
-                    var attrs = intoAttrs(tag);
+                    let attrs = intoAttrs(tag);
                     m.op(delto(active, {
                         "DelGroup": [
                             {
@@ -11079,8 +11088,8 @@ function renameBlock(m) {
     }
 }
 function deleteBlockPreservingContent(m) {
-    var active = getActive();
-    var target = getTarget();
+    let active = getActive();
+    let target = getTarget();
     // Delete group while saving contents.
     if (isBlock(active)) {
         clearActive();
@@ -11105,8 +11114,8 @@ function deleteBlockPreservingContent(m) {
     }
 }
 function deleteBlock(m) {
-    var active = getActive();
-    var target = getTarget();
+    const active = getActive();
+    const target = getTarget();
     // Delete whole block.
     if (isBlock(active)) {
         m.op(delto(active, {
@@ -11118,8 +11127,8 @@ function deleteBlock(m) {
     }
 }
 function deleteChars(m) {
-    var active = getActive();
-    var target = getTarget();
+    const active = getActive();
+    const target = getTarget();
     // Delete characters.
     if (isChar(active)) {
         clearActive();
@@ -11136,8 +11145,8 @@ function deleteChars(m) {
     }
 }
 function addBlockAfter(m) {
-    var active = getActive();
-    var target = getTarget();
+    const active = getActive();
+    const target = getTarget();
     __WEBPACK_IMPORTED_MODULE_4_bootbox___default.a.prompt({
         title: "New tag to add after:",
         value: active.data('tag').toLowerCase(),
@@ -11159,8 +11168,8 @@ function addBlockAfter(m) {
     });
 }
 function splitBlock(m) {
-    var active = getActive();
-    var target = getTarget();
+    const active = getActive();
+    const target = getTarget();
     __WEBPACK_IMPORTED_MODULE_4_bootbox___default.a.prompt({
         title: "New tag to split this into:",
         value: active.parent().data('tag').toLowerCase(),
@@ -11197,8 +11206,8 @@ function splitBlock(m) {
                     ])];
                 clearActive();
                 clearTarget();
-                var newPrev = newElem({ tag: parent.data('tag') });
-                var newNext = newElem({ tag: tag }).addClass('active').addClass('target');
+                let newPrev = newElem({ tag: parent.data('tag') });
+                let newNext = newElem({ tag: tag }).addClass('active').addClass('target');
                 prev.wrapAll(newPrev);
                 if (next.length) {
                     next.wrapAll(newNext);
@@ -11214,14 +11223,22 @@ function splitBlock(m) {
         __WEBPACK_IMPORTED_MODULE_2_jquery___default()(this).find('input').select();
     });
 }
-function init($elem) {
-    var m = new Editor($elem);
+function init($elem, editorID) {
+    const m = new Editor($elem);
     // switching button
     __WEBPACK_IMPORTED_MODULE_2_jquery___default()('<button>Style Switch</button>')
         .appendTo($elem.prev())
         .on('click', function () {
         $elem.toggleClass('theme-mock');
         $elem.toggleClass('theme-block');
+        const settings = hashState();
+        if (settings.has(`${editorID}-theme-mock`)) {
+            settings.delete(`${editorID}-theme-mock`);
+        }
+        else {
+            settings.add(`${editorID}-theme-mock`);
+        }
+        setHashState(settings);
     });
     // monkey button
     __WEBPACK_IMPORTED_MODULE_2_jquery___default()('<button>Monkey</button>')
@@ -11230,10 +11247,15 @@ function init($elem) {
         m.monkey();
     });
     // theme
-    $elem.addClass('theme-block');
+    if (hashState().has(`${editorID}-theme-mock`)) {
+        $elem.addClass('theme-mock');
+    }
+    else {
+        $elem.addClass('theme-block');
+    }
     m.$elem.on('click', 'span, div', function (e) {
-        var active = getActive();
-        var target = getTarget();
+        const active = getActive();
+        const target = getTarget();
         if (e.shiftKey) {
             if (active && active.nextAll().add(active).is(this)) {
                 clearTarget();
@@ -11247,12 +11269,12 @@ function init($elem) {
         }
         return false;
     });
-    __WEBPACK_IMPORTED_MODULE_2_jquery___default()(document).on('keypress', function (e) {
+    __WEBPACK_IMPORTED_MODULE_2_jquery___default()(document).on('keypress', (e) => {
         if (__WEBPACK_IMPORTED_MODULE_2_jquery___default()(e.target).closest('.modal').length) {
             return;
         }
-        var active = getActive();
-        var target = getTarget();
+        const active = getActive();
+        const target = getTarget();
         if (active && !active.parents('.mote').is(m.$elem)) {
             return;
         }
@@ -11263,8 +11285,8 @@ function init($elem) {
         if (e.metaKey) {
             return;
         }
-        var txt = String.fromCharCode(e.charCode);
-        var span = __WEBPACK_IMPORTED_MODULE_2_jquery___default()('<span>').text(txt).addClass('active').addClass('target');
+        let txt = String.fromCharCode(e.charCode);
+        let span = __WEBPACK_IMPORTED_MODULE_2_jquery___default()('<span>').text(txt).addClass('active').addClass('target');
         if (isBlock(active)) {
             e.preventDefault();
             clearActive();
@@ -11286,12 +11308,12 @@ function init($elem) {
             return false;
         }
     });
-    __WEBPACK_IMPORTED_MODULE_2_jquery___default()(document).on('keydown', function (e) {
+    __WEBPACK_IMPORTED_MODULE_2_jquery___default()(document).on('keydown', (e) => {
         if (__WEBPACK_IMPORTED_MODULE_2_jquery___default()(e.target).closest('.modal').length) {
             return;
         }
-        var active = getActive();
-        var target = getTarget();
+        const active = getActive();
+        const target = getTarget();
         if (active && !active.parents('.mote').is(m.$elem)) {
             return;
         }
@@ -11329,7 +11351,7 @@ function init($elem) {
                     addBlockAfter(m);
                 }
                 else if (isBlock(active.parent())) {
-                    var newActive = active.parent();
+                    let newActive = active.parent();
                     clearActive();
                     clearTarget();
                     newActive.addClass('active').addClass('target');
@@ -11344,15 +11366,15 @@ function init($elem) {
         // Arrow keys
         if ([37, 38, 39, 40].indexOf(e.keyCode) > -1) {
             e.preventDefault();
-            var keyCode = e.keyCode;
+            const keyCode = e.keyCode;
             // left
             if (keyCode == 37) {
-                var last = active.prevAll().find('span').addBack('span').last();
+                let last = active.prevAll().find('span').addBack('span').last();
                 if (!last[0] && serializeAttrs(active.parent()).tag == 'span') {
                     last = active.parent().prevAll().find('span').addBack('span').last();
                 }
                 if (last[0]) {
-                    var prev = last[0];
+                    let prev = last[0];
                     clearActive();
                     clearTarget();
                     __WEBPACK_IMPORTED_MODULE_2_jquery___default()(prev).addClass('active').addClass('target');
@@ -11360,12 +11382,12 @@ function init($elem) {
             }
             // right
             if (keyCode == 39) {
-                var next = active.nextAll().find('span').addBack('span').first();
+                let next = active.nextAll().find('span').addBack('span').first();
                 if (!next[0] && serializeAttrs(active.parent()).tag == 'span') {
                     next = active.parent().nextAll().find('span').addBack('span').first();
                 }
                 if (next[0]) {
-                    var prev = next[0];
+                    let prev = next[0];
                     clearActive();
                     clearTarget();
                     __WEBPACK_IMPORTED_MODULE_2_jquery___default()(prev).addClass('active').addClass('target');
@@ -11374,7 +11396,7 @@ function init($elem) {
             // up
             if (keyCode == 38) {
                 if (active.parent()[0] && !active.parent().hasClass('mote')) {
-                    var prev = active.parent()[0];
+                    let prev = active.parent()[0];
                     clearActive();
                     clearTarget();
                     __WEBPACK_IMPORTED_MODULE_2_jquery___default()(prev).addClass('active').addClass('target');
@@ -11383,7 +11405,7 @@ function init($elem) {
             // down
             if (keyCode == 40) {
                 if (active.children()[0]) {
-                    var prev = active.children()[0];
+                    let prev = active.children()[0];
                     clearActive();
                     clearTarget();
                     __WEBPACK_IMPORTED_MODULE_2_jquery___default()(prev).addClass('active').addClass('target');
@@ -11395,13 +11417,13 @@ function init($elem) {
 }
 var m1 = __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#mote-1');
 var m2 = __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#mote-2');
-var ops_a = init(m1);
-var ops_b = init(m2);
-__WEBPACK_IMPORTED_MODULE_2_jquery___default.a.get('/api/hello', function (data) {
+var ops_a = init(m1, 'left');
+var ops_b = init(m2, 'right');
+__WEBPACK_IMPORTED_MODULE_2_jquery___default.a.get('/api/hello', data => {
     m1.empty().append(load(data));
     m2.empty().append(load(data));
 });
-__WEBPACK_IMPORTED_MODULE_2_jquery___default()('#action-reset').on('click', function () {
+__WEBPACK_IMPORTED_MODULE_2_jquery___default()('#action-reset').on('click', () => {
     __WEBPACK_IMPORTED_MODULE_2_jquery___default.a.ajax('/api/reset', {
         contentType: 'application/json',
         type: 'POST',
@@ -11416,8 +11438,8 @@ __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#action-reset').on('click', func
         //
     });
 });
-__WEBPACK_IMPORTED_MODULE_2_jquery___default()('#action-sync').on('click', function () {
-    var packet = [
+__WEBPACK_IMPORTED_MODULE_2_jquery___default()('#action-sync').on('click', () => {
+    let packet = [
         ops_a,
         ops_b
     ];
