@@ -10,16 +10,18 @@ bootstrap;
 
 // Hashtag state
 
-function hashState(): Set<String> {
-  return new Set((location.hash || '')
-    .replace(/^#/, '')
-    .split(',')
-    .map(x => x.replace(/^\s+|\s+$/g, ''))
-    .filter(x => x.length));
-}
+class HashState {
+  static get(): Set<String> {
+    return new Set((location.hash || '')
+      .replace(/^#/, '')
+      .split(',')
+      .map(x => x.replace(/^\s+|\s+$/g, ''))
+      .filter(x => x.length));
+  }
 
-function setHashState(input: Set<String>) {
-  location.hash = Array.from(input).join(',');
+  static set(input: Set<String>) {
+    location.hash = Array.from(input).join(',');
+  }
 }
 
 // Elements
@@ -499,13 +501,13 @@ function init ($elem, editorID: string) {
       $elem.toggleClass('theme-mock');
       $elem.toggleClass('theme-block');
 
-      const settings = hashState();
+      const settings = HashState.get();
       if (settings.has(`${editorID}-theme-mock`)) {
         settings.delete(`${editorID}-theme-mock`);
       } else {
         settings.add(`${editorID}-theme-mock`);
       }
-      setHashState(settings);
+      HashState.set(settings);
     });
     
   // monkey button
@@ -516,7 +518,7 @@ function init ($elem, editorID: string) {
     });
 
   // theme
-  if (hashState().has(`${editorID}-theme-mock`)) {
+  if (HashState.get().has(`${editorID}-theme-mock`)) {
     $elem.addClass('theme-mock');
   } else {
     $elem.addClass('theme-block');
