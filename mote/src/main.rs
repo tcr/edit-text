@@ -23,23 +23,24 @@ use serde_json::{Value};
 use std::path::{Path, PathBuf};
 use oatie::transform::transform;
 
-fn default_doc() -> DocElement {
-    doc_span![DocGroup({"tag": "ul"}, [
-        DocGroup({"tag": "li"}, [
-            DocGroup({"tag": "h1"}, [
-                DocChars("Hello! "),
-                DocGroup({"tag": "span", "class": "bold"}, [DocChars("what's")]),
-                DocChars(" up?"),
-            ]),
-            DocGroup({"tag": "p"}, [
-                DocChars("Three adjectives strong."),
-            ]),
-            DocGroup({"tag": "p"}, [
-                DocChars("World!"),
-            ]),
+fn default_doc() -> DocSpan {
+    doc_span![
+        DocGroup({"tag": "h1"}, [
+            DocChars("Hello! "),
+            DocGroup({"tag": "span", "class": "bold"}, [DocChars("what's")]),
+            DocChars(" up?"),
         ]),
-    ])].pop()
-        .unwrap()
+        DocGroup({"tag": "ul"}, [
+            DocGroup({"tag": "li"}, [
+                DocGroup({"tag": "p"}, [
+                    DocChars("Three adjectives strong."),
+                ]),
+                DocGroup({"tag": "p"}, [
+                    DocChars("World!"),
+                ]),
+            ]),
+        ])
+    ]
 }
 
 #[derive(Serialize)]
@@ -55,7 +56,7 @@ fn api_confirm(struct_body: Json<ConfirmInput>, mote: State<MoteState>) -> Json<
     let (ops, compare_doc) = struct_body.0;
 
     let doc = mote.body.lock().unwrap();
-    let start = vec![doc.clone()];
+    let start = doc.clone();
 
     println!("");
     for op in &ops {
@@ -120,7 +121,7 @@ fn api_random(struct_body: Json<RandomInput>, mote: State<MoteState>) -> Json<Ra
     let (ops, compare_doc) = struct_body.0;
 
     let doc = mote.body.lock().unwrap();
-    let start = vec![doc.clone()];
+    let start = doc.clone();
 
     println!("");
     for op in &ops {
@@ -230,8 +231,8 @@ fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<Confir
     println!("testing...");
     println!("");
 
-    let doc_a = apply_operation(&vec![doc.clone()], &op_a);
-    let doc_b = apply_operation(&vec![doc.clone()], &op_b);
+    let doc_a = apply_operation(&doc.clone(), &op_a);
+    let doc_b = apply_operation(&doc.clone(), &op_b);
 
     println!("");
     println!("DOC A {:?}", doc_a);
@@ -252,7 +253,7 @@ fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<Confir
     let success = if a_res != b_res {
         false
     } else {
-        *doc = a_res[0].clone();
+        *doc = a_res.clone();
         true
     };
 
@@ -260,7 +261,7 @@ fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<Confir
 }
 
 #[get("/api/hello")]
-fn api_hello(mote: State<MoteState>) -> Json<DocElement> {
+fn api_hello(mote: State<MoteState>) -> Json<DocSpan> {
     let doc = mote.body.lock().unwrap();
     Json(doc.clone())
 }
@@ -291,7 +292,7 @@ fn files(file: PathBuf) -> Option<NamedFile> {
 }
 
 struct MoteState {
-    body: Arc<Mutex<DocElement>>,
+    body: Arc<Mutex<DocSpan>>,
 }
 
 fn main() {

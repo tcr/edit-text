@@ -153,6 +153,13 @@ button {
     }
 }
 
+.mote {
+    border: 2px solid rgba(80, 60, 60, 0.3);
+    padding: 5px 15px;
+    margin: 10px 0 20px;
+    border-radius: 3px;
+}
+
 
 .mote.theme-mock {
     -webkit-touch-callout: none;
@@ -163,11 +170,6 @@ button {
     user-select: none;
 
     font-size: 16px;
-
-    border: 2px solid rgba(80, 60, 60, 0.3);
-    padding: 5px 15px;
-    margin: 10px 0 20px;
-    border-radius: 3px;
 
     div {
         /*border: 1px solid #444;*/
