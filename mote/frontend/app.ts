@@ -62,20 +62,26 @@ function intoAttrs(str: string) {
 
 
 // Creates an HTML tree from a document tree.
-function load(el): JQuery {
+function load(vec): Array<JQuery> {
   // TODO act like doc
   // console.log(el);
-  var h = newElem(el.DocGroup[0]);
-  for (var i = 0; i < el.DocGroup[1].length; i++) {
-    if (Object.keys(el.DocGroup[1][i])[0] == 'DocChars') {
-      for (var j = 0; j < el.DocGroup[1][i].DocChars.length; j++) {
-        h.append($('<span>').text(el.DocGroup[1][i].DocChars[j]));
+  // var h = newElem(el.DocGroup[0]);
+  let ret = [];
+  for (var g = 0; g < vec.length; g++) {
+    const el = vec[g];
+    if (el.DocGroup) {
+      var h = newElem(el.DocGroup[0]);
+      h.append(load(el.DocGroup[1]));
+      ret.push(h);
+    } else if (el.DocChars) {
+      for (var j = 0; j < el.DocChars.length; j++) {
+        ret.push($('<span>').text(el.DocChars[j]));
       }
     } else {
-      h.append(load(el.DocGroup[1][i]));
+      throw new Error('unknown');
     }
   }
-  return h;
+  return ret;
 }
 
 function addto (el, then) {
@@ -193,7 +199,7 @@ class Editor {
     this.ophistory.push([d, a]);
     setTimeout(() => {
       // Serialize by default the root element
-      var match = serialize(this.$elem[0]);
+      var match = serialize(this.$elem);
       // test
       var packet = [
         this.ophistory,
