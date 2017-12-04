@@ -8,7 +8,23 @@ import bootbox from 'bootbox';
 // Consume bootstrap so bootbox works.
 bootstrap;
 
-function newElem(attrs) {
+// Hashtag state
+
+function hashState(): Set<String> {
+  return new Set((location.hash || '')
+    .replace(/^#/, '')
+    .split(',')
+    .map(x => x.replace(/^\s+|\s+$/g, ''))
+    .filter(x => x.length));
+}
+
+function setHashState(input: Set<String>) {
+  location.hash = Array.from(input).join(',');
+}
+
+// Elements
+
+function newElem(attrs): JQuery {
   return modifyElem($('<div>'), attrs);
 }
 
@@ -44,7 +60,7 @@ function intoAttrs(str: string) {
 
 
 // Creates an HTML tree from a document tree.
-function load (el) {
+function load(el): JQuery {
   // TODO act like doc
   // console.log(el);
   var h = newElem(el.DocGroup[0]);
@@ -473,7 +489,7 @@ function splitBlock(m: Editor) {
   });
 }
 
-function init ($elem) {
+function init ($elem, editorID: string) {
   const m = new Editor($elem);
 
   // switching button
@@ -481,7 +497,15 @@ function init ($elem) {
     .appendTo($elem.prev())
     .on('click', function () {
       $elem.toggleClass('theme-mock');
-      $elem.toggleClass('theme-block');    
+      $elem.toggleClass('theme-block');
+
+      const settings = hashState();
+      if (settings.has(`${editorID}-theme-mock`)) {
+        settings.delete(`${editorID}-theme-mock`);
+      } else {
+        settings.add(`${editorID}-theme-mock`);
+      }
+      setHashState(settings);
     });
     
   // monkey button
@@ -492,7 +516,11 @@ function init ($elem) {
     });
 
   // theme
-  $elem.addClass('theme-block');
+  if (hashState().has(`${editorID}-theme-mock`)) {
+    $elem.addClass('theme-mock');
+  } else {
+    $elem.addClass('theme-block');
+  }
 
   m.$elem.on('click', 'span, div', function (e) {
     const active = getActive();
@@ -682,8 +710,8 @@ function init ($elem) {
 var m1 = $('#mote-1');
 var m2 = $('#mote-2');
 
-var ops_a = init(m1);
-var ops_b = init(m2);
+var ops_a = init(m1, 'left');
+var ops_b = init(m2, 'right');
 
 $.get('/api/hello', data => {
     m1.empty().append(load(data));
