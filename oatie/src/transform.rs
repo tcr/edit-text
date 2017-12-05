@@ -930,6 +930,9 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
             );
 
             match b.head.clone() {
+                Some(DelObject) => {
+                    unimplemented!();
+                }
                 Some(DelGroup(ref span)) => {
                     // t.skip_b(1);
                     // t.group_a(attrs, span);
@@ -968,6 +971,9 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
             );
 
             match a.head.clone() {
+                Some(DelObject) => {
+                    unimplemented!();
+                }
                 Some(DelGroup(ref span)) => {
                     // t.skip_a(1);
                     // t.group_b(attrs, span);
@@ -1277,6 +1283,9 @@ pub fn transform_add_del_inner(
 ) {
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
+            DelObject => {
+                unimplemented!();
+            }
             DelChars(bcount) => {
                 match a.get_head() {
                     AddChars(avalue) => {
