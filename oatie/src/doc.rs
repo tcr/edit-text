@@ -25,6 +25,7 @@ pub enum DelElement {
     DelChars(usize),
     DelGroup(DelSpan),
     DelGroupAll,
+    DelObject,
 }
 
 pub use self::DelElement::*;
@@ -140,7 +141,7 @@ impl DelPlaceable for DelSpan {
         for item in self {
             ret += match *item {
                 DelSkip(len) | DelChars(len) => len,
-                DelGroup(..) | DelGroupAll | DelWithGroup(..) => 1,
+                DelObject | DelGroup(..) | DelGroupAll | DelWithGroup(..) => 1,
             };
         }
         ret
@@ -151,7 +152,7 @@ impl DelPlaceable for DelSpan {
         for item in self {
             ret += match *item {
                 DelSkip(len) => len,
-                DelChars(..) | DelGroup(..) | DelGroupAll => 0,
+                DelObject | DelChars(..) | DelGroup(..) | DelGroupAll => 0,
                 DelWithGroup(..) => 1,
             };
         }

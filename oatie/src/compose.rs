@@ -14,6 +14,22 @@ use normalize;
 fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepper) {
     while !a.is_done() && !b.is_done() {
         match a.get_head() {
+            DelObject => {
+                match b.head.clone() {
+                    Some(DelObject) => {
+                        res.place(&DelObject);
+                        a.next();
+                        b.next();
+                    }
+                    None => {
+                        res.place(&DelObject);
+                        a.next();
+                    }
+                    _ => {
+                        panic!("Invalid compose against DelObject");
+                    }
+                }
+            }
             DelSkip(acount) => {
                 match b.head.clone() {
                     Some(DelSkip(bcount)) => {
@@ -29,8 +45,9 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
                             b.next();
                         }
                     }
-                    Some(DelWithGroup(ref span)) |
-                    Some(DelGroup(ref span)) => {
+                    Some(DelObject) |
+                    Some(DelWithGroup(..)) |
+                    Some(DelGroup(..)) => {
                         if acount > 1 {
                             a.head = Some(DelSkip(acount - 1));
                         } else {
@@ -83,6 +100,9 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
                         res.place(&DelGroup(compose_del_del(span, bspan)));
                         a.next();
                         b.next();
+                    }
+                    Some(DelObject) => {
+                        panic!("DelWithGroup vs DelObject is bad");
                     }
                     Some(DelChars(bcount)) => {
                         panic!("DelWithGroup vs DelChars is bad");
@@ -274,6 +294,26 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
 
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
+            DelObject => {
+                match a.get_head() {
+                    AddObject => {
+                        a.next();
+                        b.next();
+                    }
+                    AddSkip(acount) => {
+                        if acount > 1 {
+                            a.head = Some(AddSkip(acount - 1));
+                            delres.place(&b.next().unwrap());
+                        } else {
+                            a.next();
+                            delres.place(&b.next().unwrap());
+                        }
+                    }
+                    _ => {
+                        panic!("Bad");
+                    }
+                }
+            }
             DelChars(bcount) => {
                 match a.get_head() {
                     AddChars(avalue) => {

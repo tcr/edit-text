@@ -330,6 +330,9 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
         let mut nextfirst = true;
 
         match d.clone() {
+            DelObject => {
+                panic!("TODO");
+            }
             DelSkip(count) => {
                 match first.clone() {
                     DocChars(ref value) => {
