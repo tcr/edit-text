@@ -1263,8 +1263,8 @@ function delAfterIns (insA, delB, schema) {
 pub fn transform_add_del_inner(
     delres: &mut DelSpan,
     addres: &mut AddSpan,
-    a: &mut AddSlice,
-    b: &mut DelSlice,
+    a: &mut AddStepper,
+    b: &mut DelStepper,
 ) {
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
@@ -1276,23 +1276,23 @@ pub fn transform_add_del_inner(
                 }
                 AddSkip(acount) => if bcount < acount {
                     a.head = Some(AddSkip(acount - bcount));
-                    delres.place(&b.next());
+                    delres.place(&b.next().unwrap());
                 } else if bcount > acount {
                     a.next();
                     delres.place(&DelChars(acount));
                     b.head = Some(DelChars(bcount - acount));
                 } else {
                     a.next();
-                    delres.place(&b.next());
+                    delres.place(&b.next().unwrap());
                 },
                 AddGroup(attrs, a_span) => {
-                    let mut a_inner = AddSlice::new(&a_span);
+                    let mut a_inner = AddStepper::new(&a_span);
                     let mut addres_inner: AddSpan = vec![];
                     let mut delres_inner: DelSpan = vec![];
                     transform_add_del_inner(&mut delres_inner, &mut addres_inner, &mut a_inner, b);
                     if !a_inner.is_done() {
                         addres_inner.place(&a_inner.head.unwrap());
-                        addres_inner.place_all(a_inner.rest);
+                        addres_inner.place_all(&a_inner.rest);
                     }
                     addres.place(&AddGroup(attrs, addres_inner));
                     delres.place(&DelWithGroup(delres_inner));
@@ -1324,7 +1324,7 @@ pub fn transform_add_del_inner(
                     }
                 }
                 AddWithGroup(..) => {
-                    addres.place(&a.next());
+                    addres.place(&a.next().unwrap());
                     delres.place(&DelSkip(1));
                     if bcount == 1 {
                         b.next();
@@ -1333,13 +1333,13 @@ pub fn transform_add_del_inner(
                     }
                 }
                 AddGroup(attrs, a_span) => {
-                    let mut a_inner = AddSlice::new(&a_span);
+                    let mut a_inner = AddStepper::new(&a_span);
                     let mut addres_inner: AddSpan = vec![];
                     let mut delres_inner: DelSpan = vec![];
                     transform_add_del_inner(&mut delres_inner, &mut addres_inner, &mut a_inner, b);
                     if !a_inner.is_done() {
                         addres_inner.place(&a_inner.head.unwrap());
-                        addres_inner.place_all(a_inner.rest);
+                        addres_inner.place_all(&a_inner.rest);
                     }
                     addres.place(&AddGroup(attrs, addres_inner));
                     delres.place(&DelWithGroup(delres_inner));
@@ -1351,7 +1351,7 @@ pub fn transform_add_del_inner(
                     panic!("DelWithGroup by AddChars is ILLEGAL");
                 }
                 AddSkip(acount) => {
-                    delres.place(&b.next());
+                    delres.place(&b.next().unwrap());
                     addres.place(&AddSkip(1));
                     if acount > 1 {
                         a.head = Some(AddSkip(acount - 1));
@@ -1380,7 +1380,7 @@ pub fn transform_add_del_inner(
                     panic!("DelGroup by AddChars is ILLEGAL");
                 }
                 AddSkip(acount) => {
-                    delres.place(&b.next());
+                    delres.place(&b.next().unwrap());
                     addres.place(&AddSkip(span.skip_post_len()));
                     if acount > 1 {
                         a.head = Some(AddSkip(acount - 1));
@@ -1397,13 +1397,13 @@ pub fn transform_add_del_inner(
                     addres.place_all(&ins[..]);
                 }
                 AddGroup(tags, ins_span) => {
-                    let mut a_inner = AddSlice::new(&ins_span);
+                    let mut a_inner = AddStepper::new(&ins_span);
                     let mut delres_inner: DelSpan = vec![];
                     let mut addres_inner: AddSpan = vec![];
                     transform_add_del_inner(&mut delres_inner, &mut addres_inner, &mut a_inner, b);
                     if !a_inner.is_done() {
                         addres_inner.place(&a_inner.head.unwrap());
-                        addres_inner.place_all(a_inner.rest);
+                        addres_inner.place_all(&a_inner.rest);
                     }
                     addres.place(&AddGroup(tags, addres_inner));
                     delres.place(&DelWithGroup(delres_inner));
@@ -1415,7 +1415,7 @@ pub fn transform_add_del_inner(
                     panic!("DelGroupAll by AddChars is ILLEGAL");
                 }
                 AddSkip(acount) => {
-                    delres.place(&b.next());
+                    delres.place(&b.next().unwrap());
                     if acount > 1 {
                         a.head = Some(AddSkip(acount - 1));
                     } else {
@@ -1424,7 +1424,7 @@ pub fn transform_add_del_inner(
                 }
                 AddWithGroup(insspan) => {
                     a.next();
-                    delres.place(&b.next());
+                    delres.place(&b.next().unwrap());
                 }
                 AddGroup(attr, insspan) => {
                     a.next();
@@ -1440,8 +1440,8 @@ pub fn transform_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
     let mut delres: DelSpan = Vec::with_capacity(avec.len() + bvec.len());
     let mut addres: AddSpan = Vec::with_capacity(avec.len() + bvec.len());
 
-    let mut a = AddSlice::new(avec);
-    let mut b = DelSlice::new(bvec);
+    let mut a = AddStepper::new(avec);
+    let mut b = DelStepper::new(bvec);
 
     transform_add_del_inner(&mut delres, &mut addres, &mut a, &mut b);
 

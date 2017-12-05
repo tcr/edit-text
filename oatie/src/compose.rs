@@ -11,7 +11,7 @@ use apply_operation;
 use stepper::*;
 use normalize;
 
-fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelSlice, b: &mut DelSlice) {
+fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepper) {
     while !a.is_done() && !b.is_done() {
         match a.get_head() {
             DelSkip(acount) => match b.head.clone() {
@@ -35,7 +35,7 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelSlice, b: &mut DelSlice) 
                     } else {
                         a.next();
                     }
-                    res.place(&b.next());
+                    res.place(&b.next().unwrap());
                 }
                 Some(DelChars(bcount)) => {
                     res.place(&DelChars(cmp::min(acount, bcount)));
@@ -56,10 +56,10 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelSlice, b: &mut DelSlice) 
                     } else {
                         a.next();
                     }
-                    res.place(&b.next());
+                    res.place(&b.next().unwrap());
                 }
                 None => {
-                    res.place(&a.next());
+                    res.place(&a.next().unwrap());
                 }
             },
             DelWithGroup(ref span) => match b.head.clone() {
@@ -69,7 +69,7 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelSlice, b: &mut DelSlice) 
                     } else {
                         b.next();
                     }
-                    res.place(&a.next());
+                    res.place(&a.next().unwrap());
                 }
                 Some(DelWithGroup(ref bspan)) => {
                     res.place(&DelWithGroup(compose_del_del(span, bspan)));
@@ -86,10 +86,10 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelSlice, b: &mut DelSlice) 
                 }
                 Some(DelGroupAll) => {
                     a.next();
-                    res.place(&b.next());
+                    res.place(&b.next().unwrap());
                 }
                 None => {
-                    res.place(&a.next());
+                    res.place(&a.next().unwrap());
                 }
             },
             DelGroup(ref span) => {
@@ -101,12 +101,12 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelSlice, b: &mut DelSlice) 
                     //     b.next();
                     // },
                     _ => {
-                        let mut c = DelSlice::new(span);
+                        let mut c = DelStepper::new(span);
                         let mut inner: DelSpan = vec![];
                         compose_del_del_inner(&mut inner, &mut c, b);
                         if !c.is_done() {
                             inner.place(&c.head.unwrap());
-                            inner.place_all(c.rest);
+                            inner.place_all(&c.rest);
                         }
                         res.place(&DelGroup(inner));
                         a.next();
@@ -128,29 +128,29 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelSlice, b: &mut DelSlice) 
 pub fn compose_del_del(avec: &DelSpan, bvec: &DelSpan) -> DelSpan {
     let mut res = Vec::with_capacity(avec.len() + bvec.len());
 
-    let mut a = DelSlice::new(avec);
-    let mut b = DelSlice::new(bvec);
+    let mut a = DelStepper::new(avec);
+    let mut b = DelStepper::new(bvec);
 
     compose_del_del_inner(&mut res, &mut a, &mut b);
 
     if !a.is_done() {
         res.place(&a.get_head());
-        res.place_all(a.rest);
+        res.place_all(&a.rest);
     }
 
     if !b.is_done() {
         res.place(&b.get_head());
-        res.place_all(b.rest);
+        res.place_all(&b.rest);
     }
 
     res
 }
 
-fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddSlice, b: &mut AddSlice) {
+fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddStepper, b: &mut AddStepper) {
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
             AddChars(value) => {
-                res.place(&b.next());
+                res.place(&b.next().unwrap());
             }
             AddSkip(bcount) => match a.get_head() {
                 AddChars(value) => {
@@ -160,7 +160,7 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddSlice, b: &mut AddSlice) 
                         a.head = Some(AddChars(value.chars().skip(bcount).collect()));
                         b.next();
                     } else if bcount > len {
-                        res.place(&a.next());
+                        res.place(&a.next().unwrap());
                         b.head = Some(AddSkip(bcount - len));
                     } else {
                         res.place(&a.get_head());
@@ -182,7 +182,7 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddSlice, b: &mut AddSlice) 
                     }
                 }
                 AddWithGroup(span) => {
-                    res.push(a.next());
+                    res.push(a.next().unwrap());
                     if bcount == 1 {
                         b.next();
                     } else {
@@ -190,7 +190,7 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddSlice, b: &mut AddSlice) 
                     }
                 }
                 AddGroup(..) => {
-                    res.push(a.next());
+                    res.push(a.next().unwrap());
                     if bcount == 1 {
                         b.next();
                     } else {
@@ -198,13 +198,13 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddSlice, b: &mut AddSlice) 
                     }
                 }
             },
-            AddGroup(ref attrs, ref bspan) => {
-                let mut c = AddSlice::new(bspan);
+            AddGroup(attrs, bspan) => {
+                let mut c = AddStepper::new(&bspan);
                 let mut inner = vec![];
                 compose_add_add_inner(&mut inner, a, &mut c);
                 if !c.is_done() {
                     inner.place(&c.get_head());
-                    inner.place_all(c.rest);
+                    inner.place_all(&c.rest);
                 }
                 res.push(AddGroup(attrs.clone(), inner));
                 b.next();
@@ -219,7 +219,7 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddSlice, b: &mut AddSlice) 
                     } else {
                         a.head = Some(AddSkip(acount - 1));
                     }
-                    res.push(b.next());
+                    res.push(b.next().unwrap());
                 }
                 AddWithGroup(ref aspan) => {
                     res.push(AddWithGroup(compose_add_add(aspan, bspan)));
@@ -239,19 +239,19 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddSlice, b: &mut AddSlice) 
 pub fn compose_add_add(avec: &AddSpan, bvec: &AddSpan) -> AddSpan {
     let mut res = Vec::with_capacity(avec.len() + bvec.len());
 
-    let mut a = AddSlice::new(avec);
-    let mut b = AddSlice::new(bvec);
+    let mut a = AddStepper::new(avec);
+    let mut b = AddStepper::new(bvec);
 
     compose_add_add_inner(&mut res, &mut a, &mut b);
 
     if !b.is_done() {
         res.place(&b.get_head());
-        res.place_all(b.rest);
+        res.place_all(&b.rest);
     }
 
     if !a.is_done() {
         res.place(&a.get_head());
-        res.place_all(a.rest);
+        res.place_all(&a.rest);
     }
 
     res
@@ -261,8 +261,8 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
     let mut delres: DelSpan = Vec::with_capacity(avec.len() + bvec.len());
     let mut addres: AddSpan = Vec::with_capacity(avec.len() + bvec.len());
 
-    let mut a = AddSlice::new(avec);
-    let mut b = DelSlice::new(bvec);
+    let mut a = AddStepper::new(avec);
+    let mut b = DelStepper::new(bvec);
 
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
@@ -282,14 +282,14 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
                 }
                 AddSkip(acount) => if bcount < acount {
                     a.head = Some(AddSkip(acount - bcount));
-                    delres.place(&b.next());
+                    delres.place(&b.next().unwrap());
                 } else if bcount > acount {
                     a.next();
                     delres.place(&DelChars(acount));
                     b.head = Some(DelChars(bcount - acount));
                 } else {
                     a.next();
-                    delres.place(&b.next());
+                    delres.place(&b.next().unwrap());
                 },
                 _ => {
                     panic!("Unimplemented or Unexpected");
@@ -303,7 +303,7 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
                         a.head = Some(AddChars(avalue.chars().skip(bcount).collect()));
                         b.next();
                     } else if bcount > alen {
-                        addres.place(&a.next());
+                        addres.place(&a.next().unwrap());
                         b.head = Some(DelSkip(bcount - alen));
                     } else {
                         addres.place(&a.get_head());
@@ -326,7 +326,7 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
                     }
                 }
                 AddWithGroup(..) => {
-                    addres.place(&a.next());
+                    addres.place(&a.next().unwrap());
                     delres.place(&DelSkip(1));
                     if bcount == 1 {
                         b.next();
@@ -335,7 +335,7 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
                     }
                 }
                 AddGroup(_, aspan) => {
-                    addres.place(&a.next());
+                    addres.place(&a.next().unwrap());
                     if aspan.skip_len() > 0 {
                         delres.place(&DelSkip(aspan.skip_len()));
                     }
@@ -351,7 +351,7 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
                     panic!("DelWithGroup by AddChars is ILLEGAL");
                 }
                 AddSkip(acount) => {
-                    delres.place(&b.next());
+                    delres.place(&b.next().unwrap());
                     addres.place(&AddSkip(1));
                     if acount > 1 {
                         a.head = Some(AddSkip(acount - 1));
@@ -381,7 +381,7 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
                     panic!("DelGroup by AddChars is ILLEGAL");
                 }
                 AddSkip(acount) => {
-                    delres.place(&b.next());
+                    delres.place(&b.next().unwrap());
                     addres.place(&AddSkip(1));
                     if acount > 1 {
                         a.head = Some(AddSkip(acount - 1));
@@ -411,7 +411,7 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
                     panic!("DelGroupAll by AddChars is ILLEGAL");
                 }
                 AddSkip(acount) => {
-                    delres.place(&b.next());
+                    delres.place(&b.next().unwrap());
                     if acount > 1 {
                         a.head = Some(AddSkip(acount - 1));
                     } else {
@@ -420,7 +420,7 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
                 }
                 AddWithGroup(insspan) => {
                     a.next();
-                    delres.place(&b.next());
+                    delres.place(&b.next().unwrap());
                 }
                 AddGroup(attr, insspan) => {
                     a.next();
