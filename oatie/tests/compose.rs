@@ -40,7 +40,7 @@ fn test_compose_del_del() {
     assert_eq!(
         compose_del_del(
             &vec![DelWithGroup(vec![DelChars(6)])],
-            &vec![DelWithGroup(vec![DelChars(6)])]
+            &vec![DelWithGroup(vec![DelChars(6)])],
         ),
         vec![DelWithGroup(vec![DelChars(12)])]
     );
@@ -48,7 +48,7 @@ fn test_compose_del_del() {
     assert_eq!(
         compose_del_del(
             &vec![DelSkip(2), DelChars(6), DelSkip(1), DelChars(2), DelSkip(1)],
-            &vec![DelSkip(1), DelChars(1), DelSkip(1)]
+            &vec![DelSkip(1), DelChars(1), DelSkip(1)],
         ),
         vec![DelSkip(1), DelChars(7), DelSkip(1), DelChars(2), DelSkip(1)]
     );
@@ -68,7 +68,7 @@ fn test_compose_add_add() {
     assert_eq!(
         compose_add_add(
             &vec![AddChars("World!".to_owned())],
-            &vec![AddChars("Hello ".to_owned())]
+            &vec![AddChars("Hello ".to_owned())],
         ),
         vec![AddChars("Hello World!".to_owned())]
     );
@@ -85,7 +85,7 @@ fn test_compose_add_add() {
                 AddSkip(1),
                 AddChars("e".to_owned()),
                 AddSkip(1),
-            ]
+            ],
         ),
         vec![AddChars("deadbeef".to_owned())]
     );
@@ -93,7 +93,7 @@ fn test_compose_add_add() {
     assert_eq!(
         compose_add_add(
             &vec![AddSkip(10), AddChars("h".to_owned())],
-            &vec![AddSkip(11), AddChars("i".to_owned())]
+            &vec![AddSkip(11), AddChars("i".to_owned())],
         ),
         vec![AddSkip(10), AddChars("hi".to_owned())]
     );
@@ -111,7 +111,7 @@ fn test_compose_add_add() {
                 AddChars("ra8c".to_owned()),
                 AddSkip(1),
             ],
-            &vec![AddSkip(10), AddChars("Eh".to_owned()), AddSkip(16)]
+            &vec![AddSkip(10), AddChars("Eh".to_owned()), AddSkip(16)],
         ),
         vec![
             AddSkip(5),
@@ -150,7 +150,7 @@ fn test_compose_add_del() {
                 DelChars(9),
                 DelSkip(1),
                 DelChars(1),
-            ]
+            ],
         ),
         (
             vec![
@@ -166,7 +166,7 @@ fn test_compose_add_del() {
                 AddChars("0".to_owned()),
                 AddSkip(2),
                 AddChars("b".to_owned()),
-            ]
+            ],
         )
     );
 }
@@ -185,7 +185,7 @@ fn test_compose() {
     ], [
         AddGroup({"tag": "p"}, [AddSkip(4)]),
         AddGroup({"tag": "p"}, [AddSkip(2)])
-    ])
+    ]),
         )),
         op_span!([], [
         AddGroup({"tag": "p"}, [AddSkip(4)]),

@@ -23,7 +23,9 @@ struct MalformedData(String);
 struct ExhaustedArray;
 
 fn comma_seq<T, F>(mut inner: &str, fnv: F) -> Result<Vec<T>, NoReadableData>
-    where F: Fn(&str) -> Result<T, Error> {
+where
+    F: Fn(&str) -> Result<T, Error>,
+{
     let mut target = vec![];
     while !inner.is_empty() {
         let mut item = None;
@@ -31,7 +33,8 @@ fn comma_seq<T, F>(mut inner: &str, fnv: F) -> Result<Vec<T>, NoReadableData>
             let mut a: Vec<_> = inner.match_indices(",").collect();
             a.push((inner.len() as usize, ""));
             a
-        } {
+        }
+        {
             let take = &inner[0..comma];
             match fnv(take) {
                 Ok(arg) => {
@@ -120,10 +123,12 @@ fn parse_add(mut value: &str) -> Result<AddElement, Error> {
 
     if let Some((key, segment)) = cap {
         return Ok(match key {
-            "AddSkip" => AddElement::AddSkip(try!(segment.parse::<usize>().or_else(|_| Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                "Bad parsing of number"
-            ))))),
+            "AddSkip" => AddElement::AddSkip(try!(segment.parse::<usize>().or_else(|_| {
+                Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "Bad parsing of number",
+                ))
+            }))),
             "AddChars" => {
                 if segment.len() < 2 || !segment.starts_with("\"") || !segment.ends_with("\"") {
                     Err(MalformedData("Expected full quoted string".into()))?;
@@ -215,7 +220,7 @@ pub fn run_transform_test(input: &str) -> Result<(), Error> {
     }
 
     // ALSO CHECK THE REVERSE
-    // The result may be different, so we don't care it to 
+    // The result may be different, so we don't care it to
     // that, but we can check that the transform is at least normalized.
     let _ = op_transform_compare(&b, &a);
 
