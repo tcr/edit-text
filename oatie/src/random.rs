@@ -11,8 +11,8 @@ pub fn random_add_span(input: &DocSpan) -> AddSpan {
 
     let mut res: AddSpan = vec![];
     for elem in input {
-        match elem {
-            &DocChars(ref value) => {
+        match *elem {
+            DocChars(ref value) => {
                 let mut n = 0;
                 let max = value.chars().count();
 
@@ -34,7 +34,7 @@ pub fn random_add_span(input: &DocSpan) -> AddSpan {
                     }
                 }
             }
-            &DocGroup(_, ref span) => if rng.gen_weighted_bool(2) {
+            DocGroup(_, ref span) => if rng.gen_weighted_bool(2) {
                 res.place(&AddWithGroup(random_add_span(span)));
             } else {
                 res.place(&AddSkip(1));
@@ -57,8 +57,8 @@ pub fn random_del_span(input: &DocSpan) -> DelSpan {
 
     let mut res = vec![];
     for elem in input {
-        match elem {
-            &DocChars(ref value) => {
+        match *elem {
+            DocChars(ref value) => {
                 let mut n = 0;
                 let max = value.chars().count();
                 while n < max {
@@ -80,7 +80,7 @@ pub fn random_del_span(input: &DocSpan) -> DelSpan {
                     }
                 }
             }
-            &DocGroup(_, ref span) => match rng.gen_range(0, 3) {
+            DocGroup(_, ref span) => match rng.gen_range(0, 3) {
                 0 => res.place(&DelWithGroup(random_del_span(span))),
                 1 => res.place(&DelGroupAll),
                 2 => res.place(&DelSkip(1)),
