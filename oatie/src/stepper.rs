@@ -45,7 +45,8 @@ impl DelStepper {
         let head = self.head.clone();
         self.stack.push(self.rest.clone());
         match head {
-            Some(DelGroup(ref span)) | Some(DelWithGroup(ref span)) => {
+            Some(DelGroup(ref span)) |
+            Some(DelWithGroup(ref span)) => {
                 self.head = None;
                 self.rest = span.to_vec();
                 self.next();
@@ -124,7 +125,8 @@ impl AddStepper {
         let head = self.head.clone();
         self.stack.push(self.rest.clone());
         match head {
-            Some(AddGroup(_, ref span)) | Some(AddWithGroup(ref span)) => {
+            Some(AddGroup(_, ref span)) |
+            Some(AddWithGroup(ref span)) => {
                 self.head = None;
                 self.rest = span.to_vec();
                 self.next();

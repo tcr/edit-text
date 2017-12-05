@@ -113,7 +113,7 @@ impl Transform {
             .rposition(|x| x.tag_real.is_some())
             .and_then(|x| Some(x + 1))
             .unwrap_or(0);
-        
+
         // TODO merge this functionality elsewhere
         let real = if let Some(ref b) = b {
             Some(get_real_merge(a, b).unwrap_or_else(|| a.clone()))
@@ -148,7 +148,7 @@ impl Transform {
             .rposition(|x| x.tag_real.is_some())
             .and_then(|x| Some(x + 1))
             .unwrap_or(0);
-                    
+
         // TODO merge this functionality elsewhere
         let real = if let Some(ref a) = a {
             Some(get_real_merge(a, &b).unwrap_or_else(|| b.clone()))
@@ -184,14 +184,12 @@ impl Transform {
             // if track.tag_a.is_some() {
             //     self.a_del.close();
             // }
-            self.a_add
-                .close(real.to_attrs()); // fake
+            self.a_add.close(real.to_attrs()); // fake
 
             // if track.tag_b.is_some() {
             //     self.b_del.close();
             // }
-            self.b_add
-                .close(real.to_attrs()); // fake
+            self.b_add.close(real.to_attrs()); // fake
 
             // } else {
             //     self.a_add.close(map! { "tag" => track.tag_a}); // fake
@@ -275,8 +273,7 @@ impl Transform {
         } else {
             println!("LOVE");
             self.a_del.close();
-            self.a_add
-                .close(track.tag_real.clone().unwrap().to_attrs());
+            self.a_add.close(track.tag_real.clone().unwrap().to_attrs());
         }
 
         if track.is_original_b && track.tag_real == track.tag_b {
@@ -286,8 +283,7 @@ impl Transform {
         } else {
             println!("NO");
             self.b_del.close();
-            self.b_add
-                .close(track.tag_real.clone().unwrap().to_attrs());
+            self.b_add.close(track.tag_real.clone().unwrap().to_attrs());
         }
 
         self.tracks.remove(index);
@@ -355,8 +351,7 @@ impl Transform {
         } else {
             self.a_del.close();
             if track_split || track.tag_b.is_none() {
-                self.a_add
-                    .close(track.tag_real.clone().unwrap().to_attrs());
+                self.a_add.close(track.tag_real.clone().unwrap().to_attrs());
             }
         }
 
@@ -365,8 +360,7 @@ impl Transform {
         // }
         println!("CLOSES THE B {:?}", self.b_add);
         if track_split || track.tag_b.is_none() {
-            self.b_add
-                .close(track.tag_real.clone().unwrap().to_attrs());
+            self.b_add.close(track.tag_real.clone().unwrap().to_attrs());
         }
 
         if track.tag_b.is_none() {
@@ -403,7 +397,16 @@ impl Transform {
         } else {
             true
         };
-            println!("tag {:?}", track.tag_real.clone().unwrap().tag_type().unwrap().do_split());
+        println!(
+            "tag {:?}",
+            track
+                .tag_real
+                .clone()
+                .unwrap()
+                .tag_type()
+                .unwrap()
+                .do_split()
+        );
 
         if track.is_original_b && (track_split || track.tag_a.is_none()) {
             // && track.tag_real == track.tag_b {
@@ -414,8 +417,7 @@ impl Transform {
 
             self.b_del.close();
             if track_split || track.tag_a.is_none() {
-                self.b_add
-                    .close(track.tag_real.clone().unwrap().to_attrs());
+                self.b_add.close(track.tag_real.clone().unwrap().to_attrs());
             }
             println!("2 {:?}", self.b_del);
         }
@@ -424,8 +426,7 @@ impl Transform {
         //     self.a_del.close();
         // }
         if track_split || track.tag_a.is_none() {
-            self.a_add
-                .close(track.tag_real.clone().unwrap().to_attrs());
+            self.a_add.close(track.tag_real.clone().unwrap().to_attrs());
         }
 
         if track.tag_a.is_none() {
@@ -453,10 +454,7 @@ impl Transform {
                 let tag_type = real.tag_type().unwrap();
                 (
                     tag_type == itype,
-                    tag_type
-                        .ancestors()
-                        .iter()
-                        .any(|x| *x == itype),
+                    tag_type.ancestors().iter().any(|x| *x == itype),
                 )
             } else {
                 (false, false)
@@ -498,20 +496,20 @@ impl Transform {
                     track.is_original_b = false;
                 } else if track.tag_b.is_some() {
                     track.tag_real = track.tag_b.clone();
-                    // track.tag_a = track.tag_b.clone();
-                    // track.is_original_b = false;
+                // track.tag_a = track.tag_b.clone();
+                // track.is_original_b = false;
 
-                    // if (origA) {
-                    //   insrA.enter();
-                    // } else {
-                    //   insrA.open(a || b, {});
-                    // }
+                // if (origA) {
+                //   insrA.enter();
+                // } else {
+                //   insrA.open(a || b, {});
+                // }
 
-                    // if (origB) {
-                    //   insrB.enter();
-                    // } else {
-                    //   insrB.open(a || b, {});
-                    // }
+                // if (origB) {
+                //   insrB.enter();
+                // } else {
+                //   insrB.open(a || b, {});
+                // }
                 } else if track.tag_a.is_some() {
                     track.tag_real = track.tag_a.clone();
                     // track.tag_a = track.tag_a.clone();
@@ -552,16 +550,22 @@ impl Transform {
                 b_add.exit();
             }
         }
-        (
-            (a_del.result(), a_add.result()),
-            (b_del.result(), b_add.result()),
-        )
+        ((a_del.result(), a_add.result()), (
+            b_del.result(),
+            b_add.result(),
+        ))
     }
 
     fn current_type(&self) -> Option<TrackType> {
         // TODO
         // self.tracks.last().unwrap().
-        let attrs = self.tracks.last().unwrap().tag_real.clone().unwrap().to_attrs();
+        let attrs = self.tracks
+            .last()
+            .unwrap()
+            .tag_real
+            .clone()
+            .unwrap()
+            .to_attrs();
         Tag::from_attrs(&attrs).tag_type()
     }
 }
@@ -664,24 +668,23 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                         (t.tag_a.clone(), t.tag_b.clone())
                     };
 
-                    if a_tag.is_some() && b_tag.is_some()
-                        && a_tag.clone().unwrap().tag_type()
-                            == b_tag.clone().unwrap().tag_type()
+                    if a_tag.is_some() && b_tag.is_some() &&
+                        a_tag.clone().unwrap().tag_type() == b_tag.clone().unwrap().tag_type()
                     {
                         // t.interrupt(a_tag || b_tag);
                         a.exit();
                         b.exit();
                         t.close();
-                    } else if a_tag.is_some()
-                        && (b_tag.is_none()
-                            || a_tag.clone().unwrap()
-                                .tag_type()
-                                .unwrap()
-                                .ancestors()
-                                .iter()
-                                .any(
-                                    |x| *x == b_tag.clone().unwrap().tag_type().unwrap(),
-                                ))
+                    } else if a_tag.is_some() &&
+                               (b_tag.is_none() ||
+                                    a_tag
+                                        .clone()
+                                        .unwrap()
+                                        .tag_type()
+                                        .unwrap()
+                                        .ancestors()
+                                        .iter()
+                                        .any(|x| *x == b_tag.clone().unwrap().tag_type().unwrap()))
                     {
                         // t.interrupt(a_tag);
                         a.exit();
@@ -743,12 +746,13 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     let a_type = Tag::from_attrs(a_attrs).tag_type().unwrap();
                     let b_type = Tag::from_attrs(b_attrs).tag_type().unwrap();
 
-                    let b_is_child_of_a = Tag::from_attrs(b_attrs)
-                        .tag_type()
-                        .unwrap()
-                        .ancestors()
-                        .iter()
-                        .any(|x| *x == Tag::from_attrs(a_attrs).tag_type().unwrap());
+                    let b_is_child_of_a =
+                        Tag::from_attrs(b_attrs)
+                            .tag_type()
+                            .unwrap()
+                            .ancestors()
+                            .iter()
+                            .any(|x| *x == Tag::from_attrs(a_attrs).tag_type().unwrap());
 
                     println!("groupgruop {:?} {:?}", a_type, b_type);
                     if a_type == b_type {
@@ -1074,19 +1078,21 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                     a_del.skip(cmp::min(a_count, b_count));
                     b_del.skip(cmp::min(a_count, b_count));
                 }
-                (Some(DelSkip(a_count)), Some(DelChars(b_chars))) => if a_count > b_chars {
-                    a.head = Some(DelSkip(a_count - b_chars));
-                    b.next();
-                    a_del.chars(b_chars);
-                } else if a_count < b_chars {
-                    a.next();
-                    b.head = Some(DelChars(b_chars - a_count));
-                    a_del.chars(a_count);
-                } else {
-                    a.next();
-                    b.next();
-                    a_del.chars(b_chars);
-                },
+                (Some(DelSkip(a_count)), Some(DelChars(b_chars))) => {
+                    if a_count > b_chars {
+                        a.head = Some(DelSkip(a_count - b_chars));
+                        b.next();
+                        a_del.chars(b_chars);
+                    } else if a_count < b_chars {
+                        a.next();
+                        b.head = Some(DelChars(b_chars - a_count));
+                        a_del.chars(a_count);
+                    } else {
+                        a.next();
+                        b.next();
+                        a_del.chars(b_chars);
+                    }
+                }
                 (Some(DelChars(a_chars)), Some(DelChars(b_chars))) => {
                     if a_chars > b_chars {
                         a.head = Some(DelChars(a_chars - b_chars));
@@ -1271,169 +1277,196 @@ pub fn transform_add_del_inner(
 ) {
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
-            DelChars(bcount) => match a.get_head() {
-                AddChars(avalue) => {
-                    addres.place(&AddChars(avalue.clone()));
-                    delres.place(&DelSkip(avalue.len()));
-                    a.next();
-                }
-                AddSkip(acount) => if bcount < acount {
-                    a.head = Some(AddSkip(acount - bcount));
-                    delres.place(&b.next().unwrap());
-                } else if bcount > acount {
-                    a.next();
-                    delres.place(&DelChars(acount));
-                    b.head = Some(DelChars(bcount - acount));
-                } else {
-                    a.next();
-                    delres.place(&b.next().unwrap());
-                },
-                AddGroup(attrs, a_span) => {
-                    let mut a_inner = AddStepper::new(&a_span);
-                    let mut addres_inner: AddSpan = vec![];
-                    let mut delres_inner: DelSpan = vec![];
-                    transform_add_del_inner(&mut delres_inner, &mut addres_inner, &mut a_inner, b);
-                    if !a_inner.is_done() {
-                        addres_inner.place(&a_inner.head.unwrap());
-                        addres_inner.place_all(&a_inner.rest);
+            DelChars(bcount) => {
+                match a.get_head() {
+                    AddChars(avalue) => {
+                        addres.place(&AddChars(avalue.clone()));
+                        delres.place(&DelSkip(avalue.len()));
+                        a.next();
                     }
-                    addres.place(&AddGroup(attrs, addres_inner));
-                    delres.place(&DelWithGroup(delres_inner));
-                    a.next();
+                    AddSkip(acount) => {
+                        if bcount < acount {
+                            a.head = Some(AddSkip(acount - bcount));
+                            delres.place(&b.next().unwrap());
+                        } else if bcount > acount {
+                            a.next();
+                            delres.place(&DelChars(acount));
+                            b.head = Some(DelChars(bcount - acount));
+                        } else {
+                            a.next();
+                            delres.place(&b.next().unwrap());
+                        }
+                    }
+                    AddGroup(attrs, a_span) => {
+                        let mut a_inner = AddStepper::new(&a_span);
+                        let mut addres_inner: AddSpan = vec![];
+                        let mut delres_inner: DelSpan = vec![];
+                        transform_add_del_inner(
+                            &mut delres_inner,
+                            &mut addres_inner,
+                            &mut a_inner,
+                            b,
+                        );
+                        if !a_inner.is_done() {
+                            addres_inner.place(&a_inner.head.unwrap());
+                            addres_inner.place_all(&a_inner.rest);
+                        }
+                        addres.place(&AddGroup(attrs, addres_inner));
+                        delres.place(&DelWithGroup(delres_inner));
+                        a.next();
+                    }
+                    unknown => {
+                        println!("Compare: {:?} {:?}", DelChars(bcount), unknown);
+                        panic!("Unimplemented or Unexpected");
+                    }
                 }
-                unknown => {
-                    println!("Compare: {:?} {:?}", DelChars(bcount), unknown);
-                    panic!("Unimplemented or Unexpected");
+            }
+            DelSkip(bcount) => {
+                match a.get_head() {
+                    AddChars(avalue) => {
+                        addres.place(&AddChars(avalue.clone()));
+                        delres.place(&DelSkip(avalue.len()));
+                        a.next();
+                    }
+                    AddSkip(acount) => {
+                        addres.place(&AddSkip(cmp::min(acount, bcount)));
+                        delres.place(&DelSkip(cmp::min(acount, bcount)));
+                        if acount > bcount {
+                            a.head = Some(AddSkip(acount - bcount));
+                            b.next();
+                        } else if acount < bcount {
+                            a.next();
+                            b.head = Some(DelSkip(bcount - acount));
+                        } else {
+                            a.next();
+                            b.next();
+                        }
+                    }
+                    AddWithGroup(..) => {
+                        addres.place(&a.next().unwrap());
+                        delres.place(&DelSkip(1));
+                        if bcount == 1 {
+                            b.next();
+                        } else {
+                            b.head = Some(DelSkip(bcount - 1));
+                        }
+                    }
+                    AddGroup(attrs, a_span) => {
+                        let mut a_inner = AddStepper::new(&a_span);
+                        let mut addres_inner: AddSpan = vec![];
+                        let mut delres_inner: DelSpan = vec![];
+                        transform_add_del_inner(
+                            &mut delres_inner,
+                            &mut addres_inner,
+                            &mut a_inner,
+                            b,
+                        );
+                        if !a_inner.is_done() {
+                            addres_inner.place(&a_inner.head.unwrap());
+                            addres_inner.place_all(&a_inner.rest);
+                        }
+                        addres.place(&AddGroup(attrs, addres_inner));
+                        delres.place(&DelWithGroup(delres_inner));
+                        a.next();
+                    }
                 }
-            },
-            DelSkip(bcount) => match a.get_head() {
-                AddChars(avalue) => {
-                    addres.place(&AddChars(avalue.clone()));
-                    delres.place(&DelSkip(avalue.len()));
-                    a.next();
-                }
-                AddSkip(acount) => {
-                    addres.place(&AddSkip(cmp::min(acount, bcount)));
-                    delres.place(&DelSkip(cmp::min(acount, bcount)));
-                    if acount > bcount {
-                        a.head = Some(AddSkip(acount - bcount));
+            }
+            DelWithGroup(span) => {
+                match a.get_head() {
+                    AddChars(avalue) => {
+                        panic!("DelWithGroup by AddChars is ILLEGAL");
+                    }
+                    AddSkip(acount) => {
+                        delres.place(&b.next().unwrap());
+                        addres.place(&AddSkip(1));
+                        if acount > 1 {
+                            a.head = Some(AddSkip(acount - 1));
+                        } else {
+                            a.next();
+                        }
+                    }
+                    AddWithGroup(insspan) => {
+                        a.next();
                         b.next();
-                    } else if acount < bcount {
+
+                        let (del, ins) = transform_add_del(&insspan, &span);
+                        delres.place(&DelWithGroup(del));
+                        addres.place(&AddWithGroup(ins));
+                    }
+                    AddGroup(attr, insspan) => {
                         a.next();
-                        b.head = Some(DelSkip(bcount - acount));
-                    } else {
+                        b.next();
+
+                        let (_, ins) = transform_add_del(&insspan, &span);
+                        addres.place(&AddGroup(attr, ins));
+                    }
+                }
+            }
+            DelGroup(span) => {
+                match a.get_head() {
+                    AddChars(avalue) => {
+                        panic!("DelGroup by AddChars is ILLEGAL");
+                    }
+                    AddSkip(acount) => {
+                        delres.place(&b.next().unwrap());
+                        addres.place(&AddSkip(span.skip_post_len()));
+                        if acount > 1 {
+                            a.head = Some(AddSkip(acount - 1));
+                        } else {
+                            a.next();
+                        }
+                    }
+                    AddWithGroup(insspan) => {
+                        a.next();
+                        b.next();
+
+                        let (del, ins) = transform_add_del(&insspan, &span);
+                        delres.place(&DelGroup(del));
+                        addres.place_all(&ins[..]);
+                    }
+                    AddGroup(tags, ins_span) => {
+                        let mut a_inner = AddStepper::new(&ins_span);
+                        let mut delres_inner: DelSpan = vec![];
+                        let mut addres_inner: AddSpan = vec![];
+                        transform_add_del_inner(
+                            &mut delres_inner,
+                            &mut addres_inner,
+                            &mut a_inner,
+                            b,
+                        );
+                        if !a_inner.is_done() {
+                            addres_inner.place(&a_inner.head.unwrap());
+                            addres_inner.place_all(&a_inner.rest);
+                        }
+                        addres.place(&AddGroup(tags, addres_inner));
+                        delres.place(&DelWithGroup(delres_inner));
+                        a.next();
+                    }
+                }
+            }
+            DelGroupAll => {
+                match a.get_head() {
+                    AddChars(avalue) => {
+                        panic!("DelGroupAll by AddChars is ILLEGAL");
+                    }
+                    AddSkip(acount) => {
+                        delres.place(&b.next().unwrap());
+                        if acount > 1 {
+                            a.head = Some(AddSkip(acount - 1));
+                        } else {
+                            a.next();
+                        }
+                    }
+                    AddWithGroup(insspan) => {
+                        a.next();
+                        delres.place(&b.next().unwrap());
+                    }
+                    AddGroup(attr, insspan) => {
                         a.next();
                         b.next();
                     }
                 }
-                AddWithGroup(..) => {
-                    addres.place(&a.next().unwrap());
-                    delres.place(&DelSkip(1));
-                    if bcount == 1 {
-                        b.next();
-                    } else {
-                        b.head = Some(DelSkip(bcount - 1));
-                    }
-                }
-                AddGroup(attrs, a_span) => {
-                    let mut a_inner = AddStepper::new(&a_span);
-                    let mut addres_inner: AddSpan = vec![];
-                    let mut delres_inner: DelSpan = vec![];
-                    transform_add_del_inner(&mut delres_inner, &mut addres_inner, &mut a_inner, b);
-                    if !a_inner.is_done() {
-                        addres_inner.place(&a_inner.head.unwrap());
-                        addres_inner.place_all(&a_inner.rest);
-                    }
-                    addres.place(&AddGroup(attrs, addres_inner));
-                    delres.place(&DelWithGroup(delres_inner));
-                    a.next();
-                }
-            },
-            DelWithGroup(span) => match a.get_head() {
-                AddChars(avalue) => {
-                    panic!("DelWithGroup by AddChars is ILLEGAL");
-                }
-                AddSkip(acount) => {
-                    delres.place(&b.next().unwrap());
-                    addres.place(&AddSkip(1));
-                    if acount > 1 {
-                        a.head = Some(AddSkip(acount - 1));
-                    } else {
-                        a.next();
-                    }
-                }
-                AddWithGroup(insspan) => {
-                    a.next();
-                    b.next();
-
-                    let (del, ins) = transform_add_del(&insspan, &span);
-                    delres.place(&DelWithGroup(del));
-                    addres.place(&AddWithGroup(ins));
-                }
-                AddGroup(attr, insspan) => {
-                    a.next();
-                    b.next();
-
-                    let (_, ins) = transform_add_del(&insspan, &span);
-                    addres.place(&AddGroup(attr, ins));
-                }
-            },
-            DelGroup(span) => match a.get_head() {
-                AddChars(avalue) => {
-                    panic!("DelGroup by AddChars is ILLEGAL");
-                }
-                AddSkip(acount) => {
-                    delres.place(&b.next().unwrap());
-                    addres.place(&AddSkip(span.skip_post_len()));
-                    if acount > 1 {
-                        a.head = Some(AddSkip(acount - 1));
-                    } else {
-                        a.next();
-                    }
-                }
-                AddWithGroup(insspan) => {
-                    a.next();
-                    b.next();
-
-                    let (del, ins) = transform_add_del(&insspan, &span);
-                    delres.place(&DelGroup(del));
-                    addres.place_all(&ins[..]);
-                }
-                AddGroup(tags, ins_span) => {
-                    let mut a_inner = AddStepper::new(&ins_span);
-                    let mut delres_inner: DelSpan = vec![];
-                    let mut addres_inner: AddSpan = vec![];
-                    transform_add_del_inner(&mut delres_inner, &mut addres_inner, &mut a_inner, b);
-                    if !a_inner.is_done() {
-                        addres_inner.place(&a_inner.head.unwrap());
-                        addres_inner.place_all(&a_inner.rest);
-                    }
-                    addres.place(&AddGroup(tags, addres_inner));
-                    delres.place(&DelWithGroup(delres_inner));
-                    a.next();
-                }
-            },
-            DelGroupAll => match a.get_head() {
-                AddChars(avalue) => {
-                    panic!("DelGroupAll by AddChars is ILLEGAL");
-                }
-                AddSkip(acount) => {
-                    delres.place(&b.next().unwrap());
-                    if acount > 1 {
-                        a.head = Some(AddSkip(acount - 1));
-                    } else {
-                        a.next();
-                    }
-                }
-                AddWithGroup(insspan) => {
-                    a.next();
-                    delres.place(&b.next().unwrap());
-                }
-                AddGroup(attr, insspan) => {
-                    a.next();
-                    b.next();
-                }
-            },
+            }
         }
     }
 }

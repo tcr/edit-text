@@ -8,10 +8,9 @@ use oatie::transform_test::run_transform_test;
 fn main() {
     let mut input = String::new();
     let stdin = io::stdin();
-    stdin
-        .lock()
-        .read_to_string(&mut input)
-        .expect("Could not read stdin");
+    stdin.lock().read_to_string(&mut input).expect(
+        "Could not read stdin",
+    );
 
     match run_transform_test(&input) {
         Ok(..) => {

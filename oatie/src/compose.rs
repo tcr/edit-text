@@ -14,84 +14,88 @@ use normalize;
 fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepper) {
     while !a.is_done() && !b.is_done() {
         match a.get_head() {
-            DelSkip(acount) => match b.head.clone() {
-                Some(DelSkip(bcount)) => {
-                    res.place(&DelSkip(cmp::min(acount, bcount)));
-                    if acount > bcount {
-                        a.head = Some(DelSkip(acount - bcount));
-                        b.next();
-                    } else if acount < bcount {
-                        b.head = Some(DelSkip(bcount - acount));
-                        a.next();
-                    } else {
+            DelSkip(acount) => {
+                match b.head.clone() {
+                    Some(DelSkip(bcount)) => {
+                        res.place(&DelSkip(cmp::min(acount, bcount)));
+                        if acount > bcount {
+                            a.head = Some(DelSkip(acount - bcount));
+                            b.next();
+                        } else if acount < bcount {
+                            b.head = Some(DelSkip(bcount - acount));
+                            a.next();
+                        } else {
+                            a.next();
+                            b.next();
+                        }
+                    }
+                    Some(DelWithGroup(ref span)) |
+                    Some(DelGroup(ref span)) => {
+                        if acount > 1 {
+                            a.head = Some(DelSkip(acount - 1));
+                        } else {
+                            a.next();
+                        }
+                        res.place(&b.next().unwrap());
+                    }
+                    Some(DelChars(bcount)) => {
+                        res.place(&DelChars(cmp::min(acount, bcount)));
+                        if acount > bcount {
+                            a.head = Some(DelSkip(acount - bcount));
+                            b.next();
+                        } else if acount < bcount {
+                            b.head = Some(DelChars(bcount - acount));
+                            a.next();
+                        } else {
+                            a.next();
+                            b.next();
+                        }
+                    }
+                    Some(DelGroupAll) => {
+                        if acount > 1 {
+                            a.head = Some(DelSkip(acount - 1));
+                        } else {
+                            a.next();
+                        }
+                        res.place(&b.next().unwrap());
+                    }
+                    None => {
+                        res.place(&a.next().unwrap());
+                    }
+                }
+            }
+            DelWithGroup(ref span) => {
+                match b.head.clone() {
+                    Some(DelSkip(bcount)) => {
+                        if bcount > 1 {
+                            b.head = Some(DelSkip(bcount - 1));
+                        } else {
+                            b.next();
+                        }
+                        res.place(&a.next().unwrap());
+                    }
+                    Some(DelWithGroup(ref bspan)) => {
+                        res.place(&DelWithGroup(compose_del_del(span, bspan)));
                         a.next();
                         b.next();
                     }
-                }
-                Some(DelWithGroup(ref span)) |
-                Some(DelGroup(ref span)) => {
-                    if acount > 1 {
-                        a.head = Some(DelSkip(acount - 1));
-                    } else {
-                        a.next();
-                    }
-                    res.place(&b.next().unwrap());
-                }
-                Some(DelChars(bcount)) => {
-                    res.place(&DelChars(cmp::min(acount, bcount)));
-                    if acount > bcount {
-                        a.head = Some(DelSkip(acount - bcount));
-                        b.next();
-                    } else if acount < bcount {
-                        b.head = Some(DelChars(bcount - acount));
-                        a.next();
-                    } else {
+                    Some(DelGroup(ref bspan)) => {
+                        res.place(&DelGroup(compose_del_del(span, bspan)));
                         a.next();
                         b.next();
                     }
-                }
-                Some(DelGroupAll) => {
-                    if acount > 1 {
-                        a.head = Some(DelSkip(acount - 1));
-                    } else {
+                    Some(DelChars(bcount)) => {
+                        panic!("DelWithGroup vs DelChars is bad");
+                    }
+                    Some(DelGroupAll) => {
                         a.next();
+                        res.place(&b.next().unwrap());
                     }
-                    res.place(&b.next().unwrap());
-                }
-                None => {
-                    res.place(&a.next().unwrap());
-                }
-            },
-            DelWithGroup(ref span) => match b.head.clone() {
-                Some(DelSkip(bcount)) => {
-                    if bcount > 1 {
-                        b.head = Some(DelSkip(bcount - 1));
-                    } else {
-                        b.next();
+                    None => {
+                        res.place(&a.next().unwrap());
                     }
-                    res.place(&a.next().unwrap());
                 }
-                Some(DelWithGroup(ref bspan)) => {
-                    res.place(&DelWithGroup(compose_del_del(span, bspan)));
-                    a.next();
-                    b.next();
-                }
-                Some(DelGroup(ref bspan)) => {
-                    res.place(&DelGroup(compose_del_del(span, bspan)));
-                    a.next();
-                    b.next();
-                }
-                Some(DelChars(bcount)) => {
-                    panic!("DelWithGroup vs DelChars is bad");
-                }
-                Some(DelGroupAll) => {
-                    a.next();
-                    res.place(&b.next().unwrap());
-                }
-                None => {
-                    res.place(&a.next().unwrap());
-                }
-            },
+            }
             DelGroup(ref span) => {
                 match b.head.clone() {
                     // TODO more of these :(
@@ -152,52 +156,54 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddStepper, b: &mut AddStepp
             AddChars(value) => {
                 res.place(&b.next().unwrap());
             }
-            AddSkip(bcount) => match a.get_head() {
-                AddChars(value) => {
-                    let len = value.chars().count();
-                    if bcount < len {
-                        res.place(&AddChars(value.chars().take(bcount).collect()));
-                        a.head = Some(AddChars(value.chars().skip(bcount).collect()));
-                        b.next();
-                    } else if bcount > len {
-                        res.place(&a.next().unwrap());
-                        b.head = Some(AddSkip(bcount - len));
-                    } else {
-                        res.place(&a.get_head());
-                        a.next();
-                        b.next();
+            AddSkip(bcount) => {
+                match a.get_head() {
+                    AddChars(value) => {
+                        let len = value.chars().count();
+                        if bcount < len {
+                            res.place(&AddChars(value.chars().take(bcount).collect()));
+                            a.head = Some(AddChars(value.chars().skip(bcount).collect()));
+                            b.next();
+                        } else if bcount > len {
+                            res.place(&a.next().unwrap());
+                            b.head = Some(AddSkip(bcount - len));
+                        } else {
+                            res.place(&a.get_head());
+                            a.next();
+                            b.next();
+                        }
+                    }
+                    AddSkip(acount) => {
+                        res.push(AddSkip(cmp::min(acount, bcount)));
+                        if acount > bcount {
+                            a.head = Some(AddSkip(acount - bcount));
+                            b.next();
+                        } else if acount < bcount {
+                            b.head = Some(AddSkip(bcount - acount));
+                            a.next();
+                        } else {
+                            a.next();
+                            b.next();
+                        }
+                    }
+                    AddWithGroup(span) => {
+                        res.push(a.next().unwrap());
+                        if bcount == 1 {
+                            b.next();
+                        } else {
+                            b.head = Some(AddSkip(bcount - 1));
+                        }
+                    }
+                    AddGroup(..) => {
+                        res.push(a.next().unwrap());
+                        if bcount == 1 {
+                            b.next();
+                        } else {
+                            b.head = Some(AddSkip(bcount - 1));
+                        }
                     }
                 }
-                AddSkip(acount) => {
-                    res.push(AddSkip(cmp::min(acount, bcount)));
-                    if acount > bcount {
-                        a.head = Some(AddSkip(acount - bcount));
-                        b.next();
-                    } else if acount < bcount {
-                        b.head = Some(AddSkip(bcount - acount));
-                        a.next();
-                    } else {
-                        a.next();
-                        b.next();
-                    }
-                }
-                AddWithGroup(span) => {
-                    res.push(a.next().unwrap());
-                    if bcount == 1 {
-                        b.next();
-                    } else {
-                        b.head = Some(AddSkip(bcount - 1));
-                    }
-                }
-                AddGroup(..) => {
-                    res.push(a.next().unwrap());
-                    if bcount == 1 {
-                        b.next();
-                    } else {
-                        b.head = Some(AddSkip(bcount - 1));
-                    }
-                }
-            },
+            }
             AddGroup(attrs, bspan) => {
                 let mut c = AddStepper::new(&bspan);
                 let mut inner = vec![];
@@ -209,29 +215,31 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddStepper, b: &mut AddStepp
                 res.push(AddGroup(attrs.clone(), inner));
                 b.next();
             }
-            AddWithGroup(ref bspan) => match a.get_head() {
-                AddChars(value) => {
-                    panic!("Cannot compose AddWithGroup with AddChars");
-                }
-                AddSkip(acount) => {
-                    if acount == 1 {
-                        a.next();
-                    } else {
-                        a.head = Some(AddSkip(acount - 1));
+            AddWithGroup(ref bspan) => {
+                match a.get_head() {
+                    AddChars(value) => {
+                        panic!("Cannot compose AddWithGroup with AddChars");
                     }
-                    res.push(b.next().unwrap());
+                    AddSkip(acount) => {
+                        if acount == 1 {
+                            a.next();
+                        } else {
+                            a.head = Some(AddSkip(acount - 1));
+                        }
+                        res.push(b.next().unwrap());
+                    }
+                    AddWithGroup(ref aspan) => {
+                        res.push(AddWithGroup(compose_add_add(aspan, bspan)));
+                        a.next();
+                        b.next();
+                    }
+                    AddGroup(ref attrs, ref aspan) => {
+                        res.push(AddGroup(attrs.clone(), compose_add_add(aspan, bspan)));
+                        a.next();
+                        b.next();
+                    }
                 }
-                AddWithGroup(ref aspan) => {
-                    res.push(AddWithGroup(compose_add_add(aspan, bspan)));
-                    a.next();
-                    b.next();
-                }
-                AddGroup(ref attrs, ref aspan) => {
-                    res.push(AddGroup(attrs.clone(), compose_add_add(aspan, bspan)));
-                    a.next();
-                    b.next();
-                }
-            },
+            }
         }
     }
 }
@@ -266,167 +274,179 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
 
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
-            DelChars(bcount) => match a.get_head() {
-                AddChars(avalue) => {
-                    let alen = avalue.chars().count();
-                    if bcount < alen {
-                        a.head = Some(AddChars(avalue.chars().skip(bcount).collect()));
-                        b.next();
-                    } else if bcount > alen {
-                        a.next();
-                        b.head = Some(DelChars(bcount - alen));
-                    } else {
-                        a.next();
-                        b.next();
+            DelChars(bcount) => {
+                match a.get_head() {
+                    AddChars(avalue) => {
+                        let alen = avalue.chars().count();
+                        if bcount < alen {
+                            a.head = Some(AddChars(avalue.chars().skip(bcount).collect()));
+                            b.next();
+                        } else if bcount > alen {
+                            a.next();
+                            b.head = Some(DelChars(bcount - alen));
+                        } else {
+                            a.next();
+                            b.next();
+                        }
+                    }
+                    AddSkip(acount) => {
+                        if bcount < acount {
+                            a.head = Some(AddSkip(acount - bcount));
+                            delres.place(&b.next().unwrap());
+                        } else if bcount > acount {
+                            a.next();
+                            delres.place(&DelChars(acount));
+                            b.head = Some(DelChars(bcount - acount));
+                        } else {
+                            a.next();
+                            delres.place(&b.next().unwrap());
+                        }
+                    }
+                    _ => {
+                        panic!("Unimplemented or Unexpected");
                     }
                 }
-                AddSkip(acount) => if bcount < acount {
-                    a.head = Some(AddSkip(acount - bcount));
-                    delres.place(&b.next().unwrap());
-                } else if bcount > acount {
-                    a.next();
-                    delres.place(&DelChars(acount));
-                    b.head = Some(DelChars(bcount - acount));
-                } else {
-                    a.next();
-                    delres.place(&b.next().unwrap());
-                },
-                _ => {
-                    panic!("Unimplemented or Unexpected");
-                }
-            },
-            DelSkip(bcount) => match a.get_head() {
-                AddChars(avalue) => {
-                    let alen = avalue.chars().count();
-                    if bcount < alen {
-                        addres.place(&AddChars(avalue.chars().take(bcount).collect()));
-                        a.head = Some(AddChars(avalue.chars().skip(bcount).collect()));
-                        b.next();
-                    } else if bcount > alen {
+            }
+            DelSkip(bcount) => {
+                match a.get_head() {
+                    AddChars(avalue) => {
+                        let alen = avalue.chars().count();
+                        if bcount < alen {
+                            addres.place(&AddChars(avalue.chars().take(bcount).collect()));
+                            a.head = Some(AddChars(avalue.chars().skip(bcount).collect()));
+                            b.next();
+                        } else if bcount > alen {
+                            addres.place(&a.next().unwrap());
+                            b.head = Some(DelSkip(bcount - alen));
+                        } else {
+                            addres.place(&a.get_head());
+                            a.next();
+                            b.next();
+                        }
+                    }
+                    AddSkip(acount) => {
+                        addres.place(&AddSkip(cmp::min(acount, bcount)));
+                        delres.place(&DelSkip(cmp::min(acount, bcount)));
+                        if acount > bcount {
+                            a.head = Some(AddSkip(acount - bcount));
+                            b.next();
+                        } else if acount < bcount {
+                            a.next();
+                            b.head = Some(DelSkip(bcount - acount));
+                        } else {
+                            a.next();
+                            b.next();
+                        }
+                    }
+                    AddWithGroup(..) => {
                         addres.place(&a.next().unwrap());
-                        b.head = Some(DelSkip(bcount - alen));
-                    } else {
-                        addres.place(&a.get_head());
+                        delres.place(&DelSkip(1));
+                        if bcount == 1 {
+                            b.next();
+                        } else {
+                            b.head = Some(DelSkip(bcount - 1));
+                        }
+                    }
+                    AddGroup(_, aspan) => {
+                        addres.place(&a.next().unwrap());
+                        if aspan.skip_len() > 0 {
+                            delres.place(&DelSkip(aspan.skip_len()));
+                        }
+                        if bcount == 1 {
+                            b.next();
+                        } else {
+                            b.head = Some(DelSkip(bcount - 1));
+                        }
+                    }
+                }
+            }
+            DelWithGroup(span) => {
+                match a.get_head() {
+                    AddChars(avalue) => {
+                        panic!("DelWithGroup by AddChars is ILLEGAL");
+                    }
+                    AddSkip(acount) => {
+                        delres.place(&b.next().unwrap());
+                        addres.place(&AddSkip(1));
+                        if acount > 1 {
+                            a.head = Some(AddSkip(acount - 1));
+                        } else {
+                            a.next();
+                        }
+                    }
+                    AddWithGroup(insspan) => {
                         a.next();
                         b.next();
-                    }
-                }
-                AddSkip(acount) => {
-                    addres.place(&AddSkip(cmp::min(acount, bcount)));
-                    delres.place(&DelSkip(cmp::min(acount, bcount)));
-                    if acount > bcount {
-                        a.head = Some(AddSkip(acount - bcount));
-                        b.next();
-                    } else if acount < bcount {
-                        a.next();
-                        b.head = Some(DelSkip(bcount - acount));
-                    } else {
-                        a.next();
-                        b.next();
-                    }
-                }
-                AddWithGroup(..) => {
-                    addres.place(&a.next().unwrap());
-                    delres.place(&DelSkip(1));
-                    if bcount == 1 {
-                        b.next();
-                    } else {
-                        b.head = Some(DelSkip(bcount - 1));
-                    }
-                }
-                AddGroup(_, aspan) => {
-                    addres.place(&a.next().unwrap());
-                    if aspan.skip_len() > 0 {
-                        delres.place(&DelSkip(aspan.skip_len()));
-                    }
-                    if bcount == 1 {
-                        b.next();
-                    } else {
-                        b.head = Some(DelSkip(bcount - 1));
-                    }
-                }
-            },
-            DelWithGroup(span) => match a.get_head() {
-                AddChars(avalue) => {
-                    panic!("DelWithGroup by AddChars is ILLEGAL");
-                }
-                AddSkip(acount) => {
-                    delres.place(&b.next().unwrap());
-                    addres.place(&AddSkip(1));
-                    if acount > 1 {
-                        a.head = Some(AddSkip(acount - 1));
-                    } else {
-                        a.next();
-                    }
-                }
-                AddWithGroup(insspan) => {
-                    a.next();
-                    b.next();
 
-                    let (del, ins) = compose_add_del(&insspan, &span);
-                    delres.place(&DelWithGroup(del));
-                    addres.place(&AddWithGroup(ins));
-                }
-                AddGroup(attr, insspan) => {
-                    a.next();
-                    b.next();
-
-                    let (del, ins) = compose_add_del(&insspan, &span);
-                    addres.place(&AddGroup(attr, ins));
-                    delres.place_all(&del);
-                }
-            },
-            DelGroup(span) => match a.get_head() {
-                AddChars(avalue) => {
-                    panic!("DelGroup by AddChars is ILLEGAL");
-                }
-                AddSkip(acount) => {
-                    delres.place(&b.next().unwrap());
-                    addres.place(&AddSkip(1));
-                    if acount > 1 {
-                        a.head = Some(AddSkip(acount - 1));
-                    } else {
+                        let (del, ins) = compose_add_del(&insspan, &span);
+                        delres.place(&DelWithGroup(del));
+                        addres.place(&AddWithGroup(ins));
+                    }
+                    AddGroup(attr, insspan) => {
                         a.next();
+                        b.next();
+
+                        let (del, ins) = compose_add_del(&insspan, &span);
+                        addres.place(&AddGroup(attr, ins));
+                        delres.place_all(&del);
                     }
                 }
-                AddWithGroup(insspan) => {
-                    a.next();
-                    b.next();
-
-                    let (del, ins) = compose_add_del(&insspan, &span);
-                    delres.place(&DelGroup(del));
-                    addres.place_all(&ins[..]);
-                }
-                AddGroup(attr, insspan) => {
-                    a.next();
-                    b.next();
-
-                    let (del, ins) = compose_add_del(&insspan, &span);
-                    delres.place_all(&del[..]);
-                    addres.place_all(&ins[..]);
-                }
-            },
-            DelGroupAll => match a.get_head() {
-                AddChars(avalue) => {
-                    panic!("DelGroupAll by AddChars is ILLEGAL");
-                }
-                AddSkip(acount) => {
-                    delres.place(&b.next().unwrap());
-                    if acount > 1 {
-                        a.head = Some(AddSkip(acount - 1));
-                    } else {
+            }
+            DelGroup(span) => {
+                match a.get_head() {
+                    AddChars(avalue) => {
+                        panic!("DelGroup by AddChars is ILLEGAL");
+                    }
+                    AddSkip(acount) => {
+                        delres.place(&b.next().unwrap());
+                        addres.place(&AddSkip(1));
+                        if acount > 1 {
+                            a.head = Some(AddSkip(acount - 1));
+                        } else {
+                            a.next();
+                        }
+                    }
+                    AddWithGroup(insspan) => {
                         a.next();
+                        b.next();
+
+                        let (del, ins) = compose_add_del(&insspan, &span);
+                        delres.place(&DelGroup(del));
+                        addres.place_all(&ins[..]);
+                    }
+                    AddGroup(attr, insspan) => {
+                        a.next();
+                        b.next();
+
+                        let (del, ins) = compose_add_del(&insspan, &span);
+                        delres.place_all(&del[..]);
+                        addres.place_all(&ins[..]);
                     }
                 }
-                AddWithGroup(insspan) => {
-                    a.next();
-                    delres.place(&b.next().unwrap());
+            }
+            DelGroupAll => {
+                match a.get_head() {
+                    AddChars(avalue) => {
+                        panic!("DelGroupAll by AddChars is ILLEGAL");
+                    }
+                    AddSkip(acount) => {
+                        delres.place(&b.next().unwrap());
+                        if acount > 1 {
+                            a.head = Some(AddSkip(acount - 1));
+                        } else {
+                            a.next();
+                        }
+                    }
+                    AddWithGroup(insspan) => {
+                        a.next();
+                        delres.place(&b.next().unwrap());
+                    }
+                    AddGroup(attr, insspan) => {
+                        a.next();
+                        b.next();
+                    }
                 }
-                AddGroup(attr, insspan) => {
-                    a.next();
-                    b.next();
-                }
-            },
+            }
         }
     }
 

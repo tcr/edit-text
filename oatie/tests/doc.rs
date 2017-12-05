@@ -45,7 +45,7 @@ fn try_this() {
                 DelSkip(1),
                 DelChars(5),
                 DelGroupAll,
-            ]
+            ],
         ),
         vec![DocChars("low".to_owned())]
     );
@@ -53,7 +53,7 @@ fn try_this() {
     assert_eq!(
         apply_delete(
             &vec![DocChars("Hello World!".to_owned())],
-            &vec![DelChars(6)]
+            &vec![DelChars(6)],
         ),
         vec![DocChars("World!".to_owned())]
     );
@@ -61,7 +61,7 @@ fn try_this() {
     assert_eq!(
         apply_add(
             &vec![DocChars("World!".to_owned())],
-            &vec![AddChars("Hello ".to_owned())]
+            &vec![AddChars("Hello ".to_owned())],
         ),
         vec![DocChars("Hello World!".to_owned())]
     );
@@ -72,7 +72,7 @@ fn try_this() {
                 DocGroup(HashMap::new(), vec![]),
                 DocChars("World!".to_owned()),
             ],
-            &vec![AddSkip(1), AddChars("Hello ".to_owned())]
+            &vec![AddSkip(1), AddChars("Hello ".to_owned())],
         ),
         vec![
             DocGroup(HashMap::new(), vec![]),
@@ -85,10 +85,10 @@ fn try_this() {
             &vec![
                 DocGroup(
                     HashMap::new(),
-                    vec![DocChars("Hello Damned World!".to_owned())],
+                    vec![DocChars("Hello Damned World!".to_owned())]
                 ),
             ],
-            &vec![DelWithGroup(vec![DelSkip(6), DelChars(7)])]
+            &vec![DelWithGroup(vec![DelSkip(6), DelChars(7)])],
         ),
         vec![
             DocGroup(HashMap::new(), vec![DocChars("Hello World!".to_owned())]),
@@ -102,7 +102,7 @@ fn try_this() {
             ],
             &vec![
                 AddWithGroup(vec![AddSkip(5), AddChars(" World".to_owned())]),
-            ]
+            ],
         ),
         vec![
             DocGroup(HashMap::new(), vec![DocChars("Hello World!".to_owned())]),
@@ -110,17 +110,23 @@ fn try_this() {
     );
 
     assert_eq!(
-        apply_operation(
-            &vec![DocChars("Goodbye World!".to_owned())],
-            &(vec![DelChars(7)], vec![AddChars("Hello".to_owned())])
-        ),
+        apply_operation(&vec![DocChars("Goodbye World!".to_owned())], &(
+            vec![
+                DelChars(7),
+            ],
+            vec![
+                AddChars(
+                    "Hello".to_owned()
+                ),
+            ],
+        )),
         vec![DocChars("Hello World!".to_owned())]
     );
 
     assert_eq!(
         apply_add(
             &vec![DocChars("Hello world!".to_owned())],
-            &vec![AddSkip(10), AddChars("dd49".to_owned()), AddSkip(2)]
+            &vec![AddSkip(10), AddChars("dd49".to_owned()), AddSkip(2)],
         ),
         vec![DocChars("Hello worldd49d!".to_owned())]
     );
@@ -139,8 +145,8 @@ fn test_lib_op() {
             ],
             &(
                 vec![DelSkip(1), DelChars(1), DelSkip(2), DelSkip(1)],
-                vec![AddSkip(3)]
-            )
+                vec![AddSkip(3)],
+            ),
         ),
         vec![
             DocChars("Ho".to_owned()),

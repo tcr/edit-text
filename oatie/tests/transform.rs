@@ -345,7 +345,12 @@ fn test_transform_del() {
 // TODO how do you ? this
 #[test]
 fn test_transform_folder() {
-    let folder = Path::new(file!()).parent().unwrap().parent().unwrap().join("in");
+    let folder = Path::new(file!())
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("in");
     for path in read_dir(folder).unwrap() {
         println!();
         println!();
