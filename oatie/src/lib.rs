@@ -1,6 +1,7 @@
 //! Defines utility functions and operation application.
 
 #![allow(unknown_lints)]
+#![allow(single_char_pattern)]
 #![allow(ptr_arg)]
 #![allow(unused_variables)]
 #![allow(dead_code)]
@@ -16,6 +17,7 @@ extern crate rand;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate term_painter;
+#[macro_use] extern crate failure;
 
 pub mod compose;
 pub mod doc;
@@ -131,11 +133,11 @@ pub fn debug_span(val: &DocSpan) {
 }
 
 pub fn debug_elem(val: &DocElement) {
-    match val {
-        &DocChars(ref value) => {
+    match *val {
+        DocChars(ref value) => {
             println!("str({})", value);
         }
-        &DocGroup(ref attrs, ref span) => {
+        DocGroup(ref attrs, ref span) => {
             println!("attrs({})", attrs.capacity());
             println!("span({})", span.capacity());
         }
@@ -143,9 +145,9 @@ pub fn debug_elem(val: &DocElement) {
 }
 
 fn place_chars(res: &mut DocSpan, value: String) {
-    if res.len() > 0 {
+    if !res.is_empty() {
         let idx = res.len() - 1;
-        if let &mut DocChars(ref mut prefix) = &mut res[idx] {
+        if let DocChars(ref mut prefix) = res[idx] {
             prefix.push_str(&value[..]);
             return;
         }
@@ -154,8 +156,8 @@ fn place_chars(res: &mut DocSpan, value: String) {
 }
 
 fn place_any(res: &mut DocSpan, value: &DocElement) {
-    match value {
-        &DocChars(ref string) => {
+    match *value {
+        DocChars(ref string) => {
             place_chars(res, string.clone());
         }
         _ => {
@@ -165,7 +167,7 @@ fn place_any(res: &mut DocSpan, value: &DocElement) {
 }
 
 fn place_many(res: &mut DocSpan, values: &[DocElement]) {
-    if values.len() > 0 {
+    if !values.is_empty() {
         place_any(res, &values[0]);
         res.extend_from_slice(&values[1..]);
     }
@@ -176,14 +178,14 @@ pub fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan
     let mut del = &delvec[..];
 
     let mut first = None;
-    if span.len() > 0 {
+    if !span.is_empty() {
         first = Some(span[0].clone());
         span = &span[1..]
     }
 
     let mut res: DocSpan = Vec::with_capacity(span.len());
 
-    if del.len() == 0 {
+    if del.is_empty() {
         return (vec![], spanvec.clone().to_vec());
     }
 
@@ -266,7 +268,7 @@ pub fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan
         }
 
         if nextdel {
-            if del.len() == 0 {
+            if del.is_empty() {
                 let mut remaining = vec![];
                 if !nextfirst && !first.is_none() && !exhausted {
                     remaining.push(first.clone().unwrap());
@@ -281,7 +283,7 @@ pub fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan
         }
 
         if nextfirst {
-            if span.len() == 0 {
+            if span.is_empty() {
                 exhausted = true;
             } else {
                 first = Some(span[0].clone());
@@ -308,8 +310,8 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
 
     let mut res: DocSpan = Vec::with_capacity(span.len());
 
-    if del.len() == 0 {
-        return span.clone().to_vec();
+    if del.is_empty() {
+        return span.to_vec();
     }
 
     let mut first = span[0].clone();
@@ -386,11 +388,11 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
         }
 
         if nextdel {
-            if del.len() == 0 {
+            if del.is_empty() {
                 if !nextfirst {
                     place_any(&mut res, &first)
                 }
-                if span.len() > 0 {
+                if !span.is_empty() {
                     place_any(&mut res, &span[0]);
                     res.extend_from_slice(&span[1..]);
                 }
@@ -402,7 +404,7 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
         }
 
         if nextfirst {
-            if span.len() == 0 {
+            if span.is_empty() {
                 panic!("exhausted document\n -->{:?}\n -->{:?}", first, span);
             }
 

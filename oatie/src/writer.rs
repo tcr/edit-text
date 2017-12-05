@@ -64,7 +64,7 @@ impl AddWriter {
     }
 
     pub fn result(self) -> AddSpan {
-        if self.stack.len() > 0 {
+        if !self.stack.is_empty() {
             println!("{:?}", self);
             assert!(false, "cannot get result when stack is still full");
         }
@@ -131,7 +131,7 @@ impl DelWriter {
     }
 
     pub fn result(self) -> DelSpan {
-        if self.stack.len() > 0 {
+        if !self.stack.is_empty() {
             println!("{:?}", self);
             assert!(false, "cannot get result when stack is still full");
         }

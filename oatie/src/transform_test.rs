@@ -8,61 +8,71 @@ use super::doc::*;
 use super::normalize;
 use super::transform::*;
 use serde_json;
+use failure::Error;
 
-macro_rules! comma_seq {
-    ($strval: expr, $target: expr, $fnv: expr) => (
-        let mut inner = $strval;
-        while inner.len() > 0 {
-            let mut item = None;
-            for (comma, _) in {
-                let mut a: Vec<_> = inner.match_indices(",").collect();
-                a.push((inner.len() as usize, ""));
-                a
-            } {
-                let take = &inner[0..comma];
-                match $fnv(take) {
-                    Ok(arg) => {
-                        item = Some(arg);
-                        if comma >= inner.len() {
-                            inner = &inner[inner.len()..];
-                            break;
-                        }
-                        inner = &inner[comma + 1..];
+#[derive(Debug, Fail)]
+#[fail(display = "Group has no readable data")]
+struct NoReadableData;
+
+#[derive(Debug, Fail)]
+#[fail(display = "Malformed data: {}", _0)]
+struct MalformedData(String);
+
+#[derive(Debug, Fail)]
+#[fail(display = "Exhausted array")]
+struct ExhaustedArray;
+
+fn comma_seq<T, F>(mut inner: &str, fnv: F) -> Result<Vec<T>, NoReadableData>
+    where F: Fn(&str) -> Result<T, Error> {
+    let mut target = vec![];
+    while !inner.is_empty() {
+        let mut item = None;
+        for (comma, _) in {
+            let mut a: Vec<_> = inner.match_indices(",").collect();
+            a.push((inner.len() as usize, ""));
+            a
+        } {
+            let take = &inner[0..comma];
+            match fnv(take) {
+                Ok(arg) => {
+                    item = Some(arg);
+                    if comma >= inner.len() {
+                        inner = &inner[inner.len()..];
                         break;
                     }
-                    Err(..) => {
-                        continue;
-                    }
+                    inner = &inner[comma + 1..];
+                    break;
+                }
+                Err(..) => {
+                    continue;
                 }
             }
-            if item.is_none() {
-                return Err(io::Error::new(io::ErrorKind::InvalidData, "Group has no readable data"));
-            }
-            $target.push(item.unwrap());
         }
-    )
+        if item.is_none() {
+            return Err(NoReadableData);
+        }
+        target.push(item.unwrap());
+    }
+    Ok(target)
 }
 
-fn parse_del(mut value: &str) -> io::Result<DelElement> {
+fn parse_del(mut value: &str) -> Result<DelElement, Error> {
     value = value.trim();
 
     if value == "DelGroupAll" {
         return Ok(DelElement::DelGroupAll);
     }
 
-    let mut cap = None;
-    if value.starts_with("DelSkip(") && value.ends_with(")") {
-        cap = Some(("DelSkip", &value["DelSkip(".len()..value.len() - 1]));
-    }
-    if value.starts_with("DelChars(") && value.ends_with(")") {
-        cap = Some(("DelChars", &value["DelChars(".len()..value.len() - 1]));
-    }
+    let cap = if value.starts_with("DelSkip(") && value.ends_with(')') {
+        Some(("DelSkip", &value["DelSkip(".len()..value.len() - 1]))
+    } else if value.starts_with("DelChars(") && value.ends_with(')') {
+        Some(("DelChars", &value["DelChars(".len()..value.len() - 1]))
+    } else {
+        None
+    };
 
     if let Some((key, segment)) = cap {
-        let inner = try!(segment.parse::<usize>().or(Err(io::Error::new(
-            io::ErrorKind::InvalidData,
-            "Bad parsing of number"
-        ))));
+        let inner = segment.parse::<usize>()?;
         return Ok(match key {
             "DelSkip" => DelElement::DelSkip(inner),
             "DelChars" => DelElement::DelChars(inner),
@@ -70,20 +80,19 @@ fn parse_del(mut value: &str) -> io::Result<DelElement> {
         });
     }
 
-    let mut cap = None;
-    if value.starts_with("DelWithGroup([") && value.ends_with("])") {
-        cap = Some((
+    let cap = if value.starts_with("DelWithGroup([") && value.ends_with("])") {
+        Some((
             "DelWithGroup",
             &value["DelWithGroup([".len()..value.len() - 2],
-        ));
-    }
-    if value.starts_with("DelGroup([") && value.ends_with("])") {
-        cap = Some(("DelGroup", &value["DelGroup([".len()..value.len() - 2]));
-    }
+        ))
+    } else if value.starts_with("DelGroup([") && value.ends_with("])") {
+        Some(("DelGroup", &value["DelGroup([".len()..value.len() - 2]))
+    } else {
+        None
+    };
 
     if let Some((key, inner)) = cap {
-        let mut args = vec![];
-        comma_seq!(inner, args, parse_del);
+        let args = comma_seq(inner, parse_del)?;
 
         return Ok(match key {
             "DelGroup" => DelElement::DelGroup(args),
@@ -91,33 +100,33 @@ fn parse_del(mut value: &str) -> io::Result<DelElement> {
             _ => unreachable!("why 2"),
         });
     }
-    Err(malformed("Invalid data"))
+    Err(MalformedData("Invalid data".into()))?
 }
 
-fn parse_add(mut value: &str) -> io::Result<AddElement> {
+fn parse_add(mut value: &str) -> Result<AddElement, Error> {
     value = value.trim();
 
     //if value == "DelGroupAll" {
     //    return Ok(DelElement::DelGroupAll);
     //}
 
-    let mut cap = None;
-    if value.starts_with("AddSkip(") && value.ends_with(")") {
-        cap = Some(("AddSkip", &value["DelSkip(".len()..value.len() - 1]));
-    }
-    if value.starts_with("AddChars(") && value.ends_with(")") {
-        cap = Some(("AddChars", &value["DelChars(".len()..value.len() - 1]));
-    }
+    let cap = if value.starts_with("AddSkip(") && value.ends_with(')') {
+        Some(("AddSkip", &value["DelSkip(".len()..value.len() - 1]))
+    } else if value.starts_with("AddChars(") && value.ends_with(')') {
+        Some(("AddChars", &value["DelChars(".len()..value.len() - 1]))
+    } else {
+        None
+    };
 
     if let Some((key, segment)) = cap {
         return Ok(match key {
-            "AddSkip" => AddElement::AddSkip(try!(segment.parse::<usize>().or(Err(io::Error::new(
+            "AddSkip" => AddElement::AddSkip(try!(segment.parse::<usize>().or_else(|_| Err(io::Error::new(
                 io::ErrorKind::InvalidData,
                 "Bad parsing of number"
             ))))),
             "AddChars" => {
                 if segment.len() < 2 || !segment.starts_with("\"") || !segment.ends_with("\"") {
-                    return Err(malformed("Expected full quoted string"));
+                    Err(MalformedData("Expected full quoted string".into()))?;
                 }
                 let segment = &segment[1..segment.len() - 1];
                 AddElement::AddChars(segment.to_string())
@@ -130,8 +139,7 @@ fn parse_add(mut value: &str) -> io::Result<AddElement> {
     if value.starts_with("AddWithGroup([") && value.ends_with("])") {
         let inner = &value["AddWithGroup([".len()..value.len() - 2];
 
-        let mut args = vec![];
-        comma_seq!(inner, args, parse_add);
+        let args = comma_seq(inner, parse_add)?;
 
         return Ok(AddElement::AddWithGroup(args));
     }
@@ -151,8 +159,7 @@ fn parse_add(mut value: &str) -> io::Result<AddElement> {
 
         let next_index = value[right_index + 1..].find('[').unwrap();
         let inner = &value[right_index + 1 + next_index + 1..value.len() - 2];
-        let mut args = vec![];
-        comma_seq!(inner, args, parse_add);
+        let args = comma_seq(inner, parse_add)?;
 
         return Ok(AddElement::AddGroup(map, args));
     }
@@ -168,83 +175,39 @@ fn parse_add(mut value: &str) -> io::Result<AddElement> {
     //     });
     // }
 
-    Err(malformed("Invalid data"))
+    Err(MalformedData("Invalid data".into()))?
 }
 
-fn malformed(reason: &str) -> io::Error {
-    io::Error::new(io::ErrorKind::InvalidData, reason)
+fn extract_array(input: &str) -> Result<String, ExhaustedArray> {
+    if !(input.starts_with("[") && input.ends_with("]")) {
+        Err(ExhaustedArray)
+    } else {
+        Ok(input[1..input.len() - 1].to_string())
+    }
 }
 
-
-pub fn run_transform_test(input: &str) -> io::Result<()> {
-    //    let input = r#"
-    //[DelSkip(1)]
-    //[AddWithGroup([AddWithGroup([AddWithGroup([AddChars("1234"), AddSkip(6)])])])]
-    //
-    //[DelWithGroup([DelWithGroup([DelWithGroup([DelChars(4), DelSkip(2)])])])]
-    //[]
-    //"#;
-
-    let four = input.lines().filter(|x| x.len() > 0).collect::<Vec<_>>();
+pub fn run_transform_test(input: &str) -> Result<(), Error> {
+    let four = input.lines().filter(|x| !x.is_empty()).collect::<Vec<_>>();
     if four.len() != 4 && four.len() != 6 {
-        return Err(malformed("Needed four or six lines as input"));
+        Err(MalformedData("Needed four or six lines as input".into()))?;
     }
 
-    let a = four[0].clone();
-    if !(a.starts_with("[") && a.ends_with("]")) {
-        return Err(malformed("Expected array"));
-    }
-    let inner = &a[1..a.len() - 1];
-    let mut del_a = vec![];
-    comma_seq!(inner, del_a, parse_del);
+    let del_a = comma_seq(&extract_array(four[0])?, parse_del)?;
+    let add_a = comma_seq(&extract_array(four[1])?, parse_add)?;
 
-    let a = four[1].clone();
-    if !(a.starts_with("[") && a.ends_with("]")) {
-        return Err(malformed("Expected array"));
-    }
-    let inner = &a[1..a.len() - 1];
-    let mut add_a = vec![];
-    comma_seq!(inner, add_a, parse_add);
-
-    let a = four[2].clone();
-    if !(a.starts_with("[") && a.ends_with("]")) {
-        return Err(malformed("Expected array"));
-    }
-    let inner = &a[1..a.len() - 1];
-    let mut del_b = vec![];
-    comma_seq!(inner, del_b, parse_del);
-
-    let a = four[3].clone();
-    if !(a.starts_with("[") && a.ends_with("]")) {
-        return Err(malformed("Expected array"));
-    }
-    let inner = &a[1..a.len() - 1];
-    let mut add_b = vec![];
-    comma_seq!(inner, add_b, parse_add);
+    let del_b = comma_seq(&extract_array(four[2])?, parse_del)?;
+    let add_b = comma_seq(&extract_array(four[3])?, parse_add)?;
 
     let a = (del_a, add_a);
     let b = (del_b, add_b);
 
     println!("transform start!");
-    let confirm = op_transform_compare(a.clone(), b.clone());
+    let confirm = op_transform_compare(&a, &b);
 
     // Check validating lines
     if four.len() == 6 {
-        let a = four[4].clone();
-        if !(a.starts_with("[") && a.ends_with("]")) {
-            return Err(malformed("Expected array"));
-        }
-        let inner = &a[1..a.len() - 1];
-        let mut confirm_del = vec![];
-        comma_seq!(inner, confirm_del, parse_del);
-
-        let a = four[5].clone();
-        if !(a.starts_with("[") && a.ends_with("]")) {
-            return Err(malformed("Expected array"));
-        }
-        let inner = &a[1..a.len() - 1];
-        let mut confirm_add = vec![];
-        comma_seq!(inner, confirm_add, parse_add);
+        let confirm_del = comma_seq(&extract_array(four[4])?, parse_del)?;
+        let confirm_add = comma_seq(&extract_array(four[5])?, parse_add)?;
 
         println!("Validating...");
         assert_eq!(confirm, (confirm_del, confirm_add));
@@ -254,21 +217,21 @@ pub fn run_transform_test(input: &str) -> io::Result<()> {
     // ALSO CHECK THE REVERSE
     // The result may be different, so we don't care it to 
     // that, but we can check that the transform is at least normalized.
-    let _ = op_transform_compare(b.clone(), a.clone());
+    let _ = op_transform_compare(&b, &a);
 
     Ok(())
 }
 
-fn op_transform_compare(a: Op, b: Op) -> Op {
-    let (a_, b_) = transform(&a, &b);
+fn op_transform_compare(a: &Op, b: &Op) -> Op {
+    let (a_, b_) = transform(a, b);
 
-    let a_res = normalize(compose::compose(&a, &a_));
-    let b_res = normalize(compose::compose(&b, &b_));
+    let a_res = normalize(compose::compose(a, &a_));
+    let b_res = normalize(compose::compose(b, &b_));
 
-    println!("");
+    println!();
     println!("A' {:?}", a_res);
     println!("B' {:?}", b_res);
-    println!("");
+    println!();
 
     assert_eq!(a_res, b_res);
 

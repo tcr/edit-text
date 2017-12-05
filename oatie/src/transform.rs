@@ -19,7 +19,11 @@ use std::collections::HashSet;
 
 
 fn parse_classes(input: &str) -> HashSet<String> {
-    input.split_whitespace().filter(|x| x.len() > 0).map(|x| x.to_owned()).collect()
+    input
+        .split_whitespace()
+        .filter(|x| !x.is_empty())
+        .map(|x| x.to_owned())
+        .collect()
 }
 
 fn format_classes(set: &HashSet<String>) -> String {
@@ -27,7 +31,6 @@ fn format_classes(set: &HashSet<String>) -> String {
     classes.sort();
     classes.join(" ")
 }
-
 
 
 #[derive(Clone, Debug)]
@@ -75,7 +78,7 @@ impl Transform {
         }
     }
 
-    fn enter(&mut self, name: Tag) {
+    fn enter(&mut self, name: &Tag) {
         let last = self.tracks
             .iter()
             .rposition(|x| x.tag_real.is_some())
@@ -104,7 +107,7 @@ impl Transform {
     }
 
     // TODO maybe take "real" value as input?
-    fn enter_a(&mut self, a: Tag, b: Option<Tag>) {
+    fn enter_a(&mut self, a: &Tag, b: Option<Tag>) {
         let last = self.tracks
             .iter()
             .rposition(|x| x.tag_real.is_some())
@@ -113,7 +116,7 @@ impl Transform {
         
         // TODO merge this functionality elsewhere
         let real = if let Some(ref b) = b {
-            Some(get_real_merge(&a, b).unwrap_or(a.clone()))
+            Some(get_real_merge(a, b).unwrap_or_else(|| a.clone()))
         } else {
             Some(a.clone())
         };
@@ -148,7 +151,7 @@ impl Transform {
                     
         // TODO merge this functionality elsewhere
         let real = if let Some(ref a) = a {
-            Some(get_real_merge(a, &b).unwrap_or(b.clone()))
+            Some(get_real_merge(a, &b).unwrap_or_else(|| b.clone()))
         } else {
             Some(b.clone())
         };
@@ -490,7 +493,7 @@ impl Transform {
             if track.tag_real.is_none() {
                 println!("REGENERATE: {:?}", track);
                 if let (&Some(ref a), &Some(ref b)) = (&track.tag_a, &track.tag_b) {
-                    track.tag_real = Some(get_real_merge(a, b).unwrap_or(a.clone()));
+                    track.tag_real = Some(get_real_merge(a, b).unwrap_or_else(|| a.clone()));
                     track.is_original_a = false;
                     track.is_original_b = false;
                 } else if track.tag_b.is_some() {
@@ -737,28 +740,28 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
 
                 // Opening
                 (Some(AddGroup(ref a_attrs, _)), Some(AddGroup(ref b_attrs, _))) => {
-                    let a_type = Tag::from_attrs(&a_attrs).tag_type().unwrap();
-                    let b_type = Tag::from_attrs(&b_attrs).tag_type().unwrap();
+                    let a_type = Tag::from_attrs(a_attrs).tag_type().unwrap();
+                    let b_type = Tag::from_attrs(b_attrs).tag_type().unwrap();
 
-                    let b_is_child_of_a = Tag::from_attrs(&b_attrs)
+                    let b_is_child_of_a = Tag::from_attrs(b_attrs)
                         .tag_type()
                         .unwrap()
                         .ancestors()
                         .iter()
-                        .any(|x| *x == Tag::from_attrs(&a_attrs).tag_type().unwrap());
+                        .any(|x| *x == Tag::from_attrs(a_attrs).tag_type().unwrap());
 
                     println!("groupgruop {:?} {:?}", a_type, b_type);
                     if a_type == b_type {
                         a.enter();
                         b.enter();
-                        if Tag::from_attrs(a_attrs) == Tag::from_attrs(&b_attrs) {
-                            t.enter(Tag::from_attrs(a_attrs));
+                        if Tag::from_attrs(a_attrs) == Tag::from_attrs(b_attrs) {
+                            t.enter(&Tag::from_attrs(a_attrs));
                         } else {
-                            t.enter_a(Tag::from_attrs(a_attrs), Some(Tag::from_attrs(b_attrs)));
+                            t.enter_a(&Tag::from_attrs(a_attrs), Some(Tag::from_attrs(b_attrs)));
                         }
                     } else if b_is_child_of_a {
                         a.enter();
-                        t.enter_a(Tag::from_attrs(a_attrs), None);
+                        t.enter_a(&Tag::from_attrs(a_attrs), None);
                     } else {
                         b.enter();
                         t.enter_b(None, Tag::from_attrs(b_attrs));
@@ -771,7 +774,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     let a_type = Tag::from_attrs(a_attrs).tag_type();
 
                     if t.next_track_a_type() == a_type {
-                        if a_type.clone().map_or(false, |x| x.do_open_split()) {
+                        if a_type.map_or(false, |x| x.do_open_split()) {
                             println!("INTERRUPTING");
                             t.interrupt(a_type.unwrap(), true);
                             if let Some(j) = t.next_track_a() {
@@ -783,7 +786,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                             t.unenter_a();
                         }
                     } else {
-                        t.enter_a(Tag::from_attrs(a_attrs), None);
+                        t.enter_a(&Tag::from_attrs(a_attrs), None);
                     }
 
                     // println!("adding left group:");
@@ -798,7 +801,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     let b_type = Tag::from_attrs(b_attrs).tag_type();
 
                     if t.next_track_b_type() == b_type {
-                        if b_type.clone().map_or(false, |x| x.do_open_split()) {
+                        if b_type.map_or(false, |x| x.do_open_split()) {
                             println!("INTERRUPTING");
                             t.interrupt(b_type.unwrap(), true);
                             if let Some(j) = t.next_track_b() {

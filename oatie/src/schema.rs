@@ -39,12 +39,12 @@ impl TrackType {
     // Unsure about this naming
     pub fn do_open_split(&self) -> bool {
         match *self {
-            TrackType::ListItems => true,
-            TrackType::Inlines => true,
+            TrackType::ListItems | TrackType::Inlines => true,
             _ => false,
         }
     }
 
+    #[allow(match_same_arms)]
     pub fn parents(&self) -> Vec<TrackType> {
         use self::TrackType::*;
         match *self {
@@ -60,6 +60,7 @@ impl TrackType {
         }
     }
 
+    #[allow(match_same_arms)]
     pub fn ancestors(&self) -> Vec<TrackType> {
         use self::TrackType::*;
         match *self {
@@ -93,7 +94,7 @@ impl Tag {
     }
 
     pub fn tag_type(self: &Tag) -> Option<TrackType> {
-        match &**self.0.get("tag").unwrap() {
+        match &*self.0["tag"] {
             "ul" => Some(TrackType::Lists),
             "li" => Some(TrackType::ListItems),
             "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => Some(TrackType::Blocks),

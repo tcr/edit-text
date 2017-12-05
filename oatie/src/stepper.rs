@@ -25,7 +25,7 @@ impl DelStepper {
 
     pub fn next(&mut self) -> Option<DelElement> {
         let res = self.head.clone();
-        self.head = if self.rest.len() > 0 {
+        self.head = if !self.rest.is_empty() {
             Some(self.rest.remove(0))
         } else {
             None
@@ -38,7 +38,7 @@ impl DelStepper {
     }
 
     pub fn is_done(&self) -> bool {
-        self.head.is_none() && self.stack.len() == 0
+        self.head.is_none() && self.stack.is_empty()
     }
 
     pub fn enter(&mut self) {
@@ -93,7 +93,7 @@ impl AddStepper {
 
     pub fn next(&mut self) -> Option<AddElement> {
         let res = self.head.clone();
-        self.head = if self.rest.len() > 0 {
+        self.head = if !self.rest.is_empty() {
             Some(self.rest.remove(0))
         } else {
             None
@@ -106,7 +106,7 @@ impl AddStepper {
     }
 
     pub fn is_done(&self) -> bool {
-        self.head.is_none() && self.stack.len() == 0
+        self.head.is_none() && self.stack.is_empty()
     }
 
     pub fn into_span(self) -> AddSpan {
