@@ -14,8 +14,7 @@ extern crate serde;
 
 use std::sync::{Arc, Mutex};
 use oatie::doc::*;
-use oatie::apply_operation;
-use oatie::compose::compose;
+use oatie::{OT, Operation};
 use rocket_contrib::Json;
 use rocket::State;
 use rocket::response::NamedFile;
@@ -23,8 +22,8 @@ use serde_json::{Value};
 use std::path::{Path, PathBuf};
 use oatie::transform::transform;
 
-fn default_doc() -> DocSpan {
-    doc_span![
+fn default_doc() -> Doc {
+    Doc(doc_span![
         DocGroup({"tag": "h1"}, [
             DocChars("Hello! "),
             DocGroup({"tag": "span", "class": "bold"}, [DocChars("what's")]),
@@ -40,7 +39,7 @@ fn default_doc() -> DocSpan {
                 ]),
             ]),
         ])
-    ]
+    ])
 }
 
 #[derive(Serialize)]
@@ -53,7 +52,8 @@ type ConfirmInput = (Vec<Op>, Vec<DocElement>);
 // TODO should return HTTP error code on failure?
 #[post("/api/confirm", data = "<struct_body>")]
 fn api_confirm(struct_body: Json<ConfirmInput>, mote: State<MoteState>) -> Json<ConfirmResponse> {
-    let (ops, compare_doc) = struct_body.0;
+    let (ops, compare_span) = struct_body.0;
+    let compare_doc = Doc(compare_span);
 
     let doc = mote.body.lock().unwrap();
     let start = doc.clone();
@@ -77,7 +77,7 @@ fn api_confirm(struct_body: Json<ConfirmInput>, mote: State<MoteState>) -> Json<
             println!("  {:?},", i.1);
             println!(")");
 
-            op = compose(&op, &i);
+            op = Operation::compose(&op, &i);
 
             println!("combined: op_span!(");
             println!("  {:?},", op.0);
@@ -90,7 +90,7 @@ fn api_confirm(struct_body: Json<ConfirmInput>, mote: State<MoteState>) -> Json<
             println!("start obj {:?}", start);
             println!("apply op {:?}", op);
 
-            res = apply_operation(&start, &op)
+            res = OT::apply(&start, &op)
         }
         res
     } else {
@@ -118,7 +118,8 @@ type RandomInput = (Vec<Op>, Vec<DocElement>);
 // TODO should return HTTP error code on failure?
 #[post("/api/random", data = "<struct_body>")]
 fn api_random(struct_body: Json<RandomInput>, mote: State<MoteState>) -> Json<RandomResponse> {
-    let (ops, compare_doc) = struct_body.0;
+    let (ops, compare_span) = struct_body.0;
+    let compare_doc = Doc(compare_span);
 
     let doc = mote.body.lock().unwrap();
     let start = doc.clone();
@@ -142,7 +143,7 @@ fn api_random(struct_body: Json<RandomInput>, mote: State<MoteState>) -> Json<Ra
             println!("  {:?},", i.1);
             println!(")");
 
-            op = compose(&op, &i);
+            op = Operation::compose(&op, &i);
 
             println!("combined: op_span!(");
             println!("  {:?},", op.0);
@@ -155,7 +156,7 @@ fn api_random(struct_body: Json<RandomInput>, mote: State<MoteState>) -> Json<Ra
             println!("start obj {:?}", start);
             println!("apply op {:?}", op);
 
-            res = apply_operation(&start, &op)
+            res = OT::apply(&start, &op)
         }
         res
     } else {
@@ -172,12 +173,12 @@ fn api_random(struct_body: Json<RandomInput>, mote: State<MoteState>) -> Json<Ra
         [AddGroup({"tag": "div"}, [AddSkip(1)])],
     );
 
-    let compare_doc = apply_operation(&compare_doc, &new_op);
+    let compare_doc = OT::apply(&compare_doc, &new_op);
 
     Json(RandomResponse {
         ok: res == compare_doc,
         op: new_op,
-        doc: compare_doc,
+        doc: compare_doc.0,
     })
 }
 
@@ -196,7 +197,7 @@ fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<Confir
     } else {
         let mut op = ops_a.remove(0);
         for i in ops_a.into_iter() {
-            op = compose(&op, &i);
+            op = Operation::compose(&op, &i);
         }
         op
     };
@@ -207,7 +208,7 @@ fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<Confir
     } else {
         let mut op = ops_b.remove(0);
         for i in ops_b.into_iter() {
-            op = compose(&op, &i);
+            op = Operation::compose(&op, &i);
         }
         op
     };
@@ -231,18 +232,18 @@ fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<Confir
     println!("testing...");
     println!("");
 
-    let doc_a = apply_operation(&doc.clone(), &op_a);
-    let doc_b = apply_operation(&doc.clone(), &op_b);
+    let doc_a = OT::apply(&doc.clone(), &op_a);
+    let doc_b = OT::apply(&doc.clone(), &op_b);
 
     println!("");
     println!("DOC A {:?}", doc_a);
     println!("OP A' {:?}", a_);
-    let a_res = apply_operation(&doc_a, &a_);
+    let a_res = OT::apply(&doc_a, &a_);
 
     println!("");
     println!("DOC B {:?}", doc_b);
     println!("OP B' {:?}", b_);
-    let b_res = apply_operation(&doc_b, &b_);
+    let b_res = OT::apply(&doc_b, &b_);
 
     println!("");
     println!("a res {:?}", a_res);
@@ -263,7 +264,7 @@ fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<Confir
 #[get("/api/hello")]
 fn api_hello(mote: State<MoteState>) -> Json<DocSpan> {
     let doc = mote.body.lock().unwrap();
-    Json(doc.clone())
+    Json(doc.clone().0)
 }
 
 #[post("/api/reset")]
@@ -292,7 +293,7 @@ fn files(file: PathBuf) -> Option<NamedFile> {
 }
 
 struct MoteState {
-    body: Arc<Mutex<DocSpan>>,
+    body: Arc<Mutex<Doc>>,
 }
 
 fn main() {

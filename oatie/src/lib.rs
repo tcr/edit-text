@@ -39,7 +39,7 @@ use std::collections::HashMap;
 pub trait OT {
     type Op: Operation;
     
-    fn apply(&self, Self::Op) -> Self;
+    fn apply(&self, &Self::Op) -> Self;
 }
 
 pub trait Operation where Self: Sized {
@@ -50,8 +50,8 @@ pub trait Operation where Self: Sized {
 impl OT for Doc {
     type Op = Op;
 
-    fn apply(&self, op: Self::Op) -> Self {
-        Doc(apply_operation(&self.0, &op))
+    fn apply(&self, op: &Self::Op) -> Self {
+        Doc(apply_operation(&self.0, op))
     }
 }
 

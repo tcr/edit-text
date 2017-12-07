@@ -15,6 +15,7 @@ pub enum DocElement {
 
 pub use self::DocElement::*;
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Doc(pub Vec<DocElement>);
 
 
