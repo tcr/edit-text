@@ -15,6 +15,8 @@ pub enum DocElement {
 
 pub use self::DocElement::*;
 
+pub struct Doc(pub Vec<DocElement>);
+
 
 pub type DelSpan = Vec<DelElement>;
 
