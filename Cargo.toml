@@ -1,2 +1,2 @@
 [workspace]
-members = ["oatie", "mote"]
+members = ["oatie", "mote", "mote/web"]
