@@ -87,9 +87,10 @@ fetchAndInstantiate("./mercutio_web.wasm", {})
       output.innerText = "[Value too small.]"
       return;
     }
-    output.innerText = Module.command({
-      'Factorial': value
-    }).Factorial;
+    output.innerText = JSON.stringify(Module.command({
+      'RenameGroup': 
+        [{"CurSkip":1},{"CurWithGroup":[{"CurWithGroup":['CurGroup']}]}],
+    }));
   }
 
   calcFact();

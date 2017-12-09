@@ -10924,6 +10924,30 @@ function delto(el, then) {
     }
     return cur;
 }
+function curto(el, then) {
+    var p = el.parents('.mote');
+    if (Array.isArray(then)) {
+        var cur = then;
+    }
+    else {
+        var cur = [then];
+    }
+    while (!el.is(p)) {
+        if (el.prevAll().length > 0) {
+            cur.unshift({
+                "CurSkip": el.prevAll().length,
+            });
+        }
+        el = el.parent();
+        if (el.is(p)) {
+            break;
+        }
+        cur = [{
+                "CurWithGroup": cur,
+            }];
+    }
+    return cur;
+}
 function getActive() {
     var a = __WEBPACK_IMPORTED_MODULE_2_jquery___default()('.active');
     return a[0] ? a : null;
@@ -11065,6 +11089,95 @@ function wrapContent(m) {
     //   alert('Not implemented?')
     // }
 }
+/*
+function applyOp(m: Editor, del, add) {
+  del = JSON.parse(JSON.stringify(del));
+  add = JSON.parse(JSON.stringify(add));
+
+  function delInner(parent, del) {
+    let children = Array.from($(parent).children());
+    children.forEach(function (node) {
+      if (!del.length) {
+        return;
+      }
+      if ($(node).is('div')) {
+        if (del[0].DelGroup) {
+          delInner($(node), del[0].DelGroup[0]);
+          $(node).children().insertBefore(node);
+          $(node).remove();
+          del.shift();
+        } else if (del[0].DelWithGroup) {
+          delInner($(node), del[0].DelWithGroup[0]);
+          del.shift();
+        } else if (del[0].DelSkip) {
+          let value = del[0].DelSkip;
+          if (value > 1) {
+            del[0].DelSkip -= 1;
+          } else {
+            del.shift();
+          }
+        }
+      } else if ($(node).is('span')) {
+        if (del[0].DelSkip) {
+          let value = del[0].DelSkip;
+          if (value > 1) {
+            del[0].DelSkip -= 1;
+          } else {
+            del.shift();
+          }
+        } else {
+          throw new Error('fail');
+        }
+      }
+    })
+  }
+
+  function addInner(parent, add) {
+    let out = [];
+    let children = Array.from($(parent).children());
+    children.forEach(function (node) {
+      if (!add.length) {
+        return;
+      }
+      out.push(node);
+
+      if ($(node).is('div')) {
+        if (add[0].AddGroup) {
+          addInner($(node), add[0].AddGroup[0]);
+          $(node).children().insertBefore(node);
+          $(node).remove();
+          add.shift();
+        } else if (add[0].AddWithGroup) {
+          addInner($(node), add[0].AddWithGroup[0]);
+          add.shift();
+        } else if (add[0].AddSkip) {
+          let value = add[0].AddSkip;
+          if (value > 1) {
+            add[0].v -= 1;
+          } else {
+            add.shift();
+          }
+        }
+      } else if ($(node).is('span')) {
+        if (add[0].AddSkip) {
+          let value = add[0].AddSkip;
+          if (value > 1) {
+            add[0].AddSkip -= 1;
+          } else {
+            add.shift();
+          }
+        } else {
+          throw new Error('fail');
+        }
+      }
+    });
+    return out;
+  }
+
+  delInner(m.$elem, del);
+  addInner(m.$elem, add);
+}
+*/
 function renameBlock(m) {
     let active = getActive();
     let target = getTarget();
@@ -11075,19 +11188,25 @@ function renameBlock(m) {
             callback: (tag) => {
                 if (tag) {
                     let attrs = intoAttrs(tag);
-                    m.op(delto(active, {
+                    console.log('------>', JSON.stringify(curto(active, {
+                        'CurGroup': null,
+                    })));
+                    let del = delto(active, {
                         "DelGroup": [
                             {
                                 "DelSkip": active.children().length
                             }
                         ],
-                    }), addto(active, {
+                    });
+                    let add = addto(active, {
                         "AddGroup": [attrs, [
                                 {
                                     "AddSkip": active.children().length
                                 }
                             ]],
-                    }));
+                    });
+                    m.op(del, add);
+                    // applyOp(m, del, add);
                     modifyElem(active, attrs);
                 }
             },
@@ -11473,6 +11592,13 @@ __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#action-sync').on('click', () =>
         alert('Error in syncing. Check the command line.');
     });
 });
+const exampleSocket = new WebSocket("ws://127.0.0.1:3012");
+exampleSocket.onopen = function (event) {
+    exampleSocket.send("Here's some text that the server is urgently awaiting!");
+};
+exampleSocket.onmessage = function (event) {
+    alert('received');
+};
 
 
 /***/ }),
