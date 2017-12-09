@@ -6,6 +6,8 @@ extern crate oatie;
 extern crate rocket;
 extern crate rocket_contrib;
 extern crate ws;
+#[macro_use]
+extern crate maplit;
 
 #[macro_use]
 extern crate serde_derive;
@@ -298,13 +300,121 @@ struct MoteState {
     body: Arc<Mutex<Doc>>,
 }
 
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum NativeCommand {
+    Factorial(u32),
+    RenameGroup(String, CurSpan),
+    Error(String),
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum ClientCommand {
+    Update(DocSpan),
+    Error(String),
+}
+
+use oatie::stepper::*;
+use oatie::writer::*;
+
+fn rename_group_inner(tag: &str, input: &mut CurStepper, doc: &mut DocStepper, del: &mut DelWriter, add: &mut AddWriter) {
+    while !input.is_done() && input.head.is_some() {
+        match input.get_head() {
+            CurSkip(value) => {
+                doc.skip(value);
+                input.next();
+                del.skip(value);
+                add.skip(value);
+            }
+            CurWithGroup(..) => {
+                input.enter();
+                doc.enter();
+                del.begin();
+                add.begin();
+
+                rename_group_inner(tag, input, doc, del, add);
+                
+                input.exit();
+                doc.exit();
+                del.exit();
+                add.exit();
+            }
+            CurGroup => {
+                // Get doc inner span length
+                let len = if let Some(DocElement::DocGroup(_, span)) = doc.head.clone() {
+                    span.skip_len()
+                } else {
+                    panic!("unreachable");
+                };
+
+                // input.enter();
+                // doc.enter();
+                del.begin();
+                add.begin();
+
+                // rename_group_inner(input, doc, del, add);
+
+                //TODO rename the groupppppp
+                del.skip(len);
+                add.skip(len);
+                
+                
+                // input.exit();
+                del.close();
+                add.close(hashmap! { "tag".to_string() => tag.to_string() });
+
+                doc.next();
+                input.next();
+            }
+        }
+    }
+}
+
+fn rename_group(client: &ws::Sender, tag: &str, input: &CurSpan) {
+    let doc = default_doc();
+
+    let mut cur_stepper = CurStepper::new(input);
+    let mut doc_stepper = DocStepper::new(&doc.0);
+    let mut del_writer = DelWriter::new();
+    let mut add_writer = AddWriter::new();
+    rename_group_inner(tag, &mut cur_stepper, &mut doc_stepper, &mut del_writer, &mut add_writer);
+    
+    // println!("del {:?}", del_writer.result());
+    // println!("add {:?}", add_writer.result());
+
+    let op = (del_writer.result(), add_writer.result());
+
+    let doc = default_doc();
+    let new_doc = OT::apply(&doc, &op);
+    
+    let res = ClientCommand::Update(new_doc.0);
+    client.send(serde_json::to_string(&res).unwrap());
+}
+
+pub fn native_command(client: &ws::Sender, req: NativeCommand) {
+    match req {
+        NativeCommand::RenameGroup(tag, cur) => {
+            rename_group(client, &tag, &cur);
+            // NativeResponse::RenameGroup
+        }
+        _ => {
+            println!("unhandled request: {:?}", req);
+        }
+    }
+}
+
 fn main() {
     thread::spawn(|| {
         ws::listen("127.0.0.1:3012", |out| {
-            move |msg| {
+            move |msg: ws::Message| {
                 // Handle messages received on this connection
                 println!("Server got message '{}'. ", msg);
-                out.send(msg)
+
+                let req_parse: Result<NativeCommand, _> = serde_json::from_slice(&msg.into_data());
+                native_command(&out, req_parse.unwrap());
+
+                Ok(())
+                // out.send(msg)
             }
         }).unwrap();
     });

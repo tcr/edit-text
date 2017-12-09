@@ -420,10 +420,6 @@ function renameBlock(m: Editor) {
         if (tag) {
           let attrs = intoAttrs(tag);
 
-          console.log('------>', JSON.stringify(curto(active, {
-            'CurGroup': null,
-          })));
-
           let del = delto(active,
             {
               "DelGroup": [
@@ -446,7 +442,17 @@ function renameBlock(m: Editor) {
           m.op(del, add);
           // applyOp(m, del, add);
 
-          modifyElem(active, attrs);
+          function RenameGroup(tag, curspan) {
+            return {
+              'RenameGroup': [tag, curspan],
+            }
+          }
+
+          exampleSocket.send(JSON.stringify(RenameGroup(tag, curto(active, {
+            'CurGroup': null,
+          })))); 
+
+          // modifyElem(active, attrs);
         }
       },
     }).on("shown.bs.modal", function() {
@@ -900,10 +906,12 @@ $('#action-sync').on('click', () => {
 
 const exampleSocket = new WebSocket("ws://127.0.0.1:3012");
 exampleSocket.onopen = function (event) {
-  exampleSocket.send("Here's some text that the server is urgently awaiting!"); 
 };
 exampleSocket.onmessage = function (event) {
-    alert('received');
+  let parse = JSON.parse(event.data);
+  if (parse.Update) {
+    m1.empty().append(load(parse.Update));
+  }
 }
 
 
