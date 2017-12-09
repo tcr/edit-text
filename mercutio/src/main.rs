@@ -5,6 +5,7 @@
 extern crate oatie;
 extern crate rocket;
 extern crate rocket_contrib;
+extern crate ws;
 
 #[macro_use]
 extern crate serde_derive;
@@ -20,6 +21,7 @@ use rocket::State;
 use rocket::response::NamedFile;
 use serde_json::{Value};
 use std::path::{Path, PathBuf};
+use std::thread;
 use oatie::transform::transform;
 
 fn default_doc() -> Doc {
@@ -297,6 +299,16 @@ struct MoteState {
 }
 
 fn main() {
+    thread::spawn(|| {
+        ws::listen("127.0.0.1:3012", |out| {
+            move |msg| {
+                // Handle messages received on this connection
+                println!("Server got message '{}'. ", msg);
+                out.send(msg)
+            }
+        }).unwrap();
+    });
+
     rocket::ignite()
         .manage(MoteState {
             body: Arc::new(Mutex::new(default_doc())),

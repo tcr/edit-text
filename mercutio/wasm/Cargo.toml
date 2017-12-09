@@ -7,6 +7,9 @@ serde = "1.0.23"
 serde_derive = "1.0.23"
 serde_json = "1.0.7"
 
+[dependencies.oatie]
+path = "../../oatie"
+
 [lib]
-crate-type = ["cdylib"]
+# crate-type = ["cdylib"]
 name = "mercutio_web"
