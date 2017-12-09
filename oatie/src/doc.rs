@@ -19,6 +19,26 @@ pub use self::DocElement::*;
 pub struct Doc(pub Vec<DocElement>);
 
 
+pub trait DocPlaceable {
+    fn skip_len(&self) -> usize;
+}
+
+impl DocPlaceable for DocSpan {
+    fn skip_len(&self) -> usize {
+        let mut ret = 0;
+        for item in self {
+            ret += match *item {
+                DocChars(ref value) => value.chars().count(),
+                DocGroup(..) => 1,
+            };
+        }
+        ret
+    }
+}
+
+
+
+
 pub type DelSpan = Vec<DelElement>;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -185,10 +205,23 @@ impl AddPlaceable for AddSpan {
         for item in self {
             ret += match *item {
                 AddSkip(len) => len,
-                AddChars(ref chars) => chars.len(),
+                AddChars(ref chars) => chars.chars().count(),
                 AddGroup(..) | AddWithGroup(..) => 1,
             };
         }
         ret
     }
 }
+
+
+
+pub type CurSpan = Vec<CurElement>;
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub enum CurElement {
+    CurSkip(usize),
+    CurWithGroup(CurSpan),
+    CurGroup,
+}
+
+pub use self::CurElement::*;
