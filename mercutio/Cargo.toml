@@ -1,7 +1,8 @@
 [package]
-authors = ["Tim Ryan <tim@3drobotics.com>"]
-name = "mote"
+authors = ["Tim Ryan <id@timryan.org>"]
+name = "mercutio"
 version = "0.1.0"
+
 [dependencies]
 bodyparser = "0.7"
 iron = "0.5"
