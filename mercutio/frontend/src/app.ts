@@ -318,149 +318,6 @@ function wrapContent(m: Editor) {
   // }
 }
 
-/*
-function applyOp(m: Editor, del, add) {
-  del = JSON.parse(JSON.stringify(del));
-  add = JSON.parse(JSON.stringify(add));
-
-  function delInner(parent, del) {
-    let children = Array.from($(parent).children());
-    children.forEach(function (node) {
-      if (!del.length) {
-        return;
-      }
-      if ($(node).is('div')) {
-        if (del[0].DelGroup) {
-          delInner($(node), del[0].DelGroup[0]);
-          $(node).children().insertBefore(node);
-          $(node).remove();
-          del.shift();
-        } else if (del[0].DelWithGroup) {
-          delInner($(node), del[0].DelWithGroup[0]);
-          del.shift();
-        } else if (del[0].DelSkip) {
-          let value = del[0].DelSkip;
-          if (value > 1) {
-            del[0].DelSkip -= 1;
-          } else {
-            del.shift();
-          }
-        }
-      } else if ($(node).is('span')) {
-        if (del[0].DelSkip) {
-          let value = del[0].DelSkip;
-          if (value > 1) {
-            del[0].DelSkip -= 1;
-          } else {
-            del.shift();
-          }
-        } else {
-          throw new Error('fail');
-        }
-      }
-    })
-  }
-
-  function addInner(parent, add) {
-    let out = [];
-    let children = Array.from($(parent).children());
-    children.forEach(function (node) {
-      if (!add.length) {
-        return;
-      }
-      out.push(node);
-
-      if ($(node).is('div')) {
-        if (add[0].AddGroup) {
-          addInner($(node), add[0].AddGroup[0]);
-          $(node).children().insertBefore(node);
-          $(node).remove();
-          add.shift();
-        } else if (add[0].AddWithGroup) {
-          addInner($(node), add[0].AddWithGroup[0]);
-          add.shift();
-        } else if (add[0].AddSkip) {
-          let value = add[0].AddSkip;
-          if (value > 1) {
-            add[0].v -= 1;
-          } else {
-            add.shift();
-          }
-        }
-      } else if ($(node).is('span')) {
-        if (add[0].AddSkip) {
-          let value = add[0].AddSkip;
-          if (value > 1) {
-            add[0].AddSkip -= 1;
-          } else {
-            add.shift();
-          }
-        } else {
-          throw new Error('fail');
-        }
-      }
-    });
-    return out;
-  }
-
-  delInner(m.$elem, del);
-  addInner(m.$elem, add);
-}
-*/
-
-function renameBlock(m: Editor) {
-  let active = getActive();
-  let target = getTarget();
-
-  if (active) {
-    bootbox.prompt({
-      title: "Rename tag group:",
-      value: "p",
-      callback: (tag) => {
-        if (tag) {
-          let attrs = intoAttrs(tag);
-
-          let del = delto(active,
-            {
-              "DelGroup": [
-                {
-                  "DelSkip": active.children().length
-                }
-              ],
-            }
-          );
-          let add = addto(active,
-            {
-              "AddGroup": [attrs, [
-                {
-                  "AddSkip": active.children().length
-                }
-              ]],
-            }
-          );
-
-          m.op(del, add);
-          // applyOp(m, del, add);
-
-          function RenameGroup(tag, curspan) {
-            return {
-              'RenameGroup': [tag, curspan],
-            }
-          }
-
-          exampleSocket.send(JSON.stringify(RenameGroup(tag, curto(active, {
-            'CurGroup': null,
-          })))); 
-
-          // modifyElem(active, attrs);
-        }
-      },
-    }).on("shown.bs.modal", function() {
-      $(this).find('input').select();
-    });
-  }
-}
-
 function deleteBlockPreservingContent(m: Editor) {
   let active = getActive();
   let target = getTarget();
@@ -625,6 +482,37 @@ function splitBlock(m: Editor) {
   });
 }
 
+
+
+
+
+
+
+
+function promptString(title, value, callback) {
+  bootbox.prompt({
+    title,
+    value,
+    callback,
+  }).on("shown.bs.modal", function() {
+    $(this).find('input').select();
+  });
+}
+
+function renameBlock(active: JQuery | null, target: JQuery | null, m: Editor) {
+  if (active) {
+    promptString('Rename tag group:', 'p', (tag) => {
+      if (tag) {
+        let attrs = intoAttrs(tag);
+
+        nativeCommand(RenameGroupCommand(tag, curto(active, {
+          'CurGroup': null,
+        })));
+      }
+    });
+  }
+}
+
 function init ($elem, editorID: string) {
   const m = new Editor($elem);
 
@@ -742,17 +630,56 @@ function init ($elem, editorID: string) {
 
     console.log('KEY:', e.keyCode);
 
+    const whitelist = [
+      // command + ,
+      {keyCode: 188, metaKey: true},
+      // command + .
+      {keyCode: 190, metaKey: true},
+      // backspace
+      {keyCode: 8},
+      // enter
+      {keyCode: 13},
+      // arrow keys
+      {keyCode: 37},
+      {keyCode: 38},
+      {keyCode: 39},
+      {keyCode: 40},
+    ];
+
+    // TODO match against the whitelist and send to server
+
     // command+,
     if (e.keyCode == 188 && e.metaKey) {
+      nativeCommand(KeypressCommand(
+        e.keyCode,
+        e.charCode,
+        e.metaKey,
+        e.shiftKey,
+        curto(active, {
+          'CurGroup': null,
+        }),
+      ));
+      
       e.preventDefault();
-      wrapContent(m);
+      // wrapContent(m);
       return false;
     }
 
     // command+.
     if (e.keyCode == 190 && e.metaKey) {
+
+      nativeCommand(KeypressCommand(
+        e.keyCode,
+        e.charCode,
+        e.metaKey,
+        e.shiftKey,
+        curto(active, {
+          'CurGroup': null,
+        }),
+      ));
+
       e.preventDefault();
-      renameBlock(m);
+      // renameBlock(active, target, m);
       return false;
     }
     if (e.keyCode == 8) {
@@ -849,11 +776,15 @@ var m2 = $('#mote-2');
 var ops_a = init(m1, 'left');
 var ops_b = init(m2, 'right');
 
+
+// Initial load
 $.get('/api/hello', data => {
     m1.empty().append(load(data));
     m2.empty().append(load(data));
 });
 
+
+// Reset button
 $('#action-reset').on('click', () => {
   $.ajax('/api/reset', {
     contentType : 'application/json',
@@ -869,6 +800,8 @@ $('#action-reset').on('click', () => {
   })
 });
 
+
+// Sync action
 $('#action-sync').on('click', () => {
   let packet = [
     ops_a,
@@ -898,10 +831,33 @@ $('#action-sync').on('click', () => {
 })
 
 
+// Commands
+type RenameGroupCommand = {RenameGroup: any};
+type KeypressCommand = {Keypress: [number, number, boolean, boolean, any]};
 
+function RenameGroupCommand(tag: string, curspan): RenameGroupCommand {
+  return {
+    'RenameGroup': [tag, curspan],
+  }
+}
 
+function KeypressCommand(
+  keyCode: number,
+  charCode: number,
+  metaKey: boolean,
+  shiftKey: boolean,
+  curspan,
+): KeypressCommand {
+  return {
+    'Keypress': [keyCode, charCode, metaKey, shiftKey, curspan],
+  }
+}
 
+type Command = RenameGroupCommand | KeypressCommand;
 
+function nativeCommand(command: Command) {
+  exampleSocket.send(JSON.stringify(command));
+}
 
 
 const exampleSocket = new WebSocket("ws://127.0.0.1:3012");
@@ -910,7 +866,16 @@ exampleSocket.onopen = function (event) {
 exampleSocket.onmessage = function (event) {
   let parse = JSON.parse(event.data);
   if (parse.Update) {
-    m1.empty().append(load(parse.Update));
+    m1.empty().append(load(parse.Update[0]));
+    // Load new op
+    ops_a.push(parse.Update[1]);
+  } else if (parse.PromptString) {
+    promptString(parse.PromptString[0], parse.PromptString[1], (value) => {
+      // Lookup actual key
+      let key = Object.keys(parse.PromptString[2])[0];
+      parse.PromptString[2][key][0] = value;
+      nativeCommand(parse.PromptString[2]);
+    });
   }
 }
 
