@@ -13,8 +13,7 @@ extern crate maplit;
 extern crate serde_derive;
 
 extern crate serde;
-#[macro_use]
-extern crate serde_json;
+#[macro_use] extern crate serde_json;
 
 use std::sync::{Arc, Mutex};
 use oatie::doc::*;
@@ -22,7 +21,7 @@ use oatie::{OT, Operation};
 use rocket_contrib::Json;
 use rocket::State;
 use rocket::response::NamedFile;
-use serde_json::Value;
+use serde_json::{Value};
 use std::path::{Path, PathBuf};
 use std::thread;
 use oatie::transform::transform;
@@ -106,7 +105,9 @@ fn api_confirm(struct_body: Json<ConfirmInput>, mote: State<MoteState>) -> Json<
     println!("EXPECTD {:?}", compare_doc);
     println!("success? {:?}", res == compare_doc);
 
-    Json(ConfirmResponse { ok: res == compare_doc })
+    Json(ConfirmResponse {
+        ok: res == compare_doc,
+    })
 }
 
 #[derive(Serialize)]
@@ -348,7 +349,7 @@ fn rename_group(client: &ws::Sender, tag: &str, input: &CurSpan) {
                     add.begin();
 
                     rename_group_inner(tag, input, doc, del, add);
-
+                    
                     input.exit();
                     doc.exit();
                     del.exit();
@@ -384,18 +385,12 @@ fn rename_group(client: &ws::Sender, tag: &str, input: &CurSpan) {
     let mut doc_stepper = DocStepper::new(&doc.0);
     let mut del_writer = DelWriter::new();
     let mut add_writer = AddWriter::new();
-    rename_group_inner(
-        tag,
-        &mut cur_stepper,
-        &mut doc_stepper,
-        &mut del_writer,
-        &mut add_writer,
-    );
-
+    rename_group_inner(tag, &mut cur_stepper, &mut doc_stepper, &mut del_writer, &mut add_writer);
+    
     // Apply operation.
     let op = (del_writer.result(), add_writer.result());
     let new_doc = OT::apply(&doc, &op);
-
+    
     // Send update.
     let res = ClientCommand::Update(new_doc.0, op);
     client.send(serde_json::to_string(&res).unwrap());
@@ -424,7 +419,7 @@ fn wrap_group(client: &ws::Sender, tag: &str, input: &CurSpan) {
                     add.begin();
 
                     wrap_group_inner(tag, input, doc, del, add);
-
+                    
                     input.exit();
                     doc.exit();
                     del.exit();
@@ -451,31 +446,18 @@ fn wrap_group(client: &ws::Sender, tag: &str, input: &CurSpan) {
     let mut doc_stepper = DocStepper::new(&doc.0);
     let mut del_writer = DelWriter::new();
     let mut add_writer = AddWriter::new();
-    wrap_group_inner(
-        tag,
-        &mut cur_stepper,
-        &mut doc_stepper,
-        &mut del_writer,
-        &mut add_writer,
-    );
-
+    wrap_group_inner(tag, &mut cur_stepper, &mut doc_stepper, &mut del_writer, &mut add_writer);
+    
     // Apply operation.
     let op = (del_writer.result(), add_writer.result());
     let new_doc = OT::apply(&doc, &op);
-
+    
     // Send update.
     let res = ClientCommand::Update(new_doc.0, op);
     client.send(serde_json::to_string(&res).unwrap());
 }
 
-fn key_command(
-    client: &ws::Sender,
-    key_code: u32,
-    char_code: u32,
-    meta_key: bool,
-    shift_key: bool,
-    cur: CurSpan,
-) {
+fn key_command(client: &ws::Sender, key_code: u32, char_code: u32, meta_key: bool, shift_key: bool, cur: CurSpan) {
     println!("key: {:?} {:?} {:?} {:?}", key_code, char_code, meta_key, shift_key);
 
     // command + .
@@ -537,11 +519,10 @@ fn main() {
     });
 
     rocket::ignite()
-        .manage(MoteState { body: Arc::new(Mutex::new(default_doc())) })
-        .mount(
-            "/",
-            routes![api_hello, api_confirm, api_sync, api_reset, api_random, root, files],
-        )
+        .manage(MoteState {
+            body: Arc::new(Mutex::new(default_doc())),
+        })
+        .mount("/", routes![api_hello, api_confirm, api_sync, api_reset, api_random, root, files])
         .launch();
 }
 
