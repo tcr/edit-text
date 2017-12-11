@@ -11314,7 +11314,7 @@ function init($elem, editorID) {
         if (e.metaKey) {
             return;
         }
-        nativeCommand(CharacterCommand(serialize(m.$elem), e.keyCode, e.charCode, e.metaKey, e.shiftKey, curto(active)));
+        nativeCommand(CharacterCommand(e.keyCode, e.charCode, e.metaKey, e.shiftKey, curto(active)));
         e.preventDefault();
         /*
     
@@ -11379,20 +11379,20 @@ function init($elem, editorID) {
         // TODO match against the whitelist and send to server
         // command+,
         if (e.keyCode == 188 && e.metaKey) {
-            nativeCommand(KeypressCommand(serialize(m.$elem), e.keyCode, e.charCode, e.metaKey, e.shiftKey, curto(active)));
+            nativeCommand(KeypressCommand(e.keyCode, e.charCode, e.metaKey, e.shiftKey, curto(active)));
             e.preventDefault();
             // wrapContent(m);
             return false;
         }
         // command+.
         if (e.keyCode == 190 && e.metaKey) {
-            nativeCommand(KeypressCommand(serialize(m.$elem), e.keyCode, e.charCode, e.metaKey, e.shiftKey, curto(active)));
+            nativeCommand(KeypressCommand(e.keyCode, e.charCode, e.metaKey, e.shiftKey, curto(active)));
             e.preventDefault();
             // renameBlock(active, target, m);
             return false;
         }
         if (e.keyCode == 8) {
-            nativeCommand(KeypressCommand(serialize(m.$elem), e.keyCode, e.charCode, e.metaKey, e.shiftKey, curto(active)));
+            nativeCommand(KeypressCommand(e.keyCode, e.charCode, e.metaKey, e.shiftKey, curto(active)));
             e.preventDefault();
             // if (e.shiftKey) {
             //   deleteBlockPreservingContent(m);
@@ -11532,14 +11532,14 @@ function RenameGroupCommand(tag, curspan) {
         'RenameGroup': [tag, curspan],
     };
 }
-function KeypressCommand(doc, keyCode, charCode, metaKey, shiftKey, curspan) {
+function KeypressCommand(keyCode, charCode, metaKey, shiftKey, curspan) {
     return {
-        'Keypress': [doc, keyCode, charCode, metaKey, shiftKey, curspan],
+        'Keypress': [keyCode, charCode, metaKey, shiftKey, curspan],
     };
 }
-function CharacterCommand(doc, keyCode, charCode, metaKey, shiftKey, curspan) {
+function CharacterCommand(keyCode, charCode, metaKey, shiftKey, curspan) {
     return {
-        'Character': [doc, keyCode, charCode, metaKey, shiftKey, curspan],
+        'Character': [keyCode, charCode, metaKey, shiftKey, curspan],
     };
 }
 function nativeCommand(command) {

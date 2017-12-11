@@ -592,7 +592,6 @@ function init ($elem, editorID: string) {
     }
 
     nativeCommand(CharacterCommand(
-      serialize(m.$elem),
       e.keyCode,
       e.charCode,
       e.metaKey,
@@ -674,7 +673,6 @@ function init ($elem, editorID: string) {
     // command+,
     if (e.keyCode == 188 && e.metaKey) {
       nativeCommand(KeypressCommand(
-        serialize(m.$elem),
         e.keyCode,
         e.charCode,
         e.metaKey,
@@ -691,7 +689,6 @@ function init ($elem, editorID: string) {
     if (e.keyCode == 190 && e.metaKey) {
 
       nativeCommand(KeypressCommand(
-        serialize(m.$elem),
         e.keyCode,
         e.charCode,
         e.metaKey,
@@ -705,7 +702,6 @@ function init ($elem, editorID: string) {
     }
     if (e.keyCode == 8) {
       nativeCommand(KeypressCommand(
-        serialize(m.$elem),
         e.keyCode,
         e.charCode,
         e.metaKey,
@@ -870,10 +866,9 @@ function RenameGroupCommand(tag: string, curspan): RenameGroupCommand {
   }
 }
 
-type KeypressCommand = {Keypress: [any, number, number, boolean, boolean, any]};
+type KeypressCommand = {Keypress: [number, number, boolean, boolean, any]};
 
 function KeypressCommand(
-  doc,
   keyCode: number,
   charCode: number,
   metaKey: boolean,
@@ -881,14 +876,13 @@ function KeypressCommand(
   curspan,
 ): KeypressCommand {
   return {
-    'Keypress': [doc, keyCode, charCode, metaKey, shiftKey, curspan],
+    'Keypress': [keyCode, charCode, metaKey, shiftKey, curspan],
   }
 }
 
-type CharacterCommand = {Character: [any, number, number, boolean, boolean, any]};
+type CharacterCommand = {Character: [number, number, boolean, boolean, any]};
 
 function CharacterCommand(
-  doc,
   keyCode: number,
   charCode: number,
   metaKey: boolean,
@@ -896,7 +890,7 @@ function CharacterCommand(
   curspan,
 ): CharacterCommand {
   return {
-    'Character': [doc, keyCode, charCode, metaKey, shiftKey, curspan],
+    'Character': [keyCode, charCode, metaKey, shiftKey, curspan],
   }
 }
 
