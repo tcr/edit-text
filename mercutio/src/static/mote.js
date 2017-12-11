@@ -10852,6 +10852,29 @@ function intoAttrs(str) {
         };
     }
 }
+function getActive() {
+    var a = __WEBPACK_IMPORTED_MODULE_2_jquery___default()('.active');
+    return a[0] ? a : null;
+}
+function getTarget() {
+    var a = __WEBPACK_IMPORTED_MODULE_2_jquery___default()('.active');
+    return a[0] ? a : null;
+}
+function isBlock($active) {
+    return $active && $active[0].tagName == 'DIV';
+}
+function isChar($active) {
+    return $active && $active[0].tagName == 'SPAN';
+}
+function isInline($active) {
+    return $active && $active.data('tag') == 'span';
+}
+function clearActive() {
+    __WEBPACK_IMPORTED_MODULE_2_jquery___default()(document).find('.active').removeClass('active');
+}
+function clearTarget() {
+    __WEBPACK_IMPORTED_MODULE_2_jquery___default()(document).find('.target').removeClass('target');
+}
 // Creates an HTML tree from a document tree.
 function load(vec) {
     // TODO act like doc
@@ -10875,6 +10898,61 @@ function load(vec) {
         }
     }
     return ret;
+}
+function curto(el) {
+    if (!el) {
+        return null;
+    }
+    let then = el.is('div') ? {
+        'CurGroup': null
+    } : {
+        'CurChar': null
+    };
+    var p = el.parents('.mote');
+    if (Array.isArray(then)) {
+        var cur = then;
+    }
+    else {
+        var cur = [then];
+    }
+    while (!el.is(p)) {
+        if (el.prevAll().length > 0) {
+            cur.unshift({
+                "CurSkip": el.prevAll().length,
+            });
+        }
+        el = el.parent();
+        if (el.is(p)) {
+            break;
+        }
+        cur = [{
+                "CurWithGroup": cur,
+            }];
+    }
+    return cur;
+}
+function serialize(parent) {
+    var out = [];
+    __WEBPACK_IMPORTED_MODULE_2_jquery___default()(parent).children().each(function () {
+        if (__WEBPACK_IMPORTED_MODULE_2_jquery___default()(this).is('div')) {
+            out.push({
+                "DocGroup": [
+                    serializeAttrs(__WEBPACK_IMPORTED_MODULE_2_jquery___default()(this)),
+                    serialize(this),
+                ],
+            });
+        }
+        else {
+            var txt = this.innerText;
+            if (Object.keys(out[out.length - 1] || {})[0] == 'DocChars') {
+                txt = out.pop().DocChars + txt;
+            }
+            out.push({
+                "DocChars": txt
+            });
+        }
+    });
+    return out;
 }
 function addto(el, then) {
     var p = el.parents('.mote');
@@ -10924,81 +11002,6 @@ function delto(el, then) {
     }
     return cur;
 }
-function curto(el) {
-    let then = el.is('div') ? {
-        'CurGroup': null
-    } : {
-        'CurChar': null
-    };
-    var p = el.parents('.mote');
-    if (Array.isArray(then)) {
-        var cur = then;
-    }
-    else {
-        var cur = [then];
-    }
-    while (!el.is(p)) {
-        if (el.prevAll().length > 0) {
-            cur.unshift({
-                "CurSkip": el.prevAll().length,
-            });
-        }
-        el = el.parent();
-        if (el.is(p)) {
-            break;
-        }
-        cur = [{
-                "CurWithGroup": cur,
-            }];
-    }
-    return cur;
-}
-function getActive() {
-    var a = __WEBPACK_IMPORTED_MODULE_2_jquery___default()('.active');
-    return a[0] ? a : null;
-}
-function getTarget() {
-    var a = __WEBPACK_IMPORTED_MODULE_2_jquery___default()('.active');
-    return a[0] ? a : null;
-}
-function isBlock($active) {
-    return $active && $active[0].tagName == 'DIV';
-}
-function isChar($active) {
-    return $active && $active[0].tagName == 'SPAN';
-}
-function isInline($active) {
-    return $active && $active.data('tag') == 'span';
-}
-function clearActive() {
-    __WEBPACK_IMPORTED_MODULE_2_jquery___default()(document).find('.active').removeClass('active');
-}
-function clearTarget() {
-    __WEBPACK_IMPORTED_MODULE_2_jquery___default()(document).find('.target').removeClass('target');
-}
-function serialize(parent) {
-    var out = [];
-    __WEBPACK_IMPORTED_MODULE_2_jquery___default()(parent).children().each(function () {
-        if (__WEBPACK_IMPORTED_MODULE_2_jquery___default()(this).is('div')) {
-            out.push({
-                "DocGroup": [
-                    serializeAttrs(__WEBPACK_IMPORTED_MODULE_2_jquery___default()(this)),
-                    serialize(this),
-                ],
-            });
-        }
-        else {
-            var txt = this.innerText;
-            if (Object.keys(out[out.length - 1] || {})[0] == 'DocChars') {
-                txt = out.pop().DocChars + txt;
-            }
-            out.push({
-                "DocChars": txt
-            });
-        }
-    });
-    return out;
-}
 class Editor {
     constructor($elem) {
         this.$elem = $elem;
@@ -11025,36 +11028,6 @@ class Editor {
                 console.log('success', arguments);
                 if (arguments[0] == '') {
                     alert('Operation seemed to fail! Check console');
-                }
-            })
-                .fail(function () {
-                console.log('failure', arguments);
-            });
-        });
-    }
-    monkey() {
-        let self = this;
-        setTimeout(() => {
-            // Serialize by default the root element
-            var match = serialize(this.$elem[0]);
-            // test
-            var packet = [
-                this.ophistory,
-                match
-            ];
-            console.log(JSON.stringify(packet));
-            __WEBPACK_IMPORTED_MODULE_2_jquery___default.a.ajax('/api/random', {
-                data: JSON.stringify(packet),
-                contentType: 'application/json',
-                type: 'POST',
-            })
-                .done(function (data) {
-                if (arguments[0] == '') {
-                    alert('Operation seemed to fail! Check console');
-                }
-                else {
-                    self.$elem.empty().append(load(data.doc[0]));
-                    self.ophistory.push(data.op);
                 }
             })
                 .fail(function () {
@@ -11239,18 +11212,6 @@ function promptString(title, value, callback) {
         __WEBPACK_IMPORTED_MODULE_2_jquery___default()(this).find('input').select();
     });
 }
-// function renameBlock(active: JQuery | null, target: JQuery | null, m: Editor) {
-//   if (active) {
-//     promptString('Rename tag group:', 'p', (tag) => {
-//       if (tag) {
-//         let attrs = intoAttrs(tag);
-//         nativeCommand(RenameGroupCommand(tag, curto(active, {
-//           'CurGroup': null,
-//         })));
-//       }
-//     });
-//   }
-// }
 function init($elem, editorID) {
     const m = new Editor($elem);
     // switching button
@@ -11267,12 +11228,6 @@ function init($elem, editorID) {
             settings.add(`${editorID}-theme-mock`);
         }
         HashState.set(settings);
-    });
-    // monkey button
-    __WEBPACK_IMPORTED_MODULE_2_jquery___default()('<button>Monkey</button>')
-        .appendTo($elem.prev())
-        .on('click', function () {
-        m.monkey();
     });
     // theme
     if (HashState.get().has(`${editorID}-theme-mock`)) {
@@ -11306,50 +11261,11 @@ function init($elem, editorID) {
         if (active && !active.parents('.mote').is(m.$elem)) {
             return;
         }
-        // No need to do this when using server-generated addkey
-        // Unless the keys are enter or arrow keys, just return.
-        // if ([13, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
-        //   return false;
-        // }
         if (e.metaKey) {
             return;
         }
-        nativeCommand(CharacterCommand(e.keyCode, e.charCode, e.metaKey, e.shiftKey, curto(active)));
+        nativeCommand(CharacterCommand(e.charCode, curto(active)));
         e.preventDefault();
-        /*
-    
-        let txt = String.fromCharCode(e.charCode);
-        let span = $('<span>').text(txt).addClass('active').addClass('target');
-        if (isBlock(active)) {
-          e.preventDefault();
-    
-          clearActive();
-          clearTarget();
-          active.prepend(span);
-    
-          m.op([], addto(span,
-            {
-              "AddChars": txt
-            }
-          ));
-          return false;
-        } else if (isChar(active)) {
-          e.preventDefault();
-    
-          clearActive();
-          clearTarget();
-          span.insertAfter(active);
-    
-          m.op([], addto(span,
-            {
-              "AddChars": txt
-            }
-          ));
-    
-          return false;
-        }
-        */
-        // e.preventDef/ault();
     });
     __WEBPACK_IMPORTED_MODULE_2_jquery___default()(document).on('keydown', (e) => {
         if (__WEBPACK_IMPORTED_MODULE_2_jquery___default()(e.target).closest('.modal').length) {
@@ -11360,7 +11276,7 @@ function init($elem, editorID) {
         if (active && !active.parents('.mote').is(m.$elem)) {
             return;
         }
-        console.log('KEY:', e.keyCode);
+        // console.log('KEY:', e.keyCode);
         const whitelist = [
             // command + ,
             { keyCode: 188, metaKey: true },
@@ -11376,33 +11292,21 @@ function init($elem, editorID) {
             { keyCode: 39 },
             { keyCode: 40 },
         ];
-        // TODO match against the whitelist and send to server
-        // command+,
-        if (e.keyCode == 188 && e.metaKey) {
-            nativeCommand(KeypressCommand(e.keyCode, e.charCode, e.metaKey, e.shiftKey, curto(active)));
-            e.preventDefault();
-            // wrapContent(m);
-            return false;
+        // Match against whitelist entries.
+        if (!whitelist.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
+            return;
         }
-        // command+.
-        if (e.keyCode == 190 && e.metaKey) {
-            nativeCommand(KeypressCommand(e.keyCode, e.charCode, e.metaKey, e.shiftKey, curto(active)));
-            e.preventDefault();
-            // renameBlock(active, target, m);
-            return false;
-        }
-        if (e.keyCode == 8) {
-            nativeCommand(KeypressCommand(e.keyCode, e.charCode, e.metaKey, e.shiftKey, curto(active)));
-            e.preventDefault();
-            // if (e.shiftKey) {
-            //   deleteBlockPreservingContent(m);
-            // } else if (e.metaKey) {
-            //   deleteBlock(m);
-            // } else {
-            //   deleteChars(m);
-            // }
-            return false;
-        }
+        nativeCommand(KeypressCommand(e.keyCode, e.metaKey, e.shiftKey, curto(active)));
+        e.preventDefault();
+        // TODO delete the rest of these
+        // more delete actions
+        // if (e.shiftKey) {
+        //   deleteBlockPreservingContent(m);
+        // } else if (e.metaKey) {
+        //   deleteBlock(m);
+        // } else {
+        //   deleteChars(m);
+        // }
         // <enter>
         if (e.keyCode == 13) {
             e.preventDefault();
@@ -11532,14 +11436,14 @@ function RenameGroupCommand(tag, curspan) {
         'RenameGroup': [tag, curspan],
     };
 }
-function KeypressCommand(keyCode, charCode, metaKey, shiftKey, curspan) {
+function KeypressCommand(keyCode, metaKey, shiftKey, curspan) {
     return {
-        'Keypress': [keyCode, charCode, metaKey, shiftKey, curspan],
+        'Keypress': [keyCode, metaKey, shiftKey, curspan],
     };
 }
-function CharacterCommand(keyCode, charCode, metaKey, shiftKey, curspan) {
+function CharacterCommand(charCode, curspan) {
     return {
-        'Character': [keyCode, charCode, metaKey, shiftKey, curspan],
+        'Character': [charCode, curspan],
     };
 }
 function nativeCommand(command) {
