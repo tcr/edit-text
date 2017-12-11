@@ -116,7 +116,7 @@ function load(vec): Array<JQuery> {
   return ret;
 }
 
-function curto (el) {
+function curto(el: JQuery | null) {
   if (!el) {
     return null;
   }
@@ -518,7 +518,7 @@ function init ($elem, editorID: string) {
     $elem.addClass('theme-block');
   }
 
-  m.$elem.on('click', 'span, div', function (e) {
+  m.$elem.on('mousedown', 'span, div', function (e) {
     const active = getActive();
     const target = getTarget();
 
@@ -526,12 +526,19 @@ function init ($elem, editorID: string) {
       if (active && active.nextAll().add(active).is(this)) {
         clearTarget();
         $(this).addClass('target');
+
+        // TODO
+        // send target destination curspan
       }
     } else {
       clearActive();
       clearTarget();
       $(this).addClass('active').addClass('target')
+
+      nativeCommand(TargetCommand(curto($(this))));
     }
+
+    // TODO this bubbles if i use preventDEfault?
     return false;
   })
 
@@ -598,7 +605,6 @@ function init ($elem, editorID: string) {
       e.keyCode,
       e.metaKey,
       e.shiftKey,
-      curto(active),
     ));
     
     e.preventDefault();
@@ -696,16 +702,27 @@ var m2 = $('#mote-2');
 var ops_a = init(m1, 'left');
 var ops_b = init(m2, 'right');
 
-
 // Initial load
 $.get('/api/hello', data => {
-    m1.empty().append(load(data));
-    m2.empty().append(load(data));
+  actionHello(data);
 });
-
 
 // Reset button
 $('#action-reset').on('click', () => {
+  actionReset();
+});
+
+// Sync action
+$('#action-sync').on('click', () => {
+  actionSync();
+})
+
+function actionHello(data) {
+  m1.empty().append(load(data));
+  m2.empty().append(load(data));
+}
+
+function actionReset() {
   $.ajax('/api/reset', {
     contentType : 'application/json',
     type : 'POST',
@@ -718,11 +735,9 @@ $('#action-reset').on('click', () => {
     }
     //
   })
-});
+}
 
-
-// Sync action
-$('#action-sync').on('click', () => {
+function actionSync() {
   let packet = [
     ops_a,
     ops_b
@@ -748,7 +763,7 @@ $('#action-sync').on('click', () => {
     console.log('failure', arguments);
     alert('Error in syncing. Check the command line.')
   });
-})
+}
 
 
 // Commands
@@ -760,16 +775,15 @@ function RenameGroupCommand(tag: string, curspan): RenameGroupCommand {
   }
 }
 
-type KeypressCommand = {Keypress: [number, boolean, boolean, any]};
+type KeypressCommand = {Keypress: [number, boolean, boolean]};
 
 function KeypressCommand(
   keyCode: number,
   metaKey: boolean,
   shiftKey: boolean,
-  curspan,
 ): KeypressCommand {
   return {
-    'Keypress': [keyCode, metaKey, shiftKey, curspan],
+    'Keypress': [keyCode, metaKey, shiftKey],
   }
 }
 
@@ -784,7 +798,17 @@ function CharacterCommand(
   }
 }
 
-type Command = RenameGroupCommand | KeypressCommand | CharacterCommand;
+type TargetCommand = {Target: [any]};
+
+function TargetCommand(
+  curspan,
+): TargetCommand {
+  return {
+    'Target': curspan,
+  }
+}
+
+type Command = RenameGroupCommand | KeypressCommand | CharacterCommand | TargetCommand;
 
 function nativeCommand(command: Command) {
   exampleSocket.send(JSON.stringify(command));

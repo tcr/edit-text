@@ -11236,20 +11236,24 @@ function init($elem, editorID) {
     else {
         $elem.addClass('theme-block');
     }
-    m.$elem.on('click', 'span, div', function (e) {
+    m.$elem.on('mousedown', 'span, div', function (e) {
         const active = getActive();
         const target = getTarget();
         if (e.shiftKey) {
             if (active && active.nextAll().add(active).is(this)) {
                 clearTarget();
                 __WEBPACK_IMPORTED_MODULE_2_jquery___default()(this).addClass('target');
+                // TODO
+                // send target destination curspan
             }
         }
         else {
             clearActive();
             clearTarget();
             __WEBPACK_IMPORTED_MODULE_2_jquery___default()(this).addClass('active').addClass('target');
+            nativeCommand(TargetCommand(curto(__WEBPACK_IMPORTED_MODULE_2_jquery___default()(this))));
         }
+        // TODO this bubbles if i use preventDEfault?
         return false;
     });
     __WEBPACK_IMPORTED_MODULE_2_jquery___default()(document).on('keypress', (e) => {
@@ -11296,7 +11300,7 @@ function init($elem, editorID) {
         if (!whitelist.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
             return;
         }
-        nativeCommand(KeypressCommand(e.keyCode, e.metaKey, e.shiftKey, curto(active)));
+        nativeCommand(KeypressCommand(e.keyCode, e.metaKey, e.shiftKey));
         e.preventDefault();
         // TODO delete the rest of these
         // more delete actions
@@ -11385,11 +11389,21 @@ var ops_a = init(m1, 'left');
 var ops_b = init(m2, 'right');
 // Initial load
 __WEBPACK_IMPORTED_MODULE_2_jquery___default.a.get('/api/hello', data => {
-    m1.empty().append(load(data));
-    m2.empty().append(load(data));
+    actionHello(data);
 });
 // Reset button
 __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#action-reset').on('click', () => {
+    actionReset();
+});
+// Sync action
+__WEBPACK_IMPORTED_MODULE_2_jquery___default()('#action-sync').on('click', () => {
+    actionSync();
+});
+function actionHello(data) {
+    m1.empty().append(load(data));
+    m2.empty().append(load(data));
+}
+function actionReset() {
     __WEBPACK_IMPORTED_MODULE_2_jquery___default.a.ajax('/api/reset', {
         contentType: 'application/json',
         type: 'POST',
@@ -11403,9 +11417,8 @@ __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#action-reset').on('click', () =
         }
         //
     });
-});
-// Sync action
-__WEBPACK_IMPORTED_MODULE_2_jquery___default()('#action-sync').on('click', () => {
+}
+function actionSync() {
     let packet = [
         ops_a,
         ops_b
@@ -11430,20 +11443,25 @@ __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#action-sync').on('click', () =>
         console.log('failure', arguments);
         alert('Error in syncing. Check the command line.');
     });
-});
+}
 function RenameGroupCommand(tag, curspan) {
     return {
         'RenameGroup': [tag, curspan],
     };
 }
-function KeypressCommand(keyCode, metaKey, shiftKey, curspan) {
+function KeypressCommand(keyCode, metaKey, shiftKey) {
     return {
-        'Keypress': [keyCode, metaKey, shiftKey, curspan],
+        'Keypress': [keyCode, metaKey, shiftKey],
     };
 }
 function CharacterCommand(charCode, curspan) {
     return {
         'Character': [charCode, curspan],
+    };
+}
+function TargetCommand(curspan) {
+    return {
+        'Target': curspan,
     };
 }
 function nativeCommand(command) {

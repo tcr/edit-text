@@ -31,11 +31,11 @@ fn default_doc() -> Doc {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum NativeCommand {
-    Keypress(u32, bool, bool, CurSpan),
+    Keypress(u32, bool, bool),
     Character(u32, CurSpan),
     RenameGroup(String, CurSpan),
     WrapGroup(String, CurSpan),
-    Error(String),
+    Target(CurSpan),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -360,15 +360,17 @@ fn key_command(
     key_code: u32,
     meta_key: bool,
     shift_key: bool,
-    cur: CurSpan,
 ) -> Result<(), Error> {
     println!("key: {:?} {:?} {:?}", key_code, meta_key, shift_key);
+
+    let cur = client.target.borrow();
 
     // command + .
     if key_code == 190 && meta_key && !shift_key {
         println!("renaming a group.");
 
-        let future = NativeCommand::RenameGroup("null".into(), cur);
+        // Unwrap into real error
+        let future = NativeCommand::RenameGroup("null".into(), cur.clone().unwrap());
         let prompt = ClientCommand::PromptString("Rename tag group:".into(), "p".into(), future);
         client.send(&prompt)?;
     }
@@ -376,7 +378,7 @@ fn key_command(
     else if key_code == 188 && meta_key && !shift_key {
         println!("wrapping a group.");
 
-        let future = NativeCommand::WrapGroup("null".into(), cur);
+        let future = NativeCommand::WrapGroup("null".into(), cur.clone().unwrap());
         let prompt = ClientCommand::PromptString("Name of new outer tag:".into(), "p".into(), future);
         client.send(&prompt)?;
     }
@@ -384,7 +386,8 @@ fn key_command(
     else if key_code == 8 && !meta_key && !shift_key {
         println!("backspace");
 
-        delete_char(client, &cur)?;
+        // TODO unwrap into real error, not into panic
+        delete_char(client, &cur.clone().unwrap())?;
     }
 
     Ok(())
@@ -398,14 +401,15 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
         NativeCommand::WrapGroup(tag, cur) => {
             wrap_group(client, &tag, &cur)?;
         }
-        NativeCommand::Keypress(key_code, meta_key, shift_key, cur) => {
-            key_command(client, key_code, meta_key, shift_key, cur)?;
+        NativeCommand::Keypress(key_code, meta_key, shift_key) => {
+            key_command(client, key_code, meta_key, shift_key)?;
         }
         NativeCommand::Character(char_code, cur) => {
             add_char(client, char_code, &cur)?;
         }
-        _ => {
-            println!("unsupported request: {:?}", req);
+        NativeCommand::Target(cur) => {
+            *client.target.borrow_mut() = Some(cur);
+
         }
     }
     Ok(())
@@ -414,6 +418,7 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
 struct Client {
     out: ws::Sender,
     doc: RefCell<Doc>,
+    target: RefCell<Option<CurSpan>>,
 }
 
 impl Client {
@@ -429,6 +434,7 @@ pub fn start_websocket_server() {
         let client = Client {
             out,
             doc: RefCell::new(default_doc()),
+            target: RefCell::new(None),
         };
         move |msg: ws::Message| {
             // Handle messages received on this connection
