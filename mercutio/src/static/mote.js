@@ -10924,7 +10924,12 @@ function delto(el, then) {
     }
     return cur;
 }
-function curto(el, then) {
+function curto(el) {
+    let then = el.is('div') ? {
+        'CurGroup': null
+    } : {
+        'CurChar': null
+    };
     var p = el.parents('.mote');
     if (Array.isArray(then)) {
         var cur = then;
@@ -11234,18 +11239,18 @@ function promptString(title, value, callback) {
         __WEBPACK_IMPORTED_MODULE_2_jquery___default()(this).find('input').select();
     });
 }
-function renameBlock(active, target, m) {
-    if (active) {
-        promptString('Rename tag group:', 'p', (tag) => {
-            if (tag) {
-                let attrs = intoAttrs(tag);
-                nativeCommand(RenameGroupCommand(tag, curto(active, {
-                    'CurGroup': null,
-                })));
-            }
-        });
-    }
-}
+// function renameBlock(active: JQuery | null, target: JQuery | null, m: Editor) {
+//   if (active) {
+//     promptString('Rename tag group:', 'p', (tag) => {
+//       if (tag) {
+//         let attrs = intoAttrs(tag);
+//         nativeCommand(RenameGroupCommand(tag, curto(active, {
+//           'CurGroup': null,
+//         })));
+//       }
+//     });
+//   }
+// }
 function init($elem, editorID) {
     const m = new Editor($elem);
     // switching button
@@ -11301,35 +11306,50 @@ function init($elem, editorID) {
         if (active && !active.parents('.mote').is(m.$elem)) {
             return;
         }
+        // No need to do this when using server-generated addkey
         // Unless the keys are enter or arrow keys, just return.
-        if ([13, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
-            return;
-        }
+        // if ([13, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+        //   return false;
+        // }
         if (e.metaKey) {
             return;
         }
+        nativeCommand(CharacterCommand(serialize(m.$elem), e.keyCode, e.charCode, e.metaKey, e.shiftKey, curto(active)));
+        e.preventDefault();
+        /*
+    
         let txt = String.fromCharCode(e.charCode);
-        let span = __WEBPACK_IMPORTED_MODULE_2_jquery___default()('<span>').text(txt).addClass('active').addClass('target');
+        let span = $('<span>').text(txt).addClass('active').addClass('target');
         if (isBlock(active)) {
-            e.preventDefault();
-            clearActive();
-            clearTarget();
-            active.prepend(span);
-            m.op([], addto(span, {
-                "AddChars": txt
-            }));
-            return false;
+          e.preventDefault();
+    
+          clearActive();
+          clearTarget();
+          active.prepend(span);
+    
+          m.op([], addto(span,
+            {
+              "AddChars": txt
+            }
+          ));
+          return false;
+        } else if (isChar(active)) {
+          e.preventDefault();
+    
+          clearActive();
+          clearTarget();
+          span.insertAfter(active);
+    
+          m.op([], addto(span,
+            {
+              "AddChars": txt
+            }
+          ));
+    
+          return false;
         }
-        else if (isChar(active)) {
-            e.preventDefault();
-            clearActive();
-            clearTarget();
-            span.insertAfter(active);
-            m.op([], addto(span, {
-                "AddChars": txt
-            }));
-            return false;
-        }
+        */
+        // e.preventDef/ault();
     });
     __WEBPACK_IMPORTED_MODULE_2_jquery___default()(document).on('keydown', (e) => {
         if (__WEBPACK_IMPORTED_MODULE_2_jquery___default()(e.target).closest('.modal').length) {
@@ -11359,33 +11379,28 @@ function init($elem, editorID) {
         // TODO match against the whitelist and send to server
         // command+,
         if (e.keyCode == 188 && e.metaKey) {
-            nativeCommand(KeypressCommand(e.keyCode, e.charCode, e.metaKey, e.shiftKey, curto(active, {
-                'CurGroup': null,
-            })));
+            nativeCommand(KeypressCommand(serialize(m.$elem), e.keyCode, e.charCode, e.metaKey, e.shiftKey, curto(active)));
             e.preventDefault();
             // wrapContent(m);
             return false;
         }
         // command+.
         if (e.keyCode == 190 && e.metaKey) {
-            nativeCommand(KeypressCommand(e.keyCode, e.charCode, e.metaKey, e.shiftKey, curto(active, {
-                'CurGroup': null,
-            })));
+            nativeCommand(KeypressCommand(serialize(m.$elem), e.keyCode, e.charCode, e.metaKey, e.shiftKey, curto(active)));
             e.preventDefault();
             // renameBlock(active, target, m);
             return false;
         }
         if (e.keyCode == 8) {
+            nativeCommand(KeypressCommand(serialize(m.$elem), e.keyCode, e.charCode, e.metaKey, e.shiftKey, curto(active)));
             e.preventDefault();
-            if (e.shiftKey) {
-                deleteBlockPreservingContent(m);
-            }
-            else if (e.metaKey) {
-                deleteBlock(m);
-            }
-            else {
-                deleteChars(m);
-            }
+            // if (e.shiftKey) {
+            //   deleteBlockPreservingContent(m);
+            // } else if (e.metaKey) {
+            //   deleteBlock(m);
+            // } else {
+            //   deleteChars(m);
+            // }
             return false;
         }
         // <enter>
@@ -11517,9 +11532,14 @@ function RenameGroupCommand(tag, curspan) {
         'RenameGroup': [tag, curspan],
     };
 }
-function KeypressCommand(keyCode, charCode, metaKey, shiftKey, curspan) {
+function KeypressCommand(doc, keyCode, charCode, metaKey, shiftKey, curspan) {
     return {
-        'Keypress': [keyCode, charCode, metaKey, shiftKey, curspan],
+        'Keypress': [doc, keyCode, charCode, metaKey, shiftKey, curspan],
+    };
+}
+function CharacterCommand(doc, keyCode, charCode, metaKey, shiftKey, curspan) {
+    return {
+        'Character': [doc, keyCode, charCode, metaKey, shiftKey, curspan],
     };
 }
 function nativeCommand(command) {
@@ -11531,6 +11551,7 @@ exampleSocket.onopen = function (event) {
 exampleSocket.onmessage = function (event) {
     let parse = JSON.parse(event.data);
     if (parse.Update) {
+        console.log('update:', parse.Update);
         m1.empty().append(load(parse.Update[0]));
         // Load new op
         ops_a.push(parse.Update[1]);

@@ -8,6 +8,7 @@ extern crate rocket_contrib;
 extern crate ws;
 #[macro_use]
 extern crate maplit;
+extern crate failure;
 
 #[macro_use]
 extern crate serde_derive;
@@ -15,6 +16,8 @@ extern crate serde_derive;
 extern crate serde;
 #[macro_use]
 extern crate serde_json;
+
+pub mod wasm;
 
 use std::sync::{Arc, Mutex};
 use oatie::doc::*;
@@ -26,6 +29,7 @@ use serde_json::Value;
 use std::path::{Path, PathBuf};
 use std::thread;
 use oatie::transform::transform;
+use wasm::start_websocket_server;
 
 fn default_doc() -> Doc {
     Doc(doc_span![
@@ -299,241 +303,9 @@ struct MoteState {
     body: Arc<Mutex<Doc>>,
 }
 
-
-
-
-
-
-
-
-
-#[derive(Serialize, Deserialize, Debug)]
-pub enum NativeCommand {
-    Keypress(u32, u32, bool, bool, CurSpan),
-    RenameGroup(String, CurSpan),
-    WrapGroup(String, CurSpan),
-    Error(String),
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub enum ClientCommand {
-    PromptString(String, String, NativeCommand),
-    Update(DocSpan, Op),
-    Error(String),
-}
-
-use oatie::stepper::*;
-use oatie::writer::*;
-
-fn rename_group(client: &ws::Sender, tag: &str, input: &CurSpan) {
-    fn rename_group_inner(
-        tag: &str,
-        input: &mut CurStepper,
-        doc: &mut DocStepper,
-        del: &mut DelWriter,
-        add: &mut AddWriter,
-    ) {
-        while !input.is_done() && input.head.is_some() {
-            match input.get_head() {
-                CurSkip(value) => {
-                    doc.skip(value);
-                    input.next();
-                    del.skip(value);
-                    add.skip(value);
-                }
-                CurWithGroup(..) => {
-                    input.enter();
-                    doc.enter();
-                    del.begin();
-                    add.begin();
-
-                    rename_group_inner(tag, input, doc, del, add);
-
-                    input.exit();
-                    doc.exit();
-                    del.exit();
-                    add.exit();
-                }
-                CurGroup => {
-                    // Get doc inner span length
-                    let len = if let Some(DocElement::DocGroup(_, span)) = doc.head.clone() {
-                        span.skip_len()
-                    } else {
-                        panic!("unreachable");
-                    };
-
-                    del.begin();
-                    add.begin();
-
-                    del.skip(len);
-                    add.skip(len);
-
-                    del.close();
-                    add.close(hashmap! { "tag".to_string() => tag.to_string() });
-                    doc.next();
-                    input.next();
-                }
-            }
-        }
-    }
-
-    // Load document.
-    let doc = default_doc();
-
-    let mut cur_stepper = CurStepper::new(input);
-    let mut doc_stepper = DocStepper::new(&doc.0);
-    let mut del_writer = DelWriter::new();
-    let mut add_writer = AddWriter::new();
-    rename_group_inner(
-        tag,
-        &mut cur_stepper,
-        &mut doc_stepper,
-        &mut del_writer,
-        &mut add_writer,
-    );
-
-    // Apply operation.
-    let op = (del_writer.result(), add_writer.result());
-    let new_doc = OT::apply(&doc, &op);
-
-    // Send update.
-    let res = ClientCommand::Update(new_doc.0, op);
-    client.send(serde_json::to_string(&res).unwrap());
-}
-
-fn wrap_group(client: &ws::Sender, tag: &str, input: &CurSpan) {
-    fn wrap_group_inner(
-        tag: &str,
-        input: &mut CurStepper,
-        doc: &mut DocStepper,
-        del: &mut DelWriter,
-        add: &mut AddWriter,
-    ) {
-        while !input.is_done() && input.head.is_some() {
-            match input.get_head() {
-                CurSkip(value) => {
-                    doc.skip(value);
-                    input.next();
-                    del.skip(value);
-                    add.skip(value);
-                }
-                CurWithGroup(..) => {
-                    input.enter();
-                    doc.enter();
-                    del.begin();
-                    add.begin();
-
-                    wrap_group_inner(tag, input, doc, del, add);
-
-                    input.exit();
-                    doc.exit();
-                    del.exit();
-                    add.exit();
-                }
-                CurGroup => {
-                    del.skip(1);
-
-                    add.begin();
-                    add.skip(1);
-                    add.close(hashmap! { "tag".to_string() => tag.to_string() });
-
-                    doc.next();
-                    input.next();
-                }
-            }
-        }
-    }
-
-    // Load document.
-    let doc = default_doc();
-
-    let mut cur_stepper = CurStepper::new(input);
-    let mut doc_stepper = DocStepper::new(&doc.0);
-    let mut del_writer = DelWriter::new();
-    let mut add_writer = AddWriter::new();
-    wrap_group_inner(
-        tag,
-        &mut cur_stepper,
-        &mut doc_stepper,
-        &mut del_writer,
-        &mut add_writer,
-    );
-
-    // Apply operation.
-    let op = (del_writer.result(), add_writer.result());
-    let new_doc = OT::apply(&doc, &op);
-
-    // Send update.
-    let res = ClientCommand::Update(new_doc.0, op);
-    client.send(serde_json::to_string(&res).unwrap());
-}
-
-fn key_command(
-    client: &ws::Sender,
-    key_code: u32,
-    char_code: u32,
-    meta_key: bool,
-    shift_key: bool,
-    cur: CurSpan,
-) {
-    println!("key: {:?} {:?} {:?} {:?}", key_code, char_code, meta_key, shift_key);
-
-    // command + .
-    if key_code == 190 && meta_key && !shift_key {
-        println!("renaming a group.");
-
-        let future = NativeCommand::RenameGroup("null".into(), cur);
-        let cc = ClientCommand::PromptString("Rename tag group:".into(), "p".into(), future);
-        client.send(serde_json::to_string(&cc).unwrap());
-    }
-    // command + ,
-    else if key_code == 188 && meta_key && !shift_key {
-        println!("wrapping a group.");
-
-        let future = NativeCommand::WrapGroup("null".into(), cur);
-        let cc = ClientCommand::PromptString("Name of new outer tag:".into(), "p".into(), future);
-        client.send(serde_json::to_string(&cc).unwrap());
-    }
-}
-
-pub fn native_command(client: &ws::Sender, req: NativeCommand) {
-    match req {
-        NativeCommand::RenameGroup(tag, cur) => {
-            rename_group(client, &tag, &cur);
-        }
-        NativeCommand::WrapGroup(tag, cur) => {
-            wrap_group(client, &tag, &cur);
-        }
-        NativeCommand::Keypress(key_code, char_code, meta_key, shift_key, cur) => {
-            key_command(client, key_code, char_code, meta_key, shift_key, cur);
-        }
-        _ => {
-            println!("unhandled request: {:?}", req);
-        }
-    }
-}
-
 fn main() {
     thread::spawn(|| {
-        ws::listen("127.0.0.1:3012", |out| {
-            move |msg: ws::Message| {
-                // Handle messages received on this connection
-                println!("Server got message '{}'. ", msg);
-
-                let req_parse: Result<NativeCommand, _> = serde_json::from_slice(&msg.into_data());
-                match req_parse {
-                    Err(err) => {
-                        println!("Packet error: {:?}", err);
-                    }
-                    Ok(value) => {
-                        native_command(&out, value);
-                    }
-                }
-
-                Ok(())
-                // out.send(msg)
-            }
-        }).unwrap();
+        start_websocket_server();
     });
 
     rocket::ignite()
