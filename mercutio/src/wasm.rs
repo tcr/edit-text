@@ -31,8 +31,8 @@ fn default_doc() -> Doc {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum NativeCommand {
-    Keypress(u32, u32, bool, bool, CurSpan),
-    Character(u32, u32, bool, bool, CurSpan),
+    Keypress(u32, bool, bool, CurSpan),
+    Character(u32, CurSpan),
     RenameGroup(String, CurSpan),
     WrapGroup(String, CurSpan),
     Error(String),
@@ -358,12 +358,11 @@ fn add_char(client: &Client, key: u32, input: &CurSpan) -> Result<(), Error> {
 fn key_command(
     client: &Client,
     key_code: u32,
-    char_code: u32,
     meta_key: bool,
     shift_key: bool,
     cur: CurSpan,
 ) -> Result<(), Error> {
-    println!("key: {:?} {:?} {:?} {:?}", key_code, char_code, meta_key, shift_key);
+    println!("key: {:?} {:?} {:?}", key_code, meta_key, shift_key);
 
     // command + .
     if key_code == 190 && meta_key && !shift_key {
@@ -399,10 +398,10 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
         NativeCommand::WrapGroup(tag, cur) => {
             wrap_group(client, &tag, &cur)?;
         }
-        NativeCommand::Keypress(key_code, char_code, meta_key, shift_key, cur) => {
-            key_command(client, key_code, char_code, meta_key, shift_key, cur)?;
+        NativeCommand::Keypress(key_code, meta_key, shift_key, cur) => {
+            key_command(client, key_code, meta_key, shift_key, cur)?;
         }
-        NativeCommand::Character(key_code, char_code, meta_key, shift_key, cur) => {
+        NativeCommand::Character(char_code, cur) => {
             add_char(client, char_code, &cur)?;
         }
         _ => {
