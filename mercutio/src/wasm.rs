@@ -6,13 +6,35 @@ use failure::Error;
 use oatie::stepper::*;
 use oatie::writer::*;
 use std::char::from_u32;
+use std::cell::RefCell;
+
+//TODO move this to being loaded from JS
+fn default_doc() -> Doc {
+    Doc(doc_span![
+        DocGroup({"tag": "h1"}, [
+            DocChars("Hello! "),
+            DocGroup({"tag": "span", "class": "bold"}, [DocChars("what's")]),
+            DocChars(" up?"),
+        ]),
+        DocGroup({"tag": "ul"}, [
+            DocGroup({"tag": "li"}, [
+                DocGroup({"tag": "p"}, [
+                    DocChars("Three adjectives strong."),
+                ]),
+                DocGroup({"tag": "p"}, [
+                    DocChars("World!"),
+                ]),
+            ]),
+        ])
+    ])
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum NativeCommand {
-    Keypress(DocSpan, u32, u32, bool, bool, CurSpan),
-    Character(DocSpan, u32, u32, bool, bool, CurSpan),
-    RenameGroup(String, DocSpan, CurSpan),
-    WrapGroup(String, DocSpan, CurSpan),
+    Keypress(u32, u32, bool, bool, CurSpan),
+    Character(u32, u32, bool, bool, CurSpan),
+    RenameGroup(String, CurSpan),
+    WrapGroup(String, CurSpan),
     Error(String),
 }
 
@@ -23,7 +45,7 @@ pub enum ClientCommand {
     Error(String),
 }
 
-fn rename_group(client: &Client, doc: DocSpan, tag: &str, input: &CurSpan) -> Result<(), Error> {
+fn rename_group(client: &Client, tag: &str, input: &CurSpan) -> Result<(), Error> {
     fn rename_group_inner(
         tag: &str,
         input: &mut CurStepper,
@@ -81,8 +103,10 @@ fn rename_group(client: &Client, doc: DocSpan, tag: &str, input: &CurSpan) -> Re
         }
     }
 
+    let mut doc = client.doc.borrow_mut();
+
     let mut cur_stepper = CurStepper::new(input);
-    let mut doc_stepper = DocStepper::new(&doc);
+    let mut doc_stepper = DocStepper::new(&doc.0);
     let mut del_writer = DelWriter::new();
     let mut add_writer = AddWriter::new();
     rename_group_inner(
@@ -95,16 +119,19 @@ fn rename_group(client: &Client, doc: DocSpan, tag: &str, input: &CurSpan) -> Re
 
     // Apply operation.
     let op = (del_writer.result(), add_writer.result());
-    let new_doc = OT::apply(&Doc(doc), &op);
+    let new_doc = OT::apply(&*doc, &op);
+
+    // Store update
+    *doc = new_doc;
 
     // Send update.
-    let res = ClientCommand::Update(new_doc.0, op);
+    let res = ClientCommand::Update(doc.0.clone(), op);
     client.send(&res)?;
 
     Ok(())
 }
 
-fn wrap_group(client: &Client, doc: DocSpan, tag: &str, input: &CurSpan) -> Result<(), Error> {
+fn wrap_group(client: &Client, tag: &str, input: &CurSpan) -> Result<(), Error> {
     fn wrap_group_inner(
         tag: &str,
         input: &mut CurStepper,
@@ -153,8 +180,10 @@ fn wrap_group(client: &Client, doc: DocSpan, tag: &str, input: &CurSpan) -> Resu
         }
     }
 
+    let mut doc = client.doc.borrow_mut();
+
     let mut cur_stepper = CurStepper::new(input);
-    let mut doc_stepper = DocStepper::new(&doc);
+    let mut doc_stepper = DocStepper::new(&doc.0);
     let mut del_writer = DelWriter::new();
     let mut add_writer = AddWriter::new();
     wrap_group_inner(
@@ -167,16 +196,19 @@ fn wrap_group(client: &Client, doc: DocSpan, tag: &str, input: &CurSpan) -> Resu
 
     // Apply operation.
     let op = (del_writer.result(), add_writer.result());
-    let new_doc = OT::apply(&Doc(doc), &op);
+    let new_doc = OT::apply(&*doc, &op);
+
+    // Store update
+    *doc = new_doc;
 
     // Send update.
-    let res = ClientCommand::Update(new_doc.0, op);
+    let res = ClientCommand::Update(doc.0.clone(), op);
     client.send(&res)?;
 
     Ok(())
 }
 
-fn delete_char(client: &Client, doc: DocSpan, input: &CurSpan) -> Result<(), Error> {
+fn delete_char(client: &Client, input: &CurSpan) -> Result<(), Error> {
     fn delete_char_inner(
         input: &mut CurStepper,
         doc: &mut DocStepper,
@@ -220,8 +252,10 @@ fn delete_char(client: &Client, doc: DocSpan, input: &CurSpan) -> Result<(), Err
         }
     }
 
+    let mut doc = client.doc.borrow_mut();
+
     let mut cur_stepper = CurStepper::new(input);
-    let mut doc_stepper = DocStepper::new(&doc);
+    let mut doc_stepper = DocStepper::new(&doc.0);
     let mut del_writer = DelWriter::new();
     let mut add_writer = AddWriter::new();
     delete_char_inner(
@@ -233,16 +267,19 @@ fn delete_char(client: &Client, doc: DocSpan, input: &CurSpan) -> Result<(), Err
 
     // Apply operation.
     let op = (del_writer.result(), add_writer.result());
-    let new_doc = OT::apply(&Doc(doc), &op);
+    let new_doc = OT::apply(&*doc, &op);
+
+    // Store update
+    *doc = new_doc;
 
     // Send update.
-    let res = ClientCommand::Update(new_doc.0, op);
+    let res = ClientCommand::Update(doc.0.clone(), op);
     client.send(&res)?;
 
     Ok(())
 }
 
-fn add_char(client: &Client, doc: DocSpan, key: u32, input: &CurSpan) -> Result<(), Error> {
+fn add_char(client: &Client, key: u32, input: &CurSpan) -> Result<(), Error> {
     fn add_char_inner(
         key: char,
         input: &mut CurStepper,
@@ -288,8 +325,10 @@ fn add_char(client: &Client, doc: DocSpan, key: u32, input: &CurSpan) -> Result<
         }
     }
 
+    let mut doc = client.doc.borrow_mut();
+
     let mut cur_stepper = CurStepper::new(input);
-    let mut doc_stepper = DocStepper::new(&doc);
+    let mut doc_stepper = DocStepper::new(&doc.0);
     let mut del_writer = DelWriter::new();
     let mut add_writer = AddWriter::new();
     add_char_inner(
@@ -303,10 +342,13 @@ fn add_char(client: &Client, doc: DocSpan, key: u32, input: &CurSpan) -> Result<
 
     // Apply operation.
     let op = (del_writer.result(), add_writer.result());
-    let new_doc = OT::apply(&Doc(doc), &op);
+    let new_doc = OT::apply(&*doc, &op);
+
+    // Store update
+    *doc = new_doc;
 
     // Send update.
-    let res = ClientCommand::Update(new_doc.0, op);
+    let res = ClientCommand::Update(doc.0.clone(), op);
     client.send(&res)?;
 
     Ok(())
@@ -315,7 +357,6 @@ fn add_char(client: &Client, doc: DocSpan, key: u32, input: &CurSpan) -> Result<
 // Load in key command.
 fn key_command(
     client: &Client,
-    doc: DocSpan,
     key_code: u32,
     char_code: u32,
     meta_key: bool,
@@ -328,7 +369,7 @@ fn key_command(
     if key_code == 190 && meta_key && !shift_key {
         println!("renaming a group.");
 
-        let future = NativeCommand::RenameGroup("null".into(), doc, cur);
+        let future = NativeCommand::RenameGroup("null".into(), cur);
         let prompt = ClientCommand::PromptString("Rename tag group:".into(), "p".into(), future);
         client.send(&prompt)?;
     }
@@ -336,7 +377,7 @@ fn key_command(
     else if key_code == 188 && meta_key && !shift_key {
         println!("wrapping a group.");
 
-        let future = NativeCommand::WrapGroup("null".into(), doc, cur);
+        let future = NativeCommand::WrapGroup("null".into(), cur);
         let prompt = ClientCommand::PromptString("Name of new outer tag:".into(), "p".into(), future);
         client.send(&prompt)?;
     }
@@ -344,7 +385,7 @@ fn key_command(
     else if key_code == 8 && !meta_key && !shift_key {
         println!("backspace");
 
-        delete_char(client, doc, &cur)?;
+        delete_char(client, &cur)?;
     }
 
     Ok(())
@@ -352,17 +393,17 @@ fn key_command(
 
 fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
     match req {
-        NativeCommand::RenameGroup(tag, doc, cur) => {
-            rename_group(client, doc, &tag, &cur)?;
+        NativeCommand::RenameGroup(tag, cur) => {
+            rename_group(client, &tag, &cur)?;
         }
-        NativeCommand::WrapGroup(tag, doc, cur) => {
-            wrap_group(client, doc, &tag, &cur)?;
+        NativeCommand::WrapGroup(tag, cur) => {
+            wrap_group(client, &tag, &cur)?;
         }
-        NativeCommand::Keypress(doc, key_code, char_code, meta_key, shift_key, cur) => {
-            key_command(client, doc, key_code, char_code, meta_key, shift_key, cur)?;
+        NativeCommand::Keypress(key_code, char_code, meta_key, shift_key, cur) => {
+            key_command(client, key_code, char_code, meta_key, shift_key, cur)?;
         }
-        NativeCommand::Character(doc, key_code, char_code, meta_key, shift_key, cur) => {
-            add_char(client, doc, char_code, &cur)?;
+        NativeCommand::Character(key_code, char_code, meta_key, shift_key, cur) => {
+            add_char(client, char_code, &cur)?;
         }
         _ => {
             println!("unsupported request: {:?}", req);
@@ -373,6 +414,7 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
 
 struct Client {
     out: ws::Sender,
+    doc: RefCell<Doc>,
 }
 
 impl Client {
@@ -386,7 +428,8 @@ impl Client {
 pub fn start_websocket_server() {
     ws::listen("127.0.0.1:3012", |out| {
         let client = Client {
-            out
+            out,
+            doc: RefCell::new(default_doc()),
         };
         move |msg: ws::Message| {
             // Handle messages received on this connection
