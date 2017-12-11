@@ -5,6 +5,7 @@ version = "0.1.0"
 [dependencies]
 bodyparser = "0.7"
 env_logger = "0.4.3"
+failure = "0.1.1"
 iron = "0.5"
 maplit = "1.0.0"
 mount = "0.3"

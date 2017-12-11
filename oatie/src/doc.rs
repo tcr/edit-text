@@ -222,6 +222,7 @@ pub enum CurElement {
     CurSkip(usize),
     CurWithGroup(CurSpan),
     CurGroup,
+    CurChar,
 }
 
 pub use self::CurElement::*;

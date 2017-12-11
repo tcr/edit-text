@@ -132,7 +132,13 @@ function delto (el, then) {
   return cur;
 }
 
-function curto (el, then) {
+function curto (el) {
+  let then: any = el.is('div') ? {
+    'CurGroup': null
+  } : {
+    'CurChar': null
+  };
+
   var p = el.parents('.mote');
   if (Array.isArray(then)) {
     var cur = then;
@@ -499,19 +505,19 @@ function promptString(title, value, callback) {
   });
 }
 
-function renameBlock(active: JQuery | null, target: JQuery | null, m: Editor) {
-  if (active) {
-    promptString('Rename tag group:', 'p', (tag) => {
-      if (tag) {
-        let attrs = intoAttrs(tag);
+// function renameBlock(active: JQuery | null, target: JQuery | null, m: Editor) {
+//   if (active) {
+//     promptString('Rename tag group:', 'p', (tag) => {
+//       if (tag) {
+//         let attrs = intoAttrs(tag);
 
-        nativeCommand(RenameGroupCommand(tag, curto(active, {
-          'CurGroup': null,
-        })));
-      }
-    });
-  }
-}
+//         nativeCommand(RenameGroupCommand(tag, curto(active, {
+//           'CurGroup': null,
+//         })));
+//       }
+//     });
+//   }
+// }
 
 function init ($elem, editorID: string) {
   const m = new Editor($elem);
@@ -575,14 +581,28 @@ function init ($elem, editorID: string) {
       return
     }
 
+    // No need to do this when using server-generated addkey
     // Unless the keys are enter or arrow keys, just return.
-    if ([13, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
-      return;
-    }
+    // if ([13, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+    //   return false;
+    // }
 
     if (e.metaKey) {
       return;
     }
+
+    nativeCommand(CharacterCommand(
+      serialize(m.$elem),
+      e.keyCode,
+      e.charCode,
+      e.metaKey,
+      e.shiftKey,
+      curto(active),
+    ));
+
+    e.preventDefault();
+
+    /*
 
     let txt = String.fromCharCode(e.charCode);
     let span = $('<span>').text(txt).addClass('active').addClass('target');
@@ -614,6 +634,9 @@ function init ($elem, editorID: string) {
 
       return false;
     }
+    */
+
+    // e.preventDef/ault();
   });
 
   $(document).on('keydown', (e) => {
@@ -651,13 +674,12 @@ function init ($elem, editorID: string) {
     // command+,
     if (e.keyCode == 188 && e.metaKey) {
       nativeCommand(KeypressCommand(
+        serialize(m.$elem),
         e.keyCode,
         e.charCode,
         e.metaKey,
         e.shiftKey,
-        curto(active, {
-          'CurGroup': null,
-        }),
+        curto(active),
       ));
       
       e.preventDefault();
@@ -669,13 +691,12 @@ function init ($elem, editorID: string) {
     if (e.keyCode == 190 && e.metaKey) {
 
       nativeCommand(KeypressCommand(
+        serialize(m.$elem),
         e.keyCode,
         e.charCode,
         e.metaKey,
         e.shiftKey,
-        curto(active, {
-          'CurGroup': null,
-        }),
+        curto(active),
       ));
 
       e.preventDefault();
@@ -683,14 +704,23 @@ function init ($elem, editorID: string) {
       return false;
     }
     if (e.keyCode == 8) {
+      nativeCommand(KeypressCommand(
+        serialize(m.$elem),
+        e.keyCode,
+        e.charCode,
+        e.metaKey,
+        e.shiftKey,
+        curto(active),
+      ));
+
       e.preventDefault();
-      if (e.shiftKey) {
-        deleteBlockPreservingContent(m);
-      } else if (e.metaKey) {
-        deleteBlock(m);
-      } else {
-        deleteChars(m);
-      }
+      // if (e.shiftKey) {
+      //   deleteBlockPreservingContent(m);
+      // } else if (e.metaKey) {
+      //   deleteBlock(m);
+      // } else {
+      //   deleteChars(m);
+      // }
       return false;
     }
 
@@ -833,7 +863,6 @@ $('#action-sync').on('click', () => {
 
 // Commands
 type RenameGroupCommand = {RenameGroup: any};
-type KeypressCommand = {Keypress: [number, number, boolean, boolean, any]};
 
 function RenameGroupCommand(tag: string, curspan): RenameGroupCommand {
   return {
@@ -841,7 +870,10 @@ function RenameGroupCommand(tag: string, curspan): RenameGroupCommand {
   }
 }
 
+type KeypressCommand = {Keypress: [any, number, number, boolean, boolean, any]};
+
 function KeypressCommand(
+  doc,
   keyCode: number,
   charCode: number,
   metaKey: boolean,
@@ -849,11 +881,26 @@ function KeypressCommand(
   curspan,
 ): KeypressCommand {
   return {
-    'Keypress': [keyCode, charCode, metaKey, shiftKey, curspan],
+    'Keypress': [doc, keyCode, charCode, metaKey, shiftKey, curspan],
   }
 }
 
-type Command = RenameGroupCommand | KeypressCommand;
+type CharacterCommand = {Character: [any, number, number, boolean, boolean, any]};
+
+function CharacterCommand(
+  doc,
+  keyCode: number,
+  charCode: number,
+  metaKey: boolean,
+  shiftKey: boolean,
+  curspan,
+): CharacterCommand {
+  return {
+    'Character': [doc, keyCode, charCode, metaKey, shiftKey, curspan],
+  }
+}
+
+type Command = RenameGroupCommand | KeypressCommand | CharacterCommand;
 
 function nativeCommand(command: Command) {
   exampleSocket.send(JSON.stringify(command));
@@ -866,6 +913,7 @@ exampleSocket.onopen = function (event) {
 exampleSocket.onmessage = function (event) {
   let parse = JSON.parse(event.data);
   if (parse.Update) {
+    console.log('update:', parse.Update);
     m1.empty().append(load(parse.Update[0]));
     // Load new op
     ops_a.push(parse.Update[1]);
