@@ -225,9 +225,11 @@ button {
     }
     
     div[data-tag="cursor"] {
+        width: 0;
         display: inline-block;
-        width: 4px;
-        background: black;
+        margin-right: -3px;
+        border-right: 3px red solid;
+        overflow: visible;
         height: 1em;
         vertical-align: bottom;
     }
