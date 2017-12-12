@@ -480,7 +480,7 @@ function splitBlock(m: Editor) {
 
 
 
-
+let KEY_WHITELIST = [];
 
 function promptString(title, value, callback) {
   bootbox.prompt({
@@ -503,19 +503,23 @@ function init ($elem, editorID: string) {
       $elem.toggleClass('theme-block');
 
       const settings = HashState.get();
-      if (settings.has(`${editorID}-theme-mock`)) {
-        settings.delete(`${editorID}-theme-mock`);
+      if (settings.has(`${editorID}-theme-block`)) {
+        settings.delete(`${editorID}-theme-v`);
       } else {
-        settings.add(`${editorID}-theme-mock`);
+        settings.add(`${editorID}-theme-block`);
       }
       HashState.set(settings);
     });
+  
+  // Button shelf
+  $('<div class="button-shelf">')
+    .appendTo($elem.prev())
 
   // theme
-  if (HashState.get().has(`${editorID}-theme-mock`)) {
-    $elem.addClass('theme-mock');
-  } else {
+  if (HashState.get().has(`${editorID}-theme-block`)) {
     $elem.addClass('theme-block');
+  } else {
+    $elem.addClass('theme-mock');
   }
 
   m.$elem.on('mousedown', 'span, div', function (e) {
@@ -578,26 +582,8 @@ function init ($elem, editorID: string) {
       return
     }
 
-    // console.log('KEY:', e.keyCode);
-
-    const whitelist = [
-      // command + ,
-      {keyCode: 188, metaKey: true},
-      // command + .
-      {keyCode: 190, metaKey: true},
-      // backspace
-      {keyCode: 8},
-      // enter
-      {keyCode: 13},
-      // arrow keys
-      {keyCode: 37},
-      {keyCode: 38},
-      {keyCode: 39},
-      {keyCode: 40},
-    ];
-
-    // Match against whitelist entries.
-    if (!whitelist.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
+    // Match against whitelisted key  entries.
+    if (!KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
       return;
     }
 
@@ -808,7 +794,17 @@ function TargetCommand(
   }
 }
 
-type Command = RenameGroupCommand | KeypressCommand | CharacterCommand | TargetCommand;
+type ButtonCommand = {Button: number};
+
+function ButtonCommand(
+  button: number,
+): ButtonCommand {
+  return {
+    'Button': button,
+  }
+}
+
+type Command = RenameGroupCommand | KeypressCommand | CharacterCommand | TargetCommand | ButtonCommand;
 
 function nativeCommand(command: Command) {
   exampleSocket.send(JSON.stringify(command));
@@ -820,17 +816,33 @@ exampleSocket.onopen = function (event) {
 };
 exampleSocket.onmessage = function (event) {
   let parse = JSON.parse(event.data);
+
   if (parse.Update) {
     console.log('update:', parse.Update);
     m1.empty().append(load(parse.Update[0]));
     // Load new op
     ops_a.push(parse.Update[1]);
-  } else if (parse.PromptString) {
+  }
+  
+  else if (parse.PromptString) {
     promptString(parse.PromptString[0], parse.PromptString[1], (value) => {
       // Lookup actual key
       let key = Object.keys(parse.PromptString[2])[0];
       parse.PromptString[2][key][0] = value;
       nativeCommand(parse.PromptString[2]);
+    });
+  }
+  
+  else if (parse.Setup) {
+    console.log('SETUP', parse.Setup);
+    KEY_WHITELIST = parse.Setup.keys.map(x => ({keyCode: x[0], metaKey: x[1], shiftKey: x[2]}));
+
+    $('.button-shelf').each((_, x) => {
+      parse.Setup.buttons.forEach(btn => {
+        $('<button>').text(btn[1]).appendTo(x).click(_ => {
+          nativeCommand(ButtonCommand(btn[0]));
+        });
+      })
     });
   }
 }
