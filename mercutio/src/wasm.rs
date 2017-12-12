@@ -1,3 +1,4 @@
+use rand;
 use oatie::doc::*;
 use oatie::{OT};
 use serde_json;
@@ -10,6 +11,7 @@ use std::cell::RefCell;
 use std::thread;
 use std::time::Duration;
 use std::sync::{Arc, Mutex};
+use rand::Rng;
 
 //TODO move this to being loaded from JS
 fn default_doc() -> Doc {
@@ -762,14 +764,34 @@ pub fn start_websocket_server() {
             buttons: button_handlers().into_iter().enumerate().map(|(i, x)| (i, x.0.to_string())).collect(),
         }).expect("Could not send initial state");
 
+        // Button monkey.
         let thread_client: Arc<_> = client.clone();
         thread::spawn(move || {
-            println!("spawned.");
+            let mut rng = rand::thread_rng();
+            thread::sleep(Duration::from_millis(rng.gen_range(0, 2000) + 500));
+            rand::thread_rng().choose(&button_handlers())
+                .map(|button| {
+                    button.1(&*thread_client);
+                });
+        });
+
+        // Letter monkey.
+        let thread_client: Arc<_> = client.clone();
+        thread::spawn(move || {
             loop {
-                thread::sleep(Duration::from_millis(1000));
-                native_command(&*thread_client, NativeCommand::Character(66));
+                thread::sleep(Duration::from_millis(rand::thread_rng().gen_range(0, 200) + 100));
+                native_command(&*thread_client, NativeCommand::Character(
+                    *rand::thread_rng().choose(&vec![
+                        rand::thread_rng().gen_range(b'A', b'Z'),
+                        rand::thread_rng().gen_range(b'a', b'z'),
+                        rand::thread_rng().gen_range(b'0', b'9'),
+                        b' ',
+                    ]).unwrap() as _));
             }
         });
+        
+        // Arrow monkey
+        // native_command(&*thread_client, NativeCommand::Keypress(39, false, false));
 
         move |msg: ws::Message| {
             // Handle messages received on this connection
