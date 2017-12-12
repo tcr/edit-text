@@ -11297,8 +11297,14 @@ function init($elem, editorID) {
 var m1 = __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#mote-1');
 var ops_a = init(m1, 'left');
 // Initial load
+var exampleSocket;
 __WEBPACK_IMPORTED_MODULE_2_jquery___default.a.get('/api/hello', data => {
     actionHello(data);
+    exampleSocket = new WebSocket("ws://127.0.0.1:3012");
+    exampleSocket.onopen = function (event) {
+        nativeCommand(LoadCommand(data));
+    };
+    exampleSocket.onmessage = onmessage;
 });
 // Reset button
 __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#action-reset').on('click', () => {
@@ -11378,13 +11384,15 @@ function ButtonCommand(button) {
         'Button': button,
     };
 }
+function LoadCommand(load) {
+    return {
+        'Load': load,
+    };
+}
 function nativeCommand(command) {
     exampleSocket.send(JSON.stringify(command));
 }
-const exampleSocket = new WebSocket("ws://127.0.0.1:3012");
-exampleSocket.onopen = function (event) {
-};
-exampleSocket.onmessage = function (event) {
+function onmessage(event) {
     let parse = JSON.parse(event.data);
     if (parse.Update) {
         console.log('update:', parse.Update);
@@ -11411,7 +11419,7 @@ exampleSocket.onmessage = function (event) {
             });
         });
     }
-};
+}
 
 
 /***/ }),
