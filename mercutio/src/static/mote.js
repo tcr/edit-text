@@ -11295,9 +11295,7 @@ function init($elem, editorID) {
     return m.ophistory;
 }
 var m1 = __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#mote-1');
-var m2 = __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#mote-2');
 var ops_a = init(m1, 'left');
-var ops_b = init(m2, 'right');
 // Initial load
 __WEBPACK_IMPORTED_MODULE_2_jquery___default.a.get('/api/hello', data => {
     actionHello(data);
@@ -11312,7 +11310,6 @@ __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#action-sync').on('click', () =>
 });
 function actionHello(data) {
     m1.empty().append(load(data));
-    m2.empty().append(load(data));
 }
 function actionReset() {
     __WEBPACK_IMPORTED_MODULE_2_jquery___default.a.ajax('/api/reset', {
@@ -11330,9 +11327,10 @@ function actionReset() {
     });
 }
 function actionSync() {
+    // TODO fix this as ops_a, ops_b
     let packet = [
         ops_a,
-        ops_b
+        ops_a
     ];
     console.log('PACKET', packet);
     __WEBPACK_IMPORTED_MODULE_2_jquery___default.a.ajax('/api/sync', {
