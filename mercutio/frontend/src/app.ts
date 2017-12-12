@@ -582,7 +582,9 @@ function init ($elem, editorID: string) {
       return
     }
 
-    // Match against whitelisted key  entries.
+    console.log('KEYDOWN:', e.keyCode);
+
+    // Match against whitelisted key entries.
     if (!KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
       return;
     }
@@ -594,89 +596,6 @@ function init ($elem, editorID: string) {
     ));
     
     e.preventDefault();
-
-    // TODO delete the rest of these
-
-    // more delete actions
-    // if (e.shiftKey) {
-    //   deleteBlockPreservingContent(m);
-    // } else if (e.metaKey) {
-    //   deleteBlock(m);
-    // } else {
-    //   deleteChars(m);
-    // }
-
-    // <enter>
-    if (e.keyCode == 13) {
-      e.preventDefault();
-      if (e.shiftKey) {
-        if (isBlock(active)) {
-          addBlockAfter(m);
-        } else if (isBlock(active.parent())) {
-          let newActive = active.parent();
-          clearActive();
-          clearTarget();
-          newActive.addClass('active').addClass('target');
-          addBlockAfter(m);
-        }
-      } else if (!e.shiftKey) {
-        splitBlock(m);
-      }
-      return false;
-    }
-
-    // Arrow keys
-    if ([37, 38, 39, 40].indexOf(e.keyCode) > -1) {
-      e.preventDefault();
-
-      const keyCode = e.keyCode;
-
-      // left
-      if (keyCode == 37) {
-        let last = active.prevAll().find('span').addBack('span').last();
-        if (!last[0] && serializeAttrs(active.parent()).tag == 'span') {
-          last = active.parent().prevAll().find('span').addBack('span').last();
-        }
-        if (last[0]) {
-          let prev = last[0];
-          clearActive();
-          clearTarget();
-          $(prev).addClass('active').addClass('target')
-        }
-      }
-      // right
-      if (keyCode == 39) {
-        let next = active.nextAll().find('span').addBack('span').first();
-        if (!next[0] && serializeAttrs(active.parent()).tag == 'span') {
-          next = active.parent().nextAll().find('span').addBack('span').first();
-        }
-        if (next[0]) {
-          let prev = next[0];
-          clearActive();
-          clearTarget();
-          $(prev).addClass('active').addClass('target')
-        }
-      }
-
-      // up
-      if (keyCode == 38) {
-        if (active.parent()[0] && !active.parent().hasClass('mote')) {
-          let prev = active.parent()[0];
-          clearActive();
-          clearTarget();
-          $(prev).addClass('active').addClass('target')
-        }
-      }
-      // down
-      if (keyCode == 40) {
-        if (active.children()[0]) {
-          let prev = active.children()[0];
-          clearActive();
-          clearTarget();
-          $(prev).addClass('active').addClass('target')
-        }
-      }
-    }
   })
 
   return m.ophistory;
