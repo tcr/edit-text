@@ -602,10 +602,8 @@ function init ($elem, editorID: string) {
 }
 
 var m1 = $('#mote-1');
-var m2 = $('#mote-2');
 
 var ops_a = init(m1, 'left');
-var ops_b = init(m2, 'right');
 
 // Initial load
 $.get('/api/hello', data => {
@@ -624,7 +622,6 @@ $('#action-sync').on('click', () => {
 
 function actionHello(data) {
   m1.empty().append(load(data));
-  m2.empty().append(load(data));
 }
 
 function actionReset() {
@@ -643,9 +640,10 @@ function actionReset() {
 }
 
 function actionSync() {
+  // TODO fix this as ops_a, ops_b
   let packet = [
     ops_a,
-    ops_b
+    ops_a
   ];
 
   console.log('PACKET', packet)

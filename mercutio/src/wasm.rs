@@ -7,6 +7,9 @@ use oatie::stepper::*;
 use oatie::writer::*;
 use std::char::from_u32;
 use std::cell::RefCell;
+use std::thread;
+use std::time::Duration;
+use std::sync::{Arc, Mutex};
 
 //TODO move this to being loaded from JS
 fn default_doc() -> Doc {
@@ -34,7 +37,7 @@ fn default_doc() -> Doc {
 pub enum NativeCommand {
     Keypress(u32, bool, bool),
     Button(u32),
-    Character(u32, CurSpan),
+    Character(u32),
     RenameGroup(String, CurSpan),
     WrapGroup(String, CurSpan),
     Target(CurSpan),
@@ -109,7 +112,7 @@ fn rename_group(client: &Client, tag: &str, input: &CurSpan) -> Result<(), Error
         }
     }
 
-    let mut doc = client.doc.borrow_mut();
+    let mut doc = client.doc.lock().unwrap();
 
     let mut cur_stepper = CurStepper::new(input);
     let mut doc_stepper = DocStepper::new(&doc.0);
@@ -186,7 +189,7 @@ fn wrap_group(client: &Client, tag: &str, input: &CurSpan) -> Result<(), Error> 
         }
     }
 
-    let mut doc = client.doc.borrow_mut();
+    let mut doc = client.doc.lock().unwrap();
 
     let mut cur_stepper = CurStepper::new(input);
     let mut doc_stepper = DocStepper::new(&doc.0);
@@ -258,7 +261,7 @@ fn delete_char(client: &Client, input: &CurSpan) -> Result<(), Error> {
         }
     }
 
-    let mut doc = client.doc.borrow_mut();
+    let mut doc = client.doc.lock().unwrap();
 
     let mut cur_stepper = CurStepper::new(input);
     let mut doc_stepper = DocStepper::new(&doc.0);
@@ -285,7 +288,7 @@ fn delete_char(client: &Client, input: &CurSpan) -> Result<(), Error> {
     Ok(())
 }
 
-fn add_char(client: &Client, key: u32, input: &CurSpan) -> Result<(), Error> {
+fn add_char(client: &Client, key: u32) -> Result<(), Error> {
     fn add_char_inner(
         key: char,
         input: &mut CurStepper,
@@ -331,9 +334,15 @@ fn add_char(client: &Client, key: u32, input: &CurSpan) -> Result<(), Error> {
         }
     }
 
-    let mut doc = client.doc.borrow_mut();
+    let mut doc = client.doc.lock().unwrap();
+    let input = client.target.lock().unwrap();
 
-    let mut cur_stepper = CurStepper::new(input);
+    if input.is_none() {
+        return Ok(());
+    }
+    let input = input.clone().unwrap();
+
+    let mut cur_stepper = CurStepper::new(&input);
     let mut doc_stepper = DocStepper::new(&doc.0);
     let mut del_writer = DelWriter::new();
     let mut add_writer = AddWriter::new();
@@ -439,8 +448,10 @@ impl DocWalker for CursorParentGroup {
         true
     }
 
-    fn exit(&mut self, _attrs: &Attrs) {
-        if self.cursor {
+    fn exit(&mut self, attrs: &Attrs) {
+        use oatie::schema::*;
+
+        if self.cursor && Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
             self.del.close();
             self.add.close(self.new_attrs.clone());
             self.cursor = false;
@@ -568,7 +579,7 @@ impl DocWalker for CaretPosition {
 }
 
 fn cursor_parent(client: &Client, replace_with: &Attrs) -> Result<(), Error> {
-    let mut doc = client.doc.borrow_mut();
+    let mut doc = client.doc.lock().unwrap();
 
     let mut walker = CursorParentGroup::new(&replace_with);
     walker.walk(&*doc);
@@ -589,7 +600,7 @@ fn cursor_parent(client: &Client, replace_with: &Attrs) -> Result<(), Error> {
 }
 
 fn caret_move(client: &Client, increase: bool) -> Result<(), Error> {
-    let mut doc = client.doc.borrow_mut();
+    let mut doc = client.doc.lock().unwrap();
 
     let mut w = CaretPosition::new();
     w.walk(&*doc);
@@ -620,7 +631,7 @@ fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&Client) -> Result<(), Error>>
         // command + .
         (190, true, false, Box::new(|client: &Client| {
             println!("renaming a group.");
-            let cur = client.target.borrow();
+            let cur = client.target.lock().unwrap();
 
             // Unwrap into real error
             let future = NativeCommand::RenameGroup("null".into(), cur.clone().unwrap());
@@ -632,7 +643,7 @@ fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&Client) -> Result<(), Error>>
         // command + ,
         (188, true, false, Box::new(|client: &Client| {
             println!("renaming a group.");
-            let cur = client.target.borrow();
+            let cur = client.target.lock().unwrap();
 
             let future = NativeCommand::WrapGroup("null".into(), cur.clone().unwrap());
             let prompt = ClientCommand::PromptString("Name of new outer tag:".into(), "p".into(), future);
@@ -643,7 +654,7 @@ fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&Client) -> Result<(), Error>>
         // backspace
         (8, false, false, Box::new(|client: &Client| {
             println!("backspace");
-            let cur = client.target.borrow();
+            let cur = client.target.lock().unwrap();
 
             // TODO unwrap into real error, not into panic
             delete_char(client, &cur.clone().unwrap())?;
@@ -697,6 +708,7 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
             wrap_group(client, &tag, &cur)?;
         }
         NativeCommand::Button(index) => {
+            // Find which button handler to respond to this command.
             button_handlers()
                 .get(index as usize)
                 .map(|handler| handler.1(client));
@@ -704,6 +716,7 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
         NativeCommand::Keypress(key_code, meta_key, shift_key) => {
             println!("key: {:?} {:?} {:?}", key_code, meta_key, shift_key);
 
+            // Find which key handler to process this command.
             for command in key_handlers() {
                 if command.0 == key_code && command.1 == meta_key && command.2 == shift_key {
                     command.3(client)?;
@@ -711,11 +724,11 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
                 }
             }
         }
-        NativeCommand::Character(char_code, cur) => {
-            add_char(client, char_code, &cur)?;
+        NativeCommand::Character(char_code) => {
+            add_char(client, char_code)?;
         }
         NativeCommand::Target(cur) => {
-            *client.target.borrow_mut() = Some(cur);
+            *client.target.lock().unwrap() = Some(cur);
 
         }
     }
@@ -724,8 +737,8 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
 
 struct Client {
     out: ws::Sender,
-    doc: RefCell<Doc>,
-    target: RefCell<Option<CurSpan>>,
+    doc: Mutex<Doc>,
+    target: Mutex<Option<CurSpan>>,
 }
 
 impl Client {
@@ -738,16 +751,25 @@ impl Client {
 
 pub fn start_websocket_server() {
     ws::listen("127.0.0.1:3012", |out| {
-        let client = Client {
+        let client = Arc::new(Client {
             out,
-            doc: RefCell::new(default_doc()),
-            target: RefCell::new(None),
-        };
+            doc: Mutex::new(default_doc()),
+            target: Mutex::new(None),
+        });
 
         client.send(&ClientCommand::Setup {
             keys: key_handlers().into_iter().map(|x| (x.0, x.1, x.2)).collect(),
             buttons: button_handlers().into_iter().enumerate().map(|(i, x)| (i, x.0.to_string())).collect(),
         }).expect("Could not send initial state");
+
+        let thread_client: Arc<_> = client.clone();
+        thread::spawn(move || {
+            println!("spawned.");
+            loop {
+                thread::sleep(Duration::from_millis(1000));
+                native_command(&*thread_client, NativeCommand::Character(66));
+            }
+        });
 
         move |msg: ws::Message| {
             // Handle messages received on this connection

@@ -97,7 +97,7 @@ impl Tag {
         match &*self.0["tag"] {
             "ul" => Some(TrackType::Lists),
             "li" => Some(TrackType::ListItems),
-            "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => Some(TrackType::Blocks),
+            "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "pre" => Some(TrackType::Blocks),
             "span" | "b" => Some(TrackType::Inlines),
             _ => None,
         }
