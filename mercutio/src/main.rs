@@ -9,13 +9,12 @@ extern crate ws;
 #[macro_use]
 extern crate maplit;
 extern crate failure;
-
 #[macro_use]
 extern crate serde_derive;
-
 extern crate serde;
 #[macro_use]
 extern crate serde_json;
+extern crate rand;
 
 pub mod wasm;
 
