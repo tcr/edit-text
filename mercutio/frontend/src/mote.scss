@@ -75,7 +75,7 @@ button {
     }
 
     span:hover {
-        -webkit-filter: brightness(150%);
+        filter: brightness(150%);
     }
 
     .active {
@@ -192,7 +192,7 @@ button {
     }
 
     span:hover {
-        -webkit-filter: brightness(150%);
+        filter: brightness(150%);
     }
 
     div.active {
@@ -201,7 +201,7 @@ button {
 
     span.active,
     span.target {
-        border-right: 3px solid rgba(0, 0, 0, 1.0);
+        // border-right: 3px solid rgba(0, 0, 0, 1.0);
         // margin-right: -3px;
         z-index: 100;
     }
@@ -222,6 +222,14 @@ button {
         &.active {
             background: #98e;
         }
+    }
+    
+    div[data-tag="cursor"] {
+        display: inline-block;
+        width: 4px;
+        background: black;
+        height: 1em;
+        vertical-align: bottom;
     }
 
     /**
@@ -259,6 +267,21 @@ button {
 
     div[data-tag="h1"] {
         font-size: 2.0em;
+        font-weight: bold;
+    }
+
+    div[data-tag="h2"] {
+        font-size: 1.7em;
+        font-weight: bold;
+    }
+    
+    div[data-tag="h3"] {
+        font-size: 1.4em;
+        font-weight: bold;
+    }
+    
+    div[data-tag="pre"] {
+        font-family: monospace;
     }
 
     div[data-tag="ul"] {

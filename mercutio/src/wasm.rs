@@ -12,6 +12,7 @@ use std::cell::RefCell;
 fn default_doc() -> Doc {
     Doc(doc_span![
         DocGroup({"tag": "h1"}, [
+            DocGroup({"tag": "cursor"}, []),
             DocChars("Hello! "),
             DocGroup({"tag": "span", "class": "bold"}, [DocChars("what's")]),
             DocChars(" up?"),
@@ -32,6 +33,7 @@ fn default_doc() -> Doc {
 #[derive(Serialize, Deserialize, Debug)]
 pub enum NativeCommand {
     Keypress(u32, bool, bool),
+    Button(u32),
     Character(u32, CurSpan),
     RenameGroup(String, CurSpan),
     WrapGroup(String, CurSpan),
@@ -40,6 +42,10 @@ pub enum NativeCommand {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum ClientCommand {
+    Setup {
+        keys: Vec<(u32, bool, bool)>,
+        buttons: Vec<(usize, String)>,
+    },
     PromptString(String, String, NativeCommand),
     Update(DocSpan, Op),
     Error(String),
@@ -354,43 +360,179 @@ fn add_char(client: &Client, key: u32, input: &CurSpan) -> Result<(), Error> {
     Ok(())
 }
 
-// Load in key command.
-fn key_command(
-    client: &Client,
-    key_code: u32,
-    meta_key: bool,
-    shift_key: bool,
-) -> Result<(), Error> {
-    println!("key: {:?} {:?} {:?}", key_code, meta_key, shift_key);
-
-    let cur = client.target.borrow();
-
-    // command + .
-    if key_code == 190 && meta_key && !shift_key {
-        println!("renaming a group.");
-
-        // Unwrap into real error
-        let future = NativeCommand::RenameGroup("null".into(), cur.clone().unwrap());
-        let prompt = ClientCommand::PromptString("Rename tag group:".into(), "p".into(), future);
-        client.send(&prompt)?;
+trait DocWalker {
+    fn _walk(
+        &mut self,
+        doc: &mut DocStepper,
+    ) {
+        while !doc.is_done() && doc.head.is_some() {
+            match doc.get_head() {
+                DocChars(value) => {
+                    self.chars(value);
+                    doc.next();
+                }
+                DocGroup(attrs, span) => {
+                    if self.enter(&attrs, &span) {
+                        doc.enter();
+                        self._walk(doc);
+                        doc.exit();
+                        self.exit(&attrs);
+                    } else {
+                        doc.skip(1);
+                    }
+                }
+            }
+        }
     }
-    // command + ,
-    else if key_code == 188 && meta_key && !shift_key {
-        println!("wrapping a group.");
 
-        let future = NativeCommand::WrapGroup("null".into(), cur.clone().unwrap());
-        let prompt = ClientCommand::PromptString("Name of new outer tag:".into(), "p".into(), future);
-        client.send(&prompt)?;
+    fn walk(&mut self, doc: &Doc) {
+        let mut stepper = DocStepper::new(&doc.0);
+        self._walk(&mut stepper);
     }
-    // backspace
-    else if key_code == 8 && !meta_key && !shift_key {
-        println!("backspace");
 
-        // TODO unwrap into real error, not into panic
-        delete_char(client, &cur.clone().unwrap())?;
+    fn chars(&mut self, _chars: String) {}
+    fn enter(&mut self, _attrs: &Attrs, _span: &DocSpan) -> bool { true }
+    fn exit(&mut self, _attrs: &Attrs) {}
+}
+
+#[derive(Debug)]
+struct CursorParentGroup {
+    del: DelWriter,
+    add: AddWriter,
+
+    cursor: bool,
+    terminated: bool,
+    new_attrs: Attrs,
+}
+
+impl CursorParentGroup {
+    fn new(new_attrs: &Attrs) -> CursorParentGroup {
+        CursorParentGroup {
+            del: DelWriter::new(),
+            add: AddWriter::new(),
+            cursor: false,
+            terminated: false,
+            new_attrs: new_attrs.clone(),
+        }
     }
+}
+
+impl DocWalker for CursorParentGroup {
+    fn chars(&mut self, text: String) {
+        self.del.skip(text.chars().count());
+        self.add.skip(text.chars().count());
+    }
+
+    fn enter(&mut self, attrs: &Attrs, _span: &DocSpan) -> bool {
+        if attrs["tag"] == "cursor" {
+            self.cursor = true;
+        }
+
+        if self.cursor || self.terminated {
+            self.del.skip(1);
+            self.add.skip(1);
+            return false;
+        }
+
+        self.del.begin();
+        self.add.begin();
+        true
+    }
+
+    fn exit(&mut self, _attrs: &Attrs) {
+        if self.cursor {
+            self.del.close();
+            self.add.close(self.new_attrs.clone());
+            self.cursor = false;
+            self.terminated = true;
+        } else {
+            self.del.exit();
+            self.add.exit();
+        }
+    }
+}
+
+fn cursor_parent(client: &Client, replace_with: &Attrs) -> Result<(), Error> {
+    let mut doc = client.doc.borrow_mut();
+
+    let mut walker = CursorParentGroup::new(&replace_with);
+    walker.walk(&*doc);
+    //assert!(walker.terminated);
+
+    // Apply operation.
+    let op = (walker.del.result(), walker.add.result());
+    let new_doc = OT::apply(&*doc, &op);
+
+    // Store update
+    *doc = new_doc;
+
+    // Send update.
+    let res = ClientCommand::Update(doc.0.clone(), op);
+    client.send(&res)?;
 
     Ok(())
+}
+
+fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&Client) -> Result<(), Error>>)> {
+    vec![
+        // command + .
+        (190, true, false, Box::new(|client: &Client| {
+            println!("renaming a group.");
+            let cur = client.target.borrow();
+
+            // Unwrap into real error
+            let future = NativeCommand::RenameGroup("null".into(), cur.clone().unwrap());
+            let prompt = ClientCommand::PromptString("Rename tag group:".into(), "p".into(), future);
+            client.send(&prompt)?;
+            Ok(())
+        })),
+
+        // command + ,
+        (188, true, false, Box::new(|client: &Client| {
+            println!("renaming a group.");
+            let cur = client.target.borrow();
+
+            let future = NativeCommand::WrapGroup("null".into(), cur.clone().unwrap());
+            let prompt = ClientCommand::PromptString("Name of new outer tag:".into(), "p".into(), future);
+            client.send(&prompt)?;
+            Ok(())
+        })),
+
+        // backspace
+        (8, false, false, Box::new(|client: &Client| {
+            println!("backspace");
+            let cur = client.target.borrow();
+
+            // TODO unwrap into real error, not into panic
+            delete_char(client, &cur.clone().unwrap())?;
+            Ok(())
+        })),
+    ]
+}
+
+fn button_handlers() -> Vec<(&'static str, Box<Fn(&Client) -> Result<(), Error>>)> {
+    vec![
+        ("Heading 1", Box::new(|client: &Client| {
+            cursor_parent(client, &hashmap! { "tag".to_string() => "h1".to_string() })?;
+            Ok(())
+        })),
+        ("Heading 2", Box::new(|client: &Client| {
+            cursor_parent(client, &hashmap! { "tag".to_string() => "h2".to_string() })?;
+            Ok(())
+        })),
+        ("Heading 3", Box::new(|client: &Client| {
+            cursor_parent(client, &hashmap! { "tag".to_string() => "h3".to_string() })?;
+            Ok(())
+        })),
+        ("Paragraph", Box::new(|client: &Client| {
+            cursor_parent(client, &hashmap! { "tag".to_string() => "p".to_string() })?;
+            Ok(())
+        })),
+        ("Code", Box::new(|client: &Client| {
+            cursor_parent(client, &hashmap! { "tag".to_string() => "pre".to_string() })?;
+            Ok(())
+        })),
+    ]
 }
 
 fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
@@ -401,8 +543,20 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
         NativeCommand::WrapGroup(tag, cur) => {
             wrap_group(client, &tag, &cur)?;
         }
+        NativeCommand::Button(index) => {
+            button_handlers()
+                .get(index as usize)
+                .map(|handler| handler.1(client));
+        }
         NativeCommand::Keypress(key_code, meta_key, shift_key) => {
-            key_command(client, key_code, meta_key, shift_key)?;
+            println!("key: {:?} {:?} {:?}", key_code, meta_key, shift_key);
+
+            for command in key_handlers() {
+                if command.0 == key_code && command.1 == meta_key && command.2 == shift_key {
+                    command.3(client)?;
+                    break;
+                }
+            }
         }
         NativeCommand::Character(char_code, cur) => {
             add_char(client, char_code, &cur)?;
@@ -436,6 +590,12 @@ pub fn start_websocket_server() {
             doc: RefCell::new(default_doc()),
             target: RefCell::new(None),
         };
+
+        client.send(&ClientCommand::Setup {
+            keys: key_handlers().into_iter().map(|x| (x.0, x.1, x.2)).collect(),
+            buttons: button_handlers().into_iter().enumerate().map(|(i, x)| (i, x.0.to_string())).collect(),
+        }).expect("Could not send initial state");
+
         move |msg: ws::Message| {
             // Handle messages received on this connection
             println!("Server got message '{}'. ", msg);
@@ -451,7 +611,6 @@ pub fn start_websocket_server() {
             }
 
             Ok(())
-            // out.send(msg)
         }
     }).unwrap();
 }
