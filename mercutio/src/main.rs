@@ -33,7 +33,6 @@ use wasm::start_websocket_server;
 fn default_doc() -> Doc {
     Doc(doc_span![
         DocGroup({"tag": "h1"}, [
-            DocGroup({"tag": "cursor"}, []),
             DocChars("Hello! "),
             DocGroup({"tag": "span", "class": "bold"}, [DocChars("what's")]),
             DocChars(" up?"),
@@ -41,6 +40,7 @@ fn default_doc() -> Doc {
         DocGroup({"tag": "ul"}, [
             DocGroup({"tag": "li"}, [
                 DocGroup({"tag": "p"}, [
+                    DocGroup({"tag": "cursor"}, []),
                     DocChars("Three adjectives strong."),
                 ]),
                 DocGroup({"tag": "p"}, [

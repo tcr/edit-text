@@ -606,8 +606,16 @@ var m1 = $('#mote-1');
 var ops_a = init(m1, 'left');
 
 // Initial load
+var exampleSocket;
 $.get('/api/hello', data => {
   actionHello(data);
+
+  exampleSocket = new WebSocket("ws://127.0.0.1:3012");
+  exampleSocket.onopen = function (event) { 
+    nativeCommand(LoadCommand(data));
+  };
+  exampleSocket.onmessage = onmessage;
+  
 });
 
 // Reset button
@@ -721,17 +729,23 @@ function ButtonCommand(
   }
 }
 
-type Command = RenameGroupCommand | KeypressCommand | CharacterCommand | TargetCommand | ButtonCommand;
+type LoadCommand = {Load: any};
+
+function LoadCommand(
+  load: any,
+): LoadCommand {
+  return {
+    'Load': load,
+  }
+}
+
+type Command = RenameGroupCommand | KeypressCommand | CharacterCommand | TargetCommand | ButtonCommand | LoadCommand;
 
 function nativeCommand(command: Command) {
   exampleSocket.send(JSON.stringify(command));
 }
 
-
-const exampleSocket = new WebSocket("ws://127.0.0.1:3012");
-exampleSocket.onopen = function (event) {
-};
-exampleSocket.onmessage = function (event) {
+function onmessage (event) {
   let parse = JSON.parse(event.data);
 
   if (parse.Update) {

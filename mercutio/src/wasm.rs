@@ -13,28 +13,6 @@ use std::time::Duration;
 use std::sync::{Arc, Mutex};
 use rand::Rng;
 
-//TODO move this to being loaded from JS
-fn default_doc() -> Doc {
-    Doc(doc_span![
-        DocGroup({"tag": "h1"}, [
-            DocGroup({"tag": "cursor"}, []),
-            DocChars("Hello! "),
-            DocGroup({"tag": "span", "class": "bold"}, [DocChars("what's")]),
-            DocChars(" up?"),
-        ]),
-        DocGroup({"tag": "ul"}, [
-            DocGroup({"tag": "li"}, [
-                DocGroup({"tag": "p"}, [
-                    DocChars("Three adjectives strong."),
-                ]),
-                DocGroup({"tag": "p"}, [
-                    DocChars("World!"),
-                ]),
-            ]),
-        ])
-    ])
-}
-
 #[derive(Serialize, Deserialize, Debug)]
 pub enum NativeCommand {
     Keypress(u32, bool, bool),
@@ -42,6 +20,7 @@ pub enum NativeCommand {
     Character(u32),
     RenameGroup(String, CurSpan),
     WrapGroup(String, CurSpan),
+    Load(DocSpan),
     Target(CurSpan),
 }
 
@@ -731,10 +710,21 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
         }
         NativeCommand::Target(cur) => {
             *client.target.lock().unwrap() = Some(cur);
-
+        }
+        NativeCommand::Load(doc) => {
+            *client.doc.lock().unwrap() = Doc(doc);
         }
     }
     Ok(())
+}
+
+fn cur_to_caret() {
+    // Iterate until cursor is reached
+    // If on a char, or a span, use it.
+    // If at end of parent which is a block, use it.
+    // Otherwise (ascending), whichever is begin next block is it.
+    // Otherwise, previous block is it (fallback).
+    // Otherwise, no cursor, abort.
 }
 
 struct Client {
@@ -755,7 +745,7 @@ pub fn start_websocket_server() {
     ws::listen("127.0.0.1:3012", |out| {
         let client = Arc::new(Client {
             out,
-            doc: Mutex::new(default_doc()),
+            doc: Mutex::new(Doc(vec![])),
             target: Mutex::new(None),
         });
 
@@ -767,6 +757,7 @@ pub fn start_websocket_server() {
         // Button monkey.
         let thread_client: Arc<_> = client.clone();
         thread::spawn(move || {
+            thread::sleep(Duration::from_millis(5000));
             let mut rng = rand::thread_rng();
             thread::sleep(Duration::from_millis(rng.gen_range(0, 2000) + 500));
             rand::thread_rng().choose(&button_handlers())
@@ -778,6 +769,7 @@ pub fn start_websocket_server() {
         // Letter monkey.
         let thread_client: Arc<_> = client.clone();
         thread::spawn(move || {
+            thread::sleep(Duration::from_millis(5000));
             loop {
                 thread::sleep(Duration::from_millis(rand::thread_rng().gen_range(0, 200) + 100));
                 native_command(&*thread_client, NativeCommand::Character(
