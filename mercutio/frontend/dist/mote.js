@@ -11317,11 +11317,11 @@ function actionReset() {
         //
     });
 }
-function actionSync(ops_a) {
+function actionSync(ops_a, ops_b) {
     // TODO fix this as ops_a, ops_b
     let packet = [
         ops_a,
-        ops_a
+        ops_b,
     ];
     console.log('PACKET', packet);
     __WEBPACK_IMPORTED_MODULE_2_jquery___default.a.ajax('/api/sync', {
@@ -11384,6 +11384,13 @@ function onmessage(m1, ops_a, event) {
         m1.empty().append(load(parse.Update[0]));
         // Load new op
         ops_a.push(parse.Update[1]);
+        window.parent.postMessage({
+            Update: {
+                doc: parse.Update[0],
+                ops: ops_a,
+                name: window.name
+            },
+        }, '*');
     }
     else if (parse.PromptString) {
         promptString(parse.PromptString[0], parse.PromptString[1], (value) => {
@@ -11408,14 +11415,22 @@ function onmessage(m1, ops_a, event) {
 if (window.MOTE_ENTRY == 'index') {
     document.body.style.background = '#eee';
     // TODO
+    let cache = {};
+    window.onmessage = function (data) {
+        let doc = data.data.Update.doc;
+        let ops = data.data.Update.ops;
+        let name = data.data.Update.name;
+        cache[name] = ops;
+    };
+    // Sync action
+    __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#action-sync').on('click', () => {
+        console.log('click', cache);
+        actionSync(cache.left, cache.right);
+    });
 }
 else if (window.MOTE_ENTRY == 'client') {
     var m1 = __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#mote');
     var ops_a = init(m1, window.name);
-    // Sync action
-    __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#action-sync').on('click', () => {
-        actionSync(ops_a);
-    });
     // Initial load
     var exampleSocket;
     __WEBPACK_IMPORTED_MODULE_2_jquery___default.a.get('/api/hello', data => {
