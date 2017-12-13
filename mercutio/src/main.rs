@@ -287,7 +287,15 @@ fn api_reset(mote: State<MoteState>) -> Json<Value> {
 fn root() -> Option<NamedFile> {
     Path::new(file!())
         .parent()
-        .map(|x| x.join("static/").join("index.html"))
+        .map(|x| x.join("templates/").join("index.html"))
+        .and_then(|x| NamedFile::open(x).ok())
+}
+
+#[get("/client")]
+fn client() -> Option<NamedFile> {
+    Path::new(file!())
+        .parent()
+        .map(|x| x.join("templates/").join("client.html"))
         .and_then(|x| NamedFile::open(x).ok())
 }
 
@@ -295,7 +303,8 @@ fn root() -> Option<NamedFile> {
 fn files(file: PathBuf) -> Option<NamedFile> {
     Path::new(file!())
         .parent()
-        .map(|x| x.join("static/").join(file))
+        .and_then(|x| x.parent())
+        .map(|x| x.join("frontend/dist/").join(file))
         .and_then(|x| NamedFile::open(x).ok())
 }
 
@@ -312,7 +321,16 @@ fn main() {
         .manage(MoteState { body: Arc::new(Mutex::new(default_doc())) })
         .mount(
             "/",
-            routes![api_hello, api_confirm, api_sync, api_reset, api_random, root, files],
+            routes![
+                api_hello,
+                api_confirm,
+                api_sync,
+                api_reset,
+                api_random,
+                root,
+                client,
+                files,
+            ],
         )
         .launch();
 }

@@ -601,34 +601,12 @@ function init ($elem, editorID: string) {
   return m.ophistory;
 }
 
-var m1 = $('#mote-1');
-
-var ops_a = init(m1, 'left');
-
-// Initial load
-var exampleSocket;
-$.get('/api/hello', data => {
-  actionHello(data);
-
-  exampleSocket = new WebSocket("ws://127.0.0.1:3012");
-  exampleSocket.onopen = function (event) { 
-    nativeCommand(LoadCommand(data));
-  };
-  exampleSocket.onmessage = onmessage;
-  
-});
-
 // Reset button
 $('#action-reset').on('click', () => {
   actionReset();
 });
 
-// Sync action
-$('#action-sync').on('click', () => {
-  actionSync();
-})
-
-function actionHello(data) {
+function actionHello(m1, data) {
   m1.empty().append(load(data));
 }
 
@@ -647,7 +625,7 @@ function actionReset() {
   })
 }
 
-function actionSync() {
+function actionSync(ops_a) {
   // TODO fix this as ops_a, ops_b
   let packet = [
     ops_a,
@@ -745,7 +723,7 @@ function nativeCommand(command: Command) {
   exampleSocket.send(JSON.stringify(command));
 }
 
-function onmessage (event) {
+function onmessage (m1, ops_a, event) {
   let parse = JSON.parse(event.data);
 
   if (parse.Update) {
@@ -779,3 +757,33 @@ function onmessage (event) {
 }
 
 
+
+if ((<any>window).MOTE_ENTRY == 'index') {
+  document.body.style.background = '#eee';
+  // TODO
+}
+
+
+else if ((<any>window).MOTE_ENTRY == 'client') {
+  var m1 = $('#mote');
+  
+  var ops_a = init(m1, window.name);
+  
+  // Sync action
+  $('#action-sync').on('click', () => {
+    actionSync(ops_a);
+  })
+  
+  // Initial load
+  var exampleSocket;
+  $.get('/api/hello', data => {
+    actionHello(m1, data);
+  
+    exampleSocket = new WebSocket("ws://127.0.0.1:3012");
+    exampleSocket.onopen = function (event) { 
+      nativeCommand(LoadCommand(data));
+    };
+    exampleSocket.onmessage = onmessage.bind(exampleSocket, m1, ops_a);
+    
+  });  
+}

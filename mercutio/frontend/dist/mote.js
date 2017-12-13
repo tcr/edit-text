@@ -11294,27 +11294,11 @@ function init($elem, editorID) {
     });
     return m.ophistory;
 }
-var m1 = __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#mote-1');
-var ops_a = init(m1, 'left');
-// Initial load
-var exampleSocket;
-__WEBPACK_IMPORTED_MODULE_2_jquery___default.a.get('/api/hello', data => {
-    actionHello(data);
-    exampleSocket = new WebSocket("ws://127.0.0.1:3012");
-    exampleSocket.onopen = function (event) {
-        nativeCommand(LoadCommand(data));
-    };
-    exampleSocket.onmessage = onmessage;
-});
 // Reset button
 __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#action-reset').on('click', () => {
     actionReset();
 });
-// Sync action
-__WEBPACK_IMPORTED_MODULE_2_jquery___default()('#action-sync').on('click', () => {
-    actionSync();
-});
-function actionHello(data) {
+function actionHello(m1, data) {
     m1.empty().append(load(data));
 }
 function actionReset() {
@@ -11332,7 +11316,7 @@ function actionReset() {
         //
     });
 }
-function actionSync() {
+function actionSync(ops_a) {
     // TODO fix this as ops_a, ops_b
     let packet = [
         ops_a,
@@ -11392,7 +11376,7 @@ function LoadCommand(load) {
 function nativeCommand(command) {
     exampleSocket.send(JSON.stringify(command));
 }
-function onmessage(event) {
+function onmessage(m1, ops_a, event) {
     let parse = JSON.parse(event.data);
     if (parse.Update) {
         console.log('update:', parse.Update);
@@ -11419,6 +11403,28 @@ function onmessage(event) {
             });
         });
     }
+}
+if (window.MOTE_ENTRY == 'index') {
+    document.body.style.background = '#eee';
+    // TODO
+}
+else if (window.MOTE_ENTRY == 'client') {
+    var m1 = __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#mote');
+    var ops_a = init(m1, window.name);
+    // Sync action
+    __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#action-sync').on('click', () => {
+        actionSync(ops_a);
+    });
+    // Initial load
+    var exampleSocket;
+    __WEBPACK_IMPORTED_MODULE_2_jquery___default.a.get('/api/hello', data => {
+        actionHello(m1, data);
+        exampleSocket = new WebSocket("ws://127.0.0.1:3012");
+        exampleSocket.onopen = function (event) {
+            nativeCommand(LoadCommand(data));
+        };
+        exampleSocket.onmessage = onmessage.bind(exampleSocket, m1, ops_a);
+    });
 }
 
 

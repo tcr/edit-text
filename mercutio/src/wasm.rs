@@ -7,7 +7,6 @@ use failure::Error;
 use oatie::stepper::*;
 use oatie::writer::*;
 use std::char::from_u32;
-use std::cell::RefCell;
 use std::thread;
 use std::time::Duration;
 use std::sync::{Arc, Mutex};

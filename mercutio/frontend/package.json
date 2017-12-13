@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack ./src/app.ts ../src/static/mote.js",
-    "watch": "webpack --watch ./src/app.ts ../src/static/mote.js"
+    "build": "webpack ./src/app.ts ./dist/mote.js",
+    "watch": "webpack --watch ./src/app.ts ./dist/mote.js"
   },
   "keywords": [],
   "author": "",
