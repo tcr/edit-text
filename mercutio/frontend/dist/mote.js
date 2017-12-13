@@ -11255,6 +11255,7 @@ function init($elem, editorID) {
             clearActive();
             clearTarget();
             __WEBPACK_IMPORTED_MODULE_2_jquery___default()(this).addClass('active').addClass('target');
+            console.log('Cursor:', curto(__WEBPACK_IMPORTED_MODULE_2_jquery___default()(this)));
             nativeCommand(TargetCommand(curto(__WEBPACK_IMPORTED_MODULE_2_jquery___default()(this))));
         }
         // TODO this bubbles if i use preventDEfault?

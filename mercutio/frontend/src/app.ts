@@ -539,6 +539,7 @@ function init ($elem, editorID: string) {
       clearTarget();
       $(this).addClass('active').addClass('target')
 
+      console.log('Cursor:', curto($(this)));
       nativeCommand(TargetCommand(curto($(this))));
     }
 

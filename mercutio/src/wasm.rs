@@ -708,6 +708,7 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
             add_char(client, char_code)?;
         }
         NativeCommand::Target(cur) => {
+            cur_to_caret(client, &cur);
             *client.target.lock().unwrap() = Some(cur);
         }
         NativeCommand::Load(doc) => {
@@ -717,13 +718,146 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
     Ok(())
 }
 
-fn cur_to_caret() {
+
+
+
+
+#[derive(Debug)]
+struct CursorToCaretPosition {
+    pos: usize,
+    terminated: bool,
+    cur_stepper: CurStepper,
+    skip_track: usize,
+}
+
+impl CursorToCaretPosition {
+    fn new(cur_stepper: CurStepper) -> CursorToCaretPosition {
+        CursorToCaretPosition {
+            pos: 0,
+            terminated: false,
+            cur_stepper: cur_stepper,
+            skip_track: 0,
+        }
+    }
+
+    fn pos(&self) -> usize {
+        if self.pos > 0 { self.pos - 1 } else { 0 }
+    }
+}
+
+impl DocWalker for CursorToCaretPosition {
+    fn chars(&mut self, text: String) {
+        println!("$$$ chars: {:?} [{:?}]", text, self.skip_track);
+
+        if self.skip_track > 0 {
+            self.pos += text.chars().count();
+        } else {
+            for i in 0..text.chars().count() {
+                println!("next char: {:?}", i);
+
+                if !self.terminated {
+                    self.pos += 1;
+                }
+                
+                match self.cur_stepper.head.clone() {
+                    Some(CurGroup) | Some(CurChar) => {
+                        self.terminated = true;
+                        self.cur_stepper.next();
+                    }
+                    Some(..) => {
+                        self.cur_stepper.skip();
+                    }
+                    None => {
+                        break; // I guess?
+                    }
+                }
+            }
+        }
+    }
+
+    fn enter(&mut self, attrs: &Attrs, _span: &DocSpan) -> bool {
+        use oatie::schema::*;
+
+        println!("$$$ enter: {:?} [{:?}]", attrs, self.skip_track);
+
+        match self.cur_stepper.head {
+            Some(CurGroup) | Some(CurChar) => {
+                self.terminated = true;
+            }
+            None => {
+                return false;
+            }
+            _ => { }
+        }
+
+        if self.terminated {
+            self.cur_stepper.next();
+            return false;
+        }
+
+        if self.skip_track > 0 {
+            self.skip_track += 1;
+        } else if let Some(CurSkip(..)) = self.cur_stepper.head {
+            self.cur_stepper.skip();
+            self.skip_track += 1;
+        } else {
+            println!("----ENTER: {:?}", self.cur_stepper);
+            self.cur_stepper.enter();
+        }
+
+        if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
+            self.pos += 1;
+        }
+
+        true
+    }
+
+    fn exit(&mut self, attrs: &Attrs) {
+        println!("$$$ exit: {:?} [{:?}]", attrs, self.skip_track);
+
+        if self.skip_track > 0 {
+            self.skip_track -= 1;
+        } else if self.skip_track == 0 {
+            println!("----EXIT: {:?}", self.cur_stepper);
+            self.cur_stepper.exit();
+        }
+    }
+}
+
+
+fn cur_to_caret(client: &Client, cur: &CurSpan) -> Result<(), Error> {
+    let mut doc = client.doc.lock().unwrap();
+
+    let mut walker = CursorToCaretPosition::new(CurStepper::new(cur));
+    walker.walk(&*doc);
+
+    println!("target: {:?}", walker.pos());
+
     // Iterate until cursor is reached
     // If on a char, or a span, use it.
     // If at end of parent which is a block, use it.
     // Otherwise (ascending), whichever is begin next block is it.
     // Otherwise, previous block is it (fallback).
     // Otherwise, no cursor, abort.
+
+    // let mut walker = CursorParentGroup::new(&replace_with);
+    // walker.walk(&*doc);
+    let mut walker = CaretSet::new(walker.pos());
+    walker.walk(&*doc);
+    //assert!(walker.terminated);
+
+    // Apply operation.
+    let op = (walker.del.result(), walker.add.result());
+    let new_doc = OT::apply(&*doc, &op);
+
+    // Store update
+    *doc = new_doc;
+
+    // Send update.
+    let res = ClientCommand::Update(doc.0.clone(), op);
+    client.send(&res)?;
+
+    Ok(())
 }
 
 struct Client {
@@ -753,33 +887,35 @@ pub fn start_websocket_server() {
             buttons: button_handlers().into_iter().enumerate().map(|(i, x)| (i, x.0.to_string())).collect(),
         }).expect("Could not send initial state");
 
-        // Button monkey.
-        let thread_client: Arc<_> = client.clone();
-        thread::spawn(move || {
-            thread::sleep(Duration::from_millis(5000));
-            let mut rng = rand::thread_rng();
-            thread::sleep(Duration::from_millis(rng.gen_range(0, 2000) + 500));
-            rand::thread_rng().choose(&button_handlers())
-                .map(|button| {
-                    button.1(&*thread_client);
-                });
-        });
+        if false {
+            // Button monkey.
+            let thread_client: Arc<_> = client.clone();
+            thread::spawn(move || {
+                thread::sleep(Duration::from_millis(5000));
+                let mut rng = rand::thread_rng();
+                thread::sleep(Duration::from_millis(rng.gen_range(0, 2000) + 500));
+                rand::thread_rng().choose(&button_handlers())
+                    .map(|button| {
+                        button.1(&*thread_client);
+                    });
+            });
 
-        // Letter monkey.
-        let thread_client: Arc<_> = client.clone();
-        thread::spawn(move || {
-            thread::sleep(Duration::from_millis(5000));
-            loop {
-                thread::sleep(Duration::from_millis(rand::thread_rng().gen_range(0, 200) + 100));
-                native_command(&*thread_client, NativeCommand::Character(
-                    *rand::thread_rng().choose(&vec![
-                        rand::thread_rng().gen_range(b'A', b'Z'),
-                        rand::thread_rng().gen_range(b'a', b'z'),
-                        rand::thread_rng().gen_range(b'0', b'9'),
-                        b' ',
-                    ]).unwrap() as _));
-            }
-        });
+            // Letter monkey.
+            let thread_client: Arc<_> = client.clone();
+            thread::spawn(move || {
+                thread::sleep(Duration::from_millis(5000));
+                loop {
+                    thread::sleep(Duration::from_millis(rand::thread_rng().gen_range(0, 200) + 100));
+                    native_command(&*thread_client, NativeCommand::Character(
+                        *rand::thread_rng().choose(&vec![
+                            rand::thread_rng().gen_range(b'A', b'Z'),
+                            rand::thread_rng().gen_range(b'a', b'z'),
+                            rand::thread_rng().gen_range(b'0', b'9'),
+                            b' ',
+                        ]).unwrap() as _));
+                }
+            });
+        }
         
         // Arrow monkey
         // native_command(&*thread_client, NativeCommand::Keypress(39, false, false));

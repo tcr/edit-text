@@ -181,6 +181,26 @@ impl CurStepper {
         self.head.is_none() && self.stack.is_empty()
     }
 
+    pub fn skip(&mut self) {
+        let do_next = match self.head {
+            Some(CurSkip(ref mut count)) => {
+                if *count > 1 {
+                    *count -= 1;
+                    false
+                } else {
+                    true
+                }
+            }
+            Some(CurWithGroup(..)) | Some(CurGroup) | Some(CurChar) => {
+                true
+            }
+            _ => unimplemented!(),
+        };
+        if do_next {
+            self.next();
+        }
+    }
+
     pub fn enter(&mut self) {
         let head = self.head.clone();
         self.stack.push(self.rest.clone());
