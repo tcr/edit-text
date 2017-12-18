@@ -63,6 +63,12 @@ impl AddWriter {
         self.past.place_all(span);
     }
 
+    pub fn exit_all(&mut self) {
+        while !self.stack.is_empty() {
+            self.exit();
+        }
+    }
+
     pub fn result(self) -> AddSpan {
         if !self.stack.is_empty() {
             println!("{:?}", self);
@@ -128,6 +134,12 @@ impl DelWriter {
 
     pub fn place_all(&mut self, span: &DelSpan) {
         self.past.place_all(span);
+    }
+
+    pub fn exit_all(&mut self) {
+        while !self.stack.is_empty() {
+            self.exit();
+        }
     }
 
     pub fn result(self) -> DelSpan {
