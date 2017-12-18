@@ -103,29 +103,6 @@ fn caret_move(doc: &Doc, increase: bool) -> Result<Op, Error> {
     add_writer.exit_all();
 
     Ok((del_writer.result(), add_writer.result()))
-
-    // let mut doc = client.doc.lock().unwrap();
-
-    // let mut w = CaretPosition::new();
-    // w.walk(&*doc);
-    // println!("COUNT {:?}", w.pos());
-
-    // let mut walker = CaretSet::new(if increase { w.pos() + 1 } else { w.pos() - 1 });
-    // walker.walk(&*doc);
-    // //assert!(walker.terminated);
-
-    // // Apply operation.
-    // let op = (walker.del.result(), walker.add.result());
-    // let new_doc = OT::apply(&*doc, &op);
-
-    // // Store update
-    // *doc = new_doc;
-
-    // // Send update.
-    // let res = ClientCommand::Update(doc.0.clone(), op);
-    // client.send(&res)?;
-
-    // Ok(())
 }
 
 fn cur_to_caret(doc: &Doc, cur: &CurSpan) -> Result<Op, Error> {
@@ -144,14 +121,8 @@ fn cur_to_caret(doc: &Doc, cur: &CurSpan) -> Result<Op, Error> {
 
     let mut writer = Walker::to_cursor(&doc_2, cur);
     writer.snap_char();
+    
 
-    // Walker::to_cursor() (really) and then back to the cursor snap_cursor() ???
-
-    // if increase {
-    //     writer.next_char();
-    // } else {
-    //     writer.back_char();
-    // }
 
     let (mut del_writer, mut add_writer) = writer.to_writers();
 
@@ -164,32 +135,6 @@ fn cur_to_caret(doc: &Doc, cur: &CurSpan) -> Result<Op, Error> {
     let op_2 = (del_writer.result(), add_writer.result());
 
     Ok(Operation::compose(&op_1, &op_2))
-
-    // let mut doc = client.doc.lock().unwrap();
-
-    // let mut walker = CursorToCaretPosition::new(CurStepper::new(cur));
-    // walker.walk(&*doc);
-
-    // println!("target: {:?}", walker.pos());
-
-    // // let mut walker = CursorParentGroup::new(&replace_with);
-    // // walker.walk(&*doc);
-    // let mut walker = CaretSet::new(walker.pos());
-    // walker.walk(&*doc);
-    // //assert!(walker.terminated);
-
-    // // Apply operation.
-    // let op = (walker.del.result(), walker.add.result());
-    // let new_doc = OT::apply(&*doc, &op);
-
-    // // Store update
-    // *doc = new_doc;
-
-    // // Send update.
-    // let res = ClientCommand::Update(doc.0.clone(), op);
-    // client.send(&res)?;
-
-    // Ok(())
 }
 
 fn client_op<C: Fn(&Doc) -> Result<Op, Error>>(client: &Client, callback: C) -> Result<(), Error> {
@@ -312,6 +257,7 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
 struct Client {
     out: ws::Sender,
     doc: Mutex<Doc>,
+    //TODO remove the target field? base only on carets instead
     target: Mutex<Option<CurSpan>>,
     monkey: AtomicBool,
 }
