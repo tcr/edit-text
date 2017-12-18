@@ -1,11 +1,9 @@
 use rand;
 use oatie::doc::*;
-use oatie::{OT};
+use oatie::{OT, Operation};
 use serde_json;
 use ws;
 use failure::Error;
-use oatie::stepper::*;
-use oatie::writer::*;
 use std::char::from_u32;
 use std::thread;
 use std::time::Duration;
@@ -37,158 +35,8 @@ pub enum ClientCommand {
     Error(String),
 }
 
-
-#[derive(Debug)]
-struct Walker {
-    original_doc: Doc,
-    doc: DocStepper,
-    caret_pos: isize,
-}
-
-impl Walker {
-    fn to_cursor(doc: &Doc) -> Walker {
-        use oatie::schema::*;
-
-        // Walk the doc until the thing
-        let mut walker = Walker {
-            original_doc: doc.clone(),
-            doc: DocStepper::new(&doc.0),
-            caret_pos: -1,
-        };
-
-        let mut matched = false;
-        loop {
-            match walker.doc.head() {
-                Some(DocChars(text)) => {
-                    walker.caret_pos += 1;
-                    walker.doc.skip(1);
-                },
-                Some(DocGroup(attrs, _)) => {
-                    if attrs["tag"] == "cursor" {
-                        matched = true;
-                        break;
-                    }
-
-                    if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
-                        walker.caret_pos += 1;
-                    }
-
-                    walker.doc.enter();
-                }
-                None => {
-                    if walker.doc.is_done() {
-                        break;
-                    } else {
-                        walker.doc.exit();
-                    }
-                }
-            }
-        }
-        if !matched {
-            panic!("Didn't find a cursor.");
-        }
-
-        walker
-    }
-
-    // TODO update the caret_pos as a result
-    fn back_block(&mut self) -> &mut Walker {
-        use oatie::schema::*;
-
-        loop {
-            self.doc.unenter();
-            self.doc.next();
-
-            match self.doc.head() {
-                Some(DocGroup(attrs, ..)) => {
-                    if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
-                        break;
-                    }
-                }
-                _ => {}
-            }
-        }
-        self
-    }
-
-    fn back_char(&mut self) -> &mut Walker {
-        use oatie::schema::*;
-
-        let mut matched = false;
-        self.doc.unskip(1);
-        loop {
-            match self.doc.head() {
-                Some(DocChars(text)) => {
-                    self.caret_pos -= 1;
-                    matched = true;
-                    break;
-                },
-                Some(DocGroup(attrs, _)) => {
-                    self.doc.unenter();
-                }
-                None => {
-                    // TODO check backwards is_done()!!!
-                    if self.doc.is_done() {
-                        break;
-                    } else {
-                        self.doc.exit();
-                        match self.doc.head() {
-                            Some(DocGroup(attrs, _)) => {
-                                self.doc.prev();
-                                if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
-                                    self.caret_pos -= 1;
-                                    break;
-                                }
-                            }
-                            _ => unreachable!(),
-                        }
-                    }
-                }
-            }
-        }
-        if !matched {
-            panic!("Didn't find a cursor.");
-        }
-        self
-    }
-
-    fn to_writers(&self) -> (DelWriter, AddWriter) {
-        let mut del = DelWriter::new();
-        let mut add = AddWriter::new();
-
-        // Walk the doc until the thing
-        let mut doc_stepper = DocStepper::new(&self.original_doc.0);
-
-        while self.doc != doc_stepper {
-            match doc_stepper.head() {
-                Some(DocChars(text)) => {
-                    del.skip(1);
-                    add.skip(1);
-                    doc_stepper.skip(1);
-                },
-                Some(DocGroup(attrs, _)) => {
-                    del.begin();
-                    add.begin();
-                    doc_stepper.enter();
-                }
-                None => {
-                    del.exit();
-                    add.exit();
-                    if doc_stepper.is_done() {
-                        break;
-                    } else {
-                        doc_stepper.exit();
-                    }
-                }
-            }
-        }
-
-        (del, add)
-    }
-}
-
 fn replace_block(doc: &Doc, tag: &str) -> Result<Op, Error> {
-    let mut walker = Walker::to_cursor(&*doc);
+    let mut walker = Walker::to_caret(&*doc);
     walker.back_block();
 
     let len = if let Some(DocGroup(_, ref span)) = walker.doc.head() {
@@ -208,7 +56,7 @@ fn replace_block(doc: &Doc, tag: &str) -> Result<Op, Error> {
 }
 
 fn delete_char(doc: &Doc) -> Result<Op, Error> {
-    let mut walker = Walker::to_cursor(&*doc);
+    let mut walker = Walker::to_caret(&*doc);
     walker.back_char();
 
     if let Some(DocChars(..)) = walker.doc.head() {
@@ -228,7 +76,7 @@ fn delete_char(doc: &Doc) -> Result<Op, Error> {
 }
 
 fn add_char(doc: &Doc, key: u32) -> Result<Op, Error> {
-    let (mut del_writer, mut add_writer) = Walker::to_cursor(&*doc)
+    let (mut del_writer, mut add_writer) = Walker::to_caret(&*doc)
         .to_writers();
 
     del_writer.exit_all();
@@ -240,35 +88,108 @@ fn add_char(doc: &Doc, key: u32) -> Result<Op, Error> {
     Ok((del_writer.result(), add_writer.result()))
 }
 
-fn caret_move(client: &Client, increase: bool) -> Result<(), Error> {
-    let mut doc = client.doc.lock().unwrap();
+fn caret_move(doc: &Doc, increase: bool) -> Result<Op, Error> {
+    let mut writer = Walker::to_caret(&*doc);
 
-    let mut w = CaretPosition::new();
-    w.walk(&*doc);
-    println!("COUNT {:?}", w.pos());
+    if increase {
+        writer.next_char();
+    } else {
+        writer.back_char();
+    }
 
-    // TODO need a literate way to express these commands
-    // walker.to_cursor().back_chars(1).delete_char()
-    // 
+    let (mut del_writer, mut add_writer) = writer.to_writers();
 
-    // let mut walker = CursorParentGroup::new(&replace_with);
+    del_writer.exit_all();
+    add_writer.exit_all();
+
+    Ok((del_writer.result(), add_writer.result()))
+
+    // let mut doc = client.doc.lock().unwrap();
+
+    // let mut w = CaretPosition::new();
+    // w.walk(&*doc);
+    // println!("COUNT {:?}", w.pos());
+
+    // let mut walker = CaretSet::new(if increase { w.pos() + 1 } else { w.pos() - 1 });
     // walker.walk(&*doc);
-    let mut walker = CaretSet::new(if increase { w.pos() + 1 } else { w.pos() - 1 });
-    walker.walk(&*doc);
-    //assert!(walker.terminated);
+    // //assert!(walker.terminated);
 
-    // Apply operation.
-    let op = (walker.del.result(), walker.add.result());
-    let new_doc = OT::apply(&*doc, &op);
+    // // Apply operation.
+    // let op = (walker.del.result(), walker.add.result());
+    // let new_doc = OT::apply(&*doc, &op);
 
-    // Store update
-    *doc = new_doc;
+    // // Store update
+    // *doc = new_doc;
 
-    // Send update.
-    let res = ClientCommand::Update(doc.0.clone(), op);
-    client.send(&res)?;
+    // // Send update.
+    // let res = ClientCommand::Update(doc.0.clone(), op);
+    // client.send(&res)?;
 
-    Ok(())
+    // Ok(())
+}
+
+fn cur_to_caret(doc: &Doc, cur: &CurSpan) -> Result<Op, Error> {
+    let (mut del_writer, mut add_writer) = Walker::to_caret(&*doc).to_writers();
+
+    del_writer.begin();
+    del_writer.close();
+    del_writer.exit_all();
+
+    add_writer.exit_all();
+
+    let op_1 = (del_writer.result(), add_writer.result());
+
+    let mut doc_2: Doc = doc.clone();
+    OT::apply(&doc_2, &op_1);
+
+    let mut writer = Walker::to_cursor(&doc_2, cur);
+    writer.snap_char();
+
+    // Walker::to_cursor() (really) and then back to the cursor snap_cursor() ???
+
+    // if increase {
+    //     writer.next_char();
+    // } else {
+    //     writer.back_char();
+    // }
+
+    let (mut del_writer, mut add_writer) = writer.to_writers();
+
+    del_writer.exit_all();
+
+    add_writer.begin();
+    add_writer.close(hashmap! { "tag".to_string() => "cursor".to_string() });
+    add_writer.exit_all();
+
+    let op_2 = (del_writer.result(), add_writer.result());
+
+    Ok(Operation::compose(&op_1, &op_2))
+
+    // let mut doc = client.doc.lock().unwrap();
+
+    // let mut walker = CursorToCaretPosition::new(CurStepper::new(cur));
+    // walker.walk(&*doc);
+
+    // println!("target: {:?}", walker.pos());
+
+    // // let mut walker = CursorParentGroup::new(&replace_with);
+    // // walker.walk(&*doc);
+    // let mut walker = CaretSet::new(walker.pos());
+    // walker.walk(&*doc);
+    // //assert!(walker.terminated);
+
+    // // Apply operation.
+    // let op = (walker.del.result(), walker.add.result());
+    // let new_doc = OT::apply(&*doc, &op);
+
+    // // Store update
+    // *doc = new_doc;
+
+    // // Send update.
+    // let res = ClientCommand::Update(doc.0.clone(), op);
+    // client.send(&res)?;
+
+    // Ok(())
 }
 
 fn client_op<C: Fn(&Doc) -> Result<Op, Error>>(client: &Client, callback: C) -> Result<(), Error> {
@@ -320,13 +241,11 @@ fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&Client) -> Result<(), Error>>
 
         // left
         (37, false, false, Box::new(|client: &Client| {
-            caret_move(client, false)?;
-            Ok(())
+            client_op(client, |doc| caret_move(doc, false))
         })),
         // right
         (39, false, false, Box::new(|client: &Client| {
-            caret_move(client, true)?;
-            Ok(())
+            client_op(client, |doc| caret_move(doc, true))
         })),
     ]
 }
@@ -377,7 +296,7 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
             client_op(client, |doc| add_char(doc, char_code))?
         }
         NativeCommand::Target(cur) => {
-            cur_to_caret(client, &cur);
+            client_op(client, |doc| cur_to_caret(doc, &cur))?;
             *client.target.lock().unwrap() = Some(cur);
         }
         NativeCommand::Load(doc) => {
@@ -387,41 +306,6 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
             client.monkey.store(setting, Ordering::Relaxed);
         }
     }
-    Ok(())
-}
-
-fn cur_to_caret(client: &Client, cur: &CurSpan) -> Result<(), Error> {
-    let mut doc = client.doc.lock().unwrap();
-
-    let mut walker = CursorToCaretPosition::new(CurStepper::new(cur));
-    walker.walk(&*doc);
-
-    println!("target: {:?}", walker.pos());
-
-    // Iterate until cursor is reached
-    // If on a char, or a span, use it.
-    // If at end of parent which is a block, use it.
-    // Otherwise (ascending), whichever is begin next block is it.
-    // Otherwise, previous block is it (fallback).
-    // Otherwise, no cursor, abort.
-
-    // let mut walker = CursorParentGroup::new(&replace_with);
-    // walker.walk(&*doc);
-    let mut walker = CaretSet::new(walker.pos());
-    walker.walk(&*doc);
-    //assert!(walker.terminated);
-
-    // Apply operation.
-    let op = (walker.del.result(), walker.add.result());
-    let new_doc = OT::apply(&*doc, &op);
-
-    // Store update
-    *doc = new_doc;
-
-    // Send update.
-    let res = ClientCommand::Update(doc.0.clone(), op);
-    client.send(&res)?;
-
     Ok(())
 }
 
