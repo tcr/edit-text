@@ -222,12 +222,13 @@ impl CurStepper {
 }
 
 
+// TODO can switch head to a usize??
 #[derive(Clone, Debug, PartialEq)]
 pub struct DocStepper {
-    head: usize,
+    head: isize,
     char_debt: usize,
     rest: Vec<DocElement>,
-    stack: Vec<(usize, Vec<DocElement>)>,
+    stack: Vec<(isize, Vec<DocElement>)>,
 }
 
 impl DocStepper {
@@ -259,7 +260,7 @@ impl DocStepper {
     }
 
     pub fn head(&self) -> Option<DocElement> {
-        match self.rest.get(self.head) {
+        match self.rest.get(self.head as usize) {
             Some(&DocChars(ref text)) => {
                 Some(DocChars(text.chars().skip(self.char_debt).collect()))
             }
@@ -302,7 +303,7 @@ impl DocStepper {
         self.stack.push((self.head, self.rest.clone()));
         match head {
             Some(DocGroup(ref attrs, ref span)) => {
-                self.head = span.len();
+                self.head = span.len() as isize;
                 self.char_debt = 0;
                 self.rest = span.to_vec();
                 self.prev();

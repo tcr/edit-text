@@ -21,10 +21,20 @@ pub enum NativeCommand {
     Button(u32),
     Character(u32),
     RenameGroup(String, CurSpan),
-    WrapGroup(String, CurSpan),
     Load(DocSpan),
     Target(CurSpan),
     Monkey(bool),
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum ClientCommand {
+    Setup {
+        keys: Vec<(u32, bool, bool)>,
+        buttons: Vec<(usize, String)>,
+    },
+    PromptString(String, String, NativeCommand),
+    Update(DocSpan, Op),
+    Error(String),
 }
 
 
@@ -81,7 +91,27 @@ impl Walker {
         walker
     }
 
-    fn back_chars(&mut self, count: usize) -> &mut Walker {
+    // TODO update the caret_pos as a result
+    fn back_block(&mut self) -> &mut Walker {
+        use oatie::schema::*;
+
+        loop {
+            self.doc.unenter();
+            self.doc.next();
+
+            match self.doc.head() {
+                Some(DocGroup(attrs, ..)) => {
+                    if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
+                        break;
+                    }
+                }
+                _ => {}
+            }
+        }
+        self
+    }
+
+    fn back_char(&mut self) -> &mut Walker {
         use oatie::schema::*;
 
         let mut matched = false;
@@ -157,184 +187,29 @@ impl Walker {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub enum ClientCommand {
-    Setup {
-        keys: Vec<(u32, bool, bool)>,
-        buttons: Vec<(usize, String)>,
-    },
-    PromptString(String, String, NativeCommand),
-    Update(DocSpan, Op),
-    Error(String),
+fn replace_block(doc: &Doc, tag: &str) -> Result<Op, Error> {
+    let mut walker = Walker::to_cursor(&*doc);
+    walker.back_block();
+
+    let len = if let Some(DocGroup(_, ref span)) = walker.doc.head() {
+        span.skip_len()
+    } else {
+        println!("uhg {:?}", walker);
+        unreachable!()
+    };
+
+    let (mut del_writer, mut add_writer) = walker.to_writers();
+
+    del_writer.group(&del_span![DelSkip(len)]);
+
+    add_writer.group(&hashmap! { "tag".to_string() => tag.to_string() }, &add_span![AddSkip(len)]);
+
+    Ok((del_writer.result(), add_writer.result()))
 }
-
-fn rename_group(client: &Client, tag: &str, input: &CurSpan) -> Result<(), Error> {
-    fn rename_group_inner(
-        tag: &str,
-        input: &mut CurStepper,
-        doc: &mut DocStepper,
-        del: &mut DelWriter,
-        add: &mut AddWriter,
-    ) {
-        while !input.is_done() && input.head.is_some() {
-            match input.get_head() {
-                CurSkip(value) => {
-                    doc.skip(value);
-                    input.next();
-                    del.skip(value);
-                    add.skip(value);
-                }
-                CurWithGroup(..) => {
-                    input.enter();
-                    doc.enter();
-                    del.begin();
-                    add.begin();
-
-                    rename_group_inner(tag, input, doc, del, add);
-
-                    input.exit();
-                    doc.exit();
-                    del.exit();
-                    add.exit();
-                }
-                CurGroup => {
-                    // Get doc inner span length
-                    let len = if let Some(DocElement::DocGroup(_, span)) = doc.head() {
-                        span.skip_len()
-                    } else {
-                        panic!("unreachable");
-                    };
-
-                    del.begin();
-                    add.begin();
-
-                    del.skip(len);
-                    add.skip(len);
-
-                    del.close();
-                    add.close(hashmap! { "tag".to_string() => tag.to_string() });
-                    doc.next();
-                    input.next();
-                }
-                CurChar => {
-                    del.skip(1);
-                    add.skip(1);
-                    doc.skip(1);
-                    input.next();
-                }
-            }
-        }
-    }
-
-    let mut doc = client.doc.lock().unwrap();
-
-    let mut cur_stepper = CurStepper::new(input);
-    let mut doc_stepper = DocStepper::new(&doc.0);
-    let mut del_writer = DelWriter::new();
-    let mut add_writer = AddWriter::new();
-    rename_group_inner(
-        tag,
-        &mut cur_stepper,
-        &mut doc_stepper,
-        &mut del_writer,
-        &mut add_writer,
-    );
-
-    // Apply operation.
-    let op = (del_writer.result(), add_writer.result());
-    let new_doc = OT::apply(&*doc, &op);
-
-    // Store update
-    *doc = new_doc;
-
-    // Send update.
-    let res = ClientCommand::Update(doc.0.clone(), op);
-    client.send(&res)?;
-
-    Ok(())
-}
-
-fn wrap_group(client: &Client, tag: &str, input: &CurSpan) -> Result<(), Error> {
-    fn wrap_group_inner(
-        tag: &str,
-        input: &mut CurStepper,
-        doc: &mut DocStepper,
-        del: &mut DelWriter,
-        add: &mut AddWriter,
-    ) {
-        while !input.is_done() && input.head.is_some() {
-            match input.get_head() {
-                CurSkip(value) => {
-                    doc.skip(value);
-                    input.next();
-                    del.skip(value);
-                    add.skip(value);
-                }
-                CurWithGroup(..) => {
-                    input.enter();
-                    doc.enter();
-                    del.begin();
-                    add.begin();
-
-                    wrap_group_inner(tag, input, doc, del, add);
-
-                    input.exit();
-                    doc.exit();
-                    del.exit();
-                    add.exit();
-                }
-                CurGroup => {
-                    del.skip(1);
-
-                    add.begin();
-                    add.skip(1);
-                    add.close(hashmap! { "tag".to_string() => tag.to_string() });
-
-                    doc.next();
-                    input.next();
-                }
-                CurChar => {
-                    del.skip(1);
-                    add.skip(1);
-                    doc.skip(1);
-                    input.next();
-                }
-            }
-        }
-    }
-
-    let mut doc = client.doc.lock().unwrap();
-
-    let mut cur_stepper = CurStepper::new(input);
-    let mut doc_stepper = DocStepper::new(&doc.0);
-    let mut del_writer = DelWriter::new();
-    let mut add_writer = AddWriter::new();
-    wrap_group_inner(
-        tag,
-        &mut cur_stepper,
-        &mut doc_stepper,
-        &mut del_writer,
-        &mut add_writer,
-    );
-
-    // Apply operation.
-    let op = (del_writer.result(), add_writer.result());
-    let new_doc = OT::apply(&*doc, &op);
-
-    // Store update
-    *doc = new_doc;
-
-    // Send update.
-    let res = ClientCommand::Update(doc.0.clone(), op);
-    client.send(&res)?;
-
-    Ok(())
-}
-
 
 fn delete_char(doc: &Doc) -> Result<Op, Error> {
     let mut walker = Walker::to_cursor(&*doc);
-    walker.back_chars(1);
+    walker.back_char();
 
     if let Some(DocChars(..)) = walker.doc.head() {
         // fallthrough
@@ -363,27 +238,6 @@ fn add_char(doc: &Doc, key: u32) -> Result<Op, Error> {
     add_writer.exit_all();
 
     Ok((del_writer.result(), add_writer.result()))
-}
-
-fn cursor_parent(client: &Client, replace_with: &Attrs) -> Result<(), Error> {
-    let mut doc = client.doc.lock().unwrap();
-
-    let mut walker = CursorParentGroup::new(&replace_with);
-    walker.walk(&*doc);
-    //assert!(walker.terminated);
-
-    // Apply operation.
-    let op = (walker.del.result(), walker.add.result());
-    let new_doc = OT::apply(&*doc, &op);
-
-    // Store update
-    *doc = new_doc;
-
-    // Send update.
-    let res = ClientCommand::Update(doc.0.clone(), op);
-    client.send(&res)?;
-
-    Ok(())
 }
 
 fn caret_move(client: &Client, increase: bool) -> Result<(), Error> {
@@ -417,6 +271,22 @@ fn caret_move(client: &Client, increase: bool) -> Result<(), Error> {
     Ok(())
 }
 
+fn client_op<C: Fn(&Doc) -> Result<Op, Error>>(client: &Client, callback: C) -> Result<(), Error> {
+    let mut doc = client.doc.lock().unwrap();
+
+    let op = callback(&*doc)?;
+
+    // Apply new operation.
+    let new_doc = OT::apply(&*doc, &op);
+    *doc = new_doc;
+
+    // Send update.
+    let res = ClientCommand::Update(doc.0.clone(), op);
+    client.send(&res)?;
+
+    Ok(())
+}
+
 fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&Client) -> Result<(), Error>>)> {
     vec![
         // command + .
@@ -431,34 +301,21 @@ fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&Client) -> Result<(), Error>>
             Ok(())
         })),
 
-        // command + ,
-        (188, true, false, Box::new(|client: &Client| {
-            println!("renaming a group.");
-            let cur = client.target.lock().unwrap();
+        // // command + ,
+        // (188, true, false, Box::new(|client: &Client| {
+        //     println!("renaming a group.");
+        //     let cur = client.target.lock().unwrap();
 
-            let future = NativeCommand::WrapGroup("null".into(), cur.clone().unwrap());
-            let prompt = ClientCommand::PromptString("Name of new outer tag:".into(), "p".into(), future);
-            client.send(&prompt)?;
-            Ok(())
-        })),
+        //     let future = NativeCommand::WrapGroup("null".into(), cur.clone().unwrap());
+        //     let prompt = ClientCommand::PromptString("Name of new outer tag:".into(), "p".into(), future);
+        //     client.send(&prompt)?;
+        //     Ok(())
+        // })),
 
         // backspace
         (8, false, false, Box::new(|client: &Client| {
             println!("backspace");
-
-            let mut doc = client.doc.lock().unwrap();
-
-            let op = delete_char(&*doc)?;
-
-            // Apply new operation.
-            let new_doc = OT::apply(&*doc, &op);
-            *doc = new_doc;
-
-            // Send update.
-            let res = ClientCommand::Update(doc.0.clone(), op);
-            client.send(&res)?;
-
-            Ok(())
+            client_op(client, |doc| delete_char(doc))
         })),
 
         // left
@@ -477,24 +334,19 @@ fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&Client) -> Result<(), Error>>
 fn button_handlers() -> Vec<(&'static str, Box<Fn(&Client) -> Result<(), Error>>)> {
     vec![
         ("Heading 1", Box::new(|client: &Client| {
-            cursor_parent(client, &hashmap! { "tag".to_string() => "h1".to_string() })?;
-            Ok(())
+            client_op(client, |doc| replace_block(doc, "h1"))
         })),
         ("Heading 2", Box::new(|client: &Client| {
-            cursor_parent(client, &hashmap! { "tag".to_string() => "h2".to_string() })?;
-            Ok(())
+            client_op(client, |doc| replace_block(doc, "h2"))
         })),
         ("Heading 3", Box::new(|client: &Client| {
-            cursor_parent(client, &hashmap! { "tag".to_string() => "h3".to_string() })?;
-            Ok(())
+            client_op(client, |doc| replace_block(doc, "h3"))
         })),
         ("Paragraph", Box::new(|client: &Client| {
-            cursor_parent(client, &hashmap! { "tag".to_string() => "p".to_string() })?;
-            Ok(())
+            client_op(client, |doc| replace_block(doc, "p"))
         })),
         ("Code", Box::new(|client: &Client| {
-            cursor_parent(client, &hashmap! { "tag".to_string() => "pre".to_string() })?;
-            Ok(())
+            client_op(client, |doc| replace_block(doc, "pre"))
         })),
     ]
 }
@@ -502,10 +354,7 @@ fn button_handlers() -> Vec<(&'static str, Box<Fn(&Client) -> Result<(), Error>>
 fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
     match req {
         NativeCommand::RenameGroup(tag, cur) => {
-            rename_group(client, &tag, &cur)?;
-        }
-        NativeCommand::WrapGroup(tag, cur) => {
-            wrap_group(client, &tag, &cur)?;
+            client_op(client, |doc| replace_block(doc, &tag))?
         }
         NativeCommand::Button(index) => {
             // Find which button handler to respond to this command.
@@ -525,17 +374,7 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
             }
         }
         NativeCommand::Character(char_code) => {
-            let mut doc = client.doc.lock().unwrap();
-
-            let op = add_char(&*doc, char_code)?;
-
-            // Apply new operation.
-            let new_doc = OT::apply(&*doc, &op);
-            *doc = new_doc;
-
-            // Send update.
-            let res = ClientCommand::Update(doc.0.clone(), op);
-            client.send(&res)?;
+            client_op(client, |doc| add_char(doc, char_code))?
         }
         NativeCommand::Target(cur) => {
             cur_to_caret(client, &cur);
