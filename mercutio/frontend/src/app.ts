@@ -495,6 +495,15 @@ function promptString(title, value, callback) {
 function init ($elem, editorID: string) {
   const m = new Editor($elem);
 
+  // monkey button
+  let monkey = false;
+  $('<button>Monkey</button>')
+  .appendTo($elem.prev())
+  .on('click', () => {
+    monkey = !monkey;
+    nativeCommand(MonkeyCommand(monkey));
+  })
+
   // switching button
   $('<button>Style Switch</button>')
     .appendTo($elem.prev())
@@ -544,6 +553,7 @@ function init ($elem, editorID: string) {
     }
 
     // TODO this bubbles if i use preventDEfault?
+    window.focus();
     return false;
   })
 
@@ -563,10 +573,7 @@ function init ($elem, editorID: string) {
       return;
     }
 
-    nativeCommand(CharacterCommand(
-      e.charCode,
-      curto(active),
-    ));
+    nativeCommand(CharacterCommand(e.charCode,));
 
     e.preventDefault();
   });
@@ -677,14 +684,13 @@ function KeypressCommand(
   }
 }
 
-type CharacterCommand = {Character: [number, any]};
+type CharacterCommand = {Character: number};
 
 function CharacterCommand(
   charCode: number,
-  curspan,
 ): CharacterCommand {
   return {
-    'Character': [charCode, curspan],
+    'Character': charCode,
   }
 }
 
@@ -718,7 +724,17 @@ function LoadCommand(
   }
 }
 
-type Command = RenameGroupCommand | KeypressCommand | CharacterCommand | TargetCommand | ButtonCommand | LoadCommand;
+type MonkeyCommand = {Monkey: boolean};
+
+function MonkeyCommand(
+  enabled: boolean,
+): MonkeyCommand {
+  return {
+    'Monkey': enabled,
+  }
+}
+
+type Command = MonkeyCommand | RenameGroupCommand | KeypressCommand | CharacterCommand | TargetCommand | ButtonCommand | LoadCommand;
 
 function nativeCommand(command: Command) {
   exampleSocket.send(JSON.stringify(command));
@@ -790,6 +806,9 @@ if ((<any>window).MOTE_ENTRY == 'index') {
 
 else if ((<any>window).MOTE_ENTRY == 'client') {
   var m1 = $('#mote');
+
+  $(window).on('focus', () => $(document.body).addClass('focused'));
+  $(window).on('blur', () => $(document.body).removeClass('focused'));
   
   var ops_a = init(m1, window.name);
   

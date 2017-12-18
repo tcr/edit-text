@@ -222,71 +222,135 @@ impl CurStepper {
 }
 
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct DocStepper {
-    pub head: Option<DocElement>,
-    pub rest: Vec<DocElement>,
-    pub stack: Vec<Vec<DocElement>>,
+    head: usize,
+    char_debt: usize,
+    rest: Vec<DocElement>,
+    stack: Vec<(usize, Vec<DocElement>)>,
 }
 
 impl DocStepper {
     pub fn new(span: &DocSpan) -> DocStepper {
         let mut ret = DocStepper {
-            head: None,
+            head: 0,
+            char_debt: 0,
             rest: span.to_vec(),
             stack: vec![],
         };
-        ret.next();
         ret
     }
 
-    pub fn next(&mut self) -> Option<DocElement> {
-        let res = self.head.clone();
-        self.head = if !self.rest.is_empty() {
-            Some(self.rest.remove(0))
-        } else {
-            None
+    pub fn prev(&mut self) -> Option<DocElement> {
+        let res = self.head();
+        self.head -= 1;
+        self.char_debt = match self.head() {
+            Some(DocChars(ref text)) => text.chars().count() - 1,
+            _ => 0,
         };
         res
     }
 
-    pub fn get_head(&self) -> DocElement {
-        self.head.clone().unwrap()
+    pub fn next(&mut self) -> Option<DocElement> {
+        let res = self.head();
+        self.head += 1;
+        self.char_debt = 0;
+        res
+    }
+
+    pub fn head(&self) -> Option<DocElement> {
+        match self.rest.get(self.head) {
+            Some(&DocChars(ref text)) => {
+                Some(DocChars(text.chars().skip(self.char_debt).collect()))
+            }
+            Some(value) => {
+                Some(value.clone())
+            }
+            None => None,
+        }
     }
 
     pub fn is_done(&self) -> bool {
-        self.head.is_none() && self.stack.is_empty()
+        self.head().is_none() && self.stack.is_empty()
+    }
+
+    pub fn unenter(&mut self) {
+        let (head, rest) = self.stack.pop().unwrap();
+        self.head = head;
+        self.char_debt = 0;
+        self.rest = rest;
+
+        // Decrement pointer
+        self.prev();
     }
 
     pub fn enter(&mut self) {
-        let head = self.head.clone();
-        self.stack.push(self.rest.clone());
+        let head = self.head();
+        self.stack.push((self.head, self.rest.clone()));
         match head {
             Some(DocGroup(ref attrs, ref span)) => {
-                self.head = None;
+                self.head = 0;
+                self.char_debt = 0;
                 self.rest = span.to_vec();
-                self.next();
+            }
+            _ => panic!("Entered wrong thing"),
+        }
+    }
+
+    pub fn unexit(&mut self) {
+        let head = self.head();
+        self.stack.push((self.head, self.rest.clone()));
+        match head {
+            Some(DocGroup(ref attrs, ref span)) => {
+                self.head = span.len();
+                self.char_debt = 0;
+                self.rest = span.to_vec();
+                self.prev();
             }
             _ => panic!("Entered wrong thing"),
         }
     }
 
     pub fn exit(&mut self) {
-        let last = self.stack.pop().unwrap();
-        self.rest = last;
+        let (head, rest) = self.stack.pop().unwrap();
+        self.head = head;
+        self.char_debt = 0;
+        self.rest = rest;
+
+        // Increment pointer
         self.next();
+    }
+
+    pub fn unskip(&mut self, mut skip: usize) {
+        while skip > 0 && self.head >= 0 {
+            match self.head() {
+                Some(DocChars(ref inner)) => {
+                    if self.char_debt > 0 {
+                        self.char_debt -= 1;
+                        skip -= 1;
+                    } else {
+                        self.prev();
+                        skip -= 1;
+                    }
+                }
+                Some(DocGroup(..)) => {
+                    self.prev();
+                    skip -= 1;
+                }
+                None => unimplemented!(),
+            }
+        }
     }
 
     pub fn skip(&mut self, mut skip: usize) {
         while skip > 0 && !self.is_done() {
-            match self.get_head() {
+            match self.head().unwrap() {
                 DocChars(ref inner) => {
                     if inner.len() <= skip {
                         self.next();
                         skip -= inner.len();
                     } else {
-                        let replace_inner: String = inner.chars().skip(skip).collect();
-                        self.head = Some(DocChars(replace_inner));
+                        self.char_debt += skip;
                         break;
                     }
                 }
