@@ -221,6 +221,17 @@ pub fn start_websocket_server() {
                 }
             }
         });
+
+        // Enter monkey.
+        let thread_client: Arc<_> = client.clone();
+        thread::spawn(move || {
+            loop {
+                thread::sleep(Duration::from_millis(rand::thread_rng().gen_range(0, 10_000) + 3000));
+                if thread_client.monkey.load(Ordering::Relaxed) {
+                    native_command(&*thread_client, NativeCommand::Keypress(13, false, false));
+                }
+            }
+        });
         
         // Arrow monkey
         // native_command(&*thread_client, NativeCommand::Keypress(39, false, false));

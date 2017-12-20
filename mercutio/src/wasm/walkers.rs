@@ -3,11 +3,11 @@ use oatie::stepper::*;
 use oatie::writer::*;
 use oatie::OT;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Walker {
     original_doc: Doc,
     pub doc: DocStepper,
-    caret_pos: isize,
+    pub caret_pos: isize,
 }
 
 impl Walker {
@@ -29,7 +29,7 @@ impl Walker {
                     walker.doc.skip(1);
                 },
                 Some(DocGroup(attrs, _)) => {
-                    if attrs["tag"] == "cursor" {
+                    if attrs["tag"] == "caret" {
                         matched = true;
                         break;
                     }
@@ -114,6 +114,9 @@ impl Walker {
         use oatie::schema::*;
 
         loop {
+            while self.doc.head_pos() > 0 {
+                self.back_char();
+            }
             self.doc.unenter();
             self.doc.next();
 
@@ -133,7 +136,6 @@ impl Walker {
         use oatie::schema::*;
 
         loop {
-            println!("next char {:?}", self.doc.head());
             match self.doc.head() {
                 Some(DocChars(..)) => {
                     self.caret_pos += 1;
