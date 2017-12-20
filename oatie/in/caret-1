@@ -1,0 +1,5 @@
+[DelWithGroup([DelGroup([]), DelSkip(2)])]
+[AddWithGroup([AddSkip(1), AddGroup({"tag": "caret"}, [])])]
+
+[DelWithGroup([DelGroup([]), DelSkip(2)])]
+[AddWithGroup([AddSkip(1), AddGroup({"tag": "caret"}, [])])]

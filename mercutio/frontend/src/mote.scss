@@ -241,6 +241,10 @@ body.focused {
         vertical-align: bottom;
     }
 
+    div[data-tag="caret"][data-client="right"] {
+        border-right: 3px solid blue;
+    }
+
     /**
      * targets
      */

@@ -33,6 +33,7 @@ function newElem(attrs): JQuery {
 function modifyElem(elem, attrs) {
   return elem
     .attr('data-tag', attrs.tag)
+    .attr('data-client', attrs.client)
     .attr('class', attrs.class || '');
 }
 
@@ -817,7 +818,7 @@ else if ((<any>window).MOTE_ENTRY == 'client') {
   $.get('/api/hello', data => {
     actionHello(m1, data);
   
-    exampleSocket = new WebSocket("ws://127.0.0.1:3012");
+    exampleSocket = new WebSocket(window.name == 'left' ? "ws://127.0.0.1:3012" : 'ws://127.0.0.1:3013');
     exampleSocket.onopen = function (event) { 
       nativeCommand(LoadCommand(data));
     };

@@ -11,6 +11,7 @@ use std::thread;
 use std::time::Duration;
 use std::sync::{Arc, Mutex};
 use rand::Rng;
+use std::{process, panic};
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use self::actions::*;
@@ -37,10 +38,13 @@ pub enum ClientCommand {
     Error(String),
 }
 
-fn client_op<C: Fn(&Doc) -> Result<Op, Error>>(client: &Client, callback: C) -> Result<(), Error> {
+fn client_op<C: Fn(ActionContext) -> Result<Op, Error>>(client: &Client, callback: C) -> Result<(), Error> {
     let mut doc = client.doc.lock().unwrap();
 
-    let op = callback(&*doc)?;
+    let op = callback(ActionContext {
+        doc: doc.clone(),
+        client_id: client.name.to_string(),
+    })?;
 
     // Apply new operation.
     let new_doc = OT::apply(&*doc, &op);
@@ -165,6 +169,7 @@ struct Client {
     //TODO remove the target field? base only on carets instead
     target: Mutex<Option<CurSpan>>,
     monkey: AtomicBool,
+    name: String,
 }
 
 impl Client {
@@ -175,13 +180,14 @@ impl Client {
     }
 }
 
-pub fn start_websocket_server() {
-    ws::listen("127.0.0.1:3012", |out| {
+pub fn server(url: &str, name: &str) {
+    ws::listen(url, |out| {
         let client = Arc::new(Client {
             out,
             doc: Mutex::new(Doc(vec![])),
             target: Mutex::new(None),
             monkey: AtomicBool::new(false),
+            name: name.to_string(),
         });
 
         client.send(&ClientCommand::Setup {
@@ -253,4 +259,24 @@ pub fn start_websocket_server() {
             Ok(())
         }
     }).unwrap();
+}
+
+pub fn start_websocket_server() {
+    thread::spawn(|| {
+        if let Err(value) = panic::catch_unwind(|| {
+            server("127.0.0.1:3012", "left");
+        }) {
+            println!("Error: {:?}", value);
+            process::exit(1);
+        }
+    });
+
+    thread::spawn(|| {
+        if let Err(value) = panic::catch_unwind(|| {
+            server("127.0.0.1:3013", "right");
+        }) {
+            println!("Error: {:?}", value);
+            process::exit(1);
+        }
+    });
 }

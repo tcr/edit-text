@@ -4,8 +4,13 @@ use failure::Error;
 use std::char::from_u32;
 use super::walkers::*;
 
-pub fn replace_block(doc: &Doc, tag: &str) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&*doc);
+pub struct ActionContext {
+    pub doc: Doc,
+    pub client_id: String,
+}
+
+pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
     walker.back_block();
 
     let len = if let Some(DocGroup(_, ref span)) = walker.doc.head() {
@@ -24,8 +29,8 @@ pub fn replace_block(doc: &Doc, tag: &str) -> Result<Op, Error> {
     Ok(writer.result())
 }
 
-pub fn delete_char(doc: &Doc) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&*doc);
+pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
 
     // Check if we lead the block.
     let caret_pos = walker.caret_pos;
@@ -55,8 +60,8 @@ pub fn delete_char(doc: &Doc) -> Result<Op, Error> {
     Ok(writer.result())
 }
 
-pub fn add_char(doc: &Doc, key: u32) -> Result<Op, Error> {
-    let mut writer = Walker::to_caret(&*doc).to_writer();
+pub fn add_char(ctx: ActionContext, key: u32) -> Result<Op, Error> {
+    let mut writer = Walker::to_caret(&ctx.doc, &ctx.client_id).to_writer();
 
     writer.del.exit_all();
 
@@ -68,8 +73,8 @@ pub fn add_char(doc: &Doc, key: u32) -> Result<Op, Error> {
     Ok(writer.result())
 }
 
-pub fn split_block(doc: &Doc) -> Result<Op, Error> {
-    let walker = Walker::to_caret(&*doc);
+pub fn split_block(ctx: ActionContext) -> Result<Op, Error> {
+    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
     let skip = walker.doc.skip_len();
 
     let previous_block = if let Some(DocGroup(attrs, _)) = walker.clone().back_block().doc.head() {
@@ -95,8 +100,8 @@ pub fn split_block(doc: &Doc) -> Result<Op, Error> {
     Ok(writer.result())
 }
 
-pub fn caret_move(doc: &Doc, increase: bool) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&*doc);
+pub fn caret_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
 
     // First operation removes the caret.
     let mut writer = walker.to_writer();
@@ -121,7 +126,7 @@ pub fn caret_move(doc: &Doc, increase: bool) -> Result<Op, Error> {
     writer.del.exit_all();
 
     writer.add.begin();
-    writer.add.close(hashmap! { "tag".to_string() => "caret".to_string() });
+    writer.add.close(hashmap! { "tag".to_string() => "caret".to_string(), "client".to_string() => ctx.client_id.clone() });
     writer.add.exit_all();
     
     let op_2 = writer.result();
@@ -135,9 +140,9 @@ pub fn caret_move(doc: &Doc, increase: bool) -> Result<Op, Error> {
     }
 }
 
-pub fn cur_to_caret(doc: &Doc, cur: &CurSpan) -> Result<Op, Error> {
+pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan) -> Result<Op, Error> {
     // First operation removes the caret.
-    let mut writer = Walker::to_caret(&*doc).to_writer();
+    let mut writer = Walker::to_caret(&ctx.doc, &ctx.client_id).to_writer();
 
     writer.del.begin();
     writer.del.close();
@@ -145,9 +150,10 @@ pub fn cur_to_caret(doc: &Doc, cur: &CurSpan) -> Result<Op, Error> {
 
     writer.add.exit_all();
 
-    let (doc, op_1) = writer.apply_result(doc);
+    let (doc, op_1) = writer.apply_result(&ctx.doc);
 
     // Second operation inserts a new caret.
+
     let mut walker = Walker::to_cursor(&doc, cur);
     walker.snap_char();
 
@@ -156,7 +162,7 @@ pub fn cur_to_caret(doc: &Doc, cur: &CurSpan) -> Result<Op, Error> {
     writer.del.exit_all();
 
     writer.add.begin();
-    writer.add.close(hashmap! { "tag".to_string() => "caret".to_string() });
+    writer.add.close(hashmap! { "tag".to_string() => "caret".to_string(), "client".to_string() => ctx.client_id.clone() });
     writer.add.exit_all();
     
     let op_2 = writer.result();
