@@ -1,6 +1,7 @@
 use oatie::doc::*;
 use oatie::stepper::*;
 use oatie::writer::*;
+use oatie::OT;
 
 #[derive(Debug)]
 pub struct Walker {
@@ -23,7 +24,7 @@ impl Walker {
         let mut matched = false;
         loop {
             match walker.doc.head() {
-                Some(DocChars(text)) => {
+                Some(DocChars(..)) => {
                     walker.caret_pos += 1;
                     walker.doc.skip(1);
                 },
@@ -77,7 +78,7 @@ impl Walker {
             }
 
             match walker.doc.head() {
-                Some(DocChars(text)) => {
+                Some(DocChars(..)) => {
                     walker.caret_pos += 1;
 
                     walker.doc.skip(1);
@@ -132,17 +133,14 @@ impl Walker {
         use oatie::schema::*;
 
         loop {
+            println!("next char {:?}", self.doc.head());
             match self.doc.head() {
-                Some(DocChars(text)) => {
+                Some(DocChars(..)) => {
                     self.caret_pos += 1;
                     self.doc.skip(1);
                     break;
                 },
                 Some(DocGroup(attrs, _)) => {
-                    if attrs["tag"] == "cursor" {
-                        break;
-                    }
-
                     if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
                         self.caret_pos += 1;
                         break;
@@ -174,12 +172,12 @@ impl Walker {
         let mut matched = false;
         loop {
             match self.doc.head() {
-                Some(DocChars(text)) => {
+                Some(DocChars(..)) => {
                     self.caret_pos -= 1;
                     matched = true;
                     break;
                 },
-                Some(DocGroup(attrs, _)) => {
+                Some(DocGroup(..)) => {
                     self.doc.unenter();
                 }
                 None => {
@@ -208,21 +206,21 @@ impl Walker {
         self
     }
 
-    pub fn to_writers(&self) -> (DelWriter, AddWriter) {
+    pub fn to_writer(&self) -> OpWriter {
         let mut del = DelWriter::new();
         let mut add = AddWriter::new();
 
-        // Walk the doc until the thing
+        // Walk the doc until we reach our current doc position.
         let mut doc_stepper = DocStepper::new(&self.original_doc.0);
 
         while self.doc != doc_stepper {
             match doc_stepper.head() {
-                Some(DocChars(text)) => {
+                Some(DocChars(..)) => {
                     del.skip(1);
                     add.skip(1);
                     doc_stepper.skip(1);
                 },
-                Some(DocGroup(attrs, _)) => {
+                Some(DocGroup(..)) => {
                     del.begin();
                     add.begin();
                     doc_stepper.enter();
@@ -239,6 +237,26 @@ impl Walker {
             }
         }
 
-        (del, add)
+        OpWriter {
+            del,
+            add
+        }
+    }
+}
+
+pub struct OpWriter {
+    pub del: DelWriter,
+    pub add: AddWriter,
+}
+
+impl OpWriter {
+    pub fn result(self) -> Op {
+        (self.del.result(), self.add.result())
+    }
+
+    pub fn apply_result(self, doc: &Doc) -> (Doc, Op) {
+        let op = self.result();
+        let new_doc = OT::apply(doc, &op);
+        (new_doc, op)
     }
 }

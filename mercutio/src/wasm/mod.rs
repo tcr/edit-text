@@ -1,17 +1,19 @@
+pub mod actions;
+pub mod walkers;
+
 use rand;
 use oatie::doc::*;
-use oatie::{OT, Operation};
+use oatie::{OT};
 use serde_json;
 use ws;
 use failure::Error;
-use std::char::from_u32;
 use std::thread;
 use std::time::Duration;
 use std::sync::{Arc, Mutex};
 use rand::Rng;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
-use super::walkers::*;
+use self::actions::*;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum NativeCommand {
@@ -33,108 +35,6 @@ pub enum ClientCommand {
     PromptString(String, String, NativeCommand),
     Update(DocSpan, Op),
     Error(String),
-}
-
-fn replace_block(doc: &Doc, tag: &str) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&*doc);
-    walker.back_block();
-
-    let len = if let Some(DocGroup(_, ref span)) = walker.doc.head() {
-        span.skip_len()
-    } else {
-        println!("uhg {:?}", walker);
-        unreachable!()
-    };
-
-    let (mut del_writer, mut add_writer) = walker.to_writers();
-
-    del_writer.group(&del_span![DelSkip(len)]);
-
-    add_writer.group(&hashmap! { "tag".to_string() => tag.to_string() }, &add_span![AddSkip(len)]);
-
-    Ok((del_writer.result(), add_writer.result()))
-}
-
-fn delete_char(doc: &Doc) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&*doc);
-    walker.back_char();
-
-    if let Some(DocChars(..)) = walker.doc.head() {
-        // fallthrough
-    } else {
-        return Ok(op_span!([], []));
-    }
-
-    let (mut del_writer, mut add_writer) = walker.to_writers();
-
-    del_writer.chars(1);
-    del_writer.exit_all();
-
-    add_writer.exit_all();
-
-    Ok((del_writer.result(), add_writer.result()))
-}
-
-fn add_char(doc: &Doc, key: u32) -> Result<Op, Error> {
-    let (mut del_writer, mut add_writer) = Walker::to_caret(&*doc)
-        .to_writers();
-
-    del_writer.exit_all();
-
-    let c: char = from_u32(key).unwrap_or('?');
-    add_writer.chars(&format!("{}", c));
-    add_writer.exit_all();
-
-    Ok((del_writer.result(), add_writer.result()))
-}
-
-fn caret_move(doc: &Doc, increase: bool) -> Result<Op, Error> {
-    let mut writer = Walker::to_caret(&*doc);
-
-    if increase {
-        writer.next_char();
-    } else {
-        writer.back_char();
-    }
-
-    let (mut del_writer, mut add_writer) = writer.to_writers();
-
-    del_writer.exit_all();
-    add_writer.exit_all();
-
-    Ok((del_writer.result(), add_writer.result()))
-}
-
-fn cur_to_caret(doc: &Doc, cur: &CurSpan) -> Result<Op, Error> {
-    let (mut del_writer, mut add_writer) = Walker::to_caret(&*doc).to_writers();
-
-    del_writer.begin();
-    del_writer.close();
-    del_writer.exit_all();
-
-    add_writer.exit_all();
-
-    let op_1 = (del_writer.result(), add_writer.result());
-
-    let mut doc_2: Doc = doc.clone();
-    OT::apply(&doc_2, &op_1);
-
-    let mut writer = Walker::to_cursor(&doc_2, cur);
-    writer.snap_char();
-    
-
-
-    let (mut del_writer, mut add_writer) = writer.to_writers();
-
-    del_writer.exit_all();
-
-    add_writer.begin();
-    add_writer.close(hashmap! { "tag".to_string() => "cursor".to_string() });
-    add_writer.exit_all();
-
-    let op_2 = (del_writer.result(), add_writer.result());
-
-    Ok(Operation::compose(&op_1, &op_2))
 }
 
 fn client_op<C: Fn(&Doc) -> Result<Op, Error>>(client: &Client, callback: C) -> Result<(), Error> {
@@ -192,6 +92,11 @@ fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&Client) -> Result<(), Error>>
         (39, false, false, Box::new(|client: &Client| {
             client_op(client, |doc| caret_move(doc, true))
         })),
+
+        // enter
+        (13, false, false, Box::new(|client: &Client| {
+            client_op(client, |doc| split_block(doc))
+        }))
     ]
 }
 
@@ -217,7 +122,7 @@ fn button_handlers() -> Vec<(&'static str, Box<Fn(&Client) -> Result<(), Error>>
 
 fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
     match req {
-        NativeCommand::RenameGroup(tag, cur) => {
+        NativeCommand::RenameGroup(tag, _) => {
             client_op(client, |doc| replace_block(doc, &tag))?
         }
         NativeCommand::Button(index) => {
