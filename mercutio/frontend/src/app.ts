@@ -822,6 +822,8 @@ else if ((<any>window).MOTE_ENTRY == 'client') {
       nativeCommand(LoadCommand(data));
     };
     exampleSocket.onmessage = onmessage.bind(exampleSocket, m1, ops_a);
-    
+    exampleSocket.onclose = function () {
+      $('body').css('background', 'red');
+    }
   });  
 }

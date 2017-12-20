@@ -11,7 +11,7 @@
 extern crate log;
 #[macro_use]
 extern crate maplit;
-// extern crate rand;
+extern crate rand;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
@@ -21,7 +21,7 @@ extern crate failure;
 
 pub mod compose;
 pub mod doc;
-// pub mod random;
+pub mod random;
 pub mod schema;
 pub mod stepper;
 pub mod transform;
@@ -30,7 +30,7 @@ pub mod transform_test;
 pub mod macros;
 pub mod apply;
 
-use apply::*;
+pub use apply::*;
 use doc::*;
 use compose::*;
 use std::collections::HashMap;

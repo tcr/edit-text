@@ -259,6 +259,10 @@ impl DocStepper {
         res
     }
 
+    pub fn head_pos(&self) -> isize {
+        self.head
+    }
+
     pub fn head(&self) -> Option<DocElement> {
         match self.rest.get(self.head as usize) {
             Some(&DocChars(ref text)) => {

@@ -30,8 +30,6 @@ fn try_this() {
         DocGroup(HashMap::new(), vec![]),
     ];
 
-    debug_span(&source);
-
     assert_eq!(
         apply_delete(
             &vec![

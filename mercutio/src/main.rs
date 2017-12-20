@@ -29,10 +29,12 @@ use std::path::{Path, PathBuf};
 use std::thread;
 use oatie::transform::transform;
 use wasm::start_websocket_server;
+use std::{process, panic};
 
 fn default_doc() -> Doc {
     Doc(doc_span![
         DocGroup({"tag": "h1"}, [
+            DocGroup({"tag": "caret"}, []),
             DocChars("Hello! "),
             DocGroup({"tag": "span", "class": "bold"}, [DocChars("what's")]),
             DocChars(" up?"),
@@ -40,7 +42,6 @@ fn default_doc() -> Doc {
         DocGroup({"tag": "ul"}, [
             DocGroup({"tag": "li"}, [
                 DocGroup({"tag": "p"}, [
-                    DocGroup({"tag": "cursor"}, []),
                     DocChars("Three adjectives strong."),
                 ]),
                 DocGroup({"tag": "p"}, [
@@ -314,7 +315,12 @@ struct MoteState {
 
 fn main() {
     thread::spawn(|| {
-        start_websocket_server();
+        if let Err(value) = panic::catch_unwind(|| {
+            start_websocket_server();
+        }) {
+            println!("Error: {:?}", value);
+            process::exit(1);
+        }
     });
 
     rocket::ignite()
