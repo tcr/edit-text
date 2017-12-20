@@ -755,7 +755,17 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                             .any(|x| *x == Tag::from_attrs(a_attrs).tag_type().unwrap());
 
                     println!("groupgruop {:?} {:?}", a_type, b_type);
-                    if a_type == b_type {
+                    if a_attrs["tag"] == "caret" && b_attrs["tag"] == "caret" {
+                        // Carets
+                        a.enter();
+                        a.exit();
+                        b.enter();
+                        b.exit();
+                        t.enter_a(&Tag::from_attrs(a_attrs), None);
+                        t.close_a();
+                        t.enter_b(None, Tag::from_attrs(b_attrs));
+                        t.close_b();
+                    } else if a_type == b_type {
                         a.enter();
                         b.enter();
                         if Tag::from_attrs(a_attrs) == Tag::from_attrs(b_attrs) {

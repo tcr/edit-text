@@ -11,7 +11,7 @@ pub struct Walker {
 }
 
 impl Walker {
-    pub fn to_caret(doc: &Doc) -> Walker {
+    pub fn to_caret(doc: &Doc, client_id: &str) -> Walker {
         use oatie::schema::*;
 
         // Walk the doc until the thing
@@ -29,7 +29,7 @@ impl Walker {
                     walker.doc.skip(1);
                 },
                 Some(DocGroup(attrs, _)) => {
-                    if attrs["tag"] == "caret" {
+                    if attrs["tag"] == "caret" && attrs.get("client") == Some(&client_id.to_string()) {
                         matched = true;
                         break;
                     }
@@ -114,6 +114,9 @@ impl Walker {
         use oatie::schema::*;
 
         loop {
+            // Find starting line of cursors
+            // TODO this whole logic is bad for back_block, which should 
+            // just actually update the caret_pos as a result
             while self.doc.head_pos() > 0 {
                 self.back_char();
             }
@@ -177,13 +180,14 @@ impl Walker {
                 Some(DocChars(..)) => {
                     self.caret_pos -= 1;
                     matched = true;
+                    println!("ooh");
                     break;
                 },
                 Some(DocGroup(..)) => {
                     self.doc.unenter();
                 }
                 None => {
-                    // TODO check backwards is_done()!!!
+                    // TODO there should be a backwards is_done()!!!
                     if self.doc.is_done() {
                         break;
                     } else {
@@ -203,7 +207,7 @@ impl Walker {
             }
         }
         if !matched {
-            panic!("Didn't find a cursor.");
+            panic!("Couldn't snap to a character.");
         }
         self
     }

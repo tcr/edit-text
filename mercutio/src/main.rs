@@ -34,7 +34,8 @@ use std::{process, panic};
 fn default_doc() -> Doc {
     Doc(doc_span![
         DocGroup({"tag": "h1"}, [
-            DocGroup({"tag": "caret"}, []),
+            DocGroup({"tag": "caret", "client": "left"}, []),
+            DocGroup({"tag": "caret", "client": "right"}, []),
             DocChars("Hello! "),
             DocGroup({"tag": "span", "class": "bold"}, [DocChars("what's")]),
             DocChars(" up?"),
@@ -269,6 +270,7 @@ fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<Confir
     Json(ConfirmResponse { ok: success })
 }
 
+/// Return the initial "hello world" document.
 #[get("/api/hello")]
 fn api_hello(mote: State<MoteState>) -> Json<DocSpan> {
     let doc = mote.body.lock().unwrap();
@@ -314,14 +316,7 @@ struct MoteState {
 }
 
 fn main() {
-    thread::spawn(|| {
-        if let Err(value) = panic::catch_unwind(|| {
-            start_websocket_server();
-        }) {
-            println!("Error: {:?}", value);
-            process::exit(1);
-        }
-    });
+    start_websocket_server();
 
     rocket::ignite()
         .manage(MoteState { body: Arc::new(Mutex::new(default_doc())) })

@@ -1,0 +1,5 @@
+[DelWithGroup([DelGroup([]), DelWithGroup([]), DelSkip(2)])]
+[AddWithGroup([AddWithGroup([]), AddSkip(1), AddGroup({"client": "left", "tag": "caret"}, [])])]
+
+[DelWithGroup([DelWithGroup([]), DelGroup([]), DelSkip(2)])]
+[AddWithGroup([AddWithGroup([]), AddSkip(1), AddGroup({"client": "right", "tag": "caret"}, [])])]
