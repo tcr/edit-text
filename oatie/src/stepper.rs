@@ -362,5 +362,9 @@ impl DocStepper {
             }
         }
     }
+
+    pub fn skip_len(&self) -> usize {
+        self.rest[self.head as usize..].to_vec().skip_len()
+    }
 }
 

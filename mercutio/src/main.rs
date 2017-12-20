@@ -17,7 +17,6 @@ extern crate serde_json;
 extern crate rand;
 
 pub mod wasm;
-pub mod walkers;
 
 use std::sync::{Arc, Mutex};
 use oatie::doc::*;
