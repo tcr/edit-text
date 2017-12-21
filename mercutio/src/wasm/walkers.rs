@@ -5,12 +5,12 @@ use oatie::OT;
 
 // tODO add a fast-forward option to skip to next caret??
 pub struct CaretStepper {
-    doc: DocStepper,
+    doc: &mut DocStepper,
     caret_pos: isize,
 }
 
 impl CaretStepper {
-    pub fn new(doc: DocStepper) -> CaretStepper {
+    pub fn new(doc: &mut DocStepper) -> CaretStepper {
         CaretStepper {
             doc,
             caret_pos: -1,
@@ -58,46 +58,32 @@ impl Walker {
     pub fn to_caret(doc: &Doc, client_id: &str) -> Walker {
         use oatie::schema::*;
 
-        // Walk the doc until the thing
-        let mut walker = Walker {
-            original_doc: doc.clone(),
-            doc: DocStepper::new(&doc.0),
-            caret_pos: -1,
-        };
+        let original_doc = doc.clone();
+        let mut doc = DocStepper::new(&doc.0);
+        let mut cstep = CaretStepper::new(doc);
 
-        let mut matched = false;
-        loop {
-            match walker.doc.head() {
-                Some(DocChars(..)) => {
-                    walker.caret_pos += 1;
-                    walker.doc.skip(1);
+        // Iterate until we match the cursor.
+        let matched = loop {
+            if let Some(DocGroup(attrs, _)) = cstep.doc.head() {
+                if attrs["tag"] == "caret" && attrs["client"] == client_id {
+                    break true;
                 }
-                Some(DocGroup(attrs, _)) => {
-                    if attrs["tag"] == "caret"
-                        && attrs.get("client") == Some(&client_id.to_string())
-                    {
-                        matched = true;
-                        break;
-                    }
-
-                    if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
-                        walker.caret_pos += 1;
-                    }
-
-                    walker.doc.enter();
-                }
-                None => if walker.doc.is_done() {
-                    break;
-                } else {
-                    walker.doc.exit();
-                },
             }
-        }
+            if cstep.next().is_none() {
+                break false;
+            }
+        };
         if !matched {
             panic!("Didn't find a caret.");
         }
 
-        walker
+        // Build return walker.
+        let CaretStepper { doc, caret_pos } = cstep;
+        Walker {
+            original_doc,
+            doc,
+            caret_pos,
+        }
     }
 
     pub fn to_cursor(doc: &Doc, cur: &CurSpan) -> Walker {
