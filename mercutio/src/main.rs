@@ -3,25 +3,24 @@
 
 extern crate failure;
 #[macro_use]
+extern crate maplit;
+#[macro_use]
 extern crate oatie;
+extern crate rand;
 extern crate rocket;
 extern crate rocket_contrib;
-extern crate ws;
-#[macro_use]
-extern crate maplit;
-extern crate failure;
-#[macro_use]
-extern crate serde_derive;
 extern crate serde;
 #[macro_use]
+extern crate serde_derive;
+#[macro_use]
 extern crate serde_json;
-extern crate rand;
+extern crate ws;
 
 pub mod wasm;
 
 use std::sync::{Arc, Mutex};
 use oatie::doc::*;
-use oatie::{OT, Operation};
+use oatie::{Operation, OT};
 use rocket_contrib::Json;
 use rocket::State;
 use rocket::response::NamedFile;
@@ -30,7 +29,7 @@ use std::path::{Path, PathBuf};
 use std::thread;
 use oatie::transform::transform;
 use wasm::start_websocket_server;
-use std::{process, panic};
+use std::{panic, process};
 
 fn default_doc() -> Doc {
     Doc(doc_span![
@@ -113,7 +112,9 @@ fn api_confirm(struct_body: Json<ConfirmInput>, mote: State<MoteState>) -> Json<
     println!("EXPECTD {:?}", compare_doc);
     println!("success? {:?}", res == compare_doc);
 
-    Json(ConfirmResponse { ok: res == compare_doc })
+    Json(ConfirmResponse {
+        ok: res == compare_doc,
+    })
 }
 
 #[derive(Serialize)]
@@ -320,7 +321,9 @@ fn main() {
     start_websocket_server();
 
     rocket::ignite()
-        .manage(MoteState { body: Arc::new(Mutex::new(default_doc())) })
+        .manage(MoteState {
+            body: Arc::new(Mutex::new(default_doc())),
+        })
         .mount(
             "/",
             routes![

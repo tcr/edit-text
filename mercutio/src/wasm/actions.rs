@@ -24,7 +24,10 @@ pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
 
     writer.del.group(&del_span![DelSkip(len)]);
 
-    writer.add.group(&hashmap! { "tag".to_string() => tag.to_string() }, &add_span![AddSkip(len)]);
+    writer.add.group(
+        &hashmap! { "tag".to_string() => tag.to_string() },
+        &add_span![AddSkip(len)],
+    );
 
     Ok(writer.result())
 }
@@ -91,10 +94,14 @@ pub fn split_block(ctx: ActionContext) -> Result<Op, Error> {
     writer.del.close();
     writer.del.exit_all();
 
-    writer.add.close(hashmap! { "tag".to_string() => previous_block });
+    writer
+        .add
+        .close(hashmap! { "tag".to_string() => previous_block });
     writer.add.begin();
     writer.add.skip(skip);
-    writer.add.close(hashmap! { "tag".to_string() => "p".to_string() });
+    writer
+        .add
+        .close(hashmap! { "tag".to_string() => "p".to_string() });
     writer.add.exit_all();
 
     Ok(writer.result())
@@ -128,7 +135,7 @@ pub fn caret_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
     writer.add.begin();
     writer.add.close(hashmap! { "tag".to_string() => "caret".to_string(), "client".to_string() => ctx.client_id.clone() });
     writer.add.exit_all();
-    
+
     let op_2 = writer.result();
 
     // Return composed operations. Select proper order or otherwise composition
@@ -164,7 +171,7 @@ pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan) -> Result<Op, Error> {
     writer.add.begin();
     writer.add.close(hashmap! { "tag".to_string() => "caret".to_string(), "client".to_string() => ctx.client_id.clone() });
     writer.add.exit_all();
-    
+
     let op_2 = writer.result();
 
     // Return composed operations.
