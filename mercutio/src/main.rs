@@ -1,6 +1,7 @@
 #![feature(plugin)]
 #![plugin(rocket_codegen)]
 
+extern crate failure;
 #[macro_use]
 extern crate oatie;
 extern crate rocket;
