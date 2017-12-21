@@ -3,7 +3,7 @@ pub mod walkers;
 
 use rand;
 use oatie::doc::*;
-use oatie::{OT};
+use oatie::OT;
 use serde_json;
 use ws;
 use failure::Error;
@@ -11,7 +11,7 @@ use std::thread;
 use std::time::Duration;
 use std::sync::{Arc, Mutex};
 use rand::Rng;
-use std::{process, panic};
+use std::{panic, process};
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use self::actions::*;
@@ -38,7 +38,10 @@ pub enum ClientCommand {
     Error(String),
 }
 
-fn client_op<C: Fn(ActionContext) -> Result<Op, Error>>(client: &Client, callback: C) -> Result<(), Error> {
+fn client_op<C: Fn(ActionContext) -> Result<Op, Error>>(
+    client: &Client,
+    callback: C,
+) -> Result<(), Error> {
     let mut doc = client.doc.lock().unwrap();
 
     let op = callback(ActionContext {
@@ -60,17 +63,22 @@ fn client_op<C: Fn(ActionContext) -> Result<Op, Error>>(client: &Client, callbac
 fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&Client) -> Result<(), Error>>)> {
     vec![
         // command + .
-        (190, true, false, Box::new(|client: &Client| {
-            println!("renaming a group.");
-            let cur = client.target.lock().unwrap();
+        (
+            190,
+            true,
+            false,
+            Box::new(|client: &Client| {
+                println!("renaming a group.");
+                let cur = client.target.lock().unwrap();
 
-            // Unwrap into real error
-            let future = NativeCommand::RenameGroup("null".into(), cur.clone().unwrap());
-            let prompt = ClientCommand::PromptString("Rename tag group:".into(), "p".into(), future);
-            client.send(&prompt)?;
-            Ok(())
-        })),
-
+                // Unwrap into real error
+                let future = NativeCommand::RenameGroup("null".into(), cur.clone().unwrap());
+                let prompt =
+                    ClientCommand::PromptString("Rename tag group:".into(), "p".into(), future);
+                client.send(&prompt)?;
+                Ok(())
+            }),
+        ),
         // // command + ,
         // (188, true, false, Box::new(|client: &Client| {
         //     println!("renaming a group.");
@@ -83,52 +91,67 @@ fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&Client) -> Result<(), Error>>
         // })),
 
         // backspace
-        (8, false, false, Box::new(|client: &Client| {
-            println!("backspace");
-            client_op(client, |doc| delete_char(doc))
-        })),
-
+        (
+            8,
+            false,
+            false,
+            Box::new(|client: &Client| {
+                println!("backspace");
+                client_op(client, |doc| delete_char(doc))
+            }),
+        ),
         // left
-        (37, false, false, Box::new(|client: &Client| {
-            client_op(client, |doc| caret_move(doc, false))
-        })),
+        (
+            37,
+            false,
+            false,
+            Box::new(|client: &Client| client_op(client, |doc| caret_move(doc, false))),
+        ),
         // right
-        (39, false, false, Box::new(|client: &Client| {
-            client_op(client, |doc| caret_move(doc, true))
-        })),
-
+        (
+            39,
+            false,
+            false,
+            Box::new(|client: &Client| client_op(client, |doc| caret_move(doc, true))),
+        ),
         // enter
-        (13, false, false, Box::new(|client: &Client| {
-            client_op(client, |doc| split_block(doc))
-        }))
+        (
+            13,
+            false,
+            false,
+            Box::new(|client: &Client| client_op(client, |doc| split_block(doc))),
+        ),
     ]
 }
 
 fn button_handlers() -> Vec<(&'static str, Box<Fn(&Client) -> Result<(), Error>>)> {
     vec![
-        ("Heading 1", Box::new(|client: &Client| {
-            client_op(client, |doc| replace_block(doc, "h1"))
-        })),
-        ("Heading 2", Box::new(|client: &Client| {
-            client_op(client, |doc| replace_block(doc, "h2"))
-        })),
-        ("Heading 3", Box::new(|client: &Client| {
-            client_op(client, |doc| replace_block(doc, "h3"))
-        })),
-        ("Paragraph", Box::new(|client: &Client| {
-            client_op(client, |doc| replace_block(doc, "p"))
-        })),
-        ("Code", Box::new(|client: &Client| {
-            client_op(client, |doc| replace_block(doc, "pre"))
-        })),
+        (
+            "Heading 1",
+            Box::new(|client: &Client| client_op(client, |doc| replace_block(doc, "h1"))),
+        ),
+        (
+            "Heading 2",
+            Box::new(|client: &Client| client_op(client, |doc| replace_block(doc, "h2"))),
+        ),
+        (
+            "Heading 3",
+            Box::new(|client: &Client| client_op(client, |doc| replace_block(doc, "h3"))),
+        ),
+        (
+            "Paragraph",
+            Box::new(|client: &Client| client_op(client, |doc| replace_block(doc, "p"))),
+        ),
+        (
+            "Code",
+            Box::new(|client: &Client| client_op(client, |doc| replace_block(doc, "pre"))),
+        ),
     ]
 }
 
 fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
     match req {
-        NativeCommand::RenameGroup(tag, _) => {
-            client_op(client, |doc| replace_block(doc, &tag))?
-        }
+        NativeCommand::RenameGroup(tag, _) => client_op(client, |doc| replace_block(doc, &tag))?,
         NativeCommand::Button(index) => {
             // Find which button handler to respond to this command.
             button_handlers()
@@ -146,9 +169,7 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
                 }
             }
         }
-        NativeCommand::Character(char_code) => {
-            client_op(client, |doc| add_char(doc, char_code))?
-        }
+        NativeCommand::Character(char_code) => client_op(client, |doc| add_char(doc, char_code))?,
         NativeCommand::Target(cur) => {
             client_op(client, |doc| cur_to_caret(doc, &cur))?;
             *client.target.lock().unwrap() = Some(cur);
@@ -190,10 +211,19 @@ pub fn server(url: &str, name: &str) {
             name: name.to_string(),
         });
 
-        client.send(&ClientCommand::Setup {
-            keys: key_handlers().into_iter().map(|x| (x.0, x.1, x.2)).collect(),
-            buttons: button_handlers().into_iter().enumerate().map(|(i, x)| (i, x.0.to_string())).collect(),
-        }).expect("Could not send initial state");
+        client
+            .send(&ClientCommand::Setup {
+                keys: key_handlers()
+                    .into_iter()
+                    .map(|x| (x.0, x.1, x.2))
+                    .collect(),
+                buttons: button_handlers()
+                    .into_iter()
+                    .enumerate()
+                    .map(|(i, x)| (i, x.0.to_string()))
+                    .collect(),
+            })
+            .expect("Could not send initial state");
 
         // Button monkey.
         let thread_client: Arc<_> = client.clone();
@@ -202,43 +232,45 @@ pub fn server(url: &str, name: &str) {
             loop {
                 thread::sleep(Duration::from_millis(rng.gen_range(0, 2000) + 500));
                 if thread_client.monkey.load(Ordering::Relaxed) {
-                    rand::thread_rng()
-                        .choose(&button_handlers())
-                        .map(|button| {
-                            button.1(&*thread_client);
-                        });
+                    rand::thread_rng().choose(&button_handlers()).map(|button| {
+                        button.1(&*thread_client);
+                    });
                 }
             }
         });
 
         // Letter monkey.
         let thread_client: Arc<_> = client.clone();
-        thread::spawn(move || {
-            loop {
-                thread::sleep(Duration::from_millis(rand::thread_rng().gen_range(0, 200) + 100));
-                if thread_client.monkey.load(Ordering::Relaxed) {
-                    native_command(&*thread_client, NativeCommand::Character(
-                        *rand::thread_rng().choose(&vec![
+        thread::spawn(move || loop {
+            thread::sleep(Duration::from_millis(
+                rand::thread_rng().gen_range(0, 200) + 100,
+            ));
+            if thread_client.monkey.load(Ordering::Relaxed) {
+                native_command(
+                    &*thread_client,
+                    NativeCommand::Character(*rand::thread_rng()
+                        .choose(&vec![
                             rand::thread_rng().gen_range(b'A', b'Z'),
                             rand::thread_rng().gen_range(b'a', b'z'),
                             rand::thread_rng().gen_range(b'0', b'9'),
                             b' ',
-                        ]).unwrap() as _));
-                }
+                        ])
+                        .unwrap() as _),
+                );
             }
         });
 
         // Enter monkey.
         let thread_client: Arc<_> = client.clone();
-        thread::spawn(move || {
-            loop {
-                thread::sleep(Duration::from_millis(rand::thread_rng().gen_range(0, 10_000) + 3000));
-                if thread_client.monkey.load(Ordering::Relaxed) {
-                    native_command(&*thread_client, NativeCommand::Keypress(13, false, false));
-                }
+        thread::spawn(move || loop {
+            thread::sleep(Duration::from_millis(
+                rand::thread_rng().gen_range(0, 10_000) + 3000,
+            ));
+            if thread_client.monkey.load(Ordering::Relaxed) {
+                native_command(&*thread_client, NativeCommand::Keypress(13, false, false));
             }
         });
-        
+
         // Arrow monkey
         // native_command(&*thread_client, NativeCommand::Keypress(39, false, false));
 

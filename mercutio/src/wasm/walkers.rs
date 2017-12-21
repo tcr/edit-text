@@ -27,9 +27,11 @@ impl Walker {
                 Some(DocChars(..)) => {
                     walker.caret_pos += 1;
                     walker.doc.skip(1);
-                },
+                }
                 Some(DocGroup(attrs, _)) => {
-                    if attrs["tag"] == "caret" && attrs.get("client") == Some(&client_id.to_string()) {
+                    if attrs["tag"] == "caret"
+                        && attrs.get("client") == Some(&client_id.to_string())
+                    {
                         matched = true;
                         break;
                     }
@@ -83,7 +85,7 @@ impl Walker {
 
                     walker.doc.skip(1);
                     match_cur.skip();
-                },
+                }
                 Some(DocGroup(attrs, _)) => {
                     if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
                         walker.caret_pos += 1;
@@ -115,7 +117,7 @@ impl Walker {
 
         loop {
             // Find starting line of cursors
-            // TODO this whole logic is bad for back_block, which should 
+            // TODO this whole logic is bad for back_block, which should
             // just actually update the caret_pos as a result
             while self.doc.head_pos() > 0 {
                 self.back_char();
@@ -144,7 +146,7 @@ impl Walker {
                     self.caret_pos += 1;
                     self.doc.skip(1);
                     break;
-                },
+                }
                 Some(DocGroup(attrs, _)) => {
                     if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
                         self.caret_pos += 1;
@@ -182,7 +184,7 @@ impl Walker {
                     matched = true;
                     println!("ooh");
                     break;
-                },
+                }
                 Some(DocGroup(..)) => {
                     self.doc.unenter();
                 }
@@ -225,7 +227,7 @@ impl Walker {
                     del.skip(1);
                     add.skip(1);
                     doc_stepper.skip(1);
-                },
+                }
                 Some(DocGroup(..)) => {
                     del.begin();
                     add.begin();
@@ -243,10 +245,7 @@ impl Walker {
             }
         }
 
-        OpWriter {
-            del,
-            add
-        }
+        OpWriter { del, add }
     }
 }
 
