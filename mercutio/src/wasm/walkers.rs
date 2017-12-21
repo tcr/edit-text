@@ -3,6 +3,50 @@ use oatie::stepper::*;
 use oatie::writer::*;
 use oatie::OT;
 
+// tODO add a fast-forward option to skip to next caret??
+pub struct CaretStepper {
+    doc: DocStepper,
+    caret_pos: isize,
+}
+
+impl CaretStepper {
+    pub fn new(doc: DocStepper) -> CaretStepper {
+        CaretStepper {
+            doc,
+            caret_pos: -1,
+        }
+    }
+}
+
+impl Iterator for CaretStepper {
+    type Item = ();
+
+    fn next(&mut self) -> Option<()> {
+        use oatie::schema::*;
+
+        match self.doc.head() {
+            Some(DocChars(..)) => {
+                self.doc.skip(1);
+                self.caret_pos += 1;
+            }
+            Some(DocGroup(attrs, _)) => {
+                if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
+                    self.caret_pos += 1;
+                }
+
+                self.doc.enter();
+            }
+            None => if self.doc.is_done() {
+                return None;
+            } else {
+                self.doc.exit();
+            }
+        }
+        Some(())
+    }
+}
+
+
 #[derive(Debug, Clone)]
 pub struct Walker {
     original_doc: Doc,
@@ -42,13 +86,11 @@ impl Walker {
 
                     walker.doc.enter();
                 }
-                None => {
-                    if walker.doc.is_done() {
-                        break;
-                    } else {
-                        walker.doc.exit();
-                    }
-                }
+                None => if walker.doc.is_done() {
+                    break;
+                } else {
+                    walker.doc.exit();
+                },
             }
         }
         if !matched {
@@ -94,14 +136,12 @@ impl Walker {
                     walker.doc.enter();
                     match_cur.enter();
                 }
-                None => {
-                    if walker.doc.is_done() {
-                        break;
-                    } else {
-                        walker.doc.exit();
-                        match_cur.exit();
-                    }
-                }
+                None => if walker.doc.is_done() {
+                    break;
+                } else {
+                    walker.doc.exit();
+                    match_cur.exit();
+                },
             }
         }
         if !matched {
@@ -155,13 +195,11 @@ impl Walker {
 
                     self.doc.enter();
                 }
-                None => {
-                    if self.doc.is_done() {
-                        break;
-                    } else {
-                        self.doc.exit();
-                    }
-                }
+                None => if self.doc.is_done() {
+                    break;
+                } else {
+                    self.doc.exit();
+                },
             }
         }
 

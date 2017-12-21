@@ -29,7 +29,6 @@ use std::path::{Path, PathBuf};
 use std::thread;
 use oatie::transform::transform;
 use wasm::start_websocket_server;
-use std::{panic, process};
 
 fn default_doc() -> Doc {
     Doc(doc_span![
