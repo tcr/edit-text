@@ -38,10 +38,10 @@ pub enum ClientCommand {
     Error(String),
 }
 
-fn client_op<C: Fn(ActionContext) -> Result<Op, Error>>(
-    client: &Client,
-    callback: C,
-) -> Result<(), Error> {
+fn client_op<C>(client: &Client, callback: C) -> Result<(), Error>
+where
+    C: Fn(ActionContext) -> Result<Op, Error>,
+{
     let mut doc = client.doc.lock().unwrap();
 
     let op = callback(ActionContext {
@@ -63,22 +63,22 @@ fn client_op<C: Fn(ActionContext) -> Result<Op, Error>>(
 fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&Client) -> Result<(), Error>>)> {
     vec![
         // command + .
-        (
-            190,
-            true,
-            false,
-            Box::new(|client: &Client| {
-                println!("renaming a group.");
-                let cur = client.target.lock().unwrap();
+        // (
+        //     190,
+        //     true,
+        //     false,
+        //     Box::new(|client: &Client| {
+        //         println!("renaming a group.");
+        //         let cur = client.target.lock().unwrap();
 
-                // Unwrap into real error
-                let future = NativeCommand::RenameGroup("null".into(), cur.clone().unwrap());
-                let prompt =
-                    ClientCommand::PromptString("Rename tag group:".into(), "p".into(), future);
-                client.send(&prompt)?;
-                Ok(())
-            }),
-        ),
+        //         // Unwrap into real error
+        //         let future = NativeCommand::RenameGroup("null".into(), cur.clone().unwrap());
+        //         let prompt =
+        //             ClientCommand::PromptString("Rename tag group:".into(), "p".into(), future);
+        //         client.send(&prompt)?;
+        //         Ok(())
+        //     }),
+        // ),
         // // command + ,
         // (188, true, false, Box::new(|client: &Client| {
         //     println!("renaming a group.");
@@ -241,33 +241,37 @@ pub fn server(url: &str, name: &str) {
 
         // Letter monkey.
         let thread_client: Arc<_> = client.clone();
-        thread::spawn(move || loop {
-            thread::sleep(Duration::from_millis(
-                rand::thread_rng().gen_range(0, 200) + 100,
-            ));
-            if thread_client.monkey.load(Ordering::Relaxed) {
-                native_command(
-                    &*thread_client,
-                    NativeCommand::Character(*rand::thread_rng()
-                        .choose(&vec![
-                            rand::thread_rng().gen_range(b'A', b'Z'),
-                            rand::thread_rng().gen_range(b'a', b'z'),
-                            rand::thread_rng().gen_range(b'0', b'9'),
-                            b' ',
-                        ])
-                        .unwrap() as _),
-                );
+        thread::spawn(move || {
+            loop {
+                thread::sleep(Duration::from_millis(
+                    rand::thread_rng().gen_range(0, 200) + 100,
+                ));
+                if thread_client.monkey.load(Ordering::Relaxed) {
+                    native_command(
+                        &*thread_client,
+                        NativeCommand::Character(*rand::thread_rng()
+                            .choose(&vec![
+                                rand::thread_rng().gen_range(b'A', b'Z'),
+                                rand::thread_rng().gen_range(b'a', b'z'),
+                                rand::thread_rng().gen_range(b'0', b'9'),
+                                b' ',
+                            ])
+                            .unwrap() as _),
+                    );
+                }
             }
         });
 
         // Enter monkey.
         let thread_client: Arc<_> = client.clone();
-        thread::spawn(move || loop {
-            thread::sleep(Duration::from_millis(
-                rand::thread_rng().gen_range(0, 10_000) + 3000,
-            ));
-            if thread_client.monkey.load(Ordering::Relaxed) {
-                native_command(&*thread_client, NativeCommand::Keypress(13, false, false));
+        thread::spawn(move || {
+            loop {
+                thread::sleep(Duration::from_millis(
+                    rand::thread_rng().gen_range(0, 10_000) + 3000,
+                ));
+                if thread_client.monkey.load(Ordering::Relaxed) {
+                    native_command(&*thread_client, NativeCommand::Keypress(13, false, false));
+                }
             }
         });
 
