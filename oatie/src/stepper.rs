@@ -226,9 +226,9 @@ impl CurStepper {
 #[derive(Clone, Debug, PartialEq)]
 pub struct DocStepper {
     head: isize,
-    char_debt: usize,
+    pub char_debt: usize,
     rest: Vec<DocElement>,
-    stack: Vec<(isize, Vec<DocElement>)>,
+    pub stack: Vec<(isize, Vec<DocElement>)>,
 }
 
 impl DocStepper {
@@ -265,6 +265,18 @@ impl DocStepper {
 
     pub fn head(&self) -> Option<DocElement> {
         match self.rest.get(self.head as usize) {
+            Some(&DocChars(ref text)) => {
+                Some(DocChars(text.chars().skip(self.char_debt).collect()))
+            }
+            Some(value) => {
+                Some(value.clone())
+            }
+            None => None,
+        }
+    }
+
+    pub fn peek(&self) -> Option<DocElement> {
+        match self.rest.get((self.head + 1) as usize) {
             Some(&DocChars(ref text)) => {
                 Some(DocChars(text.chars().skip(self.char_debt).collect()))
             }
