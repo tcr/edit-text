@@ -5,15 +5,22 @@ use oatie::OT;
 
 // tODO add a fast-forward option to skip to next caret??
 pub struct CaretStepper {
-    doc: &mut DocStepper,
+    doc: DocStepper,
     caret_pos: isize,
 }
 
 impl CaretStepper {
-    pub fn new(doc: &mut DocStepper) -> CaretStepper {
+    pub fn new(doc: DocStepper) -> CaretStepper {
         CaretStepper {
             doc,
             caret_pos: -1,
+        }
+    }
+
+    pub fn rev(self) -> ReverseCaretStepper {
+        ReverseCaretStepper {
+            doc: self.doc,
+            caret_pos: self.caret_pos,
         }
     }
 }
@@ -47,6 +54,62 @@ impl Iterator for CaretStepper {
 }
 
 
+pub struct ReverseCaretStepper {
+    doc: DocStepper,
+    caret_pos: isize,
+}
+
+impl ReverseCaretStepper {
+    pub fn rev(self) -> CaretStepper {
+        CaretStepper {
+            doc: self.doc,
+            caret_pos: self.caret_pos,
+        }
+    }
+}
+
+impl Iterator for ReverseCaretStepper {
+    type Item = ();
+
+    fn next(&mut self) -> Option<()> {
+        use oatie::schema::*;
+
+        match self.doc.head() {
+            Some(DocChars(..)) => {
+                self.caret_pos -= 1;
+                self.doc.unskip(1);
+            }
+            Some(..) => {
+                self.doc.unskip(1);
+            }
+            _ => {}
+        }
+
+        // TODO reverse is_done()
+
+        match self.doc.head() {
+            Some(DocChars(..)) => {
+                // self.caret_pos -= 1;
+            }
+            Some(DocGroup(attrs, ..)) => {
+                if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
+                    self.caret_pos -= 1;
+                }
+                self.doc.unexit();
+            }
+            None => {
+                if self.doc.stack.is_empty() {
+                    return None;
+                } else {
+                    self.doc.unenter();
+                }
+            }
+        }
+        Some(())
+    }
+}
+
+
 #[derive(Debug, Clone)]
 pub struct Walker {
     original_doc: Doc,
@@ -60,6 +123,7 @@ impl Walker {
 
         let original_doc = doc.clone();
         let mut doc = DocStepper::new(&doc.0);
+        // TODO move cstep into Walker in place of doc / caret_pos
         let mut cstep = CaretStepper::new(doc);
 
         // Iterate until we match the cursor.
@@ -141,26 +205,52 @@ impl Walker {
     pub fn back_block(&mut self) -> &mut Walker {
         use oatie::schema::*;
 
-        loop {
-            // Find starting line of cursors
-            // TODO this whole logic is bad for back_block, which should
-            // just actually update the caret_pos as a result
-            while self.doc.head_pos() > 0 {
-                self.back_char();
-            }
-            self.doc.unenter();
-            self.doc.next();
+        let mut cstep = ReverseCaretStepper {
+            doc: self.doc.clone(),
+            caret_pos: self.caret_pos,
+        };
 
-            match self.doc.head() {
-                Some(DocGroup(attrs, ..)) => {
-                    if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
-                        break;
-                    }
+        // Iterate until we match the cursor.
+        let matched = loop {
+            if let Some(DocGroup(attrs, _)) = cstep.doc.peek() {
+                if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
+                    cstep.doc.next();
+                    break true;
                 }
-                _ => {}
             }
+            if cstep.next().is_none() {
+                break false;
+            }
+        };
+        if !matched {
+            panic!("Didn't find a block.");
         }
+
+        self.doc = cstep.doc;
+        self.caret_pos = cstep.caret_pos;
+
         self
+
+        // loop {
+        //     // Find starting line of cursors
+        //     // TODO this whole logic is bad for back_block, which should
+        //     // just actually update the caret_pos as a result
+        //     while self.doc.head_pos() > 0 {
+        //         self.back_char();
+        //     }
+        //     self.doc.unenter();
+        //     self.doc.next();
+
+        //     match self.doc.head() {
+        //         Some(DocGroup(attrs, ..)) => {
+        //             if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
+        //                 break;
+        //             }
+        //         }
+        //         _ => {}
+        //     }
+        // }
+        // self
     }
 
     pub fn next_char(&mut self) -> &mut Walker {
