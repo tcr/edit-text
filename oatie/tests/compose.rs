@@ -192,4 +192,22 @@ fn test_compose() {
         AddGroup({"tag": "p"}, [AddSkip(2)])
     ])
     );
+
+
+    assert_eq!(
+        compose(
+            &op_span!(
+                [DelWithGroup([DelSkip(5), DelWithGroup([]), DelSkip(1)])],
+                [AddWithGroup([AddSkip(5), AddWithGroup([]), AddSkip(1), AddGroup({"client": "left", "tag": "caret"}, [])])],
+            ),
+            &op_span!(
+                [DelWithGroup([DelSkip(5), DelGroup([])])],
+                []
+            ),
+        ),
+        op_span!(
+            [DelWithGroup([DelSkip(5), DelGroup([]), DelSkip(1)])], 
+            [AddWithGroup([AddSkip(6), AddGroup({"tag": "caret", "client": "left"}, [])])],
+        ),
+    );
 }

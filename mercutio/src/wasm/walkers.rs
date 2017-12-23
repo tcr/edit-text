@@ -4,6 +4,7 @@ use oatie::writer::*;
 use oatie::OT;
 
 // tODO add a fast-forward option to skip to next caret??
+#[derive(Clone, Debug)]
 pub struct CaretStepper {
     doc: DocStepper,
     caret_pos: isize,
@@ -53,7 +54,7 @@ impl Iterator for CaretStepper {
     }
 }
 
-
+#[derive(Clone, Debug)]
 pub struct ReverseCaretStepper {
     doc: DocStepper,
     caret_pos: isize,
@@ -141,6 +142,15 @@ impl Walker {
             panic!("Didn't find a caret.");
         }
 
+        // // Debug
+        // {
+        //     let mut rstep = cstep.clone().rev();
+        //     while let Some(..) = rstep.next() {
+        //         continue;
+        //     }
+        //     println!("verified: {:?}", rstep.head);
+        // }
+
         // Build return walker.
         let CaretStepper { doc, caret_pos } = cstep;
         Walker {
@@ -212,6 +222,9 @@ impl Walker {
 
         // Iterate until we match the cursor.
         let matched = loop {
+            // TODO unsure if this peek logic holds up in all circumstances??
+            // What if cursor is just happening to be before a block..
+            // or is that good
             if let Some(DocGroup(attrs, _)) = cstep.doc.peek() {
                 if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
                     cstep.doc.next();
@@ -230,54 +243,28 @@ impl Walker {
         self.caret_pos = cstep.caret_pos;
 
         self
-
-        // loop {
-        //     // Find starting line of cursors
-        //     // TODO this whole logic is bad for back_block, which should
-        //     // just actually update the caret_pos as a result
-        //     while self.doc.head_pos() > 0 {
-        //         self.back_char();
-        //     }
-        //     self.doc.unenter();
-        //     self.doc.next();
-
-        //     match self.doc.head() {
-        //         Some(DocGroup(attrs, ..)) => {
-        //             if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
-        //                 break;
-        //             }
-        //         }
-        //         _ => {}
-        //     }
-        // }
-        // self
     }
 
     pub fn next_char(&mut self) -> &mut Walker {
         use oatie::schema::*;
 
-        loop {
-            match self.doc.head() {
-                Some(DocChars(..)) => {
-                    self.caret_pos += 1;
-                    self.doc.skip(1);
-                    break;
-                }
-                Some(DocGroup(attrs, _)) => {
-                    if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
-                        self.caret_pos += 1;
-                        break;
-                    }
+        let mut cstep = CaretStepper {
+            doc: self.doc.clone(),
+            caret_pos: self.caret_pos,
+        };
 
-                    self.doc.enter();
-                }
-                None => if self.doc.is_done() {
-                    break;
-                } else {
-                    self.doc.exit();
-                },
+        // Iterate until we match the cursor.
+        let matched = loop {
+            if cstep.caret_pos == self.caret_pos + 1 {
+                break true;
             }
-        }
+            if cstep.next().is_none() {
+                break false;
+            }
+        };
+
+        self.doc = cstep.doc;
+        self.caret_pos = cstep.caret_pos;
 
         self
     }

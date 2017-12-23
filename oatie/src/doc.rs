@@ -186,6 +186,7 @@ impl DelPlaceable for DelSpan {
 pub trait AddPlaceable {
     fn place_all(&mut self, all: &[AddElement]);
     fn place(&mut self, value: &AddElement);
+    fn skip_pre_len(&self) -> usize;
     fn skip_len(&self) -> usize;
 }
 
@@ -198,6 +199,19 @@ impl AddPlaceable for AddSpan {
 
     fn place(&mut self, value: &AddElement) {
         add_place_any(self, value);
+    }
+
+    fn skip_pre_len(&self) -> usize {
+        let mut ret = 0;
+        for item in self {
+            ret += match *item {
+                AddSkip(len) => len,
+                AddChars(ref chars) => 0,
+                AddGroup(..) => 0,
+                AddWithGroup(..) => 1,
+            };
+        }
+        ret
     }
 
     fn skip_len(&self) -> usize {
