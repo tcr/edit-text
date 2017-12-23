@@ -492,7 +492,7 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
 
     if !a.is_done() {
         let rest = a.into_span();
-        delres.place(&DelSkip(rest.skip_len()));
+        delres.place(&DelSkip(rest.skip_pre_len()));
         addres.place_all(&rest);
     }
 

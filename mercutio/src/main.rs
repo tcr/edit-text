@@ -315,7 +315,6 @@ fn files(file: PathBuf) -> Option<NamedFile> {
 struct MoteState {
     body: Arc<Mutex<Doc>>,
 }
-
 fn main() {
     start_websocket_server();
 
