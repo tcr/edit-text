@@ -26,7 +26,6 @@ use rocket::State;
 use rocket::response::NamedFile;
 use serde_json::Value;
 use std::path::{Path, PathBuf};
-use std::thread;
 use oatie::transform::transform;
 use wasm::start_websocket_server;
 

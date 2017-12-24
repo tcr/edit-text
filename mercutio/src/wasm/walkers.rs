@@ -3,7 +3,15 @@ use oatie::stepper::*;
 use oatie::writer::*;
 use oatie::OT;
 
-// tODO add a fast-forward option to skip to next caret??
+fn is_block(attrs: &Attrs) -> bool {
+    use oatie::schema::*;
+    Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks)
+}
+
+fn is_caret(attrs: &Attrs, client_id: Option<&str>) -> bool {
+    attrs["tag"] == "caret" && client_id.map(|id| attrs["client"] == id).unwrap_or(false)
+}
+
 #[derive(Clone, Debug)]
 pub struct CaretStepper {
     doc: DocStepper,
@@ -24,24 +32,31 @@ impl CaretStepper {
             caret_pos: self.caret_pos,
         }
     }
+
+    pub fn is_valid_caret_pos(&self) -> bool {
+        if let Some(DocChars(..)) = self.doc.unhead() {
+            return true;
+        } else if self.doc.unhead().is_none() {
+            if let Some(DocGroup(ref attrs, _)) = self.doc.clone().unenter().head() {
+                if is_block(attrs) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }
 
 impl Iterator for CaretStepper {
     type Item = ();
 
     fn next(&mut self) -> Option<()> {
-        use oatie::schema::*;
-
+        println!("next {:?}", self.doc.head());
         match self.doc.head() {
             Some(DocChars(..)) => {
                 self.doc.skip(1);
-                self.caret_pos += 1;
             }
             Some(DocGroup(attrs, _)) => {
-                if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
-                    self.caret_pos += 1;
-                }
-
                 self.doc.enter();
             }
             None => if self.doc.is_done() {
@@ -50,6 +65,11 @@ impl Iterator for CaretStepper {
                 self.doc.exit();
             }
         }
+
+        if self.is_valid_caret_pos() {
+            self.caret_pos += 1;
+        }
+
         Some(())
     }
 }
@@ -67,35 +87,34 @@ impl ReverseCaretStepper {
             caret_pos: self.caret_pos,
         }
     }
+
+    pub fn is_valid_caret_pos(&self) -> bool {
+        if let Some(DocChars(..)) = self.doc.unhead() {
+            return true;
+        } else if self.doc.unhead().is_none() {
+            if let Some(DocGroup(ref attrs, _)) = self.doc.clone().unenter().head() {
+                if is_block(attrs) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }
 
 impl Iterator for ReverseCaretStepper {
     type Item = ();
 
     fn next(&mut self) -> Option<()> {
-        use oatie::schema::*;
-
-        match self.doc.head() {
-            Some(DocChars(..)) => {
-                self.caret_pos -= 1;
-                self.doc.unskip(1);
-            }
-            Some(..) => {
-                self.doc.unskip(1);
-            }
-            _ => {}
+        if self.is_valid_caret_pos() {
+            self.caret_pos -= 1;
         }
 
-        // TODO reverse is_done()
-
-        match self.doc.head() {
+        match self.doc.unhead() {
             Some(DocChars(..)) => {
-                // self.caret_pos -= 1;
+                self.doc.unskip(1);
             }
-            Some(DocGroup(attrs, ..)) => {
-                if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
-                    self.caret_pos -= 1;
-                }
+            Some(DocGroup(..)) => {
                 self.doc.unexit();
             }
             None => {
@@ -106,6 +125,7 @@ impl Iterator for ReverseCaretStepper {
                 }
             }
         }
+
         Some(())
     }
 }
@@ -130,7 +150,7 @@ impl Walker {
         // Iterate until we match the cursor.
         let matched = loop {
             if let Some(DocGroup(attrs, _)) = cstep.doc.head() {
-                if attrs["tag"] == "caret" && attrs["client"] == client_id {
+                if is_caret(&attrs, Some(client_id)) {
                     break true;
                 }
             }
@@ -161,16 +181,15 @@ impl Walker {
     }
 
     pub fn to_cursor(doc: &Doc, cur: &CurSpan) -> Walker {
-        use oatie::schema::*;
-
-        // Walk the doc until the thing
-        let mut walker = Walker {
-            original_doc: doc.clone(),
+        let mut cstep = CaretStepper {
             doc: DocStepper::new(&doc.0),
             caret_pos: -1,
         };
 
         let mut match_cur = CurStepper::new(cur);
+        let mut match_doc = DocStepper::new(&doc.0);
+
+        println!("\n\nHI THERE: to_cursor");
         let mut matched = false;
         loop {
             match match_cur.head {
@@ -181,34 +200,60 @@ impl Walker {
                 _ => {}
             }
 
-            match walker.doc.head() {
-                Some(DocChars(..)) => {
-                    walker.caret_pos += 1;
-
-                    walker.doc.skip(1);
-                    match_cur.skip();
+            // TODO make this an iterator also
+            println!("-----> {:?}", cstep.doc.head());
+            println!("-----  @> {:?}", match_cur.get_head());
+            match match_cur.get_head() {
+                Some(CurSkip(n)) => {
+                    match_cur.next();
+                    match_doc.skip(n);
                 }
-                Some(DocGroup(attrs, _)) => {
-                    if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
-                        walker.caret_pos += 1;
-                    }
-
-                    walker.doc.enter();
+                Some(CurWithGroup(..)) => {
                     match_cur.enter();
+                    match_doc.enter();
                 }
-                None => if walker.doc.is_done() {
+                None => if match_cur.is_done() {
                     break;
                 } else {
-                    walker.doc.exit();
                     match_cur.exit();
+                    match_doc.exit();
+
+                    println!();
+                    println!("yeah but {:?}", match_cur.head);
+                    println!("yeah AND {:?}", match_doc.head());
+                    println!();
                 },
+                // TODO merge this match with above
+                Some(_) => unreachable!(),
+            }
+
+            // println!("going forever");
+            while match_doc != cstep.doc {
+                cstep.next();
+                // println!("!!");
+                // println!("!! _ {:?}", match_doc);
+                // println!("!! V {:?}", cstep.doc);
+                // println!("!!");
             }
         }
         if !matched {
             panic!("Didn't find the cursor.");
         }
+        println!("\ndoing cstep\n");
 
-        walker
+        // let mut cstep = cstep.rev();
+
+        while !cstep.is_valid_caret_pos() {
+            cstep.next();
+        }
+
+        println!("\ndone\n");
+
+        Walker {
+            original_doc: doc.clone(),
+            doc: cstep.doc,
+            caret_pos: cstep.caret_pos,
+        }
     }
 
     // TODO update the caret_pos as a result
@@ -222,12 +267,8 @@ impl Walker {
 
         // Iterate until we match the cursor.
         let matched = loop {
-            // TODO unsure if this peek logic holds up in all circumstances??
-            // What if cursor is just happening to be before a block..
-            // or is that good
-            if let Some(DocGroup(attrs, _)) = cstep.doc.peek() {
-                if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
-                    cstep.doc.next();
+            if let Some(DocGroup(attrs, _)) = cstep.doc.head() {
+                if is_block(&attrs) {
                     break true;
                 }
             }
@@ -246,16 +287,15 @@ impl Walker {
     }
 
     pub fn next_char(&mut self) -> &mut Walker {
-        use oatie::schema::*;
-
         let mut cstep = CaretStepper {
             doc: self.doc.clone(),
             caret_pos: self.caret_pos,
         };
 
         // Iterate until we match the cursor.
+        println!();
         let matched = loop {
-            if cstep.caret_pos == self.caret_pos + 1 {
+            if cstep.caret_pos == self.caret_pos + 1 && cstep.is_valid_caret_pos() {
                 break true;
             }
             if cstep.next().is_none() {
@@ -270,8 +310,29 @@ impl Walker {
     }
 
     pub fn back_char(&mut self) -> &mut Walker {
-        self.doc.unskip(1);
-        self.snap_char()
+        let mut cstep = ReverseCaretStepper {
+            doc: self.doc.clone(),
+            caret_pos: self.caret_pos,
+        };
+
+        println!("\n\nBACK\n\n");
+
+        // Iterate until we match the cursor.
+        let matched = loop {
+            println!("wait {:?} --- {:?}", cstep.caret_pos, self.caret_pos);
+            if cstep.caret_pos == self.caret_pos - 1 && cstep.is_valid_caret_pos() {
+                break true;
+            }
+            // TODO need to set cstep.valid_char or nah
+            if cstep.next().is_none() {
+                break false;
+            }
+        };
+
+        self.doc = cstep.doc;
+        self.caret_pos = cstep.caret_pos;
+
+        self
     }
 
     pub fn snap_char(&mut self) -> &mut Walker {

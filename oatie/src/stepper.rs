@@ -173,8 +173,8 @@ impl CurStepper {
         res
     }
 
-    pub fn get_head(&self) -> CurElement {
-        self.head.clone().unwrap()
+    pub fn get_head(&self) -> Option<CurElement> {
+        self.head.clone()
     }
 
     pub fn is_done(&self) -> bool {
@@ -275,6 +275,18 @@ impl DocStepper {
         }
     }
 
+    pub fn unhead(&self) -> Option<DocElement> {
+        if self.char_debt > 0 {
+            if let Some(&DocChars(ref text)) = self.rest.get(self.head as usize) {
+                return Some(DocChars(text.chars().take(self.char_debt).collect()));
+            } else {
+                unreachable!();
+            }
+        }
+
+        self.rest.get((self.head - 1) as usize).map(|value| value.clone())
+    }
+
     pub fn peek(&self) -> Option<DocElement> {
         match self.rest.get((self.head + 1) as usize) {
             Some(&DocChars(ref text)) => {
@@ -291,14 +303,13 @@ impl DocStepper {
         self.head().is_none() && self.stack.is_empty()
     }
 
-    pub fn unenter(&mut self) {
+    pub fn unenter(&mut self) -> &mut Self {
         let (head, rest) = self.stack.pop().unwrap();
         self.head = head;
         self.char_debt = 0;
         self.rest = rest;
 
-        // Decrement pointer
-        self.prev();
+        self
     }
 
     pub fn enter(&mut self) {
@@ -315,6 +326,8 @@ impl DocStepper {
     }
 
     pub fn unexit(&mut self) {
+        self.prev();
+
         let head = self.head();
         self.stack.push((self.head, self.rest.clone()));
         match head {
