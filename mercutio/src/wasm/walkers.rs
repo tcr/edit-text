@@ -1,7 +1,7 @@
 use oatie::doc::*;
 use oatie::stepper::*;
 use oatie::writer::*;
-use oatie::OT;
+use take_mut;
 
 fn is_block(attrs: &Attrs) -> bool {
     use oatie::schema::*;
@@ -51,7 +51,6 @@ impl Iterator for CaretStepper {
     type Item = ();
 
     fn next(&mut self) -> Option<()> {
-        println!("next {:?}", self.doc.head());
         match self.doc.head() {
             Some(DocChars(..)) => {
                 self.doc.skip(1);
@@ -134,17 +133,21 @@ impl Iterator for ReverseCaretStepper {
 #[derive(Debug, Clone)]
 pub struct Walker {
     original_doc: Doc,
-    pub doc: DocStepper,
-    pub caret_pos: isize,
+    stepper: CaretStepper,
 }
 
 impl Walker {
-    pub fn to_caret(doc: &Doc, client_id: &str) -> Walker {
-        use oatie::schema::*;
+    pub fn doc(&self) -> &DocStepper {
+        &self.stepper.doc
+    }
 
+    pub fn caret_pos(&self) -> isize {
+        self.stepper.caret_pos
+    }
+
+    pub fn to_caret(doc: &Doc, client_id: &str) -> Walker {
         let original_doc = doc.clone();
         let mut doc = DocStepper::new(&doc.0);
-        // TODO move cstep into Walker in place of doc / caret_pos
         let mut cstep = CaretStepper::new(doc);
 
         // Iterate until we match the cursor.
@@ -162,26 +165,17 @@ impl Walker {
             panic!("Didn't find a caret.");
         }
 
-        // // Debug
-        // {
-        //     let mut rstep = cstep.clone().rev();
-        //     while let Some(..) = rstep.next() {
-        //         continue;
-        //     }
-        //     println!("verified: {:?}", rstep.head);
-        // }
-
-        // Build return walker.
-        let CaretStepper { doc, caret_pos } = cstep;
         Walker {
             original_doc,
-            doc,
-            caret_pos,
+            stepper: CaretStepper {
+                doc: cstep.doc,
+                caret_pos: cstep.caret_pos,
+            }
         }
     }
 
     pub fn to_cursor(doc: &Doc, cur: &CurSpan) -> Walker {
-        let mut cstep = CaretStepper {
+        let mut stepper = CaretStepper {
             doc: DocStepper::new(&doc.0),
             caret_pos: -1,
         };
@@ -189,21 +183,14 @@ impl Walker {
         let mut match_cur = CurStepper::new(cur);
         let mut match_doc = DocStepper::new(&doc.0);
 
-        println!("\n\nHI THERE: to_cursor");
         let mut matched = false;
         loop {
-            match match_cur.head {
+            match match_cur.get_head() {
                 Some(CurGroup) | Some(CurChar) => {
                     matched = true;
                     break;
                 }
-                _ => {}
-            }
 
-            // TODO make this an iterator also
-            println!("-----> {:?}", cstep.doc.head());
-            println!("-----  @> {:?}", match_cur.get_head());
-            match match_cur.get_head() {
                 Some(CurSkip(n)) => {
                     match_cur.next();
                     match_doc.skip(n);
@@ -217,162 +204,105 @@ impl Walker {
                 } else {
                     match_cur.exit();
                     match_doc.exit();
-
-                    println!();
-                    println!("yeah but {:?}", match_cur.head);
-                    println!("yeah AND {:?}", match_doc.head());
-                    println!();
                 },
-                // TODO merge this match with above
-                Some(_) => unreachable!(),
             }
 
-            // println!("going forever");
-            while match_doc != cstep.doc {
-                cstep.next();
-                // println!("!!");
-                // println!("!! _ {:?}", match_doc);
-                // println!("!! V {:?}", cstep.doc);
-                // println!("!!");
+            while match_doc != stepper.doc {
+                stepper.next();
             }
         }
         if !matched {
             panic!("Didn't find the cursor.");
         }
-        println!("\ndoing cstep\n");
 
-        // let mut cstep = cstep.rev();
-
-        while !cstep.is_valid_caret_pos() {
-            cstep.next();
+        // Snap to leftmost character boundary. It's possible the
+        // cursor points to a character following a span or caret, but
+        // we want our stepper to be on the immediate right of its character.
+        let mut rstepper = stepper.rev();
+        while !rstepper.is_valid_caret_pos() {
+            rstepper.next();
         }
 
-        println!("\ndone\n");
+        // Next, increment by one full char (so cursor is always on right).
+        let mut stepper = rstepper.rev();
+        loop {
+            stepper.next();
+            if stepper.is_valid_caret_pos() {
+                break;
+            }
+        }
 
         Walker {
             original_doc: doc.clone(),
-            doc: cstep.doc,
-            caret_pos: cstep.caret_pos,
+            stepper,
         }
     }
 
     // TODO update the caret_pos as a result
     pub fn back_block(&mut self) -> &mut Walker {
-        use oatie::schema::*;
+        take_mut::take(&mut self.stepper, |mut stepper| {
+            let mut rstepper = stepper.rev();
 
-        let mut cstep = ReverseCaretStepper {
-            doc: self.doc.clone(),
-            caret_pos: self.caret_pos,
-        };
-
-        // Iterate until we match the cursor.
-        let matched = loop {
-            if let Some(DocGroup(attrs, _)) = cstep.doc.head() {
-                if is_block(&attrs) {
-                    break true;
+            // Iterate until we match the cursor.car
+            let matched = loop {
+                if let Some(DocGroup(attrs, _)) = rstepper.doc.head() {
+                    if is_block(&attrs) {
+                        break true;
+                    }
                 }
+                if rstepper.next().is_none() {
+                    break false;
+                }
+            };
+            if !matched {
+                panic!("Didn't find a block.");
             }
-            if cstep.next().is_none() {
-                break false;
-            }
-        };
-        if !matched {
-            panic!("Didn't find a block.");
-        }
 
-        self.doc = cstep.doc;
-        self.caret_pos = cstep.caret_pos;
+            rstepper.rev()
+        });
 
         self
     }
 
     pub fn next_char(&mut self) -> &mut Walker {
-        let mut cstep = CaretStepper {
-            doc: self.doc.clone(),
-            caret_pos: self.caret_pos,
-        };
+        take_mut::take(&mut self.stepper, |mut stepper| {
+            let target_pos = stepper.caret_pos + 1;
 
-        // Iterate until we match the cursor.
-        println!();
-        let matched = loop {
-            if cstep.caret_pos == self.caret_pos + 1 && cstep.is_valid_caret_pos() {
-                break true;
-            }
-            if cstep.next().is_none() {
-                break false;
-            }
-        };
+            // Iterate until we match the cursor.
+            let matched = loop {
+                if stepper.caret_pos == target_pos && stepper.is_valid_caret_pos() {
+                    break true;
+                }
+                if stepper.next().is_none() {
+                    break false;
+                }
+            };
 
-        self.doc = cstep.doc;
-        self.caret_pos = cstep.caret_pos;
+            stepper
+        });
 
         self
     }
 
     pub fn back_char(&mut self) -> &mut Walker {
-        let mut cstep = ReverseCaretStepper {
-            doc: self.doc.clone(),
-            caret_pos: self.caret_pos,
-        };
+        take_mut::take(&mut self.stepper, |mut stepper| {
+            let mut rstepper = stepper.rev();
 
-        println!("\n\nBACK\n\n");
+            let target_pos = rstepper.caret_pos - 1;
 
-        // Iterate until we match the cursor.
-        let matched = loop {
-            println!("wait {:?} --- {:?}", cstep.caret_pos, self.caret_pos);
-            if cstep.caret_pos == self.caret_pos - 1 && cstep.is_valid_caret_pos() {
-                break true;
-            }
-            // TODO need to set cstep.valid_char or nah
-            if cstep.next().is_none() {
-                break false;
-            }
-        };
-
-        self.doc = cstep.doc;
-        self.caret_pos = cstep.caret_pos;
-
-        self
-    }
-
-    pub fn snap_char(&mut self) -> &mut Walker {
-        use oatie::schema::*;
-
-        let mut matched = false;
-        loop {
-            match self.doc.head() {
-                Some(DocChars(..)) => {
-                    self.caret_pos -= 1;
-                    matched = true;
-                    println!("ooh");
-                    break;
+            // Iterate until we match the cursor.
+            let matched = loop {
+                if rstepper.caret_pos == target_pos && rstepper.is_valid_caret_pos() {
+                    break true;
                 }
-                Some(DocGroup(..)) => {
-                    self.doc.unenter();
+                if rstepper.next().is_none() {
+                    break false;
                 }
-                None => {
-                    // TODO there should be a backwards is_done()!!!
-                    if self.doc.is_done() {
-                        break;
-                    } else {
-                        self.doc.exit();
-                        match self.doc.head() {
-                            Some(DocGroup(attrs, _)) => {
-                                self.doc.prev();
-                                if Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) {
-                                    self.caret_pos -= 1;
-                                    break;
-                                }
-                            }
-                            _ => unreachable!(),
-                        }
-                    }
-                }
-            }
-        }
-        if !matched {
-            panic!("Couldn't snap to a character.");
-        }
+            };
+
+            rstepper.rev()
+        });
+
         self
     }
 
@@ -383,7 +313,7 @@ impl Walker {
         // Walk the doc until we reach our current doc position.
         let mut doc_stepper = DocStepper::new(&self.original_doc.0);
 
-        while self.doc != doc_stepper {
+        while self.stepper.doc != doc_stepper {
             match doc_stepper.head() {
                 Some(DocChars(..)) => {
                     del.skip(1);
@@ -419,11 +349,5 @@ pub struct OpWriter {
 impl OpWriter {
     pub fn result(self) -> Op {
         (self.del.result(), self.add.result())
-    }
-
-    pub fn apply_result(self, doc: &Doc) -> (Doc, Op) {
-        let op = self.result();
-        let new_doc = OT::apply(doc, &op);
-        (new_doc, op)
     }
 }

@@ -13,7 +13,7 @@ pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
     let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
     walker.back_block();
 
-    let len = if let Some(DocGroup(_, ref span)) = walker.doc.head() {
+    let len = if let Some(DocGroup(_, ref span)) = walker.doc().head() {
         span.skip_len()
     } else {
         println!("uhg {:?}", walker);
@@ -36,10 +36,10 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
     let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
 
     // Check if we lead the block.
-    let caret_pos = walker.caret_pos;
+    let caret_pos = walker.caret_pos();
     let mut block_walker = walker.clone();
     block_walker.back_block();
-    if caret_pos == block_walker.caret_pos {
+    if caret_pos == block_walker.caret_pos() {
         println!("TODO: merge blocks!");
         return Ok(op_span!([], []));
     }
@@ -47,7 +47,7 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
     walker.back_char();
 
     // check if we are in a character group.
-    if let Some(DocChars(..)) = walker.doc.head() {
+    if let Some(DocChars(..)) = walker.doc().head() {
         // fallthrough
     } else {
         return Ok(op_span!([], []));
@@ -78,9 +78,9 @@ pub fn add_char(ctx: ActionContext, key: u32) -> Result<Op, Error> {
 
 pub fn split_block(ctx: ActionContext) -> Result<Op, Error> {
     let walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
-    let skip = walker.doc.skip_len();
+    let skip = walker.doc().skip_len();
 
-    let previous_block = if let Some(DocGroup(attrs, _)) = walker.clone().back_block().doc.head() {
+    let previous_block = if let Some(DocGroup(attrs, _)) = walker.clone().back_block().doc().head() {
         attrs["tag"].to_string()
     } else {
         // Fill in default value.
@@ -149,8 +149,8 @@ pub fn caret_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
 
 pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan) -> Result<Op, Error> {
     // First operation removes the caret.
-    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
-    let pos_1 = walker.caret_pos;
+    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
+    let pos_1 = walker.caret_pos();
     let mut writer = walker.to_writer();
 
     writer.del.begin();
@@ -163,8 +163,8 @@ pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan) -> Result<Op, Error> {
 
     // Second operation inserts a new caret.
 
-    let mut walker = Walker::to_cursor(&ctx.doc, cur);
-    let pos_2 = walker.caret_pos;
+    let walker = Walker::to_cursor(&ctx.doc, cur);
+    let pos_2 = walker.caret_pos();
     if pos_1 == pos_2 {
         // Redundant
         return Ok(op_span!([], []));
