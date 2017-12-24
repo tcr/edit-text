@@ -241,37 +241,33 @@ pub fn server(url: &str, name: &str) {
 
         // Letter monkey.
         let thread_client: Arc<_> = client.clone();
-        thread::spawn(move || {
-            loop {
-                thread::sleep(Duration::from_millis(
-                    rand::thread_rng().gen_range(0, 200) + 100,
-                ));
-                if thread_client.monkey.load(Ordering::Relaxed) {
-                    native_command(
-                        &*thread_client,
-                        NativeCommand::Character(*rand::thread_rng()
-                            .choose(&vec![
-                                rand::thread_rng().gen_range(b'A', b'Z'),
-                                rand::thread_rng().gen_range(b'a', b'z'),
-                                rand::thread_rng().gen_range(b'0', b'9'),
-                                b' ',
-                            ])
-                            .unwrap() as _),
-                    );
-                }
+        thread::spawn(move || loop {
+            thread::sleep(Duration::from_millis(
+                rand::thread_rng().gen_range(0, 200) + 100,
+            ));
+            if thread_client.monkey.load(Ordering::Relaxed) {
+                native_command(
+                    &*thread_client,
+                    NativeCommand::Character(*rand::thread_rng()
+                        .choose(&vec![
+                            rand::thread_rng().gen_range(b'A', b'Z'),
+                            rand::thread_rng().gen_range(b'a', b'z'),
+                            rand::thread_rng().gen_range(b'0', b'9'),
+                            b' ',
+                        ])
+                        .unwrap() as _),
+                );
             }
         });
 
         // Enter monkey.
         let thread_client: Arc<_> = client.clone();
-        thread::spawn(move || {
-            loop {
-                thread::sleep(Duration::from_millis(
-                    rand::thread_rng().gen_range(0, 10_000) + 3000,
-                ));
-                if thread_client.monkey.load(Ordering::Relaxed) {
-                    native_command(&*thread_client, NativeCommand::Keypress(13, false, false));
-                }
+        thread::spawn(move || loop {
+            thread::sleep(Duration::from_millis(
+                rand::thread_rng().gen_range(0, 10_000) + 3000,
+            ));
+            if thread_client.monkey.load(Ordering::Relaxed) {
+                native_command(&*thread_client, NativeCommand::Keypress(13, false, false));
             }
         });
 

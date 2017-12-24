@@ -35,18 +35,53 @@ pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
 pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
     let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
 
-    // Check if we lead the block.
+    // Check if caret is at the start of a block.
     let caret_pos = walker.caret_pos();
     let mut block_walker = walker.clone();
     block_walker.back_block();
+    block_walker.stepper.next(); // re-enter the block to first caret position
     if caret_pos == block_walker.caret_pos() {
-        println!("TODO: merge blocks!");
-        return Ok(op_span!([], []));
+        println!("\n\ngoing in");
+
+        // Return to block parent.
+        block_walker.back_block();
+        let span_2 = match block_walker.stepper().head() {
+            Some(DocGroup(.., span)) => span.skip_len(),
+            _ => unreachable!()
+        };
+        println!("--> span_2 {:?}", span_2);
+
+        // Move to prior block to join it.
+        block_walker.back_block();
+        let span_1 = match block_walker.stepper().head() {
+            Some(DocGroup(.., span)) => span.skip_len(),
+            _ => unreachable!()
+        };
+        println!("--> span_1 {:?}", span_1);
+
+        let mut writer = block_walker.to_writer();
+
+        writer.del.begin();
+        writer.del.skip(span_1);
+        writer.del.close();
+        writer.del.begin();
+        writer.del.skip(span_2);
+        writer.del.close();
+        writer.del.exit_all();
+
+        writer.add.begin();
+        writer.add.skip(span_1 + span_2);
+        writer.add.close(hashmap! { "tag".into() => "pre".into() });
+        writer.add.exit_all();
+
+        let res = writer.result();
+
+        return Ok(res)
     }
 
     walker.back_char();
 
-    // check if we are in a character group.
+    // Check that we precede a character.
     if let Some(DocChars(..)) = walker.doc().head() {
         // fallthrough
     } else {
@@ -55,6 +90,7 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
 
     let mut writer = walker.to_writer();
 
+    // Delete the character.
     writer.del.chars(1);
     writer.del.exit_all();
 
@@ -80,7 +116,8 @@ pub fn split_block(ctx: ActionContext) -> Result<Op, Error> {
     let walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
     let skip = walker.doc().skip_len();
 
-    let previous_block = if let Some(DocGroup(attrs, _)) = walker.clone().back_block().doc().head() {
+    let previous_block = if let Some(DocGroup(attrs, _)) = walker.clone().back_block().doc().head()
+    {
         attrs["tag"].to_string()
     } else {
         // Fill in default value.
@@ -99,9 +136,7 @@ pub fn split_block(ctx: ActionContext) -> Result<Op, Error> {
         .close(hashmap! { "tag".into() => previous_block });
     writer.add.begin();
     writer.add.skip(skip);
-    writer
-        .add
-        .close(hashmap! { "tag".into() => "p".into() });
+    writer.add.close(hashmap! { "tag".into() => "p".into() });
     writer.add.exit_all();
 
     Ok(writer.result())
