@@ -96,12 +96,12 @@ pub fn split_block(ctx: ActionContext) -> Result<Op, Error> {
 
     writer
         .add
-        .close(hashmap! { "tag".to_string() => previous_block });
+        .close(hashmap! { "tag".into() => previous_block });
     writer.add.begin();
     writer.add.skip(skip);
     writer
         .add
-        .close(hashmap! { "tag".to_string() => "p".to_string() });
+        .close(hashmap! { "tag".into() => "p".into() });
     writer.add.exit_all();
 
     Ok(writer.result())
@@ -149,7 +149,9 @@ pub fn caret_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
 
 pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan) -> Result<Op, Error> {
     // First operation removes the caret.
-    let mut writer = Walker::to_caret(&ctx.doc, &ctx.client_id).to_writer();
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
+    let pos_1 = walker.caret_pos;
+    let mut writer = walker.to_writer();
 
     writer.del.begin();
     writer.del.close();
@@ -157,12 +159,16 @@ pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan) -> Result<Op, Error> {
 
     writer.add.exit_all();
 
-    let (doc, op_1) = writer.apply_result(&ctx.doc);
+    let op_1 = writer.result();
 
     // Second operation inserts a new caret.
 
-    let mut walker = Walker::to_cursor(&doc, cur);
-    walker.snap_char();
+    let mut walker = Walker::to_cursor(&ctx.doc, cur);
+    let pos_2 = walker.caret_pos;
+    if pos_1 == pos_2 {
+        // Redundant
+        return Ok(op_span!([], []));
+    }
 
     let mut writer = walker.to_writer();
 
@@ -174,6 +180,11 @@ pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan) -> Result<Op, Error> {
 
     let op_2 = writer.result();
 
-    // Return composed operations.
-    Ok(Operation::compose(&op_1, &op_2))
+    // Return composed operations. Select proper order or otherwise composition
+    // will be invalid.
+    if pos_1 < pos_2 {
+        Ok(Operation::compose(&op_2, &op_1))
+    } else {
+        Ok(Operation::compose(&op_1, &op_2))
+    }
 }
