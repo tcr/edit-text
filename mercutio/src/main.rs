@@ -15,6 +15,7 @@ extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
 extern crate ws;
+extern crate take_mut;
 
 pub mod wasm;
 
