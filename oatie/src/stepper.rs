@@ -145,7 +145,7 @@ impl AddStepper {
 
 #[derive(Clone, Debug)]
 pub struct CurStepper {
-    pub head: Option<CurElement>,
+    head: Option<CurElement>,
     pub rest: Vec<CurElement>,
     pub stack: Vec<Vec<CurElement>>,
 }
@@ -173,7 +173,7 @@ impl CurStepper {
         res
     }
 
-    pub fn get_head(&self) -> Option<CurElement> {
+    pub fn head(&self) -> Option<CurElement> {
         self.head.clone()
     }
 
@@ -299,6 +299,10 @@ impl DocStepper {
         }
     }
 
+    pub fn is_back_done(&self) -> bool {
+        self.unhead().is_none() && self.stack.is_empty()
+    }
+
     pub fn is_done(&self) -> bool {
         self.head().is_none() && self.stack.is_empty()
     }
@@ -312,7 +316,7 @@ impl DocStepper {
         self
     }
 
-    pub fn enter(&mut self) {
+    pub fn enter(&mut self) -> &mut Self {
         let head = self.head();
         self.stack.push((self.head, self.rest.clone()));
         match head {
@@ -323,6 +327,8 @@ impl DocStepper {
             }
             _ => panic!("Entered wrong thing"),
         }
+
+        self
     }
 
     pub fn unexit(&mut self) {

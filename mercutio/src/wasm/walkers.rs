@@ -20,10 +20,7 @@ pub struct CaretStepper {
 
 impl CaretStepper {
     pub fn new(doc: DocStepper) -> CaretStepper {
-        CaretStepper {
-            doc,
-            caret_pos: -1,
-        }
+        CaretStepper { doc, caret_pos: -1 }
     }
 
     pub fn rev(self) -> ReverseCaretStepper {
@@ -55,14 +52,14 @@ impl Iterator for CaretStepper {
             Some(DocChars(..)) => {
                 self.doc.skip(1);
             }
-            Some(DocGroup(attrs, _)) => {
+            Some(DocGroup(..)) => {
                 self.doc.enter();
             }
             None => if self.doc.is_done() {
                 return None;
             } else {
                 self.doc.exit();
-            }
+            },
         }
 
         if self.is_valid_caret_pos() {
@@ -129,11 +126,10 @@ impl Iterator for ReverseCaretStepper {
     }
 }
 
-
 #[derive(Debug, Clone)]
 pub struct Walker {
     original_doc: Doc,
-    stepper: CaretStepper,
+    pub stepper: CaretStepper,
 }
 
 impl Walker {
@@ -146,18 +142,16 @@ impl Walker {
     }
 
     pub fn to_caret(doc: &Doc, client_id: &str) -> Walker {
-        let original_doc = doc.clone();
-        let mut doc = DocStepper::new(&doc.0);
-        let mut cstep = CaretStepper::new(doc);
+        let mut stepper = CaretStepper::new(DocStepper::new(&doc.0));
 
         // Iterate until we match the cursor.
         let matched = loop {
-            if let Some(DocGroup(attrs, _)) = cstep.doc.head() {
+            if let Some(DocGroup(attrs, _)) = stepper.doc.head() {
                 if is_caret(&attrs, Some(client_id)) {
                     break true;
                 }
             }
-            if cstep.next().is_none() {
+            if stepper.next().is_none() {
                 break false;
             }
         };
@@ -166,26 +160,21 @@ impl Walker {
         }
 
         Walker {
-            original_doc,
-            stepper: CaretStepper {
-                doc: cstep.doc,
-                caret_pos: cstep.caret_pos,
-            }
+            original_doc: doc.clone(),
+            stepper,
         }
     }
 
     pub fn to_cursor(doc: &Doc, cur: &CurSpan) -> Walker {
-        let mut stepper = CaretStepper {
-            doc: DocStepper::new(&doc.0),
-            caret_pos: -1,
-        };
+        let mut stepper = CaretStepper::new(DocStepper::new(&doc.0));
 
         let mut match_cur = CurStepper::new(cur);
         let mut match_doc = DocStepper::new(&doc.0);
 
         let mut matched = false;
         loop {
-            match match_cur.get_head() {
+            match match_cur.head() {
+                // End of cursor iterator
                 Some(CurGroup) | Some(CurChar) => {
                     matched = true;
                     break;
@@ -238,20 +227,19 @@ impl Walker {
         }
     }
 
-    // TODO update the caret_pos as a result
     pub fn back_block(&mut self) -> &mut Walker {
-        take_mut::take(&mut self.stepper, |mut stepper| {
+        take_mut::take(&mut self.stepper, |stepper| {
             let mut rstepper = stepper.rev();
 
-            // Iterate until we match the cursor.car
+            // Iterate until we reach a block.
             let matched = loop {
+                if rstepper.next().is_none() {
+                    break false;
+                }
                 if let Some(DocGroup(attrs, _)) = rstepper.doc.head() {
                     if is_block(&attrs) {
                         break true;
                     }
-                }
-                if rstepper.next().is_none() {
-                    break false;
                 }
             };
             if !matched {
@@ -285,7 +273,7 @@ impl Walker {
     }
 
     pub fn back_char(&mut self) -> &mut Walker {
-        take_mut::take(&mut self.stepper, |mut stepper| {
+        take_mut::take(&mut self.stepper, |stepper| {
             let mut rstepper = stepper.rev();
 
             let target_pos = rstepper.caret_pos - 1;
@@ -338,6 +326,10 @@ impl Walker {
         }
 
         OpWriter { del, add }
+    }
+
+    pub fn stepper(&self) -> &DocStepper {
+        &self.stepper.doc
     }
 }
 
