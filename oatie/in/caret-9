@@ -1,0 +1,5 @@
+[DelGroup([DelSkip(14)])]
+[AddGroup({"tag": "h1"}, [AddChars(" i8 Cr")]), AddGroup({"tag": "p"}, [AddChars("64 R"), AddSkip(14)])]
+
+[DelGroup([DelWithGroup([]), DelSkip(13)])]
+[AddGroup({"tag": "h2"}, [AddWithGroup([]), AddChars("iX "), AddSkip(13)])]

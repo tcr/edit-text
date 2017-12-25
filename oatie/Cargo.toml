@@ -2,12 +2,11 @@
 authors = ["Tim Cameron Ryan <id@timryan.org>"]
 name = "oatie"
 version = "0.2.0"
-
 [dependencies]
+either = "1.4.0"
 failure = "0.1.1"
 log = "0.3.1"
 maplit = "1.0.0"
-#rand = { path = "vendor/rand" }
 rand = "*"
 serde = "1.0"
 serde_derive = "1.0"

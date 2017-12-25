@@ -18,6 +18,7 @@ extern crate serde_json;
 extern crate term_painter;
 #[macro_use]
 extern crate failure;
+extern crate either;
 
 pub mod compose;
 pub mod doc;

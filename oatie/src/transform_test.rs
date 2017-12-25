@@ -230,6 +230,13 @@ pub fn run_transform_test(input: &str) -> Result<(), Error> {
 fn op_transform_compare(a: &Op, b: &Op) -> Op {
     let (a_, b_) = transform(a, b);
 
+    println!();
+    println!(" --> a : {:?}", a);
+    println!(" --> a': {:?}", a_);
+    println!(" --> b : {:?}", b);
+    println!(" --> b': {:?}", b_);
+    println!();
+
     let a_res = normalize(compose::compose(a, &a_));
     let b_res = normalize(compose::compose(b, &b_));
 
