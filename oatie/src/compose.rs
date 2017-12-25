@@ -435,7 +435,7 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
                     }
                     AddSkip(acount) => {
                         delres.place(&b.next().unwrap());
-                        addres.place(&AddSkip(1));
+                        addres.place(&AddSkip(span.skip_post_len()));
                         if acount > 1 {
                             a.head = Some(AddSkip(acount - 1));
                         } else {

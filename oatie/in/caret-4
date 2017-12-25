@@ -1,0 +1,5 @@
+[]
+[AddGroup({"tag": "h1"}, [AddChars("qra "), AddSkip(13)])]
+
+[DelGroup([DelGroup([]), DelSkip(12)])]
+[]

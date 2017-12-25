@@ -784,12 +784,15 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     // TODO if they are different tags THEN WHAT
                 }
                 (Some(AddGroup(ref a_attrs, _)), _) => {
+                    t.regenerate();
                     a.enter();
                     let a_type = Tag::from_attrs(a_attrs).tag_type();
 
+                    println!("~~~~ :) :) :)");
+                    println!("~~~~ -> {:?} {:?}", t.next_track_a_type(), a_type);
                     if t.next_track_a_type() == a_type {
                         if a_type.map_or(false, |x| x.do_open_split()) {
-                            println!("INTERRUPTING");
+                            println!("INTERRUPTING A");
                             t.interrupt(a_type.unwrap(), true);
                             if let Some(j) = t.next_track_a() {
                                 j.tag_a = Some(Tag::from_attrs(a_attrs));
@@ -816,7 +819,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
 
                     if t.next_track_b_type() == b_type {
                         if b_type.map_or(false, |x| x.do_open_split()) {
-                            println!("INTERRUPTING");
+                            println!("INTERRUPTING B");
                             t.interrupt(b_type.unwrap(), true);
                             if let Some(j) = t.next_track_b() {
                                 j.tag_b = Some(Tag::from_attrs(b_attrs));
@@ -903,8 +906,17 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                 }
 
                 // Invalid
-                (Some(AddWithGroup(_)), Some(AddChars(_))) => {
-                    panic!("bad formation: {:?} {:?}", a.head, b.head);
+                // TODO not invalid; is this right now?
+                (Some(AddWithGroup(ref a_inner)), Some(AddChars(ref b_chars))) => {
+                    t.chars_a(b_chars);
+                    // t.a_del.skip(1);
+                    // t.a_add.skip(1);
+                    t.b_del.skip(b_chars.chars().count());
+                    t.b_add.skip(b_chars.chars().count());
+                    // t.b_add.with_group(&a_inner);
+
+                    // a.next();
+                    b.next();
                 }
             }
         }
@@ -1393,7 +1405,8 @@ pub fn transform_add_del_inner(
             DelWithGroup(span) => {
                 match a.get_head() {
                     AddChars(avalue) => {
-                        panic!("DelWithGroup by AddChars is ILLEGAL");
+                        delres.place(&DelSkip(avalue.chars().count()));
+                        addres.place(&a.next().unwrap());
                     }
                     AddSkip(acount) => {
                         delres.place(&b.next().unwrap());
@@ -1424,7 +1437,8 @@ pub fn transform_add_del_inner(
             DelGroup(span) => {
                 match a.get_head() {
                     AddChars(avalue) => {
-                        panic!("DelGroup by AddChars is ILLEGAL");
+                        delres.place(&DelSkip(avalue.chars().count()));
+                        addres.place(&a.next().unwrap());
                     }
                     AddSkip(acount) => {
                         delres.place(&b.next().unwrap());

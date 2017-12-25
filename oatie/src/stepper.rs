@@ -233,13 +233,12 @@ pub struct DocStepper {
 
 impl DocStepper {
     pub fn new(span: &DocSpan) -> DocStepper {
-        let mut ret = DocStepper {
+        DocStepper {
             head: 0,
             char_debt: 0,
             rest: span.to_vec(),
             stack: vec![],
-        };
-        ret
+        }
     }
 
     pub fn prev(&mut self) -> Option<DocElement> {
