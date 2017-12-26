@@ -88,6 +88,8 @@ fn del_place_skip(res: &mut DelSpan, count: usize) {
             return;
         }
     }
+
+    assert!(count > 0);
     res.push(DelSkip(count));
 }
 
@@ -124,6 +126,8 @@ fn add_place_skip(res: &mut AddSpan, count: usize) {
             return;
         }
     }
+
+    assert!(count > 0);
     res.push(AddSkip(count));
 }
 
