@@ -813,7 +813,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                 }
                 (_, Some(AddGroup(ref b_attrs, _))) => {
                     // println!("groupgruop {:?} {:?}", a_type, b_type);
-                    // t.regenerate();
+                    t.regenerate();
                     b.enter();
                     let b_type = Tag::from_attrs(b_attrs).tag_type();
 
@@ -1425,12 +1425,29 @@ pub fn transform_add_del_inner(
                         delres.place(&DelWithGroup(del));
                         addres.place(&AddWithGroup(ins));
                     }
-                    AddGroup(attr, insspan) => {
+                    AddGroup(attrs, a_span) => {
+                        let mut a_inner = AddStepper::new(&a_span);
+                        let mut addres_inner: AddSpan = vec![];
+                        let mut delres_inner: DelSpan = vec![];
+                        transform_add_del_inner(
+                            &mut delres_inner,
+                            &mut addres_inner,
+                            &mut a_inner,
+                            b,
+                        );
+                        if !a_inner.is_done() {
+                            addres_inner.place(&a_inner.head.unwrap());
+                            addres_inner.place_all(&a_inner.rest);
+                        }
+                        addres.place(&AddGroup(attrs, addres_inner));
+                        delres.place(&DelWithGroup(delres_inner));
                         a.next();
-                        b.next();
 
-                        let (_, ins) = transform_add_del(&insspan, &span);
-                        addres.place(&AddGroup(attr, ins));
+                        // a.next();
+                        // b.next();
+
+                        // let (_, ins) = transform_add_del(&insspan, &span);
+                        // addres.place(&AddGroup(attr, ins));
                     }
                 }
             }

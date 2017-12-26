@@ -1,0 +1,5 @@
+[DelGroup([DelWithGroup([]), DelSkip(2)]), DelWithGroup([DelGroup([])])]
+[AddGroup({"tag": "h3"}, [AddWithGroup([]), AddSkip(1), AddChars("u")]), AddGroup({"tag": "p"}, [AddChars("7D")]), AddGroup({"tag": "p"}, [AddGroup({"tag": "caret", "client": "left"}, []), AddChars("2"), AddSkip(1)]), AddWithGroup([])]
+
+[DelGroup([DelGroup([]), DelSkip(2)])]
+[AddGroup({"tag": "h2"}, [AddSkip(1)]), AddGroup({"tag": "p"}, [AddGroup({"client": "right", "tag": "caret"}, []), AddSkip(1)])]

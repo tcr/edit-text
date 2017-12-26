@@ -3,6 +3,3 @@
 
 [DelGroup([DelWithGroup([]), DelSkip(13)])]
 [AddGroup({"tag": "p"}, [AddWithGroup([]), AddChars(" d 5k"), AddSkip(13)])]
-
-[DelGroup([DelSkip(14)])]
-[AddGroup({"tag": "h3"}, [AddChars(" 1o6hW A  NM1 10ya A C0i")]), AddGroup({"tag": "p"}, [AddChars(" 3a"), AddSkip(1), AddChars(" d 5k"), AddSkip(13)])]

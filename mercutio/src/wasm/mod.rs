@@ -243,7 +243,7 @@ pub fn server(url: &str, name: &str) {
         let thread_client: Arc<_> = client.clone();
         thread::spawn(move || loop {
             thread::sleep(Duration::from_millis(
-                rand::thread_rng().gen_range(0, 200) + 100,
+                rand::thread_rng().gen_range(0, 2000) + 100,
             ));
             if thread_client.monkey.load(Ordering::Relaxed) {
                 native_command(
@@ -260,11 +260,25 @@ pub fn server(url: &str, name: &str) {
             }
         });
 
+        // Arrow keys.
+        let thread_client: Arc<_> = client.clone();
+        thread::spawn(move || loop {
+            thread::sleep(Duration::from_millis(
+                rand::thread_rng().gen_range(0, 300) + 700,
+            ));
+            if thread_client.monkey.load(Ordering::Relaxed) {
+                native_command(
+                    &*thread_client,
+                    NativeCommand::Keypress(*rand::thread_rng().choose(&[37, 39]).unwrap(), false, false),
+                );
+            }
+        });
+
         // Enter monkey.
         let thread_client: Arc<_> = client.clone();
         thread::spawn(move || loop {
             thread::sleep(Duration::from_millis(
-                rand::thread_rng().gen_range(0, 10_000) + 3000,
+                rand::thread_rng().gen_range(0, 3_000) + 1000,
             ));
             if thread_client.monkey.load(Ordering::Relaxed) {
                 native_command(&*thread_client, NativeCommand::Keypress(13, false, false));
