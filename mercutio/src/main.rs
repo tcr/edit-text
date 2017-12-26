@@ -226,24 +226,28 @@ fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<Confir
     println!("OP A {:?}", op_a);
     println!("OP B {:?}", op_b);
 
-    println!("");
+    println!();
     println!("<test>");
-    println!("{:?}", op_a.0);
-    println!("{:?}", op_a.1);
-    println!("");
-    println!("{:?}", op_b.0);
-    println!("{:?}", op_b.1);
+    println!("doc:   {:?}", *doc);
+    println!();
+    println!("a_del: {:?}", op_a.0);
+    println!("a_add: {:?}", op_a.1);
+    println!();
+    println!("b_del: {:?}", op_b.0);
+    println!("b_add: {:?}", op_b.1);
     println!("</test>");
-    println!("");
+    println!();
 
     // Tranform
     let (a_, b_) = transform(&op_a, &op_b);
 
-    println!("testing...");
-    println!("");
+    println!("(!) applying first composed operations...");
+    println!();
 
     let doc_a = OT::apply(&doc.clone(), &op_a);
     let doc_b = OT::apply(&doc.clone(), &op_b);
+
+    println!("(!) applying transformed operations...");
 
     println!("");
     println!("DOC A {:?}", doc_a);
