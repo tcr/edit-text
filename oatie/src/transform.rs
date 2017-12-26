@@ -1065,7 +1065,9 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                         a.next();
                     }
 
-                    b_del.skip(b_inner.skip_len());
+                    if b_inner.skip_len() > 0 {
+                        b_del.skip(b_inner.skip_len());
+                    }
                     b.next();
                 }
                 (Some(DelSkip(a_count)), Some(DelGroupAll)) => {
@@ -1079,7 +1081,9 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                     b.next();
                 }
                 (Some(DelGroup(a_inner)), Some(DelSkip(b_count))) => {
-                    a_del.skip(a_inner.skip_len());
+                    if a_inner.skip_len() > 0 {
+                        a_del.skip(a_inner.skip_len());
+                    }
                     b_del.group(&a_inner);
 
                     a.next();
@@ -1459,7 +1463,9 @@ pub fn transform_add_del_inner(
                     }
                     AddSkip(acount) => {
                         delres.place(&b.next().unwrap());
-                        addres.place(&AddSkip(span.skip_post_len()));
+                        if span.skip_post_len() > 0 {
+                            addres.place(&AddSkip(span.skip_post_len()));
+                        }
                         if acount > 1 {
                             a.head = Some(AddSkip(acount - 1));
                         } else {
