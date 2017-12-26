@@ -88,6 +88,9 @@ impl ReverseCaretStepper {
         if let Some(DocChars(..)) = self.doc.unhead() {
             return true;
         } else if self.doc.unhead().is_none() {
+            if self.doc.stack.is_empty() {
+                return false;
+            }
             if let Some(DocGroup(ref attrs, _)) = self.doc.clone().unenter().head() {
                 if is_block(attrs) {
                     return true;
@@ -253,7 +256,8 @@ impl Walker {
     }
 
     pub fn next_char(&mut self) -> &mut Walker {
-        take_mut::take(&mut self.stepper, |mut stepper| {
+        take_mut::take(&mut self.stepper, |prev_stepper| {
+            let mut stepper = prev_stepper.clone();
             let target_pos = stepper.caret_pos + 1;
 
             // Iterate until we match the cursor.
@@ -266,17 +270,23 @@ impl Walker {
                 }
             };
 
-            stepper
+            if matched {
+                stepper
+            } else {
+                prev_stepper
+            }
         });
 
         self
     }
 
     pub fn back_char(&mut self) -> &mut Walker {
-        take_mut::take(&mut self.stepper, |stepper| {
-            let mut rstepper = stepper.rev();
+        let res = take_mut::take(&mut self.stepper, |prev_stepper| {
+            let mut rstepper = prev_stepper.clone().rev();
 
             let target_pos = rstepper.caret_pos - 1;
+
+            println!("uh1 {:?}", prev_stepper);
 
             // Iterate until we match the cursor.
             let matched = loop {
@@ -288,7 +298,15 @@ impl Walker {
                 }
             };
 
-            rstepper.rev()
+            println!("REV REV {:?}", rstepper);
+    let j = rstepper.rev();
+            println!("uh2 {:?} + {:?}", matched, j);
+
+            if matched {
+                j
+            } else {
+                prev_stepper
+            }
         });
 
         self
@@ -300,6 +318,8 @@ impl Walker {
 
         // Walk the doc until we reach our current doc position.
         let mut doc_stepper = DocStepper::new(&self.original_doc.0);
+
+        println!("self.stepper.doc {:?}", self.stepper.doc);
 
         while self.stepper.doc != doc_stepper {
             match doc_stepper.head() {
@@ -314,11 +334,12 @@ impl Walker {
                     doc_stepper.enter();
                 }
                 None => {
-                    del.exit();
-                    add.exit();
                     if doc_stepper.is_done() {
-                        break;
+                        // TODO is it possible end of document could actually be target?
+                        panic!("Reached end of document via to_writer");
                     } else {
+                        del.exit();
+                        add.exit();
                         doc_stepper.exit();
                     }
                 }

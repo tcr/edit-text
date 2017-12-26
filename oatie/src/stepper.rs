@@ -225,7 +225,7 @@ impl CurStepper {
 // TODO can switch head to a usize??
 #[derive(Clone, Debug, PartialEq)]
 pub struct DocStepper {
-    head: isize,
+    pub head: isize,
     pub char_debt: usize,
     rest: Vec<DocElement>,
     pub stack: Vec<(isize, Vec<DocElement>)>,
@@ -340,10 +340,14 @@ impl DocStepper {
                 self.head = span.len() as isize;
                 self.char_debt = 0;
                 self.rest = span.to_vec();
-                self.prev();
+                if span.len() > 0 {
+                    self.prev();
+                }
             }
             _ => panic!("Entered wrong thing"),
         }
+
+        assert!(self.head >= 0);
     }
 
     pub fn exit(&mut self) {

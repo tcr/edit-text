@@ -102,13 +102,13 @@ impl DelWriter {
 
     pub fn exit(&mut self) {
         let past = self.past.clone();
-        self.past = self.stack.pop().unwrap();
+        self.past = self.stack.pop().expect("Cannot exit(), as we aren't in a group");
         self.past.push(DelWithGroup(past));
     }
 
     pub fn close(&mut self) {
         let past = self.past.clone();
-        self.past = self.stack.pop().unwrap();
+        self.past = self.stack.pop().expect("Cannot close(), as we aren't in a group");
         self.past.push(DelGroup(past));
     }
 
