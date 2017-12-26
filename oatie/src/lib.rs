@@ -14,10 +14,12 @@ extern crate maplit;
 extern crate rand;
 #[macro_use]
 extern crate serde_derive;
+extern crate yansi;
 extern crate serde_json;
 extern crate term_painter;
 #[macro_use]
 extern crate failure;
+extern crate regex;
 extern crate either;
 
 pub mod compose;

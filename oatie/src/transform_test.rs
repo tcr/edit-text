@@ -6,9 +6,12 @@ use std::collections::HashMap;
 use super::compose;
 use super::doc::*;
 use super::normalize;
+use super::OT;
 use super::transform::*;
 use serde_json;
+use regex::Regex;
 use failure::Error;
+use yansi::Paint;
 
 #[derive(Debug, Fail)]
 #[fail(display = "Group has no readable data")]
@@ -59,7 +62,65 @@ where
     Ok(target)
 }
 
-fn parse_del(mut value: &str) -> Result<DelElement, Error> {
+fn extract_array(input: &str) -> Result<String, ExhaustedArray> {
+    let input = input.trim();
+    if !(input.starts_with("[") && input.ends_with("]")) {
+        Err(ExhaustedArray)
+    } else {
+        Ok(input[1..input.len() - 1].to_string())
+    }
+}
+
+fn parse_doc_elem(mut value: &str) -> Result<DocElement, Error> {
+    value = value.trim();
+
+    let cap = if value.starts_with("DocChars(") && value.ends_with(')') {
+        Some(("AddChars", &value["DocChars(".len()..value.len() - 1]))
+    } else {
+        None
+    };
+
+    if let Some((key, segment)) = cap {
+        return Ok(match key {
+            "AddChars" => {
+                if segment.len() < 2 || !segment.starts_with("\"") || !segment.ends_with("\"") {
+                    Err(MalformedData("Expected full quoted string".into()))?;
+                }
+                let segment = &segment[1..segment.len() - 1];
+                DocElement::DocChars(segment.to_string())
+            }
+            _ => unreachable!(),
+        });
+    }
+
+    if value.starts_with("DocGroup({") && value.ends_with("])") {
+        // panic!("this doesnt work yet");
+
+        let right_index = value.find('}').unwrap();
+        let body = &value["DocGroup(".len()..right_index + 1];
+
+        // Find ending } then subslice then
+        let v: Value = serde_json::from_str(body).unwrap();
+        let mut map: HashMap<String, String> = hashmap![];
+        for (key, value) in v.as_object().unwrap() {
+            map.insert(key.to_string(), value.as_str().unwrap().to_string());
+        }
+
+        let next_index = value[right_index + 1..].find('[').unwrap();
+        let inner = &value[right_index + 1 + next_index + 1..value.len() - 2];
+        let args = comma_seq(inner, parse_doc_elem)?;
+
+        return Ok(DocElement::DocGroup(map, args));
+    }
+
+    Err(MalformedData("Invalid data".into()))?
+}
+
+pub fn parse_doc_span(input: &str) -> Result<DocSpan, Error> {
+    Ok(comma_seq(&extract_array(input)?, parse_doc_elem)?)
+}
+
+fn parse_del_elem(mut value: &str) -> Result<DelElement, Error> {
     value = value.trim();
 
     if value == "DelGroupAll" {
@@ -95,7 +156,7 @@ fn parse_del(mut value: &str) -> Result<DelElement, Error> {
     };
 
     if let Some((key, inner)) = cap {
-        let args = comma_seq(inner, parse_del)?;
+        let args = comma_seq(inner, parse_del_elem)?;
 
         return Ok(match key {
             "DelGroup" => DelElement::DelGroup(args),
@@ -106,17 +167,17 @@ fn parse_del(mut value: &str) -> Result<DelElement, Error> {
     Err(MalformedData("Invalid data".into()))?
 }
 
-fn parse_add(mut value: &str) -> Result<AddElement, Error> {
+pub fn parse_del_span(input: &str) -> Result<DelSpan, Error> {
+    Ok(comma_seq(&extract_array(input)?, parse_del_elem)?)
+}
+
+fn parse_add_elem(mut value: &str) -> Result<AddElement, Error> {
     value = value.trim();
 
-    //if value == "DelGroupAll" {
-    //    return Ok(DelElement::DelGroupAll);
-    //}
-
     let cap = if value.starts_with("AddSkip(") && value.ends_with(')') {
-        Some(("AddSkip", &value["DelSkip(".len()..value.len() - 1]))
+        Some(("AddSkip", &value["AddSkip(".len()..value.len() - 1]))
     } else if value.starts_with("AddChars(") && value.ends_with(')') {
-        Some(("AddChars", &value["DelChars(".len()..value.len() - 1]))
+        Some(("AddChars", &value["AddChars(".len()..value.len() - 1]))
     } else {
         None
     };
@@ -144,7 +205,7 @@ fn parse_add(mut value: &str) -> Result<AddElement, Error> {
     if value.starts_with("AddWithGroup([") && value.ends_with("])") {
         let inner = &value["AddWithGroup([".len()..value.len() - 2];
 
-        let args = comma_seq(inner, parse_add)?;
+        let args = comma_seq(inner, parse_add_elem)?;
 
         return Ok(AddElement::AddWithGroup(args));
     }
@@ -164,7 +225,7 @@ fn parse_add(mut value: &str) -> Result<AddElement, Error> {
 
         let next_index = value[right_index + 1..].find('[').unwrap();
         let inner = &value[right_index + 1 + next_index + 1..value.len() - 2];
-        let args = comma_seq(inner, parse_add)?;
+        let args = comma_seq(inner, parse_add_elem)?;
 
         return Ok(AddElement::AddGroup(map, args));
     }
@@ -183,51 +244,11 @@ fn parse_add(mut value: &str) -> Result<AddElement, Error> {
     Err(MalformedData("Invalid data".into()))?
 }
 
-fn extract_array(input: &str) -> Result<String, ExhaustedArray> {
-    if !(input.starts_with("[") && input.ends_with("]")) {
-        Err(ExhaustedArray)
-    } else {
-        Ok(input[1..input.len() - 1].to_string())
-    }
+pub fn parse_add_span(input: &str) -> Result<AddSpan, Error> {
+    Ok(comma_seq(&extract_array(input)?, parse_add_elem)?)
 }
 
-pub fn run_transform_test(input: &str) -> Result<(), Error> {
-    let four = input.lines().filter(|x| !x.is_empty()).collect::<Vec<_>>();
-    if four.len() != 4 && four.len() != 6 {
-        Err(MalformedData("Needed four or six lines as input".into()))?;
-    }
-
-    let del_a = comma_seq(&extract_array(four[0])?, parse_del)?;
-    let add_a = comma_seq(&extract_array(four[1])?, parse_add)?;
-
-    let del_b = comma_seq(&extract_array(four[2])?, parse_del)?;
-    let add_b = comma_seq(&extract_array(four[3])?, parse_add)?;
-
-    let a = (del_a, add_a);
-    let b = (del_b, add_b);
-
-    println!("transform start!");
-    let confirm = op_transform_compare(&a, &b);
-
-    // Check validating lines
-    if four.len() == 6 {
-        let confirm_del = comma_seq(&extract_array(four[4])?, parse_del)?;
-        let confirm_add = comma_seq(&extract_array(four[5])?, parse_add)?;
-
-        println!("Validating...");
-        assert_eq!(confirm, (confirm_del, confirm_add));
-        println!("Valid!");
-    }
-
-    // ALSO CHECK THE REVERSE
-    // The result may be different, so we don't care it to
-    // that, but we can check that the transform is at least normalized.
-    let _ = op_transform_compare(&b, &a);
-
-    Ok(())
-}
-
-fn op_transform_compare(a: &Op, b: &Op) -> Op {
+fn op_transform_compare(a: &Op, b: &Op) -> (Op, Op, Op, Op) {
     let (a_, b_) = transform(a, b);
 
     println!();
@@ -247,5 +268,98 @@ fn op_transform_compare(a: &Op, b: &Op) -> Op {
 
     assert_eq!(a_res, b_res);
 
-    a_res
+    (a_, b_, a_res, b_res)
+}
+
+pub fn run_transform_test(input: &str) -> Result<(), Error> {
+    let re = Regex::new(r"(\n|^)(\w+):([\n\w\W]+?)(\n(?:\w)|(\n\]))").unwrap();
+    let mut test: HashMap<_, _> = re.captures_iter(&input)
+        .map(|cap| {
+            let name = cap[2].to_string();
+            let end_cap = cap.get(5).map(|x| x.as_str()).unwrap_or("");
+            let body = [&cap[3], end_cap].join("");
+            (name, body)
+        })
+        .collect();
+
+    // Attempt old-style transform test which matches by line.
+    if test.len() == 0 {
+        let four = input.lines().filter(|x| !x.is_empty()).collect::<Vec<_>>();
+        if four.len() != 4 && four.len() != 6 {
+            Err(MalformedData("Needed four or six lines as input".into()))?;
+        }
+
+        test.insert("a_del".into(), four[0].into());
+        test.insert("a_add".into(), four[1].into());
+
+        test.insert("b_del".into(), four[2].into());
+        test.insert("b_add".into(), four[3].into());
+
+        // Check validating lines
+        if four.len() == 6 {
+            test.insert("op_del".into(), four[4].into());
+            test.insert("op_add".into(), four[5].into());
+        }
+    }
+
+    // Extract test entries.
+    let a = (parse_del_span(&test["a_del"])?, parse_add_span(&test["a_add"])?);
+    let b = (parse_del_span(&test["b_del"])?, parse_add_span(&test["b_add"])?);
+    let check = if test.contains_key("op_del") || test.contains_key("op_add") {
+        Some((parse_del_span(&test["op_del"])?, parse_add_span(&test["op_add"])?))
+    } else {
+        None
+    };
+
+    // Check that transforms produce identical operations when composed.
+    println!("{}", Paint::red("(!) comparing transform operation results..."));
+    let (a_, b_, a_res, b_res) = op_transform_compare(&a, &b);
+    println!("ok");
+    println!();
+
+    // Check validating lines.
+    if let Some(check) = check {
+        println!("{}", Paint::red("(!) validating client A against provided 'check' op..."));
+        assert_eq!(a_res, check);
+        println!("ok");
+        println!();
+    }
+
+    // ALSO CHECK THE REVERSE
+    // The result may be different, so we don't care it to
+    // that, but we can check that the transform is at least normalized.
+    let _ = op_transform_compare(&b, &a);
+
+    // Check against provided document.
+    if let Some(doc) = test.get("doc") {
+        let doc = Doc(parse_doc_span(doc)?);
+
+        println!("document: {:?}", doc);
+        println!();
+
+        // First test original operations can be applied against the doc.
+        println!("{}", Paint::red("(!) applying first ops..."));
+        println!("doc a : a");
+        let doc_a = OT::apply(&doc, &a);
+        println!("doc b : b");
+        let doc_b = OT::apply(&doc, &b);
+        println!("ok");
+        println!();
+
+        // Next apply the transformed ops.
+        println!("{}", Paint::red("(!) applying transformed ops..."));
+        println!("doc a : a : a'");
+        let doc_a = OT::apply(&doc_a, &a_);
+        println!("doc b : b : b'");
+        let doc_b = OT::apply(&doc_b, &b_);
+        println!("ok");
+        println!();
+
+        // Next test transforms can produce identical documents.
+        // TODO
+    }
+
+    println!("{}", Paint::green("(!) done."));
+
+    Ok(())
 }
