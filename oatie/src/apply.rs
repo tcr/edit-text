@@ -79,8 +79,8 @@ fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan) {
                             d = AddSkip(count - len);
                             nextdel = false;
                         } else if len > count {
-                            place_chars(&mut res, value[0..count].to_owned());
-                            first = Some(DocChars(value[count..len].to_owned()));
+                            place_chars(&mut res, value.chars().take(count).collect());
+                            first = Some(DocChars(value.chars().skip(count).take(len).collect()));
                             nextfirst = false;
                         } else {
                             place_chars(&mut res, value.to_owned());
@@ -122,16 +122,17 @@ fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan) {
 
                 trace!("REST OF INNER {:?} {:?}", rest, del);
 
-                let inner = apply_add(&rest, &del.to_vec());
+                let (inner, rest) = apply_add_inner(&rest, &del.to_vec());
                 place_many(&mut res, &inner);
-                return (res, vec![]);
+                return (res, rest);
             }
         }
 
         if nextdel {
             if del.is_empty() {
                 let mut remaining = vec![];
-                if !nextfirst && !first.is_none() && !exhausted {
+                trace!("nextfirst {:?} {:?} {:?}", nextfirst, first, exhausted);
+                if !nextfirst && first.is_some() && !exhausted {
                     remaining.push(first.clone().unwrap());
                     // place_any(&mut res, &first.clone().unwrap());
                 }

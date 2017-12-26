@@ -1,8 +1,29 @@
+doc:   [
+    DocGroup({"tag": "h1"}, [
+        DocGroup({"client": "left", "tag": "caret"}, []),
+        DocGroup({"tag": "caret", "client": "right"}, []),
+        DocChars("Hello! "), DocGroup({"tag": "span", "class": "bold"}, [
+            DocChars("what\'s")
+        ]),
+        DocChars(" up?")
+    ]),
+    DocGroup({"tag": "ul"}, [
+        DocGroup({"tag": "li"}, [
+            DocGroup({"tag": "p"}, [
+                DocChars("Three adjectives strong.")
+            ]),
+            DocGroup({"tag": "p"}, [
+                DocChars("World!")
+            ])
+        ])
+    ])
+]
 
 a_del: [
     DelGroup([
         DelGroup([]),
-        DelSkip(13)
+        DelWithGroup([]),
+        DelSkip(12)
     ])
 ]
 a_add: [
@@ -10,14 +31,15 @@ a_add: [
         AddChars("Iv")
     ]),
     AddGroup({"tag": "h3"}, [
-        AddGroup({"tag": "caret", "client": "left"}, []),
-        AddSkip(13)
+        AddChars("3t0L"), AddGroup({"tag": "caret", "client": "left"}, []),
+        AddWithGroup([]),
+        AddSkip(12)
     ])
 ]
 
 b_del: [
     DelGroup([
-        DelSkip(1),
+        DelWithGroup([]),
         DelGroup([]),
         DelSkip(12)
     ])
@@ -33,6 +55,8 @@ b_add: [
         AddSkip(1)
     ]),
     AddGroup({"tag": "p"}, [
-        AddSkip(10)
+        AddSkip(1),
+        AddGroup({"tag": "caret", "client": "right"}, []),
+        AddSkip(9)
     ])
 ]

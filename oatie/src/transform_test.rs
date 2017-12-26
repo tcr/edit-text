@@ -252,18 +252,19 @@ fn op_transform_compare(a: &Op, b: &Op) -> (Op, Op, Op, Op) {
     let (a_, b_) = transform(a, b);
 
     println!();
-    println!(" --> a : {:?}", a);
-    println!(" --> a': {:?}", a_);
-    println!(" --> b : {:?}", b);
-    println!(" --> b': {:?}", b_);
+    println!(" --> a \n{:?}", a);
+    println!(" --> a'\n{:?}", a_);
+    println!(" --> b \n{:?}", b);
+    println!(" --> b'\n{:?}", b_);
     println!();
 
     let a_res = normalize(compose::compose(a, &a_));
     let b_res = normalize(compose::compose(b, &b_));
 
     println!();
-    println!("A' {:?}", a_res);
-    println!("B' {:?}", b_res);
+    println!("(!) validating composed ops are equivalent:");
+    println!(" --> a : a'\n{:?}", a_res);
+    println!(" --> b : b'\n{:?}", b_res);
     println!();
 
     assert_eq!(a_res, b_res);
@@ -325,11 +326,6 @@ pub fn run_transform_test(input: &str) -> Result<(), Error> {
         println!();
     }
 
-    // ALSO CHECK THE REVERSE
-    // The result may be different, so we don't care it to
-    // that, but we can check that the transform is at least normalized.
-    let _ = op_transform_compare(&b, &a);
-
     // Check against provided document.
     if let Some(doc) = test.get("doc") {
         let doc = Doc(parse_doc_span(doc)?);
@@ -339,25 +335,37 @@ pub fn run_transform_test(input: &str) -> Result<(), Error> {
 
         // First test original operations can be applied against the doc.
         println!("{}", Paint::red("(!) applying first ops..."));
-        println!("doc a : a");
+        println!(" ---> doc a : a");
         let doc_a = OT::apply(&doc, &a);
-        println!("doc b : b");
+        println!("{:?}", doc_a);
+        println!();
+        println!(" ---> doc b : b");
         let doc_b = OT::apply(&doc, &b);
+        println!("{:?}", doc_b);
+        println!();
         println!("ok");
         println!();
 
         // Next apply the transformed ops.
         println!("{}", Paint::red("(!) applying transformed ops..."));
-        println!("doc a : a : a'");
+        println!(" ---> doc a : a : a'");
         let doc_a = OT::apply(&doc_a, &a_);
-        println!("doc b : b : b'");
+        println!("{:?}", doc_a);
+        println!(" ---> doc b : b : b'");
         let doc_b = OT::apply(&doc_b, &b_);
+        println!("{:?}", doc_b);
+        println!();
         println!("ok");
         println!();
 
         // Next test transforms can produce identical documents.
         // TODO
     }
+
+    // ALSO CHECK THE REVERSE
+    // The result may be different, so we don't care it to
+    // that, but we can check that the transform is at least normalized.
+    let _ = op_transform_compare(&b, &a);
 
     println!("{}", Paint::green("(!) done."));
 

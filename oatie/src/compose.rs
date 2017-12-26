@@ -293,7 +293,6 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
     let mut b = DelStepper::new(bvec);
 
     while !b.is_done() && !a.is_done() {
-        println!("UHN {:?} {:?}", b.get_head(), a.get_head());
         match b.get_head() {
             DelObject => {
                 match a.get_head() {
