@@ -11220,9 +11220,12 @@ function init($elem, editorID) {
     let monkey = false;
     __WEBPACK_IMPORTED_MODULE_2_jquery___default()('<button>Monkey</button>')
         .appendTo($elem.prev())
-        .on('click', () => {
+        .on('click', function () {
         monkey = !monkey;
         nativeCommand(MonkeyCommand(monkey));
+        __WEBPACK_IMPORTED_MODULE_2_jquery___default()(this).css('font-weight') == '700'
+            ? __WEBPACK_IMPORTED_MODULE_2_jquery___default()(this).css('font-weight', 'normal')
+            : __WEBPACK_IMPORTED_MODULE_2_jquery___default()(this).css('font-weight', 'bold');
     });
     // switching button
     __WEBPACK_IMPORTED_MODULE_2_jquery___default()('<button>Style Switch</button>')
@@ -11429,7 +11432,6 @@ function onmessage(m1, ops_a, event) {
 }
 if (window.MOTE_ENTRY == 'index') {
     document.body.style.background = '#eee';
-    // TODO
     let cache = {};
     window.onmessage = function (data) {
         let doc = data.data.Update.doc;
@@ -11452,6 +11454,14 @@ else if (window.MOTE_ENTRY == 'client') {
     var exampleSocket;
     __WEBPACK_IMPORTED_MODULE_2_jquery___default.a.get('/api/hello', data => {
         actionHello(m1, data);
+        // Initial load.
+        window.parent.postMessage({
+            Update: {
+                doc: data,
+                ops: ops_a,
+                name: window.name
+            },
+        }, '*');
         exampleSocket = new WebSocket(window.name == 'left' ? "ws://127.0.0.1:3012" : 'ws://127.0.0.1:3013');
         exampleSocket.onopen = function (event) {
             nativeCommand(LoadCommand(data));
