@@ -243,7 +243,7 @@ pub fn server(url: &str, name: &str) {
         let thread_client: Arc<_> = client.clone();
         thread::spawn(move || loop {
             thread::sleep(Duration::from_millis(
-                rand::thread_rng().gen_range(0, 2000) + 100,
+                rand::thread_rng().gen_range(0, 300) + 100,
             ));
             if thread_client.monkey.load(Ordering::Relaxed) {
                 native_command(
@@ -264,7 +264,7 @@ pub fn server(url: &str, name: &str) {
         let thread_client: Arc<_> = client.clone();
         thread::spawn(move || loop {
             thread::sleep(Duration::from_millis(
-                rand::thread_rng().gen_range(0, 300) + 700,
+                rand::thread_rng().gen_range(0, 4000) + 700,
             ));
             if thread_client.monkey.load(Ordering::Relaxed) {
                 native_command(

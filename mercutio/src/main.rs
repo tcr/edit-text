@@ -28,6 +28,7 @@ use rocket::response::NamedFile;
 use serde_json::Value;
 use std::path::{Path, PathBuf};
 use oatie::transform::transform;
+use oatie::debug_pretty;
 use wasm::start_websocket_server;
 
 fn default_doc() -> Doc {
@@ -201,16 +202,26 @@ fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<Confir
 
     let mut doc = mote.body.lock().unwrap();
 
+    println!(" ---> input ops_a");
+    println!("{:?}", ops_a);
+    println!();
+
     // Flatten client A operations.
     let op_a = if ops_a.len() == 0 {
         (vec![], vec![])
     } else {
+        // Additional checks if needed
         let mut op = ops_a.remove(0);
+        
         for i in ops_a.into_iter() {
             op = Operation::compose(&op, &i);
         }
         op
     };
+
+    println!(" ---> input ops_b");
+    println!("{:?}", ops_b);
+    println!();
 
     // Flatten client B operations.
     let op_b = if ops_b.len() == 0 {
@@ -228,13 +239,13 @@ fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<Confir
 
     println!();
     println!("<test>");
-    println!("doc:   {:?}", *doc);
+    println!("doc:   {}", debug_pretty(&*doc));
     println!();
-    println!("a_del: {:?}", op_a.0);
-    println!("a_add: {:?}", op_a.1);
+    println!("a_del: {:?}", debug_pretty(&op_a.0));
+    println!("a_add: {:?}", debug_pretty(&op_a.1));
     println!();
-    println!("b_del: {:?}", op_b.0);
-    println!("b_add: {:?}", op_b.1);
+    println!("b_del: {:?}", debug_pretty(&op_b.0));
+    println!("b_add: {:?}", debug_pretty(&op_b.1));
     println!("</test>");
     println!();
 
