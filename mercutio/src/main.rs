@@ -36,20 +36,23 @@ fn default_doc() -> Doc {
         DocGroup({"tag": "h1"}, [
             DocGroup({"tag": "caret", "client": "left"}, []),
             DocGroup({"tag": "caret", "client": "right"}, []),
-            DocChars("Hello! "),
-            DocGroup({"tag": "span", "class": "bold"}, [DocChars("what's")]),
-            DocChars(" up?"),
+            DocChars("Hello world!"),
         ]),
-        DocGroup({"tag": "ul"}, [
-            DocGroup({"tag": "li"}, [
-                DocGroup({"tag": "p"}, [
-                    DocChars("Three adjectives strong."),
-                ]),
-                DocGroup({"tag": "p"}, [
-                    DocChars("World!"),
-                ]),
-            ]),
-        ])
+        DocGroup({"tag": "p"}, [
+            DocChars("What's "),
+            DocGroup({"tag": "span", "class": "bold"}, [DocChars("new and great")]),
+            DocChars(" with you?"),
+        ]),
+        // DocGroup({"tag": "ul"}, [
+        //     DocGroup({"tag": "li"}, [
+        //         DocGroup({"tag": "p"}, [
+        //             DocChars("Three adjectives strong."),
+        //         ]),
+        //         DocGroup({"tag": "p"}, [
+        //             DocChars("World!"),
+        //         ]),
+        //     ]),
+        // ])
     ])
 }
 
@@ -318,6 +321,14 @@ fn client() -> Option<NamedFile> {
         .and_then(|x| NamedFile::open(x).ok())
 }
 
+#[get("/favicon.png")]
+fn favicon() -> Option<NamedFile> {
+    Path::new(file!())
+        .parent()
+        .map(|x| x.join("templates/").join("favicon.png"))
+        .and_then(|x| NamedFile::open(x).ok())
+}
+
 #[get("/<file..>", rank = 2)]
 fn files(file: PathBuf) -> Option<NamedFile> {
     Path::new(file!())
@@ -348,6 +359,7 @@ fn main() {
                 root,
                 client,
                 files,
+                favicon,
             ],
         )
         .launch();

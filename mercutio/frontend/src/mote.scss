@@ -230,6 +230,13 @@ body.focused {
             background: #98e;
         }
     }
+
+    div[data-tag="span"]:empty::before {
+        display: inline;
+        content: "!";
+        padding: 0 5px;
+        border: 2px solid red;
+    }
     
     div[data-tag="caret"] {
         display: inline;

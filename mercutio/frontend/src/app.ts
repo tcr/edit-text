@@ -499,18 +499,18 @@ function init ($elem, editorID: string) {
   // monkey button
   let monkey = false;
   $('<button>Monkey</button>')
-  .appendTo($elem.prev())
-  .on('click', function () {
-    monkey = !monkey;
-    nativeCommand(MonkeyCommand(monkey));
-    $(this).css('font-weight') == '700'
-      ? $(this).css('font-weight', 'normal')
-      : $(this).css('font-weight', 'bold');
-  })
+    .appendTo($('#local-buttons'))
+    .on('click', function () {
+      monkey = !monkey;
+      nativeCommand(MonkeyCommand(monkey));
+      $(this).css('font-weight') == '700'
+        ? $(this).css('font-weight', 'normal')
+        : $(this).css('font-weight', 'bold');
+    })
 
   // switching button
   $('<button>Style Switch</button>')
-    .appendTo($elem.prev())
+    .appendTo($('#local-buttons'))
     .on('click', function () {
       $elem.toggleClass('theme-mock');
       $elem.toggleClass('theme-block');
@@ -523,10 +523,6 @@ function init ($elem, editorID: string) {
       }
       HashState.set(settings);
     });
-  
-  // Button shelf
-  $('<div class="button-shelf">')
-    .appendTo($elem.prev())
 
   // theme
   if (HashState.get().has(`${editorID}-theme-block`)) {
@@ -782,7 +778,7 @@ function onmessage (m1, ops_a, event) {
     console.log('SETUP', parse.Setup);
     KEY_WHITELIST = parse.Setup.keys.map(x => ({keyCode: x[0], metaKey: x[1], shiftKey: x[2]}));
 
-    $('.button-shelf').each((_, x) => {
+    $('#native-buttons').each((_, x) => {
       parse.Setup.buttons.forEach(btn => {
         $('<button>').text(btn[1]).appendTo(x).click(_ => {
           nativeCommand(ButtonCommand(btn[0]));

@@ -340,9 +340,9 @@ impl DocStepper {
                 self.head = span.len() as isize;
                 self.char_debt = 0;
                 self.rest = span.to_vec();
-                if span.len() > 0 {
-                    self.prev();
-                }
+                // if span.len() > 0 {
+                //     self.prev();
+                // }
             }
             _ => panic!("Entered wrong thing"),
         }
@@ -376,7 +376,10 @@ impl DocStepper {
                     self.prev();
                     skip -= 1;
                 }
-                None => unimplemented!(),
+                None => {
+                    self.prev();
+                    skip -= 1;
+                }
             }
         }
     }
