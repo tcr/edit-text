@@ -114,6 +114,20 @@ fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&Client) -> Result<(), Error>>
             false,
             Box::new(|client: &Client| client_op(client, |doc| caret_move(doc, true))),
         ),
+        // up
+        (
+            38,
+            false,
+            false,
+            Box::new(|client: &Client| client_op(client, |doc| caret_block_move(doc, false))),
+        ),
+        // down
+        (
+            40,
+            false,
+            false,
+            Box::new(|client: &Client| client_op(client, |doc| caret_block_move(doc, true))),
+        ),
         // enter
         (
             13,
@@ -201,6 +215,69 @@ impl Client {
     }
 }
 
+#[allow(unused)]
+fn setup_monkey(client: Arc<Client>) {
+    // Button monkey.
+    let thread_client: Arc<_> = client.clone();
+    thread::spawn(move || {
+        let mut rng = rand::thread_rng();
+        loop {
+            thread::sleep(Duration::from_millis(rng.gen_range(0, 2000) + 500));
+            if thread_client.monkey.load(Ordering::Relaxed) {
+                rand::thread_rng().choose(&button_handlers()).map(|button| {
+                    button.1(&*thread_client);
+                });
+            }
+        }
+    });
+
+    // Letter monkey.
+    let thread_client: Arc<_> = client.clone();
+    thread::spawn(move || loop {
+        thread::sleep(Duration::from_millis(
+            rand::thread_rng().gen_range(0, 300) + 100,
+        ));
+        if thread_client.monkey.load(Ordering::Relaxed) {
+            native_command(
+                &*thread_client,
+                NativeCommand::Character(*rand::thread_rng()
+                    .choose(&vec![
+                        rand::thread_rng().gen_range(b'A', b'Z'),
+                        rand::thread_rng().gen_range(b'a', b'z'),
+                        rand::thread_rng().gen_range(b'0', b'9'),
+                        b' ',
+                    ])
+                    .unwrap() as _),
+            );
+        }
+    });
+
+    // Arrow keys.
+    let thread_client: Arc<_> = client.clone();
+    thread::spawn(move || loop {
+        thread::sleep(Duration::from_millis(
+            rand::thread_rng().gen_range(0, 4000) + 700,
+        ));
+        if thread_client.monkey.load(Ordering::Relaxed) {
+            native_command(
+                &*thread_client,
+                NativeCommand::Keypress(*rand::thread_rng().choose(&[37, 39]).unwrap(), false, false),
+            );
+        }
+    });
+
+    // Enter monkey.
+    let thread_client: Arc<_> = client.clone();
+    thread::spawn(move || loop {
+        thread::sleep(Duration::from_millis(
+            rand::thread_rng().gen_range(0, 3_000) + 1000,
+        ));
+        if thread_client.monkey.load(Ordering::Relaxed) {
+            native_command(&*thread_client, NativeCommand::Keypress(13, false, false));
+        }
+    });
+}
+
 pub fn server(url: &str, name: &str) {
     ws::listen(url, |out| {
         let client = Arc::new(Client {
@@ -211,6 +288,7 @@ pub fn server(url: &str, name: &str) {
             name: name.to_string(),
         });
 
+        // Send initial setup packet.
         client
             .send(&ClientCommand::Setup {
                 keys: key_handlers()
@@ -225,69 +303,10 @@ pub fn server(url: &str, name: &str) {
             })
             .expect("Could not send initial state");
 
-        // Button monkey.
-        let thread_client: Arc<_> = client.clone();
-        thread::spawn(move || {
-            let mut rng = rand::thread_rng();
-            loop {
-                thread::sleep(Duration::from_millis(rng.gen_range(0, 2000) + 500));
-                if thread_client.monkey.load(Ordering::Relaxed) {
-                    rand::thread_rng().choose(&button_handlers()).map(|button| {
-                        button.1(&*thread_client);
-                    });
-                }
-            }
-        });
+        // Setup monkey tasks.
+        setup_monkey(client.clone());
 
-        // Letter monkey.
-        let thread_client: Arc<_> = client.clone();
-        thread::spawn(move || loop {
-            thread::sleep(Duration::from_millis(
-                rand::thread_rng().gen_range(0, 300) + 100,
-            ));
-            if thread_client.monkey.load(Ordering::Relaxed) {
-                native_command(
-                    &*thread_client,
-                    NativeCommand::Character(*rand::thread_rng()
-                        .choose(&vec![
-                            rand::thread_rng().gen_range(b'A', b'Z'),
-                            rand::thread_rng().gen_range(b'a', b'z'),
-                            rand::thread_rng().gen_range(b'0', b'9'),
-                            b' ',
-                        ])
-                        .unwrap() as _),
-                );
-            }
-        });
-
-        // Arrow keys.
-        let thread_client: Arc<_> = client.clone();
-        thread::spawn(move || loop {
-            thread::sleep(Duration::from_millis(
-                rand::thread_rng().gen_range(0, 4000) + 700,
-            ));
-            if thread_client.monkey.load(Ordering::Relaxed) {
-                native_command(
-                    &*thread_client,
-                    NativeCommand::Keypress(*rand::thread_rng().choose(&[37, 39]).unwrap(), false, false),
-                );
-            }
-        });
-
-        // Enter monkey.
-        let thread_client: Arc<_> = client.clone();
-        thread::spawn(move || loop {
-            thread::sleep(Duration::from_millis(
-                rand::thread_rng().gen_range(0, 3_000) + 1000,
-            ));
-            if thread_client.monkey.load(Ordering::Relaxed) {
-                native_command(&*thread_client, NativeCommand::Keypress(13, false, false));
-            }
-        });
-
-        // Arrow monkey
-        // native_command(&*thread_client, NativeCommand::Keypress(39, false, false));
-
+        // Websocket message handler.
         move |msg: ws::Message| {
             // Handle messages received on this connection
             println!("Server got message '{}'. ", msg);

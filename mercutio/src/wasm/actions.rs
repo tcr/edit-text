@@ -11,7 +11,7 @@ pub struct ActionContext {
 
 pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
     let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
-    walker.back_block();
+    walker.back_block(true);
 
     let len = if let Some(DocGroup(_, ref span)) = walker.doc().head() {
         span.skip_len()
@@ -38,26 +38,22 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
     // Check if caret is at the start of a block.
     let caret_pos = walker.caret_pos();
     let mut block_walker = walker.clone();
-    block_walker.back_block();
+    block_walker.back_block(true);
     block_walker.stepper.next(); // re-enter the block to first caret position
     if caret_pos == block_walker.caret_pos() {
-        println!("\n\ngoing in");
-
         // Return to block parent.
-        block_walker.back_block();
+        block_walker.back_block(true);
         let span_2 = match block_walker.stepper().head() {
             Some(DocGroup(.., span)) => span.skip_len(),
             _ => unreachable!()
         };
-        println!("--> span_2 {:?}", span_2);
 
         // Move to prior block to join it.
-        block_walker.back_block();
-        let span_1 = match block_walker.stepper().head() {
-            Some(DocGroup(.., span)) => span.skip_len(),
+        block_walker.back_block(true);
+        let (attrs, span_1) = match block_walker.stepper().head() {
+            Some(DocGroup(attrs, span)) => (attrs, span.skip_len()),
             _ => unreachable!()
         };
-        println!("--> span_1 {:?}", span_1);
 
         let mut writer = block_walker.to_writer();
 
@@ -71,7 +67,7 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
 
         writer.add.begin();
         writer.add.skip(span_1 + span_2);
-        writer.add.close(hashmap! { "tag".into() => "pre".into() });
+        writer.add.close(attrs);
         writer.add.exit_all();
 
         let res = writer.result();
@@ -85,7 +81,14 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
     if let Some(DocChars(..)) = walker.doc().head() {
         // fallthrough
     } else {
-        return Ok(op_span!([], []));
+        // Check if parent is span, if so move outside span
+        // TODO check that the parent is actually a span
+        walker.stepper.next();
+        if let Some(DocChars(..)) = walker.doc().head() {
+            // fallthrough
+        } else {
+            return Ok(op_span!([], []));
+        }
     }
 
     let mut writer = walker.to_writer();
@@ -116,7 +119,7 @@ pub fn split_block(ctx: ActionContext) -> Result<Op, Error> {
     let walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
     let skip = walker.doc().skip_len();
 
-    let previous_block = if let Some(DocGroup(attrs, _)) = walker.clone().back_block().doc().head()
+    let previous_block = if let Some(DocGroup(attrs, _)) = walker.clone().back_block(true).doc().head()
     {
         attrs["tag"].to_string()
     } else {
@@ -168,7 +171,57 @@ pub fn caret_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
     writer.del.exit_all();
 
     writer.add.begin();
-    writer.add.close(hashmap! { "tag".to_string() => "caret".to_string(), "client".to_string() => ctx.client_id.clone() });
+    writer.add.close(hashmap! {
+        "tag".to_string() => "caret".to_string(),
+        "client".to_string() => ctx.client_id.clone(),
+    });
+    writer.add.exit_all();
+
+    let op_2 = writer.result();
+
+    // Return composed operations. Select proper order or otherwise composition
+    // will be invalid.
+    if increase {
+        Ok(Operation::compose(&op_2, &op_1))
+    } else {
+        Ok(Operation::compose(&op_1, &op_2))
+    }
+}
+
+pub fn caret_block_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
+
+    // First operation removes the caret.
+    let mut writer = walker.to_writer();
+
+    writer.del.begin();
+    writer.del.close();
+    writer.del.exit_all();
+
+    writer.add.exit_all();
+
+    let op_1 = writer.result();
+
+    // Second operation inserts the new caret.
+    if increase {
+        if !walker.next_block() {
+            return Ok(op_span!([], []));
+        }
+    } else {
+        walker.back_block(true);
+        walker.back_block(false);
+    }
+
+    let mut writer = walker.to_writer();
+
+    writer.del.exit_all();
+
+    writer.add.begin();
+    writer.add.begin();
+    writer.add.close(hashmap! {
+        "tag".to_string() => "caret".to_string(),
+        "client".to_string() => ctx.client_id.clone(),
+    });
     writer.add.exit_all();
 
     let op_2 = writer.result();

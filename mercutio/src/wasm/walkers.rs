@@ -230,7 +230,8 @@ impl Walker {
         }
     }
 
-    pub fn back_block(&mut self) -> &mut Walker {
+    // TODO don't like the assert api here
+    pub fn back_block(&mut self, assert: bool) -> &mut Walker {
         take_mut::take(&mut self.stepper, |stepper| {
             let mut rstepper = stepper.rev();
 
@@ -245,7 +246,7 @@ impl Walker {
                     }
                 }
             };
-            if !matched {
+            if !matched && assert {
                 panic!("Didn't find a block.");
             }
 
@@ -253,6 +254,30 @@ impl Walker {
         });
 
         self
+    }
+
+    pub fn next_block(&mut self) -> bool {
+        let mut matched = false;
+        take_mut::take(&mut self.stepper, |prev_stepper| {
+            let mut stepper = prev_stepper.clone();
+            let target_pos = stepper.caret_pos + 1;
+
+            // Iterate until we match the cursor.
+            matched = loop {
+                if stepper.next().is_none() {
+                    break false;
+                }
+                if let Some(DocGroup(attrs, _)) = stepper.doc.head() {
+                    if is_block(&attrs) {
+                        break true;
+                    }
+                }
+            };
+
+            stepper
+        });
+
+        matched
     }
 
     pub fn next_char(&mut self) -> &mut Walker {
@@ -286,7 +311,7 @@ impl Walker {
 
             let target_pos = rstepper.caret_pos - 1;
 
-            println!("uh1 {:?}", prev_stepper);
+            println!("whoa");
 
             // Iterate until we match the cursor.
             let matched = loop {
@@ -296,14 +321,11 @@ impl Walker {
                 if rstepper.next().is_none() {
                     break false;
                 }
+                // println!("----> step {:#?}", rstepper.doc);
             };
 
-            println!("REV REV {:?}", rstepper);
-    let j = rstepper.rev();
-            println!("uh2 {:?} + {:?}", matched, j);
-
             if matched {
-                j
+                rstepper.rev()
             } else {
                 prev_stepper
             }
@@ -318,8 +340,6 @@ impl Walker {
 
         // Walk the doc until we reach our current doc position.
         let mut doc_stepper = DocStepper::new(&self.original_doc.0);
-
-        println!("self.stepper.doc {:?}", self.stepper.doc);
 
         while self.stepper.doc != doc_stepper {
             match doc_stepper.head() {
