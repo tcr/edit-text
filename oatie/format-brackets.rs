@@ -5,10 +5,7 @@ extern crate clipboard;
 use clipboard::ClipboardProvider;
 use clipboard::ClipboardContext;
 
-fn main() {
-    let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
-    let input = ctx.get_contents().unwrap();
-
+pub fn format_brackets(input: &str) -> String {
     let mut out = String::new();
     let mut len = "".to_string();
     let mut chars = input.chars().peekable();
@@ -54,5 +51,13 @@ fn main() {
             }
         }
     }
+}
+
+fn main() {
+    let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
+    let input = ctx.get_contents().unwrap();
+
+    let out = format_brackets(&input);
+
     ctx.set_contents(out).unwrap();
 }

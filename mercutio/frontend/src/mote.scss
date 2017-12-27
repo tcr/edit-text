@@ -232,12 +232,11 @@ body.focused {
     }
     
     div[data-tag="caret"] {
-        width: 0;
-        display: inline-block;
+        display: inline;
         margin-right: -3px;
         border-right: 3px red solid;
         overflow: visible;
-        height: 1em;
+        font-size: inherit;
         vertical-align: bottom;
     }
 
