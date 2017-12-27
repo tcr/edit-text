@@ -30,6 +30,10 @@ where
     F: Fn(&str) -> Result<T, Error>,
 {
     let mut target = vec![];
+    if inner.chars().all(|x| x.is_whitespace()) {
+        return Ok(target)
+    }
+
     while !inner.is_empty() {
         let mut item = None;
         for (comma, _) in {
@@ -303,6 +307,8 @@ pub fn run_transform_test(input: &str) -> Result<(), Error> {
         }
     }
 
+    println!("entries {:?}", test.keys().collect::<Vec<_>>());
+
     // Extract test entries.
     let a = (parse_del_span(&test["a_del"])?, parse_add_span(&test["a_add"])?);
     let b = (parse_del_span(&test["b_del"])?, parse_add_span(&test["b_add"])?);
@@ -328,12 +334,15 @@ pub fn run_transform_test(input: &str) -> Result<(), Error> {
 
     // Check against provided document.
     if let Some(doc) = test.get("doc") {
+        println!("{}", Paint::red("(!) validating docs..."));
+
         let doc = Doc(parse_doc_span(doc)?);
 
         println!("document: {:?}", doc);
         println!();
 
         // First test original operations can be applied against the doc.
+        // (This should always pass.)
         println!("{}", Paint::red("(!) applying first ops..."));
         println!(" ---> doc a : a");
         let doc_a = OT::apply(&doc, &a);
