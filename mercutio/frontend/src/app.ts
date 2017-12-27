@@ -500,9 +500,12 @@ function init ($elem, editorID: string) {
   let monkey = false;
   $('<button>Monkey</button>')
   .appendTo($elem.prev())
-  .on('click', () => {
+  .on('click', function () {
     monkey = !monkey;
     nativeCommand(MonkeyCommand(monkey));
+    $(this).css('font-weight') == '700'
+      ? $(this).css('font-weight', 'normal')
+      : $(this).css('font-weight', 'bold');
   })
 
   // switching button
@@ -735,7 +738,14 @@ function MonkeyCommand(
   }
 }
 
-type Command = MonkeyCommand | RenameGroupCommand | KeypressCommand | CharacterCommand | TargetCommand | ButtonCommand | LoadCommand;
+type Command
+  = MonkeyCommand
+  | RenameGroupCommand
+  | KeypressCommand
+  | CharacterCommand
+  | TargetCommand
+  | ButtonCommand
+  | LoadCommand;
 
 function nativeCommand(command: Command) {
   exampleSocket.send(JSON.stringify(command));
@@ -786,7 +796,6 @@ function onmessage (m1, ops_a, event) {
 
 if ((<any>window).MOTE_ENTRY == 'index') {
   document.body.style.background = '#eee';
-  // TODO
 
   let cache = (<any>{});
 
@@ -817,9 +826,18 @@ else if ((<any>window).MOTE_ENTRY == 'client') {
   var exampleSocket;
   $.get('/api/hello', data => {
     actionHello(m1, data);
+
+    // Initial load.
+    window.parent.postMessage({
+      Update: {
+        doc: data,
+        ops: ops_a,
+        name: window.name
+      },
+    }, '*');
   
     exampleSocket = new WebSocket(window.name == 'left' ? "ws://127.0.0.1:3012" : 'ws://127.0.0.1:3013');
-    exampleSocket.onopen = function (event) { 
+    exampleSocket.onopen = function (event) {
       nativeCommand(LoadCommand(data));
     };
     exampleSocket.onmessage = onmessage.bind(exampleSocket, m1, ops_a);
