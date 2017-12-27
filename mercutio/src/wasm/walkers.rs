@@ -200,7 +200,9 @@ impl Walker {
             }
 
             while match_doc != stepper.doc {
-                stepper.next();
+                if stepper.next().is_none() {
+                    break;
+                }
             }
         }
         if !matched {
@@ -212,13 +214,17 @@ impl Walker {
         // we want our stepper to be on the immediate right of its character.
         let mut rstepper = stepper.rev();
         while !rstepper.is_valid_caret_pos() {
-            rstepper.next();
+            if rstepper.next().is_none() {
+                break;
+            }
         }
 
         // Next, increment by one full char (so cursor is always on right).
         let mut stepper = rstepper.rev();
         loop {
-            stepper.next();
+            if stepper.next().is_none() {
+                break;
+            }
             if stepper.is_valid_caret_pos() {
                 break;
             }

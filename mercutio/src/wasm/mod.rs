@@ -189,7 +189,11 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
             *client.target.lock().unwrap() = Some(cur);
         }
         NativeCommand::Load(doc) => {
-            *client.doc.lock().unwrap() = Doc(doc);
+            *client.doc.lock().unwrap() = Doc(doc.clone());
+
+            // Native drives client state.
+            let res = ClientCommand::Update(doc.clone(), op_span!([], []));
+            client.send(&res)?;
         }
         NativeCommand::Monkey(setting) => {
             client.monkey.store(setting, Ordering::Relaxed);
@@ -235,7 +239,7 @@ fn setup_monkey(client: Arc<Client>) {
     let thread_client: Arc<_> = client.clone();
     thread::spawn(move || loop {
         thread::sleep(Duration::from_millis(
-            rand::thread_rng().gen_range(0, 300) + 100,
+            rand::thread_rng().gen_range(0, 200) + 50,
         ));
         if thread_client.monkey.load(Ordering::Relaxed) {
             native_command(
@@ -256,12 +260,13 @@ fn setup_monkey(client: Arc<Client>) {
     let thread_client: Arc<_> = client.clone();
     thread::spawn(move || loop {
         thread::sleep(Duration::from_millis(
-            rand::thread_rng().gen_range(0, 4000) + 700,
+            rand::thread_rng().gen_range(0, 500) + 0,
         ));
         if thread_client.monkey.load(Ordering::Relaxed) {
+            let key = *rand::thread_rng().choose(&[37, 38, 39, 40]).unwrap();
             native_command(
                 &*thread_client,
-                NativeCommand::Keypress(*rand::thread_rng().choose(&[37, 39]).unwrap(), false, false),
+                NativeCommand::Keypress(key, false, false),
             );
         }
     });
@@ -270,7 +275,7 @@ fn setup_monkey(client: Arc<Client>) {
     let thread_client: Arc<_> = client.clone();
     thread::spawn(move || loop {
         thread::sleep(Duration::from_millis(
-            rand::thread_rng().gen_range(0, 3_000) + 1000,
+            rand::thread_rng().gen_range(0, 8_000) + 6000,
         ));
         if thread_client.monkey.load(Ordering::Relaxed) {
             native_command(&*thread_client, NativeCommand::Keypress(13, false, false));

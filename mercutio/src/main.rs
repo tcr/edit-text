@@ -196,11 +196,17 @@ fn api_random(struct_body: Json<RandomInput>, mote: State<MoteState>) -> Json<Ra
     })
 }
 
+#[derive(Serialize)]
+struct SyncResponse {
+    ok: bool,
+    doc: DocSpan,
+}
+
 type SyncInput = (Vec<Op>, Vec<Op>);
 
 // TODO should return HTTP error code on failure?
 #[post("/api/sync", data = "<struct_body>")]
-fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<ConfirmResponse> {
+fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<SyncResponse> {
     let (mut ops_a, mut ops_b) = struct_body.0;
 
     let mut doc = mote.body.lock().unwrap();
@@ -242,13 +248,13 @@ fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<Confir
 
     println!();
     println!("<test>");
-    println!("doc:   {}", debug_pretty(&*doc));
+    println!("doc:   {}", debug_pretty(&doc.0));
     println!();
-    println!("a_del: {:?}", debug_pretty(&op_a.0));
-    println!("a_add: {:?}", debug_pretty(&op_a.1));
+    println!("a_del: {}", debug_pretty(&op_a.0));
+    println!("a_add: {}", debug_pretty(&op_a.1));
     println!();
-    println!("b_del: {:?}", debug_pretty(&op_b.0));
-    println!("b_add: {:?}", debug_pretty(&op_b.1));
+    println!("b_del: {}", debug_pretty(&op_b.0));
+    println!("b_add: {}", debug_pretty(&op_b.1));
     println!("</test>");
     println!();
 
@@ -286,7 +292,10 @@ fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<Confir
         true
     };
 
-    Json(ConfirmResponse { ok: success })
+    Json(SyncResponse {
+        ok: success,
+        doc: a_res.0,
+    })
 }
 
 /// Return the initial "hello world" document.

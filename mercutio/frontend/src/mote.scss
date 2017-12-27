@@ -202,33 +202,8 @@ body.focused {
         filter: brightness(150%);
     }
 
-    div.active {
-        background: #98e;
-    }
-
-    span.active,
-    span.target {
-        // border-right: 3px solid rgba(0, 0, 0, 1.0);
-        // margin-right: -3px;
-        z-index: 100;
-    }
-
-    div.active,
-    div.target {
-        border-bottom: 3px solid rgba(0, 0, 0, .3);
-        padding-bottom: 9px;
-    }
-
-    div.active > div {
-        background: #ccc;
-    }
-
     div[data-tag="span"] {
         display: inline;
-
-        &.active {
-            background: #98e;
-        }
     }
 
     div[data-tag="span"]:empty::before {
@@ -240,38 +215,29 @@ body.focused {
     
     div[data-tag="caret"] {
         display: inline;
-        margin-right: -3px;
-        border-right: 3px red solid;
+        border-right: 2px red solid;
         overflow: visible;
         font-size: inherit;
         vertical-align: bottom;
+        animation: caret step-end 1.2s infinite;
+
     }
 
     div[data-tag="caret"][data-client="right"] {
-        border-right: 3px solid blue;
+        border-right-color: blue;
     }
 
-    /**
-     * targets
-     */
-
-    .active ~ * {
-        background: red;
-    }
-
-    .target ~ span {
-        background: rgb(220, 255, 220);
-    }
-
-    // reset previous changes
-
-    .target ~ div {
-        background: rgba(0, 0, 0, .15);
-    }
-
-    .target ~ div[data-tag="span"] {
-        background: rgba(255, 0, 0, .25);
-    }
+    @keyframes caret {
+        0% {
+            border-right-width: 2px;
+            margin-right: -2px;
+            margin-left: -1px;
+        }
+        // 50% {
+        //     border-right-width: 0;
+        //     margin-right: 0;
+        // }
+      }
 
     /**
      * span styles

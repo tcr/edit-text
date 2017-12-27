@@ -509,7 +509,7 @@ function init ($elem, editorID: string) {
     })
 
   // switching button
-  $('<button>Style Switch</button>')
+  $('<button>Toggle Element View</button>')
     .appendTo($('#local-buttons'))
     .on('click', function () {
       $elem.toggleClass('theme-mock');
@@ -546,7 +546,7 @@ function init ($elem, editorID: string) {
     } else {
       clearActive();
       clearTarget();
-      $(this).addClass('active').addClass('target')
+      $(this).addClass('active').addClass('target');
 
       console.log('Cursor:', curto($(this)));
       nativeCommand(TargetCommand(curto($(this))));
@@ -634,7 +634,6 @@ function actionReset() {
 }
 
 function actionSync(ops_a, ops_b) {
-  // TODO fix this as ops_a, ops_b
   let packet = [
     ops_a,
     ops_b,
@@ -650,7 +649,16 @@ function actionSync(ops_a, ops_b) {
   .done(function (data, _2, obj) {
     console.log('success', arguments);
     if (obj.status == 200 && data != '') {
-      window.location.reload();
+      
+      // window.location.reload();
+
+      // Get the new thing and update the two clients
+      for (let i = 0; i < window.frames.length; i++) {
+        console.log('hi');
+        window.frames[i].postMessage({
+          'Sync': data.doc
+        }, '*');
+      }
     } else {
       alert('Error in syncing. Check the command line.')
     }
@@ -747,6 +755,8 @@ function nativeCommand(command: Command) {
   exampleSocket.send(JSON.stringify(command));
 }
 
+let cleanse = false;
+
 function onmessage (m1, ops_a, event) {
   let parse = JSON.parse(event.data);
 
@@ -754,7 +764,12 @@ function onmessage (m1, ops_a, event) {
     console.log('update:', parse.Update);
     m1.empty().append(load(parse.Update[0]));
     // Load new op
-    ops_a.push(parse.Update[1]);
+    if (cleanse) {
+      ops_a.splice(0, ops_a.length);
+      cleanse = false;
+    } else {
+      ops_a.push(parse.Update[1]);
+    }
 
     window.parent.postMessage({
       Update: {
@@ -807,11 +822,23 @@ if ((<any>window).MOTE_ENTRY == 'index') {
     console.log('click', cache);
     actionSync(cache.left, cache.right);
   })
+
+  setInterval(function () {
+    actionSync(cache.left, cache.right);
+  }, 250)
 }
 
 
 else if ((<any>window).MOTE_ENTRY == 'client') {
   var m1 = $('#mote');
+
+  window.onmessage = function (event) {
+    if ('Sync' in event.data) {
+      // Push to native
+      cleanse = true;
+      nativeCommand(LoadCommand(event.data.Sync))
+    }
+  };
 
   $(window).on('focus', () => $(document.body).addClass('focused'));
   $(window).on('blur', () => $(document.body).removeClass('focused'));
