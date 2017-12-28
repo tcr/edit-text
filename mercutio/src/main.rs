@@ -36,7 +36,7 @@ fn default_doc() -> Doc {
         DocGroup({"tag": "h1"}, [
             DocGroup({"tag": "caret", "client": "left"}, []),
             DocGroup({"tag": "caret", "client": "right"}, []),
-            DocChars("Hello world!"),
+            DocChars("ADD A 60s TIMER, then REMOVE CARET LINES FROM default_doc() !"),
         ]),
         DocGroup({"tag": "p"}, [
             DocChars("What's "),

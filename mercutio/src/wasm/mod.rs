@@ -263,7 +263,7 @@ fn setup_monkey(client: Arc<Client>) {
             rand::thread_rng().gen_range(0, 500) + 0,
         ));
         if thread_client.monkey.load(Ordering::Relaxed) {
-            let key = *rand::thread_rng().choose(&[37, 38, 39, 40]).unwrap();
+            let key = *rand::thread_rng().choose(&[37, 38, 39, 40, 8]).unwrap();
             native_command(
                 &*thread_client,
                 NativeCommand::Keypress(key, false, false),
