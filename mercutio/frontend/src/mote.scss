@@ -24,10 +24,14 @@ button {
     font-size: 0.6em;
 }
 
-body {
+#parent {
+    background: #eee;
+}
+
+#editor {
     background: #ccc;
 }
-body.focused {
+#editor.focused {
     background: white;
 }
 

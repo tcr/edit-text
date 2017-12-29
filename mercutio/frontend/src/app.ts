@@ -1,5 +1,6 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './mote.scss';
+import * as commands from './commands.ts';
 
 import $ from 'jquery';
 import bootstrap from 'bootstrap';
@@ -37,29 +38,11 @@ function modifyElem(elem, attrs) {
     .attr('class', attrs.class || '');
 }
 
-function serializeAttrs(elem: JQuery) {
-  return {
-    "tag": String(elem.attr('data-tag') || ''),
-  };
-}
-
-function intoAttrs(str: string) {
-  if (str == 'i') {
-    return {
-      "tag": "span",
-      "class": "italic",
-    }
-  } else if (str == 'b') {
-    return {
-      "tag": "span",
-      "class": "bold",
-    }
-  } else {
-    return {
-      "tag": str,
-    };
-  }
-}
+// function serializeAttrs(elem: JQuery) {
+//   return {
+//     "tag": String(elem.attr('data-tag') || ''),
+//   };
+// }
 
 
 
@@ -95,7 +78,7 @@ function clearTarget () {
 
 
 // Creates an HTML tree from a document tree.
-function load(vec): Array<JQuery> {
+function docToDOM(vec): Array<JQuery> {
   // TODO act like doc
   // console.log(el);
   // var h = newElem(el.DocGroup[0]);
@@ -104,7 +87,7 @@ function load(vec): Array<JQuery> {
     const el = vec[g];
     if (el.DocGroup) {
       var h = newElem(el.DocGroup[0]);
-      h.append(load(el.DocGroup[1]));
+      h.append(docToDOM(el.DocGroup[1]));
       ret.push(h);
     } else if (el.DocChars) {
       for (var j = 0; j < el.DocChars.length; j++) {
@@ -151,28 +134,28 @@ function curto(el: JQuery | null) {
   return cur;
 }
 
-function serialize (parent) {
-  var out = []
-  $(parent).children().each(function () {
-    if ($(this).is('div')) {
-      out.push({
-        "DocGroup": [
-          serializeAttrs($(this)),
-          serialize(this),
-        ],
-      });
-    } else {
-      var txt = this.innerText
-      if (Object.keys(out[out.length - 1] || {})[0] == 'DocChars') {
-        txt = out.pop().DocChars + txt;
-      }
-      out.push({
-        "DocChars": txt
-      });
-    }
-  })
-  return out;
-}
+// function serialize (parent) {
+//   var out = []
+//   $(parent).children().each(function () {
+//     if ($(this).is('div')) {
+//       out.push({
+//         "DocGroup": [
+//           serializeAttrs($(this)),
+//           serialize(this),
+//         ],
+//       });
+//     } else {
+//       var txt = this.innerText
+//       if (Object.keys(out[out.length - 1] || {})[0] == 'DocChars') {
+//         txt = out.pop().DocChars + txt;
+//       }
+//       out.push({
+//         "DocChars": txt
+//       });
+//     }
+//   })
+//   return out;
+// }
 
 
 
@@ -195,139 +178,219 @@ function promptString(title, value, callback) {
   });
 }
 
-function init ($elem, editorID: string) {
-  // monkey button
-  let monkey = false;
-  $('<button>Monkey</button>')
-    .appendTo($('#local-buttons'))
-    .on('click', function () {
-      monkey = !monkey;
-      nativeCommand(MonkeyCommand(monkey));
-      $(this).css('font-weight') == '700'
-        ? $(this).css('font-weight', 'normal')
-        : $(this).css('font-weight', 'bold');
+// Initialize child editor.
+class Editor {
+  $elem: any;
+  editorID: string;
+  ops: Array<any>;
+  nativeSocket: WebSocket;
+
+  constructor($elem, editorID: string) {
+    this.$elem = $elem;
+    this.editorID = editorID;
+    this.ops = [];
+
+    let editor = this;
+
+    // monkey button
+    let monkey = false;
+    $('<button>Monkey</button>')
+      .appendTo($('#local-buttons'))
+      .on('click', function () {
+        monkey = !monkey;
+        editor.nativeCommand(commands.MonkeyCommand(monkey));
+        $(this).css('font-weight') == '700'
+          ? $(this).css('font-weight', 'normal')
+          : $(this).css('font-weight', 'bold');
+      })
+
+    // switching button
+    $('<button>Toggle Element View</button>')
+      .appendTo($('#local-buttons'))
+      .on('click', function () {
+        $elem.toggleClass('theme-mock');
+        $elem.toggleClass('theme-block');
+
+        const settings = HashState.get();
+        if (settings.has(`${editorID}-theme-block`)) {
+          settings.delete(`${editorID}-theme-v`);
+        } else {
+          settings.add(`${editorID}-theme-block`);
+        }
+        HashState.set(settings);
+      });
+
+    // theme
+    if (HashState.get().has(`${editorID}-theme-block`)) {
+      $elem.addClass('theme-block');
+    } else {
+      $elem.addClass('theme-mock');
+    }
+
+    $elem.on('mousedown', 'span, div', function (e) {
+      const active = getActive();
+      const target = getTarget();
+
+      if (e.shiftKey) {
+        if (active && active.nextAll().add(active).is(this)) {
+          clearTarget();
+          $(this).addClass('target');
+
+          // TODO
+          // send target destination curspan
+        }
+      } else {
+        clearActive();
+        clearTarget();
+        $(this).addClass('active').addClass('target');
+
+        console.log('Cursor:', curto($(this)));
+        editor.nativeCommand(commands.TargetCommand(curto($(this))));
+      }
+
+      // TODO this bubbles if i use preventDEfault?
+      window.focus();
+      return false;
     })
 
-  // switching button
-  $('<button>Toggle Element View</button>')
-    .appendTo($('#local-buttons'))
-    .on('click', function () {
-      $elem.toggleClass('theme-mock');
-      $elem.toggleClass('theme-block');
-
-      const settings = HashState.get();
-      if (settings.has(`${editorID}-theme-block`)) {
-        settings.delete(`${editorID}-theme-v`);
-      } else {
-        settings.add(`${editorID}-theme-block`);
+    $(document).on('keypress', (e) => {
+      if ($(e.target).closest('.modal').length) {
+        return;
       }
-      HashState.set(settings);
+
+      const active = getActive();
+      const target = getTarget();
+
+      if (active && !active.parents('.mote').is($elem)) {
+        return
+      }
+
+      if (e.metaKey) {
+        return;
+      }
+
+      editor.nativeCommand(commands.CharacterCommand(e.charCode,));
+
+      e.preventDefault();
     });
 
-  // theme
-  if (HashState.get().has(`${editorID}-theme-block`)) {
-    $elem.addClass('theme-block');
-  } else {
-    $elem.addClass('theme-mock');
+    $(document).on('keydown', (e) => {
+      if ($(e.target).closest('.modal').length) {
+        return;
+      }
+
+      const active = getActive();
+      const target = getTarget();
+
+      if (active && !active.parents('.mote').is($elem)) {
+        return
+      }
+
+      console.log('KEYDOWN:', e.keyCode);
+
+      // Match against whitelisted key entries.
+      if (!KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
+        return;
+      }
+
+      this.nativeCommand(commands.KeypressCommand(
+        e.keyCode,
+        e.metaKey,
+        e.shiftKey,
+      ));
+      
+      e.preventDefault();
+    })
   }
 
-  $elem.on('mousedown', 'span, div', function (e) {
-    const active = getActive();
-    const target = getTarget();
+  load(data) {
+    this.$elem.empty().append(docToDOM(data));
+  }
 
-    if (e.shiftKey) {
-      if (active && active.nextAll().add(active).is(this)) {
-        clearTarget();
-        $(this).addClass('target');
+  nativeCommand(command: commands.Command) {
+    this.nativeSocket.send(JSON.stringify(command));
+  }
 
-        // TODO
-        // send target destination curspan
+  nativeConnect(data) {
+    let editor = this;
+    this.nativeSocket = new WebSocket(
+      window.name == 'left' ? "ws://127.0.0.1:3012" : 'ws://127.0.0.1:3013'
+    );
+    this.nativeSocket.onopen = function (event) {
+      editor.nativeCommand(commands.LoadCommand(data));
+    };
+    this.nativeSocket.onmessage = this.onNativeMessage.bind(this);
+    this.nativeSocket.onclose = function () {
+      $('body').css('background', 'red');
+    }
+  }
+
+  // Received message on native socket
+  onNativeMessage(event) {
+    let editor = this;
+    let parse = JSON.parse(event.data);
+  
+    if (parse.Update) {
+      editor.load(parse.Update[0]);
+  
+      if (parse.Update[1] == null) {
+        editor.ops.splice(0, this.ops.length);
+      } else {
+        editor.ops.push(parse.Update[1]);
       }
-    } else {
-      clearActive();
-      clearTarget();
-      $(this).addClass('active').addClass('target');
-
-      console.log('Cursor:', curto($(this)));
-      nativeCommand(TargetCommand(curto($(this))));
+  
+      window.parent.postMessage({
+        Update: {
+          doc: parse.Update[0], 
+          ops: editor.ops,
+          name: editor.editorID,
+          version: parse.Update[2],
+        },
+      }, '*');
     }
-
-    // TODO this bubbles if i use preventDEfault?
-    window.focus();
-    return false;
-  })
-
-  $(document).on('keypress', (e) => {
-    if ($(e.target).closest('.modal').length) {
-      return;
-    }
-
-    const active = getActive();
-    const target = getTarget();
-
-    if (active && !active.parents('.mote').is($elem)) {
-      return
-    }
-
-    if (e.metaKey) {
-      return;
-    }
-
-    nativeCommand(CharacterCommand(e.charCode,));
-
-    e.preventDefault();
-  });
-
-  $(document).on('keydown', (e) => {
-    if ($(e.target).closest('.modal').length) {
-      return;
-    }
-
-    const active = getActive();
-    const target = getTarget();
-
-    if (active && !active.parents('.mote').is($elem)) {
-      return
-    }
-
-    console.log('KEYDOWN:', e.keyCode);
-
-    // Match against whitelisted key entries.
-    if (!KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
-      return;
-    }
-
-    nativeCommand(KeypressCommand(
-      e.keyCode,
-      e.metaKey,
-      e.shiftKey,
-    ));
     
-    e.preventDefault();
-  })
+    else if (parse.PromptString) {
+      promptString(parse.PromptString[0], parse.PromptString[1], (value) => {
+        // Lookup actual key
+        let key = Object.keys(parse.PromptString[2])[0];
+        parse.PromptString[2][key][0] = value;
+        editor.nativeCommand(parse.PromptString[2]);
+      });
+    }
+    
+    else if (parse.Setup) {
+      console.log('SETUP', parse.Setup);
+      KEY_WHITELIST = parse.Setup.keys.map(x => ({keyCode: x[0], metaKey: x[1], shiftKey: x[2]}));
+  
+      $('#native-buttons').each((_, x) => {
+        parse.Setup.buttons.forEach(btn => {
+          $('<button>').text(btn[1]).appendTo(x).click(_ => {
+            editor.nativeCommand(commands.ButtonCommand(btn[0]));
+          });
+        })
+      });
+    }
+  }
 
-  // todo
-  return [];
+  syncConnect() {
+    let editor = this;
+
+    // Receive messages from parent window.
+    window.onmessage = function (event) {
+      if ('Sync' in event.data) {
+        // Push to native
+        editor.nativeCommand(commands.LoadCommand(event.data.Sync))
+      }
+      if ('Monkey' in event.data) {
+        // TODO reflect this in the app
+        editor.nativeCommand(commands.MonkeyCommand(true));
+      }
+    };
+  }
 }
 
 // Reset button
 $('#action-reset').on('click', () => {
-  actionReset();
-});
-
-$('#action-monkey').on('click', () => {
-  for (let i = 0; i < window.frames.length; i++) {
-    window.frames[i].postMessage({
-      'Monkey': {}
-    }, '*');
-  }
-})
-
-function actionHello(m1, data) {
-  m1.empty().append(load(data));
-}
-
-function actionReset() {
   $.ajax('/api/reset', {
     contentType : 'application/json',
     type : 'POST',
@@ -341,7 +404,16 @@ function actionReset() {
     }
     //
   })
-}
+});
+
+// Monkey global click button.
+$('#action-monkey').on('click', () => {
+  for (let i = 0; i < window.frames.length; i++) {
+    window.frames[i].postMessage({
+      'Monkey': {}
+    }, '*');
+  }
+})
 
 function actionSync(ops_a, ops_b) {
   let packet = [
@@ -379,136 +451,7 @@ function actionSync(ops_a, ops_b) {
   });
 }
 
-
-// Commands
-type RenameGroupCommand = {RenameGroup: any};
-
-function RenameGroupCommand(tag: string, curspan): RenameGroupCommand {
-  return {
-    'RenameGroup': [tag, curspan],
-  }
-}
-
-type KeypressCommand = {Keypress: [number, boolean, boolean]};
-
-function KeypressCommand(
-  keyCode: number,
-  metaKey: boolean,
-  shiftKey: boolean,
-): KeypressCommand {
-  return {
-    'Keypress': [keyCode, metaKey, shiftKey],
-  }
-}
-
-type CharacterCommand = {Character: number};
-
-function CharacterCommand(
-  charCode: number,
-): CharacterCommand {
-  return {
-    'Character': charCode,
-  }
-}
-
-type TargetCommand = {Target: [any]};
-
-function TargetCommand(
-  curspan,
-): TargetCommand {
-  return {
-    'Target': curspan,
-  }
-}
-
-type ButtonCommand = {Button: number};
-
-function ButtonCommand(
-  button: number,
-): ButtonCommand {
-  return {
-    'Button': button,
-  }
-}
-
-type LoadCommand = {Load: any};
-
-function LoadCommand(
-  load: any,
-): LoadCommand {
-  return {
-    'Load': load,
-  }
-}
-
-type MonkeyCommand = {Monkey: boolean};
-
-function MonkeyCommand(
-  enabled: boolean,
-): MonkeyCommand {
-  return {
-    'Monkey': enabled,
-  }
-}
-
-type Command
-  = MonkeyCommand
-  | RenameGroupCommand
-  | KeypressCommand
-  | CharacterCommand
-  | TargetCommand
-  | ButtonCommand
-  | LoadCommand;
-
-function nativeCommand(command: Command) {
-  exampleSocket.send(JSON.stringify(command));
-}
-
-function onmessage (m1, ops_a, event) {
-  let parse = JSON.parse(event.data);
-
-  if (parse.Update) {
-    m1.empty().append(load(parse.Update[0]));
-
-    if (parse.Update[1] == null) {
-      ops_a.splice(0, ops_a.length);
-    } else {
-      ops_a.push(parse.Update[1]);
-    }
-
-    window.parent.postMessage({
-      Update: {
-        doc: parse.Update[0], 
-        ops: ops_a,
-        name: window.name,
-        version: parse.Update[2],
-      },
-    }, '*');
-  }
-  
-  else if (parse.PromptString) {
-    promptString(parse.PromptString[0], parse.PromptString[1], (value) => {
-      // Lookup actual key
-      let key = Object.keys(parse.PromptString[2])[0];
-      parse.PromptString[2][key][0] = value;
-      nativeCommand(parse.PromptString[2]);
-    });
-  }
-  
-  else if (parse.Setup) {
-    console.log('SETUP', parse.Setup);
-    KEY_WHITELIST = parse.Setup.keys.map(x => ({keyCode: x[0], metaKey: x[1], shiftKey: x[2]}));
-
-    $('#native-buttons').each((_, x) => {
-      parse.Setup.buttons.forEach(btn => {
-        $('<button>').text(btn[1]).appendTo(x).click(_ => {
-          nativeCommand(ButtonCommand(btn[0]));
-        });
-      })
-    });
-  }
-}
-
+// Timer component.
 let counter = 0;
 setInterval(() => {
   $('#timer').each(function () {
@@ -516,10 +459,10 @@ setInterval(() => {
   })
 }, 1000);
 
+$(window).on('focus', () => $(document.body).addClass('focused'));
+$(window).on('blur', () => $(document.body).removeClass('focused'));
 
 if ((<any>window).MOTE_ENTRY == 'index') {
-  document.body.style.background = '#eee';
-
   let cache = (<any>{});
 
   // TODO get this from the initial load
@@ -529,18 +472,6 @@ if ((<any>window).MOTE_ENTRY == 'index') {
     let name = data.data.Update.name;
     cache[name] = data.data.Update;
   };
-
-  // Sync action
-  // $('#action-sync').on('click', () => {
-  //   console.log('click', cache);
-  //   if (!cache.left || !cache.right) {
-  //     return;
-  //   }
-  //   actionSync(cache.left, cache.right);
-  //   delete cache.left;
-  //   delete cache.right;
-  //   curversion += 1;
-  // })
 
   setInterval(function () {
     if ((!cache.left || cache.left.version != curversion) ||
@@ -553,46 +484,12 @@ if ((<any>window).MOTE_ENTRY == 'index') {
   }, 250)
 }
 else if ((<any>window).MOTE_ENTRY == 'client') {
-  var m1 = $('#mote');
+  let editor = new Editor($('#mote'), window.name);
 
-  // Receive messages from parent window.
-  window.onmessage = function (event) {
-    if ('Sync' in event.data) {
-      // Push to native
-      nativeCommand(LoadCommand(event.data.Sync))
-    }
-    if ('Monkey' in event.data) {
-      // TODO reflect this in the app
-      nativeCommand(MonkeyCommand(true));
-    }
-  };
-
-  $(window).on('focus', () => $(document.body).addClass('focused'));
-  $(window).on('blur', () => $(document.body).removeClass('focused'));
-  
-  var ops_a = init(m1, window.name);
+  editor.syncConnect();
   
   // Initial load
-  var exampleSocket;
   $.get('/api/hello', data => {
-    actionHello(m1, data);
-
-    // Initial load.
-    window.parent.postMessage({
-      Update: {
-        doc: data,
-        ops: ops_a,
-        name: window.name
-      },
-    }, '*');
-  
-    exampleSocket = new WebSocket(window.name == 'left' ? "ws://127.0.0.1:3012" : 'ws://127.0.0.1:3013');
-    exampleSocket.onopen = function (event) {
-      nativeCommand(LoadCommand(data));
-    };
-    exampleSocket.onmessage = onmessage.bind(exampleSocket, m1, ops_a);
-    exampleSocket.onclose = function () {
-      $('body').css('background', 'red');
-    }
+    editor.nativeConnect(data);
   });  
 }
