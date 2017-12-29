@@ -10793,19 +10793,21 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_bootstrap_dist_css_bootstrap_min_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_bootstrap_dist_css_bootstrap_min_css__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__mote_scss__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__mote_scss___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__mote_scss__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_jquery__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_jquery__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_bootstrap__ = __webpack_require__(14);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_bootstrap___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_bootstrap__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_bootbox__ = __webpack_require__(27);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_bootbox___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_bootbox__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__commands_ts__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_jquery__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_jquery__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_bootstrap__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_bootstrap___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_bootstrap__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_bootbox__ = __webpack_require__(27);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_bootbox___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_bootbox__);
+
 
 
 
 
 
 // Consume bootstrap so bootbox works.
-__WEBPACK_IMPORTED_MODULE_3_bootstrap___default.a;
+__WEBPACK_IMPORTED_MODULE_4_bootstrap___default.a;
 // Hashtag state
 class HashState {
     static get() {
@@ -10821,7 +10823,7 @@ class HashState {
 }
 // Elements
 function newElem(attrs) {
-    return modifyElem(__WEBPACK_IMPORTED_MODULE_2_jquery___default()('<div>'), attrs);
+    return modifyElem(__WEBPACK_IMPORTED_MODULE_3_jquery___default()('<div>'), attrs);
 }
 function modifyElem(elem, attrs) {
     return elem
@@ -10829,36 +10831,17 @@ function modifyElem(elem, attrs) {
         .attr('data-client', attrs.client)
         .attr('class', attrs.class || '');
 }
-function serializeAttrs(elem) {
-    return {
-        "tag": String(elem.attr('data-tag') || ''),
-    };
-}
-function intoAttrs(str) {
-    if (str == 'i') {
-        return {
-            "tag": "span",
-            "class": "italic",
-        };
-    }
-    else if (str == 'b') {
-        return {
-            "tag": "span",
-            "class": "bold",
-        };
-    }
-    else {
-        return {
-            "tag": str,
-        };
-    }
-}
+// function serializeAttrs(elem: JQuery) {
+//   return {
+//     "tag": String(elem.attr('data-tag') || ''),
+//   };
+// }
 function getActive() {
-    var a = __WEBPACK_IMPORTED_MODULE_2_jquery___default()('.active');
+    var a = __WEBPACK_IMPORTED_MODULE_3_jquery___default()('.active');
     return a[0] ? a : null;
 }
 function getTarget() {
-    var a = __WEBPACK_IMPORTED_MODULE_2_jquery___default()('.active');
+    var a = __WEBPACK_IMPORTED_MODULE_3_jquery___default()('.active');
     return a[0] ? a : null;
 }
 function isBlock($active) {
@@ -10871,13 +10854,13 @@ function isInline($active) {
     return $active && $active.data('tag') == 'span';
 }
 function clearActive() {
-    __WEBPACK_IMPORTED_MODULE_2_jquery___default()(document).find('.active').removeClass('active');
+    __WEBPACK_IMPORTED_MODULE_3_jquery___default()(document).find('.active').removeClass('active');
 }
 function clearTarget() {
-    __WEBPACK_IMPORTED_MODULE_2_jquery___default()(document).find('.target').removeClass('target');
+    __WEBPACK_IMPORTED_MODULE_3_jquery___default()(document).find('.target').removeClass('target');
 }
 // Creates an HTML tree from a document tree.
-function load(vec) {
+function docToDOM(vec) {
     // TODO act like doc
     // console.log(el);
     // var h = newElem(el.DocGroup[0]);
@@ -10886,12 +10869,12 @@ function load(vec) {
         const el = vec[g];
         if (el.DocGroup) {
             var h = newElem(el.DocGroup[0]);
-            h.append(load(el.DocGroup[1]));
+            h.append(docToDOM(el.DocGroup[1]));
             ret.push(h);
         }
         else if (el.DocChars) {
             for (var j = 0; j < el.DocChars.length; j++) {
-                ret.push(__WEBPACK_IMPORTED_MODULE_2_jquery___default()('<span>').text(el.DocChars[j]));
+                ret.push(__WEBPACK_IMPORTED_MODULE_3_jquery___default()('<span>').text(el.DocChars[j]));
             }
         }
         else {
@@ -10932,146 +10915,209 @@ function curto(el) {
     }
     return cur;
 }
-function serialize(parent) {
-    var out = [];
-    __WEBPACK_IMPORTED_MODULE_2_jquery___default()(parent).children().each(function () {
-        if (__WEBPACK_IMPORTED_MODULE_2_jquery___default()(this).is('div')) {
-            out.push({
-                "DocGroup": [
-                    serializeAttrs(__WEBPACK_IMPORTED_MODULE_2_jquery___default()(this)),
-                    serialize(this),
-                ],
-            });
-        }
-        else {
-            var txt = this.innerText;
-            if (Object.keys(out[out.length - 1] || {})[0] == 'DocChars') {
-                txt = out.pop().DocChars + txt;
-            }
-            out.push({
-                "DocChars": txt
-            });
-        }
-    });
-    return out;
-}
+// function serialize (parent) {
+//   var out = []
+//   $(parent).children().each(function () {
+//     if ($(this).is('div')) {
+//       out.push({
+//         "DocGroup": [
+//           serializeAttrs($(this)),
+//           serialize(this),
+//         ],
+//       });
+//     } else {
+//       var txt = this.innerText
+//       if (Object.keys(out[out.length - 1] || {})[0] == 'DocChars') {
+//         txt = out.pop().DocChars + txt;
+//       }
+//       out.push({
+//         "DocChars": txt
+//       });
+//     }
+//   })
+//   return out;
+// }
 let KEY_WHITELIST = [];
 function promptString(title, value, callback) {
-    __WEBPACK_IMPORTED_MODULE_4_bootbox___default.a.prompt({
+    __WEBPACK_IMPORTED_MODULE_5_bootbox___default.a.prompt({
         title,
         value,
         callback,
     }).on("shown.bs.modal", function () {
-        __WEBPACK_IMPORTED_MODULE_2_jquery___default()(this).find('input').select();
+        __WEBPACK_IMPORTED_MODULE_3_jquery___default()(this).find('input').select();
     });
 }
-function init($elem, editorID) {
-    // monkey button
-    let monkey = false;
-    __WEBPACK_IMPORTED_MODULE_2_jquery___default()('<button>Monkey</button>')
-        .appendTo(__WEBPACK_IMPORTED_MODULE_2_jquery___default()('#local-buttons'))
-        .on('click', function () {
-        monkey = !monkey;
-        nativeCommand(MonkeyCommand(monkey));
-        __WEBPACK_IMPORTED_MODULE_2_jquery___default()(this).css('font-weight') == '700'
-            ? __WEBPACK_IMPORTED_MODULE_2_jquery___default()(this).css('font-weight', 'normal')
-            : __WEBPACK_IMPORTED_MODULE_2_jquery___default()(this).css('font-weight', 'bold');
-    });
-    // switching button
-    __WEBPACK_IMPORTED_MODULE_2_jquery___default()('<button>Toggle Element View</button>')
-        .appendTo(__WEBPACK_IMPORTED_MODULE_2_jquery___default()('#local-buttons'))
-        .on('click', function () {
-        $elem.toggleClass('theme-mock');
-        $elem.toggleClass('theme-block');
-        const settings = HashState.get();
-        if (settings.has(`${editorID}-theme-block`)) {
-            settings.delete(`${editorID}-theme-v`);
-        }
-        else {
-            settings.add(`${editorID}-theme-block`);
-        }
-        HashState.set(settings);
-    });
-    // theme
-    if (HashState.get().has(`${editorID}-theme-block`)) {
-        $elem.addClass('theme-block');
-    }
-    else {
-        $elem.addClass('theme-mock');
-    }
-    $elem.on('mousedown', 'span, div', function (e) {
-        const active = getActive();
-        const target = getTarget();
-        if (e.shiftKey) {
-            if (active && active.nextAll().add(active).is(this)) {
-                clearTarget();
-                __WEBPACK_IMPORTED_MODULE_2_jquery___default()(this).addClass('target');
-                // TODO
-                // send target destination curspan
+// Initialize child editor.
+class Editor {
+    constructor($elem, editorID) {
+        this.$elem = $elem;
+        this.editorID = editorID;
+        this.ops = [];
+        let editor = this;
+        // monkey button
+        let monkey = false;
+        __WEBPACK_IMPORTED_MODULE_3_jquery___default()('<button>Monkey</button>')
+            .appendTo(__WEBPACK_IMPORTED_MODULE_3_jquery___default()('#local-buttons'))
+            .on('click', function () {
+            monkey = !monkey;
+            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_2__commands_ts__["e" /* MonkeyCommand */](monkey));
+            __WEBPACK_IMPORTED_MODULE_3_jquery___default()(this).css('font-weight') == '700'
+                ? __WEBPACK_IMPORTED_MODULE_3_jquery___default()(this).css('font-weight', 'normal')
+                : __WEBPACK_IMPORTED_MODULE_3_jquery___default()(this).css('font-weight', 'bold');
+        });
+        // switching button
+        __WEBPACK_IMPORTED_MODULE_3_jquery___default()('<button>Toggle Element View</button>')
+            .appendTo(__WEBPACK_IMPORTED_MODULE_3_jquery___default()('#local-buttons'))
+            .on('click', function () {
+            $elem.toggleClass('theme-mock');
+            $elem.toggleClass('theme-block');
+            const settings = HashState.get();
+            if (settings.has(`${editorID}-theme-block`)) {
+                settings.delete(`${editorID}-theme-v`);
             }
+            else {
+                settings.add(`${editorID}-theme-block`);
+            }
+            HashState.set(settings);
+        });
+        // theme
+        if (HashState.get().has(`${editorID}-theme-block`)) {
+            $elem.addClass('theme-block');
         }
         else {
-            clearActive();
-            clearTarget();
-            __WEBPACK_IMPORTED_MODULE_2_jquery___default()(this).addClass('active').addClass('target');
-            console.log('Cursor:', curto(__WEBPACK_IMPORTED_MODULE_2_jquery___default()(this)));
-            nativeCommand(TargetCommand(curto(__WEBPACK_IMPORTED_MODULE_2_jquery___default()(this))));
+            $elem.addClass('theme-mock');
         }
-        // TODO this bubbles if i use preventDEfault?
-        window.focus();
-        return false;
-    });
-    __WEBPACK_IMPORTED_MODULE_2_jquery___default()(document).on('keypress', (e) => {
-        if (__WEBPACK_IMPORTED_MODULE_2_jquery___default()(e.target).closest('.modal').length) {
-            return;
+        $elem.on('mousedown', 'span, div', function (e) {
+            const active = getActive();
+            const target = getTarget();
+            if (e.shiftKey) {
+                if (active && active.nextAll().add(active).is(this)) {
+                    clearTarget();
+                    __WEBPACK_IMPORTED_MODULE_3_jquery___default()(this).addClass('target');
+                    // TODO
+                    // send target destination curspan
+                }
+            }
+            else {
+                clearActive();
+                clearTarget();
+                __WEBPACK_IMPORTED_MODULE_3_jquery___default()(this).addClass('active').addClass('target');
+                console.log('Cursor:', curto(__WEBPACK_IMPORTED_MODULE_3_jquery___default()(this)));
+                editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_2__commands_ts__["f" /* TargetCommand */](curto(__WEBPACK_IMPORTED_MODULE_3_jquery___default()(this))));
+            }
+            // TODO this bubbles if i use preventDEfault?
+            window.focus();
+            return false;
+        });
+        __WEBPACK_IMPORTED_MODULE_3_jquery___default()(document).on('keypress', (e) => {
+            if (__WEBPACK_IMPORTED_MODULE_3_jquery___default()(e.target).closest('.modal').length) {
+                return;
+            }
+            const active = getActive();
+            const target = getTarget();
+            if (active && !active.parents('.mote').is($elem)) {
+                return;
+            }
+            if (e.metaKey) {
+                return;
+            }
+            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_2__commands_ts__["b" /* CharacterCommand */](e.charCode));
+            e.preventDefault();
+        });
+        __WEBPACK_IMPORTED_MODULE_3_jquery___default()(document).on('keydown', (e) => {
+            if (__WEBPACK_IMPORTED_MODULE_3_jquery___default()(e.target).closest('.modal').length) {
+                return;
+            }
+            const active = getActive();
+            const target = getTarget();
+            if (active && !active.parents('.mote').is($elem)) {
+                return;
+            }
+            console.log('KEYDOWN:', e.keyCode);
+            // Match against whitelisted key entries.
+            if (!KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
+                return;
+            }
+            this.nativeCommand(__WEBPACK_IMPORTED_MODULE_2__commands_ts__["c" /* KeypressCommand */](e.keyCode, e.metaKey, e.shiftKey));
+            e.preventDefault();
+        });
+    }
+    load(data) {
+        this.$elem.empty().append(docToDOM(data));
+    }
+    nativeCommand(command) {
+        this.nativeSocket.send(JSON.stringify(command));
+    }
+    nativeConnect(data) {
+        let editor = this;
+        this.nativeSocket = new WebSocket(window.name == 'left' ? "ws://127.0.0.1:3012" : 'ws://127.0.0.1:3013');
+        this.nativeSocket.onopen = function (event) {
+            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_2__commands_ts__["d" /* LoadCommand */](data));
+        };
+        this.nativeSocket.onmessage = this.onNativeMessage.bind(this);
+        this.nativeSocket.onclose = function () {
+            __WEBPACK_IMPORTED_MODULE_3_jquery___default()('body').css('background', 'red');
+        };
+    }
+    // Received message on native socket
+    onNativeMessage(event) {
+        let editor = this;
+        let parse = JSON.parse(event.data);
+        if (parse.Update) {
+            editor.load(parse.Update[0]);
+            if (parse.Update[1] == null) {
+                editor.ops.splice(0, this.ops.length);
+            }
+            else {
+                editor.ops.push(parse.Update[1]);
+            }
+            window.parent.postMessage({
+                Update: {
+                    doc: parse.Update[0],
+                    ops: editor.ops,
+                    name: editor.editorID,
+                    version: parse.Update[2],
+                },
+            }, '*');
         }
-        const active = getActive();
-        const target = getTarget();
-        if (active && !active.parents('.mote').is($elem)) {
-            return;
+        else if (parse.PromptString) {
+            promptString(parse.PromptString[0], parse.PromptString[1], (value) => {
+                // Lookup actual key
+                let key = Object.keys(parse.PromptString[2])[0];
+                parse.PromptString[2][key][0] = value;
+                editor.nativeCommand(parse.PromptString[2]);
+            });
         }
-        if (e.metaKey) {
-            return;
+        else if (parse.Setup) {
+            console.log('SETUP', parse.Setup);
+            KEY_WHITELIST = parse.Setup.keys.map(x => ({ keyCode: x[0], metaKey: x[1], shiftKey: x[2] }));
+            __WEBPACK_IMPORTED_MODULE_3_jquery___default()('#native-buttons').each((_, x) => {
+                parse.Setup.buttons.forEach(btn => {
+                    __WEBPACK_IMPORTED_MODULE_3_jquery___default()('<button>').text(btn[1]).appendTo(x).click(_ => {
+                        editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_2__commands_ts__["a" /* ButtonCommand */](btn[0]));
+                    });
+                });
+            });
         }
-        nativeCommand(CharacterCommand(e.charCode));
-        e.preventDefault();
-    });
-    __WEBPACK_IMPORTED_MODULE_2_jquery___default()(document).on('keydown', (e) => {
-        if (__WEBPACK_IMPORTED_MODULE_2_jquery___default()(e.target).closest('.modal').length) {
-            return;
-        }
-        const active = getActive();
-        const target = getTarget();
-        if (active && !active.parents('.mote').is($elem)) {
-            return;
-        }
-        console.log('KEYDOWN:', e.keyCode);
-        // Match against whitelisted key entries.
-        if (!KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
-            return;
-        }
-        nativeCommand(KeypressCommand(e.keyCode, e.metaKey, e.shiftKey));
-        e.preventDefault();
-    });
-    // todo
-    return [];
+    }
+    syncConnect() {
+        let editor = this;
+        // Receive messages from parent window.
+        window.onmessage = function (event) {
+            if ('Sync' in event.data) {
+                // Push to native
+                editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_2__commands_ts__["d" /* LoadCommand */](event.data.Sync));
+            }
+            if ('Monkey' in event.data) {
+                // TODO reflect this in the app
+                editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_2__commands_ts__["e" /* MonkeyCommand */](true));
+            }
+        };
+    }
 }
 // Reset button
-__WEBPACK_IMPORTED_MODULE_2_jquery___default()('#action-reset').on('click', () => {
-    actionReset();
-});
-__WEBPACK_IMPORTED_MODULE_2_jquery___default()('#action-monkey').on('click', () => {
-    for (let i = 0; i < window.frames.length; i++) {
-        window.frames[i].postMessage({
-            'Monkey': {}
-        }, '*');
-    }
-});
-function actionHello(m1, data) {
-    m1.empty().append(load(data));
-}
-function actionReset() {
-    __WEBPACK_IMPORTED_MODULE_2_jquery___default.a.ajax('/api/reset', {
+__WEBPACK_IMPORTED_MODULE_3_jquery___default()('#action-reset').on('click', () => {
+    __WEBPACK_IMPORTED_MODULE_3_jquery___default.a.ajax('/api/reset', {
         contentType: 'application/json',
         type: 'POST',
     })
@@ -11085,14 +11131,22 @@ function actionReset() {
         }
         //
     });
-}
+});
+// Monkey global click button.
+__WEBPACK_IMPORTED_MODULE_3_jquery___default()('#action-monkey').on('click', () => {
+    for (let i = 0; i < window.frames.length; i++) {
+        window.frames[i].postMessage({
+            'Monkey': {}
+        }, '*');
+    }
+});
 function actionSync(ops_a, ops_b) {
     let packet = [
         ops_a,
         ops_b,
     ];
     console.log('PACKET', packet);
-    __WEBPACK_IMPORTED_MODULE_2_jquery___default.a.ajax('/api/sync', {
+    __WEBPACK_IMPORTED_MODULE_3_jquery___default.a.ajax('/api/sync', {
         data: JSON.stringify(packet),
         contentType: 'application/json',
         type: 'POST',
@@ -11118,91 +11172,16 @@ function actionSync(ops_a, ops_b) {
         alert('Error in syncing. Check the command line.');
     });
 }
-function RenameGroupCommand(tag, curspan) {
-    return {
-        'RenameGroup': [tag, curspan],
-    };
-}
-function KeypressCommand(keyCode, metaKey, shiftKey) {
-    return {
-        'Keypress': [keyCode, metaKey, shiftKey],
-    };
-}
-function CharacterCommand(charCode) {
-    return {
-        'Character': charCode,
-    };
-}
-function TargetCommand(curspan) {
-    return {
-        'Target': curspan,
-    };
-}
-function ButtonCommand(button) {
-    return {
-        'Button': button,
-    };
-}
-function LoadCommand(load) {
-    return {
-        'Load': load,
-    };
-}
-function MonkeyCommand(enabled) {
-    return {
-        'Monkey': enabled,
-    };
-}
-function nativeCommand(command) {
-    exampleSocket.send(JSON.stringify(command));
-}
-function onmessage(m1, ops_a, event) {
-    let parse = JSON.parse(event.data);
-    if (parse.Update) {
-        m1.empty().append(load(parse.Update[0]));
-        if (parse.Update[1] == null) {
-            ops_a.splice(0, ops_a.length);
-        }
-        else {
-            ops_a.push(parse.Update[1]);
-        }
-        window.parent.postMessage({
-            Update: {
-                doc: parse.Update[0],
-                ops: ops_a,
-                name: window.name,
-                version: parse.Update[2],
-            },
-        }, '*');
-    }
-    else if (parse.PromptString) {
-        promptString(parse.PromptString[0], parse.PromptString[1], (value) => {
-            // Lookup actual key
-            let key = Object.keys(parse.PromptString[2])[0];
-            parse.PromptString[2][key][0] = value;
-            nativeCommand(parse.PromptString[2]);
-        });
-    }
-    else if (parse.Setup) {
-        console.log('SETUP', parse.Setup);
-        KEY_WHITELIST = parse.Setup.keys.map(x => ({ keyCode: x[0], metaKey: x[1], shiftKey: x[2] }));
-        __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#native-buttons').each((_, x) => {
-            parse.Setup.buttons.forEach(btn => {
-                __WEBPACK_IMPORTED_MODULE_2_jquery___default()('<button>').text(btn[1]).appendTo(x).click(_ => {
-                    nativeCommand(ButtonCommand(btn[0]));
-                });
-            });
-        });
-    }
-}
+// Timer component.
 let counter = 0;
 setInterval(() => {
-    __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#timer').each(function () {
-        __WEBPACK_IMPORTED_MODULE_2_jquery___default()(this).text(counter++ + 's');
+    __WEBPACK_IMPORTED_MODULE_3_jquery___default()('#timer').each(function () {
+        __WEBPACK_IMPORTED_MODULE_3_jquery___default()(this).text(counter++ + 's');
     });
 }, 1000);
+__WEBPACK_IMPORTED_MODULE_3_jquery___default()(window).on('focus', () => __WEBPACK_IMPORTED_MODULE_3_jquery___default()(document.body).addClass('focused'));
+__WEBPACK_IMPORTED_MODULE_3_jquery___default()(window).on('blur', () => __WEBPACK_IMPORTED_MODULE_3_jquery___default()(document.body).removeClass('focused'));
 if (window.MOTE_ENTRY == 'index') {
-    document.body.style.background = '#eee';
     let cache = {};
     // TODO get this from the initial load
     let curversion = 101;
@@ -11210,17 +11189,6 @@ if (window.MOTE_ENTRY == 'index') {
         let name = data.data.Update.name;
         cache[name] = data.data.Update;
     };
-    // Sync action
-    // $('#action-sync').on('click', () => {
-    //   console.log('click', cache);
-    //   if (!cache.left || !cache.right) {
-    //     return;
-    //   }
-    //   actionSync(cache.left, cache.right);
-    //   delete cache.left;
-    //   delete cache.right;
-    //   curversion += 1;
-    // })
     setInterval(function () {
         if ((!cache.left || cache.left.version != curversion) ||
             (!cache.right || cache.right.version != curversion)) {
@@ -11232,41 +11200,11 @@ if (window.MOTE_ENTRY == 'index') {
     }, 250);
 }
 else if (window.MOTE_ENTRY == 'client') {
-    var m1 = __WEBPACK_IMPORTED_MODULE_2_jquery___default()('#mote');
-    // Receive messages from parent window.
-    window.onmessage = function (event) {
-        if ('Sync' in event.data) {
-            // Push to native
-            nativeCommand(LoadCommand(event.data.Sync));
-        }
-        if ('Monkey' in event.data) {
-            // TODO reflect this in the app
-            nativeCommand(MonkeyCommand(true));
-        }
-    };
-    __WEBPACK_IMPORTED_MODULE_2_jquery___default()(window).on('focus', () => __WEBPACK_IMPORTED_MODULE_2_jquery___default()(document.body).addClass('focused'));
-    __WEBPACK_IMPORTED_MODULE_2_jquery___default()(window).on('blur', () => __WEBPACK_IMPORTED_MODULE_2_jquery___default()(document.body).removeClass('focused'));
-    var ops_a = init(m1, window.name);
+    let editor = new Editor(__WEBPACK_IMPORTED_MODULE_3_jquery___default()('#mote'), window.name);
+    editor.syncConnect();
     // Initial load
-    var exampleSocket;
-    __WEBPACK_IMPORTED_MODULE_2_jquery___default.a.get('/api/hello', data => {
-        actionHello(m1, data);
-        // Initial load.
-        window.parent.postMessage({
-            Update: {
-                doc: data,
-                ops: ops_a,
-                name: window.name
-            },
-        }, '*');
-        exampleSocket = new WebSocket(window.name == 'left' ? "ws://127.0.0.1:3012" : 'ws://127.0.0.1:3013');
-        exampleSocket.onopen = function (event) {
-            nativeCommand(LoadCommand(data));
-        };
-        exampleSocket.onmessage = onmessage.bind(exampleSocket, m1, ops_a);
-        exampleSocket.onclose = function () {
-            __WEBPACK_IMPORTED_MODULE_2_jquery___default()('body').css('background', 'red');
-        };
+    __WEBPACK_IMPORTED_MODULE_3_jquery___default.a.get('/api/hello', data => {
+        editor.nativeConnect(data);
     });
 }
 
@@ -11475,7 +11413,7 @@ exports = module.exports = __webpack_require__(1)(undefined);
 
 
 // module
-exports.push([module.i, "body {\n  font-family: Helvetica;\n  padding: 10px 30px; }\n\nh4 {\n  margin-bottom: 0; }\n\n#clients {\n  width: 100%;\n  border-spacing: 20px;\n  border-collapse: separate; }\n\n#clients td {\n  width: 50%;\n  vertical-align: top; }\n\nbutton {\n  font: inherit;\n  font-size: 0.6em; }\n\nbody {\n  background: #ccc; }\n\nbody.focused {\n  background: white; }\n\n.mote.theme-block {\n  font-family: monospace;\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  /**\n     * targets\n     */\n  /**\n     * span styles\n     */ }\n  .mote.theme-block div {\n    /*border: 1px solid #444;*/\n    background: rgba(0, 0, 0, 0.15);\n    padding: 12px 12px 12px 16px;\n    margin: 8px 0;\n    position: relative;\n    min-height: 14px; }\n    .mote.theme-block div::before {\n      display: block;\n      content: attr(data-tag);\n      opacity: 0.5;\n      background: black;\n      color: white;\n      padding: 2px 4px;\n      width: -webkit-max-content;\n      margin-bottom: 6px;\n      text-align: center; }\n  .mote.theme-block * {\n    clear: both; }\n  .mote.theme-block span {\n    background: #7dc87d;\n    padding: 3px 5px;\n    /*border: 1px solid rgba(0, 0, 0, .3);*/\n    display: inline-block;\n    width: 20px;\n    height: 1.8em;\n    box-sizing: border-box;\n    margin-left: 1px;\n    margin-bottom: 2px;\n    cursor: pointer;\n    white-space: pre; }\n  .mote.theme-block span:hover {\n    filter: brightness(150%); }\n  .mote.theme-block .active {\n    background: #98e; }\n  .mote.theme-block span.active,\n  .mote.theme-block span.target {\n    border-right: 3px solid rgba(0, 0, 0, 0.3);\n    margin-right: -1px;\n    width: 21px; }\n  .mote.theme-block div.active,\n  .mote.theme-block div.target {\n    border-bottom: 3px solid rgba(0, 0, 0, 0.3);\n    padding-bottom: 9px; }\n  .mote.theme-block div.active > div {\n    background: #ccc; }\n  .mote.theme-block div[data-tag=\"span\"] {\n    display: inline-block;\n    margin-left: 1px;\n    padding: 4px 6px 1px;\n    margin-bottom: 3px;\n    background: rgba(255, 0, 0, 0.25); }\n    .mote.theme-block div[data-tag=\"span\"].active {\n      margin-bottom: 0;\n      background: #98e; }\n    .mote.theme-block div[data-tag=\"span\"]::before {\n      float: left;\n      margin-top: 2px;\n      margin-right: 2px;\n      display: none; }\n  .mote.theme-block .active ~ * {\n    background: red; }\n  .mote.theme-block .target ~ span {\n    background: #7dc87d; }\n  .mote.theme-block .target ~ div {\n    background: rgba(0, 0, 0, 0.15); }\n  .mote.theme-block .target ~ div[data-tag=\"span\"] {\n    background: rgba(255, 0, 0, 0.25); }\n  .mote.theme-block div.bold {\n    font-weight: 900; }\n  .mote.theme-block div.italic {\n    font-style: italic; }\n\n.mote {\n  border: 2px solid rgba(80, 60, 60, 0.3);\n  padding: 5px 15px;\n  margin: 10px 0 20px;\n  border-radius: 3px; }\n\n.mote.theme-mock {\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  font-size: 16px;\n  /**\n     * span styles\n     */ }\n  .mote.theme-mock div {\n    /*border: 1px solid #444;*/\n    margin: 8px 0;\n    position: relative;\n    min-height: 14px; }\n  .mote.theme-mock * {\n    clear: both; }\n  .mote.theme-mock span {\n    background: #dcffdc;\n    /*border: 1px solid rgba(0, 0, 0, .3);*/\n    display: inline;\n    cursor: pointer;\n    white-space: pre-wrap;\n    z-index: 10; }\n  .mote.theme-mock span:hover {\n    filter: brightness(150%); }\n  .mote.theme-mock div[data-tag=\"span\"] {\n    display: inline; }\n  .mote.theme-mock div[data-tag=\"span\"]:empty::before {\n    display: inline;\n    content: \"!\";\n    padding: 0 5px;\n    border: 2px solid red; }\n  .mote.theme-mock div[data-tag=\"caret\"] {\n    display: inline;\n    border-right: 2px red solid;\n    overflow: visible;\n    font-size: inherit;\n    vertical-align: bottom;\n    animation: caret step-end 1.2s infinite; }\n  .mote.theme-mock div[data-tag=\"caret\"][data-client=\"right\"] {\n    border-right-color: blue; }\n\n@keyframes caret {\n  0% {\n    border-right-width: 2px;\n    margin-right: -2px;\n    margin-left: -1px; } }\n  .mote.theme-mock div.bold {\n    font-weight: 900; }\n  .mote.theme-mock div.italic {\n    font-style: italic; }\n  .mote.theme-mock div[data-tag=\"h1\"] {\n    font-size: 2.0em;\n    font-weight: bold; }\n  .mote.theme-mock div[data-tag=\"h2\"] {\n    font-size: 1.7em;\n    font-weight: bold; }\n  .mote.theme-mock div[data-tag=\"h3\"] {\n    font-size: 1.4em;\n    font-weight: bold; }\n  .mote.theme-mock div[data-tag=\"pre\"] {\n    font-family: monospace; }\n  .mote.theme-mock div[data-tag=\"ul\"] {\n    list-style: disc outside none; }\n  .mote.theme-mock div[data-tag=\"li\"] {\n    display: list-item;\n    margin-left: 25px; }\n", ""]);
+exports.push([module.i, "body {\n  font-family: Helvetica;\n  padding: 10px 30px; }\n\nh4 {\n  margin-bottom: 0; }\n\n#clients {\n  width: 100%;\n  border-spacing: 20px;\n  border-collapse: separate; }\n\n#clients td {\n  width: 50%;\n  vertical-align: top; }\n\nbutton {\n  font: inherit;\n  font-size: 0.6em; }\n\n#parent {\n  background: #eee; }\n\n#editor {\n  background: #ccc; }\n\n#editor.focused {\n  background: white; }\n\n.mote.theme-block {\n  font-family: monospace;\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  /**\n     * targets\n     */\n  /**\n     * span styles\n     */ }\n  .mote.theme-block div {\n    /*border: 1px solid #444;*/\n    background: rgba(0, 0, 0, 0.15);\n    padding: 12px 12px 12px 16px;\n    margin: 8px 0;\n    position: relative;\n    min-height: 14px; }\n    .mote.theme-block div::before {\n      display: block;\n      content: attr(data-tag);\n      opacity: 0.5;\n      background: black;\n      color: white;\n      padding: 2px 4px;\n      width: -webkit-max-content;\n      margin-bottom: 6px;\n      text-align: center; }\n  .mote.theme-block * {\n    clear: both; }\n  .mote.theme-block span {\n    background: #7dc87d;\n    padding: 3px 5px;\n    /*border: 1px solid rgba(0, 0, 0, .3);*/\n    display: inline-block;\n    width: 20px;\n    height: 1.8em;\n    box-sizing: border-box;\n    margin-left: 1px;\n    margin-bottom: 2px;\n    cursor: pointer;\n    white-space: pre; }\n  .mote.theme-block span:hover {\n    filter: brightness(150%); }\n  .mote.theme-block .active {\n    background: #98e; }\n  .mote.theme-block span.active,\n  .mote.theme-block span.target {\n    border-right: 3px solid rgba(0, 0, 0, 0.3);\n    margin-right: -1px;\n    width: 21px; }\n  .mote.theme-block div.active,\n  .mote.theme-block div.target {\n    border-bottom: 3px solid rgba(0, 0, 0, 0.3);\n    padding-bottom: 9px; }\n  .mote.theme-block div.active > div {\n    background: #ccc; }\n  .mote.theme-block div[data-tag=\"span\"] {\n    display: inline-block;\n    margin-left: 1px;\n    padding: 4px 6px 1px;\n    margin-bottom: 3px;\n    background: rgba(255, 0, 0, 0.25); }\n    .mote.theme-block div[data-tag=\"span\"].active {\n      margin-bottom: 0;\n      background: #98e; }\n    .mote.theme-block div[data-tag=\"span\"]::before {\n      float: left;\n      margin-top: 2px;\n      margin-right: 2px;\n      display: none; }\n  .mote.theme-block .active ~ * {\n    background: red; }\n  .mote.theme-block .target ~ span {\n    background: #7dc87d; }\n  .mote.theme-block .target ~ div {\n    background: rgba(0, 0, 0, 0.15); }\n  .mote.theme-block .target ~ div[data-tag=\"span\"] {\n    background: rgba(255, 0, 0, 0.25); }\n  .mote.theme-block div.bold {\n    font-weight: 900; }\n  .mote.theme-block div.italic {\n    font-style: italic; }\n\n.mote {\n  border: 2px solid rgba(80, 60, 60, 0.3);\n  padding: 5px 15px;\n  margin: 10px 0 20px;\n  border-radius: 3px; }\n\n.mote.theme-mock {\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  font-size: 16px;\n  /**\n     * span styles\n     */ }\n  .mote.theme-mock div {\n    /*border: 1px solid #444;*/\n    margin: 8px 0;\n    position: relative;\n    min-height: 14px; }\n  .mote.theme-mock * {\n    clear: both; }\n  .mote.theme-mock span {\n    background: #dcffdc;\n    /*border: 1px solid rgba(0, 0, 0, .3);*/\n    display: inline;\n    cursor: pointer;\n    white-space: pre-wrap;\n    z-index: 10; }\n  .mote.theme-mock span:hover {\n    filter: brightness(150%); }\n  .mote.theme-mock div[data-tag=\"span\"] {\n    display: inline; }\n  .mote.theme-mock div[data-tag=\"span\"]:empty::before {\n    display: inline;\n    content: \"!\";\n    padding: 0 5px;\n    border: 2px solid red; }\n  .mote.theme-mock div[data-tag=\"caret\"] {\n    display: inline;\n    border-right: 2px red solid;\n    overflow: visible;\n    font-size: inherit;\n    vertical-align: bottom;\n    animation: caret step-end 1.2s infinite; }\n  .mote.theme-mock div[data-tag=\"caret\"][data-client=\"right\"] {\n    border-right-color: blue; }\n\n@keyframes caret {\n  0% {\n    border-right-width: 2px;\n    margin-right: -2px;\n    margin-left: -1px; } }\n  .mote.theme-mock div.bold {\n    font-weight: 900; }\n  .mote.theme-mock div.italic {\n    font-style: italic; }\n  .mote.theme-mock div[data-tag=\"h1\"] {\n    font-size: 2.0em;\n    font-weight: bold; }\n  .mote.theme-mock div[data-tag=\"h2\"] {\n    font-size: 1.7em;\n    font-weight: bold; }\n  .mote.theme-mock div[data-tag=\"h3\"] {\n    font-size: 1.4em;\n    font-weight: bold; }\n  .mote.theme-mock div[data-tag=\"pre\"] {\n    font-family: monospace; }\n  .mote.theme-mock div[data-tag=\"ul\"] {\n    list-style: disc outside none; }\n  .mote.theme-mock div[data-tag=\"li\"] {\n    display: list-item;\n    margin-left: 25px; }\n", ""]);
 
 // exports
 
@@ -14922,6 +14860,55 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
   return exports;
 }));
+
+
+/***/ }),
+/* 28 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* unused harmony export RenameGroupCommand */
+/* harmony export (immutable) */ __webpack_exports__["c"] = KeypressCommand;
+/* harmony export (immutable) */ __webpack_exports__["b"] = CharacterCommand;
+/* harmony export (immutable) */ __webpack_exports__["f"] = TargetCommand;
+/* harmony export (immutable) */ __webpack_exports__["a"] = ButtonCommand;
+/* harmony export (immutable) */ __webpack_exports__["d"] = LoadCommand;
+/* harmony export (immutable) */ __webpack_exports__["e"] = MonkeyCommand;
+function RenameGroupCommand(tag, curspan) {
+    return {
+        'RenameGroup': [tag, curspan],
+    };
+}
+function KeypressCommand(keyCode, metaKey, shiftKey) {
+    return {
+        'Keypress': [keyCode, metaKey, shiftKey],
+    };
+}
+function CharacterCommand(charCode) {
+    return {
+        'Character': charCode,
+    };
+}
+function TargetCommand(curspan) {
+    return {
+        'Target': curspan,
+    };
+}
+function ButtonCommand(button) {
+    return {
+        'Button': button,
+    };
+}
+function LoadCommand(load) {
+    return {
+        'Load': load,
+    };
+}
+function MonkeyCommand(enabled) {
+    return {
+        'Monkey': enabled,
+    };
+}
 
 
 /***/ })
