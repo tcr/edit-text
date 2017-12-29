@@ -183,304 +183,6 @@ function serialize (parent) {
 
 
 
-
-
-
-
-function addto (el, then) {
-  var p = el.parents('.mote');
-  if (Array.isArray(then)) {
-    var cur = then;
-  } else {
-    var cur = [then];
-  }
-  while (!el.is(p)) {
-    if (el.prevAll().length > 0) {
-      cur.unshift({
-        "AddSkip": el.prevAll().length,
-      });
-    }
-    el = el.parent();
-    if (el.is(p)) {
-      break;
-    }
-    cur = [{
-      "AddWithGroup": cur,
-    }];
-  }
-  return cur;
-}
-
-function delto (el, then) {
-  var p = el.parents('.mote');
-  if (Array.isArray(then)) {
-    var cur = then;
-  } else {
-    var cur = [then];
-  }
-  while (!el.is(p)) {
-    if (el.prevAll().length > 0) {
-      cur.unshift({
-        "DelSkip": el.prevAll().length,
-      });
-    }
-    el = el.parent();
-    if (el.is(p)) {
-      break;
-    }
-    cur = [{
-      "DelWithGroup": cur,
-    }];
-  }
-  return cur;
-}
-
-class Editor {
-  $elem: JQuery;
-  ophistory;
-
-  constructor($elem: JQuery) {
-    this.$elem = $elem;
-    this.ophistory = [];
-  }
-
-  op(d, a) {
-    console.log(JSON.stringify([d, a]));
-    this.ophistory.push([d, a]);
-    setTimeout(() => {
-      // Serialize by default the root element
-      var match = serialize(this.$elem);
-      // test
-      var packet = [
-        this.ophistory,
-        match
-      ];
-      console.log(JSON.stringify(packet));
-
-      $.ajax('/api/confirm', {
-        data : JSON.stringify(packet),
-        contentType : 'application/json',
-        type : 'POST',
-      })
-      .done(function () {
-        console.log('success', arguments);
-        if (arguments[0] == '') {
-          alert('Operation seemed to fail! Check console')
-        }
-      })
-      .fail(function () {
-        console.log('failure', arguments);
-      });
-    })
-  }
-}
-
-
-function wrapContent(m: Editor) {
-  let active = getActive();
-  let target = getTarget();
-
-  // if (isBlock(active)) {
-    bootbox.prompt({
-      title: "Wrap selected in tag:",
-      value: "p",
-      callback: (tag) => {
-        if (tag) {
-          var attrs = intoAttrs(tag);
-
-          var out = active.nextAll().add(active).not($('.target').nextAll());
-          clearActive();
-          clearTarget();
-          out.wrapAll(newElem(attrs));
-          active = out.parent().addClass('active').addClass('target');
-          m.op([], addto(active,
-            {
-              "AddGroup": [attrs, [
-                {
-                  "AddSkip": out.length
-                }
-              ]],
-            }
-          ));
-        }
-      },
-    }).on("shown.bs.modal", function() {
-      $(this).find('input').select();
-    });
-  // } else {
-  //   alert('Not implemented?')
-  // }
-}
-
-function deleteBlockPreservingContent(m: Editor) {
-  let active = getActive();
-  let target = getTarget();
-
-  // Delete group while saving contents.
-  if (isBlock(active)) {
-    clearActive();
-    clearTarget();
-
-    m.op(delto(active,
-      {
-        "DelGroup": [
-          {
-            "DelSkip": active.children().length
-          }
-        ],
-      }
-    ), []);
-
-    var first = active.children().first();
-    var last = active.children().last();
-    if (active.contents().length) {
-      active.contents().unwrap();
-    } else {
-      active.remove();
-    }
-    active = first.addClass('active')[0] ? first : null;
-    last.addClass('target');
-  }
-}
-
-function deleteBlock(m: Editor) {
-  const active = getActive();
-  const target = getTarget();
-
-  // Delete whole block.
-  if (isBlock(active)) {
-    m.op(delto(active,
-      {
-        "DelGroupAll": null,
-      }
-    ), []);
-
-    active.remove();
-    clearActive();
-    clearTarget();
-  }
-}
-
-function deleteChars(m: Editor) {
-  const active = getActive();
-  const target = getTarget();
-
-  // Delete characters.
-  if (isChar(active)) {
-    clearActive();
-    clearTarget();
-
-    m.op(delto(active,
-      {
-        "DelChars": 1,
-      }
-    ), []);
-
-    var prev = active.prev();
-    var dad = active.parent();
-    active.remove();
-    $(prev[0] ? prev : dad[0] ? dad : null)
-      .addClass('active')
-      .addClass('target');
-  }
-}
-
-function addBlockAfter(m: Editor) {
-  const active = getActive();
-  const target = getTarget();
-
-  bootbox.prompt({
-    title: "New tag to add after:",
-    value: active.data('tag').toLowerCase(),
-    callback: function (tag) {
-      if (tag) {
-        clearActive();
-        clearTarget();
-
-        newElem({tag: tag})
-          .insertAfter(active)
-          .addClass('active')
-          .addClass('target');
-
-        m.op([], addto(active.next(),
-          {
-            "AddGroup": [{"tag": tag}, []],
-          }
-        ));
-      }
-    }
-  }).on("shown.bs.modal", function() {
-    $(this).find('input').select();
-  });
-}
-
-function splitBlock(m: Editor) {
-  const active = getActive();
-  const target = getTarget();
-
-  bootbox.prompt({
-    title: "New tag to split this into:",
-    value: active.parent().data('tag').toLowerCase(),
-    callback: function (tag) {
-      if (tag) {
-        var prev = active.prevAll().add(active);
-        var next = active.nextAll();
-
-        var parent = active.parent();
-
-        var operation = [delto(parent, [
-          {
-            "DelGroup": [
-              {
-                "DelSkip": prev.length + next.length
-              }
-            ],
-          },
-        ]), addto(parent, [
-          {
-            "AddGroup": [{"tag": parent.data('tag')}, [
-              {
-                "AddSkip": prev.length
-              }
-            ]],
-          },
-          {
-            "AddGroup": [{"tag": tag},
-              next.length ?
-                [{
-                  "AddSkip": next.length
-                }]
-                : []
-            ],
-          }
-        ])];
-
-        clearActive();
-        clearTarget();
-
-        let newPrev = newElem({tag: parent.data('tag')});
-        let newNext = newElem({tag: tag}).addClass('active').addClass('target');
-        prev.wrapAll(newPrev);
-        if (next.length) {
-          next.wrapAll(newNext);
-        } else {
-          newNext.insertAfter(parent);
-        }
-        parent.contents().unwrap();
-
-        m.op(operation[0], operation[1]);
-      }
-    },
-  }).on("shown.bs.modal", function() {
-    $(this).find('input').select();
-  });
-}
-
-
-
-
-
-
 let KEY_WHITELIST = [];
 
 function promptString(title, value, callback) {
@@ -494,8 +196,6 @@ function promptString(title, value, callback) {
 }
 
 function init ($elem, editorID: string) {
-  const m = new Editor($elem);
-
   // monkey button
   let monkey = false;
   $('<button>Monkey</button>')
@@ -531,7 +231,7 @@ function init ($elem, editorID: string) {
     $elem.addClass('theme-mock');
   }
 
-  m.$elem.on('mousedown', 'span, div', function (e) {
+  $elem.on('mousedown', 'span, div', function (e) {
     const active = getActive();
     const target = getTarget();
 
@@ -565,7 +265,7 @@ function init ($elem, editorID: string) {
     const active = getActive();
     const target = getTarget();
 
-    if (active && !active.parents('.mote').is(m.$elem)) {
+    if (active && !active.parents('.mote').is($elem)) {
       return
     }
 
@@ -586,7 +286,7 @@ function init ($elem, editorID: string) {
     const active = getActive();
     const target = getTarget();
 
-    if (active && !active.parents('.mote').is(m.$elem)) {
+    if (active && !active.parents('.mote').is($elem)) {
       return
     }
 
@@ -606,13 +306,22 @@ function init ($elem, editorID: string) {
     e.preventDefault();
   })
 
-  return m.ophistory;
+  // todo
+  return [];
 }
 
 // Reset button
 $('#action-reset').on('click', () => {
   actionReset();
 });
+
+$('#action-monkey').on('click', () => {
+  for (let i = 0; i < window.frames.length; i++) {
+    window.frames[i].postMessage({
+      'Monkey': {}
+    }, '*');
+  }
+})
 
 function actionHello(m1, data) {
   m1.empty().append(load(data));
@@ -628,6 +337,7 @@ function actionReset() {
       window.location.reload();
     } else {
       alert('Error in resetting. Check the console.')
+      window.stop();
     }
     //
   })
@@ -652,9 +362,8 @@ function actionSync(ops_a, ops_b) {
       
       // window.location.reload();
 
-      // Get the new thing and update the two clients
+      // Get the new document state and update the two clients
       for (let i = 0; i < window.frames.length; i++) {
-        console.log('hi');
         window.frames[i].postMessage({
           'Sync': data.doc
         }, '*');
@@ -755,18 +464,14 @@ function nativeCommand(command: Command) {
   exampleSocket.send(JSON.stringify(command));
 }
 
-let cleanse = false;
-
 function onmessage (m1, ops_a, event) {
   let parse = JSON.parse(event.data);
 
   if (parse.Update) {
-    console.log('update:', parse.Update);
     m1.empty().append(load(parse.Update[0]));
-    // Load new op
-    if (cleanse) {
+
+    if (parse.Update[1] == null) {
       ops_a.splice(0, ops_a.length);
-      cleanse = false;
     } else {
       ops_a.push(parse.Update[1]);
     }
@@ -775,7 +480,8 @@ function onmessage (m1, ops_a, event) {
       Update: {
         doc: parse.Update[0], 
         ops: ops_a,
-        name: window.name
+        name: window.name,
+        version: parse.Update[2],
       },
     }, '*');
   }
@@ -803,6 +509,12 @@ function onmessage (m1, ops_a, event) {
   }
 }
 
+let counter = 0;
+setInterval(() => {
+  $('#timer').each(function () {
+    $(this).text(counter++ + 's');
+  })
+}, 1000);
 
 
 if ((<any>window).MOTE_ENTRY == 'index') {
@@ -810,33 +522,48 @@ if ((<any>window).MOTE_ENTRY == 'index') {
 
   let cache = (<any>{});
 
+  // TODO get this from the initial load
+  let curversion = 101;
+
   window.onmessage = function (data) {
-    let doc = data.data.Update.doc;
-    let ops = data.data.Update.ops;
     let name = data.data.Update.name;
-    cache[name] = ops;
+    cache[name] = data.data.Update;
   };
 
   // Sync action
-  $('#action-sync').on('click', () => {
-    console.log('click', cache);
-    actionSync(cache.left, cache.right);
-  })
+  // $('#action-sync').on('click', () => {
+  //   console.log('click', cache);
+  //   if (!cache.left || !cache.right) {
+  //     return;
+  //   }
+  //   actionSync(cache.left, cache.right);
+  //   delete cache.left;
+  //   delete cache.right;
+  //   curversion += 1;
+  // })
 
   setInterval(function () {
-    actionSync(cache.left, cache.right);
+    if ((!cache.left || cache.left.version != curversion) ||
+      (!cache.right || cache.right.version != curversion)) {
+      console.log('outdated, skipping:', cache.left, cache.right);
+      return;
+    }
+    curversion += 1;
+    actionSync(cache.left.ops, cache.right.ops);
   }, 250)
 }
-
-
 else if ((<any>window).MOTE_ENTRY == 'client') {
   var m1 = $('#mote');
 
+  // Receive messages from parent window.
   window.onmessage = function (event) {
     if ('Sync' in event.data) {
       // Push to native
-      cleanse = true;
       nativeCommand(LoadCommand(event.data.Sync))
+    }
+    if ('Monkey' in event.data) {
+      // TODO reflect this in the app
+      nativeCommand(MonkeyCommand(true));
     }
   };
 

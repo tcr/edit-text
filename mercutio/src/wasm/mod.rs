@@ -12,7 +12,7 @@ use std::time::Duration;
 use std::sync::{Arc, Mutex};
 use rand::Rng;
 use std::{panic, process};
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::sync::atomic::Ordering;
 use self::actions::*;
 
@@ -34,7 +34,7 @@ pub enum ClientCommand {
         buttons: Vec<(usize, String)>,
     },
     PromptString(String, String, NativeCommand),
-    Update(DocSpan, Op),
+    Update(DocSpan, Option<Op>, usize),
     Error(String),
 }
 
@@ -54,7 +54,7 @@ where
     *doc = new_doc;
 
     // Send update.
-    let res = ClientCommand::Update(doc.0.clone(), op);
+    let res = ClientCommand::Update(doc.0.clone(), Some(op), client.version.load(Ordering::Relaxed));
     client.send(&res)?;
 
     Ok(())
@@ -189,11 +189,21 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
             *client.target.lock().unwrap() = Some(cur);
         }
         NativeCommand::Load(doc) => {
-            *client.doc.lock().unwrap() = Doc(doc.clone());
+            let mut client_doc = client.doc.lock().unwrap();
+            *client_doc = Doc(doc.clone());
+
+            let next_version = client.version.load(Ordering::Relaxed) + 1;
+            client.version.store(next_version, Ordering::Relaxed);
+            println!("Bumped version to {:?}", next_version);
 
             // Native drives client state.
-            let res = ClientCommand::Update(doc.clone(), op_span!([], []));
+            let res = ClientCommand::Update(doc.clone(), None, next_version);
             client.send(&res)?;
+
+            // Drop mutex.
+            // TODO this probably isn't necessary, but we shoudl version
+            // doc and version in same mutex
+            drop(client_doc);
         }
         NativeCommand::Monkey(setting) => {
             client.monkey.store(setting, Ordering::Relaxed);
@@ -209,6 +219,8 @@ struct Client {
     target: Mutex<Option<CurSpan>>,
     monkey: AtomicBool,
     name: String,
+    version: AtomicUsize,
+    alive: AtomicBool,
 }
 
 impl Client {
@@ -225,7 +237,7 @@ fn setup_monkey(client: Arc<Client>) {
     let thread_client: Arc<_> = client.clone();
     thread::spawn(move || {
         let mut rng = rand::thread_rng();
-        loop {
+        while thread_client.alive.load(Ordering::Relaxed) {
             thread::sleep(Duration::from_millis(rng.gen_range(0, 2000) + 500));
             if thread_client.monkey.load(Ordering::Relaxed) {
                 rand::thread_rng().choose(&button_handlers()).map(|button| {
@@ -237,50 +249,91 @@ fn setup_monkey(client: Arc<Client>) {
 
     // Letter monkey.
     let thread_client: Arc<_> = client.clone();
-    thread::spawn(move || loop {
-        thread::sleep(Duration::from_millis(
-            rand::thread_rng().gen_range(0, 200) + 50,
-        ));
-        if thread_client.monkey.load(Ordering::Relaxed) {
-            native_command(
-                &*thread_client,
-                NativeCommand::Character(*rand::thread_rng()
-                    .choose(&vec![
-                        rand::thread_rng().gen_range(b'A', b'Z'),
-                        rand::thread_rng().gen_range(b'a', b'z'),
-                        rand::thread_rng().gen_range(b'0', b'9'),
-                        b' ',
-                    ])
-                    .unwrap() as _),
-            );
+    thread::spawn(move || {
+        while thread_client.alive.load(Ordering::Relaxed) {
+            thread::sleep(Duration::from_millis(
+                rand::thread_rng().gen_range(0, 200) + 50,
+            ));
+            if thread_client.monkey.load(Ordering::Relaxed) {
+                native_command(
+                    &*thread_client,
+                    NativeCommand::Character(*rand::thread_rng()
+                        .choose(&vec![
+                            rand::thread_rng().gen_range(b'A', b'Z'),
+                            rand::thread_rng().gen_range(b'a', b'z'),
+                            rand::thread_rng().gen_range(b'0', b'9'),
+                            b' ',
+                        ])
+                        .unwrap() as _),
+                );
+            }
         }
     });
 
     // Arrow keys.
     let thread_client: Arc<_> = client.clone();
-    thread::spawn(move || loop {
-        thread::sleep(Duration::from_millis(
-            rand::thread_rng().gen_range(0, 500) + 0,
-        ));
-        if thread_client.monkey.load(Ordering::Relaxed) {
-            let key = *rand::thread_rng().choose(&[37, 38, 39, 40, 8]).unwrap();
-            native_command(
-                &*thread_client,
-                NativeCommand::Keypress(key, false, false),
-            );
+    thread::spawn(move || {
+        while thread_client.alive.load(Ordering::Relaxed) {
+            thread::sleep(Duration::from_millis(
+                rand::thread_rng().gen_range(0, 500) + 0,
+            ));
+            if thread_client.monkey.load(Ordering::Relaxed) {
+                let key = *rand::thread_rng().choose(&[37, 38, 39, 40, 8, 8, 8]).unwrap();
+                native_command(
+                    &*thread_client,
+                    NativeCommand::Keypress(key, false, false),
+                );
+            }
         }
     });
 
     // Enter monkey.
     let thread_client: Arc<_> = client.clone();
     thread::spawn(move || loop {
-        thread::sleep(Duration::from_millis(
-            rand::thread_rng().gen_range(0, 8_000) + 6000,
-        ));
-        if thread_client.monkey.load(Ordering::Relaxed) {
-            native_command(&*thread_client, NativeCommand::Keypress(13, false, false));
+        while thread_client.alive.load(Ordering::Relaxed) {
+            thread::sleep(Duration::from_millis(
+                rand::thread_rng().gen_range(0, 8_000) + 6000,
+            ));
+            if thread_client.monkey.load(Ordering::Relaxed) {
+                native_command(&*thread_client, NativeCommand::Keypress(13, false, false));
+            }
         }
     });
+}
+
+struct SocketHandler {
+    client: Arc<Client>,
+}
+
+impl ws::Handler for SocketHandler {
+    fn on_message(&mut self, msg: ws::Message) -> Result<(), ws::Error> {
+        // Handle messages received on this connection
+        println!("Server got message '{}'. ", msg);
+
+        let req_parse: Result<NativeCommand, _> = serde_json::from_slice(&msg.into_data());
+        match req_parse {
+            Err(err) => {
+                println!("Packet error: {:?}", err);
+            }
+            Ok(value) => {
+                native_command(&self.client, value).expect("Native command error");
+            }
+        }
+
+        Ok(())
+    }
+
+    fn on_error(&mut self, err: ws::Error) {
+        println!("Killing after error");
+        self.client.monkey.store(false, Ordering::Relaxed);
+        self.client.alive.store(false, Ordering::Relaxed);
+    }
+
+    fn on_close(&mut self, code: ws::CloseCode, reason: &str) {
+        println!("Killing after close");
+        self.client.monkey.store(false, Ordering::Relaxed);
+        self.client.alive.store(false, Ordering::Relaxed);
+    }
 }
 
 pub fn server(url: &str, name: &str) {
@@ -291,6 +344,8 @@ pub fn server(url: &str, name: &str) {
             target: Mutex::new(None),
             monkey: AtomicBool::new(false),
             name: name.to_string(),
+            version: AtomicUsize::new(100),
+            alive: AtomicBool::new(true),
         });
 
         // Send initial setup packet.
@@ -312,21 +367,8 @@ pub fn server(url: &str, name: &str) {
         setup_monkey(client.clone());
 
         // Websocket message handler.
-        move |msg: ws::Message| {
-            // Handle messages received on this connection
-            println!("Server got message '{}'. ", msg);
-
-            let req_parse: Result<NativeCommand, _> = serde_json::from_slice(&msg.into_data());
-            match req_parse {
-                Err(err) => {
-                    println!("Packet error: {:?}", err);
-                }
-                Ok(value) => {
-                    native_command(&client, value).expect("Native command error");
-                }
-            }
-
-            Ok(())
+        SocketHandler {
+            client,
         }
     }).unwrap();
 }

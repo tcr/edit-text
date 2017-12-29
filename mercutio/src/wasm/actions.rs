@@ -35,6 +35,11 @@ pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
 pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
     let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
 
+    // TODO fix this without a caret position integer check.
+    if walker.caret_pos() < 2 {
+        return Ok(op_span!([], []));
+    }
+
     // Check if caret is at the start of a block.
     let caret_pos = walker.caret_pos();
     let mut block_walker = walker.clone();
@@ -58,15 +63,21 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
         let mut writer = block_walker.to_writer();
 
         writer.del.begin();
-        writer.del.skip(span_1);
+        if span_1 > 0 {
+            writer.del.skip(span_1);
+        }
         writer.del.close();
         writer.del.begin();
-        writer.del.skip(span_2);
+        if span_2 > 0 {
+            writer.del.skip(span_2);
+        }
         writer.del.close();
         writer.del.exit_all();
 
         writer.add.begin();
-        writer.add.skip(span_1 + span_2);
+        if span_1 + span_2 > 0 {
+            writer.add.skip(span_1 + span_2);
+        }
         writer.add.close(attrs);
         writer.add.exit_all();
 

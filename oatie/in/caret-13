@@ -1,0 +1,50 @@
+doc:   [
+    DocGroup({"tag": "h1"}, [
+        DocChars("  "), DocGroup({"client": "right", "tag": "caret"}, []),
+        DocChars(" YoPD N    QsCJ10  4W5 F66W7r 0 UE60Y 3  AYdD uLS5r D A 60s TIMER, then REMOVE CARET LINES FROM default_doc() !")
+    ]),
+    DocChars("q671 wj  "), DocGroup({"tag": "pre"}, [
+        DocChars("c4n5 N")
+    ]),
+    DocGroup({"tag": "h2"}, [
+        DocChars(" 2qRi "), DocGroup({"tag": "caret", "client": "left"}, []),
+        DocChars("F cU SJe")
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocChars("B M I i35TjRwFs K4AInJP  e4What\'s "), DocGroup({"tag": "span", "class": "bold"}, [
+            DocChars("new and great")
+        ]),
+        DocChars(" with you?")
+    ])
+]
+
+a_del: [
+    DelWithGroup([
+        DelSkip(2), DelWithGroup([]),
+        DelSkip(111)
+    ]),
+    DelSkip(9), DelWithGroup([
+        DelSkip(6)
+    ]),
+    DelWithGroup([
+        DelSkip(6)
+    ])
+]
+a_add: [
+    AddWithGroup([
+        AddSkip(2), AddWithGroup([]),
+        AddSkip(111)
+    ]),
+    AddSkip(9), AddWithGroup([
+        AddSkip(6)
+    ]),
+    AddWithGroup([
+        AddSkip(6), AddChars("2")
+    ])
+]
+
+b_del: [
+]
+
+b_add: [
+]
