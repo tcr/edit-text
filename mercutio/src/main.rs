@@ -36,12 +36,13 @@ fn default_doc() -> Doc {
         DocGroup({"tag": "h1"}, [
             DocGroup({"tag": "caret", "client": "left"}, []),
             DocGroup({"tag": "caret", "client": "right"}, []),
-            DocChars("ADD A 60s TIMER, then REMOVE CARET LINES FROM default_doc() !"),
+            DocChars("Hello world!"),
         ]),
         DocGroup({"tag": "p"}, [
-            DocChars("What's "),
-            DocGroup({"tag": "span", "class": "bold"}, [DocChars("new and great")]),
-            DocChars(" with you?"),
+            // DocChars("What's "),
+            // DocGroup({"tag": "span", "class": "bold"}, [DocChars("new and great")]),
+            // DocChars(" with you?"),
+            DocChars("What's up with you?"),
         ]),
         // DocGroup({"tag": "ul"}, [
         //     DocGroup({"tag": "li"}, [
@@ -207,7 +208,7 @@ type SyncInput = (Vec<Op>, Vec<Op>);
 // TODO should return HTTP error code on failure?
 #[post("/api/sync", data = "<struct_body>")]
 fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<SyncResponse> {
-    let (mut ops_a, mut ops_b) = struct_body.0;
+    let (ops_a, ops_b) = struct_body.0;
 
     let mut doc = mote.body.lock().unwrap();
 
@@ -216,16 +217,9 @@ fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<SyncRe
     println!();
 
     // Flatten client A operations.
-    let op_a = if ops_a.len() == 0 {
-        (vec![], vec![])
-    } else {
-        // Additional checks if needed
-        let mut op = ops_a.remove(0);
-        
-        for i in ops_a.into_iter() {
-            op = Operation::compose(&op, &i);
-        }
-        op
+    let mut op_a = op_span!([], []);
+    for op in &ops_a {
+        op_a = Operation::compose(&op_a, op);
     };
 
     println!(" ---> input ops_b");
@@ -233,14 +227,9 @@ fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<SyncRe
     println!();
 
     // Flatten client B operations.
-    let op_b = if ops_b.len() == 0 {
-        (vec![], vec![])
-    } else {
-        let mut op = ops_b.remove(0);
-        for i in ops_b.into_iter() {
-            op = Operation::compose(&op, &i);
-        }
-        op
+    let mut op_b = op_span!([], []);
+    for op in &ops_b {
+        op_b = Operation::compose(&op_b, op);
     };
 
     println!("OP A {:?}", op_a);
@@ -258,16 +247,37 @@ fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<SyncRe
     println!("</test>");
     println!();
 
-    // Tranform
-    let (a_, b_) = transform(&op_a, &op_b);
-
-    println!("(!) applying first composed operations...");
+    println!("(!) recreating initial client state...");
     println!();
+
+    let mut check_op_a = op_span!([], []);
+    for (i, op) in ops_a.iter().enumerate() {
+        println!("  A: applying {:?}/{:?}", i + 1, ops_a.len());
+        check_op_a = Operation::compose(&check_op_a, &op);
+        println!(" op: {}", debug_pretty(&check_op_a));
+        let _ = OT::apply(&doc.clone(), &check_op_a);
+    }
+
+    println!();
+
+    let mut check_op_b = op_span!([], []);
+    for (i, op) in ops_b.iter().enumerate() {
+        println!("  B: applying {:?}/{:?}", i + 1, ops_b.len());
+        check_op_b = Operation::compose(&check_op_b, &op);
+        println!(" op: {}", debug_pretty(&check_op_b));
+        let _ = OT::apply(&doc.clone(), &check_op_b);
+    }
 
     let doc_a = OT::apply(&doc.clone(), &op_a);
     let doc_b = OT::apply(&doc.clone(), &op_b);
 
+    println!("ok");
+    println!();
+
     println!("(!) applying transformed operations...");
+
+    // Tranform
+    let (a_, b_) = transform(&op_a, &op_b);
 
     println!("");
     println!("DOC A {:?}", doc_a);
