@@ -721,45 +721,51 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     t.skip_b(b_chars.len());
                     b.next();
                 }
-                (None, _) => {
-                    let a_typ = t.tracks
-                        .iter()
-                        .rev()
-                        .find(|t| t.tag_a.is_some())
-                        .unwrap()
-                        .tag_a
-                        .clone()
-                        .unwrap()
-                        .tag_type()
-                        .unwrap();
-                    println!("what is up with a {:?}", t.a_add);
-                    t.interrupt(a_typ, false);
-                    // println!("... {:?} {:?}", t.a_del, t.a_add);
-                    // println!("... {:?} {:?}", t.b_del, t.b_add);
-                    println!("~~~> tracks {:?}", t.tracks);
-                    t.close_a();
-                    // println!("...");
-                    a.exit();
-                    println!("<~~~ tracks {:?}", t.tracks);
-                    // println!("WHERE ARE WE WITH A {:?}", a);
+                (Some(AddChars(ref a_chars)), None) => {
+                    t.regenerate();
+
+                    t.skip_a(a_chars.len());
+                    t.chars_b(a_chars);
+                    a.next();
                 }
-                (_, None) => {
-                    // println!("... {:?} {:?}", t.a_del, t.a_add);
-                    // println!("... {:?} {:?}", t.b_del, t.b_add);
-                    let b_typ = t.tracks
-                        .iter()
-                        .rev()
-                        .find(|t| t.tag_b.is_some())
-                        .unwrap()
-                        .tag_b
-                        .clone()
-                        .unwrap()
-                        .tag_type()
-                        .unwrap();
-                    t.interrupt(b_typ, false);
-                    t.close_b();
-                    // t.closeA()
-                    b.exit();
+                (None, compare) => {
+                    // TODO this logic is evidence AddObject should be broken out
+                    let groupsuccess = if let Some(AddGroup(ref b_attrs, _)) = compare {
+                        if b_attrs["tag"] == "caret" {
+                            b.enter();
+                            b.exit();
+                            t.enter_b(None, Tag::from_attrs(b_attrs));
+                            t.close_b();
+
+                            true
+                        } else {
+                            false
+                        }
+                    } else {
+                        false
+                    };
+                    if !groupsuccess {
+                        let a_typ = t.tracks
+                            .iter()
+                            .rev()
+                            .find(|t| t.tag_a.is_some())
+                            .unwrap()
+                            .tag_a
+                            .clone()
+                            .unwrap()
+                            .tag_type()
+                            .unwrap();
+                        println!("what is up with a {:?}", t.a_add);
+                        t.interrupt(a_typ, false);
+                        // println!("... {:?} {:?}", t.a_del, t.a_add);
+                        // println!("... {:?} {:?}", t.b_del, t.b_add);
+                        println!("~~~> tracks {:?}", t.tracks);
+                        t.close_a();
+                        // println!("...");
+                        a.exit();
+                        println!("<~~~ tracks {:?}", t.tracks);
+                        // println!("WHERE ARE WE WITH A {:?}", a);
+                    }
                 }
 
                 // Opening
@@ -779,6 +785,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
 
                     println!("groupgruop {:?} {:?}", a_type, b_type);
                     if a_attrs["tag"] == "caret" && b_attrs["tag"] == "caret" {
+                        t.regenerate();
                         // Carets
                         a.enter();
                         a.exit();
@@ -846,6 +853,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                 (Some(AddGroup(ref a_attrs, _)), _) => {
                     // TODO should carets be worked around like this?
                     // TODO should t.regenerate be called??
+                        t.regenerate();
                     if a_attrs["tag"] == "caret" {
                         // Carets
                         a.enter();
@@ -853,7 +861,6 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                         t.enter_a(&Tag::from_attrs(a_attrs), None);
                         t.close_a();
                     } else {
-                        t.regenerate();
                         a.enter();
                         let a_type = Tag::from_attrs(a_attrs).tag_type();
 
@@ -881,26 +888,53 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     //     println!(" - {:?}", t);
                     // }
                 }
-                (_, Some(AddGroup(ref b_attrs, _))) => {
-                    // println!("groupgruop {:?} {:?}", a_type, b_type);
-                    t.regenerate();
-                    b.enter();
-                    let b_type = Tag::from_attrs(b_attrs).tag_type();
-
-                    if t.next_track_b_type() == b_type {
-                        if b_type.map_or(false, |x| x.do_open_split()) {
-                            println!("INTERRUPTING B");
-                            t.interrupt(b_type.unwrap(), true);
-                            if let Some(j) = t.next_track_b() {
-                                j.tag_b = Some(Tag::from_attrs(b_attrs));
-                                j.is_original_b = true;
-                            }
-                            t.b_del.begin();
-                        } else {
-                            t.unenter_b();
-                        }
-                    } else {
+                (_, None) => {
+                    // println!("... {:?} {:?}", t.a_del, t.a_add);
+                    // println!("... {:?} {:?}", t.b_del, t.b_add);
+                    let b_typ = t.tracks
+                        .iter()
+                        .rev()
+                        .find(|t| t.tag_b.is_some())
+                        .unwrap()
+                        .tag_b
+                        .clone()
+                        .unwrap()
+                        .tag_type()
+                        .unwrap();
+                    t.interrupt(b_typ, false);
+                    t.close_b();
+                    // t.closeA()
+                    b.exit();
+                }
+                (_, Some(AddGroup(ref b_attrs, _))) => {// TODO should carets be worked around like this?
+                    // TODO should t.regenerate be called??
+                        t.regenerate();
+                    if b_attrs["tag"] == "caret" {
+                        // Carets
+                        b.enter();
+                        b.exit();
                         t.enter_b(None, Tag::from_attrs(b_attrs));
+                        t.close_b();
+                    } else {
+                        // println!("groupgruop {:?} {:?}", a_type, b_type);
+                        b.enter();
+                        let b_type = Tag::from_attrs(b_attrs).tag_type();
+
+                        if t.next_track_b_type() == b_type {
+                            if b_type.map_or(false, |x| x.do_open_split()) {
+                                println!("INTERRUPTING B");
+                                t.interrupt(b_type.unwrap(), true);
+                                if let Some(j) = t.next_track_b() {
+                                    j.tag_b = Some(Tag::from_attrs(b_attrs));
+                                    j.is_original_b = true;
+                                }
+                                t.b_del.begin();
+                            } else {
+                                t.unenter_b();
+                            }
+                        } else {
+                            t.enter_b(None, Tag::from_attrs(b_attrs));
+                        }
                     }
                 }
 
@@ -926,12 +960,12 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
 
                     b.next();
                     t.chars_a(b_chars);
-                    t.skip_b(b_chars.len());
+                    t.skip_b(b_chars.chars().count());
                 }
                 (Some(AddChars(ref a_chars)), _) => {
                     t.regenerate();
 
-                    t.skip_a(a_chars.len());
+                    t.skip_a(a_chars.chars().count());
                     t.chars_b(a_chars);
                     a.next();
                 }
@@ -1069,7 +1103,7 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                 Some(DelGroup(ref span)) => {
                     // t.skip_a(1);
                     // t.group_b(attrs, span);
-                    a_del.skip(1);
+                    // a_del.skip(1);
                     b_del.group(span);
                     a.next();
                 }
@@ -1151,8 +1185,8 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                     b.next();
                 }
                 (Some(DelGroup(a_inner)), Some(DelSkip(b_count))) => {
-                    if a_inner.skip_len() > 0 {
-                        a_del.skip(a_inner.skip_len());
+                    if a_inner.skip_post_len() > 0 {
+                        a_del.skip(a_inner.skip_post_len());
                     }
                     b_del.group(&a_inner);
 
@@ -1206,9 +1240,6 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                         a.next();
                         b.next();
                     }
-
-                    a_del.skip(cmp::min(a_chars, b_chars));
-                    b_del.skip(cmp::min(a_chars, b_chars));
                 }
                 (Some(DelChars(a_chars)), Some(DelSkip(b_count))) => {
                     if a_chars > b_count {

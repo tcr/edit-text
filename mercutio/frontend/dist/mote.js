@@ -10815,7 +10815,7 @@ if (window.MOTE_ENTRY == 'index') {
     let parent = new __WEBPACK_IMPORTED_MODULE_3__parent_ts__["a" /* default */]();
     parent.childConnect();
     // Set syncing rate.
-    setInterval(parent.sync.bind(parent), 4000);
+    setInterval(parent.sync.bind(parent), 200);
 }
 else if (window.MOTE_ENTRY == 'client') {
     let editor = new __WEBPACK_IMPORTED_MODULE_2__editor_ts__["a" /* default */](__WEBPACK_IMPORTED_MODULE_4_jquery___default()('#mote'), window.name);

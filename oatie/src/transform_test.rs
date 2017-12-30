@@ -6,11 +6,12 @@ use std::collections::HashMap;
 use super::compose;
 use super::doc::*;
 use super::normalize;
-use super::OT;
+use super::{OT, Operation};
 use super::transform::*;
 use serde_json;
 use regex::Regex;
 use failure::Error;
+use debug_pretty;
 use yansi::Paint;
 
 #[derive(Debug, Fail)]
@@ -363,6 +364,21 @@ pub fn run_transform_test(input: &str) -> Result<(), Error> {
         println!(" ---> doc b : b : b'");
         let doc_b = OT::apply(&doc_b, &b_);
         println!("{:?}", doc_b);
+        println!();
+        println!("ok");
+        println!();
+
+        // Next test them composed.
+        println!("{}", Paint::red("(!) testing op composed (double check)..."));
+        println!(" ---> doc a : (a : a')");
+        let doc_a_cmp = OT::apply(&doc, &Operation::compose(&a, &a_));
+        println!("{}", debug_pretty(&doc));
+        println!();
+        println!("{}", debug_pretty(&Operation::compose(&a, &a_)));
+        println!("{}", debug_pretty(&doc_a_cmp));
+        println!(" ---> doc b : (b : b')");
+        let doc_b_cmp = OT::apply(&doc, &Operation::compose(&a, &a_));
+        println!("{}", debug_pretty(&doc_b_cmp));
         println!();
         println!("ok");
         println!();
