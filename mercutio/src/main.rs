@@ -250,23 +250,25 @@ fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<SyncRe
     println!("(!) recreating initial client state...");
     println!();
 
-    let mut check_op_a = op_span!([], []);
-    for (i, op) in ops_a.iter().enumerate() {
-        println!("  A: applying {:?}/{:?}", i + 1, ops_a.len());
-        check_op_a = Operation::compose(&check_op_a, &op);
-        println!(" op: {}", debug_pretty(&check_op_a));
-        let _ = OT::apply(&doc.clone(), &check_op_a);
-    }
+    // TODO remove this validation code if we're performing the check client-side
 
-    println!();
+    // let mut check_op_a = op_span!([], []);
+    // for (i, op) in ops_a.iter().enumerate() {
+    //     println!("  A: applying {:?}/{:?}", i + 1, ops_a.len());
+    //     check_op_a = Operation::compose(&check_op_a, &op);
+    //     println!(" op: {}", debug_pretty(&check_op_a));
+    //     let _ = OT::apply(&doc.clone(), &check_op_a);
+    // }
 
-    let mut check_op_b = op_span!([], []);
-    for (i, op) in ops_b.iter().enumerate() {
-        println!("  B: applying {:?}/{:?}", i + 1, ops_b.len());
-        check_op_b = Operation::compose(&check_op_b, &op);
-        println!(" op: {}", debug_pretty(&check_op_b));
-        let _ = OT::apply(&doc.clone(), &check_op_b);
-    }
+    // println!();
+
+    // let mut check_op_b = op_span!([], []);
+    // for (i, op) in ops_b.iter().enumerate() {
+    //     println!("  B: applying {:?}/{:?}", i + 1, ops_b.len());
+    //     check_op_b = Operation::compose(&check_op_b, &op);
+    //     println!(" op: {}", debug_pretty(&check_op_b));
+    //     let _ = OT::apply(&doc.clone(), &check_op_b);
+    // }
 
     let doc_a = OT::apply(&doc.clone(), &op_a);
     let doc_b = OT::apply(&doc.clone(), &op_b);
@@ -326,34 +328,33 @@ fn api_reset(mote: State<MoteState>) -> Json<Value> {
 
 #[get("/")]
 fn root() -> Option<NamedFile> {
-    Path::new(file!())
-        .parent()
-        .map(|x| x.join("templates/").join("index.html"))
+    Some(Path::new(".")
+        .join("src/templates/")
+        .join("index.html"))
         .and_then(|x| NamedFile::open(x).ok())
 }
 
 #[get("/client")]
 fn client() -> Option<NamedFile> {
-    Path::new(file!())
-        .parent()
-        .map(|x| x.join("templates/").join("client.html"))
+    Some(Path::new(".")
+        .join("src/templates/")
+        .join("client.html"))
         .and_then(|x| NamedFile::open(x).ok())
 }
 
 #[get("/favicon.png")]
 fn favicon() -> Option<NamedFile> {
-    Path::new(file!())
-        .parent()
-        .map(|x| x.join("templates/").join("favicon.png"))
+    Some(Path::new(".")
+        .join("src/templates/")
+        .join("favicon.png"))
         .and_then(|x| NamedFile::open(x).ok())
 }
 
 #[get("/<file..>", rank = 2)]
 fn files(file: PathBuf) -> Option<NamedFile> {
-    Path::new(file!())
-        .parent()
-        .and_then(|x| x.parent())
-        .map(|x| x.join("frontend/dist/").join(file))
+    Some(Path::new(".")
+        .join("frontend/dist/")
+        .join(file))
         .and_then(|x| NamedFile::open(x).ok())
 }
 

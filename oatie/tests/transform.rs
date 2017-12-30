@@ -345,12 +345,11 @@ fn test_transform_del() {
 // TODO how do you ? this
 #[test]
 fn test_transform_folder() {
-    let folder = Path::new(file!())
-        .parent()
-        .unwrap()
-        .parent()
-        .unwrap()
+    // Fetches root of workspace.
+    let folder = std::env::current_dir().unwrap().to_owned()
         .join("in");
+
+    println!("{:?}", folder);
     for path in read_dir(folder).unwrap() {
         println!();
         println!();
