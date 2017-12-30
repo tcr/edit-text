@@ -1,0 +1,60 @@
+doc:   [
+    DocGroup({"tag": "h1"}, []),
+    DocGroup({"tag": "p"}, [
+        DocChars("AB"), DocGroup({"client": "left", "tag": "caret"}, []),
+        DocChars("w")
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocChars("Hq A")
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocChars("5gxJ5P3v5W p04l"), DocGroup({"tag": "caret", "client": "right"}, []),
+        DocChars("M3BeKyqB   8Q8  FVe3")
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocChars("ie yD J M4 LW12 s sD8 N5 gEnkS4a  aXh7Yr5 n8D4LIjs0a6 2y KO bP5 2 R37 r2XP1udlS43D2s2   Xa  0  1I 4w81N    2 6wHGko   42BGQu260ogy 134 J7v5YbbNX6b43U16lH4 nnIltBF7Xa  SY1wiR d7l7US7 k0R Q YlIHKU5S1FTdoH  y 4PQs4IJ3mk0eAf OnM146  u v m3  7G1rmPg B O2X Cm s382fyb b8  U0lm825OSjY V7B76c3yy siST8H77R573q1Q K 6P k3eoojL s   CGQU  jB w1PdRyR3  2H E hTymiq VW 668s F5 F7u 1U1 527 4 6h y5TT l mbJUKj MgeTgB 2F G u16  BP wgf85D  B 1 e  rx aWXB2sMGo5q  26 G3Ow0U72khW VQc 6 h x8s2 G4h7s13 EM1k MSnO vj  078 x87 5q    2Vncdc23K5EGsR0MO PjnXaALGQf  c x7C2aTSkyU   IRu4  46EroD 5 WK3bL5P1c JUt60g 60wEjEgmvA s5  82u1 va2Nx2LN5s3d45T3uIWX4tO Q2  04Lp  nk e1 r554qtfb tr  S 3 5GiKu77 X42   Eft  RrTEk2B 60wM4 v8QGS  6hk5h 32jjgPGtrJ 1 I2lo worliWhat\'s up with you?")
+    ])
+]
+
+a_del: [
+    DelWithGroup([]),
+    DelGroup([
+        DelSkip(1),
+        DelChars(1),
+        DelGroup([]),
+        DelSkip(1)
+    ]),
+    DelWithGroup([])
+]
+a_add: [
+    AddWithGroup([]),
+    AddGroup({"tag": "p"}, [
+        AddSkip(1),
+        AddChars("0 S "),
+        AddSkip(1)
+    ]),
+    AddWithGroup([
+        AddChars("5")
+    ])
+]
+
+b_del: [
+    DelWithGroup([]),
+    DelGroup([
+        DelSkip(4)
+    ]),
+    DelGroup([
+        DelSkip(4)
+    ]),
+    DelGroup([
+        DelSkip(36)
+    ])
+]
+b_add: [
+    AddWithGroup([]),
+    AddGroup({"tag": "p"}, [
+        AddSkip(4),
+        AddGroup({"tag": "caret", "client": "right"}, []),
+        AddSkip(4)
+    ])
+]

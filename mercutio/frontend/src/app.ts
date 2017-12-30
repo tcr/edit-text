@@ -22,7 +22,7 @@ if ((<any>window).MOTE_ENTRY == 'index') {
   parent.childConnect();
 
   // Set syncing rate.
-  setInterval(parent.sync.bind(parent), 4000)
+  setInterval(parent.sync.bind(parent), 200)
 }
 else if ((<any>window).MOTE_ENTRY == 'client') {
   let editor = new Editor($('#mote'), window.name);

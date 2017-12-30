@@ -143,7 +143,9 @@ pub fn split_block(ctx: ActionContext) -> Result<Op, Error> {
 
     let mut writer = walker.to_writer();
 
-    writer.del.skip(skip);
+    if skip > 0 {
+        writer.del.skip(skip);
+    }
     writer.del.close();
     writer.del.exit_all();
 
@@ -151,7 +153,9 @@ pub fn split_block(ctx: ActionContext) -> Result<Op, Error> {
         .add
         .close(hashmap! { "tag".into() => previous_block });
     writer.add.begin();
-    writer.add.skip(skip);
+    if skip > 0 {
+        writer.add.skip(skip);
+    }
     writer.add.close(hashmap! { "tag".into() => "p".into() });
     writer.add.exit_all();
 
