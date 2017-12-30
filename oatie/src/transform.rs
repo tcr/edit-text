@@ -42,6 +42,13 @@ struct Track {
     is_original_b: bool,
 }
 
+impl Track {
+    // TODO dumb, remove this
+    fn _anything(&self) -> Option<Tag> {
+        self.tag_a.clone().or(self.tag_real.clone()).or(self.tag_b.clone())
+    }
+}
+
 struct Transform {
     tracks: Vec<Track>,
     a_del: DelWriter,
@@ -121,6 +128,13 @@ impl Transform {
             Some(a.clone())
         };
 
+        if let Some(last) = self.tracks.last() {
+            if a.tag_type() == last._anything().unwrap().tag_type() {
+                println!("-----> UGH {:?}", last);
+                panic!("Should not have consecutive similar tracks.");
+            }
+        }
+
         self.tracks.insert(
             last,
             Track {
@@ -155,6 +169,13 @@ impl Transform {
         } else {
             Some(b.clone())
         };
+
+        if let Some(last) = self.tracks.last() {
+            if b.tag_type() == last.tag_a.as_ref().or(last.tag_real.as_ref()).or(last.tag_b.as_ref()).unwrap().tag_type() {
+                println!("-----> UGH {:?}", last);
+                panic!("Should not have consecutive similar tracks.");
+            }
+        }
 
         self.tracks.insert(
             last,
@@ -776,11 +797,48 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                             t.enter_a(&Tag::from_attrs(a_attrs), Some(Tag::from_attrs(b_attrs)));
                         }
                     } else if b_is_child_of_a {
+                        t.regenerate();
                         a.enter();
-                        t.enter_a(&Tag::from_attrs(a_attrs), None);
+                        let a_type = Tag::from_attrs(a_attrs).tag_type();
+
+                        println!("~~~~ :) :) :)");
+                        println!("~~~~ -> {:?} {:?}", t.next_track_a_type(), a_type);
+                        if t.next_track_a_type() == a_type {
+                            if a_type.map_or(false, |x| x.do_open_split()) {
+                                println!("INTERRUPTING A");
+                                t.interrupt(a_type.unwrap(), true);
+                                if let Some(j) = t.next_track_a() {
+                                    j.tag_a = Some(Tag::from_attrs(a_attrs));
+                                    j.is_original_a = true;
+                                }
+                                t.a_del.begin();
+                            } else {
+                                t.unenter_a();
+                            }
+                        } else {
+                            t.enter_a(&Tag::from_attrs(a_attrs), None);
+                        }
                     } else {
+                        // println!("groupgruop {:?} {:?}", a_type, b_type);
+                        t.regenerate();
                         b.enter();
-                        t.enter_b(None, Tag::from_attrs(b_attrs));
+                        let b_type = Tag::from_attrs(b_attrs).tag_type();
+
+                        if t.next_track_b_type() == b_type {
+                            if b_type.map_or(false, |x| x.do_open_split()) {
+                                println!("INTERRUPTING B");
+                                t.interrupt(b_type.unwrap(), true);
+                                if let Some(j) = t.next_track_b() {
+                                    j.tag_b = Some(Tag::from_attrs(b_attrs));
+                                    j.is_original_b = true;
+                                }
+                                t.b_del.begin();
+                            } else {
+                                t.unenter_b();
+                            }
+                        } else {
+                            t.enter_b(None, Tag::from_attrs(b_attrs));
+                        }
                     }
 
                     // TODO if they are different tags THEN WHAT
