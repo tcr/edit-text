@@ -280,7 +280,7 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
 
         if nextfirst {
             if span.is_empty() {
-                panic!("exhausted document\n -->{:?}\n -->{:?}", first, span);
+                panic!("exhausted document in apply_delete\n -->{:?}\n -->{:?}", first, span);
             }
 
             first = span[0].clone();

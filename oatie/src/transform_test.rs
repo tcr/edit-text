@@ -374,7 +374,7 @@ pub fn run_transform_test(input: &str) -> Result<(), Error> {
     // ALSO CHECK THE REVERSE
     // The result may be different, so we don't care it to
     // that, but we can check that the transform is at least normalized.
-    let _ = op_transform_compare(&b, &a);
+    // let _ = op_transform_compare(&b, &a);
 
     println!("{}", Paint::green("(!) done."));
 

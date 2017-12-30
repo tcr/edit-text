@@ -2,68 +2,89 @@
 
 use oatie::doc::*;
 use oatie::Operation;
+use oatie::{OT, debug_pretty};
 
 fn main() {
-    let mut ops = vec![
-        op_span!([DelWithGroup([DelSkip(3), DelGroup([]), DelSkip(1)])], [AddWithGroup([AddSkip(4), AddGroup({"client": "right", "tag": "caret"}, [])])]),
-        op_span!([DelGroup([DelSkip(5)])], [AddGroup({"tag": "p"}, [AddSkip(5)])]), 
-        op_span!([DelWithGroup([DelSkip(4)])], [AddWithGroup([AddSkip(4), AddChars("H")])]), 
-        op_span!([DelWithGroup([DelSkip(5), DelGroup([])]), DelWithGroup([])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddGroup({"client": "right", "tag": "caret"}, [])])]), 
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelGroup([]), DelSkip(1)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1), AddGroup({"tag": "caret", "client": "right"}, [])])]), 
-        op_span!([DelWithGroup([DelSkip(5)]), DelGroup([DelSkip(4)])], [AddWithGroup([AddSkip(5)]), AddGroup({"tag": "p"}, [AddSkip(4)])]), 
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1), AddChars("f")])]), 
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(2), DelGroup([])])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1), AddGroup({"client": "right", "tag": "caret"}, []), AddSkip(1)])]), 
-        op_span!([DelWithGroup([DelSkip(5)]), DelGroup([DelSkip(5)])], [AddWithGroup([AddSkip(5)]), AddGroup({"tag": "p"}, [AddSkip(1)]), AddGroup({"tag": "p"}, [AddSkip(4)])]), 
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelGroup([DelSkip(4)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddGroup({"tag": "h1"}, [AddSkip(4)])]), 
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddChars("h")])]), 
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(1), DelGroup([]), DelSkip(1)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddGroup({"client": "right", "tag": "caret"}, [])])]), 
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelGroup([DelSkip(5)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddGroup({"tag": "h1"}, [AddSkip(5)])]), 
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelGroup([]), DelWithGroup([]), DelSkip(1)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1), AddGroup({"tag": "caret", "client": "right"}, [])])]), 
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelGroup([DelSkip(2), DelWithGroup([]), DelSkip(2)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddGroup({"tag": "h1"}, [AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddGroup({"tag": "p"}, [AddSkip(1)])]), 
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelGroup([DelSkip(1)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddGroup({"tag": "h1"}, [AddSkip(1)])]), 
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddChars("T")])]), 
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(1)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(1), AddChars(" ")])]), 
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(2), DelGroup([])])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(1), AddGroup({"tag": "caret", "client": "right"}, []), AddSkip(1)])]), 
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelGroup([DelSkip(3)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddGroup({"tag": "h2"}, [AddSkip(3)])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(1), DelGroup([])])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddGroup({"tag": "caret", "client": "right"}, []), AddSkip(1)])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddChars(" ")])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(1), DelGroup([]), DelSkip(1)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(2), AddGroup({"tag": "caret", "client": "right"}, [])])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelGroup([DelSkip(4)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddGroup({"tag": "h2"}, [AddSkip(4)])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(2), DelGroup([]), DelSkip(1)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3), AddGroup({"tag": "caret", "client": "right"}, [])])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelGroup([DelSkip(4)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddGroup({"tag": "h2"}, [AddSkip(3)]), AddGroup({"tag": "p"}, [AddSkip(1)])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelWithGroup([])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddWithGroup([AddChars("c")])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelWithGroup([DelSkip(1), DelGroup([])])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddWithGroup([AddGroup({"tag": "caret", "client": "right"}, []), AddSkip(1)])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelWithGroup([])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddWithGroup([AddChars("k")])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelGroup([DelSkip(3)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddGroup({"tag": "h1"}, [AddSkip(3)])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelWithGroup([DelSkip(1), DelGroup([]), DelSkip(1)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddWithGroup([AddSkip(2), AddGroup({"client": "right", "tag": "caret"}, [])])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelWithGroup([DelSkip(2), DelGroup([])])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddWithGroup([AddSkip(1), AddGroup({"tag": "caret", "client": "right"}, []), AddSkip(1)])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelGroup([DelSkip(3)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddGroup({"tag": "h1"}, [AddSkip(1)]), AddGroup({"tag": "p"}, [AddSkip(2)])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelWithGroup([DelSkip(1)]), DelGroup([DelSkip(2)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddWithGroup([AddSkip(1)]), AddGroup({"tag": "pre"}, [AddSkip(2)])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelWithGroup([DelSkip(1)]), DelWithGroup([])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddChars(" ")])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(1), DelGroup([]), DelSkip(1)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddGroup({"client": "right", "tag": "caret"}, [])])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelGroup([])]), DelWithGroup([])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2)]), AddWithGroup([AddGroup({"client": "right", "tag": "caret"}, [])])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2)]), DelWithGroup([])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2)]), AddWithGroup([AddChars("6")])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2)]), DelWithGroup([DelSkip(1)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2)]), AddWithGroup([AddSkip(1), AddChars("d")])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2)]), DelGroup([DelSkip(14)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2)]), AddGroup({"tag": "p"}, [AddSkip(2)]), AddGroup({"tag": "p"}, [AddSkip(12)])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2)]), DelWithGroup([DelSkip(2)]), DelWithGroup([DelGroup([])])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2)]), AddWithGroup([AddSkip(1), AddGroup({"tag": "caret", "client": "right"}, []), AddSkip(1)]), AddWithGroup([])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2)]), DelGroup([DelSkip(3)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2)]), AddGroup({"tag": "p"}, [AddSkip(3)])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2)]), DelGroup([DelSkip(3)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2)]), AddGroup({"tag": "p"}, [AddSkip(1)]), AddGroup({"tag": "p"}, [AddSkip(2)])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2)]), DelWithGroup([DelSkip(1)]), DelWithGroup([])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddChars("f")])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(1), DelGroup([]), DelSkip(1)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddGroup({"client": "right", "tag": "caret"}, [])])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddChars("6")])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(3), DelGroup([])])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddGroup({"client": "right", "tag": "caret"}, []), AddSkip(1)])]),
-        op_span!([DelWithGroup([DelSkip(5)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2), DelWithGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(3)]), DelWithGroup([DelSkip(1)]), DelWithGroup([DelSkip(2)]), DelWithGroup([DelSkip(1)]), DelGroup([DelSkip(4)])], [AddWithGroup([AddSkip(5)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2), AddWithGroup([]), AddSkip(1)]), AddWithGroup([AddSkip(3)]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(2)]), AddWithGroup([AddSkip(1)]), AddGroup({"tag": "h2"}, [AddSkip(4)])]),
-    ];
+    let op_left = op_span!(
+        [
+            DelWithGroup([
+                DelWithGroup([]),
+                DelSkip(2),
+                DelGroup([DelSkip(6)])
+            ])
+        ],
+        [
+            AddWithGroup([
+                AddWithGroup([]),
+                AddSkip(2),
+                AddChars("  5"),
+                AddGroup({"client": "left", "tag": "caret"}, [])
+            ])
+        ]
+    );
+    let op_right = op_span!(
+        [DelGroup([DelSkip(32)])],
+        [AddGroup({"tag": "pre"}, [AddSkip(32)])]
+    );
+    
+    let res = op_span!([DelGroup([DelWithGroup([]), DelSkip(2), DelGroup([]), DelSkip(25)])], [AddGroup({"tag": "pre"}, [AddWithGroup([]), AddSkip(2), AddChars("  5"), AddGroup({"client": "left", "tag": "caret"}, []), AddSkip(25)])]);
+    
+    let original = Doc(doc_span![
+        DocGroup({"tag": "h2"}, [
+            DocGroup({"tag": "caret", "client": "right"}, []),
+            DocChars(" X"),
+            DocGroup({"client": "left", "tag": "caret"}, [
+                DocChars("a88MMd")
+            ]),
+            DocChars("1  N3vXHello world!")
+        ]), DocGroup({"tag": "h2"}, [DocChars("D0G231m G8WC YJ 5hat\'s up with you?")])]);
+    
+    let latest_doc = Doc(doc_span![
+        DocGroup({"tag": "h2"}, [
+            DocGroup({"tag": "caret", "client": "right"}, []),
+            DocChars(" X  5"),
+            DocGroup({"client": "left", "tag": "caret"}, []),
+            DocChars("a88MMd1  N3vXHello world!")
+        ]),
+        DocGroup({"tag": "h2"}, [DocChars("D0G231m G8WC YJ 5hat\'s up with you?")])]);
 
-    let op = if ops.len() == 0 {
-        (vec![], vec![])
-    } else {
-        let mut op = ops.remove(0);
-        for i in ops.into_iter() {
-            op = Operation::compose(&op, &i);
-        }
-        op
-    };
+    // Works
+    println!("1");
+    let out = OT::apply(&latest_doc, &op_right);
 
-    println!("help me {:?}", op);
+    // Works
+    println!("2");
+    let out2 = OT::apply(&original, &op_left);
+    println!("3 {}", debug_pretty(&out2));
+    let out3 = OT::apply(&out2, &op_right);
+
+    // Fails
+    println!("4");
+    let comp = Operation::compose(&op_left, &op_right);
+    println!("OP {}", debug_pretty(&comp));
+    let out4 = OT::apply(&original, &comp);
+
+    // let mut ops = vec![
+    //     op_span!(
+    //         [DelWithGroup([DelSkip(10), DelGroup([])])],
+    //         // [AddWithGroup([AddSkip(10), AddChars("Bh uh2"), AddGroup({"tag": "caret", "client": "left"}, [])])]
+    //         [AddWithGroup([AddSkip(10), AddChars("123456"), AddGroup({"tag": "caret", "client": "left"}, [])])]
+    //     ),
+    //     op_span!(
+    //         [DelGroup([DelSkip(73)])],
+    //         [AddGroup({"tag": "h1"}, [AddSkip(73)])]
+    //     ),
+    // ];
+
+    // let op = if ops.len() == 0 {
+    //     (vec![], vec![])
+    // } else {
+    //     let mut op = ops.remove(0);
+    //     for i in ops.into_iter() {
+    //         op = Operation::compose(&op, &i);
+    //     }
+    //     op
+    // };
+
+    // println!("help me {:?}", op);
 }
