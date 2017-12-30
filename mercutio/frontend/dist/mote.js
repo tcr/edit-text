@@ -10793,13 +10793,12 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_bootstrap_dist_css_bootstrap_min_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_bootstrap_dist_css_bootstrap_min_css__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__mote_scss__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__mote_scss___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__mote_scss__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__commands_ts__ = __webpack_require__(28);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_jquery__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_jquery__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_bootstrap__ = __webpack_require__(14);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_bootstrap___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_bootstrap__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_bootbox__ = __webpack_require__(27);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_bootbox___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_bootbox__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__editor_ts__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__parent_ts__ = __webpack_require__(30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_jquery__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_jquery__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_bootstrap__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_bootstrap___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_bootstrap__);
 
 
 
@@ -10807,405 +10806,21 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 // Consume bootstrap so bootbox works.
-__WEBPACK_IMPORTED_MODULE_4_bootstrap___default.a;
-// Hashtag state
-class HashState {
-    static get() {
-        return new Set((location.hash || '')
-            .replace(/^#/, '')
-            .split(',')
-            .map(x => x.replace(/^\s+|\s+$/g, ''))
-            .filter(x => x.length));
-    }
-    static set(input) {
-        location.hash = Array.from(input).join(',');
-    }
-}
-// Elements
-function newElem(attrs) {
-    return modifyElem(__WEBPACK_IMPORTED_MODULE_3_jquery___default()('<div>'), attrs);
-}
-function modifyElem(elem, attrs) {
-    return elem
-        .attr('data-tag', attrs.tag)
-        .attr('data-client', attrs.client)
-        .attr('class', attrs.class || '');
-}
-// function serializeAttrs(elem: JQuery) {
-//   return {
-//     "tag": String(elem.attr('data-tag') || ''),
-//   };
-// }
-function getActive() {
-    var a = __WEBPACK_IMPORTED_MODULE_3_jquery___default()('.active');
-    return a[0] ? a : null;
-}
-function getTarget() {
-    var a = __WEBPACK_IMPORTED_MODULE_3_jquery___default()('.active');
-    return a[0] ? a : null;
-}
-function isBlock($active) {
-    return $active && $active[0].tagName == 'DIV';
-}
-function isChar($active) {
-    return $active && $active[0].tagName == 'SPAN';
-}
-function isInline($active) {
-    return $active && $active.data('tag') == 'span';
-}
-function clearActive() {
-    __WEBPACK_IMPORTED_MODULE_3_jquery___default()(document).find('.active').removeClass('active');
-}
-function clearTarget() {
-    __WEBPACK_IMPORTED_MODULE_3_jquery___default()(document).find('.target').removeClass('target');
-}
-// Creates an HTML tree from a document tree.
-function docToDOM(vec) {
-    // TODO act like doc
-    // console.log(el);
-    // var h = newElem(el.DocGroup[0]);
-    let ret = [];
-    for (var g = 0; g < vec.length; g++) {
-        const el = vec[g];
-        if (el.DocGroup) {
-            var h = newElem(el.DocGroup[0]);
-            h.append(docToDOM(el.DocGroup[1]));
-            ret.push(h);
-        }
-        else if (el.DocChars) {
-            for (var j = 0; j < el.DocChars.length; j++) {
-                ret.push(__WEBPACK_IMPORTED_MODULE_3_jquery___default()('<span>').text(el.DocChars[j]));
-            }
-        }
-        else {
-            throw new Error('unknown');
-        }
-    }
-    return ret;
-}
-function curto(el) {
-    if (!el) {
-        return null;
-    }
-    let then = el.is('div') ? {
-        'CurGroup': null
-    } : {
-        'CurChar': null
-    };
-    var p = el.parents('.mote');
-    if (Array.isArray(then)) {
-        var cur = then;
-    }
-    else {
-        var cur = [then];
-    }
-    while (!el.is(p)) {
-        if (el.prevAll().length > 0) {
-            cur.unshift({
-                "CurSkip": el.prevAll().length,
-            });
-        }
-        el = el.parent();
-        if (el.is(p)) {
-            break;
-        }
-        cur = [{
-                "CurWithGroup": cur,
-            }];
-    }
-    return cur;
-}
-// function serialize (parent) {
-//   var out = []
-//   $(parent).children().each(function () {
-//     if ($(this).is('div')) {
-//       out.push({
-//         "DocGroup": [
-//           serializeAttrs($(this)),
-//           serialize(this),
-//         ],
-//       });
-//     } else {
-//       var txt = this.innerText
-//       if (Object.keys(out[out.length - 1] || {})[0] == 'DocChars') {
-//         txt = out.pop().DocChars + txt;
-//       }
-//       out.push({
-//         "DocChars": txt
-//       });
-//     }
-//   })
-//   return out;
-// }
-let KEY_WHITELIST = [];
-function promptString(title, value, callback) {
-    __WEBPACK_IMPORTED_MODULE_5_bootbox___default.a.prompt({
-        title,
-        value,
-        callback,
-    }).on("shown.bs.modal", function () {
-        __WEBPACK_IMPORTED_MODULE_3_jquery___default()(this).find('input').select();
-    });
-}
-// Initialize child editor.
-class Editor {
-    constructor($elem, editorID) {
-        this.$elem = $elem;
-        this.editorID = editorID;
-        this.ops = [];
-        let editor = this;
-        // monkey button
-        let monkey = false;
-        __WEBPACK_IMPORTED_MODULE_3_jquery___default()('<button>Monkey</button>')
-            .appendTo(__WEBPACK_IMPORTED_MODULE_3_jquery___default()('#local-buttons'))
-            .on('click', function () {
-            monkey = !monkey;
-            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_2__commands_ts__["e" /* MonkeyCommand */](monkey));
-            __WEBPACK_IMPORTED_MODULE_3_jquery___default()(this).css('font-weight') == '700'
-                ? __WEBPACK_IMPORTED_MODULE_3_jquery___default()(this).css('font-weight', 'normal')
-                : __WEBPACK_IMPORTED_MODULE_3_jquery___default()(this).css('font-weight', 'bold');
-        });
-        // switching button
-        __WEBPACK_IMPORTED_MODULE_3_jquery___default()('<button>Toggle Element View</button>')
-            .appendTo(__WEBPACK_IMPORTED_MODULE_3_jquery___default()('#local-buttons'))
-            .on('click', function () {
-            $elem.toggleClass('theme-mock');
-            $elem.toggleClass('theme-block');
-            const settings = HashState.get();
-            if (settings.has(`${editorID}-theme-block`)) {
-                settings.delete(`${editorID}-theme-v`);
-            }
-            else {
-                settings.add(`${editorID}-theme-block`);
-            }
-            HashState.set(settings);
-        });
-        // theme
-        if (HashState.get().has(`${editorID}-theme-block`)) {
-            $elem.addClass('theme-block');
-        }
-        else {
-            $elem.addClass('theme-mock');
-        }
-        $elem.on('mousedown', 'span, div', function (e) {
-            const active = getActive();
-            const target = getTarget();
-            if (e.shiftKey) {
-                if (active && active.nextAll().add(active).is(this)) {
-                    clearTarget();
-                    __WEBPACK_IMPORTED_MODULE_3_jquery___default()(this).addClass('target');
-                    // TODO
-                    // send target destination curspan
-                }
-            }
-            else {
-                clearActive();
-                clearTarget();
-                __WEBPACK_IMPORTED_MODULE_3_jquery___default()(this).addClass('active').addClass('target');
-                console.log('Cursor:', curto(__WEBPACK_IMPORTED_MODULE_3_jquery___default()(this)));
-                editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_2__commands_ts__["f" /* TargetCommand */](curto(__WEBPACK_IMPORTED_MODULE_3_jquery___default()(this))));
-            }
-            // TODO this bubbles if i use preventDEfault?
-            window.focus();
-            return false;
-        });
-        __WEBPACK_IMPORTED_MODULE_3_jquery___default()(document).on('keypress', (e) => {
-            if (__WEBPACK_IMPORTED_MODULE_3_jquery___default()(e.target).closest('.modal').length) {
-                return;
-            }
-            const active = getActive();
-            const target = getTarget();
-            if (active && !active.parents('.mote').is($elem)) {
-                return;
-            }
-            if (e.metaKey) {
-                return;
-            }
-            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_2__commands_ts__["b" /* CharacterCommand */](e.charCode));
-            e.preventDefault();
-        });
-        __WEBPACK_IMPORTED_MODULE_3_jquery___default()(document).on('keydown', (e) => {
-            if (__WEBPACK_IMPORTED_MODULE_3_jquery___default()(e.target).closest('.modal').length) {
-                return;
-            }
-            const active = getActive();
-            const target = getTarget();
-            if (active && !active.parents('.mote').is($elem)) {
-                return;
-            }
-            console.log('KEYDOWN:', e.keyCode);
-            // Match against whitelisted key entries.
-            if (!KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
-                return;
-            }
-            this.nativeCommand(__WEBPACK_IMPORTED_MODULE_2__commands_ts__["c" /* KeypressCommand */](e.keyCode, e.metaKey, e.shiftKey));
-            e.preventDefault();
-        });
-    }
-    load(data) {
-        this.$elem.empty().append(docToDOM(data));
-    }
-    nativeCommand(command) {
-        this.nativeSocket.send(JSON.stringify(command));
-    }
-    nativeConnect(data) {
-        let editor = this;
-        this.nativeSocket = new WebSocket(window.name == 'left' ? "ws://127.0.0.1:3012" : 'ws://127.0.0.1:3013');
-        this.nativeSocket.onopen = function (event) {
-            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_2__commands_ts__["d" /* LoadCommand */](data));
-        };
-        this.nativeSocket.onmessage = this.onNativeMessage.bind(this);
-        this.nativeSocket.onclose = function () {
-            __WEBPACK_IMPORTED_MODULE_3_jquery___default()('body').css('background', 'red');
-        };
-    }
-    // Received message on native socket
-    onNativeMessage(event) {
-        let editor = this;
-        let parse = JSON.parse(event.data);
-        if (parse.Update) {
-            editor.load(parse.Update[0]);
-            if (parse.Update[1] == null) {
-                editor.ops.splice(0, this.ops.length);
-            }
-            else {
-                editor.ops.push(parse.Update[1]);
-            }
-            window.parent.postMessage({
-                Update: {
-                    doc: parse.Update[0],
-                    ops: editor.ops,
-                    name: editor.editorID,
-                    version: parse.Update[2],
-                },
-            }, '*');
-        }
-        else if (parse.PromptString) {
-            promptString(parse.PromptString[0], parse.PromptString[1], (value) => {
-                // Lookup actual key
-                let key = Object.keys(parse.PromptString[2])[0];
-                parse.PromptString[2][key][0] = value;
-                editor.nativeCommand(parse.PromptString[2]);
-            });
-        }
-        else if (parse.Setup) {
-            console.log('SETUP', parse.Setup);
-            KEY_WHITELIST = parse.Setup.keys.map(x => ({ keyCode: x[0], metaKey: x[1], shiftKey: x[2] }));
-            __WEBPACK_IMPORTED_MODULE_3_jquery___default()('#native-buttons').each((_, x) => {
-                parse.Setup.buttons.forEach(btn => {
-                    __WEBPACK_IMPORTED_MODULE_3_jquery___default()('<button>').text(btn[1]).appendTo(x).click(_ => {
-                        editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_2__commands_ts__["a" /* ButtonCommand */](btn[0]));
-                    });
-                });
-            });
-        }
-    }
-    syncConnect() {
-        let editor = this;
-        // Receive messages from parent window.
-        window.onmessage = function (event) {
-            if ('Sync' in event.data) {
-                // Push to native
-                editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_2__commands_ts__["d" /* LoadCommand */](event.data.Sync));
-            }
-            if ('Monkey' in event.data) {
-                // TODO reflect this in the app
-                editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_2__commands_ts__["e" /* MonkeyCommand */](true));
-            }
-        };
-    }
-}
-// Reset button
-__WEBPACK_IMPORTED_MODULE_3_jquery___default()('#action-reset').on('click', () => {
-    __WEBPACK_IMPORTED_MODULE_3_jquery___default.a.ajax('/api/reset', {
-        contentType: 'application/json',
-        type: 'POST',
-    })
-        .done(function (data, _2, obj) {
-        if (obj.status == 200 && data != '') {
-            window.location.reload();
-        }
-        else {
-            alert('Error in resetting. Check the console.');
-            window.stop();
-        }
-        //
-    });
-});
-// Monkey global click button.
-__WEBPACK_IMPORTED_MODULE_3_jquery___default()('#action-monkey').on('click', () => {
-    for (let i = 0; i < window.frames.length; i++) {
-        window.frames[i].postMessage({
-            'Monkey': {}
-        }, '*');
-    }
-});
-function actionSync(ops_a, ops_b) {
-    let packet = [
-        ops_a,
-        ops_b,
-    ];
-    console.log('PACKET', packet);
-    __WEBPACK_IMPORTED_MODULE_3_jquery___default.a.ajax('/api/sync', {
-        data: JSON.stringify(packet),
-        contentType: 'application/json',
-        type: 'POST',
-    })
-        .done(function (data, _2, obj) {
-        console.log('success', arguments);
-        if (obj.status == 200 && data != '') {
-            // window.location.reload();
-            // Get the new document state and update the two clients
-            for (let i = 0; i < window.frames.length; i++) {
-                window.frames[i].postMessage({
-                    'Sync': data.doc
-                }, '*');
-            }
-        }
-        else {
-            alert('Error in syncing. Check the command line.');
-        }
-        //
-    })
-        .fail(function () {
-        console.log('failure', arguments);
-        alert('Error in syncing. Check the command line.');
-    });
-}
-// Timer component.
-let counter = 0;
-setInterval(() => {
-    __WEBPACK_IMPORTED_MODULE_3_jquery___default()('#timer').each(function () {
-        __WEBPACK_IMPORTED_MODULE_3_jquery___default()(this).text(counter++ + 's');
-    });
-}, 1000);
-__WEBPACK_IMPORTED_MODULE_3_jquery___default()(window).on('focus', () => __WEBPACK_IMPORTED_MODULE_3_jquery___default()(document.body).addClass('focused'));
-__WEBPACK_IMPORTED_MODULE_3_jquery___default()(window).on('blur', () => __WEBPACK_IMPORTED_MODULE_3_jquery___default()(document.body).removeClass('focused'));
+__WEBPACK_IMPORTED_MODULE_5_bootstrap___default.a;
+// Blur/Focus classes.
+__WEBPACK_IMPORTED_MODULE_4_jquery___default()(window).on('focus', () => __WEBPACK_IMPORTED_MODULE_4_jquery___default()(document.body).addClass('focused'));
+__WEBPACK_IMPORTED_MODULE_4_jquery___default()(window).on('blur', () => __WEBPACK_IMPORTED_MODULE_4_jquery___default()(document.body).removeClass('focused'));
+// Entry.
 if (window.MOTE_ENTRY == 'index') {
-    let cache = {};
-    // TODO get this from the initial load
-    let curversion = 101;
-    window.onmessage = function (data) {
-        let name = data.data.Update.name;
-        cache[name] = data.data.Update;
-    };
-    setInterval(function () {
-        if ((!cache.left || cache.left.version != curversion) ||
-            (!cache.right || cache.right.version != curversion)) {
-            console.log('outdated, skipping:', cache.left, cache.right);
-            return;
-        }
-        curversion += 1;
-        actionSync(cache.left.ops, cache.right.ops);
-    }, 250);
+    let parent = new __WEBPACK_IMPORTED_MODULE_3__parent_ts__["a" /* default */]();
+    parent.childConnect();
+    // Set syncing rate.
+    setInterval(parent.sync.bind(parent), 4000);
 }
 else if (window.MOTE_ENTRY == 'client') {
-    let editor = new Editor(__WEBPACK_IMPORTED_MODULE_3_jquery___default()('#mote'), window.name);
+    let editor = new __WEBPACK_IMPORTED_MODULE_2__editor_ts__["a" /* default */](__WEBPACK_IMPORTED_MODULE_4_jquery___default()('#mote'), window.name);
     editor.syncConnect();
-    // Initial load
-    __WEBPACK_IMPORTED_MODULE_3_jquery___default.a.get('/api/hello', data => {
-        editor.nativeConnect(data);
-    });
+    editor.nativeConnect();
 }
 
 
@@ -13869,1000 +13484,7 @@ __webpack_require__(26)
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 27 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
- * bootbox.js [v4.4.0]
- *
- * http://bootboxjs.com/license.txt
- */
-
-// @see https://github.com/makeusabrew/bootbox/issues/180
-// @see https://github.com/makeusabrew/bootbox/issues/186
-(function (root, factory) {
-
-  "use strict";
-  if (true) {
-    // AMD. Register as an anonymous module.
-    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(0)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
-				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
-				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-  } else if (typeof exports === "object") {
-    // Node. Does not work with strict CommonJS, but
-    // only CommonJS-like environments that support module.exports,
-    // like Node.
-    module.exports = factory(require("jquery"));
-  } else {
-    // Browser globals (root is window)
-    root.bootbox = factory(root.jQuery);
-  }
-
-}(this, function init($, undefined) {
-
-  "use strict";
-
-  // the base DOM structure needed to create a modal
-  var templates = {
-    dialog:
-      "<div class='bootbox modal' tabindex='-1' role='dialog'>" +
-        "<div class='modal-dialog'>" +
-          "<div class='modal-content'>" +
-            "<div class='modal-body'><div class='bootbox-body'></div></div>" +
-          "</div>" +
-        "</div>" +
-      "</div>",
-    header:
-      "<div class='modal-header'>" +
-        "<h4 class='modal-title'></h4>" +
-      "</div>",
-    footer:
-      "<div class='modal-footer'></div>",
-    closeButton:
-      "<button type='button' class='bootbox-close-button close' data-dismiss='modal' aria-hidden='true'>&times;</button>",
-    form:
-      "<form class='bootbox-form'></form>",
-    inputs: {
-      text:
-        "<input class='bootbox-input bootbox-input-text form-control' autocomplete=off type=text />",
-      textarea:
-        "<textarea class='bootbox-input bootbox-input-textarea form-control'></textarea>",
-      email:
-        "<input class='bootbox-input bootbox-input-email form-control' autocomplete='off' type='email' />",
-      select:
-        "<select class='bootbox-input bootbox-input-select form-control'></select>",
-      checkbox:
-        "<div class='checkbox'><label><input class='bootbox-input bootbox-input-checkbox' type='checkbox' /></label></div>",
-      date:
-        "<input class='bootbox-input bootbox-input-date form-control' autocomplete=off type='date' />",
-      time:
-        "<input class='bootbox-input bootbox-input-time form-control' autocomplete=off type='time' />",
-      number:
-        "<input class='bootbox-input bootbox-input-number form-control' autocomplete=off type='number' />",
-      password:
-        "<input class='bootbox-input bootbox-input-password form-control' autocomplete='off' type='password' />"
-    }
-  };
-
-  var defaults = {
-    // default language
-    locale: "en",
-    // show backdrop or not. Default to static so user has to interact with dialog
-    backdrop: "static",
-    // animate the modal in/out
-    animate: true,
-    // additional class string applied to the top level dialog
-    className: null,
-    // whether or not to include a close button
-    closeButton: true,
-    // show the dialog immediately by default
-    show: true,
-    // dialog container
-    container: "body"
-  };
-
-  // our public object; augmented after our private API
-  var exports = {};
-
-  /**
-   * @private
-   */
-  function _t(key) {
-    var locale = locales[defaults.locale];
-    return locale ? locale[key] : locales.en[key];
-  }
-
-  function processCallback(e, dialog, callback) {
-    e.stopPropagation();
-    e.preventDefault();
-
-    // by default we assume a callback will get rid of the dialog,
-    // although it is given the opportunity to override this
-
-    // so, if the callback can be invoked and it *explicitly returns false*
-    // then we'll set a flag to keep the dialog active...
-    var preserveDialog = $.isFunction(callback) && callback.call(dialog, e) === false;
-
-    // ... otherwise we'll bin it
-    if (!preserveDialog) {
-      dialog.modal("hide");
-    }
-  }
-
-  function getKeyLength(obj) {
-    // @TODO defer to Object.keys(x).length if available?
-    var k, t = 0;
-    for (k in obj) {
-      t ++;
-    }
-    return t;
-  }
-
-  function each(collection, iterator) {
-    var index = 0;
-    $.each(collection, function(key, value) {
-      iterator(key, value, index++);
-    });
-  }
-
-  function sanitize(options) {
-    var buttons;
-    var total;
-
-    if (typeof options !== "object") {
-      throw new Error("Please supply an object of options");
-    }
-
-    if (!options.message) {
-      throw new Error("Please specify a message");
-    }
-
-    // make sure any supplied options take precedence over defaults
-    options = $.extend({}, defaults, options);
-
-    if (!options.buttons) {
-      options.buttons = {};
-    }
-
-    buttons = options.buttons;
-
-    total = getKeyLength(buttons);
-
-    each(buttons, function(key, button, index) {
-
-      if ($.isFunction(button)) {
-        // short form, assume value is our callback. Since button
-        // isn't an object it isn't a reference either so re-assign it
-        button = buttons[key] = {
-          callback: button
-        };
-      }
-
-      // before any further checks make sure by now button is the correct type
-      if ($.type(button) !== "object") {
-        throw new Error("button with key " + key + " must be an object");
-      }
-
-      if (!button.label) {
-        // the lack of an explicit label means we'll assume the key is good enough
-        button.label = key;
-      }
-
-      if (!button.className) {
-        if (total <= 2 && index === total-1) {
-          // always add a primary to the main option in a two-button dialog
-          button.className = "btn-primary";
-        } else {
-          button.className = "btn-default";
-        }
-      }
-    });
-
-    return options;
-  }
-
-  /**
-   * map a flexible set of arguments into a single returned object
-   * if args.length is already one just return it, otherwise
-   * use the properties argument to map the unnamed args to
-   * object properties
-   * so in the latter case:
-   * mapArguments(["foo", $.noop], ["message", "callback"])
-   * -> { message: "foo", callback: $.noop }
-   */
-  function mapArguments(args, properties) {
-    var argn = args.length;
-    var options = {};
-
-    if (argn < 1 || argn > 2) {
-      throw new Error("Invalid argument length");
-    }
-
-    if (argn === 2 || typeof args[0] === "string") {
-      options[properties[0]] = args[0];
-      options[properties[1]] = args[1];
-    } else {
-      options = args[0];
-    }
-
-    return options;
-  }
-
-  /**
-   * merge a set of default dialog options with user supplied arguments
-   */
-  function mergeArguments(defaults, args, properties) {
-    return $.extend(
-      // deep merge
-      true,
-      // ensure the target is an empty, unreferenced object
-      {},
-      // the base options object for this type of dialog (often just buttons)
-      defaults,
-      // args could be an object or array; if it's an array properties will
-      // map it to a proper options object
-      mapArguments(
-        args,
-        properties
-      )
-    );
-  }
-
-  /**
-   * this entry-level method makes heavy use of composition to take a simple
-   * range of inputs and return valid options suitable for passing to bootbox.dialog
-   */
-  function mergeDialogOptions(className, labels, properties, args) {
-    //  build up a base set of dialog properties
-    var baseOptions = {
-      className: "bootbox-" + className,
-      buttons: createLabels.apply(null, labels)
-    };
-
-    // ensure the buttons properties generated, *after* merging
-    // with user args are still valid against the supplied labels
-    return validateButtons(
-      // merge the generated base properties with user supplied arguments
-      mergeArguments(
-        baseOptions,
-        args,
-        // if args.length > 1, properties specify how each arg maps to an object key
-        properties
-      ),
-      labels
-    );
-  }
-
-  /**
-   * from a given list of arguments return a suitable object of button labels
-   * all this does is normalise the given labels and translate them where possible
-   * e.g. "ok", "confirm" -> { ok: "OK, cancel: "Annuleren" }
-   */
-  function createLabels() {
-    var buttons = {};
-
-    for (var i = 0, j = arguments.length; i < j; i++) {
-      var argument = arguments[i];
-      var key = argument.toLowerCase();
-      var value = argument.toUpperCase();
-
-      buttons[key] = {
-        label: _t(value)
-      };
-    }
-
-    return buttons;
-  }
-
-  function validateButtons(options, buttons) {
-    var allowedButtons = {};
-    each(buttons, function(key, value) {
-      allowedButtons[value] = true;
-    });
-
-    each(options.buttons, function(key) {
-      if (allowedButtons[key] === undefined) {
-        throw new Error("button key " + key + " is not allowed (options are " + buttons.join("\n") + ")");
-      }
-    });
-
-    return options;
-  }
-
-  exports.alert = function() {
-    var options;
-
-    options = mergeDialogOptions("alert", ["ok"], ["message", "callback"], arguments);
-
-    if (options.callback && !$.isFunction(options.callback)) {
-      throw new Error("alert requires callback property to be a function when provided");
-    }
-
-    /**
-     * overrides
-     */
-    options.buttons.ok.callback = options.onEscape = function() {
-      if ($.isFunction(options.callback)) {
-        return options.callback.call(this);
-      }
-      return true;
-    };
-
-    return exports.dialog(options);
-  };
-
-  exports.confirm = function() {
-    var options;
-
-    options = mergeDialogOptions("confirm", ["cancel", "confirm"], ["message", "callback"], arguments);
-
-    /**
-     * overrides; undo anything the user tried to set they shouldn't have
-     */
-    options.buttons.cancel.callback = options.onEscape = function() {
-      return options.callback.call(this, false);
-    };
-
-    options.buttons.confirm.callback = function() {
-      return options.callback.call(this, true);
-    };
-
-    // confirm specific validation
-    if (!$.isFunction(options.callback)) {
-      throw new Error("confirm requires a callback");
-    }
-
-    return exports.dialog(options);
-  };
-
-  exports.prompt = function() {
-    var options;
-    var defaults;
-    var dialog;
-    var form;
-    var input;
-    var shouldShow;
-    var inputOptions;
-
-    // we have to create our form first otherwise
-    // its value is undefined when gearing up our options
-    // @TODO this could be solved by allowing message to
-    // be a function instead...
-    form = $(templates.form);
-
-    // prompt defaults are more complex than others in that
-    // users can override more defaults
-    // @TODO I don't like that prompt has to do a lot of heavy
-    // lifting which mergeDialogOptions can *almost* support already
-    // just because of 'value' and 'inputType' - can we refactor?
-    defaults = {
-      className: "bootbox-prompt",
-      buttons: createLabels("cancel", "confirm"),
-      value: "",
-      inputType: "text"
-    };
-
-    options = validateButtons(
-      mergeArguments(defaults, arguments, ["title", "callback"]),
-      ["cancel", "confirm"]
-    );
-
-    // capture the user's show value; we always set this to false before
-    // spawning the dialog to give us a chance to attach some handlers to
-    // it, but we need to make sure we respect a preference not to show it
-    shouldShow = (options.show === undefined) ? true : options.show;
-
-    /**
-     * overrides; undo anything the user tried to set they shouldn't have
-     */
-    options.message = form;
-
-    options.buttons.cancel.callback = options.onEscape = function() {
-      return options.callback.call(this, null);
-    };
-
-    options.buttons.confirm.callback = function() {
-      var value;
-
-      switch (options.inputType) {
-        case "text":
-        case "textarea":
-        case "email":
-        case "select":
-        case "date":
-        case "time":
-        case "number":
-        case "password":
-          value = input.val();
-          break;
-
-        case "checkbox":
-          var checkedItems = input.find("input:checked");
-
-          // we assume that checkboxes are always multiple,
-          // hence we default to an empty array
-          value = [];
-
-          each(checkedItems, function(_, item) {
-            value.push($(item).val());
-          });
-          break;
-      }
-
-      return options.callback.call(this, value);
-    };
-
-    options.show = false;
-
-    // prompt specific validation
-    if (!options.title) {
-      throw new Error("prompt requires a title");
-    }
-
-    if (!$.isFunction(options.callback)) {
-      throw new Error("prompt requires a callback");
-    }
-
-    if (!templates.inputs[options.inputType]) {
-      throw new Error("invalid prompt type");
-    }
-
-    // create the input based on the supplied type
-    input = $(templates.inputs[options.inputType]);
-
-    switch (options.inputType) {
-      case "text":
-      case "textarea":
-      case "email":
-      case "date":
-      case "time":
-      case "number":
-      case "password":
-        input.val(options.value);
-        break;
-
-      case "select":
-        var groups = {};
-        inputOptions = options.inputOptions || [];
-
-        if (!$.isArray(inputOptions)) {
-          throw new Error("Please pass an array of input options");
-        }
-
-        if (!inputOptions.length) {
-          throw new Error("prompt with select requires options");
-        }
-
-        each(inputOptions, function(_, option) {
-
-          // assume the element to attach to is the input...
-          var elem = input;
-
-          if (option.value === undefined || option.text === undefined) {
-            throw new Error("given options in wrong format");
-          }
-
-          // ... but override that element if this option sits in a group
-
-          if (option.group) {
-            // initialise group if necessary
-            if (!groups[option.group]) {
-              groups[option.group] = $("<optgroup/>").attr("label", option.group);
-            }
-
-            elem = groups[option.group];
-          }
-
-          elem.append("<option value='" + option.value + "'>" + option.text + "</option>");
-        });
-
-        each(groups, function(_, group) {
-          input.append(group);
-        });
-
-        // safe to set a select's value as per a normal input
-        input.val(options.value);
-        break;
-
-      case "checkbox":
-        var values   = $.isArray(options.value) ? options.value : [options.value];
-        inputOptions = options.inputOptions || [];
-
-        if (!inputOptions.length) {
-          throw new Error("prompt with checkbox requires options");
-        }
-
-        if (!inputOptions[0].value || !inputOptions[0].text) {
-          throw new Error("given options in wrong format");
-        }
-
-        // checkboxes have to nest within a containing element, so
-        // they break the rules a bit and we end up re-assigning
-        // our 'input' element to this container instead
-        input = $("<div/>");
-
-        each(inputOptions, function(_, option) {
-          var checkbox = $(templates.inputs[options.inputType]);
-
-          checkbox.find("input").attr("value", option.value);
-          checkbox.find("label").append(option.text);
-
-          // we've ensured values is an array so we can always iterate over it
-          each(values, function(_, value) {
-            if (value === option.value) {
-              checkbox.find("input").prop("checked", true);
-            }
-          });
-
-          input.append(checkbox);
-        });
-        break;
-    }
-
-    // @TODO provide an attributes option instead
-    // and simply map that as keys: vals
-    if (options.placeholder) {
-      input.attr("placeholder", options.placeholder);
-    }
-
-    if (options.pattern) {
-      input.attr("pattern", options.pattern);
-    }
-
-    if (options.maxlength) {
-      input.attr("maxlength", options.maxlength);
-    }
-
-    // now place it in our form
-    form.append(input);
-
-    form.on("submit", function(e) {
-      e.preventDefault();
-      // Fix for SammyJS (or similar JS routing library) hijacking the form post.
-      e.stopPropagation();
-      // @TODO can we actually click *the* button object instead?
-      // e.g. buttons.confirm.click() or similar
-      dialog.find(".btn-primary").click();
-    });
-
-    dialog = exports.dialog(options);
-
-    // clear the existing handler focusing the submit button...
-    dialog.off("shown.bs.modal");
-
-    // ...and replace it with one focusing our input, if possible
-    dialog.on("shown.bs.modal", function() {
-      // need the closure here since input isn't
-      // an object otherwise
-      input.focus();
-    });
-
-    if (shouldShow === true) {
-      dialog.modal("show");
-    }
-
-    return dialog;
-  };
-
-  exports.dialog = function(options) {
-    options = sanitize(options);
-
-    var dialog = $(templates.dialog);
-    var innerDialog = dialog.find(".modal-dialog");
-    var body = dialog.find(".modal-body");
-    var buttons = options.buttons;
-    var buttonStr = "";
-    var callbacks = {
-      onEscape: options.onEscape
-    };
-
-    if ($.fn.modal === undefined) {
-      throw new Error(
-        "$.fn.modal is not defined; please double check you have included " +
-        "the Bootstrap JavaScript library. See http://getbootstrap.com/javascript/ " +
-        "for more details."
-      );
-    }
-
-    each(buttons, function(key, button) {
-
-      // @TODO I don't like this string appending to itself; bit dirty. Needs reworking
-      // can we just build up button elements instead? slower but neater. Then button
-      // can just become a template too
-      buttonStr += "<button data-bb-handler='" + key + "' type='button' class='btn " + button.className + "'>" + button.label + "</button>";
-      callbacks[key] = button.callback;
-    });
-
-    body.find(".bootbox-body").html(options.message);
-
-    if (options.animate === true) {
-      dialog.addClass("fade");
-    }
-
-    if (options.className) {
-      dialog.addClass(options.className);
-    }
-
-    if (options.size === "large") {
-      innerDialog.addClass("modal-lg");
-    } else if (options.size === "small") {
-      innerDialog.addClass("modal-sm");
-    }
-
-    if (options.title) {
-      body.before(templates.header);
-    }
-
-    if (options.closeButton) {
-      var closeButton = $(templates.closeButton);
-
-      if (options.title) {
-        dialog.find(".modal-header").prepend(closeButton);
-      } else {
-        closeButton.css("margin-top", "-10px").prependTo(body);
-      }
-    }
-
-    if (options.title) {
-      dialog.find(".modal-title").html(options.title);
-    }
-
-    if (buttonStr.length) {
-      body.after(templates.footer);
-      dialog.find(".modal-footer").html(buttonStr);
-    }
-
-
-    /**
-     * Bootstrap event listeners; used handle extra
-     * setup & teardown required after the underlying
-     * modal has performed certain actions
-     */
-
-    dialog.on("hidden.bs.modal", function(e) {
-      // ensure we don't accidentally intercept hidden events triggered
-      // by children of the current dialog. We shouldn't anymore now BS
-      // namespaces its events; but still worth doing
-      if (e.target === this) {
-        dialog.remove();
-      }
-    });
-
-    /*
-    dialog.on("show.bs.modal", function() {
-      // sadly this doesn't work; show is called *just* before
-      // the backdrop is added so we'd need a setTimeout hack or
-      // otherwise... leaving in as would be nice
-      if (options.backdrop) {
-        dialog.next(".modal-backdrop").addClass("bootbox-backdrop");
-      }
-    });
-    */
-
-    dialog.on("shown.bs.modal", function() {
-      dialog.find(".btn-primary:first").focus();
-    });
-
-    /**
-     * Bootbox event listeners; experimental and may not last
-     * just an attempt to decouple some behaviours from their
-     * respective triggers
-     */
-
-    if (options.backdrop !== "static") {
-      // A boolean true/false according to the Bootstrap docs
-      // should show a dialog the user can dismiss by clicking on
-      // the background.
-      // We always only ever pass static/false to the actual
-      // $.modal function because with `true` we can't trap
-      // this event (the .modal-backdrop swallows it)
-      // However, we still want to sort of respect true
-      // and invoke the escape mechanism instead
-      dialog.on("click.dismiss.bs.modal", function(e) {
-        // @NOTE: the target varies in >= 3.3.x releases since the modal backdrop
-        // moved *inside* the outer dialog rather than *alongside* it
-        if (dialog.children(".modal-backdrop").length) {
-          e.currentTarget = dialog.children(".modal-backdrop").get(0);
-        }
-
-        if (e.target !== e.currentTarget) {
-          return;
-        }
-
-        dialog.trigger("escape.close.bb");
-      });
-    }
-
-    dialog.on("escape.close.bb", function(e) {
-      if (callbacks.onEscape) {
-        processCallback(e, dialog, callbacks.onEscape);
-      }
-    });
-
-    /**
-     * Standard jQuery event listeners; used to handle user
-     * interaction with our dialog
-     */
-
-    dialog.on("click", ".modal-footer button", function(e) {
-      var callbackKey = $(this).data("bb-handler");
-
-      processCallback(e, dialog, callbacks[callbackKey]);
-    });
-
-    dialog.on("click", ".bootbox-close-button", function(e) {
-      // onEscape might be falsy but that's fine; the fact is
-      // if the user has managed to click the close button we
-      // have to close the dialog, callback or not
-      processCallback(e, dialog, callbacks.onEscape);
-    });
-
-    dialog.on("keyup", function(e) {
-      if (e.which === 27) {
-        dialog.trigger("escape.close.bb");
-      }
-    });
-
-    // the remainder of this method simply deals with adding our
-    // dialogent to the DOM, augmenting it with Bootstrap's modal
-    // functionality and then giving the resulting object back
-    // to our caller
-
-    $(options.container).append(dialog);
-
-    dialog.modal({
-      backdrop: options.backdrop ? "static": false,
-      keyboard: false,
-      show: false
-    });
-
-    if (options.show) {
-      dialog.modal("show");
-    }
-
-    // @TODO should we return the raw element here or should
-    // we wrap it in an object on which we can expose some neater
-    // methods, e.g. var d = bootbox.alert(); d.hide(); instead
-    // of d.modal("hide");
-
-   /*
-    function BBDialog(elem) {
-      this.elem = elem;
-    }
-
-    BBDialog.prototype = {
-      hide: function() {
-        return this.elem.modal("hide");
-      },
-      show: function() {
-        return this.elem.modal("show");
-      }
-    };
-    */
-
-    return dialog;
-
-  };
-
-  exports.setDefaults = function() {
-    var values = {};
-
-    if (arguments.length === 2) {
-      // allow passing of single key/value...
-      values[arguments[0]] = arguments[1];
-    } else {
-      // ... and as an object too
-      values = arguments[0];
-    }
-
-    $.extend(defaults, values);
-  };
-
-  exports.hideAll = function() {
-    $(".bootbox").modal("hide");
-
-    return exports;
-  };
-
-
-  /**
-   * standard locales. Please add more according to ISO 639-1 standard. Multiple language variants are
-   * unlikely to be required. If this gets too large it can be split out into separate JS files.
-   */
-  var locales = {
-    bg_BG : {
-      OK      : "Ок",
-      CANCEL  : "Отказ",
-      CONFIRM : "Потвърждавам"
-    },
-    br : {
-      OK      : "OK",
-      CANCEL  : "Cancelar",
-      CONFIRM : "Sim"
-    },
-    cs : {
-      OK      : "OK",
-      CANCEL  : "Zrušit",
-      CONFIRM : "Potvrdit"
-    },
-    da : {
-      OK      : "OK",
-      CANCEL  : "Annuller",
-      CONFIRM : "Accepter"
-    },
-    de : {
-      OK      : "OK",
-      CANCEL  : "Abbrechen",
-      CONFIRM : "Akzeptieren"
-    },
-    el : {
-      OK      : "Εντάξει",
-      CANCEL  : "Ακύρωση",
-      CONFIRM : "Επιβεβαίωση"
-    },
-    en : {
-      OK      : "OK",
-      CANCEL  : "Cancel",
-      CONFIRM : "OK"
-    },
-    es : {
-      OK      : "OK",
-      CANCEL  : "Cancelar",
-      CONFIRM : "Aceptar"
-    },
-    et : {
-      OK      : "OK",
-      CANCEL  : "Katkesta",
-      CONFIRM : "OK"
-    },
-    fa : {
-      OK      : "قبول",
-      CANCEL  : "لغو",
-      CONFIRM : "تایید"
-    },
-    fi : {
-      OK      : "OK",
-      CANCEL  : "Peruuta",
-      CONFIRM : "OK"
-    },
-    fr : {
-      OK      : "OK",
-      CANCEL  : "Annuler",
-      CONFIRM : "D'accord"
-    },
-    he : {
-      OK      : "אישור",
-      CANCEL  : "ביטול",
-      CONFIRM : "אישור"
-    },
-    hu : {
-      OK      : "OK",
-      CANCEL  : "Mégsem",
-      CONFIRM : "Megerősít"
-    },
-    hr : {
-      OK      : "OK",
-      CANCEL  : "Odustani",
-      CONFIRM : "Potvrdi"
-    },
-    id : {
-      OK      : "OK",
-      CANCEL  : "Batal",
-      CONFIRM : "OK"
-    },
-    it : {
-      OK      : "OK",
-      CANCEL  : "Annulla",
-      CONFIRM : "Conferma"
-    },
-    ja : {
-      OK      : "OK",
-      CANCEL  : "キャンセル",
-      CONFIRM : "確認"
-    },
-    lt : {
-      OK      : "Gerai",
-      CANCEL  : "Atšaukti",
-      CONFIRM : "Patvirtinti"
-    },
-    lv : {
-      OK      : "Labi",
-      CANCEL  : "Atcelt",
-      CONFIRM : "Apstiprināt"
-    },
-    nl : {
-      OK      : "OK",
-      CANCEL  : "Annuleren",
-      CONFIRM : "Accepteren"
-    },
-    no : {
-      OK      : "OK",
-      CANCEL  : "Avbryt",
-      CONFIRM : "OK"
-    },
-    pl : {
-      OK      : "OK",
-      CANCEL  : "Anuluj",
-      CONFIRM : "Potwierdź"
-    },
-    pt : {
-      OK      : "OK",
-      CANCEL  : "Cancelar",
-      CONFIRM : "Confirmar"
-    },
-    ru : {
-      OK      : "OK",
-      CANCEL  : "Отмена",
-      CONFIRM : "Применить"
-    },
-    sq : {
-      OK : "OK",
-      CANCEL : "Anulo",
-      CONFIRM : "Prano"
-    },
-    sv : {
-      OK      : "OK",
-      CANCEL  : "Avbryt",
-      CONFIRM : "OK"
-    },
-    th : {
-      OK      : "ตกลง",
-      CANCEL  : "ยกเลิก",
-      CONFIRM : "ยืนยัน"
-    },
-    tr : {
-      OK      : "Tamam",
-      CANCEL  : "İptal",
-      CONFIRM : "Onayla"
-    },
-    zh_CN : {
-      OK      : "OK",
-      CANCEL  : "取消",
-      CONFIRM : "确认"
-    },
-    zh_TW : {
-      OK      : "OK",
-      CANCEL  : "取消",
-      CONFIRM : "確認"
-    }
-  };
-
-  exports.addLocale = function(name, values) {
-    $.each(["OK", "CANCEL", "CONFIRM"], function(_, v) {
-      if (!values[v]) {
-        throw new Error("Please supply a translation for '" + v + "'");
-      }
-    });
-
-    locales[name] = {
-      OK: values.OK,
-      CANCEL: values.CANCEL,
-      CONFIRM: values.CONFIRM
-    };
-
-    return exports;
-  };
-
-  exports.removeLocale = function(name) {
-    delete locales[name];
-
-    return exports;
-  };
-
-  exports.setLocale = function(name) {
-    return exports.setDefaults("locale", name);
-  };
-
-  exports.init = function(_$) {
-    return init(_$ || $);
-  };
-
-  return exports;
-}));
-
-
-/***/ }),
+/* 27 */,
 /* 28 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -14909,6 +13531,453 @@ function MonkeyCommand(enabled) {
         'Monkey': enabled,
     };
 }
+
+
+/***/ }),
+/* 29 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__commands_ts__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__hashstate_ts__ = __webpack_require__(31);
+
+
+// Elements
+function newElem(attrs) {
+    return modifyElem($('<div>'), attrs);
+}
+function modifyElem(elem, attrs) {
+    return elem
+        .attr('data-tag', attrs.tag)
+        .attr('data-client', attrs.client)
+        .attr('class', attrs.class || '');
+}
+// function serializeAttrs(elem: JQuery) {
+//   return {
+//     "tag": String(elem.attr('data-tag') || ''),
+//   };
+// }
+function getActive() {
+    var a = $('.active');
+    return a[0] ? a : null;
+}
+function getTarget() {
+    var a = $('.active');
+    return a[0] ? a : null;
+}
+function isBlock($active) {
+    return $active && $active[0].tagName == 'DIV';
+}
+function isChar($active) {
+    return $active && $active[0].tagName == 'SPAN';
+}
+function isInline($active) {
+    return $active && $active.data('tag') == 'span';
+}
+function clearActive() {
+    $(document).find('.active').removeClass('active');
+}
+function clearTarget() {
+    $(document).find('.target').removeClass('target');
+}
+// Creates an HTML tree from a document tree.
+function docToDOM(vec) {
+    // TODO act like doc
+    // console.log(el);
+    // var h = newElem(el.DocGroup[0]);
+    let ret = [];
+    for (var g = 0; g < vec.length; g++) {
+        const el = vec[g];
+        if (el.DocGroup) {
+            var h = newElem(el.DocGroup[0]);
+            h.append(docToDOM(el.DocGroup[1]));
+            ret.push(h);
+        }
+        else if (el.DocChars) {
+            for (var j = 0; j < el.DocChars.length; j++) {
+                ret.push($('<span>').text(el.DocChars[j]));
+            }
+        }
+        else {
+            throw new Error('unknown');
+        }
+    }
+    return ret;
+}
+function curto(el) {
+    if (!el) {
+        return null;
+    }
+    let then = el.is('div') ? {
+        'CurGroup': null
+    } : {
+        'CurChar': null
+    };
+    var p = el.parents('.mote');
+    if (Array.isArray(then)) {
+        var cur = then;
+    }
+    else {
+        var cur = [then];
+    }
+    while (!el.is(p)) {
+        if (el.prevAll().length > 0) {
+            cur.unshift({
+                "CurSkip": el.prevAll().length,
+            });
+        }
+        el = el.parent();
+        if (el.is(p)) {
+            break;
+        }
+        cur = [{
+                "CurWithGroup": cur,
+            }];
+    }
+    return cur;
+}
+// function serialize (parent) {
+//   var out = []
+//   $(parent).children().each(function () {
+//     if ($(this).is('div')) {
+//       out.push({
+//         "DocGroup": [
+//           serializeAttrs($(this)),
+//           serialize(this),
+//         ],
+//       });
+//     } else {
+//       var txt = this.innerText
+//       if (Object.keys(out[out.length - 1] || {})[0] == 'DocChars') {
+//         txt = out.pop().DocChars + txt;
+//       }
+//       out.push({
+//         "DocChars": txt
+//       });
+//     }
+//   })
+//   return out;
+// }
+function promptString(title, value, callback) {
+    bootbox.prompt({
+        title,
+        value,
+        callback,
+    }).on("shown.bs.modal", function () {
+        $(this).find('input').select();
+    });
+}
+// Initialize child editor.
+class Editor {
+    constructor($elem, editorID) {
+        this.$elem = $elem;
+        this.editorID = editorID;
+        this.ops = [];
+        this.KEY_WHITELIST = [];
+        let editor = this;
+        // monkey button
+        let monkey = false;
+        $('<button>Monkey</button>')
+            .appendTo($('#local-buttons'))
+            .on('click', function () {
+            monkey = !monkey;
+            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["e" /* MonkeyCommand */](monkey));
+            $(this).css('font-weight') == '700'
+                ? $(this).css('font-weight', 'normal')
+                : $(this).css('font-weight', 'bold');
+        });
+        // switching button
+        $('<button>Toggle Element View</button>')
+            .appendTo($('#local-buttons'))
+            .on('click', function () {
+            $elem.toggleClass('theme-mock');
+            $elem.toggleClass('theme-block');
+            const settings = __WEBPACK_IMPORTED_MODULE_1__hashstate_ts__["a" /* default */].get();
+            if (settings.has(`${editorID}-theme-block`)) {
+                settings.delete(`${editorID}-theme-v`);
+            }
+            else {
+                settings.add(`${editorID}-theme-block`);
+            }
+            __WEBPACK_IMPORTED_MODULE_1__hashstate_ts__["a" /* default */].set(settings);
+        });
+        // theme
+        if (__WEBPACK_IMPORTED_MODULE_1__hashstate_ts__["a" /* default */].get().has(`${editorID}-theme-block`)) {
+            $elem.addClass('theme-block');
+        }
+        else {
+            $elem.addClass('theme-mock');
+        }
+        $elem.on('mousedown', 'span, div', function (e) {
+            const active = getActive();
+            const target = getTarget();
+            if (e.shiftKey) {
+                if (active && active.nextAll().add(active).is(this)) {
+                    clearTarget();
+                    $(this).addClass('target');
+                    // TODO
+                    // send target destination curspan
+                }
+            }
+            else {
+                clearActive();
+                clearTarget();
+                $(this).addClass('active').addClass('target');
+                console.log('Cursor:', curto($(this)));
+                editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["f" /* TargetCommand */](curto($(this))));
+            }
+            // TODO this bubbles if i use preventDEfault?
+            window.focus();
+            return false;
+        });
+        $(document).on('keypress', (e) => {
+            if ($(e.target).closest('.modal').length) {
+                return;
+            }
+            const active = getActive();
+            const target = getTarget();
+            if (active && !active.parents('.mote').is($elem)) {
+                return;
+            }
+            if (e.metaKey) {
+                return;
+            }
+            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["b" /* CharacterCommand */](e.charCode));
+            e.preventDefault();
+        });
+        $(document).on('keydown', (e) => {
+            if ($(e.target).closest('.modal').length) {
+                return;
+            }
+            const active = getActive();
+            const target = getTarget();
+            if (active && !active.parents('.mote').is($elem)) {
+                return;
+            }
+            console.log('KEYDOWN:', e.keyCode);
+            // Match against whitelisted key entries.
+            if (!editor.KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
+                return;
+            }
+            this.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["c" /* KeypressCommand */](e.keyCode, e.metaKey, e.shiftKey));
+            e.preventDefault();
+        });
+    }
+    load(data) {
+        this.$elem.empty().append(docToDOM(data));
+    }
+    nativeCommand(command) {
+        this.nativeSocket.send(JSON.stringify(command));
+    }
+    nativeConnect() {
+        let editor = this;
+        this.nativeSocket = new WebSocket(editor.editorID == 'left' ? "ws://127.0.0.1:3012" : 'ws://127.0.0.1:3013');
+        this.nativeSocket.onopen = function (event) {
+            console.log('Connected.');
+            window.parent.postMessage({
+                "Live": editor.editorID,
+            }, '*');
+        };
+        this.nativeSocket.onmessage = this.onNativeMessage.bind(this);
+        this.nativeSocket.onclose = function () {
+            $('body').css('background', 'red');
+        };
+    }
+    // Received message on native socket
+    onNativeMessage(event) {
+        let editor = this;
+        let parse = JSON.parse(event.data);
+        if (parse.Update) {
+            editor.load(parse.Update[0]);
+            if (parse.Update[1] == null) {
+                editor.ops.splice(0, this.ops.length);
+            }
+            else {
+                editor.ops.push(parse.Update[1]);
+            }
+            window.parent.postMessage({
+                Update: {
+                    doc: parse.Update[0],
+                    ops: editor.ops,
+                    name: editor.editorID,
+                    version: parse.Update[2],
+                },
+            }, '*');
+        }
+        else if (parse.PromptString) {
+            promptString(parse.PromptString[0], parse.PromptString[1], (value) => {
+                // Lookup actual key
+                let key = Object.keys(parse.PromptString[2])[0];
+                parse.PromptString[2][key][0] = value;
+                editor.nativeCommand(parse.PromptString[2]);
+            });
+        }
+        else if (parse.Setup) {
+            console.log('SETUP', parse.Setup);
+            editor.KEY_WHITELIST = parse.Setup.keys.map(x => ({ keyCode: x[0], metaKey: x[1], shiftKey: x[2] }));
+            $('#native-buttons').each((_, x) => {
+                parse.Setup.buttons.forEach(btn => {
+                    $('<button>').text(btn[1]).appendTo(x).click(_ => {
+                        editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["a" /* ButtonCommand */](btn[0]));
+                    });
+                });
+            });
+        }
+    }
+    syncConnect() {
+        window.onmessage = this.onSyncMessage.bind(this);
+    }
+    onSyncMessage(event) {
+        let editor = this;
+        if ('Sync' in event.data) {
+            // Push to native
+            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["d" /* LoadCommand */](event.data.Sync));
+        }
+        if ('Monkey' in event.data) {
+            // TODO reflect this in the app
+            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["e" /* MonkeyCommand */](true));
+        }
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Editor;
+
+
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
+
+/***/ }),
+/* 30 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function($) {class Parent {
+    constructor() {
+        this.cache = {};
+        // TODO get this from the initial load
+        this.version = 101;
+        this.alive = 0;
+        // Timer component.
+        let counter = 0;
+        setInterval(() => {
+            $('#timer').each(function () {
+                $(this).text(counter++ + 's');
+            });
+        }, 1000);
+        // Monkey global click button.
+        $('#action-monkey').on('click', () => {
+            for (let i = 0; i < window.frames.length; i++) {
+                window.frames[i].postMessage({
+                    'Monkey': {}
+                }, '*');
+            }
+        });
+        // Reset button
+        $('#action-reset').on('click', () => {
+            $.ajax('/api/reset', {
+                contentType: 'application/json',
+                type: 'POST',
+            })
+                .done(function (data, _2, obj) {
+                if (obj.status == 200 && data != '') {
+                    window.location.reload();
+                }
+                else {
+                    alert('Error in resetting. Check the console.');
+                    window.stop();
+                }
+                //
+            });
+        });
+    }
+    initialize() {
+        let parent = this;
+        $.get('/api/hello', data => {
+            parent.syncChildren(data);
+        });
+    }
+    childConnect() {
+        let parent = this;
+        window.onmessage = function (event) {
+            if ('Update' in event.data) {
+                let name = event.data.Update.name;
+                parent.cache[name] = event.data.Update;
+            }
+            if ('Live' in event.data) {
+                parent.alive += 1;
+                if (parent.alive == 2) {
+                    parent.initialize();
+                }
+            }
+        };
+    }
+    sync() {
+        let parent = this;
+        if (this.alive != 2) {
+            return;
+        }
+        if ((!this.cache.left || this.cache.left.version != this.version) ||
+            (!this.cache.right || this.cache.right.version != this.version)) {
+            console.log('outdated, skipping:', this.cache.left, this.cache.right);
+            return;
+        }
+        this.version += 1;
+        let packet = [this.cache.left.ops, this.cache.right.ops];
+        console.log('PACKET', packet);
+        $.ajax('/api/sync', {
+            data: JSON.stringify(packet),
+            contentType: 'application/json',
+            type: 'POST',
+        })
+            .done(function (data, _2, obj) {
+            console.log('success', arguments);
+            if (obj.status == 200 && data != '') {
+                // Get the new document state and update the two clients
+                parent.syncChildren(data.doc);
+            }
+            else {
+                alert('Error in syncing. Check the command line.');
+                window.stop();
+            }
+            //
+        })
+            .fail(function () {
+            console.log('failure', arguments);
+            alert('HTTP error in syncing. Check the command line.');
+            window.stop();
+        });
+    }
+    syncChildren(data) {
+        for (let i = 0; i < window.frames.length; i++) {
+            window.frames[i].postMessage({
+                'Sync': data
+            }, '*');
+        }
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Parent;
+
+
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
+
+/***/ }),
+/* 31 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+// Hashtag state
+class HashState {
+    static get() {
+        return new Set((location.hash || '')
+            .replace(/^#/, '')
+            .split(',')
+            .map(x => x.replace(/^\s+|\s+$/g, ''))
+            .filter(x => x.length));
+    }
+    static set(input) {
+        location.hash = Array.from(input).join(',');
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = HashState;
+
 
 
 /***/ })

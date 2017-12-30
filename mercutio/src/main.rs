@@ -213,8 +213,8 @@ fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<SyncRe
     let mut doc = mote.body.lock().unwrap();
 
     println!(" ---> input ops_a");
-    println!("{:?}", ops_a);
-    println!();
+    // println!("{:?}", ops_a);
+    // println!();
 
     // Flatten client A operations.
     let mut op_a = op_span!([], []);
@@ -223,8 +223,8 @@ fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<SyncRe
     };
 
     println!(" ---> input ops_b");
-    println!("{:?}", ops_b);
-    println!();
+    // println!("{:?}", ops_b);
+    // println!();
 
     // Flatten client B operations.
     let mut op_b = op_span!([], []);

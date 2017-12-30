@@ -23,11 +23,13 @@ pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
     let mut writer = walker.to_writer();
 
     writer.del.group(&del_span![DelSkip(len)]);
+    writer.del.exit_all();
 
     writer.add.group(
         &hashmap! { "tag".to_string() => tag.to_string() },
         &add_span![AddSkip(len)],
     );
+    writer.add.exit_all();
 
     Ok(writer.result())
 }

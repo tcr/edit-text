@@ -3,7 +3,7 @@ pub mod walkers;
 
 use rand;
 use oatie::doc::*;
-use oatie::OT;
+use oatie::{OT, Operation, debug_pretty};
 use serde_json;
 use ws;
 use failure::Error;
@@ -51,7 +51,26 @@ where
 
     // Apply new operation.
     let new_doc = OT::apply(&*doc, &op);
+
+    let original_doc = client.original_doc.lock().unwrap();
+    let mut original_ops = client.original_ops.lock().unwrap();
+    original_ops.push(op.clone());
+
+    // println!("ORIGINAL: {:?}", *original_doc);
+    let mut check_op_a = op_span!([], []);
+    for (i, op) in original_ops.iter().enumerate() {
+        // println!("  {}: applying {:?}/{:?}", client.name, i + 1, original_ops.len());
+        // println!("  {} 1️⃣: let op_left = op_span!{:?};", client.name, check_op_a);
+        // println!("  {} 1️⃣: let op_right = op_span!{:?};", client.name, op);
+        check_op_a = Operation::compose(&check_op_a, &op);
+        // println!("  {} 1️⃣: let res = op_span!{:?};", client.name, check_op_a);
+        // println!("  {} 1️⃣: let original = doc_span!{:?};", client.name, *original_doc);
+        // println!("  {} 1️⃣: let latest_doc = doc_span!{:?};", client.name, *doc);
+        let _ = OT::apply(&*original_doc, &check_op_a);
+    }
+
     *doc = new_doc;
+    assert_eq!(OT::apply(&*original_doc, &check_op_a), *doc);
 
     // Send update.
     let res = ClientCommand::Update(doc.0.clone(), Some(op), client.version.load(Ordering::Relaxed));
@@ -192,6 +211,9 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
             let mut client_doc = client.doc.lock().unwrap();
             *client_doc = Doc(doc.clone());
 
+            *client.original_doc.lock().unwrap() = Doc(doc.clone());
+            *client.original_ops.lock().unwrap() = vec![];
+
             let next_version = client.version.load(Ordering::Relaxed) + 1;
             client.version.store(next_version, Ordering::Relaxed);
             println!("Bumped version to {:?}", next_version);
@@ -215,6 +237,8 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
 struct Client {
     out: ws::Sender,
     doc: Mutex<Doc>,
+    original_doc: Mutex<Doc>,
+    original_ops: Mutex<Vec<Op>>,
     //TODO remove the target field? base only on carets instead
     target: Mutex<Option<CurSpan>>,
     monkey: AtomicBool,
@@ -341,6 +365,10 @@ pub fn server(url: &str, name: &str) {
         let client = Arc::new(Client {
             out,
             doc: Mutex::new(Doc(vec![])),
+            
+            original_doc: Mutex::new(Doc(vec![])),
+            original_ops: Mutex::new(vec![]),
+
             target: Mutex::new(None),
             monkey: AtomicBool::new(false),
             name: name.to_string(),

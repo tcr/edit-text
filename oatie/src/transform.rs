@@ -657,7 +657,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
         } else {
             println!(
                 "{}",
-                BrightYellow.paint(format!("Next step: {:?}", (a.head.clone(), b.head.clone())))
+                BrightYellow.paint(format!("Next step (ins): {:?}", (a.head.clone(), b.head.clone())))
             );
 
             match (a.head.clone(), b.head.clone()) {
@@ -743,6 +743,8 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
 
                 // Opening
                 (Some(AddGroup(ref a_attrs, _)), Some(AddGroup(ref b_attrs, _))) => {
+                    // TODO should t.regenerate be called??
+
                     let a_type = Tag::from_attrs(a_attrs).tag_type().unwrap();
                     let b_type = Tag::from_attrs(b_attrs).tag_type().unwrap();
 
@@ -784,26 +786,36 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     // TODO if they are different tags THEN WHAT
                 }
                 (Some(AddGroup(ref a_attrs, _)), _) => {
-                    t.regenerate();
-                    a.enter();
-                    let a_type = Tag::from_attrs(a_attrs).tag_type();
-
-                    println!("~~~~ :) :) :)");
-                    println!("~~~~ -> {:?} {:?}", t.next_track_a_type(), a_type);
-                    if t.next_track_a_type() == a_type {
-                        if a_type.map_or(false, |x| x.do_open_split()) {
-                            println!("INTERRUPTING A");
-                            t.interrupt(a_type.unwrap(), true);
-                            if let Some(j) = t.next_track_a() {
-                                j.tag_a = Some(Tag::from_attrs(a_attrs));
-                                j.is_original_a = true;
-                            }
-                            t.a_del.begin();
-                        } else {
-                            t.unenter_a();
-                        }
-                    } else {
+                    // TODO should carets be worked around like this?
+                    // TODO should t.regenerate be called??
+                    if a_attrs["tag"] == "caret" {
+                        // Carets
+                        a.enter();
+                        a.exit();
                         t.enter_a(&Tag::from_attrs(a_attrs), None);
+                        t.close_a();
+                    } else {
+                        t.regenerate();
+                        a.enter();
+                        let a_type = Tag::from_attrs(a_attrs).tag_type();
+
+                        println!("~~~~ :) :) :)");
+                        println!("~~~~ -> {:?} {:?}", t.next_track_a_type(), a_type);
+                        if t.next_track_a_type() == a_type {
+                            if a_type.map_or(false, |x| x.do_open_split()) {
+                                println!("INTERRUPTING A");
+                                t.interrupt(a_type.unwrap(), true);
+                                if let Some(j) = t.next_track_a() {
+                                    j.tag_a = Some(Tag::from_attrs(a_attrs));
+                                    j.is_original_a = true;
+                                }
+                                t.a_del.begin();
+                            } else {
+                                t.unenter_a();
+                            }
+                        } else {
+                            t.enter_a(&Tag::from_attrs(a_attrs), None);
+                        }
                     }
 
                     // println!("adding left group:");
@@ -1034,7 +1046,7 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
         } else {
             println!(
                 "{}",
-                BrightYellow.paint(format!("Next step: {:?}", (a.head.clone(), b.head.clone())))
+                BrightYellow.paint(format!("Next step (del): {:?}", (a.head.clone(), b.head.clone())))
             );
 
             match (a.head.clone(), b.head.clone()) {

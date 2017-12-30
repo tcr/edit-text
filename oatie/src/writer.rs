@@ -11,6 +11,11 @@ use term_painter::ToStyle;
 use term_painter::Color::*;
 use term_painter::Attr::*;
 
+// TODO temp
+fn is_caret(attrs: &Attrs) -> bool {
+    attrs["tag"] == "caret"
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct AddWriter {
     pub past: Vec<AddElement>,
@@ -40,6 +45,10 @@ impl AddWriter {
     pub fn close(&mut self, attrs: Attrs) {
         let past = self.past.clone();
         self.past = self.stack.pop().unwrap();
+
+        // TODO temp
+        assert!(!is_caret(&attrs) || past.is_empty());
+
         self.past.push(AddGroup(attrs, past));
     }
 
