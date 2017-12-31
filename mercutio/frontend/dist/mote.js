@@ -10793,11 +10793,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_bootstrap_dist_css_bootstrap_min_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_bootstrap_dist_css_bootstrap_min_css__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__mote_scss__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__mote_scss___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__mote_scss__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__editor_ts__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__parent_ts__ = __webpack_require__(30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__editor_ts__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__parent_ts__ = __webpack_require__(17);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_jquery__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_jquery__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_bootstrap__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_bootstrap__ = __webpack_require__(18);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_bootstrap___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_bootstrap__);
 
 
@@ -11035,13 +11035,508 @@ exports.push([module.i, "body {\n  font-family: Helvetica;\n  padding: 10px 30px
 
 /***/ }),
 /* 14 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__commands_ts__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__hashstate_ts__ = __webpack_require__(16);
+
+
+// Elements
+function divElem(attrs) {
+    return `<div
+    data-tag=${JSON.stringify(String(attrs.tag))}
+    data-client=${JSON.stringify(String(attrs.client))}
+    class=${JSON.stringify(String(attrs.class || ''))}
+  >`;
+}
+// function serializeAttrs(elem: JQuery) {
+//   return {
+//     "tag": String(elem.attr('data-tag') || ''),
+//   };
+// }
+function getActive() {
+    var a = $('.active');
+    return a[0] ? a : null;
+}
+function getTarget() {
+    var a = $('.active');
+    return a[0] ? a : null;
+}
+function isBlock($active) {
+    return $active && $active[0].tagName == 'DIV';
+}
+function isChar($active) {
+    return $active && $active[0].tagName == 'SPAN';
+}
+function isInline($active) {
+    return $active && $active.data('tag') == 'span';
+}
+function clearActive() {
+    $(document).find('.active').removeClass('active');
+}
+function clearTarget() {
+    $(document).find('.target').removeClass('target');
+}
+// Creates an HTML tree from a document tree.
+function docToString(vec) {
+    // TODO act like doc
+    // console.log(el);
+    // var h = newElem(el.DocGroup[0]);
+    let ret = [];
+    for (var g = 0; g < vec.length; g++) {
+        const el = vec[g];
+        if (el.DocGroup) {
+            ret.push([
+                divElem(el.DocGroup[0]),
+                docToString(el.DocGroup[1]),
+                '</div>'
+            ].join(''));
+        }
+        else if (el.DocChars) {
+            for (var j = 0; j < el.DocChars.length; j++) {
+                ret.push([`<span>`, String(el.DocChars[j]), '</span>'].join(''));
+            }
+        }
+        else {
+            throw new Error('unknown');
+        }
+    }
+    return ret.join('');
+}
+function curto(el) {
+    if (!el) {
+        return null;
+    }
+    let then = el.is('div') ? {
+        'CurGroup': null
+    } : {
+        'CurChar': null
+    };
+    var p = el.parents('.mote');
+    if (Array.isArray(then)) {
+        var cur = then;
+    }
+    else {
+        var cur = [then];
+    }
+    while (!el.is(p)) {
+        if (el.prevAll().length > 0) {
+            cur.unshift({
+                "CurSkip": el.prevAll().length,
+            });
+        }
+        el = el.parent();
+        if (el.is(p)) {
+            break;
+        }
+        cur = [{
+                "CurWithGroup": cur,
+            }];
+    }
+    return cur;
+}
+// function serialize (parent) {
+//   var out = []
+//   $(parent).children().each(function () {
+//     if ($(this).is('div')) {
+//       out.push({
+//         "DocGroup": [
+//           serializeAttrs($(this)),
+//           serialize(this),
+//         ],
+//       });
+//     } else {
+//       var txt = this.innerText
+//       if (Object.keys(out[out.length - 1] || {})[0] == 'DocChars') {
+//         txt = out.pop().DocChars + txt;
+//       }
+//       out.push({
+//         "DocChars": txt
+//       });
+//     }
+//   })
+//   return out;
+// }
+function promptString(title, value, callback) {
+    bootbox.prompt({
+        title,
+        value,
+        callback,
+    }).on("shown.bs.modal", function () {
+        $(this).find('input').select();
+    });
+}
+// Initialize child editor.
+class Editor {
+    constructor($elem, editorID) {
+        this.$elem = $elem;
+        this.editorID = editorID;
+        this.ops = [];
+        this.KEY_WHITELIST = [];
+        let editor = this;
+        // monkey button
+        let monkey = false;
+        $('<button>Monkey</button>')
+            .appendTo($('#local-buttons'))
+            .on('click', function () {
+            monkey = !monkey;
+            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["e" /* MonkeyCommand */](monkey));
+            $(this).css('font-weight') == '700'
+                ? $(this).css('font-weight', 'normal')
+                : $(this).css('font-weight', 'bold');
+        });
+        // switching button
+        $('<button>Toggle Element View</button>')
+            .appendTo($('#local-buttons'))
+            .on('click', function () {
+            $elem.toggleClass('theme-mock');
+            $elem.toggleClass('theme-block');
+            const settings = __WEBPACK_IMPORTED_MODULE_1__hashstate_ts__["a" /* default */].get();
+            if (settings.has(`${editorID}-theme-block`)) {
+                settings.delete(`${editorID}-theme-v`);
+            }
+            else {
+                settings.add(`${editorID}-theme-block`);
+            }
+            __WEBPACK_IMPORTED_MODULE_1__hashstate_ts__["a" /* default */].set(settings);
+        });
+        // theme
+        if (__WEBPACK_IMPORTED_MODULE_1__hashstate_ts__["a" /* default */].get().has(`${editorID}-theme-block`)) {
+            $elem.addClass('theme-block');
+        }
+        else {
+            $elem.addClass('theme-mock');
+        }
+        $elem.on('mousedown', 'span, div', function (e) {
+            const active = getActive();
+            const target = getTarget();
+            if (e.shiftKey) {
+                if (active && active.nextAll().add(active).is(this)) {
+                    clearTarget();
+                    $(this).addClass('target');
+                    // TODO
+                    // send target destination curspan
+                }
+            }
+            else {
+                clearActive();
+                clearTarget();
+                $(this).addClass('active').addClass('target');
+                console.log('Cursor:', curto($(this)));
+                editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["f" /* TargetCommand */](curto($(this))));
+            }
+            // TODO this bubbles if i use preventDEfault?
+            window.focus();
+            return false;
+        });
+        $(document).on('keypress', (e) => {
+            if ($(e.target).closest('.modal').length) {
+                return;
+            }
+            const active = getActive();
+            const target = getTarget();
+            if (active && !active.parents('.mote').is($elem)) {
+                return;
+            }
+            if (e.metaKey) {
+                return;
+            }
+            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["b" /* CharacterCommand */](e.charCode));
+            e.preventDefault();
+        });
+        $(document).on('keydown', (e) => {
+            if ($(e.target).closest('.modal').length) {
+                return;
+            }
+            const active = getActive();
+            const target = getTarget();
+            if (active && !active.parents('.mote').is($elem)) {
+                return;
+            }
+            console.log('KEYDOWN:', e.keyCode);
+            // Match against whitelisted key entries.
+            if (!editor.KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
+                return;
+            }
+            this.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["c" /* KeypressCommand */](e.keyCode, e.metaKey, e.shiftKey));
+            e.preventDefault();
+        });
+    }
+    load(data) {
+        let elem = this.$elem[0];
+        requestAnimationFrame(() => {
+            elem.innerHTML = docToString(data);
+        });
+    }
+    nativeCommand(command) {
+        this.nativeSocket.send(JSON.stringify(command));
+    }
+    nativeConnect() {
+        let editor = this;
+        this.nativeSocket = new WebSocket(editor.editorID == 'left' ? "ws://127.0.0.1:3012" : 'ws://127.0.0.1:3013');
+        this.nativeSocket.onopen = function (event) {
+            console.log('Connected.');
+            window.parent.postMessage({
+                "Live": editor.editorID,
+            }, '*');
+        };
+        this.nativeSocket.onmessage = this.onNativeMessage.bind(this);
+        this.nativeSocket.onclose = function () {
+            $('body').css('background', 'red');
+        };
+    }
+    // Received message on native socket
+    onNativeMessage(event) {
+        let editor = this;
+        let parse = JSON.parse(event.data);
+        if (parse.Update) {
+            editor.load(parse.Update[0]);
+            if (parse.Update[1] == null) {
+                editor.ops.splice(0, this.ops.length);
+            }
+            else {
+                editor.ops.push(parse.Update[1]);
+            }
+            window.parent.postMessage({
+                Update: {
+                    doc: parse.Update[0],
+                    ops: editor.ops,
+                    name: editor.editorID,
+                    version: parse.Update[2],
+                },
+            }, '*');
+        }
+        else if (parse.PromptString) {
+            promptString(parse.PromptString[0], parse.PromptString[1], (value) => {
+                // Lookup actual key
+                let key = Object.keys(parse.PromptString[2])[0];
+                parse.PromptString[2][key][0] = value;
+                editor.nativeCommand(parse.PromptString[2]);
+            });
+        }
+        else if (parse.Setup) {
+            console.log('SETUP', parse.Setup);
+            editor.KEY_WHITELIST = parse.Setup.keys.map(x => ({ keyCode: x[0], metaKey: x[1], shiftKey: x[2] }));
+            $('#native-buttons').each((_, x) => {
+                parse.Setup.buttons.forEach(btn => {
+                    $('<button>').text(btn[1]).appendTo(x).click(_ => {
+                        editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["a" /* ButtonCommand */](btn[0]));
+                    });
+                });
+            });
+        }
+    }
+    syncConnect() {
+        window.onmessage = this.onSyncMessage.bind(this);
+    }
+    onSyncMessage(event) {
+        let editor = this;
+        if ('Sync' in event.data) {
+            // Push to native
+            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["d" /* LoadCommand */](event.data.Sync));
+        }
+        if ('Monkey' in event.data) {
+            // TODO reflect this in the app
+            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["e" /* MonkeyCommand */](true));
+        }
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Editor;
+
+
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
+
+/***/ }),
+/* 15 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* unused harmony export RenameGroupCommand */
+/* harmony export (immutable) */ __webpack_exports__["c"] = KeypressCommand;
+/* harmony export (immutable) */ __webpack_exports__["b"] = CharacterCommand;
+/* harmony export (immutable) */ __webpack_exports__["f"] = TargetCommand;
+/* harmony export (immutable) */ __webpack_exports__["a"] = ButtonCommand;
+/* harmony export (immutable) */ __webpack_exports__["d"] = LoadCommand;
+/* harmony export (immutable) */ __webpack_exports__["e"] = MonkeyCommand;
+function RenameGroupCommand(tag, curspan) {
+    return {
+        'RenameGroup': [tag, curspan],
+    };
+}
+function KeypressCommand(keyCode, metaKey, shiftKey) {
+    return {
+        'Keypress': [keyCode, metaKey, shiftKey],
+    };
+}
+function CharacterCommand(charCode) {
+    return {
+        'Character': charCode,
+    };
+}
+function TargetCommand(curspan) {
+    return {
+        'Target': curspan,
+    };
+}
+function ButtonCommand(button) {
+    return {
+        'Button': button,
+    };
+}
+function LoadCommand(load) {
+    return {
+        'Load': load,
+    };
+}
+function MonkeyCommand(enabled) {
+    return {
+        'Monkey': enabled,
+    };
+}
+
+
+/***/ }),
+/* 16 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+// Hashtag state
+class HashState {
+    static get() {
+        return new Set((location.hash || '')
+            .replace(/^#/, '')
+            .split(',')
+            .map(x => x.replace(/^\s+|\s+$/g, ''))
+            .filter(x => x.length));
+    }
+    static set(input) {
+        location.hash = Array.from(input).join(',');
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = HashState;
+
+
+
+/***/ }),
+/* 17 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function($) {class Parent {
+    constructor() {
+        this.cache = {};
+        // TODO get this from the initial load
+        this.version = 101;
+        this.alive = 0;
+        // Timer component.
+        let counter = 0;
+        setInterval(() => {
+            $('#timer').each(function () {
+                $(this).text(counter++ + 's');
+            });
+        }, 1000);
+        // Monkey global click button.
+        $('#action-monkey').on('click', () => {
+            for (let i = 0; i < window.frames.length; i++) {
+                window.frames[i].postMessage({
+                    'Monkey': {}
+                }, '*');
+            }
+        });
+        // Reset button
+        $('#action-reset').on('click', () => {
+            $.ajax('/api/reset', {
+                contentType: 'application/json',
+                type: 'POST',
+            })
+                .done(function (data, _2, obj) {
+                if (obj.status == 200 && data != '') {
+                    window.location.reload();
+                }
+                else {
+                    alert('Error in resetting. Check the console.');
+                    window.stop();
+                }
+                //
+            });
+        });
+    }
+    initialize() {
+        let parent = this;
+        $.get('/api/hello', data => {
+            parent.syncChildren(data);
+        });
+    }
+    childConnect() {
+        let parent = this;
+        window.onmessage = function (event) {
+            if ('Update' in event.data) {
+                let name = event.data.Update.name;
+                parent.cache[name] = event.data.Update;
+            }
+            if ('Live' in event.data) {
+                parent.alive += 1;
+                if (parent.alive == 2) {
+                    parent.initialize();
+                }
+            }
+        };
+    }
+    sync() {
+        let parent = this;
+        if (this.alive != 2) {
+            return;
+        }
+        if ((!this.cache.left || this.cache.left.version != this.version) ||
+            (!this.cache.right || this.cache.right.version != this.version)) {
+            console.log('outdated, skipping:', this.cache.left, this.cache.right);
+            return;
+        }
+        this.version += 1;
+        let packet = [this.cache.left.ops, this.cache.right.ops];
+        console.log('PACKET', packet);
+        $.ajax('/api/sync', {
+            data: JSON.stringify(packet),
+            contentType: 'application/json',
+            type: 'POST',
+        })
+            .done(function (data, _2, obj) {
+            console.log('success', arguments);
+            if (obj.status == 200 && data != '') {
+                // Get the new document state and update the two clients
+                parent.syncChildren(data.doc);
+            }
+            else {
+                alert('Error in syncing. Check the command line.');
+                window.stop();
+            }
+            //
+        })
+            .fail(function () {
+            console.log('failure', arguments);
+            alert('HTTP error in syncing. Check the command line.');
+            window.stop();
+        });
+    }
+    syncChildren(data) {
+        for (let i = 0; i < window.frames.length; i++) {
+            window.frames[i].postMessage({
+                'Sync': data
+            }, '*');
+        }
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Parent;
+
+
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
+
+/***/ }),
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // This file is autogenerated via the `commonjs` Grunt task. You can require() this file in a CommonJS environment.
-__webpack_require__(15)
-__webpack_require__(16)
-__webpack_require__(17)
-__webpack_require__(18)
 __webpack_require__(19)
 __webpack_require__(20)
 __webpack_require__(21)
@@ -11050,9 +11545,13 @@ __webpack_require__(23)
 __webpack_require__(24)
 __webpack_require__(25)
 __webpack_require__(26)
+__webpack_require__(27)
+__webpack_require__(28)
+__webpack_require__(29)
+__webpack_require__(30)
 
 /***/ }),
-/* 15 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(jQuery) {/* ========================================================================
@@ -11118,7 +11617,7 @@ __webpack_require__(26)
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 16 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(jQuery) {/* ========================================================================
@@ -11219,7 +11718,7 @@ __webpack_require__(26)
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 17 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(jQuery) {/* ========================================================================
@@ -11351,7 +11850,7 @@ __webpack_require__(26)
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 18 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(jQuery) {/* ========================================================================
@@ -11595,7 +12094,7 @@ __webpack_require__(26)
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 19 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(jQuery) {/* ========================================================================
@@ -11814,7 +12313,7 @@ __webpack_require__(26)
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 20 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(jQuery) {/* ========================================================================
@@ -11986,7 +12485,7 @@ __webpack_require__(26)
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 21 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(jQuery) {/* ========================================================================
@@ -12332,7 +12831,7 @@ __webpack_require__(26)
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 22 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(jQuery) {/* ========================================================================
@@ -12859,7 +13358,7 @@ __webpack_require__(26)
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 23 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(jQuery) {/* ========================================================================
@@ -12974,7 +13473,7 @@ __webpack_require__(26)
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 24 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(jQuery) {/* ========================================================================
@@ -13153,7 +13652,7 @@ __webpack_require__(26)
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 25 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(jQuery) {/* ========================================================================
@@ -13315,7 +13814,7 @@ __webpack_require__(26)
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 26 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(jQuery) {/* ========================================================================
@@ -13482,503 +13981,6 @@ __webpack_require__(26)
 }(jQuery);
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
-
-/***/ }),
-/* 27 */,
-/* 28 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* unused harmony export RenameGroupCommand */
-/* harmony export (immutable) */ __webpack_exports__["c"] = KeypressCommand;
-/* harmony export (immutable) */ __webpack_exports__["b"] = CharacterCommand;
-/* harmony export (immutable) */ __webpack_exports__["f"] = TargetCommand;
-/* harmony export (immutable) */ __webpack_exports__["a"] = ButtonCommand;
-/* harmony export (immutable) */ __webpack_exports__["d"] = LoadCommand;
-/* harmony export (immutable) */ __webpack_exports__["e"] = MonkeyCommand;
-function RenameGroupCommand(tag, curspan) {
-    return {
-        'RenameGroup': [tag, curspan],
-    };
-}
-function KeypressCommand(keyCode, metaKey, shiftKey) {
-    return {
-        'Keypress': [keyCode, metaKey, shiftKey],
-    };
-}
-function CharacterCommand(charCode) {
-    return {
-        'Character': charCode,
-    };
-}
-function TargetCommand(curspan) {
-    return {
-        'Target': curspan,
-    };
-}
-function ButtonCommand(button) {
-    return {
-        'Button': button,
-    };
-}
-function LoadCommand(load) {
-    return {
-        'Load': load,
-    };
-}
-function MonkeyCommand(enabled) {
-    return {
-        'Monkey': enabled,
-    };
-}
-
-
-/***/ }),
-/* 29 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__commands_ts__ = __webpack_require__(28);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__hashstate_ts__ = __webpack_require__(31);
-
-
-// Elements
-function newElem(attrs) {
-    return modifyElem($('<div>'), attrs);
-}
-function modifyElem(elem, attrs) {
-    return elem
-        .attr('data-tag', attrs.tag)
-        .attr('data-client', attrs.client)
-        .attr('class', attrs.class || '');
-}
-// function serializeAttrs(elem: JQuery) {
-//   return {
-//     "tag": String(elem.attr('data-tag') || ''),
-//   };
-// }
-function getActive() {
-    var a = $('.active');
-    return a[0] ? a : null;
-}
-function getTarget() {
-    var a = $('.active');
-    return a[0] ? a : null;
-}
-function isBlock($active) {
-    return $active && $active[0].tagName == 'DIV';
-}
-function isChar($active) {
-    return $active && $active[0].tagName == 'SPAN';
-}
-function isInline($active) {
-    return $active && $active.data('tag') == 'span';
-}
-function clearActive() {
-    $(document).find('.active').removeClass('active');
-}
-function clearTarget() {
-    $(document).find('.target').removeClass('target');
-}
-// Creates an HTML tree from a document tree.
-function docToDOM(vec) {
-    // TODO act like doc
-    // console.log(el);
-    // var h = newElem(el.DocGroup[0]);
-    let ret = [];
-    for (var g = 0; g < vec.length; g++) {
-        const el = vec[g];
-        if (el.DocGroup) {
-            var h = newElem(el.DocGroup[0]);
-            h.append(docToDOM(el.DocGroup[1]));
-            ret.push(h);
-        }
-        else if (el.DocChars) {
-            for (var j = 0; j < el.DocChars.length; j++) {
-                ret.push($('<span>').text(el.DocChars[j]));
-            }
-        }
-        else {
-            throw new Error('unknown');
-        }
-    }
-    return ret;
-}
-function curto(el) {
-    if (!el) {
-        return null;
-    }
-    let then = el.is('div') ? {
-        'CurGroup': null
-    } : {
-        'CurChar': null
-    };
-    var p = el.parents('.mote');
-    if (Array.isArray(then)) {
-        var cur = then;
-    }
-    else {
-        var cur = [then];
-    }
-    while (!el.is(p)) {
-        if (el.prevAll().length > 0) {
-            cur.unshift({
-                "CurSkip": el.prevAll().length,
-            });
-        }
-        el = el.parent();
-        if (el.is(p)) {
-            break;
-        }
-        cur = [{
-                "CurWithGroup": cur,
-            }];
-    }
-    return cur;
-}
-// function serialize (parent) {
-//   var out = []
-//   $(parent).children().each(function () {
-//     if ($(this).is('div')) {
-//       out.push({
-//         "DocGroup": [
-//           serializeAttrs($(this)),
-//           serialize(this),
-//         ],
-//       });
-//     } else {
-//       var txt = this.innerText
-//       if (Object.keys(out[out.length - 1] || {})[0] == 'DocChars') {
-//         txt = out.pop().DocChars + txt;
-//       }
-//       out.push({
-//         "DocChars": txt
-//       });
-//     }
-//   })
-//   return out;
-// }
-function promptString(title, value, callback) {
-    bootbox.prompt({
-        title,
-        value,
-        callback,
-    }).on("shown.bs.modal", function () {
-        $(this).find('input').select();
-    });
-}
-// Initialize child editor.
-class Editor {
-    constructor($elem, editorID) {
-        this.$elem = $elem;
-        this.editorID = editorID;
-        this.ops = [];
-        this.KEY_WHITELIST = [];
-        let editor = this;
-        // monkey button
-        let monkey = false;
-        $('<button>Monkey</button>')
-            .appendTo($('#local-buttons'))
-            .on('click', function () {
-            monkey = !monkey;
-            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["e" /* MonkeyCommand */](monkey));
-            $(this).css('font-weight') == '700'
-                ? $(this).css('font-weight', 'normal')
-                : $(this).css('font-weight', 'bold');
-        });
-        // switching button
-        $('<button>Toggle Element View</button>')
-            .appendTo($('#local-buttons'))
-            .on('click', function () {
-            $elem.toggleClass('theme-mock');
-            $elem.toggleClass('theme-block');
-            const settings = __WEBPACK_IMPORTED_MODULE_1__hashstate_ts__["a" /* default */].get();
-            if (settings.has(`${editorID}-theme-block`)) {
-                settings.delete(`${editorID}-theme-v`);
-            }
-            else {
-                settings.add(`${editorID}-theme-block`);
-            }
-            __WEBPACK_IMPORTED_MODULE_1__hashstate_ts__["a" /* default */].set(settings);
-        });
-        // theme
-        if (__WEBPACK_IMPORTED_MODULE_1__hashstate_ts__["a" /* default */].get().has(`${editorID}-theme-block`)) {
-            $elem.addClass('theme-block');
-        }
-        else {
-            $elem.addClass('theme-mock');
-        }
-        $elem.on('mousedown', 'span, div', function (e) {
-            const active = getActive();
-            const target = getTarget();
-            if (e.shiftKey) {
-                if (active && active.nextAll().add(active).is(this)) {
-                    clearTarget();
-                    $(this).addClass('target');
-                    // TODO
-                    // send target destination curspan
-                }
-            }
-            else {
-                clearActive();
-                clearTarget();
-                $(this).addClass('active').addClass('target');
-                console.log('Cursor:', curto($(this)));
-                editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["f" /* TargetCommand */](curto($(this))));
-            }
-            // TODO this bubbles if i use preventDEfault?
-            window.focus();
-            return false;
-        });
-        $(document).on('keypress', (e) => {
-            if ($(e.target).closest('.modal').length) {
-                return;
-            }
-            const active = getActive();
-            const target = getTarget();
-            if (active && !active.parents('.mote').is($elem)) {
-                return;
-            }
-            if (e.metaKey) {
-                return;
-            }
-            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["b" /* CharacterCommand */](e.charCode));
-            e.preventDefault();
-        });
-        $(document).on('keydown', (e) => {
-            if ($(e.target).closest('.modal').length) {
-                return;
-            }
-            const active = getActive();
-            const target = getTarget();
-            if (active && !active.parents('.mote').is($elem)) {
-                return;
-            }
-            console.log('KEYDOWN:', e.keyCode);
-            // Match against whitelisted key entries.
-            if (!editor.KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
-                return;
-            }
-            this.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["c" /* KeypressCommand */](e.keyCode, e.metaKey, e.shiftKey));
-            e.preventDefault();
-        });
-    }
-    load(data) {
-        this.$elem.empty().append(docToDOM(data));
-    }
-    nativeCommand(command) {
-        this.nativeSocket.send(JSON.stringify(command));
-    }
-    nativeConnect() {
-        let editor = this;
-        this.nativeSocket = new WebSocket(editor.editorID == 'left' ? "ws://127.0.0.1:3012" : 'ws://127.0.0.1:3013');
-        this.nativeSocket.onopen = function (event) {
-            console.log('Connected.');
-            window.parent.postMessage({
-                "Live": editor.editorID,
-            }, '*');
-        };
-        this.nativeSocket.onmessage = this.onNativeMessage.bind(this);
-        this.nativeSocket.onclose = function () {
-            $('body').css('background', 'red');
-        };
-    }
-    // Received message on native socket
-    onNativeMessage(event) {
-        let editor = this;
-        let parse = JSON.parse(event.data);
-        if (parse.Update) {
-            editor.load(parse.Update[0]);
-            if (parse.Update[1] == null) {
-                editor.ops.splice(0, this.ops.length);
-            }
-            else {
-                editor.ops.push(parse.Update[1]);
-            }
-            window.parent.postMessage({
-                Update: {
-                    doc: parse.Update[0],
-                    ops: editor.ops,
-                    name: editor.editorID,
-                    version: parse.Update[2],
-                },
-            }, '*');
-        }
-        else if (parse.PromptString) {
-            promptString(parse.PromptString[0], parse.PromptString[1], (value) => {
-                // Lookup actual key
-                let key = Object.keys(parse.PromptString[2])[0];
-                parse.PromptString[2][key][0] = value;
-                editor.nativeCommand(parse.PromptString[2]);
-            });
-        }
-        else if (parse.Setup) {
-            console.log('SETUP', parse.Setup);
-            editor.KEY_WHITELIST = parse.Setup.keys.map(x => ({ keyCode: x[0], metaKey: x[1], shiftKey: x[2] }));
-            $('#native-buttons').each((_, x) => {
-                parse.Setup.buttons.forEach(btn => {
-                    $('<button>').text(btn[1]).appendTo(x).click(_ => {
-                        editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["a" /* ButtonCommand */](btn[0]));
-                    });
-                });
-            });
-        }
-    }
-    syncConnect() {
-        window.onmessage = this.onSyncMessage.bind(this);
-    }
-    onSyncMessage(event) {
-        let editor = this;
-        if ('Sync' in event.data) {
-            // Push to native
-            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["d" /* LoadCommand */](event.data.Sync));
-        }
-        if ('Monkey' in event.data) {
-            // TODO reflect this in the app
-            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["e" /* MonkeyCommand */](true));
-        }
-    }
-}
-/* harmony export (immutable) */ __webpack_exports__["a"] = Editor;
-
-
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
-
-/***/ }),
-/* 30 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function($) {class Parent {
-    constructor() {
-        this.cache = {};
-        // TODO get this from the initial load
-        this.version = 101;
-        this.alive = 0;
-        // Timer component.
-        let counter = 0;
-        setInterval(() => {
-            $('#timer').each(function () {
-                $(this).text(counter++ + 's');
-            });
-        }, 1000);
-        // Monkey global click button.
-        $('#action-monkey').on('click', () => {
-            for (let i = 0; i < window.frames.length; i++) {
-                window.frames[i].postMessage({
-                    'Monkey': {}
-                }, '*');
-            }
-        });
-        // Reset button
-        $('#action-reset').on('click', () => {
-            $.ajax('/api/reset', {
-                contentType: 'application/json',
-                type: 'POST',
-            })
-                .done(function (data, _2, obj) {
-                if (obj.status == 200 && data != '') {
-                    window.location.reload();
-                }
-                else {
-                    alert('Error in resetting. Check the console.');
-                    window.stop();
-                }
-                //
-            });
-        });
-    }
-    initialize() {
-        let parent = this;
-        $.get('/api/hello', data => {
-            parent.syncChildren(data);
-        });
-    }
-    childConnect() {
-        let parent = this;
-        window.onmessage = function (event) {
-            if ('Update' in event.data) {
-                let name = event.data.Update.name;
-                parent.cache[name] = event.data.Update;
-            }
-            if ('Live' in event.data) {
-                parent.alive += 1;
-                if (parent.alive == 2) {
-                    parent.initialize();
-                }
-            }
-        };
-    }
-    sync() {
-        let parent = this;
-        if (this.alive != 2) {
-            return;
-        }
-        if ((!this.cache.left || this.cache.left.version != this.version) ||
-            (!this.cache.right || this.cache.right.version != this.version)) {
-            console.log('outdated, skipping:', this.cache.left, this.cache.right);
-            return;
-        }
-        this.version += 1;
-        let packet = [this.cache.left.ops, this.cache.right.ops];
-        console.log('PACKET', packet);
-        $.ajax('/api/sync', {
-            data: JSON.stringify(packet),
-            contentType: 'application/json',
-            type: 'POST',
-        })
-            .done(function (data, _2, obj) {
-            console.log('success', arguments);
-            if (obj.status == 200 && data != '') {
-                // Get the new document state and update the two clients
-                parent.syncChildren(data.doc);
-            }
-            else {
-                alert('Error in syncing. Check the command line.');
-                window.stop();
-            }
-            //
-        })
-            .fail(function () {
-            console.log('failure', arguments);
-            alert('HTTP error in syncing. Check the command line.');
-            window.stop();
-        });
-    }
-    syncChildren(data) {
-        for (let i = 0; i < window.frames.length; i++) {
-            window.frames[i].postMessage({
-                'Sync': data
-            }, '*');
-        }
-    }
-}
-/* harmony export (immutable) */ __webpack_exports__["a"] = Parent;
-
-
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
-
-/***/ }),
-/* 31 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-// Hashtag state
-class HashState {
-    static get() {
-        return new Set((location.hash || '')
-            .replace(/^#/, '')
-            .split(',')
-            .map(x => x.replace(/^\s+|\s+$/g, ''))
-            .filter(x => x.length));
-    }
-    static set(input) {
-        location.hash = Array.from(input).join(',');
-    }
-}
-/* harmony export (immutable) */ __webpack_exports__["a"] = HashState;
-
-
 
 /***/ })
 /******/ ]);

@@ -3,15 +3,12 @@ import HashState from './hashstate.ts';
 
 // Elements
 
-function newElem(attrs): JQuery {
-  return modifyElem($('<div>'), attrs);
-}
-
-function modifyElem(elem, attrs) {
-  return elem
-    .attr('data-tag', attrs.tag)
-    .attr('data-client', attrs.client)
-    .attr('class', attrs.class || '');
+function divElem(attrs): string {
+  return `<div
+    data-tag=${JSON.stringify(String(attrs.tag))}
+    data-client=${JSON.stringify(String(attrs.client))}
+    class=${JSON.stringify(String(attrs.class || ''))}
+  >`;
 }
 
 // function serializeAttrs(elem: JQuery) {
@@ -54,7 +51,7 @@ function clearTarget () {
 
 
 // Creates an HTML tree from a document tree.
-function docToDOM(vec): Array<JQuery> {
+function docToString(vec: Array<any>): string {
   // TODO act like doc
   // console.log(el);
   // var h = newElem(el.DocGroup[0]);
@@ -62,18 +59,20 @@ function docToDOM(vec): Array<JQuery> {
   for (var g = 0; g < vec.length; g++) {
     const el = vec[g];
     if (el.DocGroup) {
-      var h = newElem(el.DocGroup[0]);
-      h.append(docToDOM(el.DocGroup[1]));
-      ret.push(h);
+      ret.push([
+        divElem(el.DocGroup[0]),
+        docToString(el.DocGroup[1]),
+        '</div>'
+      ].join(''));
     } else if (el.DocChars) {
       for (var j = 0; j < el.DocChars.length; j++) {
-        ret.push($('<span>').text(el.DocChars[j]));
+        ret.push([`<span>`, String(el.DocChars[j]), '</span>'].join(''));
       }
     } else {
       throw new Error('unknown');
     }
   }
-  return ret;
+  return ret.join('');
 }
 
 function curto(el: JQuery | null) {
@@ -270,8 +269,11 @@ export default class Editor {
     })
   }
 
-  load(data) {
-    this.$elem.empty().append(docToDOM(data));
+  load(data: Array<any>) {
+    let elem = this.$elem[0];
+    requestAnimationFrame(() => {
+      elem.innerHTML = docToString(data);
+    });
   }
 
   nativeCommand(command: commands.Command) {
