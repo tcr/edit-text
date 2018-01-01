@@ -16,6 +16,7 @@ use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::sync::atomic::Ordering;
 use self::actions::*;
 
+// Commands to send back to native.
 #[derive(Serialize, Deserialize, Debug)]
 pub enum NativeCommand {
     Keypress(u32, bool, bool),
@@ -27,6 +28,7 @@ pub enum NativeCommand {
     Monkey(bool),
 }
 
+// Commands to send to JavaScript.
 #[derive(Serialize, Deserialize, Debug)]
 pub enum ClientCommand {
     Setup {
@@ -255,6 +257,27 @@ impl Client {
     }
 }
 
+type MonkeyParam = (u64, u64, u64);
+
+// "Human-like"
+const MONKEY_BUTTON: MonkeyParam = (500, 0, 2000);
+const MONKEY_LETTER: MonkeyParam = (50, 0, 200);
+const MONKEY_ARROW: MonkeyParam = (0, 0, 500);
+const MONKEY_BACKSPACE: MonkeyParam = (0, 0, 400);
+const MONKEY_ENTER: MonkeyParam = (600, 0, 3_000);
+
+// Race
+// const MONKEY_BUTTON: MonkeyParam = (0, 0, 100);
+// const MONKEY_LETTER: MonkeyParam = (0, 0, 100);
+// const MONKEY_ARROW: MonkeyParam = (0, 0, 100);
+// const MONKEY_BACKSPACE: MonkeyParam = (0, 0, 100);
+// const MONKEY_ENTER: MonkeyParam = (0, 0, 1_000);
+
+fn monkey_wait(input: MonkeyParam) {
+    let mut rng = rand::thread_rng();
+    thread::sleep(Duration::from_millis(input.0 + rng.gen_range(input.1, input.2)));
+}
+
 #[allow(unused)]
 fn setup_monkey(client: Arc<Client>) {
     // Button monkey.
@@ -262,9 +285,9 @@ fn setup_monkey(client: Arc<Client>) {
     thread::spawn(move || {
         let mut rng = rand::thread_rng();
         while thread_client.alive.load(Ordering::Relaxed) {
-            thread::sleep(Duration::from_millis(rng.gen_range(0, 2000) + 500));
+            monkey_wait(MONKEY_BUTTON);
             if thread_client.monkey.load(Ordering::Relaxed) {
-                rand::thread_rng().choose(&button_handlers()).map(|button| {
+                rng.choose(&button_handlers()).map(|button| {
                     button.1(&*thread_client);
                 });
             }
@@ -274,20 +297,20 @@ fn setup_monkey(client: Arc<Client>) {
     // Letter monkey.
     let thread_client: Arc<_> = client.clone();
     thread::spawn(move || {
+        let mut rng = rand::thread_rng();
         while thread_client.alive.load(Ordering::Relaxed) {
-            thread::sleep(Duration::from_millis(
-                rand::thread_rng().gen_range(0, 200) + 50,
-            ));
+            monkey_wait(MONKEY_LETTER);
             if thread_client.monkey.load(Ordering::Relaxed) {
+                let char_list = vec![
+                            rng.gen_range(b'A', b'Z'),
+                            rng.gen_range(b'a', b'z'),
+                            rng.gen_range(b'0', b'9'),
+                            b' ',
+                        ];
                 native_command(
                     &*thread_client,
-                    NativeCommand::Character(*rand::thread_rng()
-                        .choose(&vec![
-                            rand::thread_rng().gen_range(b'A', b'Z'),
-                            rand::thread_rng().gen_range(b'a', b'z'),
-                            rand::thread_rng().gen_range(b'0', b'9'),
-                            b' ',
-                        ])
+                    NativeCommand::Character(*rng
+                        .choose(&char_list)
                         .unwrap() as _),
                 );
             }
@@ -297,12 +320,11 @@ fn setup_monkey(client: Arc<Client>) {
     // Arrow keys.
     let thread_client: Arc<_> = client.clone();
     thread::spawn(move || {
+        let mut rng = rand::thread_rng();
         while thread_client.alive.load(Ordering::Relaxed) {
-            thread::sleep(Duration::from_millis(
-                rand::thread_rng().gen_range(0, 500) + 0,
-            ));
+            monkey_wait(MONKEY_ARROW);
             if thread_client.monkey.load(Ordering::Relaxed) {
-                let key = *rand::thread_rng().choose(&[37, 39, 37, 39, 37, 39, 38, 40]).unwrap();
+                let key = *rng.choose(&[37, 39, 37, 39, 37, 39, 38, 40]).unwrap();
                 native_command(
                     &*thread_client,
                     NativeCommand::Keypress(key, false, false),
@@ -315,9 +337,7 @@ fn setup_monkey(client: Arc<Client>) {
     let thread_client: Arc<_> = client.clone();
     thread::spawn(move || {
         while thread_client.alive.load(Ordering::Relaxed) {
-            thread::sleep(Duration::from_millis(
-                rand::thread_rng().gen_range(0, 400),
-            ));
+            monkey_wait(MONKEY_BACKSPACE);
             if thread_client.monkey.load(Ordering::Relaxed) {
                 native_command(
                     &*thread_client,
@@ -331,9 +351,7 @@ fn setup_monkey(client: Arc<Client>) {
     let thread_client: Arc<_> = client.clone();
     thread::spawn(move || loop {
         while thread_client.alive.load(Ordering::Relaxed) {
-            thread::sleep(Duration::from_millis(
-                rand::thread_rng().gen_range(0, 3_000) + 600,
-            ));
+            monkey_wait(MONKEY_ENTER);
             if thread_client.monkey.load(Ordering::Relaxed) {
                 native_command(&*thread_client, NativeCommand::Keypress(13, false, false));
             }

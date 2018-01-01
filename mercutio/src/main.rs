@@ -25,11 +25,14 @@ use oatie::{Operation, OT};
 use rocket_contrib::Json;
 use rocket::State;
 use rocket::response::NamedFile;
+use failure::Error;
 use serde_json::Value;
 use std::path::{Path, PathBuf};
 use oatie::transform::transform;
 use oatie::debug_pretty;
 use wasm::start_websocket_server;
+use std::thread;
+use oatie::schema::{validate_doc_span, ValidateContext};
 
 fn default_doc() -> Doc {
     Doc(doc_span![
@@ -205,13 +208,7 @@ struct SyncResponse {
 
 type SyncInput = (Vec<Op>, Vec<Op>);
 
-// TODO should return HTTP error code on failure?
-#[post("/api/sync", data = "<struct_body>")]
-fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<SyncResponse> {
-    let (ops_a, ops_b) = struct_body.0;
-
-    let mut doc = mote.body.lock().unwrap();
-
+fn action_sync(doc: &Doc, ops_a: Vec<Op>, ops_b: Vec<Op>) -> Result<Doc, Error> {
     println!(" ---> input ops_a");
     println!("{:?}", ops_a);
     println!();
@@ -300,14 +297,36 @@ fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<SyncRe
     let success = if a_res != b_res {
         false
     } else {
-        *doc = a_res.clone();
         true
     };
 
-    Json(SyncResponse {
-        ok: success,
-        doc: a_res.0,
-    })
+    // TODO return error when success is false
+
+    let new_doc = Doc(a_res.0);
+    validate_doc_span(ValidateContext::new(), &new_doc.0).expect("Validation error");
+
+    Ok(new_doc)
+}
+
+// TODO should return HTTP error code on failure?
+#[post("/api/sync", data = "<struct_body>")]
+fn api_sync(struct_body: Json<SyncInput>, mote: State<MoteState>) -> Json<SyncResponse> {
+    let (ops_a, ops_b) = struct_body.0;
+    let mut doc = mote.body.lock().unwrap();
+
+    if let Ok(new_doc) = action_sync(&*doc, ops_a, ops_b) {
+        *doc = new_doc.clone();
+        Json(SyncResponse {
+            ok: true,
+            doc: new_doc.0,
+        })
+    } else {
+        // TODO throw that error
+        Json(SyncResponse {
+            ok: false,
+            doc: doc.0.clone(),
+        })
+    }
 }
 
 /// Return the initial "hello world" document.
@@ -358,16 +377,81 @@ fn files(file: PathBuf) -> Option<NamedFile> {
         .and_then(|x| NamedFile::open(x).ok())
 }
 
+
+#[derive(Serialize, Deserialize, Debug)]
+enum SyncServerCommand {
+    Sync(Vec<Op>, Vec<Op>),
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+enum SyncClientCommand {
+    Update(Option<DocSpan>),
+}
+
+fn sync_socket_server(state: MoteState) {
+    thread::spawn(move || {
+        let url = "127.0.0.1:3010";
+        ws::listen(url, move |out| {
+            // DO the thing
+
+            // Reset
+            // Sync
+            // Update
+                // TODO how do you get the state of the other thing in here?
+
+            // Initial
+            {
+                let mut doc = state.body.lock().unwrap();
+                out.send(serde_json::to_string(&SyncClientCommand::Update(Some(doc.0.clone()))).unwrap());
+            }
+
+            let state = state.clone();
+            move |msg: ws::Message| {
+                let req_parse: Result<SyncServerCommand, _> = serde_json::from_slice(&msg.into_data());
+                match req_parse {
+                    Err(err) => {
+                        println!("Packet error: {:?}", err);
+                    }
+                    Ok(value) => {
+                        // native_command(&self.client, value).expect("Native command error");
+                        println!("lmao {:?}", value);
+
+                        match value {
+                            SyncServerCommand::Sync(ops_a, ops_b) => {
+                                let mut doc = state.body.lock().unwrap();
+                                 if let Ok(new_doc) = action_sync(&*doc, ops_a, ops_b) {
+                                     *doc = new_doc.clone();
+                                     
+                                     out.send(serde_json::to_string(&SyncClientCommand::Update(Some(new_doc.0))).unwrap());
+                                 } else {
+                                     out.send(serde_json::to_string(&SyncClientCommand::Update(None)).unwrap());
+                                 }
+                            }
+                        }
+                    }
+                }
+
+                Ok(())
+            }
+        })
+    });
+}
+
+#[derive(Clone)]
 struct MoteState {
     body: Arc<Mutex<Doc>>,
 }
+
 fn main() {
+    let mercutio_state = MoteState {
+        body: Arc::new(Mutex::new(default_doc())),
+    };
+
+    sync_socket_server(mercutio_state.clone());
     start_websocket_server();
 
     rocket::ignite()
-        .manage(MoteState {
-            body: Arc::new(Mutex::new(default_doc())),
-        })
+        .manage(mercutio_state)
         .mount(
             "/",
             routes![
