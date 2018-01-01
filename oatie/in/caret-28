@@ -1,0 +1,80 @@
+doc:   [
+    DocGroup({"tag": "h2"}, [
+        DocChars("Vi")
+    ]),
+    DocGroup({"tag": "h3"}, [
+        DocChars(" G 2D  g tR 154EKn wr1bc0oR 1")
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocChars(" YOf "), DocGroup({"tag": "caret", "client": "left"}, []),
+        DocChars(" j 7 R0FcL6 820 0jRR H 3 n 72wOe 5 2 S p64  t mpK  u5Ul 6u4Q V  83HHw3Ts4O48 51 7 ft6  gL A  m7a8p110VEf")
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocChars(" Pxlovx 8"), DocGroup({"tag": "caret", "client": "right"}, []),
+        DocChars(" 51N2  3gF4pl sPB00Qa e4v b6 c iI6Ic750 IeP I1  R k450ou5ki1 Sj1 P0  xkcEq2gNtTR m7m7hP58a4 frP  10jH U2No0G 0A 63O1766 2  2 56e4eA 65 y KIuY1UWD 5J1 FVh k 4 eDl1idAg7ftNV    4 4 R3oM58 TXs LCLq b4SVq Ld 1")
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocChars(" KY34  0fUK V K27gpxr7 4 Cmc7xR hek r  y5 e M7 4nk5jyu017n 3CwX4qR7Pkt 0jJR cc1 7aq 2 c1 xeqC t67 213go7Y 7 8i572hf  PB04 oX8DE8Nha 0  Qni   c5 rb cRTFt Laq6AC JE7 382 iREQvDLNoU15Wg   7  g6Nr BP 7m087y7     v7e 8  6B  g1uLq84 wN5 cjqt5 40 j s6 k l3wU37MfQ5 Qgrw k27 p73 c4W  ao8pFfK 3mlP qg uP8 KsGr 7am4Fasl2 G ICi7L7T7 ojN4dhg  84RWA  b  4   w0U7 7BWq5 5y  A84  D veI     672 o6u1eYB  fie6S46 O2804 pUA j71Gm 0KBUatV TTpxvv  6 8 4 s  b   6 S QnR4XQS1   V   u rJF M6u6Av m L  Ys 7eny4q us0u  c  V   H em7llo world Sv xm HG5NA7Yp 0ITK  6Vc    y 8xJ5What\'s up with you?")
+    ])
+]
+
+a_del: [
+    DelWithGroup([
+        DelSkip(2)
+    ]),
+    DelWithGroup([
+        DelSkip(29)
+    ]),
+    DelWithGroup([
+        DelSkip(5), DelGroup([]),
+        DelSkip(104)
+    ]),
+    DelSkip(1)
+]
+a_add: [
+    AddWithGroup([
+        AddSkip(2)
+    ]),
+    AddWithGroup([
+        AddSkip(29)
+    ]),
+    AddWithGroup([
+        AddSkip(5), AddChars("v"), AddSkip(104)
+    ]),
+    AddWithGroup([
+        AddGroup({"tag": "caret", "client": "left"}, [])
+    ])
+]
+
+b_del: [
+    DelWithGroup([
+        DelSkip(2)
+    ]),
+    DelWithGroup([
+        DelSkip(29)
+    ]),
+    DelWithGroup([
+        DelSkip(5), DelWithGroup([]),
+        DelSkip(104)
+    ]),
+    DelGroup([
+        DelSkip(6), DelChars(3), DelGroup([]),
+        DelChars(1), DelSkip(204)
+    ])
+]
+b_add: [
+    AddWithGroup([
+        AddSkip(2)
+    ]),
+    AddWithGroup([
+        AddSkip(29)
+    ]),
+    AddWithGroup([
+        AddSkip(5), AddWithGroup([]),
+        AddSkip(104)
+    ]),
+    AddGroup({"tag": "h2"}, [
+        AddSkip(6), AddChars("m"), AddGroup({"client": "right", "tag": "caret"}, []),
+        AddSkip(204)
+    ])
+]

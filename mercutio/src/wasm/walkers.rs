@@ -317,8 +317,6 @@ impl Walker {
 
             let target_pos = rstepper.caret_pos - 1;
 
-            println!("whoa");
-
             // Iterate until we match the cursor.
             let matched = loop {
                 if rstepper.caret_pos == target_pos && rstepper.is_valid_caret_pos() {

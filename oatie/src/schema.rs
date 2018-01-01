@@ -3,13 +3,12 @@
 use std::collections::HashMap;
 use std::borrow::ToOwned;
 use std::cmp;
-
 use super::doc::*;
 use super::stepper::*;
 use super::compose;
 use super::normalize;
 use super::writer::*;
-
+use failure::Error;
 use term_painter::ToStyle;
 use term_painter::Color::*;
 use term_painter::Attr::*;
@@ -103,4 +102,54 @@ impl Tag {
             _ => None,
         }
     }
+}
+
+
+#[derive(Clone)]
+pub struct ValidateContext {
+    stack: Vec<Attrs>,
+}
+
+impl ValidateContext {
+    pub fn new() -> ValidateContext {
+        ValidateContext {
+            stack: vec![],
+        }
+    }
+}
+
+pub fn validate_doc_span(ctx: ValidateContext, span: &DocSpan) -> Result<(), Error> {
+    for elem in span {
+        match *elem {
+            DocGroup(ref attrs, ref span) => {
+                let mut child_ctx = ctx.clone();
+                child_ctx.stack.push(attrs.clone());
+                validate_doc_span(child_ctx, span)?;
+                
+                // Check parentage.
+                if let Some(parent) = ctx.stack.last() {
+                    let parent_type = Tag(parent.clone()).tag_type().unwrap();
+                    let cur_type = Tag(attrs.clone()).tag_type().unwrap();
+                    ensure!(
+                        cur_type.parents().contains(&parent_type),
+                        "Block has incorrect parent"
+                    );
+                }
+            }
+            DocChars(text) => {
+                ensure!(text.chars().count() > 0, "Empty char string");
+
+                if let Some(block) = ctx.stack.last() {
+                    ensure!(
+                        Tag(block.clone()).tag_type() == Some(TrackType::Blocks) ||
+                        Tag(block.clone()).tag_type() == Some(TrackType::Inlines),
+                        "Char found outside block"
+                    );
+                } else {
+                    bail!("Found char in root");
+                }
+            }
+        }
+    }
+    Ok(())
 }

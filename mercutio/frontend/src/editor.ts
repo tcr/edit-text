@@ -51,28 +51,26 @@ function clearTarget () {
 
 
 // Creates an HTML tree from a document tree.
-function docToString(vec: Array<any>): string {
+function docToStrings(ret: Array<string>, vec: Array<any>) {
   // TODO act like doc
   // console.log(el);
   // var h = newElem(el.DocGroup[0]);
-  let ret = [];
   for (var g = 0; g < vec.length; g++) {
     const el = vec[g];
     if (el.DocGroup) {
-      ret.push([
-        divElem(el.DocGroup[0]),
-        docToString(el.DocGroup[1]),
-        '</div>'
-      ].join(''));
+      ret.push(divElem(el.DocGroup[0]));
+      docToStrings(ret, el.DocGroup[1]);
+      ret.push('</div>');
     } else if (el.DocChars) {
       for (var j = 0; j < el.DocChars.length; j++) {
-        ret.push([`<span>`, String(el.DocChars[j]), '</span>'].join(''));
+        ret.push('<span>');
+        ret.push(String(el.DocChars[j]));
+        ret.push('</span>');
       }
     } else {
       throw new Error('unknown');
     }
   }
-  return ret.join('');
 }
 
 function curto(el: JQuery | null) {
@@ -272,7 +270,9 @@ export default class Editor {
   load(data: Array<any>) {
     let elem = this.$elem[0];
     requestAnimationFrame(() => {
-      elem.innerHTML = docToString(data);
+      let ret = [];
+      docToStrings(ret, data);
+      elem.innerHTML = ret.join('');
     });
   }
 

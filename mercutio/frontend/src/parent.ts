@@ -2,19 +2,25 @@ export default class Parent {
   cache: any;
   version: number;
   alive: number;
+  syncSocket: WebSocket;
+  docState: any | null;
+  syncWait: boolean;
 
   constructor() {
     this.cache = {};
     // TODO get this from the initial load
     this.version = 101;
     this.alive = 0;
+    this.syncWait = false;
 
     // Timer component.
     let counter = 0;
     setInterval(() => {
-      $('#timer').each(function () {
-        $(this).text(counter++ + 's');
-      })
+      requestAnimationFrame(() => {
+        $('#timer').each(function () {
+          $(this).text(counter++ + 's');
+        })
+      });
     }, 1000);
 
     // Monkey global click button.
@@ -42,13 +48,38 @@ export default class Parent {
         //
       })
     });
+
+    let parent = this;
+    this.syncSocket = new WebSocket('ws://127.0.0.1:3010');
+    this.syncSocket.onopen = function (event) {
+      console.log('(!) SyncSocket connected.');
+    };
+    this.syncSocket.onmessage = this.onSyncClientMessage.bind(this);
+    this.syncSocket.onclose = function () {
+      $('body').css('background', 'red');
+      alert('Websocket closed, error?');
+
+      // TODO just in case?
+      window.stop();
+    }
+  }
+
+  onSyncClientMessage(msg) {
+    let data = JSON.parse(msg.data);
+
+    if ('Update' in data) {
+      console.log('updating', data);
+      this.docState = data.Update;
+      this.syncChildren(data.Update);
+      this.syncWait = false;
+    }
   }
 
   initialize() {
-    let parent = this;
-    $.get('/api/hello', data => {
-      parent.syncChildren(data);
-    });
+    // let parent = this;
+    // $.get('/api/hello', data => {
+    //   parent.syncChildren(data);
+    // });
   }
 
   childConnect() {
@@ -60,8 +91,8 @@ export default class Parent {
       }
       if ('Live' in event.data) {
         parent.alive += 1;
-        if (parent.alive == 2) {
-          parent.initialize();
+        if (parent.docState !== null && parent.docState && parent.alive == 2) {
+          parent.syncChildren(parent.docState);
         }
       }
     };
@@ -69,6 +100,10 @@ export default class Parent {
 
   sync() {
     let parent = this;
+
+    if (this.syncWait) {
+      return;
+    }
 
     if (this.alive != 2) {
       return;
@@ -79,33 +114,15 @@ export default class Parent {
       console.log('outdated, skipping:', this.cache.left, this.cache.right);
       return;
     }
+
+    this.syncWait = true;
     this.version += 1;
 
     let packet = [this.cache.left.ops, this.cache.right.ops];
 
-    console.log('PACKET', packet)
-
-    $.ajax('/api/sync', {
-      data : JSON.stringify(packet),
-      contentType : 'application/json',
-      type : 'POST',
-    })
-    .done(function (data, _2, obj) {
-      console.log('success', arguments);
-      if (obj.status == 200 && data != '') {
-        // Get the new document state and update the two clients
-        parent.syncChildren(data.doc);
-      } else {
-        alert('Error in syncing. Check the command line.')
-        window.stop();
-      }
-      //
-    })
-    .fail(function () {
-      console.log('failure', arguments);
-      alert('HTTP error in syncing. Check the command line.')
-      window.stop();
-    });
+    this.syncSocket.send(JSON.stringify({
+      Sync: packet,
+    }));
   }
 
   syncChildren(data) {
