@@ -236,13 +236,38 @@ impl Walker {
         }
     }
 
-    // TODO don't like the assert api here
-    pub fn back_block(&mut self, assert: bool) -> &mut Walker {
+    pub fn parent(&mut self) -> bool {
+        let mut matched = false;
         take_mut::take(&mut self.stepper, |stepper| {
             let mut rstepper = stepper.rev();
 
             // Iterate until we reach a block.
-            let matched = loop {
+            let mut depth = 1;
+            while depth > 0 {
+                if rstepper.next().is_none() {
+                    break;
+                }
+                if let Some(DocGroup(attrs, _)) = rstepper.doc.head() {
+                    depth -= 1;
+                } else if let None = rstepper.doc.head() {
+                    depth += 1;
+                }
+            }
+            matched = depth == 0;
+
+            rstepper.rev()
+        });
+
+        matched
+    }
+
+    pub fn back_block(&mut self) -> bool {
+        let mut matched = false;
+        take_mut::take(&mut self.stepper, |prev_stepper| {
+            let mut rstepper = prev_stepper.clone().rev();
+
+            // Iterate until we reach a block.
+            matched = loop {
                 if rstepper.next().is_none() {
                     break false;
                 }
@@ -252,14 +277,15 @@ impl Walker {
                     }
                 }
             };
-            if !matched && assert {
-                panic!("Didn't find a block.");
-            }
 
-            rstepper.rev()
+            if matched {
+                rstepper.rev()
+            } else {
+                prev_stepper
+            }
         });
 
-        self
+        matched
     }
 
     pub fn next_block(&mut self) -> bool {
@@ -280,7 +306,11 @@ impl Walker {
                 }
             };
 
-            stepper
+            if matched {
+                stepper
+            } else {
+                prev_stepper
+            }
         });
 
         matched

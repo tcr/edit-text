@@ -181,6 +181,10 @@ fn button_handlers() -> Vec<(&'static str, Box<Fn(&Client) -> Result<(), Error>>
             "Code",
             Box::new(|client: &Client| client_op(client, |doc| replace_block(doc, "pre"))),
         ),
+        (
+            "List",
+            Box::new(|client: &Client| client_op(client, |doc| toggle_list(doc))),
+        ),
     ]
 }
 

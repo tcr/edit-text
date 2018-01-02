@@ -115,6 +115,11 @@ export default class Parent {
       return;
     }
 
+    // Drop no-ops
+    if (!this.cache.left.ops.length && !this.cache.right.ops.length) {
+      return;
+    }
+
     this.syncWait = true;
     this.version += 1;
 

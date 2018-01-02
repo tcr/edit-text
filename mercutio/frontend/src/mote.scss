@@ -273,11 +273,8 @@ button {
         font-family: monospace;
     }
 
-    div[data-tag="ul"] {
+    div[data-tag="bullet"] {
         list-style: disc outside none;
-    }
-
-    div[data-tag="li"] {
         display: list-item;
         margin-left: 25px;
     }

@@ -9,14 +9,71 @@ pub struct ActionContext {
     pub client_id: String,
 }
 
+pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
+    assert!(walker.back_block());
+    
+    let mut parent_walker = walker.clone();
+    if parent_walker.parent() {
+        if let Some(DocGroup(ref attrs, ref span)) = parent_walker.doc().head() {
+            if attrs["tag"] == "bullet" {
+                // Do the list destructuring here
+                let mut writer = parent_walker.to_writer();
+                
+                writer.del.group(&del_span![DelSkip(1)]);
+                writer.del.exit_all();
+
+                writer.add.exit_all();
+
+                return Ok(writer.result());
+
+                // let op_1 = writer.result();
+
+                // assert!(parent_walker.parent());
+
+                // if let Some(DocGroup(ref attrs, ref span)) = parent_walker.doc().head() {
+                //     assert_eq!(attrs["tag"], "ul");
+
+                //     let mut writer = parent_walker.to_writer();
+                
+                //     writer.del.group(&del_span![DelSkip(1)]);
+                //     writer.del.exit_all();
+
+                //     writer.add.exit_all();
+
+                //     let op_2 = writer.result();
+
+                //     return Ok(Operation::compose(&op_1, &op_2));
+
+                // } else {
+                //     unreachable!();
+                // }
+            }
+        }
+    }
+
+    let mut writer = walker.to_writer();
+
+    writer.del.exit_all();
+
+    writer.add.group(
+        &hashmap! { "tag".to_string() => "bullet".to_string() },
+        &add_span![
+            AddSkip(1)
+        ],
+    );
+    writer.add.exit_all();
+
+    Ok(writer.result())
+}
+
 pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
     let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
-    walker.back_block(true);
+    assert!(walker.back_block());
 
     let len = if let Some(DocGroup(_, ref span)) = walker.doc().head() {
         span.skip_len()
     } else {
-        println!("uhg {:?}", walker);
         unreachable!()
     };
 
@@ -38,25 +95,51 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
     let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
 
     // TODO fix this without a caret position integer check.
-    if walker.caret_pos() < 2 {
-        return Ok(op_span!([], []));
-    }
+    // Check if we are at the start of the document.
+    // if walker.caret_pos() < 2 {
+    //     return Ok(op_span!([], []));
+    // }
 
     // Check if caret is at the start of a block.
     let caret_pos = walker.caret_pos();
     let mut block_walker = walker.clone();
-    block_walker.back_block(true);
+    assert!(block_walker.back_block());
     block_walker.stepper.next(); // re-enter the block to first caret position
     if caret_pos == block_walker.caret_pos() {
+        // Check for list
+        let mut parent_walker = walker.clone();
+        assert!(parent_walker.back_block());
+        if parent_walker.doc().is_back_done() && parent_walker.parent() {
+            if let Some(DocGroup(ref attrs, ref span)) = parent_walker.doc().head() {
+                if attrs["tag"] == "li" {
+                    // Do the list destructuring here
+                    println!("BEGINNING OF LIST");
+                    return Ok(op_span!([], []));
+                }
+            }
+        }
+        
         // Return to block parent.
-        block_walker.back_block(true);
+        assert!(block_walker.back_block());
         let span_2 = match block_walker.stepper().head() {
             Some(DocGroup(.., span)) => span.skip_len(),
             _ => unreachable!()
         };
 
-        // Move to prior block to join it.
-        block_walker.back_block(true);
+        let last_doc_stack = block_walker.doc().stack.clone();
+
+        // Move to prior block to join it, or abort.
+        if !block_walker.back_block() {
+            return Ok(op_span!([], []));
+        }
+
+        let next_doc_stack = block_walker.doc().stack.clone();
+
+        if last_doc_stack != next_doc_stack {
+            return Ok(op_span!([], []));
+        }
+
+        // Surround block.
         let (attrs, span_1) = match block_walker.stepper().head() {
             Some(DocGroup(attrs, span)) => (attrs, span.skip_len()),
             _ => unreachable!()
@@ -132,7 +215,9 @@ pub fn split_block(ctx: ActionContext) -> Result<Op, Error> {
     let walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
     let skip = walker.doc().skip_len();
 
-    let previous_block = if let Some(DocGroup(attrs, _)) = walker.clone().back_block(true).doc().head()
+    let mut prev_walker = walker.clone();
+    assert!(prev_walker.back_block());
+    let previous_block = if let Some(DocGroup(attrs, _)) = prev_walker.doc().head()
     {
         attrs["tag"].to_string()
     } else {
@@ -225,8 +310,8 @@ pub fn caret_block_move(ctx: ActionContext, increase: bool) -> Result<Op, Error>
             return Ok(op_span!([], []));
         }
     } else {
-        walker.back_block(true);
-        walker.back_block(false);
+        assert!(walker.back_block());
+        let _ = walker.back_block(); // don't care
     }
 
     let mut writer = walker.to_writer();
