@@ -47,10 +47,10 @@ impl TrackType {
     pub fn parents(&self) -> Vec<TrackType> {
         use self::TrackType::*;
         match *self {
-            Lists => vec![ListItems, BlockQuotes],
-            ListItems => vec![Lists],
+            // Lists => vec![ListItems, BlockQuotes],
+            ListItems => vec![ListItems, BlockQuotes],
             BlockQuotes => vec![ListItems, BlockQuotes],
-            Blocks => vec![ListItems, BlockObjects],
+            Blocks => vec![ListItems, BlockQuotes],
             BlockObjects => vec![ListItems, BlockQuotes],
             Inlines | InlineObjects => vec![Blocks],
             _ => {
@@ -63,12 +63,12 @@ impl TrackType {
     pub fn ancestors(&self) -> Vec<TrackType> {
         use self::TrackType::*;
         match *self {
-            Lists => vec![Lists, ListItems, BlockQuotes],
-            ListItems => vec![Lists, ListItems, BlockQuotes],
-            BlockQuotes => vec![Lists, ListItems, BlockQuotes],
-            Blocks => vec![Lists, ListItems, BlockObjects],
-            BlockObjects => vec![Lists, ListItems, BlockQuotes],
-            Inlines | InlineObjects => vec![Lists, ListItems, BlockQuotes, Blocks],
+            // Lists => vec![Lists, ListItems, BlockQuotes],
+            ListItems => vec![ListItems, BlockQuotes],
+            BlockQuotes => vec![ListItems, BlockQuotes],
+            Blocks => vec![ListItems, BlockObjects],
+            BlockObjects => vec![ListItems, BlockQuotes],
+            Inlines | InlineObjects => vec![ListItems, BlockQuotes, Blocks],
             _ => {
                 panic!("this shouldnt be");
             }
@@ -94,8 +94,11 @@ impl Tag {
 
     pub fn tag_type(self: &Tag) -> Option<TrackType> {
         match &*self.0["tag"] {
+            // TODO remove these two
             "ul" => Some(TrackType::Lists),
             "li" => Some(TrackType::ListItems),
+
+            "bullet" => Some(TrackType::ListItems),
             "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "pre" => Some(TrackType::Blocks),
             "span" | "b" => Some(TrackType::Inlines),
             "caret" => Some(TrackType::InlineObjects),
@@ -136,8 +139,8 @@ pub fn validate_doc_span(ctx: ValidateContext, span: &DocSpan) -> Result<(), Err
                     );
                 }
             }
-            DocChars(text) => {
-                ensure!(text.chars().count() > 0, "Empty char string");
+            DocChars(ref text) => {
+                ensure!(text.len() > 0, "Empty char string");
 
                 if let Some(block) = ctx.stack.last() {
                     ensure!(
