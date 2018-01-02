@@ -11447,23 +11447,6 @@ class HashState {
                 }, '*');
             }
         });
-        // Reset button
-        $('#action-reset').on('click', () => {
-            $.ajax('/api/reset', {
-                contentType: 'application/json',
-                type: 'POST',
-            })
-                .done(function (data, _2, obj) {
-                if (obj.status == 200 && data != '') {
-                    window.location.reload();
-                }
-                else {
-                    alert('Error in resetting. Check the console.');
-                    window.stop();
-                }
-                //
-            });
-        });
         let parent = this;
         this.syncSocket = new WebSocket('ws://127.0.0.1:3010');
         this.syncSocket.onopen = function (event) {
