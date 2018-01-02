@@ -71,6 +71,16 @@ export function MonkeyCommand(
   }
 }
 
+type ConnectCommand = {Connect: string};
+
+export function ConnectCommand(
+  client: string,
+): ConnectCommand {
+  return {
+    'Connect': client,
+  }
+}
+
 export type Command
   = MonkeyCommand
   | RenameGroupCommand
@@ -78,4 +88,5 @@ export type Command
   | CharacterCommand
   | TargetCommand
   | ButtonCommand
-  | LoadCommand;
+  | LoadCommand
+  | ConnectCommand;

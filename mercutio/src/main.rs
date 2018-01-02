@@ -1,6 +1,7 @@
 #![feature(plugin)]
 #![plugin(rocket_codegen)]
 
+#[macro_use]
 extern crate failure;
 #[macro_use]
 extern crate maplit;
@@ -68,6 +69,6 @@ fn main() {
     start_websocket_server();
 
     rocket::ignite()
-        .mount("/", routes![root, client, files, favicon,])
+        .mount("/", routes![root, client, files, favicon])
         .launch();
 }

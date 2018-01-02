@@ -19,6 +19,7 @@ use self::actions::*;
 // Commands to send back to native.
 #[derive(Serialize, Deserialize, Debug)]
 pub enum NativeCommand {
+    Connect(String),
     Keypress(u32, bool, bool),
     Button(u32),
     Character(u32),
@@ -46,9 +47,10 @@ where
 {
     let mut doc = client.doc.lock().unwrap();
 
+    let client_id = client.name.lock().unwrap().clone().unwrap().to_string();
     let op = callback(ActionContext {
         doc: doc.clone(),
-        client_id: client.name.to_string(),
+        client_id,
     })?;
 
     // Apply new operation.
@@ -83,34 +85,6 @@ where
 
 fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&Client) -> Result<(), Error>>)> {
     vec![
-        // command + .
-        // (
-        //     190,
-        //     true,
-        //     false,
-        //     Box::new(|client: &Client| {
-        //         println!("renaming a group.");
-        //         let cur = client.target.lock().unwrap();
-
-        //         // Unwrap into real error
-        //         let future = NativeCommand::RenameGroup("null".into(), cur.clone().unwrap());
-        //         let prompt =
-        //             ClientCommand::PromptString("Rename tag group:".into(), "p".into(), future);
-        //         client.send(&prompt)?;
-        //         Ok(())
-        //     }),
-        // ),
-        // // command + ,
-        // (188, true, false, Box::new(|client: &Client| {
-        //     println!("renaming a group.");
-        //     let cur = client.target.lock().unwrap();
-
-        //     let future = NativeCommand::WrapGroup("null".into(), cur.clone().unwrap());
-        //     let prompt = ClientCommand::PromptString("Name of new outer tag:".into(), "p".into(), future);
-        //     client.send(&prompt)?;
-        //     Ok(())
-        // })),
-
         // backspace
         (
             8,
@@ -190,6 +164,9 @@ fn button_handlers() -> Vec<(&'static str, Box<Fn(&Client) -> Result<(), Error>>
 
 fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
     match req {
+        NativeCommand::Connect(client_id) => {
+            *client.name.lock().unwrap() = Some(client_id);
+        }
         NativeCommand::RenameGroup(tag, _) => client_op(client, |doc| replace_block(doc, &tag))?,
         NativeCommand::Button(index) => {
             // Find which button handler to respond to this command.
@@ -232,6 +209,13 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
             // TODO this probably isn't necessary, but we shoudl version
             // doc and version in same mutex
             drop(client_doc);
+
+            // Load the caret.
+            if !client.first_load.load(Ordering::Relaxed) {
+                client.first_load.store(true, Ordering::Relaxed);
+
+                client_op(client, |doc| init_caret(doc))?;
+            }
         }
         NativeCommand::Monkey(setting) => {
             client.monkey.store(setting, Ordering::Relaxed);
@@ -245,10 +229,11 @@ struct Client {
     doc: Mutex<Doc>,
     original_doc: Mutex<Doc>,
     original_ops: Mutex<Vec<Op>>,
+    first_load: AtomicBool,
     //TODO remove the target field? base only on carets instead
     target: Mutex<Option<CurSpan>>,
     monkey: AtomicBool,
-    name: String,
+    name: Mutex<Option<String>>,
     version: AtomicUsize,
     alive: AtomicBool,
 }
@@ -398,7 +383,7 @@ impl ws::Handler for SocketHandler {
     }
 }
 
-pub fn server(url: &str, name: &str) {
+pub fn server(url: &str) {
     ws::listen(url, |out| {
         let client = Arc::new(Client {
             out,
@@ -407,9 +392,10 @@ pub fn server(url: &str, name: &str) {
             original_doc: Mutex::new(Doc(vec![])),
             original_ops: Mutex::new(vec![]),
 
+            first_load: AtomicBool::new(false),
             target: Mutex::new(None),
             monkey: AtomicBool::new(false),
-            name: name.to_string(),
+            name: Mutex::new(None),
             version: AtomicUsize::new(100),
             alive: AtomicBool::new(true),
         });
@@ -442,16 +428,7 @@ pub fn server(url: &str, name: &str) {
 pub fn start_websocket_server() {
     thread::spawn(|| {
         if let Err(value) = panic::catch_unwind(|| {
-            server("127.0.0.1:3012", "left");
-        }) {
-            println!("Error: {:?}", value);
-            process::exit(1);
-        }
-    });
-
-    thread::spawn(|| {
-        if let Err(value) = panic::catch_unwind(|| {
-            server("127.0.0.1:3013", "right");
+            server("127.0.0.1:3012");
         }) {
             println!("Error: {:?}", value);
             process::exit(1);

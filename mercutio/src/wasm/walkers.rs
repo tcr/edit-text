@@ -136,12 +136,44 @@ pub struct Walker {
 }
 
 impl Walker {
+    pub fn new(doc: &Doc) -> Walker {
+        Walker {
+            original_doc: doc.clone(),
+            stepper: CaretStepper::new(DocStepper::new(&doc.0)),
+        }
+    }
+
     pub fn doc(&self) -> &DocStepper {
         &self.stepper.doc
     }
 
     pub fn caret_pos(&self) -> isize {
         self.stepper.caret_pos
+    }
+
+    pub fn goto_pos(&mut self, target_pos: isize) -> bool {
+        let mut matched = false;
+        take_mut::take(&mut self.stepper, |prev_stepper| {
+            let mut stepper = prev_stepper.clone();
+
+            // Iterate until we match the cursor.
+            matched = loop {
+                if stepper.caret_pos == target_pos && stepper.is_valid_caret_pos() {
+                    break true;
+                }
+                if stepper.next().is_none() {
+                    break false;
+                }
+            };
+
+            if matched {
+                stepper
+            } else {
+                prev_stepper
+            }
+        });
+
+        matched
     }
 
     pub fn to_caret(doc: &Doc, client_id: &str) -> Walker {
