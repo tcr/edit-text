@@ -18,8 +18,8 @@ use serde_json;
 pub fn default_doc() -> Doc {
     Doc(doc_span![
         DocGroup({"tag": "h1"}, [
-            DocGroup({"tag": "caret", "client": "left"}, []),
-            DocGroup({"tag": "caret", "client": "right"}, []),
+            // DocGroup({"tag": "caret", "client": "left"}, []),
+            // DocGroup({"tag": "caret", "client": "right"}, []),
             DocChars("Hello world!"),
         ]),
         DocGroup({"tag": "p"}, [
@@ -137,7 +137,8 @@ pub fn action_sync(doc: &Doc, ops_a: Vec<Op>, ops_b: Vec<Op>) -> Result<Doc, Err
     // TODO return error when success is false
 
     let new_doc = Doc(a_res.0);
-    validate_doc_span(ValidateContext::new(), &new_doc.0).expect("Validation error");
+    let mut validate_ctx = ValidateContext::new();
+    validate_doc_span(&mut validate_ctx, &new_doc.0).expect("Validation error");
 
     Ok(new_doc)
 }
@@ -156,14 +157,7 @@ pub fn sync_socket_server(state: MoteState) {
     thread::spawn(move || {
         let url = "127.0.0.1:3010";
         ws::listen(url, move |out| {
-            // DO the thing
-
-            // Reset
-            // Sync
-            // Update
-            // TODO how do you get the state of the other thing in here?
-
-            // Initial
+            // Initial document state.
             {
                 let doc = state.body.lock().unwrap();
                 let command = SyncClientCommand::Update(Some(doc.0.clone()));

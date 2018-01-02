@@ -14,7 +14,7 @@ h4 {
 }
 
 #clients td {
-    width: 50%;
+    // width: 50%;
     vertical-align: top;
 }
 
@@ -225,6 +225,10 @@ button {
         vertical-align: bottom;
         animation: caret step-end 1.2s infinite;
 
+    }
+
+    div[data-tag="caret"][data-client="middle"] {
+        border-right-color: #0f0;
     }
 
     div[data-tag="caret"][data-client="right"] {

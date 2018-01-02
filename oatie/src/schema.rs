@@ -1,6 +1,6 @@
 //! Performs operational transform.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::borrow::ToOwned;
 use std::cmp;
 use super::doc::*;
@@ -111,23 +111,31 @@ impl Tag {
 #[derive(Clone)]
 pub struct ValidateContext {
     stack: Vec<Attrs>,
+    carets: HashSet<String>,
 }
 
 impl ValidateContext {
     pub fn new() -> ValidateContext {
         ValidateContext {
             stack: vec![],
+            carets: hashset![],
         }
     }
 }
 
-pub fn validate_doc_span(ctx: ValidateContext, span: &DocSpan) -> Result<(), Error> {
+pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<(), Error> {
     for elem in span {
         match *elem {
             DocGroup(ref attrs, ref span) => {
-                let mut child_ctx = ctx.clone();
-                child_ctx.stack.push(attrs.clone());
-                validate_doc_span(child_ctx, span)?;
+                if attrs["tag"] == "caret" {
+                    if !ctx.carets.insert(attrs["client"].clone()) {
+                        bail!("Multiple carets for {:?} exist", attrs["client"]);
+                    }
+                }
+
+                ctx.stack.push(attrs.clone());
+                validate_doc_span(ctx, span)?;
+                ctx.stack.pop();
                 
                 // Check parentage.
                 if let Some(parent) = ctx.stack.last() {

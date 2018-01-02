@@ -1,24 +1,6 @@
 import * as commands from './commands.ts';
 import HashState from './hashstate.ts';
 
-// Elements
-
-function divElem(attrs): string {
-  return `<div
-    data-tag=${JSON.stringify(String(attrs.tag))}
-    data-client=${JSON.stringify(String(attrs.client))}
-    class=${JSON.stringify(String(attrs.class || ''))}
-  >`;
-}
-
-// function serializeAttrs(elem: JQuery) {
-//   return {
-//     "tag": String(elem.attr('data-tag') || ''),
-//   };
-// }
-
-
-
 function getActive() {
   var a = $('.active')
   return a[0] ? a : null;
@@ -58,7 +40,12 @@ function docToStrings(ret: Array<string>, vec: Array<any>) {
   for (var g = 0; g < vec.length; g++) {
     const el = vec[g];
     if (el.DocGroup) {
-      ret.push(divElem(el.DocGroup[0]));
+      const attrs = el.DocGroup[0];
+      ret.push(`<div
+        data-tag=${JSON.stringify(String(attrs.tag))}
+        data-client=${JSON.stringify(String(attrs.client))}
+        class=${JSON.stringify(String(attrs.class || ''))}
+      >`);
       docToStrings(ret, el.DocGroup[1]);
       ret.push('</div>');
     } else if (el.DocChars) {
@@ -282,11 +269,12 @@ export default class Editor {
 
   nativeConnect() {
     let editor = this;
-    this.nativeSocket = new WebSocket(
-      editor.editorID == 'left' ? "ws://127.0.0.1:3012" : 'ws://127.0.0.1:3013'
-    );
+    this.nativeSocket = new WebSocket('ws://127.0.0.1:3012');
     this.nativeSocket.onopen = function (event) {
-      console.log('Connected.');
+      console.log('Editor "%s" is connected.', editor.editorID);
+
+      editor.nativeCommand(new commands.ConnectCommand(editor.editorID));
+
       window.parent.postMessage({
         "Live": editor.editorID,
       }, '*')

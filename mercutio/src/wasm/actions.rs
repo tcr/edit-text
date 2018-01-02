@@ -290,6 +290,26 @@ pub fn caret_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
     }
 }
 
+pub fn init_caret(ctx: ActionContext) -> Result<Op, Error> {
+    let mut walker = Walker::new(&ctx.doc);
+    if !walker.goto_pos(0) {
+        bail!("Could not insert first caret");
+    }
+
+    let mut writer = walker.to_writer();
+
+    writer.del.exit_all();
+
+    writer.add.begin();
+    writer.add.close(hashmap! {
+        "tag".to_string() => "caret".to_string(),
+        "client".to_string() => ctx.client_id.clone(),
+    });
+    writer.add.exit_all();
+
+    Ok(writer.result())
+}
+
 pub fn caret_block_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
     let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
 
