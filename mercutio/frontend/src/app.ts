@@ -19,15 +19,14 @@ $(window).on('blur', () => $(document.body).removeClass('focused'));
 if ((<any>window).MOTE_ENTRY == 'index') {
   let parent = new Parent();
 
-  parent.childConnect();
+  // parent.childConnect();
 
   // Set syncing rate.
-  setInterval(parent.sync.bind(parent), 200)
+  // setInterval(parent.sync.bind(parent), 200)
 }
 else if ((<any>window).MOTE_ENTRY == 'client') {
   let editor = new Editor($('#mote'), window.name);
 
   editor.syncConnect();
-
   editor.nativeConnect();
 }

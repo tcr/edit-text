@@ -1,19 +1,22 @@
-use std::sync::{Arc, Mutex};
-use oatie::doc::*;
-use oatie::{Operation, OT};
-use rocket_contrib::Json;
-use rocket::State;
-use rocket::response::NamedFile;
 use failure::Error;
-use serde_json::Value;
-use std::path::{Path, PathBuf};
-use oatie::transform::transform;
+use oatie::{Operation, OT};
 use oatie::debug_pretty;
-use wasm::start_websocket_server;
-use std::thread;
+use oatie::doc::*;
 use oatie::schema::{validate_doc_span, ValidateContext};
-use ws;
+use oatie::transform::transform;
+use rocket_contrib::Json;
+use rocket::response::NamedFile;
+use rocket::State;
 use serde_json;
+use serde_json::Value;
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
+use bus::Bus;
+use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::Duration;
+use wasm::start_websocket_server;
+use ws;
 
 pub fn default_doc() -> Doc {
     Doc(doc_span![
@@ -46,7 +49,7 @@ pub struct MoteState {
     pub body: Arc<Mutex<Doc>>,
 }
 
-pub fn action_sync(doc: &Doc, ops_a: Vec<Op>, ops_b: Vec<Op>) -> Result<Doc, Error> {
+pub fn action_sync(doc: &Doc, ops_a: Vec<Op>, ops_b: Vec<Op>) -> Result<(Doc, Op), Error> {
     println!(" ---> input ops_a");
     println!("{:?}", ops_a);
     println!();
@@ -140,33 +143,89 @@ pub fn action_sync(doc: &Doc, ops_a: Vec<Op>, ops_b: Vec<Op>) -> Result<Doc, Err
     let mut validate_ctx = ValidateContext::new();
     validate_doc_span(&mut validate_ctx, &new_doc.0).expect("Validation error");
 
-    Ok(new_doc)
+    Ok((new_doc, Operation::compose(&op_a, &a_)))
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum SyncServerCommand {
-    Sync(Vec<Op>, Vec<Op>),
+    // Connect(String),
+    Commit(String, Op, usize),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum SyncClientCommand {
-    Update(Option<DocSpan>),
+    Update(DocSpan, usize),
+}
+
+pub struct SyncState {
+    ops: HashMap<String, Vec<Op>>,
+    version: usize,
 }
 
 pub fn sync_socket_server(state: MoteState) {
     thread::spawn(move || {
         let url = "127.0.0.1:3010";
+
+        let sync_state_mutex = Arc::new(Mutex::new(SyncState {
+            ops: hashmap![],
+            version: 100,
+        }));
+
+        let bus = Arc::new(Mutex::new(Bus::new(255)));
+
+        let sync_state_mutex_capture = sync_state_mutex.clone();
+        let state_capture = state.clone();
+        let bus_capture = bus.clone();
+        thread::spawn(move || {
+            loop {
+                // wait 1s
+                thread::sleep(Duration::from_millis(100));
+
+                // Attempt to extract client map
+                let mut sync_state = sync_state_mutex_capture.lock().unwrap();
+                let left_ops = sync_state.ops.remove("left").unwrap_or(vec![]);
+                // let middle_ops = sync_state.ops.remove("middle").unwrap_or(vec![]);
+                let right_ops = sync_state.ops.remove("right").unwrap_or(vec![]);
+                if left_ops.is_empty() /*&& middle_ops.is_empty()*/ && right_ops.is_empty() {
+                    continue;
+                }
+                
+                // Do transform
+                let mut doc = state_capture.body.lock().unwrap();
+                // let (_, new_op) = action_sync(&doc, left_ops, right_ops).unwrap();
+                // let (new_doc, _) = action_sync(&doc, vec![new_op], middle_ops).unwrap();
+                let (new_doc, _) = action_sync(&doc, left_ops, right_ops).unwrap();
+                *doc = new_doc;
+
+                // Increase version
+                sync_state.version += 1;
+
+                bus_capture.lock().unwrap().broadcast((doc.0.clone(), sync_state.version));
+            }
+        });
+
+        let state_capture = state.clone();
+        let bus_capture = bus.clone();
         ws::listen(url, move |out| {
             // Initial document state.
             {
                 let doc = state.body.lock().unwrap();
-                let command = SyncClientCommand::Update(Some(doc.0.clone()));
-                out.send(
-                    serde_json::to_string(&command).unwrap(),
-                );
+                let command = SyncClientCommand::Update(doc.0.clone(), 100);
+                out.send(serde_json::to_string(&command).unwrap());
             }
 
+            let mut rx = {
+                bus_capture.lock().unwrap().add_rx()
+            };
+            thread::spawn(move || {
+                while let Ok((doc, version)) = rx.recv() {
+                    let command = SyncClientCommand::Update(doc, version);
+                    out.send(serde_json::to_string(&command).unwrap());
+                }
+            });
+
             let state = state.clone();
+            let sync_state_mutex_capture = sync_state_mutex.clone();
             move |msg: ws::Message| {
                 let req_parse: Result<SyncServerCommand, _> =
                     serde_json::from_slice(&msg.into_data());
@@ -179,18 +238,26 @@ pub fn sync_socket_server(state: MoteState) {
                         println!("lmao {:?}", value);
 
                         match value {
-                            SyncServerCommand::Sync(ops_a, ops_b) => {
-                                let mut doc = state.body.lock().unwrap();
-                                if let Ok(new_doc) = action_sync(&*doc, ops_a, ops_b) {
-                                    *doc = new_doc.clone();
-
-                                    let command = SyncClientCommand::Update(Some(new_doc.0));
-                                    out.send(serde_json::to_string(&command).unwrap());
-                                } else {
-                                    let command = SyncClientCommand::Update(None);
-                                    out.send(serde_json::to_string(&command).unwrap());
-                                }
+                            // SyncServerCommand::Connect(client_id) => {
+                            //     let mut state = state_mutex.lock().unwrap();
+                            //     *state..get_mut(&client_id).unwrap() = vec![];
+                            // }
+                            SyncServerCommand::Commit(client_id, op, version) => {
+                                let mut sync_state = sync_state_mutex_capture.lock().unwrap();
+                                sync_state.ops.entry(client_id).or_insert(vec![]).push(op);
                             }
+                            // SyncServerCommand::Sync(ops_a, ops_b) => {
+                            //     let mut doc = state.body.lock().unwrap();
+                            //     if let Ok(new_doc) = action_sync(&*doc, ops_a, ops_b) {
+                            //         *doc = new_doc.clone();
+
+                            //         let command = SyncClientCommand::Update(Some(new_doc.0));
+                            //         out.send(serde_json::to_string(&command).unwrap());
+                            //     } else {
+                            //         let command = SyncClientCommand::Update(None);
+                            //         out.send(serde_json::to_string(&command).unwrap());
+                            //     }
+                            // }
                         }
                     }
                 }

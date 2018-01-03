@@ -10813,9 +10813,9 @@ __WEBPACK_IMPORTED_MODULE_4_jquery___default()(window).on('blur', () => __WEBPAC
 // Entry.
 if (window.MOTE_ENTRY == 'index') {
     let parent = new __WEBPACK_IMPORTED_MODULE_3__parent_ts__["a" /* default */]();
-    parent.childConnect();
+    // parent.childConnect();
     // Set syncing rate.
-    setInterval(parent.sync.bind(parent), 200);
+    // setInterval(parent.sync.bind(parent), 200)
 }
 else if (window.MOTE_ENTRY == 'client') {
     let editor = new __WEBPACK_IMPORTED_MODULE_2__editor_ts__["a" /* default */](__WEBPACK_IMPORTED_MODULE_4_jquery___default()('#mote'), window.name);
@@ -11171,7 +11171,7 @@ class Editor {
             .appendTo($('#local-buttons'))
             .on('click', function () {
             monkey = !monkey;
-            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["f" /* MonkeyCommand */](monkey));
+            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["d" /* MonkeyCommand */](monkey));
             $(this).css('font-weight') == '700'
                 ? $(this).css('font-weight', 'normal')
                 : $(this).css('font-weight', 'bold');
@@ -11214,7 +11214,7 @@ class Editor {
                 clearTarget();
                 $(this).addClass('active').addClass('target');
                 console.log('Cursor:', curto($(this)));
-                editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["g" /* TargetCommand */](curto($(this))));
+                editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["e" /* TargetCommand */](curto($(this))));
             }
             // TODO this bubbles if i use preventDEfault?
             window.focus();
@@ -11249,7 +11249,7 @@ class Editor {
             if (!editor.KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
                 return;
             }
-            this.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["d" /* KeypressCommand */](e.keyCode, e.metaKey, e.shiftKey));
+            this.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["c" /* KeypressCommand */](e.keyCode, e.metaKey, e.shiftKey));
             e.preventDefault();
         });
     }
@@ -11266,13 +11266,13 @@ class Editor {
     }
     nativeConnect() {
         let editor = this;
-        this.nativeSocket = new WebSocket('ws://127.0.0.1:3012');
+        this.nativeSocket = new WebSocket('ws://127.0.0.1:3012/' + editor.editorID);
         this.nativeSocket.onopen = function (event) {
             console.log('Editor "%s" is connected.', editor.editorID);
-            editor.nativeCommand(new __WEBPACK_IMPORTED_MODULE_0__commands_ts__["c" /* ConnectCommand */](editor.editorID));
-            window.parent.postMessage({
-                "Live": editor.editorID,
-            }, '*');
+            // editor.nativeCommand(commands.ConnectCommand(editor.editorID));
+            // window.parent.postMessage({
+            //   "Live": editor.editorID,
+            // }, '*')
         };
         this.nativeSocket.onmessage = this.onNativeMessage.bind(this);
         this.nativeSocket.onclose = function () {
@@ -11283,6 +11283,7 @@ class Editor {
     onNativeMessage(event) {
         let editor = this;
         let parse = JSON.parse(event.data);
+        console.log(parse);
         if (parse.Update) {
             editor.load(parse.Update[0]);
             if (parse.Update[1] == null) {
@@ -11325,13 +11326,13 @@ class Editor {
     }
     onSyncMessage(event) {
         let editor = this;
-        if ('Sync' in event.data) {
-            // Push to native
-            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["e" /* LoadCommand */](event.data.Sync));
-        }
+        // if ('Sync' in event.data) {
+        //   // Push to native
+        //   editor.nativeCommand(commands.LoadCommand(event.data.Sync))
+        // }
         if ('Monkey' in event.data) {
             // TODO reflect this in the app
-            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["f" /* MonkeyCommand */](true));
+            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["d" /* MonkeyCommand */](true));
         }
     }
 }
@@ -11346,13 +11347,13 @@ class Editor {
 
 "use strict";
 /* unused harmony export RenameGroupCommand */
-/* harmony export (immutable) */ __webpack_exports__["d"] = KeypressCommand;
+/* harmony export (immutable) */ __webpack_exports__["c"] = KeypressCommand;
 /* harmony export (immutable) */ __webpack_exports__["b"] = CharacterCommand;
-/* harmony export (immutable) */ __webpack_exports__["g"] = TargetCommand;
+/* harmony export (immutable) */ __webpack_exports__["e"] = TargetCommand;
 /* harmony export (immutable) */ __webpack_exports__["a"] = ButtonCommand;
-/* harmony export (immutable) */ __webpack_exports__["e"] = LoadCommand;
-/* harmony export (immutable) */ __webpack_exports__["f"] = MonkeyCommand;
-/* harmony export (immutable) */ __webpack_exports__["c"] = ConnectCommand;
+/* unused harmony export LoadCommand */
+/* harmony export (immutable) */ __webpack_exports__["d"] = MonkeyCommand;
+/* unused harmony export ConnectCommand */
 function RenameGroupCommand(tag, curspan) {
     return {
         'RenameGroup': [tag, curspan],
@@ -11446,79 +11447,33 @@ class HashState {
                 }, '*');
             }
         });
-        let parent = this;
-        this.syncSocket = new WebSocket('ws://127.0.0.1:3010');
-        this.syncSocket.onopen = function (event) {
-            console.log('(!) SyncSocket connected.');
-        };
-        this.syncSocket.onmessage = this.onSyncClientMessage.bind(this);
-        this.syncSocket.onclose = function () {
-            $('body').css('background', 'red');
-            alert('Websocket closed, error?');
-            // TODO just in case?
-            window.stop();
-        };
+        // let parent = this;
+        // this.syncSocket = new WebSocket('ws://127.0.0.1:3010');
+        // this.syncSocket.onopen = function (event) {
+        //   console.log('(!) SyncSocket connected.');
+        // };
+        // this.syncSocket.onmessage = this.onSyncClientMessage.bind(this);
+        // this.syncSocket.onclose = function () {
+        //   $('body').css('background', 'red');
+        //   alert('Websocket closed, error?');
+        //   // TODO just in case?
+        //   window.stop();
+        // }
     }
-    onSyncClientMessage(msg) {
-        let data = JSON.parse(msg.data);
-        if ('Update' in data) {
-            console.log('updating', data);
-            this.docState = data.Update;
-            this.syncChildren(data.Update);
-            this.syncWait = false;
-        }
-    }
+    // onSyncClientMessage(msg) {
+    //   let data = JSON.parse(msg.data);
+    //   if ('Update' in data) {
+    //     console.log('updating', data);
+    //     this.docState = data.Update;
+    //     this.syncChildren(data.Update);
+    //     this.syncWait = false;
+    //   }
+    // }
     initialize() {
         // let parent = this;
         // $.get('/api/hello', data => {
         //   parent.syncChildren(data);
         // });
-    }
-    childConnect() {
-        let parent = this;
-        window.onmessage = function (event) {
-            if ('Update' in event.data) {
-                let name = event.data.Update.name;
-                parent.cache[name] = event.data.Update;
-            }
-            if ('Live' in event.data) {
-                parent.alive += 1;
-                if (parent.docState !== null && parent.docState && parent.alive == 2) {
-                    parent.syncChildren(parent.docState);
-                }
-            }
-        };
-    }
-    sync() {
-        let parent = this;
-        if (this.syncWait) {
-            return;
-        }
-        if (this.alive != 2) {
-            return;
-        }
-        if ((!this.cache.left || this.cache.left.version != this.version) ||
-            (!this.cache.right || this.cache.right.version != this.version)) {
-            console.log('outdated, skipping:', this.cache.left, this.cache.right);
-            return;
-        }
-        // Drop no-ops
-        if (!this.cache.left.ops.length && !this.cache.right.ops.length) {
-            return;
-        }
-        this.syncWait = true;
-        this.version += 1;
-        let packet = [this.cache.left.ops, this.cache.right.ops];
-        this.syncSocket.send(JSON.stringify({
-            Sync: packet,
-        }));
-    }
-    syncChildren(data) {
-        for (let i = 0; i < window.frames.length; i++) {
-            window.frames[i].postMessage({
-                'Sync': data
-            }, '*');
-        }
     }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = Parent;
