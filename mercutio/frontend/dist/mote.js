@@ -10815,7 +10815,7 @@ if (window.MOTE_ENTRY == 'index') {
     new __WEBPACK_IMPORTED_MODULE_3__parent_ts__["a" /* default */]();
 }
 else if (window.MOTE_ENTRY == 'client') {
-    let editor = new __WEBPACK_IMPORTED_MODULE_2__editor_ts__["a" /* default */](__WEBPACK_IMPORTED_MODULE_4_jquery___default()('#mote'), window.name);
+    let editor = new __WEBPACK_IMPORTED_MODULE_2__editor_ts__["a" /* default */](__WEBPACK_IMPORTED_MODULE_4_jquery___default()('#mote'), (location.search || '').substr(1));
     editor.syncConnect();
     editor.nativeConnect();
 }

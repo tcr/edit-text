@@ -20,7 +20,7 @@ if ((<any>window).MOTE_ENTRY == 'index') {
   new Parent();
 }
 else if ((<any>window).MOTE_ENTRY == 'client') {
-  let editor = new Editor($('#mote'), window.name);
+  let editor = new Editor($('#mote'), (location.search || '').substr(1));
 
   editor.syncConnect();
   editor.nativeConnect();
