@@ -251,7 +251,7 @@ export default class Editor {
       ));
       
       e.preventDefault();
-    })
+    });
   }
 
   load(data: Array<any>) {
@@ -269,15 +269,15 @@ export default class Editor {
 
   nativeConnect() {
     let editor = this;
-    this.nativeSocket = new WebSocket('ws://127.0.0.1:3012');
+    this.nativeSocket = new WebSocket('ws://127.0.0.1:3012/' + editor.editorID);
     this.nativeSocket.onopen = function (event) {
       console.log('Editor "%s" is connected.', editor.editorID);
 
-      editor.nativeCommand(new commands.ConnectCommand(editor.editorID));
+      // editor.nativeCommand(commands.ConnectCommand(editor.editorID));
 
-      window.parent.postMessage({
-        "Live": editor.editorID,
-      }, '*')
+      // window.parent.postMessage({
+      //   "Live": editor.editorID,
+      // }, '*')
     };
     this.nativeSocket.onmessage = this.onNativeMessage.bind(this);
     this.nativeSocket.onclose = function () {
@@ -289,6 +289,8 @@ export default class Editor {
   onNativeMessage(event) {
     let editor = this;
     let parse = JSON.parse(event.data);
+
+    console.log(parse);
   
     if (parse.Update) {
       editor.load(parse.Update[0]);
@@ -339,10 +341,10 @@ export default class Editor {
   onSyncMessage(event) {
     let editor = this;
 
-    if ('Sync' in event.data) {
-      // Push to native
-      editor.nativeCommand(commands.LoadCommand(event.data.Sync))
-    }
+    // if ('Sync' in event.data) {
+    //   // Push to native
+    //   editor.nativeCommand(commands.LoadCommand(event.data.Sync))
+    // }
     if ('Monkey' in event.data) {
       // TODO reflect this in the app
       editor.nativeCommand(commands.MonkeyCommand(true));

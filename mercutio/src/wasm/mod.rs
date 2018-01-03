@@ -1,30 +1,34 @@
 pub mod actions;
 pub mod walkers;
 
-use rand;
-use oatie::doc::*;
-use oatie::{OT, Operation, debug_pretty};
-use serde_json;
-use ws;
 use failure::Error;
-use std::thread;
-use std::time::Duration;
-use std::sync::{Arc, Mutex};
+use oatie::{OT, Operation, debug_pretty};
+use oatie::doc::*;
+use rand;
 use rand::Rng;
+use self::actions::*;
+use super::sync::{SyncServerCommand, SyncClientCommand};
+use serde_json;
 use std::{panic, process};
+use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::sync::atomic::Ordering;
-use self::actions::*;
+use std::thread;
+use std::time::Duration;
+use ws;
+use crossbeam_channel::{unbounded, Sender};
+
+
 
 // Commands to send back to native.
 #[derive(Serialize, Deserialize, Debug)]
 pub enum NativeCommand {
-    Connect(String),
+    // Connect(String),
     Keypress(u32, bool, bool),
     Button(u32),
     Character(u32),
     RenameGroup(String, CurSpan),
-    Load(DocSpan),
+    // Load(DocSpan),
     Target(CurSpan),
     Monkey(bool),
 }
@@ -77,8 +81,11 @@ where
     assert_eq!(OT::apply(&*original_doc, &check_op_a), *doc);
 
     // Send update.
-    let res = ClientCommand::Update(doc.0.clone(), Some(op), client.version.load(Ordering::Relaxed));
+    let res = ClientCommand::Update(doc.0.clone(), Some(op.clone()), client.version.load(Ordering::Relaxed));
     client.send(&res)?;
+
+    // Send operation to sync server.
+    client.tx.send(op);
 
     Ok(())
 }
@@ -164,9 +171,9 @@ fn button_handlers() -> Vec<(&'static str, Box<Fn(&Client) -> Result<(), Error>>
 
 fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
     match req {
-        NativeCommand::Connect(client_id) => {
-            *client.name.lock().unwrap() = Some(client_id);
-        }
+        // NativeCommand::Connect(client_id) => {
+        //     *client.name.lock().unwrap() = Some(client_id);
+        // }
         NativeCommand::RenameGroup(tag, _) => client_op(client, |doc| replace_block(doc, &tag))?,
         NativeCommand::Button(index) => {
             // Find which button handler to respond to this command.
@@ -190,33 +197,33 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
             client_op(client, |doc| cur_to_caret(doc, &cur))?;
             *client.target.lock().unwrap() = Some(cur);
         }
-        NativeCommand::Load(doc) => {
-            let mut client_doc = client.doc.lock().unwrap();
-            *client_doc = Doc(doc.clone());
+        // NativeCommand::Load(doc) => {
+        //     let mut client_doc = client.doc.lock().unwrap();
+        //     *client_doc = Doc(doc.clone());
 
-            *client.original_doc.lock().unwrap() = Doc(doc.clone());
-            *client.original_ops.lock().unwrap() = vec![];
+        //     *client.original_doc.lock().unwrap() = Doc(doc.clone());
+        //     *client.original_ops.lock().unwrap() = vec![];
 
-            let next_version = client.version.load(Ordering::Relaxed) + 1;
-            client.version.store(next_version, Ordering::Relaxed);
-            println!("Bumped version to {:?}", next_version);
+        //     let next_version = client.version.load(Ordering::Relaxed) + 1;
+        //     client.version.store(next_version, Ordering::Relaxed);
+        //     println!("Bumped version to {:?}", next_version);
 
-            // Native drives client state.
-            let res = ClientCommand::Update(doc.clone(), None, next_version);
-            client.send(&res)?;
+        //     // Native drives client state.
+        //     let res = ClientCommand::Update(doc.clone(), None, next_version);
+        //     client.send(&res)?;
 
-            // Drop mutex.
-            // TODO this probably isn't necessary, but we shoudl version
-            // doc and version in same mutex
-            drop(client_doc);
+        //     // Drop mutex.
+        //     // TODO this probably isn't necessary, but we shoudl version
+        //     // doc and version in same mutex
+        //     drop(client_doc);
 
-            // Load the caret.
-            if !client.first_load.load(Ordering::Relaxed) {
-                client.first_load.store(true, Ordering::Relaxed);
+        //     // Load the caret.
+        //     if !client.first_load.load(Ordering::Relaxed) {
+        //         client.first_load.store(true, Ordering::Relaxed);
 
-                client_op(client, |doc| init_caret(doc))?;
-            }
-        }
+        //         client_op(client, |doc| init_caret(doc))?;
+        //     }
+        // }
         NativeCommand::Monkey(setting) => {
             client.monkey.store(setting, Ordering::Relaxed);
         }
@@ -236,6 +243,7 @@ struct Client {
     name: Mutex<Option<String>>,
     version: AtomicUsize,
     alive: AtomicBool,
+    tx: Sender<Op>,
 }
 
 impl Client {
@@ -353,9 +361,15 @@ struct SocketHandler {
 }
 
 impl ws::Handler for SocketHandler {
+    fn on_open(&mut self, shake: ws::Handshake) -> Result<(), ws::Error> {
+        let client_id = shake.request.resource()[1..].to_string();
+        *self.client.name.lock().unwrap() = Some(client_id);
+        Ok(())
+    }
+
     fn on_message(&mut self, msg: ws::Message) -> Result<(), ws::Error> {
         // Handle messages received on this connection
-        println!("Server got message '{}'. ", msg);
+        println!("wasm got a packet from client '{}'. ", msg);
 
         let req_parse: Result<NativeCommand, _> = serde_json::from_slice(&msg.into_data());
         match req_parse {
@@ -385,7 +399,9 @@ impl ws::Handler for SocketHandler {
 
 pub fn server(url: &str) {
     ws::listen(url, |out| {
-        let client = Arc::new(Client {
+        let (tx, rx) = unbounded();
+
+        let mut client = Arc::new(Client {
             out,
             doc: Mutex::new(Doc(vec![])),
             
@@ -398,6 +414,8 @@ pub fn server(url: &str) {
             name: Mutex::new(None),
             version: AtomicUsize::new(100),
             alive: AtomicBool::new(true),
+
+            tx,
         });
 
         // Send initial setup packet.
@@ -417,6 +435,75 @@ pub fn server(url: &str) {
 
         // Setup monkey tasks.
         setup_monkey(client.clone());
+
+        let client_capture = client.clone();
+        thread::spawn(move || {
+            ws::connect("ws://127.0.0.1:3010", |out| {
+                // out.send(serde_json::to_string(&SyncServerCommand::Connect("left".to_string())).unwrap()).unwrap();
+
+                // Send over operations
+                let rx_capture = rx.clone();
+                let client_capture_capture = client_capture.clone();
+                thread::spawn(move || {
+                    while let Ok(packet) = rx_capture.recv() {
+                        let name = client_capture_capture.name.lock().unwrap().clone().unwrap();
+                        let cur_version = client_capture_capture.version.load(Ordering::Relaxed);
+                        out.send(serde_json::to_string(&SyncServerCommand::Commit(
+                            name,
+                            packet,
+                            cur_version
+                        )).unwrap()).unwrap();
+                    }
+                });
+
+                let client_capture_capture = client_capture.clone();
+                move |msg: ws::Message| {
+                    // Handle messages received on this connection
+                    println!("wasm got a packet from sync '{}'. ", msg);
+
+                    let req_parse: Result<SyncClientCommand, _> = serde_json::from_slice(&msg.into_data());
+                    match req_parse {
+                        Err(err) => {
+                            println!("Packet error: {:?}", err);
+                        }
+                        Ok(value) => {
+                            match value {
+                                SyncClientCommand::Update(doc, version) => {
+                                    let mut client_doc = client_capture_capture.doc.lock().unwrap();
+                                    *client_doc = Doc(doc.clone());
+
+                                    *client_capture_capture.original_doc.lock().unwrap() = Doc(doc.clone());
+                                    *client_capture_capture.original_ops.lock().unwrap() = vec![];
+
+                                    client_capture_capture.version.store(version, Ordering::Relaxed);
+                                    println!("new version is {:?}", version);
+
+                                    // Native drives client state.
+                                    let res = ClientCommand::Update(doc.clone(), None, version);
+                                    client_capture_capture.send(&res).unwrap();
+
+                                    // Drop mutex.
+                                    // TODO this probably isn't necessary, but we shoudl version
+                                    // doc and version in same mutex
+                                    drop(client_doc);
+
+                                    // Load the caret.
+                                    if !client_capture_capture.first_load.load(Ordering::Relaxed) {
+                                        client_capture_capture.first_load.store(true, Ordering::Relaxed);
+
+                                        client_op(&*client_capture_capture, |doc| init_caret(doc)).unwrap();
+                                    }
+                                }
+                            }
+                            // native_command(&client, value).expect("Native command error");
+                        }
+                    }
+
+                    Ok(())
+                }
+            }).unwrap();
+        });
+
 
         // Websocket message handler.
         SocketHandler {
