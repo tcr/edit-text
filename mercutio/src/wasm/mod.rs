@@ -81,11 +81,12 @@ where
     assert_eq!(OT::apply(&*original_doc, &check_op_a), *doc);
 
     // Send update.
-    let res = ClientCommand::Update(doc.0.clone(), Some(op.clone()), client.version.load(Ordering::Relaxed));
+    let version = client.version.load(Ordering::Relaxed);
+    let res = ClientCommand::Update(doc.0.clone(), Some(op.clone()), version);
     client.send(&res)?;
 
     // Send operation to sync server.
-    client.tx.send(op);
+    client.tx.send((op, version));
 
     Ok(())
 }
@@ -243,7 +244,7 @@ struct Client {
     name: Mutex<Option<String>>,
     version: AtomicUsize,
     alive: AtomicBool,
-    tx: Sender<Op>,
+    tx: Sender<(Op, usize)>,
 }
 
 impl Client {
@@ -445,13 +446,13 @@ pub fn server(url: &str) {
                 let rx_capture = rx.clone();
                 let client_capture_capture = client_capture.clone();
                 thread::spawn(move || {
-                    while let Ok(packet) = rx_capture.recv() {
+                    while let Ok((packet, version)) = rx_capture.recv() {
                         let name = client_capture_capture.name.lock().unwrap().clone().unwrap();
-                        let cur_version = client_capture_capture.version.load(Ordering::Relaxed);
+                        // let cur_version = client_capture_capture.version.load(Ordering::Relaxed);
                         out.send(serde_json::to_string(&SyncServerCommand::Commit(
                             name,
                             packet,
-                            cur_version
+                            version
                         )).unwrap()).unwrap();
                     }
                 });
@@ -491,7 +492,10 @@ pub fn server(url: &str) {
                                     if !client_capture_capture.first_load.load(Ordering::Relaxed) {
                                         client_capture_capture.first_load.store(true, Ordering::Relaxed);
 
+                                        let v = client_capture_capture.version.load(Ordering::Relaxed);
+                                        client_capture_capture.version.store(0, Ordering::Relaxed);
                                         client_op(&*client_capture_capture, |doc| init_caret(doc)).unwrap();
+                                        client_capture_capture.version.store(v, Ordering::Relaxed);
                                     }
                                 }
                             }

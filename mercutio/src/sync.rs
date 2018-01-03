@@ -17,6 +17,7 @@ use std::thread;
 use std::time::Duration;
 use wasm::start_websocket_server;
 use ws;
+use std::{panic, process};
 
 pub fn default_doc() -> Doc {
     Doc(doc_span![
@@ -177,30 +178,38 @@ pub fn sync_socket_server(state: MoteState) {
         let state_capture = state.clone();
         let bus_capture = bus.clone();
         thread::spawn(move || {
-            loop {
-                // wait 1s
-                thread::sleep(Duration::from_millis(100));
+            if let Err(value) = panic::catch_unwind(|| {
+                loop {
+                    // wait 1s
+                    thread::sleep(Duration::from_millis(100));
 
-                // Attempt to extract client map
-                let mut sync_state = sync_state_mutex_capture.lock().unwrap();
-                let left_ops = sync_state.ops.remove("left").unwrap_or(vec![]);
-                // let middle_ops = sync_state.ops.remove("middle").unwrap_or(vec![]);
-                let right_ops = sync_state.ops.remove("right").unwrap_or(vec![]);
-                if left_ops.is_empty() /*&& middle_ops.is_empty()*/ && right_ops.is_empty() {
-                    continue;
+                    // Attempt to extract client map
+                    let mut sync_state = sync_state_mutex_capture.lock().unwrap();
+                    let left_ops = sync_state.ops.remove("left").unwrap_or(vec![]);
+                    let middle_ops = sync_state.ops.remove("middle").unwrap_or(vec![]);
+                    let right_ops = sync_state.ops.remove("right").unwrap_or(vec![]);
+                    if left_ops.is_empty() && middle_ops.is_empty() && right_ops.is_empty() {
+                        continue;
+                    }
+
+                    // TODO generally extract client ops, then merge in
+                    // a generalized action op
+                    
+                    // Do transform
+                    let mut doc = state_capture.body.lock().unwrap();
+                    let (_, new_op) = action_sync(&doc, left_ops, right_ops).unwrap();
+                    let (new_doc, _) = action_sync(&doc, vec![new_op], middle_ops).unwrap();
+                    // let (new_doc, _) = action_sync(&doc, left_ops, right_ops).unwrap();
+                    *doc = new_doc;
+
+                    // Increase version
+                    sync_state.version += 1;
+
+                    bus_capture.lock().unwrap().broadcast((doc.0.clone(), sync_state.version));
                 }
-                
-                // Do transform
-                let mut doc = state_capture.body.lock().unwrap();
-                // let (_, new_op) = action_sync(&doc, left_ops, right_ops).unwrap();
-                // let (new_doc, _) = action_sync(&doc, vec![new_op], middle_ops).unwrap();
-                let (new_doc, _) = action_sync(&doc, left_ops, right_ops).unwrap();
-                *doc = new_doc;
-
-                // Increase version
-                sync_state.version += 1;
-
-                bus_capture.lock().unwrap().broadcast((doc.0.clone(), sync_state.version));
+            }) {
+                println!("Error: {:?}", value);
+                process::exit(1);
             }
         });
 
@@ -244,7 +253,10 @@ pub fn sync_socket_server(state: MoteState) {
                             // }
                             SyncServerCommand::Commit(client_id, op, version) => {
                                 let mut sync_state = sync_state_mutex_capture.lock().unwrap();
-                                sync_state.ops.entry(client_id).or_insert(vec![]).push(op);
+                                // TODO remove hack version == 0 which lets us add carets from all parties
+                                if version == 0 || version == sync_state.version {
+                                    sync_state.ops.entry(client_id).or_insert(vec![]).push(op);
+                                }
                             }
                             // SyncServerCommand::Sync(ops_a, ops_b) => {
                             //     let mut doc = state.body.lock().unwrap();

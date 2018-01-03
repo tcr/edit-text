@@ -11289,14 +11289,6 @@ class Editor {
             else {
                 editor.ops.push(parse.Update[1]);
             }
-            window.parent.postMessage({
-                Update: {
-                    doc: parse.Update[0],
-                    ops: editor.ops,
-                    name: editor.editorID,
-                    version: parse.Update[2],
-                },
-            }, '*');
         }
         else if (parse.PromptString) {
             promptString(parse.PromptString[0], parse.PromptString[1], (value) => {
