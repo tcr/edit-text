@@ -10812,10 +10812,7 @@ __WEBPACK_IMPORTED_MODULE_4_jquery___default()(window).on('focus', () => __WEBPA
 __WEBPACK_IMPORTED_MODULE_4_jquery___default()(window).on('blur', () => __WEBPACK_IMPORTED_MODULE_4_jquery___default()(document.body).removeClass('focused'));
 // Entry.
 if (window.MOTE_ENTRY == 'index') {
-    let parent = new __WEBPACK_IMPORTED_MODULE_3__parent_ts__["a" /* default */]();
-    // parent.childConnect();
-    // Set syncing rate.
-    // setInterval(parent.sync.bind(parent), 200)
+    new __WEBPACK_IMPORTED_MODULE_3__parent_ts__["a" /* default */]();
 }
 else if (window.MOTE_ENTRY == 'client') {
     let editor = new __WEBPACK_IMPORTED_MODULE_2__editor_ts__["a" /* default */](__WEBPACK_IMPORTED_MODULE_4_jquery___default()('#mote'), window.name);
@@ -11425,11 +11422,6 @@ class HashState {
 "use strict";
 /* WEBPACK VAR INJECTION */(function($) {class Parent {
     constructor() {
-        this.cache = {};
-        // TODO get this from the initial load
-        this.version = 101;
-        this.alive = 0;
-        this.syncWait = false;
         // Timer component.
         let counter = 0;
         setInterval(() => {
@@ -11447,33 +11439,6 @@ class HashState {
                 }, '*');
             }
         });
-        // let parent = this;
-        // this.syncSocket = new WebSocket('ws://127.0.0.1:3010');
-        // this.syncSocket.onopen = function (event) {
-        //   console.log('(!) SyncSocket connected.');
-        // };
-        // this.syncSocket.onmessage = this.onSyncClientMessage.bind(this);
-        // this.syncSocket.onclose = function () {
-        //   $('body').css('background', 'red');
-        //   alert('Websocket closed, error?');
-        //   // TODO just in case?
-        //   window.stop();
-        // }
-    }
-    // onSyncClientMessage(msg) {
-    //   let data = JSON.parse(msg.data);
-    //   if ('Update' in data) {
-    //     console.log('updating', data);
-    //     this.docState = data.Update;
-    //     this.syncChildren(data.Update);
-    //     this.syncWait = false;
-    //   }
-    // }
-    initialize() {
-        // let parent = this;
-        // $.get('/api/hello', data => {
-        //   parent.syncChildren(data);
-        // });
     }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = Parent;
