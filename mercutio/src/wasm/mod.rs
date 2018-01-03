@@ -172,9 +172,6 @@ fn button_handlers() -> Vec<(&'static str, Box<Fn(&Client) -> Result<(), Error>>
 
 fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
     match req {
-        // NativeCommand::Connect(client_id) => {
-        //     *client.name.lock().unwrap() = Some(client_id);
-        // }
         NativeCommand::RenameGroup(tag, _) => client_op(client, |doc| replace_block(doc, &tag))?,
         NativeCommand::Button(index) => {
             // Find which button handler to respond to this command.
@@ -198,33 +195,6 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
             client_op(client, |doc| cur_to_caret(doc, &cur))?;
             *client.target.lock().unwrap() = Some(cur);
         }
-        // NativeCommand::Load(doc) => {
-        //     let mut client_doc = client.doc.lock().unwrap();
-        //     *client_doc = Doc(doc.clone());
-
-        //     *client.original_doc.lock().unwrap() = Doc(doc.clone());
-        //     *client.original_ops.lock().unwrap() = vec![];
-
-        //     let next_version = client.version.load(Ordering::Relaxed) + 1;
-        //     client.version.store(next_version, Ordering::Relaxed);
-        //     println!("Bumped version to {:?}", next_version);
-
-        //     // Native drives client state.
-        //     let res = ClientCommand::Update(doc.clone(), None, next_version);
-        //     client.send(&res)?;
-
-        //     // Drop mutex.
-        //     // TODO this probably isn't necessary, but we shoudl version
-        //     // doc and version in same mutex
-        //     drop(client_doc);
-
-        //     // Load the caret.
-        //     if !client.first_load.load(Ordering::Relaxed) {
-        //         client.first_load.store(true, Ordering::Relaxed);
-
-        //         client_op(client, |doc| init_caret(doc))?;
-        //     }
-        // }
         NativeCommand::Monkey(setting) => {
             client.monkey.store(setting, Ordering::Relaxed);
         }
@@ -440,8 +410,6 @@ pub fn server(url: &str) {
         let client_capture = client.clone();
         thread::spawn(move || {
             ws::connect("ws://127.0.0.1:3010", |out| {
-                // out.send(serde_json::to_string(&SyncServerCommand::Connect("left".to_string())).unwrap()).unwrap();
-
                 // Send over operations
                 let rx_capture = rx.clone();
                 let client_capture_capture = client_capture.clone();
@@ -499,7 +467,6 @@ pub fn server(url: &str) {
                                     }
                                 }
                             }
-                            // native_command(&client, value).expect("Native command error");
                         }
                     }
 
@@ -507,7 +474,6 @@ pub fn server(url: &str) {
                 }
             }).unwrap();
         });
-
 
         // Websocket message handler.
         SocketHandler {

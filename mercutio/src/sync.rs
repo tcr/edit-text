@@ -239,18 +239,8 @@ pub fn sync_socket_server(state: MoteState) {
                 let req_parse: Result<SyncServerCommand, _> =
                     serde_json::from_slice(&msg.into_data());
                 match req_parse {
-                    Err(err) => {
-                        println!("Packet error: {:?}", err);
-                    }
                     Ok(value) => {
-                        // native_command(&self.client, value).expect("Native command error");
-                        println!("lmao {:?}", value);
-
                         match value {
-                            // SyncServerCommand::Connect(client_id) => {
-                            //     let mut state = state_mutex.lock().unwrap();
-                            //     *state..get_mut(&client_id).unwrap() = vec![];
-                            // }
                             SyncServerCommand::Commit(client_id, op, version) => {
                                 let mut sync_state = sync_state_mutex_capture.lock().unwrap();
                                 // TODO remove hack version == 0 which lets us add carets from all parties
@@ -258,19 +248,10 @@ pub fn sync_socket_server(state: MoteState) {
                                     sync_state.ops.entry(client_id).or_insert(vec![]).push(op);
                                 }
                             }
-                            // SyncServerCommand::Sync(ops_a, ops_b) => {
-                            //     let mut doc = state.body.lock().unwrap();
-                            //     if let Ok(new_doc) = action_sync(&*doc, ops_a, ops_b) {
-                            //         *doc = new_doc.clone();
-
-                            //         let command = SyncClientCommand::Update(Some(new_doc.0));
-                            //         out.send(serde_json::to_string(&command).unwrap());
-                            //     } else {
-                            //         let command = SyncClientCommand::Update(None);
-                            //         out.send(serde_json::to_string(&command).unwrap());
-                            //     }
-                            // }
                         }
+                    }
+                    Err(err) => {
+                        println!("Packet error: {:?}", err);
                     }
                 }
 
