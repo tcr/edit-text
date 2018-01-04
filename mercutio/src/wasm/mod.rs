@@ -2,12 +2,12 @@ pub mod actions;
 pub mod walkers;
 
 use failure::Error;
-use oatie::{OT, Operation, debug_pretty};
+use oatie::{debug_pretty, Operation, OT};
 use oatie::doc::*;
 use rand;
 use rand::Rng;
 use self::actions::*;
-use super::sync::{SyncServerCommand, SyncClientCommand};
+use super::sync::{SyncClientCommand, SyncServerCommand};
 use serde_json;
 use std::{panic, process};
 use std::sync::{Arc, Mutex};
@@ -16,9 +16,13 @@ use std::sync::atomic::Ordering;
 use std::thread;
 use std::time::Duration;
 use ws;
-use crossbeam_channel::{unbounded, Sender};
+use crossbeam_channel::{unbounded, Receiver, Sender};
 
-
+macro_rules! clone_all {
+    ( $( $x:ident ),* ) => {
+        $(let $x = $x.clone();)*
+    };
+}
 
 // Commands to send back to native.
 #[derive(Serialize, Deserialize, Debug)]
@@ -45,23 +49,45 @@ pub enum ClientCommand {
     Error(String),
 }
 
-fn client_op<C>(client: &Client, callback: C) -> Result<(), Error>
+struct Client {
+    name: Arc<Mutex<Option<String>>>,
+
+    doc: Doc,
+    version: usize,
+
+    original_doc: Doc,
+    original_ops: Vec<Op>,
+
+    first_load: bool,
+    monkey: AtomicBool,
+    alive: AtomicBool,
+
+    out: ws::Sender,
+    tx: Sender<SyncServerCommand>,
+}
+
+impl Client {
+    fn send(&self, req: &ClientCommand) -> Result<(), Error> {
+        let json = serde_json::to_string(&req)?;
+        self.out.send(json)?;
+        Ok(())
+    }
+}
+
+fn client_op<C>(client: &mut Client, callback: C) -> Result<(), Error>
 where
     C: Fn(ActionContext) -> Result<Op, Error>,
 {
-    let mut doc = client.doc.lock().unwrap();
-
     let client_id = client.name.lock().unwrap().clone().unwrap().to_string();
     let op = callback(ActionContext {
-        doc: doc.clone(),
+        doc: client.doc.clone(),
         client_id,
     })?;
 
     // Apply new operation.
-    let new_doc = OT::apply(&*doc, &op);
+    let new_doc = OT::apply(&client.doc, &op);
 
-    let original_doc = client.original_doc.lock().unwrap();
-    let mut original_ops = client.original_ops.lock().unwrap();
+    let mut original_ops = client.original_ops.clone();
     original_ops.push(op.clone());
 
     // println!("ORIGINAL: {:?}", *original_doc);
@@ -74,32 +100,34 @@ where
         // println!("  {} 1️⃣: let res = op_span!{:?};", client.name, check_op_a);
         // println!("  {} 1️⃣: let original = doc_span!{:?};", client.name, *original_doc);
         // println!("  {} 1️⃣: let latest_doc = doc_span!{:?};", client.name, *doc);
-        let _ = OT::apply(&*original_doc, &check_op_a);
+        let _ = OT::apply(&client.original_doc, &check_op_a);
     }
 
-    *doc = new_doc;
-    assert_eq!(OT::apply(&*original_doc, &check_op_a), *doc);
+    client.doc = new_doc;
+    assert_eq!(OT::apply(&client.original_doc, &check_op_a), client.doc);
 
     // Send update.
-    let version = client.version.load(Ordering::Relaxed);
-    let res = ClientCommand::Update(doc.0.clone(), Some(op.clone()), version);
+    let res = ClientCommand::Update(client.doc.0.clone(), Some(op.clone()), client.version);
     client.send(&res)?;
 
     // Send operation to sync server.
-    client.tx.send((op, version));
+    client.tx.send(SyncServerCommand::Commit(
+        client.name.lock().unwrap().clone().unwrap(),
+        op,
+        client.version,
+    ));
 
     Ok(())
 }
 
-fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&Client) -> Result<(), Error>>)> {
+fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&mut Client) -> Result<(), Error>>)> {
     vec![
         // backspace
         (
             8,
             false,
             false,
-            Box::new(|client: &Client| {
-                println!("backspace");
+            Box::new(|client: &mut Client| {
                 client_op(client, |doc| delete_char(doc))
             }),
         ),
@@ -108,69 +136,69 @@ fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&Client) -> Result<(), Error>>
             37,
             false,
             false,
-            Box::new(|client: &Client| client_op(client, |doc| caret_move(doc, false))),
+            Box::new(|client: &mut Client| client_op(client, |doc| caret_move(doc, false))),
         ),
         // right
         (
             39,
             false,
             false,
-            Box::new(|client: &Client| client_op(client, |doc| caret_move(doc, true))),
+            Box::new(|client: &mut Client| client_op(client, |doc| caret_move(doc, true))),
         ),
         // up
         (
             38,
             false,
             false,
-            Box::new(|client: &Client| client_op(client, |doc| caret_block_move(doc, false))),
+            Box::new(|client: &mut Client| client_op(client, |doc| caret_block_move(doc, false))),
         ),
         // down
         (
             40,
             false,
             false,
-            Box::new(|client: &Client| client_op(client, |doc| caret_block_move(doc, true))),
+            Box::new(|client: &mut Client| client_op(client, |doc| caret_block_move(doc, true))),
         ),
         // enter
         (
             13,
             false,
             false,
-            Box::new(|client: &Client| client_op(client, |doc| split_block(doc))),
+            Box::new(|client: &mut Client| client_op(client, |doc| split_block(doc))),
         ),
     ]
 }
 
-fn button_handlers() -> Vec<(&'static str, Box<Fn(&Client) -> Result<(), Error>>)> {
+fn button_handlers() -> Vec<(&'static str, Box<Fn(&mut Client) -> Result<(), Error>>)> {
     vec![
         (
             "Heading 1",
-            Box::new(|client: &Client| client_op(client, |doc| replace_block(doc, "h1"))),
+            Box::new(|client: &mut Client| client_op(client, |doc| replace_block(doc, "h1"))),
         ),
         (
             "Heading 2",
-            Box::new(|client: &Client| client_op(client, |doc| replace_block(doc, "h2"))),
+            Box::new(|client: &mut Client| client_op(client, |doc| replace_block(doc, "h2"))),
         ),
         (
             "Heading 3",
-            Box::new(|client: &Client| client_op(client, |doc| replace_block(doc, "h3"))),
+            Box::new(|client: &mut Client| client_op(client, |doc| replace_block(doc, "h3"))),
         ),
         (
             "Paragraph",
-            Box::new(|client: &Client| client_op(client, |doc| replace_block(doc, "p"))),
+            Box::new(|client: &mut Client| client_op(client, |doc| replace_block(doc, "p"))),
         ),
         (
             "Code",
-            Box::new(|client: &Client| client_op(client, |doc| replace_block(doc, "pre"))),
+            Box::new(|client: &mut Client| client_op(client, |doc| replace_block(doc, "pre"))),
         ),
         (
             "List",
-            Box::new(|client: &Client| client_op(client, |doc| toggle_list(doc))),
+            Box::new(|client: &mut Client| client_op(client, |doc| toggle_list(doc))),
         ),
     ]
 }
 
-fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
+fn native_command(client: &mut Client, req: NativeCommand) -> Result<(), Error> {
     match req {
         NativeCommand::RenameGroup(tag, _) => client_op(client, |doc| replace_block(doc, &tag))?,
         NativeCommand::Button(index) => {
@@ -193,7 +221,6 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
         NativeCommand::Character(char_code) => client_op(client, |doc| add_char(doc, char_code))?,
         NativeCommand::Target(cur) => {
             client_op(client, |doc| cur_to_caret(doc, &cur))?;
-            *client.target.lock().unwrap() = Some(cur);
         }
         NativeCommand::Monkey(setting) => {
             client.monkey.store(setting, Ordering::Relaxed);
@@ -202,27 +229,34 @@ fn native_command(client: &Client, req: NativeCommand) -> Result<(), Error> {
     Ok(())
 }
 
-struct Client {
-    out: ws::Sender,
-    doc: Mutex<Doc>,
-    original_doc: Mutex<Doc>,
-    original_ops: Mutex<Vec<Op>>,
-    first_load: AtomicBool,
-    //TODO remove the target field? base only on carets instead
-    target: Mutex<Option<CurSpan>>,
-    monkey: AtomicBool,
-    name: Mutex<Option<String>>,
-    version: AtomicUsize,
-    alive: AtomicBool,
-    tx: Sender<(Op, usize)>,
+enum Task {
+    ButtonMonkey,
+    LetterMonkey,
+    ArrowMonkey,
+    BackspaceMonkey,
+    EnterMonkey,
+    SyncClientCommand(SyncClientCommand),
+    NativeCommand(NativeCommand),
 }
 
-impl Client {
-    fn send(&self, req: &ClientCommand) -> Result<(), Error> {
-        let json = serde_json::to_string(&req)?;
-        self.out.send(json)?;
-        Ok(())
-    }
+macro_rules! monkey_task {
+    ( $alive:expr, $tx:expr, $wait_params:expr, $task:expr ) => {
+        {
+            let tx = $tx.clone();
+            let alive = $alive.clone();
+            thread::spawn::<_, Result<(), Error>>(move || {
+                let mut rng = rand::thread_rng();
+                thread::sleep(Duration::from_millis(3000));
+                while alive.load(Ordering::Relaxed) {
+                    thread::sleep(Duration::from_millis(
+                        $wait_params.0 + rng.gen_range($wait_params.1, $wait_params.2),
+                    ));
+                    tx.send($task)?;
+                }
+                Ok(())
+            })
+        }
+    };
 }
 
 type MonkeyParam = (u64, u64, u64);
@@ -241,100 +275,25 @@ const MONKEY_ENTER: MonkeyParam = (600, 0, 3_000);
 // const MONKEY_BACKSPACE: MonkeyParam = (0, 0, 100);
 // const MONKEY_ENTER: MonkeyParam = (0, 0, 1_000);
 
-fn monkey_wait(input: MonkeyParam) {
-    let mut rng = rand::thread_rng();
-    thread::sleep(Duration::from_millis(input.0 + rng.gen_range(input.1, input.2)));
-}
-
 #[allow(unused)]
-fn setup_monkey(client: Arc<Client>) {
+fn setup_monkey(alive: Arc<AtomicBool>, tx: Sender<Task>) {
     // Button monkey.
-    let thread_client: Arc<_> = client.clone();
-    thread::spawn(move || {
-        let mut rng = rand::thread_rng();
-        while thread_client.alive.load(Ordering::Relaxed) {
-            monkey_wait(MONKEY_BUTTON);
-            if thread_client.monkey.load(Ordering::Relaxed) {
-                rng.choose(&button_handlers()).map(|button| {
-                    button.1(&*thread_client);
-                });
-            }
-        }
-    });
-
-    // Letter monkey.
-    let thread_client: Arc<_> = client.clone();
-    thread::spawn(move || {
-        let mut rng = rand::thread_rng();
-        while thread_client.alive.load(Ordering::Relaxed) {
-            monkey_wait(MONKEY_LETTER);
-            if thread_client.monkey.load(Ordering::Relaxed) {
-                let char_list = vec![
-                            rng.gen_range(b'A', b'Z'),
-                            rng.gen_range(b'a', b'z'),
-                            rng.gen_range(b'0', b'9'),
-                            b' ',
-                        ];
-                native_command(
-                    &*thread_client,
-                    NativeCommand::Character(*rng
-                        .choose(&char_list)
-                        .unwrap() as _),
-                );
-            }
-        }
-    });
-
-    // Arrow keys.
-    let thread_client: Arc<_> = client.clone();
-    thread::spawn(move || {
-        let mut rng = rand::thread_rng();
-        while thread_client.alive.load(Ordering::Relaxed) {
-            monkey_wait(MONKEY_ARROW);
-            if thread_client.monkey.load(Ordering::Relaxed) {
-                let key = *rng.choose(&[37, 39, 37, 39, 37, 39, 38, 40]).unwrap();
-                native_command(
-                    &*thread_client,
-                    NativeCommand::Keypress(key, false, false),
-                );
-            }
-        }
-    });
-
-    // Backspace monkey.
-    let thread_client: Arc<_> = client.clone();
-    thread::spawn(move || {
-        while thread_client.alive.load(Ordering::Relaxed) {
-            monkey_wait(MONKEY_BACKSPACE);
-            if thread_client.monkey.load(Ordering::Relaxed) {
-                native_command(
-                    &*thread_client,
-                    NativeCommand::Keypress(8, false, false),
-                );
-            }
-        }
-    });
-
-    // Enter monkey.
-    let thread_client: Arc<_> = client.clone();
-    thread::spawn(move || loop {
-        while thread_client.alive.load(Ordering::Relaxed) {
-            monkey_wait(MONKEY_ENTER);
-            if thread_client.monkey.load(Ordering::Relaxed) {
-                native_command(&*thread_client, NativeCommand::Keypress(13, false, false));
-            }
-        }
-    });
+    monkey_task!(alive, tx, MONKEY_BUTTON, Task::ButtonMonkey);
+    monkey_task!(alive, tx, MONKEY_LETTER, Task::LetterMonkey);
+    monkey_task!(alive, tx, MONKEY_ARROW, Task::ArrowMonkey);
+    monkey_task!(alive, tx, MONKEY_BACKSPACE, Task::BackspaceMonkey);
+    monkey_task!(alive, tx, MONKEY_ENTER, Task::EnterMonkey);
 }
 
 struct SocketHandler {
-    client: Arc<Client>,
+    name: Arc<Mutex<Option<String>>>,
+    tx_task: Sender<Task>,
 }
 
 impl ws::Handler for SocketHandler {
     fn on_open(&mut self, shake: ws::Handshake) -> Result<(), ws::Error> {
         let client_id = shake.request.resource()[1..].to_string();
-        *self.client.name.lock().unwrap() = Some(client_id);
+        *self.name.lock().unwrap() = Some(client_id);
         Ok(())
     }
 
@@ -348,7 +307,7 @@ impl ws::Handler for SocketHandler {
                 println!("Packet error: {:?}", err);
             }
             Ok(value) => {
-                native_command(&self.client, value).expect("Native command error");
+                self.tx_task.send(Task::NativeCommand(value));
             }
         }
 
@@ -357,37 +316,105 @@ impl ws::Handler for SocketHandler {
 
     fn on_error(&mut self, err: ws::Error) {
         println!("Killing after error");
-        self.client.monkey.store(false, Ordering::Relaxed);
-        self.client.alive.store(false, Ordering::Relaxed);
+        // self.client.monkey.store(false, Ordering::Relaxed);
+        // self.client.alive.store(false, Ordering::Relaxed);
     }
 
     fn on_close(&mut self, code: ws::CloseCode, reason: &str) {
         println!("Killing after close");
-        self.client.monkey.store(false, Ordering::Relaxed);
-        self.client.alive.store(false, Ordering::Relaxed);
+        // self.client.monkey.store(false, Ordering::Relaxed);
+        // self.client.alive.store(false, Ordering::Relaxed);
     }
+}
+
+fn handle_task(value: Task, client: &mut Client) -> Result<(), Error> {
+    let mut rng = rand::thread_rng();
+
+    match value {
+        Task::ButtonMonkey => {
+            let index = rng.gen_range(0, button_handlers().len() as u32);
+            let command = NativeCommand::Button(index);
+            native_command(client, command)?;
+        }
+        Task::LetterMonkey => {
+            let char_list = vec![
+                rng.gen_range(b'A', b'Z'),
+                rng.gen_range(b'a', b'z'),
+                rng.gen_range(b'0', b'9'),
+                b' ',
+            ];
+            let c = *rng.choose(&char_list).unwrap() as u32;
+            let command = NativeCommand::Character(c);
+            native_command(client, command)?;
+        }
+        Task::ArrowMonkey => {
+            let key = *rng.choose(&[37, 39, 37, 39, 37, 39, 38, 40]).unwrap();
+            let command = NativeCommand::Keypress(key, false, false);
+            native_command(client, command)?;
+        }
+        Task::BackspaceMonkey => {
+            let command = NativeCommand::Keypress(8, false, false);
+            native_command(client, command)?;
+        }
+        Task::EnterMonkey => {
+            let command = NativeCommand::Keypress(13, false, false);
+            native_command(client, command)?;
+        }
+
+        // Handle commands from Native.
+        Task::NativeCommand(command) => {
+            native_command(client, command)?;
+        }
+
+        // Handle commands from Sync.
+        Task::SyncClientCommand(SyncClientCommand::Update(doc, version)) => {
+            client.doc = Doc(doc.clone());
+            client.version = version;
+            println!("new version is {:?}", version);
+
+            client.original_doc = Doc(doc.clone());
+            client.original_ops = vec![];
+
+            // Native drives client state.
+            let res = ClientCommand::Update(doc.clone(), None, version);
+            client.send(&res).unwrap();
+
+            // Load the caret.
+            if !client.first_load {
+                client.first_load = true;
+
+                let v = client.version;
+                client.version = 0;
+                client_op(client, |doc| init_caret(doc)).unwrap();
+                client.version = v;
+            }
+        }
+    }
+    Ok(())
 }
 
 pub fn server(url: &str) {
     ws::listen(url, |out| {
         let (tx, rx) = unbounded();
 
-        let mut client = Arc::new(Client {
-            out,
-            doc: Mutex::new(Doc(vec![])),
-            
-            original_doc: Mutex::new(Doc(vec![])),
-            original_ops: Mutex::new(vec![]),
+        let name = Arc::new(Mutex::new(None));
 
-            first_load: AtomicBool::new(false),
-            target: Mutex::new(None),
+        let mut client = Client {
+            name: name.clone(),
+
+            doc: Doc(doc_span![]),
+            version: 100,
+
+            original_doc: Doc(doc_span![]),
+            original_ops: vec![],
+
+            first_load: false,
             monkey: AtomicBool::new(false),
-            name: Mutex::new(None),
-            version: AtomicUsize::new(100),
             alive: AtomicBool::new(true),
 
+            out,
             tx,
-        });
+        };
 
         // Send initial setup packet.
         client
@@ -404,80 +431,63 @@ pub fn server(url: &str) {
             })
             .expect("Could not send initial state");
 
-        // Setup monkey tasks.
-        setup_monkey(client.clone());
+        let mut alive = Arc::new(AtomicBool::new(true));
+        let (tx_task, rx_task) = unbounded();
 
-        let client_capture = client.clone();
-        thread::spawn(move || {
-            ws::connect("ws://127.0.0.1:3010", |out| {
-                // Send over operations
-                let rx_capture = rx.clone();
-                let client_capture_capture = client_capture.clone();
-                thread::spawn(move || {
-                    while let Ok((packet, version)) = rx_capture.recv() {
-                        let name = client_capture_capture.name.lock().unwrap().clone().unwrap();
-                        // let cur_version = client_capture_capture.version.load(Ordering::Relaxed);
-                        out.send(serde_json::to_string(&SyncServerCommand::Commit(
-                            name,
-                            packet,
-                            version
-                        )).unwrap()).unwrap();
+        // Launch money tests.
+        setup_monkey(alive.clone(), tx_task.clone());
+
+        // Setup thread listener.
+        thread::spawn::<_, Result<(), Error>>(move || {
+            while let Ok(task) = rx_task.recv() {
+                handle_task(task, &mut client)?;
+            }
+            Ok(())
+        });
+
+        // Connect to the sync server.
+        {
+            clone_all!(tx_task);
+            thread::spawn(move || {
+                ws::connect("ws://127.0.0.1:3010", move |out| {
+                    // Send over operations
+                    {
+                        clone_all!(tx_task, rx);
+                        thread::spawn(move || {
+                            while let Ok(command) = rx.recv() {
+                                out.send(serde_json::to_string(&command).unwrap()).unwrap();
+                            }
+                        });
                     }
-                });
 
-                let client_capture_capture = client_capture.clone();
-                move |msg: ws::Message| {
-                    // Handle messages received on this connection
-                    println!("wasm got a packet from sync '{}'. ", msg);
+                    {
+                        clone_all!(tx_task);
+                        move |msg: ws::Message| {
+                            // Handle messages received on this connection
+                            println!("wasm got a packet from sync '{}'. ", msg);
 
-                    let req_parse: Result<SyncClientCommand, _> = serde_json::from_slice(&msg.into_data());
-                    match req_parse {
-                        Err(err) => {
-                            println!("Packet error: {:?}", err);
-                        }
-                        Ok(value) => {
-                            match value {
-                                SyncClientCommand::Update(doc, version) => {
-                                    let mut client_doc = client_capture_capture.doc.lock().unwrap();
-                                    *client_doc = Doc(doc.clone());
-
-                                    *client_capture_capture.original_doc.lock().unwrap() = Doc(doc.clone());
-                                    *client_capture_capture.original_ops.lock().unwrap() = vec![];
-
-                                    client_capture_capture.version.store(version, Ordering::Relaxed);
-                                    println!("new version is {:?}", version);
-
-                                    // Native drives client state.
-                                    let res = ClientCommand::Update(doc.clone(), None, version);
-                                    client_capture_capture.send(&res).unwrap();
-
-                                    // Drop mutex.
-                                    // TODO this probably isn't necessary, but we shoudl version
-                                    // doc and version in same mutex
-                                    drop(client_doc);
-
-                                    // Load the caret.
-                                    if !client_capture_capture.first_load.load(Ordering::Relaxed) {
-                                        client_capture_capture.first_load.store(true, Ordering::Relaxed);
-
-                                        let v = client_capture_capture.version.load(Ordering::Relaxed);
-                                        client_capture_capture.version.store(0, Ordering::Relaxed);
-                                        client_op(&*client_capture_capture, |doc| init_caret(doc)).unwrap();
-                                        client_capture_capture.version.store(v, Ordering::Relaxed);
-                                    }
+                            let req_parse: Result<SyncClientCommand, _> =
+                                serde_json::from_slice(&msg.into_data());
+                            match req_parse {
+                                Err(err) => {
+                                    println!("Packet error: {:?}", err);
+                                }
+                                Ok(value) => {
+                                    tx_task.send(Task::SyncClientCommand(value));
                                 }
                             }
+
+                            Ok(())
                         }
                     }
-
-                    Ok(())
-                }
-            }).unwrap();
-        });
+                }).unwrap();
+            });
+        }
 
         // Websocket message handler.
         SocketHandler {
-            client,
+            name,
+            tx_task,
         }
     }).unwrap();
 }
