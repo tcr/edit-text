@@ -721,6 +721,11 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     t.skip_b(b_chars.len());
                     b.next();
                 }
+                (None, Some(AddSkip(b_skip))) => {
+                    t.skip_a(b_skip);
+                    t.skip_b(b_skip);
+                    b.next();
+                }
                 (Some(AddChars(ref a_chars)), None) => {
                     t.regenerate();
 
@@ -728,6 +733,9 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     t.chars_b(a_chars);
                     a.next();
                 }
+
+                // TODO don't like that this isn't a pattern match;
+                // This case should handle AddWithGroup and AddGroup (I believe)
                 (None, compare) => {
                     // TODO this logic is evidence AddObject should be broken out
                     let groupsuccess = if let Some(AddGroup(ref b_attrs, _)) = compare {
