@@ -19,9 +19,7 @@ extern crate take_mut;
 extern crate ws;
 extern crate crossbeam_channel;
 extern crate bus;
-
-pub mod wasm;
-pub mod sync;
+extern crate mercutio;
 
 use std::sync::{Arc, Mutex};
 use oatie::doc::*;
@@ -34,9 +32,9 @@ use serde_json::Value;
 use std::path::{Path, PathBuf};
 use oatie::transform::transform;
 use oatie::debug_pretty;
-use wasm::start_websocket_server;
+use mercutio::wasm::start_websocket_server;
 use std::thread;
-use sync::*;
+use mercutio::sync::*;
 use oatie::schema::{validate_doc_span, ValidateContext};
 
 #[get("/")]
@@ -68,7 +66,10 @@ fn main() {
     };
 
     sync_socket_server(mercutio_state.clone());
-    start_websocket_server();
+
+    // thread::spawn(|| {
+    //     start_websocket_server();
+    // });
 
     rocket::ignite()
         .mount("/", routes![root, client, files, favicon])

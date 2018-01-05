@@ -51,6 +51,7 @@ pub fn format_brackets(input: &str) -> String {
             }
         }
     }
+    out
 }
 
 fn main() {
