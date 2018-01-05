@@ -248,7 +248,6 @@ macro_rules! monkey_task {
             let monkey = $monkey.clone();
             thread::spawn::<_, Result<(), Error>>(move || {
                 let mut rng = rand::thread_rng();
-                thread::sleep(Duration::from_millis(2000));
                 while alive.load(Ordering::Relaxed) {
                     thread::sleep(Duration::from_millis(
                         $wait_params.0 + rng.gen_range($wait_params.1, $wait_params.2),
