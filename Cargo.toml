@@ -3,6 +3,8 @@ members = ["oatie", "mercutio"]
 
 [profile.dev]
 panic = 'abort'
+debug = true
 
 [profile.release]
 panic = 'abort'
+debug = true

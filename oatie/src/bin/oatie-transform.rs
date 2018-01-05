@@ -18,7 +18,7 @@ fn main() {
             println!("all set!");
         }
         Err(err) => {
-            println!("transform test error: {}", err);
+            eprintln!("transform test error: {:?}", err);
             ::std::process::exit(1);
         }
     }
