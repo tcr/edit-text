@@ -1,0 +1,155 @@
+doc:   [
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "h3"}, [
+            DocChars("w GJ 3mX2gS1 3ViDRd")
+        ])
+    ]),
+    DocGroup({"tag": "pre"}, [
+        DocChars("E ")
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocGroup({"client": "left", "tag": "caret"}, []),
+        DocChars("0MmDN uJ RN 7OT2533s")
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocGroup({"client": "right", "tag": "caret"}, []),
+        DocChars("k")
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocChars(" ")
+    ]),
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "pre"}, [
+            DocChars(" sm ")
+        ]),
+        DocGroup({"tag": "h1"}, [
+            DocChars(" dKEH0TfG78oqg U175")
+        ])
+    ]),
+    DocGroup({"tag": "pre"}, [
+        DocChars("0   4 s")
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocChars(" W")
+    ]),
+    DocGroup({"tag": "h1"}, [
+        DocChars("YQa3yH   t phI   U PW  2cQgxth Ka2m2nRCG0S0 hqCh yKy2F 8G245m F W T5 rJ0D8r31Tn6 4Jd22fSY3S  Wvk6  4x8tJOT3J1YSYqiWXu Kx N 7UM6oHX3yQ  qDP")
+    ]),
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "p"}, [
+            DocChars("Jj4N60ORK yTnSc6 Rik4v7e  25vj 3mSB3G6  W5rU0YvW")
+        ])
+    ]),
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "p"}, [
+            DocChars("m0Jgie80L20  VQ2N52mY")
+        ])
+    ]),
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "pre"}, [
+            DocChars("QJ8u6wAI3Qk f q D Y36")
+        ]),
+        DocGroup({"tag": "h2"}, [
+            DocChars("Tp dL  l3fk o6 y270a")
+        ])
+    ]),
+    DocGroup({"tag": "h2"}, [
+        DocChars("EG X   LiS7k 81UA  Crv8vx o")
+    ]),
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "pre"}, [
+            DocChars("0 EFy7PnS66flD1AR  33P2  RX0 U G W J   F 46CVOW84K7WX uaA 4 I akmx J3S1eK4 q J  rj 1   V L2 Eo V1")
+        ])
+    ]),
+    DocGroup({"tag": "h1"}, [
+        DocChars("pTO")
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocChars(" 5  cO")
+    ]),
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "p"}, [
+            DocChars("od4 3V")
+        ])
+    ]),
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "h3"}, [
+            DocChars("F"), DocGroup({"tag": "caret", "client": "middle"}, []),
+            DocChars("7teBf d2")
+        ])
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocChars("4 6g B1O")
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocChars("KdOgECfe8 5  N ")
+    ]),
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "p"}, [
+            DocChars("k yU643j")
+        ])
+    ]),
+    DocGroup({"tag": "pre"}, [
+        DocChars("e84CPw17yj1 I4g4GW    b fLDs jomsPDKGWKu n   Iy l 6  5x6 3   5 33ello world!sC4csg1a1kF 0K 8 Wculwy4kFda RA wy0Bl  5 k L E 80QvWhat\'s up with you?")
+    ])
+]
+
+a_del: [
+    DelWithGroup([
+        DelWithGroup([
+            DelSkip(19)
+        ])
+    ]),
+    DelGroup([
+        DelSkip(2)
+    ]),
+    DelGroup([
+        DelGroup([]),
+        DelSkip(20)
+    ])
+]
+a_add: [
+    AddWithGroup([
+        AddWithGroup([
+            AddSkip(19)
+        ])
+    ]),
+    AddGroup({"tag": "bullet"}, [
+        AddGroup({"tag": "pre"}, [
+            AddSkip(2), AddGroup({"tag": "caret", "client": "left"}, []),
+            AddChars("1"), AddSkip(20)
+        ])
+    ])
+]
+
+b_del: [
+    DelWithGroup([
+        DelWithGroup([
+            DelSkip(19)
+        ])
+    ]),
+    DelWithGroup([
+        DelSkip(2)
+    ]),
+    DelGroup([
+        DelWithGroup([]),
+        DelSkip(19), DelChars(1)
+    ]),
+    DelGroup([
+        DelSkip(2)
+    ])
+]
+b_add: [
+    AddWithGroup([
+        AddWithGroup([
+            AddSkip(19)
+        ])
+    ]),
+    AddWithGroup([
+        AddSkip(2)
+    ]),
+    AddGroup({"tag": "p"}, [
+        AddWithGroup([]),
+        AddSkip(21)
+    ])
+]

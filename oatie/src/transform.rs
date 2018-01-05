@@ -352,6 +352,26 @@ impl Transform {
         }
     }
 
+    // TODO does this replace its counterpart?
+    fn next_track_a_by_type(&mut self, arg: TrackType) -> Option<TrackType> {
+        if let Some(track) = self.tracks.iter()
+            .position(|x| x.tag_a.is_none() && x.tag_real.as_ref().and_then(|x| x.tag_type()) == Some(arg)) {
+            self.tracks[track].tag_real.as_ref().and_then(|x| x.tag_type())
+        } else {
+            None
+        }
+    }
+
+    // TODO does this replace its counterpart?
+    fn next_track_b_by_type(&mut self, arg: TrackType) -> Option<TrackType> {
+        if let Some(track) = self.tracks.iter()
+            .position(|x| x.tag_b.is_none() && x.tag_real.as_ref().and_then(|x| x.tag_type()) == Some(arg)) {
+            self.tracks[track].tag_real.as_ref().and_then(|x| x.tag_type())
+        } else {
+            None
+        }
+    }
+
     fn close_a(&mut self) {
         println!("TRACKS CLOSE A: {:?}", self.tracks);
         let (track, index) = self.top_track_a();
@@ -813,8 +833,9 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
 
                         println!("~~~~ :) :) :)");
                         println!("~~~~ -> {:?} {:?}", t.next_track_a_type(), a_type);
-                        if t.next_track_a_type() == a_type {
-                            if a_type.map_or(false, |x| x.do_open_split()) {
+                        if t.next_track_a_by_type(a_type.unwrap()).is_some() {
+                            // if a_type.map_or(false, |x| x.do_open_split()) {
+                            if true {
                                 println!("INTERRUPTING A");
                                 t.interrupt(a_type.unwrap(), true);
                                 if let Some(j) = t.next_track_a() {
@@ -834,8 +855,11 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                         b.enter();
                         let b_type = Tag::from_attrs(b_attrs).tag_type();
 
-                        if t.next_track_b_type() == b_type {
-                            if b_type.map_or(false, |x| x.do_open_split()) {
+                        // println!("TELL ME {:?} {:?}", t.next_track_by_type(b_type.unwrap()), b_type);
+
+                        if t.next_track_b_by_type(b_type.unwrap()).is_some() {
+                            // if b_type.map_or(false, |x| x.do_open_split()) {
+                            if true {
                                 println!("INTERRUPTING B");
                                 t.interrupt(b_type.unwrap(), true);
                                 if let Some(j) = t.next_track_b() {
