@@ -6,7 +6,7 @@ doc:   [
         DocGroup({"tag": "caret", "client": "left"}, []),
         DocChars("2Nr"),
         DocGroup({"client": "middle", "tag": "caret"}, []),
-        DocChars("8bG8  by c mkvwSYkQtNY4o  yLat\'s up with you?")
+        DocChars("8bG8  by c mkvwSYkQtNY4o  yLat's up with you?")
     ])
 ]
 

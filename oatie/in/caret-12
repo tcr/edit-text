@@ -7,14 +7,12 @@ doc:   [
         ]),
         DocChars(" up?")
     ]),
-    DocGroup({"tag": "ul"}, [
-        DocGroup({"tag": "li"}, [
-            DocGroup({"tag": "p"}, [
-                DocChars("Three adjectives strong.")
-            ]),
-            DocGroup({"tag": "p"}, [
-                DocChars("World!")
-            ])
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "p"}, [
+            DocChars("Three adjectives strong.")
+        ]),
+        DocGroup({"tag": "p"}, [
+            DocChars("World!")
         ])
     ])
 ]

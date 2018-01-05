@@ -721,11 +721,6 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     t.skip_b(b_chars.len());
                     b.next();
                 }
-                (None, Some(AddSkip(b_skip))) => {
-                    t.skip_a(b_skip);
-                    t.skip_b(b_skip);
-                    b.next();
-                }
                 (Some(AddChars(ref a_chars)), None) => {
                     t.regenerate();
 
@@ -941,6 +936,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                                 t.unenter_b();
                             }
                         } else {
+                            t.interrupt(b_type.unwrap(), true); // caret-32
                             t.enter_b(None, Tag::from_attrs(b_attrs));
                         }
                     }
@@ -980,6 +976,8 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
 
                 // With Groups
                 (Some(AddWithGroup(a_inner)), Some(AddSkip(b_count))) => {
+                    t.regenerate(); // caret-31
+
                     t.a_del.skip(1);
                     t.a_add.skip(1);
                     t.b_del.skip(1);
@@ -993,6 +991,8 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     }
                 }
                 (Some(AddWithGroup(a_inner)), Some(AddWithGroup(b_inner))) => {
+                    t.regenerate(); // caret-31
+
                     let (a_op, b_op) = transform_insertions(&a_inner, &b_inner);
 
                     t.a_del.with_group(&a_op.0);
@@ -1004,6 +1004,8 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     b.next();
                 }
                 (Some(AddSkip(a_count)), Some(AddWithGroup(b_inner))) => {
+                    t.regenerate(); // caret-31
+
                     t.a_del.skip(1);
                     t.a_add.with_group(&b_inner);
                     t.b_del.skip(1);
@@ -1178,7 +1180,7 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                     }
 
                     if b_inner.skip_len() > 0 {
-                        b_del.skip(b_inner.skip_len());
+                        b_del.skip(b_inner.skip_post_len());
                     }
                     b.next();
                 }
@@ -1581,14 +1583,71 @@ pub fn transform_add_del_inner(
                             a.next();
                         }
                     }
-                    AddWithGroup(insspan) => {
+
+
+
+
+
+                    AddWithGroup(ins_span) => {
+                        let mut a_inner = AddStepper::new(&ins_span);
+                        let mut b_inner = DelStepper::new(&span);
+                        let mut delres_inner: DelSpan = vec![];
+                        let mut addres_inner: AddSpan = vec![];
+                        transform_add_del_inner(
+                            &mut delres_inner,
+                            &mut addres_inner,
+                            &mut a_inner,
+                            &mut b_inner,
+                        );
+
+                        // TODO should this be part of the top-level resolution for transform_add_del
+                        if !b_inner.is_done() {
+
+                            if let &Some(ref head) = &b_inner.head {
+                                let len = (vec![head.clone()]).skip_post_len();
+                                if len > 0 {
+                                    addres_inner.place(&AddSkip(len));
+                                }
+                            }
+                            let len = b_inner.rest.skip_post_len();
+                            if len > 0 {
+                                addres_inner.place(&AddSkip(len));
+                            }
+
+                            delres_inner.place(&b_inner.head.unwrap());
+                            delres_inner.place_all(&b_inner.rest);
+                        } else if !a_inner.is_done() {
+
+                            if let &Some(ref head) = &a_inner.head {
+                                let len = (vec![head.clone()]).skip_len();
+                                if len > 0 {
+                                    delres_inner.place(&DelSkip(len));
+                                }
+                            }
+                            let len = a_inner.rest.skip_len();
+                            if len > 0 {
+                                delres_inner.place(&DelSkip(len));
+                            }
+
+                            addres_inner.place(&a_inner.head.unwrap());
+                            addres_inner.place_all(&a_inner.rest);
+                        }
+
+                        delres.place(&DelGroup(delres_inner));
+                        addres.place_all(&addres_inner);
+
                         a.next();
                         b.next();
-
-                        let (del, ins) = transform_add_del(&insspan, &span);
-                        delres.place(&DelGroup(del));
-                        addres.place_all(&ins[..]);
                     }
+                        
+                    // AddWithGroup(ins_span) => {
+                    //     a.next();
+                    //     b.next();
+
+                    //     let (del, ins) = transform_add_del(&ins_span, &span);
+                    //     delres.place(&DelGroup(del));
+                    //     addres.place_all(&ins[..]);
+                    // }
                     AddGroup(tags, ins_span) => {
                         let mut a_inner = AddStepper::new(&ins_span);
                         let mut delres_inner: DelSpan = vec![];

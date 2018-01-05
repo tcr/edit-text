@@ -1,8 +1,8 @@
 []
-[AddGroup({"tag": "ul"}, [AddGroup({"tag": "li"}, [AddSkip(15)])])]
+[AddGroup({"tag": "bullet"}, [AddSkip(15)])]
 
 []
 [AddGroup({"tag": "p"}, [AddSkip(15)])]
 
 []
-[AddGroup({"tag": "ul"}, [AddGroup({"tag": "li"}, [AddGroup({"tag": "p"}, [AddSkip(15)])])])]
+[AddGroup({"tag": "bullet"}, [AddGroup({"tag": "p"}, [AddSkip(15)])])]

@@ -20,7 +20,7 @@ pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
                 // Do the list destructuring here
                 let mut writer = parent_walker.to_writer();
                 
-                writer.del.group(&del_span![DelSkip(1)]);
+                writer.del.group(&del_span![DelSkip(span.skip_len())]);
                 writer.del.exit_all();
 
                 writer.add.exit_all();

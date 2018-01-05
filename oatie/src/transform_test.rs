@@ -7,6 +7,7 @@ use super::compose;
 use super::doc::*;
 use super::normalize;
 use super::{OT, Operation};
+use super::schema::{ValidateContext, validate_doc_span};
 use super::transform::*;
 use serde_json;
 use regex::Regex;
@@ -80,19 +81,19 @@ fn parse_doc_elem(mut value: &str) -> Result<DocElement, Error> {
     value = value.trim();
 
     let cap = if value.starts_with("DocChars(") && value.ends_with(')') {
-        Some(("AddChars", &value["DocChars(".len()..value.len() - 1]))
+        Some(("DocChars", &value["DocChars(".len()..value.len() - 1]))
     } else {
         None
     };
 
     if let Some((key, segment)) = cap {
         return Ok(match key {
-            "AddChars" => {
+            "DocChars" => {
                 if segment.len() < 2 || !segment.starts_with("\"") || !segment.ends_with("\"") {
                     Err(MalformedData("Expected full quoted string".into()))?;
                 }
-                let segment = &segment[1..segment.len() - 1];
-                DocElement::DocChars(segment.to_string())
+                let segment: Value = serde_json::from_str(&segment.replace("\\'", "'")).unwrap();
+                DocElement::DocChars(segment.as_str().unwrap().to_string())
             }
             _ => unreachable!(),
         });
@@ -199,8 +200,8 @@ fn parse_add_elem(mut value: &str) -> Result<AddElement, Error> {
                 if segment.len() < 2 || !segment.starts_with("\"") || !segment.ends_with("\"") {
                     Err(MalformedData("Expected full quoted string".into()))?;
                 }
-                let segment = &segment[1..segment.len() - 1];
-                AddElement::AddChars(segment.to_string())
+                let segment: Value = serde_json::from_str(&segment.replace("\\'", "'")).unwrap();
+                AddElement::AddChars(segment.as_str().unwrap().to_string())
             }
             _ => unreachable!(),
         });
@@ -361,9 +362,11 @@ pub fn run_transform_test(input: &str) -> Result<(), Error> {
         println!(" ---> doc a : a : a'");
         let doc_a = OT::apply(&doc_a, &a_);
         println!("{:?}", doc_a);
+        validate_doc_span(&mut ValidateContext::new(), &doc_a.0)?;
         println!(" ---> doc b : b : b'");
         let doc_b = OT::apply(&doc_b, &b_);
         println!("{:?}", doc_b);
+        validate_doc_span(&mut ValidateContext::new(), &doc_b.0)?;
         println!();
         println!("ok");
         println!();
@@ -376,9 +379,11 @@ pub fn run_transform_test(input: &str) -> Result<(), Error> {
         println!();
         println!("{}", debug_pretty(&Operation::compose(&a, &a_)));
         println!("{}", debug_pretty(&doc_a_cmp));
+        validate_doc_span(&mut ValidateContext::new(), &doc_a_cmp.0)?;
         println!(" ---> doc b : (b : b')");
         let doc_b_cmp = OT::apply(&doc, &Operation::compose(&a, &a_));
         println!("{}", debug_pretty(&doc_b_cmp));
+        validate_doc_span(&mut ValidateContext::new(), &doc_b_cmp.0)?;
         println!();
         println!("ok");
         println!();

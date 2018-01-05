@@ -89,16 +89,18 @@ where
 
     client.original_ops.push(op.clone());
 
-    // println!("ORIGINAL: {:?}", *original_doc);
+    // TODO is this correct
+    // println!("ORIGINAL: {:?}", client.original_doc);
     let mut check_op_a = op_span!([], []);
+    let name = client.name.lock().unwrap().clone().unwrap();
     for (i, op) in client.original_ops.iter().enumerate() {
-        // println!("  {}: applying {:?}/{:?}", client.name, i + 1, original_ops.len());
-        // println!("  {} 1️⃣: let op_left = op_span!{:?};", client.name, check_op_a);
-        // println!("  {} 1️⃣: let op_right = op_span!{:?};", client.name, op);
+        // println!("  {}: applying {:?}/{:?}", name, i + 1, client.original_ops.len());
+        // println!("  {} 1️⃣: let op_left = op_span!{:?};", name, check_op_a);
+        // println!("  {} 1️⃣: let op_right = op_span!{:?};", name, op);
         check_op_a = Operation::compose(&check_op_a, &op);
-        // println!("  {} 1️⃣: let res = op_span!{:?};", client.name, check_op_a);
-        // println!("  {} 1️⃣: let original = doc_span!{:?};", client.name, *original_doc);
-        // println!("  {} 1️⃣: let latest_doc = doc_span!{:?};", client.name, *doc);
+        // println!("  {} 1️⃣: let res = op_span!{:?};", name, check_op_a);
+        // println!("  {} 1️⃣: let original = doc_span!{:?};", name, client.original_doc);
+        // println!("  {} 1️⃣: let latest_doc = doc_span!{:?};", name, client.doc);
         let _ = OT::apply(&client.original_doc, &check_op_a);
     }
 
