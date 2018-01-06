@@ -180,27 +180,35 @@ pub fn sync_socket_server(state: MoteState) {
         thread::spawn(move || {
             if let Err(value) = panic::catch_unwind(|| {
                 loop {
-                    // wait 1s
+                    // Wait 100ms between transforms.
                     thread::sleep(Duration::from_millis(100));
 
-                    // Attempt to extract client map
+                    // Extract the client map and dump active client operations.
                     let mut sync_state = sync_state_mutex_capture.lock().unwrap();
-                    let left_ops = sync_state.ops.remove("left").unwrap_or(vec![]);
-                    let middle_ops = sync_state.ops.remove("middle").unwrap_or(vec![]);
-                    let right_ops = sync_state.ops.remove("right").unwrap_or(vec![]);
-                    if left_ops.is_empty() && middle_ops.is_empty() && right_ops.is_empty() {
+                    let mut keys: Vec<_> = sync_state.ops.keys().cloned().collect();
+                    keys.sort();
+                    if keys.is_empty() {
                         continue;
                     }
 
-                    // TODO generally extract client ops, then merge in
-                    // a generalized action op
-                    
-                    // Do transform
+                    // List the clients.
+                    println!("evaluating: {:?}", keys);
+
+                    // Perform the document operation transformation.
                     let mut doc = state_capture.body.lock().unwrap();
-                    let (_, new_op) = action_sync(&doc, left_ops, right_ops).unwrap();
-                    let (new_doc, _) = action_sync(&doc, vec![new_op], middle_ops).unwrap();
-                    // let (new_doc, _) = action_sync(&doc, left_ops, right_ops).unwrap();
+                    let mut new_doc = doc.clone();
+                    let mut new_op = vec![op_span!([], [])];
+                    for op_group in keys.iter().map(|x| sync_state.ops.remove(x).unwrap()) {
+                        let res = action_sync(&doc, new_op, op_group).unwrap();
+                        new_doc = res.0;
+                        new_op = vec![res.1];
+                    }
                     *doc = new_doc;
+
+                    // let mut doc = state_capture.body.lock().unwrap();
+                    // let (_, new_op) = action_sync(&doc, left_ops, middle_ops).unwrap();
+                    // let (new_doc, _) = action_sync(&doc, vec![new_op], right_ops).unwrap();
+                    // *doc = new_doc;
 
                     // Increase version
                     sync_state.version += 1;
