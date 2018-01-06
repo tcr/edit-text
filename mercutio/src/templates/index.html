@@ -5,82 +5,118 @@
 
 <title>Mercutio</title>
 
+<style>
+  iframe {
+    border: none;
+    width: 100%;
+    height: 100%;
+  }
+
+html, body { width: 100%; height: 100%; padding: 0 !important; }
+#root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#clients, #clients tbody, #clients tr, #clients td {
+  display: block;
+}
+
+#clients, #clients tbody {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+#clients tr {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+}
+
+#clients td {
+  border: 2px solid black;
+  box-sizing: border-box;
+  flex: 1;
+}
+
+iframe {
+  display: block;
+}
+
+</style>
+
+<!--
+<pre>
+command + . - rename group
+command + , - add new group
+shift + delete - delete group saving contents
+command + delete - delete group with contents
+enter - split parent at
+shift + enter - insert block after</pre>
+-->
+
 <body id="parent">
-  <h1>Mercutio
-    <button id="action-monkey">🙈🙉🙊</button>
-    <span style="font-family: monospace; padding: 3px 5px;" id="timer"></span>
-  </h1>
+  <div id="root">
+    <h1>Mercutio
+      <button id="action-monkey">🙈🙉🙊</button>
+      <span style="font-family: monospace; padding: 3px 5px;" id="timer"></span>
+    </h1>
 
-  <!--
-  <pre>
-  command + . - rename group
-  command + , - add new group
-  shift + delete - delete group saving contents
-  command + delete - delete group with contents
-  enter - split parent at
-  shift + enter - insert block after</pre>
-  -->
+    <table id="clients">
+      <!-- <tr> 
+        <td>
+          <h4>"left"</h4>
+          <iframe style="border: none; width: 100%; height: 800px" src="/client/?left"></iframe>
+        </td>
+        <td>
+          <h4>"middle"</h4>
+          <iframe style="border: none; width: 100%; height: 800px" src="/client/?middle"></iframe>
+        </td>
+        <td>
+          <h4>"right"</h4>
+          <iframe style="border: none; width: 100%; height: 800px" src="/client/?right"></iframe>
+        </td>
+      </tr> -->
 
-  <style>
-    iframe {
-      border: none;
-      width: 100%;
-      /* height: 800px; */
-      height: 400px;
-    }
-  </style>
-
-  <table id="clients">
-    <!-- <tr> 
-      <td>
-        <h4>"left"</h4>
-        <iframe style="border: none; width: 100%; height: 800px" src="/client/?left"></iframe>
-      </td>
-      <td>
-        <h4>"middle"</h4>
-        <iframe style="border: none; width: 100%; height: 800px" src="/client/?middle"></iframe>
-      </td>
-      <td>
-        <h4>"right"</h4>
-        <iframe style="border: none; width: 100%; height: 800px" src="/client/?right"></iframe>
-      </td>
-    </tr> -->
-
-    <tr>
-      <td>
-        <h4>a</h4><iframe src="/client/?a"></iframe>
-      </td>
-      <td>
-        <h4>b</h4><iframe src="/client/?b"></iframe>
-      </td>
-      <td>
-        <h4>c</h4><iframe src="/client/?c"></iframe>
-      </td>
-      <td>
-        <h4>d</h4><iframe src="/client/?d"></iframe>
-      </td>
-      <td>
-        <h4>e</h4><iframe src="/client/?e"></iframe>
-      </td>
-    </tr>
-    <tr>
-      <td>
-        <h4>f</h4><iframe src="/client/?f"></iframe>
-      </td>
-      <td>
-        <h4>g</h4><iframe src="/client/?g"></iframe>
-      </td>
-      <td>
-        <h4>h</h4><iframe src="/client/?h"></iframe>
-      </td>
-      <td>
-        <h4>i</h4><iframe src="/client/?i"></iframe>
-      </td>
-      <td>
-        <h4>j</h4><iframe src="/client/?j"></iframe>
-      </td>
-    </tr>
-  </table>
+      <tr>
+        <td>
+          <iframe src="/client/?a"></iframe>
+        </td>
+        <td>
+          <iframe src="/client/?b"></iframe>
+        </td>
+        <td>
+          <iframe src="/client/?c"></iframe>
+        </td>
+        <td>
+          <iframe src="/client/?d"></iframe>
+        </td>
+        <td>
+          <iframe src="/client/?e"></iframe>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <iframe src="/client/?f"></iframe>
+        </td>
+        <td>
+          <iframe src="/client/?g"></iframe>
+        </td>
+        <td>
+          <iframe src="/client/?h"></iframe>
+        </td>
+        <td>
+          <iframe src="/client/?i"></iframe>
+        </td>
+        <td>
+          <iframe src="/client/?j"></iframe>
+        </td>
+      </tr>
+    </table>
+  </div>
 </body>
 
 <script>window.MOTE_ENTRY = 'index';</script>

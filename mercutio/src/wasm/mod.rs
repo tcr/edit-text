@@ -45,7 +45,7 @@ pub enum ClientCommand {
         buttons: Vec<(usize, String)>,
     },
     PromptString(String, String, NativeCommand),
-    Update(DocSpan, Option<Op>, usize),
+    Update(String, Option<Op>),
     Error(String),
 }
 
@@ -72,6 +72,63 @@ impl Client {
         self.out.send(json)?;
         Ok(())
     }
+}
+
+
+
+// // Creates an HTML tree from a document tree.
+// function docToStrings(ret: Array<string>, vec: Array<any>) {
+//   // TODO act like doc
+//   // console.log(el);
+//   // var h = newElem(el.DocGroup[0]);
+//   for (var g = 0; g < vec.length; g++) {
+//     const el = vec[g];
+//     if (el.DocGroup) {
+//       const attrs = el.DocGroup[0];
+//       ret.push(`<div
+//         data-tag=${JSON.stringify(String(attrs.tag))}
+//         data-client=${JSON.stringify(String(attrs.client))}
+//         class=${JSON.stringify(String(attrs.class || ''))}
+//       >`);
+//       docToStrings(ret, el.DocGroup[1]);
+//       ret.push('</div>');
+//     } else if (el.DocChars) {
+//       for (var j = 0; j < el.DocChars.length; j++) {
+//         ret.push('<span>');
+//         ret.push(String(el.DocChars[j]));
+//         ret.push('</span>');
+//       }
+//     } else {
+//       throw new Error('unknown');
+//     }
+//   }
+// }
+
+fn doc_as_html(doc: &DocSpan) -> String {
+    let mut out = String::new();
+    for elem in doc {
+        match elem {
+            &DocGroup(ref attrs, ref span) => {
+                out.push_str(&format!(r#"<div
+                    data-tag={}
+                    data-client={}
+                    class={}
+                >"#, 
+                    serde_json::to_string(attrs.get("tag").unwrap_or(&"".to_string())).unwrap(),
+                    serde_json::to_string(attrs.get("client").unwrap_or(&"".to_string())).unwrap(),
+                    serde_json::to_string(attrs.get("class").unwrap_or(&"".to_string())).unwrap(),
+                ));
+                out.push_str(&doc_as_html(span));
+                out.push_str(r"</div>");
+            }
+            &DocChars(ref text) => {
+                out.push_str(r"<span>");
+                out.push_str(text);
+                out.push_str(r"</span>");
+            }
+        }
+    }
+    out
 }
 
 fn client_op<C>(client: &mut Client, callback: C) -> Result<(), Error>
@@ -108,7 +165,7 @@ where
     assert_eq!(OT::apply(&client.original_doc, &check_op_a), client.doc);
 
     // Send update.
-    let res = ClientCommand::Update(client.doc.0.clone(), Some(op.clone()), client.version);
+    let res = ClientCommand::Update(doc_as_html(&client.doc.0), Some(op.clone()));
     client.send(&res)?;
 
     // Send operation to sync server.
@@ -381,7 +438,7 @@ fn handle_task(value: Task, client: &mut Client) -> Result<(), Error> {
             println!("new version is {:?}", version);
 
             // Native drives client state.
-            let res = ClientCommand::Update(doc.clone(), None, version);
+            let res = ClientCommand::Update(doc_as_html(&doc), None);
             client.send(&res).unwrap();
 
             // Load the caret.

@@ -143,6 +143,9 @@ export default class Editor {
 
     let editor = this;
 
+    $('<b style="width: 200px; display: block">Client: ' + editorID + '</b>')
+      .appendTo($('#local-buttons'));
+
     // monkey button
     let monkey = false;
     $('<button>Monkey</button>')
@@ -254,12 +257,10 @@ export default class Editor {
     });
   }
 
-  load(data: Array<any>) {
+  load(data: string) {
     let elem = this.$elem[0];
     requestAnimationFrame(() => {
-      let ret = [];
-      docToStrings(ret, data);
-      elem.innerHTML = ret.join('');
+      elem.innerHTML = data;
     });
   }
 
