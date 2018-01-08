@@ -312,6 +312,12 @@ impl Transform {
         self.tracks.remove(index);
     }
 
+    fn top_track_real(&self) -> Option<(Track, usize)> {
+        self.tracks.iter()
+            .rposition(|x| x.tag_real.is_some())
+            .map(|index| (self.tracks[index].clone(), index))
+    }
+
     fn top_track_a(&mut self) -> (Track, usize) {
         let index = self.tracks.iter().rposition(|x| x.tag_a.is_some()).unwrap();
         (self.tracks[index].clone(), index)
@@ -664,6 +670,16 @@ impl Transform {
             .to_attrs();
         Tag::from_attrs(&attrs).tag_type()
     }
+
+    fn supports_text(&self) -> bool {
+        if let Some((track, _)) = self.top_track_real() {
+            // TODO also inlines TODO also move logic to schema
+            if track.tag_real.unwrap().tag_type() == Some(TrackType::Blocks) {
+                return true;
+            }
+        }
+        false
+    }
 }
 
 pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
@@ -802,9 +818,22 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                 // TODO don't like that this isn't a pattern match;
                 // This case should handle AddWithGroup and AddGroup (I believe)
                 (None, compare) => {
+                    let ok = if let Some(AddChars(ref b_chars)) = compare {
+                        if t.supports_text() {
+                            t.chars_a(b_chars);
+                            t.skip_b(b_chars.chars().count());
+                            b.next();
+                            true
+                        } else {
+                            false
+                        }
+                    } else {
+                        false
+                    };
+
                     // TODO this logic is evidence AddObject should be broken out
                     let groupsuccess = if let Some(AddGroup(ref b_attrs, _)) = compare {
-                        if b_attrs["tag"] == "caret" {
+                        if b_attrs["tag"] == "caret" && t.supports_text() {
                             b.enter();
                             b.exit();
                             t.enter_b(None, Tag::from_attrs(b_attrs));
@@ -817,7 +846,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     } else {
                         false
                     };
-                    if !groupsuccess {
+                    if !ok && !groupsuccess {
                         let a_typ = t.tracks
                             .iter()
                             .rev()
@@ -904,13 +933,15 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                                 t.unenter_a();
                             }
                         } else {
+                            t.interrupt(a_type.unwrap(), false); // caret-46
                             t.enter_a(&Tag::from_attrs(a_attrs), None);
                         }
                     } else {
                         // println!("groupgruop {:?} {:?}", a_type, b_type);
-                        t.regenerate();
-                        b.enter();
                         let b_type = Tag::from_attrs(b_attrs).tag_type();
+                        t.regenerate_until(&b_type.clone().unwrap());
+
+                        b.enter();
 
                         // println!("TELL ME {:?} {:?}", t.next_track_by_type(b_type.unwrap()), b_type);
 
@@ -928,6 +959,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                                 t.unenter_b(b_type.unwrap());
                             }
                         } else {
+                            t.interrupt(b_type.unwrap(), false); // caret-43
                             t.enter_b(None, Tag::from_attrs(b_attrs));
                         }
                     }
@@ -940,7 +972,8 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
 
                     // TODO this logic is evidence AddObject should be broken out
                     let groupsuccess = if let Some(AddGroup(ref a_attrs, _)) = compare {
-                        if a_attrs["tag"] == "caret" {
+                    t.regenerate(); // TODO is this correct
+                        if a_attrs["tag"] == "caret" && t.supports_text() {
                             a.enter();
                             a.exit();
                             t.enter_a(&Tag::from_attrs(a_attrs), None);

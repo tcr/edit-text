@@ -327,7 +327,7 @@ type MonkeyParam = (u64, u64, u64);
 const MONKEY_BUTTON: MonkeyParam = (500, 0, 2000);
 const MONKEY_LETTER: MonkeyParam = (50, 0, 200);
 const MONKEY_ARROW: MonkeyParam = (0, 0, 500);
-const MONKEY_BACKSPACE: MonkeyParam = (0, 0, 250);
+const MONKEY_BACKSPACE: MonkeyParam = (0, 0, 200);
 const MONKEY_ENTER: MonkeyParam = (600, 0, 3_000);
 
 // Race
