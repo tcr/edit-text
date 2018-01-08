@@ -74,15 +74,32 @@ pub fn action_sync(doc: &Doc, ops_a: Vec<Op>, ops_b: Vec<Op>) -> Result<(Doc, Op
     println!("OP A {:?}", op_a);
     println!("OP B {:?}", op_b);
 
+    let test = format!(r#"
+doc:   {}
+
+a_del: {}
+a_add: {}
+
+b_del: {}
+b_add: {}
+"#,
+    debug_pretty(&doc.0),
+    debug_pretty(&op_a.0),
+    debug_pretty(&op_a.1),
+    debug_pretty(&op_b.0),
+    debug_pretty(&op_b.1)
+);
+    // TODO dump to document
+    {
+        use ::std::io::prelude::*;
+        let mut f = ::std::fs::File::create("test.txt").unwrap();
+        f.write_all(&test.as_bytes()).unwrap();
+        f.sync_all().unwrap();
+    }
+
     println!();
     println!("<test>");
-    println!("doc:   {}", debug_pretty(&doc.0));
-    println!();
-    println!("a_del: {}", debug_pretty(&op_a.0));
-    println!("a_add: {}", debug_pretty(&op_a.1));
-    println!();
-    println!("b_del: {}", debug_pretty(&op_b.0));
-    println!("b_add: {}", debug_pretty(&op_b.1));
+    print!("{}", test);
     println!("</test>");
     println!();
 
@@ -180,8 +197,8 @@ pub fn sync_socket_server(state: MoteState) {
         thread::spawn(move || {
             if let Err(value) = panic::catch_unwind(|| {
                 loop {
-                    // Wait 100ms between transforms.
-                    thread::sleep(Duration::from_millis(100));
+                    // Wait a set duration between transforms.
+                    thread::sleep(Duration::from_millis(500));
 
                     // Extract the client map and dump active client operations.
                     let mut sync_state = sync_state_mutex_capture.lock().unwrap();

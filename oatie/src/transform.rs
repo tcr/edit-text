@@ -237,9 +237,9 @@ impl Transform {
         track.tag_a = track.tag_real.clone();
     }
 
-    fn unenter_b(&mut self) {
+    fn unenter_b(&mut self, ty: TrackType) {
         self.b_del.begin();
-        let track = self.next_track_b().unwrap();
+        let track = self.next_track_b_by_type(ty).unwrap();
         track.tag_b = track.tag_real.clone();
     }
 
@@ -365,10 +365,10 @@ impl Transform {
     }
 
     // TODO does this replace its counterpart?
-    fn next_track_b_by_type(&mut self, arg: TrackType) -> Option<TrackType> {
+    fn next_track_b_by_type(&mut self, arg: TrackType) -> Option<&mut Track> {
         if let Some(track) = self.tracks.iter()
             .position(|x| x.tag_b.is_none() && x.tag_real.as_ref().and_then(|x| x.tag_type()) == Some(arg)) {
-            self.tracks[track].tag_real.as_ref().and_then(|x| x.tag_type())
+            Some(&mut self.tracks[track])
         } else {
             None
         }
@@ -440,6 +440,7 @@ impl Transform {
         } else {
             true
         };
+        println!("TAG {:?}", track);
         println!(
             "tag {:?}",
             track
@@ -790,11 +791,6 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                         t.close_b();
                     }
                 }
-                (None, Some(AddChars(ref b_chars))) => {
-                    t.chars_a(b_chars);
-                    t.skip_b(b_chars.len());
-                    b.next();
-                }
                 (Some(AddChars(ref a_chars)), None) => {
                     t.regenerate();
 
@@ -844,6 +840,13 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                         // println!("WHERE ARE WE WITH A {:?}", a);
                     }
                 }
+
+                // caret-42
+                // (None, Some(AddChars(ref b_chars))) => {
+                //     t.chars_a(b_chars);
+                //     t.skip_b(b_chars.len());
+                //     b.next();
+                // }
 
                 // Opening
                 (Some(AddGroup(ref a_attrs, _)), Some(AddGroup(ref b_attrs, _))) => {
@@ -922,7 +925,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                                 }
                                 t.b_del.begin();
                             } else {
-                                t.unenter_b();
+                                t.unenter_b(b_type.unwrap());
                             }
                         } else {
                             t.enter_b(None, Tag::from_attrs(b_attrs));
@@ -930,6 +933,42 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     }
 
                     // TODO if they are different tags THEN WHAT
+                }
+                (compare, None) => {
+                    // println!("... {:?} {:?}", t.a_del, t.a_add);
+                    // println!("... {:?} {:?}", t.b_del, t.b_add);
+
+                    // TODO this logic is evidence AddObject should be broken out
+                    let groupsuccess = if let Some(AddGroup(ref a_attrs, _)) = compare {
+                        if a_attrs["tag"] == "caret" {
+                            a.enter();
+                            a.exit();
+                            t.enter_a(&Tag::from_attrs(a_attrs), None);
+                            t.close_a();
+
+                            true
+                        } else {
+                            false
+                        }
+                    } else {
+                        false
+                    };
+                    if !groupsuccess {
+                        let b_typ = t.tracks
+                            .iter()
+                            .rev()
+                            .find(|t| t.tag_b.is_some())
+                            .unwrap()
+                            .tag_b
+                            .clone()
+                            .unwrap()
+                            .tag_type()
+                            .unwrap();
+                        t.interrupt(b_typ, false);
+                        t.close_b();
+                        // t.closeA()
+                        b.exit();
+                    }
                 }
                 (Some(AddGroup(ref a_attrs, _)), _) => {
                     // TODO should carets be worked around like this?
@@ -975,28 +1014,11 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     //     println!(" - {:?}", t);
                     // }
                 }
-                (_, None) => {
-                    // println!("... {:?} {:?}", t.a_del, t.a_add);
-                    // println!("... {:?} {:?}", t.b_del, t.b_add);
-                    let b_typ = t.tracks
-                        .iter()
-                        .rev()
-                        .find(|t| t.tag_b.is_some())
-                        .unwrap()
-                        .tag_b
-                        .clone()
-                        .unwrap()
-                        .tag_type()
-                        .unwrap();
-                    t.interrupt(b_typ, false);
-                    t.close_b();
-                    // t.closeA()
-                    b.exit();
-                }
                 (_, Some(AddGroup(ref b_attrs, _))) => {// TODO should carets be worked around like this?
                     // TODO should t.regenerate be called??
                     let b_type = Tag::from_attrs(b_attrs).tag_type();
                     t.regenerate_until(&b_type.clone().unwrap());
+                    println!("TRACKS {:?}", t.tracks);
 
                     if b_attrs["tag"] == "caret" {
                         // Carets
@@ -1019,7 +1041,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                                 }
                                 t.b_del.begin();
                             } else {
-                                t.unenter_b();
+                                t.unenter_b(b_type.unwrap());
                             }
                         } else {
                             t.interrupt(b_type.unwrap(), false); // caret-32
@@ -1818,6 +1840,7 @@ pub fn transform(a: &Op, b: &Op) -> (Op, Op) {
     println!(" == b_del_0 {:?}", b_del_0);
     println!();
 
+    // How do you apply del' if add has already been applied on the client?
     // The result will be applied after the client's insert operations had already been performed.
     // Reverse the impact of insA with delA` to not affect already newly added elements or text.
     // var _ = delAfterIns(insA, delA_0, schema), delA_1 = _[0];
