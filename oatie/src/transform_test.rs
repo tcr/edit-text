@@ -36,7 +36,8 @@ where
         return Ok(target)
     }
 
-    while !inner.is_empty() {
+    let re = Regex::new(r"^\s*(,\s*)*$").unwrap();
+    while !inner.is_empty() && !re.is_match(inner) {
         let mut item = None;
         for (comma, _) in {
             let mut a: Vec<_> = inner.match_indices(",").collect();

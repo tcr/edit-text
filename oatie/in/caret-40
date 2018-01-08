@@ -1,0 +1,54 @@
+
+doc:   [
+    DocGroup({"tag": "h2"}, [
+        DocChars("3edY1V1"),
+    ]),
+    DocGroup({"tag": "h2"}, [
+        DocChars("PNo world!")
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocChars(" What\'s up with you?")
+    ])
+]
+
+a_del: [
+    DelGroup([
+        DelSkip(7),
+    ]),
+    DelGroup([
+        DelSkip(10)
+    ]),
+    DelGroup([
+        DelSkip(20)
+    ])
+]
+a_add: [
+    AddGroup({"tag": "bullet"}, [
+        AddGroup({"tag": "h2"}, [
+            AddSkip(17),
+        ])
+    ]),
+    AddGroup({"tag": "p"}, [
+        AddSkip(20)
+    ])
+]
+
+b_del: [
+    DelGroup([
+        DelSkip(7),
+    ]),
+    DelGroup([
+        DelSkip(10)
+    ])
+]
+b_add: [
+    AddGroup({"tag": "h1"}, [
+        AddSkip(1),
+        AddChars(" j")
+    ]),
+    AddGroup({"tag": "bullet"}, [
+        AddGroup({"tag": "p"}, [
+            AddSkip(16)
+        ])
+    ])
+]

@@ -20,3 +20,7 @@ ws = "0.7.3"
 
 [dependencies.oatie]
 path = "../oatie"
+
+[features]
+default = ["virtual_monkeys"]
+virtual_monkeys = []

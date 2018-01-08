@@ -38,7 +38,7 @@ impl TrackType {
     // Unsure about this naming
     pub fn do_open_split(&self) -> bool {
         match *self {
-            TrackType::ListItems | TrackType::Inlines => true,
+            TrackType::Inlines => true,
             _ => false,
         }
     }

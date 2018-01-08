@@ -122,9 +122,11 @@ fn doc_as_html(doc: &DocSpan) -> String {
                 out.push_str(r"</div>");
             }
             &DocChars(ref text) => {
-                out.push_str(r"<span>");
-                out.push_str(text);
-                out.push_str(r"</span>");
+                for c in text.chars() {
+                    out.push_str(r"<span>");
+                    out.push(c);
+                    out.push_str(r"</span>");
+                }
             }
         }
     }
