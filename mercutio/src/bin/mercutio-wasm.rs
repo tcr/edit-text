@@ -20,13 +20,13 @@ fn virtual_monkeys() {
     thread::spawn(|| {
         thread::sleep(Duration::from_millis(1000));
 
-        for key in 0..4 {
+        for key in 0..8 {
             thread::spawn(move || {
                 let url = format!("ws://127.0.0.1:3012/{}", ('a' as u8 + key as u8) as char);
                 println!("Connecting to {:?}", url);
 
                 ws::connect(url.as_str(), move |out| {
-                    thread::sleep(Duration::from_millis(1000));
+                    thread::sleep(Duration::from_millis(1000 + ((key as u64) * 200)));
                     
                     // Start monkey
                     let command = NativeCommand::Monkey(true);
