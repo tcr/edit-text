@@ -361,10 +361,10 @@ impl Transform {
     }
 
     // TODO does this replace its counterpart?
-    fn next_track_a_by_type(&mut self, arg: TrackType) -> Option<TrackType> {
+    fn next_track_a_by_type(&mut self, arg: TrackType) -> Option<&mut Track> {
         if let Some(track) = self.tracks.iter()
             .position(|x| x.tag_a.is_none() && x.tag_real.as_ref().and_then(|x| x.tag_type()) == Some(arg)) {
-            self.tracks[track].tag_real.as_ref().and_then(|x| x.tag_type())
+            Some(&mut self.tracks[track])
         } else {
             None
         }
@@ -913,9 +913,10 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                             t.enter_a(&Tag::from_attrs(a_attrs), Some(Tag::from_attrs(b_attrs)));
                         }
                     } else if b_is_child_of_a {
-                        t.regenerate();
-                        a.enter();
                         let a_type = Tag::from_attrs(a_attrs).tag_type();
+                        t.regenerate_until(&a_type.clone().unwrap());
+
+                        a.enter();
 
                         println!("~~~~ :O");
                         println!("~~~~ -> {:?} {:?}", t.next_track_a_type(), a_type);
@@ -923,10 +924,12 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                             // if a_type.map_or(false, |x| x.do_open_split()) {
                             if true {
                                 println!("INTERRUPTING A");
-                                t.interrupt(a_type.unwrap(), true);
-                                if let Some(j) = t.next_track_a() {
+                                t.interrupt(a_type.unwrap(), false);
+                                println!("BUT THE TRACKS -----<> {:?}", t.tracks);
+                                if let Some(j) = t.next_track_a_by_type(a_type.unwrap()) {
                                     j.tag_a = Some(Tag::from_attrs(a_attrs));
-                                    j.is_original_a = true;
+                                    j.is_original_a = false;
+                                    println!("inject A");
                                 }
                                 t.a_del.begin();
                             } else {
@@ -949,10 +952,11 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                             // if b_type.map_or(false, |x| x.do_open_split()) {
                             if true {
                                 println!("INTERRUPTING B");
-                                t.interrupt(b_type.unwrap(), true);
-                                if let Some(j) = t.next_track_b() {
+                                t.interrupt(b_type.unwrap(), false);
+                                if let Some(j) = t.next_track_b_by_type(b_type.unwrap()) {
                                     j.tag_b = Some(Tag::from_attrs(b_attrs));
-                                    j.is_original_b = true;
+                                    j.is_original_b = false;
+                                    println!("inject B");
                                 }
                                 t.b_del.begin();
                             } else {
@@ -1188,6 +1192,33 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
     println!("RESULT A: {:?}", op_a.clone());
     println!("RESULT B: {:?}", op_b.clone());
     (op_a, op_b)
+}
+
+
+fn normalize_delgroupall_element(elem: DelElement) -> DelElement {
+    match elem {
+        DelGroup(span) => {
+            if span.len() > 0 && span.skip_post_len() == 0 {
+                println!("---> {:?}", span);
+                println!("what {:?}", span.skip_post_len());
+                DelGroupAll
+            } else {
+                DelGroup(normalize_delgroupall(span))
+            }
+        }
+        DelWithGroup(span) => {
+            DelWithGroup(normalize_delgroupall(span))
+        }
+        _ => elem,
+    }
+}
+
+pub fn normalize_delgroupall(del: DelSpan) -> DelSpan {
+    let mut ret: DelSpan = vec![];
+    for elem in del.into_iter() {
+        ret.place(&normalize_delgroupall_element(elem));
+    }
+    ret
 }
 
 pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan) {
@@ -1479,6 +1510,13 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                         b.next();
                     }
                 }
+                // TODO
+                // (Some(DelGroupAll), Some(DelGroup(b_inner))) => {
+                //     b_del.group_all();
+
+                //     a.next();
+                //     b.next();
+                // }
 
                 unimplemented => {
                     println!("Not reachable: {:?}", unimplemented);
@@ -1562,6 +1600,9 @@ pub fn transform_add_del_inner(
     b: &mut DelStepper,
 ) {
     while !b.is_done() && !a.is_done() {
+        println!("-----> {:?} {:?}", a.head, b.head);
+
+
         match b.get_head() {
             DelObject => {
                 unimplemented!();
@@ -1814,7 +1855,8 @@ pub fn transform_add_del_inner(
             DelGroupAll => {
                 match a.get_head() {
                     AddChars(avalue) => {
-                        panic!("DelGroupAll by AddChars is ILLEGAL");
+                        delres.place(&DelSkip(avalue.chars().count()));
+                        addres.place(&a.next().unwrap());
                     }
                     AddSkip(acount) => {
                         delres.place(&b.next().unwrap());
@@ -1828,9 +1870,23 @@ pub fn transform_add_del_inner(
                         a.next();
                         delres.place(&b.next().unwrap());
                     }
-                    AddGroup(attr, insspan) => {
+                    AddGroup(tags, ins_span) => {
+                        let mut a_inner = AddStepper::new(&ins_span);
+                        let mut delres_inner: DelSpan = vec![];
+                        let mut addres_inner: AddSpan = vec![];
+                        transform_add_del_inner(
+                            &mut delres_inner,
+                            &mut addres_inner,
+                            &mut a_inner,
+                            b,
+                        );
+                        if !a_inner.is_done() {
+                            addres_inner.place(&a_inner.head.unwrap());
+                            addres_inner.place_all(&a_inner.rest);
+                        }
+                        addres.place(&AddGroup(tags, addres_inner));
+                        // delres.place(&DelGroupAll);
                         a.next();
-                        b.next();
                     }
                 }
             }
@@ -1863,11 +1919,22 @@ pub fn transform_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
 
 /// Transform two operations according to a schema.
 
-pub fn transform(a: &Op, b: &Op) -> (Op, Op) {
+pub fn transform(a_original: &Op, b_original: &Op) -> (Op, Op) {
     // Transform deletions A and B against each other to get delA` and delB`.
     println!(" # transform[1] transform_deletions");
-    println!(" a_del   {:?}", a.0);
-    println!(" b_del   {:?}", b.0);
+    println!(" a_del   {:?}", a_original.0);
+    println!(" b_del   {:?}", b_original.0);
+    println!();
+
+    let mut a = a_original.clone();
+    let mut b = b_original.clone();
+
+    a.0 = normalize_delgroupall(a.0);
+    b.0 = normalize_delgroupall(b.0);
+    println!(" a_del*  {:?}", a.0);
+    println!(" b_del*  {:?}", b.0);
+
+
     let (a_del_0, b_del_0) = transform_deletions(&a.0, &b.0);
     println!(" == a_del_0 {:?}", a_del_0);
     println!(" == b_del_0 {:?}", b_del_0);

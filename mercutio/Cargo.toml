@@ -22,5 +22,5 @@ ws = "0.7.3"
 path = "../oatie"
 
 [features]
-default = ["virtual_monkeys"]
+default = []
 virtual_monkeys = []

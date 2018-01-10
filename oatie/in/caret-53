@@ -9,7 +9,7 @@ doc:   [
 ]
 
 a_del: [
-    DelGroup([
+    DelWithGroup([
         DelSkip(5)
     ]),
     DelWithGroup([
@@ -17,7 +17,7 @@ a_del: [
     ]),
 ]
 a_add: [
-    AddGroup({"tag": "h3"}, [
+    AddWithGroup([
         AddSkip(5)
     ]),
     AddWithGroup([
