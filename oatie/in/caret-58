@@ -1,0 +1,38 @@
+
+doc:   [
+    DocGroup({"tag": "pre"}, [
+        DocChars(" "),
+        DocGroup({"client": "c", "tag": "caret"}, []),
+    ]),
+    DocGroup({"tag": "pre"}, [
+        DocChars("J")
+    ]),
+]
+
+a_del: [
+    DelGroup([
+        DelChars(1), DelGroupAll,
+    ]),
+    DelGroup([
+        DelSkip(1)
+    ]),
+]
+a_add: [
+    AddGroup({"tag": "pre"}, [
+        AddSkip(1), 
+    ]),
+]
+
+b_del: [
+    DelGroup([
+        DelSkip(2),
+    ]),
+    DelGroup([
+        DelSkip(1)
+    ])
+]
+b_add: [
+    AddGroup({"tag": "pre"}, [
+        AddSkip(3),
+    ])
+]

@@ -361,7 +361,7 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
                             b.head = Some(DelMany(bcount - acount));
                         } else {
                             a.next();
-                            delres.place(&b.next().unwrap());
+                            b.next();
                         }
                     }
                     AddGroup(attr, ins_span) => {
@@ -583,24 +583,24 @@ pub fn compose(a: &Op, b: &Op) -> Op {
     let &(ref adel, ref ains) = a;
     let &(ref bdel, ref bins) = b;
 
-    println!("`````````````` >(compose)<");
-    println!("`````````````` lins {:?}", ains);
-    println!("`````````````` rdel {:?}", bdel);
+    // println!("`````````````` >(compose)<");
+    // println!("`````````````` lins {:?}", ains);
+    // println!("`````````````` rdel {:?}", bdel);
     let (mdel, mins) = compose_add_del(ains, bdel);
-    println!("``````````````  d=> {:?}", mdel);
-    println!("``````````````  i=> {:?}", mins);
+    // println!("``````````````  d=> {:?}", mdel);
+    // println!("``````````````  i=> {:?}", mins);
 
-    println!("`````````````` ldel {:?}", adel);
-    println!("``````````````  d=>  {:?}", mdel);
+    // println!("`````````````` ldel {:?}", adel);
+    // println!("``````````````  d=>  {:?}", mdel);
     let a_ = compose_del_del(adel, &mdel);
-    println!("``````````````  del' {:?}", a_);
+    // println!("``````````````  del' {:?}", a_);
 
-    println!("``````````````  i=> {:?}", mins);
-    println!("`````````````` rins {:?}", bins);
+    // println!("``````````````  i=> {:?}", mins);
+    // println!("`````````````` rins {:?}", bins);
     let b_ = compose_add_add(&mins, bins);
-    println!("`````````````` ins' {:?}", b_);
-    println!();
-    println!();
+    // println!("`````````````` ins' {:?}", b_);
+    // println!();
+    // println!();
 
     (a_, b_)
 }
