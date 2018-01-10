@@ -30,6 +30,10 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
                     }
                 }
             }
+            DelMany(count) => {
+                res.place(&DelMany(count));
+                a.next();
+            }
             DelSkip(acount) => {
                 match b.head.clone() {
                     Some(DelSkip(bcount)) => {
@@ -68,6 +72,19 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
                             b.next();
                         }
                     }
+                    Some(DelMany(bcount)) => {
+                        res.place(&DelMany(cmp::min(acount, bcount)));
+                        if acount > bcount {
+                            a.head = Some(DelSkip(acount - bcount));
+                            b.next();
+                        } else if acount < bcount {
+                            b.head = Some(DelMany(bcount - acount));
+                            a.next();
+                        } else {
+                            a.next();
+                            b.next();
+                        }
+                    }
                     Some(DelGroupAll) => {
                         if acount > 1 {
                             a.head = Some(DelSkip(acount - 1));
@@ -83,6 +100,15 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
             }
             DelWithGroup(ref span) => {
                 match b.head.clone() {
+                    Some(DelMany(bcount)) => {
+                        if bcount > 1 {
+                            b.head = Some(DelMany(bcount - 1));
+                        } else {
+                            b.next();
+                        }
+                        a.next();
+                        res.place(&DelMany(1));
+                    }
                     Some(DelSkip(bcount)) => {
                         if bcount > 1 {
                             b.head = Some(DelSkip(bcount - 1));
@@ -156,6 +182,7 @@ pub fn compose_del_del(avec: &DelSpan, bvec: &DelSpan) -> DelSpan {
     let mut b = DelStepper::new(bvec);
 
     compose_del_del_inner(&mut res, &mut a, &mut b);
+    println!("\n\n");
 
     if !a.is_done() {
         res.place(&a.get_head());
@@ -307,6 +334,56 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
                     }
                     _ => {
                         panic!("Bad");
+                    }
+                }
+            }
+            DelMany(bcount) => {
+                match a.get_head() {
+                    AddChars(avalue) => {
+                        let alen = avalue.chars().count();
+                        if bcount < alen {
+                            a.head = Some(AddChars(avalue.chars().skip(bcount).collect()));
+                            b.next();
+                        } else if bcount > alen {
+                            a.next();
+                            b.head = Some(DelMany(bcount - alen));
+                        } else {
+                            a.next();
+                            b.next();
+                        }
+                    }
+                    AddSkip(acount) => {
+                        if bcount < acount {
+                            a.head = Some(AddSkip(acount - bcount));
+                            delres.place(&b.next().unwrap());
+                        } else if bcount > acount {
+                            a.next();
+                            delres.place(&DelMany(acount));
+                            b.head = Some(DelMany(bcount - acount));
+                        } else {
+                            a.next();
+                            delres.place(&b.next().unwrap());
+                        }
+                    }
+                    AddGroup(attr, ins_span) => {
+                        if bcount > 1 {
+                            a.next();
+                            delres.place(&DelMany(ins_span.skip_len()));
+                            b.head = Some(DelMany(bcount - 1));
+                        } else {
+                            a.next();
+                            b.next();
+                        }
+                    }
+                    AddWithGroup(insspan) => {
+                        if bcount > 1 {
+                            a.next();
+                            b.head = Some(DelMany(bcount - 1));
+                        } else {
+                            a.next();
+                            b.next();
+                        }
+                        delres.place(&DelMany(1));
                     }
                 }
             }

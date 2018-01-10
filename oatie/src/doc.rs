@@ -48,6 +48,9 @@ pub enum DelElement {
     DelChars(usize),
     DelGroup(DelSpan),
     DelGroupAll,
+    DelMany(usize),
+
+    // TODO what
     DelObject,
 }
 
@@ -93,6 +96,19 @@ fn del_place_skip(res: &mut DelSpan, count: usize) {
     res.push(DelSkip(count));
 }
 
+fn del_place_many(res: &mut DelSpan, count: usize) {
+    if !res.is_empty() {
+        let idx = res.len() - 1;
+        if let DelMany(ref mut prefix) = res[idx] {
+            *prefix += count;
+            return;
+        }
+    }
+
+    assert!(count > 0);
+    res.push(DelMany(count));
+}
+
 fn del_place_any(res: &mut DelSpan, value: &DelElement) {
     match *value {
         DelChars(count) => {
@@ -101,7 +117,10 @@ fn del_place_any(res: &mut DelSpan, value: &DelElement) {
         DelSkip(count) => {
             del_place_skip(res, count);
         }
-        _ => {
+        DelMany(count) => {
+            del_place_many(res, count);
+        }
+        DelGroup(..) | DelGroupAll | DelWithGroup(..) | DelObject => {
             res.push(value.clone());
         }
     }
@@ -167,7 +186,7 @@ impl DelPlaceable for DelSpan {
         let mut ret = 0;
         for item in self {
             ret += match *item {
-                DelSkip(len) | DelChars(len) => len,
+                DelSkip(len) | DelChars(len) | DelMany(len) => len,
                 DelObject | DelGroup(..) | DelGroupAll | DelWithGroup(..) => 1,
             };
         }
@@ -179,7 +198,7 @@ impl DelPlaceable for DelSpan {
         for item in self {
             ret += match *item {
                 DelSkip(len) => len,
-                DelObject | DelChars(..) | DelGroupAll => 0,
+                DelObject | DelChars(..) | DelMany(..) | DelGroupAll => 0,
                 DelWithGroup(..) => 1,
                 DelGroup(ref span) => span.skip_post_len(),
             };
