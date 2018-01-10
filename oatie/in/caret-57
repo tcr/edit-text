@@ -1,0 +1,43 @@
+
+doc:   [
+    DocGroup({"tag": "h2"}, [
+        DocChars("12")
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocChars("1"),
+    ]),
+]
+
+a_del: [
+    DelGroup([
+        DelSkip(2)
+    ]),
+    DelWithGroup([
+        DelChars(1),
+    ]),
+]
+a_add: [
+    AddGroup({"tag": "h3"}, [
+        AddGroup({"tag": "caret", "client": "d"}, []),
+    ]),
+    AddGroup({"tag": "h3"}, [
+        AddSkip(2),
+    ]),
+    AddWithGroup([
+        AddChars("6"),
+    ]),
+]
+
+b_del: [
+    DelGroup([
+        DelSkip(2),
+    ]),
+    DelGroup([
+        DelSkip(1)
+    ])
+]
+b_add: [
+    AddGroup({"tag": "h2"}, [
+        AddSkip(3)
+    ])
+]

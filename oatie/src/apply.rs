@@ -236,6 +236,27 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
                     }
                 }
             }
+            DelMany(count) => {
+                match first.clone() {
+                    DocChars(ref value) => {
+                        let len = value.chars().count();
+                        if len > count {
+                            first = DocChars(value[count..].to_owned());
+                            nextfirst = false;
+                        } else if len < count {
+                            panic!("attempted deletion of too much");
+                        }
+                    }
+                    DocGroup(..) => {
+                        if count > 1 {
+                            d = DelMany(count - 1);
+                            nextdel = false;
+                        } else {
+                            nextdel = true;
+                        }
+                    }
+                }
+            }
             DelChars(count) => {
                 match first.clone() {
                     DocChars(ref value) => {
@@ -293,7 +314,11 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
 
 pub fn apply_operation(spanvec: &DocSpan, op: &Op) -> DocSpan {
     let &(ref delvec, ref addvec) = op;
+    // println!("------> @1 {:?}", spanvec);
+    // println!("------> @2 {:?}", delvec);
     let postdel = apply_delete(spanvec, delvec);
+    // println!("------> @3 {:?}", postdel);
+    // println!("------> @4 {:?}", addvec);
     apply_add(&postdel, addvec)
 }
 

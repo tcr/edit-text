@@ -1198,7 +1198,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
 fn normalize_delgroupall_element(elem: DelElement) -> DelElement {
     match elem {
         DelGroup(span) => {
-            if span.len() > 0 && span.skip_post_len() == 0 {
+            if span.skip_post_len() == 0 {
                 println!("---> {:?}", span);
                 println!("what {:?}", span.skip_post_len());
                 DelGroupAll
@@ -1253,6 +1253,10 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                     a_del.with_group(span);
                     b.next();
                 }
+                Some(DelMany(b_count)) => {
+                    a_del.many(b_count);
+                    b.next();
+                }
                 Some(DelChars(b_chars)) => {
                     // t.chars_a(b_chars);
                     // t.skip_b(b_chars.len());
@@ -1303,6 +1307,12 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                     // t.chars_b(a_chars);
                     b_del.chars(a_chars);
                     a.next();
+                }
+                Some(DelMany(a_count)) => {
+                    // t.skip_a(a_chars.len());
+                    // t.chars_b(a_chars);
+                    a.next();
+                    b_del.many(a_count);
                 }
                 Some(DelSkip(a_count)) => {
                     // t.skip_a(a_count);
@@ -1511,12 +1521,18 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                     }
                 }
                 // TODO
-                // (Some(DelGroupAll), Some(DelGroup(b_inner))) => {
-                //     b_del.group_all();
+                (Some(DelGroupAll), Some(DelGroup(b_inner))) => {
+                    b_del.many(b_inner.skip_post_len());
 
-                //     a.next();
-                //     b.next();
-                // }
+                    a.next();
+                    b.next();
+                }
+                (Some(DelGroup(a_inner)), Some(DelGroupAll)) => {
+                    a_del.many(a_inner.skip_post_len());
+
+                    a.next();
+                    b.next();
+                }
 
                 unimplemented => {
                     println!("Not reachable: {:?}", unimplemented);
@@ -1648,6 +1664,56 @@ pub fn transform_add_del_inner(
                     unknown => {
                         println!("Compare: {:?} {:?}", DelChars(bcount), unknown);
                         panic!("Unimplemented or Unexpected");
+                    }
+                }
+            }
+            DelMany(bcount) => {
+                match a.get_head() {
+                    AddChars(avalue) => {
+                        addres.place(&AddChars(avalue.clone()));
+                        delres.place(&DelSkip(avalue.len()));
+                        a.next();
+                    }
+                    AddSkip(acount) => {
+                        if bcount < acount {
+                            a.head = Some(AddSkip(acount - bcount));
+                            delres.place(&b.next().unwrap());
+                        } else if bcount > acount {
+                            a.next();
+                            delres.place(&DelMany(acount));
+                            b.head = Some(DelMany(bcount - acount));
+                        } else {
+                            a.next();
+                            delres.place(&b.next().unwrap());
+                        }
+                    }
+                    AddGroup(attrs, a_span) => {
+                        let mut a_inner = AddStepper::new(&a_span);
+                        let mut addres_inner: AddSpan = vec![];
+                        let mut delres_inner: DelSpan = vec![];
+                        transform_add_del_inner(
+                            &mut delres_inner,
+                            &mut addres_inner,
+                            &mut a_inner,
+                            b,
+                        );
+                        if !a_inner.is_done() {
+                            addres_inner.place(&a_inner.head.unwrap());
+                            addres_inner.place_all(&a_inner.rest);
+                        }
+                        addres.place(&AddGroup(attrs, addres_inner));
+                        delres.place(&DelWithGroup(delres_inner));
+                        a.next();
+                    }
+                    AddWithGroup(ins_span) => {
+                        if bcount > 1 {
+                            delres.place(&DelMany(1));
+                            b.head = Some(DelMany(bcount - 1));
+                            a.next();
+                        } else {
+                            delres.place(&b.next().unwrap());
+                            a.next();
+                        }
                     }
                 }
             }
@@ -1935,10 +2001,16 @@ pub fn transform(a_original: &Op, b_original: &Op) -> (Op, Op) {
     println!(" b_del*  {:?}", b.0);
 
 
-    let (a_del_0, b_del_0) = transform_deletions(&a.0, &b.0);
+    let (mut a_del_0, mut b_del_0) = transform_deletions(&a.0, &b.0);
     println!(" == a_del_0 {:?}", a_del_0);
     println!(" == b_del_0 {:?}", b_del_0);
     println!();
+
+
+    a_del_0 = normalize_delgroupall(a_del_0);
+    b_del_0 = normalize_delgroupall(b_del_0);
+    println!(" a_del_0*  {:?}", a_del_0);
+    println!(" b_del_0*  {:?}", b_del_0);
 
     // How do you apply del' if add has already been applied on the client?
     // The result will be applied after the client's insert operations had already been performed.

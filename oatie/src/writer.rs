@@ -121,6 +121,10 @@ impl DelWriter {
         self.past.push(DelGroup(past));
     }
 
+    pub fn many(&mut self, n: usize) {
+        self.past.place(&DelMany(n));
+    }
+
     pub fn skip(&mut self, n: usize) {
         self.past.place(&DelSkip(n));
     }
