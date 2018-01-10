@@ -182,7 +182,6 @@ pub fn compose_del_del(avec: &DelSpan, bvec: &DelSpan) -> DelSpan {
     let mut b = DelStepper::new(bvec);
 
     compose_del_del_inner(&mut res, &mut a, &mut b);
-    println!("\n\n");
 
     if !a.is_done() {
         res.place(&a.get_head());
@@ -584,22 +583,24 @@ pub fn compose(a: &Op, b: &Op) -> Op {
     let &(ref adel, ref ains) = a;
     let &(ref bdel, ref bins) = b;
 
-    // println!("`````````````` compose_add_del");
-    // println!("``````````````     {:?}", ains);
-    // println!("``````````````     {:?}", bdel);
+    println!("`````````````` >(compose)<");
+    println!("`````````````` lins {:?}", ains);
+    println!("`````````````` rdel {:?}", bdel);
     let (mdel, mins) = compose_add_del(ains, bdel);
-    // println!("``````````````  => {:?}", mdel);
-    // println!("``````````````  => {:?}", mins);
+    println!("``````````````  d=> {:?}", mdel);
+    println!("``````````````  i=> {:?}", mins);
 
-    // println!("`````````````` del {:?}", adel);
-    // println!("``````````````     {:?}", mdel);
+    println!("`````````````` ldel {:?}", adel);
+    println!("``````````````  d=>  {:?}", mdel);
     let a_ = compose_del_del(adel, &mdel);
-    // println!("``````````````  a' {:?}", a_);
+    println!("``````````````  del' {:?}", a_);
 
-    // println!("`````````````` ins {:?}", mins);
-    // println!("``````````````     {:?}", bins);
+    println!("``````````````  i=> {:?}", mins);
+    println!("`````````````` rins {:?}", bins);
     let b_ = compose_add_add(&mins, bins);
-    // println!("``````````````  b' {:?}", b_);
+    println!("`````````````` ins' {:?}", b_);
+    println!();
+    println!();
 
     (a_, b_)
 }
