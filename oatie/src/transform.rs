@@ -1199,8 +1199,6 @@ fn normalize_delgroupall_element(elem: DelElement) -> DelElement {
     match elem {
         DelGroup(span) => {
             if span.skip_post_len() == 0 {
-                println!("---> {:?}", span);
-                println!("what {:?}", span.skip_post_len());
                 DelGroupAll
             } else {
                 DelGroup(normalize_delgroupall(span))
@@ -1533,6 +1531,10 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                     a.next();
                     b.next();
                 }
+                (Some(DelGroupAll), Some(DelGroupAll)) => {
+                    a.next();
+                    b.next();
+                }
 
                 unimplemented => {
                     println!("Not reachable: {:?}", unimplemented);
@@ -1616,8 +1618,7 @@ pub fn transform_add_del_inner(
     b: &mut DelStepper,
 ) {
     while !b.is_done() && !a.is_done() {
-        println!("-----> {:?} {:?}", a.head, b.head);
-
+        println!("TADI---> {:?} {:?}", a.head, b.head);
 
         match b.get_head() {
             DelObject => {
@@ -1936,7 +1937,7 @@ pub fn transform_add_del_inner(
                         a.next();
                         delres.place(&b.next().unwrap());
                     }
-                    AddGroup(tags, ins_span) => {
+                    AddGroup(attrs, ins_span) => {
                         let mut a_inner = AddStepper::new(&ins_span);
                         let mut delres_inner: DelSpan = vec![];
                         let mut addres_inner: AddSpan = vec![];
@@ -1950,8 +1951,10 @@ pub fn transform_add_del_inner(
                             addres_inner.place(&a_inner.head.unwrap());
                             addres_inner.place_all(&a_inner.rest);
                         }
-                        addres.place(&AddGroup(tags, addres_inner));
-                        // delres.place(&DelGroupAll);
+                        addres.place(&AddGroup(attrs, addres_inner));
+                        delres.place(&DelWithGroup(delres_inner));
+
+                        println!("NOW   ->{:?}\n   ->{:?}", addres, delres);
                         a.next();
                     }
                 }
