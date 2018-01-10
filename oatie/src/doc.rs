@@ -179,8 +179,9 @@ impl DelPlaceable for DelSpan {
         for item in self {
             ret += match *item {
                 DelSkip(len) => len,
-                DelObject | DelChars(..) | DelGroup(..) | DelGroupAll => 0,
+                DelObject | DelChars(..) | DelGroupAll => 0,
                 DelWithGroup(..) => 1,
+                DelGroup(ref span) => span.skip_post_len(),
             };
         }
         ret

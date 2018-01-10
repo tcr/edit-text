@@ -265,8 +265,11 @@ fn op_transform_compare(a: &Op, b: &Op) -> (Op, Op, Op, Op) {
     println!(" --> b'\n{:?}", b_);
     println!();
 
-    let a_res = normalize(compose::compose(a, &a_));
-    let b_res = normalize(compose::compose(b, &b_));
+    let mut a_res = normalize(compose::compose(a, &a_));
+    let mut b_res = normalize(compose::compose(b, &b_));
+
+    a_res.0 = normalize_delgroupall(a_res.0);
+    b_res.0 = normalize_delgroupall(b_res.0);
 
     println!();
     println!("(!) validating composed ops are equivalent:");
@@ -340,8 +343,8 @@ pub fn run_transform_test(input: &str) -> Result<(), Error> {
         println!("{}", Paint::red("(!) validating docs..."));
 
         let doc = Doc(parse_doc_span(doc)?);
-
-        println!("document: {:?}", doc);
+        println!("original document: {:?}", doc);
+        validate_doc_span(&mut ValidateContext::new(), &doc.0)?;
         println!();
 
         // First test original operations can be applied against the doc.

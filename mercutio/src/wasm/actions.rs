@@ -290,6 +290,10 @@ pub fn caret_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
     }
 }
 
+pub fn has_caret(ctx: ActionContext) -> bool {
+    Walker::to_caret_safe(&ctx.doc, &ctx.client_id).is_some()
+}
+
 pub fn init_caret(ctx: ActionContext) -> Result<Op, Error> {
     let mut walker = Walker::new(&ctx.doc);
     if !walker.goto_pos(0) {

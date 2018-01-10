@@ -145,6 +145,14 @@ pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<()
                         cur_type.parents().contains(&parent_type),
                         "Block has incorrect parent"
                     );
+                } else {
+                    // Top-level blocks
+                    ensure!(
+                        Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) ||
+                        Tag(attrs.clone()).tag_type() == Some(TrackType::ListItems),
+                        "Root block has incorrect parent"
+                    );
+
                 }
             }
             DocChars(ref text) => {

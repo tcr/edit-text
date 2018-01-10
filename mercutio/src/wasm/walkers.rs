@@ -200,6 +200,32 @@ impl Walker {
         }
     }
 
+    // TODO merge with above
+    pub fn to_caret_safe(doc: &Doc, client_id: &str) -> Option<Walker> {
+        let mut stepper = CaretStepper::new(DocStepper::new(&doc.0));
+
+        // Iterate until we match the cursor.
+        let matched = loop {
+            if let Some(DocGroup(attrs, _)) = stepper.doc.head() {
+                if is_caret(&attrs, Some(client_id)) {
+                    break true;
+                }
+            }
+            if stepper.next().is_none() {
+                break false;
+            }
+        };
+
+        if !matched {
+            None
+        } else {
+            Some(Walker {
+                original_doc: doc.clone(),
+                stepper,
+            })
+        }
+    }
+
     pub fn to_cursor(doc: &Doc, cur: &CurSpan) -> Walker {
         let mut stepper = CaretStepper::new(DocStepper::new(&doc.0));
 

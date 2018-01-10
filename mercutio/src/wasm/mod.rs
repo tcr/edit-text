@@ -133,6 +133,18 @@ fn doc_as_html(doc: &DocSpan) -> String {
     out
 }
 
+// TODO combine with client_op?
+fn with_action_context<C, T>(client: &mut Client, callback: C) -> Result<T, Error>
+where
+    C: Fn(ActionContext) -> Result<T, Error>,
+{
+    let client_id = client.name.lock().unwrap().clone().unwrap().to_string();
+    callback(ActionContext {
+        doc: client.doc.clone(),
+        client_id,
+    })
+}
+
 fn client_op<C>(client: &mut Client, callback: C) -> Result<(), Error>
 where
     C: Fn(ActionContext) -> Result<Op, Error>,
@@ -430,7 +442,7 @@ fn handle_task(value: Task, client: &mut Client) -> Result<(), Error> {
             native_command(client, command)?;
         }
 
-        // Handle commands from Sync.
+        // Sync sent us an Update command.
         Task::SyncClientCommand(SyncClientCommand::Update(doc, version)) => {
             client.original_doc = Doc(doc.clone());
             client.original_ops = vec![];
@@ -439,18 +451,14 @@ fn handle_task(value: Task, client: &mut Client) -> Result<(), Error> {
             client.version = version;
             println!("new version is {:?}", version);
 
+            // If the caret doesn't exist or was deleted, reinitialize.
+            if !with_action_context(client, |ctx| Ok(has_caret(ctx))).ok().unwrap_or(true) {
+                client_op(client, |doc| init_caret(doc)).unwrap();
+            }
+
             // Native drives client state.
             let res = ClientCommand::Update(doc_as_html(&doc), None);
             client.send(&res).unwrap();
-
-            // Load the caret.
-            if !client.first_load {
-                client.first_load = true;
-
-                client.version = 0;
-                client_op(client, |doc| init_caret(doc)).unwrap();
-                client.version = version;
-            }
         }
     }
     Ok(())
