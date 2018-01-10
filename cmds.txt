@@ -1,0 +1,7 @@
+cat in/caret-48 | RUST_BACKTRACE=1 cargo run
+
+CARGO_INCREMENTAL=1 RUST_BACKTRACE=1 cargo run --release --bin mercutio-sync
+
+CARGO_INCREMENTAL=1 RUST_BACKTRACE=1 cargo run --release --bin mercutio-wasm --features virtual_monkeys
+
+
