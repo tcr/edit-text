@@ -1520,13 +1520,17 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
                 }
                 // TODO
                 (Some(DelGroupAll), Some(DelGroup(b_inner))) => {
-                    b_del.many(b_inner.skip_post_len());
+                    if b_inner.skip_post_len() > 0 {
+                        b_del.many(b_inner.skip_post_len());
+                    }
 
                     a.next();
                     b.next();
                 }
                 (Some(DelGroup(a_inner)), Some(DelGroupAll)) => {
-                    a_del.many(a_inner.skip_post_len());
+                    if a_inner.skip_post_len() > 0 {
+                        a_del.many(a_inner.skip_post_len());
+                    }
 
                     a.next();
                     b.next();
@@ -1840,52 +1844,57 @@ pub fn transform_add_del_inner(
 
 
                     AddWithGroup(ins_span) => {
-                        let mut a_inner = AddStepper::new(&ins_span);
-                        let mut b_inner = DelStepper::new(&span);
-                        let mut delres_inner: DelSpan = vec![];
-                        let mut addres_inner: AddSpan = vec![];
-                        transform_add_del_inner(
-                            &mut delres_inner,
-                            &mut addres_inner,
-                            &mut a_inner,
-                            &mut b_inner,
-                        );
+                        // if span.skip_post_len() == 0 {
+                        //     // TODO
+                        //     delres.place(&DelGroupAll);
+                        // } else {
+                            let mut a_inner = AddStepper::new(&ins_span);
+                            let mut b_inner = DelStepper::new(&span);
+                            let mut delres_inner: DelSpan = vec![];
+                            let mut addres_inner: AddSpan = vec![];
+                            transform_add_del_inner(
+                                &mut delres_inner,
+                                &mut addres_inner,
+                                &mut a_inner,
+                                &mut b_inner,
+                            );
 
-                        // TODO should this be part of the top-level resolution for transform_add_del
-                        if !b_inner.is_done() {
+                            // TODO should this be part of the top-level resolution for transform_add_del
+                            if !b_inner.is_done() {
 
-                            if let &Some(ref head) = &b_inner.head {
-                                let len = (vec![head.clone()]).skip_post_len();
+                                if let &Some(ref head) = &b_inner.head {
+                                    let len = (vec![head.clone()]).skip_post_len();
+                                    if len > 0 {
+                                        addres_inner.place(&AddSkip(len));
+                                    }
+                                }
+                                let len = b_inner.rest.skip_post_len();
                                 if len > 0 {
                                     addres_inner.place(&AddSkip(len));
                                 }
-                            }
-                            let len = b_inner.rest.skip_post_len();
-                            if len > 0 {
-                                addres_inner.place(&AddSkip(len));
-                            }
 
-                            delres_inner.place(&b_inner.head.unwrap());
-                            delres_inner.place_all(&b_inner.rest);
-                        } else if !a_inner.is_done() {
+                                delres_inner.place(&b_inner.head.unwrap());
+                                delres_inner.place_all(&b_inner.rest);
+                            } else if !a_inner.is_done() {
 
-                            if let &Some(ref head) = &a_inner.head {
-                                let len = (vec![head.clone()]).skip_len();
+                                if let &Some(ref head) = &a_inner.head {
+                                    let len = (vec![head.clone()]).skip_len();
+                                    if len > 0 {
+                                        delres_inner.place(&DelSkip(len));
+                                    }
+                                }
+                                let len = a_inner.rest.skip_len();
                                 if len > 0 {
                                     delres_inner.place(&DelSkip(len));
                                 }
-                            }
-                            let len = a_inner.rest.skip_len();
-                            if len > 0 {
-                                delres_inner.place(&DelSkip(len));
+
+                                addres_inner.place(&a_inner.head.unwrap());
+                                addres_inner.place_all(&a_inner.rest);
                             }
 
-                            addres_inner.place(&a_inner.head.unwrap());
-                            addres_inner.place_all(&a_inner.rest);
-                        }
-
-                        delres.place(&DelGroup(delres_inner));
-                        addres.place_all(&addres_inner);
+                            delres.place(&DelGroup(delres_inner));
+                            addres.place_all(&addres_inner);
+                        // }
 
                         a.next();
                         b.next();
@@ -1998,8 +2007,8 @@ pub fn transform(a_original: &Op, b_original: &Op) -> (Op, Op) {
     let mut a = a_original.clone();
     let mut b = b_original.clone();
 
-    a.0 = normalize_delgroupall(a.0);
-    b.0 = normalize_delgroupall(b.0);
+    // a.0 = normalize_delgroupall(a.0);
+    // b.0 = normalize_delgroupall(b.0);
     println!(" a_del*  {:?}", a.0);
     println!(" b_del*  {:?}", b.0);
 
@@ -2010,8 +2019,8 @@ pub fn transform(a_original: &Op, b_original: &Op) -> (Op, Op) {
     println!();
 
 
-    a_del_0 = normalize_delgroupall(a_del_0);
-    b_del_0 = normalize_delgroupall(b_del_0);
+    // a_del_0 = normalize_delgroupall(a_del_0);
+    // b_del_0 = normalize_delgroupall(b_del_0);
     println!(" a_del_0*  {:?}", a_del_0);
     println!(" b_del_0*  {:?}", b_del_0);
 

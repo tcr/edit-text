@@ -1,0 +1,76 @@
+
+doc:   [
+    DocGroup({"tag": "h1"}, [
+        DocGroup({"client": "a", "tag": "caret"}, []),
+        DocChars(" aG5"), DocGroup({"client": "b", "tag": "caret"}, []),
+        DocChars(" T6 "), DocGroup({"client": "e", "tag": "caret"}, [])
+    ]),
+    DocGroup({"tag": "h1"}, [
+        DocChars("5ll"), DocGroup({"tag": "caret", "client": "d"}, []),
+        DocChars("lo world! "), DocGroup({"client": "c", "tag": "caret"}, [])
+    ]),
+    DocGroup({"tag": "h1"}, [
+        DocChars("What\'s up with you?")
+    ])
+]
+
+a_del: [
+    DelGroup([
+        DelGroup([]),
+        DelChars(3), DelSkip(1), DelGroup([]),
+        DelSkip(3), DelChars(1), DelWithGroup([])
+    ]),
+    DelGroup([
+        DelChars(1), DelSkip(2), DelWithGroup([]),
+        DelSkip(9), DelChars(1), DelGroup([])
+    ]),
+    DelGroup([
+        DelSkip(19)
+    ])
+]
+a_add: [
+    AddGroup({"tag": "bullet"}, [
+        AddGroup({"tag": "pre"}, [
+            AddGroup({"tag": "caret", "client": "c"}, []),
+            AddChars("dOm5c"), AddGroup({"client": "b", "tag": "caret"}, []),
+            AddChars("b5")
+        ]),
+        AddGroup({"tag": "h1"}, [
+            AddGroup({"tag": "caret", "client": "a"}, []),
+            AddSkip(4), AddChars("W"), AddWithGroup([]),
+            AddChars("K")
+        ])
+    ]),
+    AddGroup({"tag": "bullet"}, [
+        AddGroup({"tag": "h1"}, [
+            AddSkip(2), AddWithGroup([]),
+            AddSkip(9), AddChars(" k")
+        ]),
+        AddGroup({"tag": "h1"}, [
+            AddSkip(19)
+        ])
+    ])
+]
+
+b_del: [
+    DelGroup([
+        DelWithGroup([]),
+        DelSkip(1), DelChars(1), DelSkip(2), DelWithGroup([]),
+        DelSkip(4), DelWithGroup([])
+    ]),
+    DelGroup([
+        DelChars(3), DelGroup([]),
+        DelChars(1), DelSkip(10)
+    ])
+]
+b_add: [
+    AddGroup({"tag": "bullet"}, [
+        AddGroup({"tag": "h1"}, [
+            AddWithGroup([]),
+            AddSkip(1), AddGroup({"client": "d", "tag": "caret"}, []),
+            AddChars("6B"), AddSkip(2), AddWithGroup([]),
+            AddSkip(4), AddWithGroup([]),
+            AddChars("  "), AddSkip(10)
+        ])
+    ])
+]

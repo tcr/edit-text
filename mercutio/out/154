@@ -1,0 +1,81 @@
+
+doc:   [
+    DocGroup({"tag": "h1"}, [
+        DocGroup({"tag": "caret", "client": "b"}, []),
+        DocGroup({"client": "e", "tag": "caret"}, []),
+        DocGroup({"tag": "caret", "client": "c"}, []),
+        DocChars("wg"), DocGroup({"client": "d", "tag": "caret"}, []),
+        DocChars("nE")
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocChars("j5"), DocGroup({"client": "a", "tag": "caret"}, []),
+        DocChars("llo world!")
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocChars("What\'s up with you?")
+    ])
+]
+
+a_del: [
+    DelGroup([
+        DelGroupAll, DelWithGroup([]),
+        DelWithGroup([]),
+        DelSkip(1), DelChars(1), DelWithGroup([]),
+        DelSkip(2)
+    ]),
+    DelGroup([
+        DelChars(2), DelGroup([]),
+        DelSkip(10)
+    ]),
+    DelGroup([
+        DelSkip(19)
+    ])
+]
+a_add: [
+    AddGroup({"tag": "bullet"}, [
+        AddGroup({"tag": "h1"}, [
+            AddGroup({"tag": "caret", "client": "b"}, []),
+            AddChars("i"), AddWithGroup([]),
+            AddWithGroup([]),
+            AddSkip(1), AddGroup({"client": "a", "tag": "caret"}, []),
+            AddChars("x"), AddWithGroup([]),
+            AddSkip(1), AddChars("6"), AddSkip(1)
+        ])
+    ]),
+    AddGroup({"tag": "bullet"}, [
+        AddGroup({"tag": "h1"}, [
+            AddSkip(29)
+        ])
+    ])
+]
+
+b_del: [
+    DelGroup([
+        DelWithGroup([]),
+        DelWithGroup([]),
+        DelGroup([]),
+        DelChars(2), DelWithGroup([]),
+        DelSkip(1), DelChars(1)
+    ]),
+    DelGroup([
+        DelSkip(2), DelWithGroup([]),
+        DelSkip(8), DelChars(2)
+    ]),
+    DelGroup([
+        DelSkip(19)
+    ])
+]
+b_add: [
+    AddGroup({"tag": "bullet"}, [
+        AddGroup({"tag": "h1"}, [
+            AddWithGroup([]),
+            AddWithGroup([]),
+            AddChars(" M "), AddWithGroup([]),
+            AddSkip(1), AddChars("G"), AddSkip(2), AddWithGroup([]),
+            AddSkip(8), AddChars("p"), AddGroup({"tag": "caret", "client": "c"}, [])
+        ])
+    ]),
+    AddGroup({"tag": "p"}, [
+        AddChars("ODR"), AddSkip(19)
+    ])
+]

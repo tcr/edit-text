@@ -1,0 +1,77 @@
+
+doc:   [
+    DocGroup({"tag": "h2"}, [
+        DocChars("7Wp0")
+    ]),
+    DocGroup({"tag": "h2"}, [
+        DocChars(" "), DocGroup({"tag": "caret", "client": "e"}, []),
+        DocChars("o3K70Ro"), DocGroup({"tag": "caret", "client": "a"}, []),
+        DocGroup({"client": "c", "tag": "caret"}, []),
+        DocChars(" "), DocGroup({"tag": "caret", "client": "b"}, []),
+        DocChars("1C"), DocGroup({"client": "d", "tag": "caret"}, [])
+    ]),
+    DocGroup({"tag": "h1"}, [
+        DocChars("t\'s up with you?")
+    ])
+]
+
+a_del: [
+    DelGroup([
+        DelSkip(1), DelChars(3)
+    ]),
+    DelGroup([
+        DelChars(1), DelWithGroup([]),
+        DelSkip(2), DelChars(2), DelSkip(1), DelChars(1), DelSkip(1), DelGroup([]),
+        DelWithGroup([]),
+        DelSkip(1), DelGroup([]),
+        DelSkip(3)
+    ])
+]
+a_add: [
+    AddGroup({"tag": "h2"}, [
+        AddSkip(1), AddGroup({"client": "b", "tag": "caret"}, []),
+        AddChars("  "), AddWithGroup([]),
+        AddSkip(2)
+    ]),
+    AddGroup({"tag": "bullet"}, [
+        AddGroup({"tag": "h2"}, [
+            AddChars("RR "), AddGroup({"client": "a", "tag": "caret"}, []),
+            AddSkip(2), AddWithGroup([]),
+            AddSkip(1), AddChars("6")
+        ]),
+        AddGroup({"tag": "h2"}, [
+            AddChars("C"), AddSkip(3)
+        ])
+    ])
+]
+
+b_del: [
+    DelWithGroup([
+        DelSkip(4)
+    ]),
+    DelGroup([
+        DelSkip(1), DelWithGroup([]),
+        DelSkip(4), DelChars(2), DelSkip(1), DelWithGroup([]),
+        DelGroup([]),
+        DelSkip(1), DelWithGroup([]),
+        DelSkip(1), DelChars(1), DelWithGroup([])
+    ]),
+    DelGroup([
+        DelChars(1), DelSkip(15)
+    ])
+]
+b_add: [
+    AddWithGroup([
+        AddChars("7"), AddGroup({"client": "c", "tag": "caret"}, []),
+        AddSkip(4)
+    ]),
+    AddGroup({"tag": "bullet"}, [
+        AddGroup({"tag": "p"}, [
+            AddSkip(1), AddWithGroup([]),
+            AddSkip(5), AddWithGroup([]),
+            AddSkip(1), AddWithGroup([]),
+            AddSkip(1), AddWithGroup([]),
+            AddChars("C2 "), AddSkip(15)
+        ])
+    ])
+]
