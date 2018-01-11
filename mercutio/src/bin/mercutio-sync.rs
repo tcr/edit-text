@@ -20,7 +20,11 @@ extern crate ws;
 extern crate crossbeam_channel;
 extern crate bus;
 extern crate mercutio;
+extern crate structopt;
+#[macro_use]
+extern crate structopt_derive;
 
+use structopt::StructOpt;
 use std::sync::{Arc, Mutex};
 use oatie::doc::*;
 use oatie::{Operation, OT};
@@ -60,18 +64,34 @@ fn files(file: PathBuf) -> Option<NamedFile> {
     Some(Path::new(".").join("frontend/dist/").join(file)).and_then(|x| NamedFile::open(x).ok())
 }
 
+#[derive(StructOpt, Debug)]
+#[structopt(name = "mercutio-wasm", about = "An example of StructOpt usage.")]
+struct Opt {
+    #[structopt(long="port", help = "Port", default_value = "3010")]
+    port: u16,
+
+    #[structopt(long="period", help = "Sync period", default_value = "100")]
+    period: usize,
+}
+
 fn main() {
+    let opt = Opt::from_args();
+
     let mercutio_state = MoteState {
         body: Arc::new(Mutex::new(default_doc())),
     };
 
-    sync_socket_server(mercutio_state.clone());
+    sync_socket_server(opt.port, opt.period, mercutio_state.clone());
 
     // thread::spawn(|| {
     //     start_websocket_server();
     // });
 
-    rocket::ignite()
-        .mount("/", routes![root, client, files, favicon])
-        .launch();
+    loop {
+        ::std::thread::sleep(::std::time::Duration::from_millis(1000));
+    }
+
+    // rocket::ignite()
+    //     .mount("/", routes![root, client, files, favicon])
+    //     .launch();
 }

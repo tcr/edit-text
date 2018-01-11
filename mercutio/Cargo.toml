@@ -16,11 +16,9 @@ serde = "1.0.21"
 serde_derive = "1.0.21"
 serde_json = "1.0.6"
 take_mut = "0.2.0"
+structopt = "0.1.0"
+structopt-derive = "0.1.0"
 ws = "0.7.3"
 
 [dependencies.oatie]
 path = "../oatie"
-
-[features]
-default = []
-virtual_monkeys = []

@@ -1,0 +1,76 @@
+
+doc:   [
+    DocGroup({"tag": "h1"}, [
+        DocGroup({"tag": "caret", "client": "d"}, []),
+        DocChars("2885dl ")
+    ]),
+    DocGroup({"tag": "h3"}, [
+        DocGroup({"client": "e", "tag": "caret"}, []),
+        DocChars("x7"), DocGroup({"client": "a", "tag": "caret"}, []),
+        DocChars("4 w"), DocGroup({"client": "b", "tag": "caret"}, []),
+        DocGroup({"tag": "caret", "client": "f"}, []),
+        DocChars("3ms ")
+    ]),
+    DocGroup({"tag": "h3"}, [
+        DocChars("!"), DocGroup({"client": "c", "tag": "caret"}, []),
+        DocGroup({"tag": "caret", "client": "g"}, []),
+        DocChars("2")
+    ]),
+    DocGroup({"tag": "h3"}, [
+        DocChars("What\'s up with you?")
+    ])
+]
+
+a_del: [
+    DelWithGroup([
+        DelWithGroup([]),
+        DelSkip(7)
+    ]),
+    DelGroup([
+        DelWithGroup([]),
+        DelSkip(2), DelGroup([]),
+        DelSkip(9)
+    ])
+]
+a_add: [
+    AddWithGroup([
+        AddWithGroup([]),
+        AddSkip(7)
+    ]),
+    AddGroup({"tag": "bullet"}, [
+        AddGroup({"tag": "h3"}, [
+            AddWithGroup([]),
+            AddSkip(1), AddGroup({"tag": "caret", "client": "a"}, []),
+            AddSkip(10)
+        ])
+    ])
+]
+
+b_del: [
+    DelGroup([
+        DelWithGroup([]),
+        DelSkip(1), DelChars(1), DelSkip(4), DelChars(1)
+    ]),
+    DelGroup([
+        DelWithGroup([]),
+        DelSkip(2), DelWithGroup([]),
+        DelSkip(3), DelGroup([]),
+        DelWithGroup([]),
+        DelSkip(1), DelChars(3)
+    ]),
+    DelGroup([
+        DelSkip(4)
+    ])
+]
+b_add: [
+    AddGroup({"tag": "bullet"}, [
+        AddGroup({"tag": "pre"}, [
+            AddChars(" "), AddWithGroup([]),
+            AddSkip(1), AddChars("s Y EV "), AddSkip(4), AddChars("0"), AddWithGroup([]),
+            AddSkip(2), AddWithGroup([]),
+            AddSkip(3), AddChars(" "), AddWithGroup([]),
+            AddSkip(1), AddChars("I"), AddSkip(1), AddGroup({"client": "b", "tag": "caret"}, []),
+            AddSkip(3)
+        ])
+    ])
+]

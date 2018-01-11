@@ -1,0 +1,46 @@
+
+doc:   [
+    DocGroup({"tag": "h1"}, [
+        DocChars("Hello world!")
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocChars("What\'s up with you?")
+    ])
+]
+
+a_del: [
+    DelGroup([
+        DelSkip(9), DelChars(3)
+    ]),
+    DelGroup([
+        DelChars(1), DelSkip(18)
+    ])
+]
+a_add: [
+    AddGroup({"tag": "p"}, [
+        AddChars(" "), AddSkip(9), AddChars("JS ")
+    ]),
+    AddGroup({"tag": "bullet"}, [
+        AddGroup({"tag": "p"}, [
+            AddChars(" "), AddGroup({"tag": "caret", "client": "a"}, []),
+            AddSkip(18)
+        ])
+    ])
+]
+
+b_del: [
+    DelGroup([
+        DelSkip(9), DelChars(3)
+    ]),
+    DelGroup([
+        DelChars(1), DelSkip(18)
+    ])
+]
+b_add: [
+    AddGroup({"tag": "bullet"}, [
+        AddGroup({"tag": "h1"}, [
+            AddChars("o"), AddGroup({"client": "b", "tag": "caret"}, []),
+            AddSkip(27)
+        ])
+    ])
+]

@@ -464,7 +464,7 @@ fn handle_task(value: Task, client: &mut Client) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn server(url: &str) {
+pub fn server(url: &str, wsp: u16) {
     ws::listen(url, |out| {
         let (tx, rx) = unbounded();
 
@@ -521,7 +521,7 @@ pub fn server(url: &str) {
         {
             clone_all!(tx_task);
             thread::spawn(move || {
-                ws::connect("ws://127.0.0.1:3010", move |out| {
+                ws::connect(format!("ws://127.0.0.1:{}", wsp), move |out| {
                     // Send over operations
                     {
                         clone_all!(tx_task, rx);
@@ -566,6 +566,6 @@ pub fn server(url: &str) {
     }).unwrap();
 }
 
-pub fn start_websocket_server() {
-    server("127.0.0.1:3012");
+pub fn start_websocket_server(port: u16) {
+    server(&format!("127.0.0.1:{}", port), port - 1);
 }

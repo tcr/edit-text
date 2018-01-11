@@ -1,0 +1,70 @@
+
+doc:   [
+    DocGroup({"tag": "p"}, [
+        DocGroup({"tag": "caret", "client": "c"}, []),
+        DocChars("52"), DocGroup({"client": "a", "tag": "caret"}, []),
+        DocChars("qk"), DocGroup({"client": "b", "tag": "caret"}, []),
+        DocChars("l3G"), DocGroup({"client": "e", "tag": "caret"}, [])
+    ]),
+    DocGroup({"tag": "h1"}, [
+        DocChars("at\'s up with you?")
+    ])
+]
+
+a_del: [
+    DelGroup([
+        DelGroupAll, DelSkip(1), DelChars(1), DelGroup([]),
+        DelChars(2), DelGroupAll, DelChars(3), DelGroupAll
+    ]),
+    DelGroup([
+        DelChars(2), DelSkip(15)
+    ])
+]
+a_add: [
+    AddGroup({"tag": "bullet"}, [
+        AddGroup({"tag": "h2"}, [
+            AddGroup({"tag": "caret", "client": "a"}, []),
+            AddGroup({"client": "e", "tag": "caret"}, []),
+            AddChars("q"), AddGroup({"client": "c", "tag": "caret"}, []),
+            AddChars(" "), AddGroup({"client": "d", "tag": "caret"}, []),
+            AddChars("y")
+        ]),
+        AddGroup({"tag": "h2"}, [
+            AddChars("y"), AddSkip(1), AddChars("Ek  ")
+        ]),
+        AddGroup({"tag": "h1"}, [
+            AddGroup({"client": "b", "tag": "caret"}, []),
+            AddChars("J43vYNk")
+        ])
+    ]),
+    AddGroup({"tag": "bullet"}, [
+        AddGroup({"tag": "h1"}, [
+            AddChars("Q3"), AddSkip(15)
+        ])
+    ])
+]
+
+b_del: [
+    DelGroup([
+        DelWithGroup([]),
+        DelSkip(1), DelChars(1), DelWithGroup([]),
+        DelSkip(2), DelWithGroup([]),
+        DelSkip(2), DelChars(1), DelWithGroup([])
+    ]),
+    DelGroup([
+        DelChars(2), DelSkip(15)
+    ])
+]
+b_add: [
+    AddGroup({"tag": "bullet"}, [
+        AddGroup({"tag": "h1"}, [])
+    ]),
+    AddGroup({"tag": "p"}, [
+        AddChars(" "), AddWithGroup([]),
+        AddSkip(1), AddChars("x "), AddGroup({"client": "f", "tag": "caret"}, []),
+        AddWithGroup([]),
+        AddSkip(2), AddWithGroup([]),
+        AddSkip(2), AddWithGroup([]),
+        AddChars("f "), AddSkip(15)
+    ])
+]

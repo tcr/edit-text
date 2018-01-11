@@ -315,11 +315,11 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
 
 pub fn apply_operation(spanvec: &DocSpan, op: &Op) -> DocSpan {
     let &(ref delvec, ref addvec) = op;
-    println!("------> @1 {:?}", spanvec);
-    println!("------> @2 {:?}", delvec);
+    // println!("------> @1 {:?}", spanvec);
+    // println!("------> @2 {:?}", delvec);
     let postdel = apply_delete(spanvec, delvec);
-    println!("------> @3 {:?}", postdel);
-    println!("------> @4 {:?}", addvec);
+    // println!("------> @3 {:?}", postdel);
+    // println!("------> @4 {:?}", addvec);
     apply_add(&postdel, addvec)
 }
 

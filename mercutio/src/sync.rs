@@ -180,9 +180,9 @@ pub struct SyncState {
     version: usize,
 }
 
-pub fn sync_socket_server(state: MoteState) {
+pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
     thread::spawn(move || {
-        let url = "127.0.0.1:3010";
+        let url = format!("127.0.0.1:{}", port);
 
         let sync_state_mutex = Arc::new(Mutex::new(SyncState {
             ops: hashmap![],
@@ -198,7 +198,7 @@ pub fn sync_socket_server(state: MoteState) {
             if let Err(value) = panic::catch_unwind(|| {
                 loop {
                     // Wait a set duration between transforms.
-                    thread::sleep(Duration::from_millis(500));
+                    thread::sleep(Duration::from_millis(period as u64));
 
                     // Extract the client map and dump active client operations.
                     let mut sync_state = sync_state_mutex_capture.lock().unwrap();
