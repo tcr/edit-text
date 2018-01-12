@@ -16,7 +16,7 @@ fn launch(input: &str) -> i32 {
         // .arg("--period")
         // .arg(rnd_period.to_string())
         .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
+        .stdout(Stdio::null())
         .stderr(Stdio::inherit())
         .spawn()
         .unwrap();
@@ -135,6 +135,7 @@ fn main() {
             let mut f = File::open(file).unwrap();
             let mut contents = String::new();
             f.read_to_string(&mut contents);
+            contents.push_str("\n\n\n");
 
             // Skip these
             if contents.find("DelGroupAll").is_some() || contents.find("DelMany").is_some() {
@@ -143,8 +144,10 @@ fn main() {
 
             println!("-----> {:?}", file);
             if launch(&contents) == 0 {
+                println!("success");
                 Status::Success
             } else {
+                println!("failed");
                 Status::Failed
             }
         })
