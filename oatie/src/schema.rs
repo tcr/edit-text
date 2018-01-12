@@ -64,7 +64,7 @@ impl TrackType {
         use self::TrackType::*;
         match *self {
             // Lists => vec![Lists, ListItems, BlockQuotes],
-            ListItems => vec![ListItems, BlockQuotes],
+            ListItems => vec![ListItems, BlockQuotes,],
             BlockQuotes => vec![ListItems, BlockQuotes],
             Blocks => vec![ListItems, BlockObjects],
             BlockObjects => vec![ListItems, BlockQuotes],

@@ -145,6 +145,10 @@ impl DelWriter {
         self.past.place(&DelWithGroup(span.clone()));
     }
 
+    pub fn place(&mut self, elem: &DelElement) {
+        self.past.place(elem);
+    }
+
     pub fn place_all(&mut self, span: &DelSpan) {
         self.past.place_all(span);
     }

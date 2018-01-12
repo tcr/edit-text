@@ -1,8 +1,3 @@
-// cargo-deps: rayon="*"
-
-extern crate rayon;
-
-use rayon::prelude::*;
 use std::fs::File;
 use std::fs;
 use std::process::{Stdio, Command};
@@ -21,8 +16,8 @@ fn launch(input: &str) -> i32 {
         // .arg("--period")
         // .arg(rnd_period.to_string())
         .stdin(Stdio::piped())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::inherit())
         .spawn()
         .unwrap();
     
@@ -116,6 +111,13 @@ fn launch(input: &str) -> i32 {
 //     }
 // }
 
+#[derive(PartialEq)]
+enum Status {
+    Success,
+    Failed,
+    Skipped,
+}
+
 fn main() {
     println!("Running tests...");
     println!();
@@ -128,7 +130,7 @@ fn main() {
         files.push(path);
     }
 
-    let res = files.par_iter()
+    let res = files.iter()
         .map(|file| {
             let mut f = File::open(file).unwrap();
             let mut contents = String::new();
@@ -136,16 +138,24 @@ fn main() {
 
             // Skip these
             if contents.find("DelGroupAll").is_some() || contents.find("DelMany").is_some() {
-                return 0;
+                return Status::Skipped;
             }
 
-            launch(&contents)
+            println!("-----> {:?}", file);
+            if launch(&contents) == 0 {
+                Status::Success
+            } else {
+                Status::Failed
+            }
         })
         .collect::<Vec<_>>();
     
     println!("total ran: {:?}", res.len());
-    println!("total success: {:?}", res.iter().filter(|x| **x == 0).count());
-    println!("total failed: {:?}", res.iter().filter(|x| **x != 0).count());
+    println!();
+    println!("total success: {:?}", res.iter().filter(|x| **x == Status::Success).count());
+    println!("total failed: {:?}", res.iter().filter(|x| **x == Status::Failed).count());
+    println!();
+    println!("total skipped: {:?}", res.iter().filter(|x| **x == Status::Skipped).count());
 
     // let mut counter = Arc::new(AtomicUsize::new((high as usize) + 1));
     // println!("Start with out/{:?}", counter.load(Ordering::Relaxed));
