@@ -271,8 +271,8 @@ fn op_transform_compare(a: &Op, b: &Op) -> (Op, Op, Op, Op) {
     let mut a_res = normalize(compose::compose(a, &a_));
     let mut b_res = normalize(compose::compose(b, &b_));
 
-    a_res.0 = normalize_delgroupall(a_res.0);
-    b_res.0 = normalize_delgroupall(b_res.0);
+    // a_res.0 = normalize_delgroupall(a_res.0);
+    // b_res.0 = normalize_delgroupall(b_res.0);
 
     println!();
     println!("(!) validating composed ops are equivalent:");
