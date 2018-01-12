@@ -1437,7 +1437,9 @@ pub fn transform_del_del_inner(
                     match b_inner_step.head.clone() {
                         Some(ref elem) => {
                             a_inner_del.place(elem);
-                            b_inner_del.place(elem);
+                            if let &DelSkip(..) = elem {
+                                b_inner_del.place(elem);
+                            }
                             b_inner_step.next();
                         }
                         None => {
@@ -2018,8 +2020,8 @@ pub fn transform(a_original: &Op, b_original: &Op) -> (Op, Op) {
 
     // a.0 = normalize_delgroupall(a.0);
     // b.0 = normalize_delgroupall(b.0);
-    println!(" a_del*  {:?}", a.0);
-    println!(" b_del*  {:?}", b.0);
+    // println!(" a_del*  {:?}", a.0);
+    // println!(" b_del*  {:?}", b.0);
 
 
     let (mut a_del_0, mut b_del_0) = transform_deletions(&a.0, &b.0);
