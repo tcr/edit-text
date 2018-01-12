@@ -237,6 +237,12 @@ impl Transform {
         track.tag_a = track.tag_real.clone();
     }
 
+    fn unenter_a2(&mut self, ty: TrackType) {
+        self.a_del.begin();
+        let track = self.next_track_a_by_type(ty).unwrap();
+        track.tag_a = track.tag_real.clone();
+    }
+
     fn unenter_b(&mut self, ty: TrackType) {
         self.b_del.begin();
         let track = self.next_track_b_by_type(ty).unwrap();
@@ -1048,7 +1054,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                                 }
                                 t.a_del.begin();
                             } else {
-                                t.unenter_a();
+                                t.unenter_a2(a_type.unwrap());
                             }
                         } else {
                             t.interrupt(a_type.unwrap(), true);
