@@ -586,10 +586,17 @@ impl Transform {
                 println!("REGENERATE UNTIL: {:?}", target);
 
                 let track_type = track._anything().unwrap().tag_type().unwrap();
-                if target.parents().iter().position(|x| *x == track_type).is_none()
+                if target.ancestors().iter().position(|x| *x == track_type).is_none()
                     && *target != track_type {
-                    println!("met {:?}", target);
-                    break;
+                    if *target == track_type {
+                        println!("met {:?}", target);
+                        break;
+                    } else {
+                        println!(":O mismatched ancestor {:?} of {:?}", track_type, target);
+                        break;
+                    }
+                } else {
+                    println!(":) regen {:?}", track_type);
                 }
 
                 if let (&Some(ref a), &Some(ref b)) = (&track.tag_a, &track.tag_b) {
@@ -704,7 +711,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
             t.regenerate();
             println!(
                 "{}",
-                BrightYellow.paint(format!("Finishing B: {:?}", b.head.clone()))
+                BrightYellow.paint(format!("Finishing B (ins): {:?}", b.head.clone()))
             );
 
             match b.head.clone() {
@@ -769,7 +776,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
         } else {
             println!(
                 "{}",
-                BrightYellow.paint(format!("Next step (ins): {:?}", (a.head.clone(), b.head.clone())))
+                BrightYellow.paint(format!("Next step (ins):\n A {:?}\n B {:?}", a.head.clone(), b.head.clone()))
             );
 
             match (a.head.clone(), b.head.clone()) {
@@ -892,9 +899,11 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                             .iter()
                             .any(|x| *x == Tag::from_attrs(a_attrs).tag_type().unwrap());
 
-                    println!("groupgruop {:?} {:?}", a_type, b_type);
+                    println!("GroupByGroup {:?} {:?}", a_type, b_type);
+
                     if a_attrs["tag"] == "caret" && b_attrs["tag"] == "caret" {
-                        t.regenerate();
+                        t.regenerate_until(&a_type);
+
                         // Carets
                         a.enter();
                         a.exit();
@@ -905,6 +914,8 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                         t.enter_b(None, Tag::from_attrs(b_attrs));
                         t.close_b();
                     } else if a_type == b_type {
+                        t.regenerate_until(&a_type);
+                        
                         a.enter();
                         b.enter();
                         if Tag::from_attrs(a_attrs) == Tag::from_attrs(b_attrs) {
@@ -939,8 +950,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                             t.interrupt(a_type.unwrap(), false); // caret-46
                             t.enter_a(&Tag::from_attrs(a_attrs), None);
                         }
-                    } else {
-                        // println!("groupgruop {:?} {:?}", a_type, b_type);
+                    } else /* a is a child of b */ {
                         let b_type = Tag::from_attrs(b_attrs).tag_type();
                         t.regenerate_until(&b_type.clone().unwrap());
 
@@ -1219,331 +1229,302 @@ pub fn normalize_delgroupall(del: DelSpan) -> DelSpan {
     ret
 }
 
-pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan) {
-    let mut a = DelStepper::new(avec);
-    let mut b = DelStepper::new(bvec);
-
-    let mut a_del = DelWriter::new();
-    let mut b_del = DelWriter::new();
-
-    while !(a.is_done() && b.is_done()) {
+pub fn transform_del_del_inner(
+    a_del: &mut DelWriter,
+    b_del: &mut DelWriter,
+    a: &mut DelStepper,
+    b: &mut DelStepper,
+) {
+    while !a.is_done() && !b.is_done() {
         println!("{}", Green.bold().paint("transform_deletions:"));
         println!("{}", BrightGreen.paint(format!(" @ a_del: {:?}", a_del)));
         println!("{}", BrightGreen.paint(format!(" @ b_del: {:?}", b_del)));
 
-        if a.is_done() {
-            println!(
-                "{}",
-                BrightYellow.paint(format!("Finishing B: {:?}", b.head.clone()))
-            );
+        println!(
+            "{}",
+            BrightYellow.paint(format!("Next step (del): {:?}", (a.head.clone(), b.head.clone())))
+        );
 
-            match b.head.clone() {
-                Some(DelObject) => {
-                    unimplemented!();
+        match (a.head.clone(), b.head.clone()) {
+            // Groups
+            (Some(DelGroup(a_inner)), Some(DelGroup(b_inner))) => {
+                let (a_del_inner, b_del_inner) = transform_deletions(&a_inner, &b_inner);
+
+                a_del.place_all(&a_del_inner);
+                b_del.place_all(&b_del_inner);
+
+                a.next();
+                b.next();
+            }
+            (Some(DelGroup(a_inner)), Some(DelWithGroup(b_inner))) => {
+                let (a_del_inner, b_del_inner) = transform_deletions(&a_inner, &b_inner);
+
+                a_del.place_all(&a_del_inner);
+                b_del.group(&b_del_inner);
+
+                a.next();
+                b.next();
+            }
+            (Some(DelSkip(a_count)), Some(DelGroup(b_inner))) => {
+                a_del.group(&b_inner);
+                if a_count > 1 {
+                    a.head = Some(DelSkip(a_count - 1));
+                } else {
+                    a.next();
                 }
-                Some(DelGroup(ref span)) => {
-                    // t.skip_b(1);
-                    // t.group_a(attrs, span);
-                    a_del.group(span);
+
+                if b_inner.skip_len() > 0 {
+                    b_del.skip(b_inner.skip_post_len());
+                }
+                b.next();
+            }
+            (Some(DelSkip(a_count)), Some(DelGroupAll)) => {
+                a_del.group_all();
+                if a_count > 1 {
+                    a.head = Some(DelSkip(a_count - 1));
+                } else {
+                    a.next();
+                }
+
+                b.next();
+            }
+            (Some(DelGroup(a_inner)), Some(DelSkip(b_count))) => {
+                if a_inner.skip_post_len() > 0 {
+                    a_del.skip(a_inner.skip_post_len());
+                }
+                b_del.group(&a_inner);
+
+                a.next();
+                if b_count > 1 {
+                    b.head = Some(DelSkip(b_count - 1));
+                } else {
                     b.next();
                 }
-                Some(DelWithGroup(ref span)) => {
-                    a_del.with_group(span);
+            }
+
+            // Rest
+            (Some(DelSkip(a_count)), Some(DelSkip(b_count))) => {
+                if a_count > b_count {
+                    a.head = Some(DelSkip(a_count - b_count));
+                    b.next();
+                } else if a_count < b_count {
+                    a.next();
+                    b.head = Some(DelSkip(b_count - a_count));
+                } else {
+                    a.next();
                     b.next();
                 }
-                Some(DelMany(b_count)) => {
-                    a_del.many(b_count);
+
+                a_del.skip(cmp::min(a_count, b_count));
+                b_del.skip(cmp::min(a_count, b_count));
+            }
+            (Some(DelSkip(a_count)), Some(DelChars(b_chars))) => {
+                if a_count > b_chars {
+                    a.head = Some(DelSkip(a_count - b_chars));
                     b.next();
-                }
-                Some(DelChars(b_chars)) => {
-                    // t.chars_a(b_chars);
-                    // t.skip_b(b_chars.len());
                     a_del.chars(b_chars);
+                } else if a_count < b_chars {
+                    a.next();
+                    b.head = Some(DelChars(b_chars - a_count));
+                    a_del.chars(a_count);
+                } else {
+                    a.next();
                     b.next();
-                }
-                Some(DelSkip(b_count)) => {
-                    // t.skip_a(b_count);
-                    // t.skip_b(b_count);
-                    a_del.skip(b_count);
-                    b.next();
-                }
-                Some(DelGroupAll) => {
-                    a_del.group_all();
-                    b.next();
-                }
-                None => {
-                    // t.close_b();
-                    b.exit();
+                    a_del.chars(b_chars);
                 }
             }
-        } else if b.is_done() {
-            println!(
-                "{}",
-                BrightYellow.paint(format!("Finishing A (del): {:?}", a.head.clone()))
-            );
-
-            match a.head.clone() {
-                Some(DelObject) => {
-                    unimplemented!();
-                }
-                Some(DelGroup(ref span)) => {
-                    // t.skip_a(1);
-                    // t.group_b(attrs, span);
-                    // a_del.skip(1);
-                    b_del.group(span);
+            (Some(DelChars(a_chars)), Some(DelChars(b_chars))) => {
+                if a_chars > b_chars {
+                    a.head = Some(DelChars(a_chars - b_chars));
+                    b.next();
+                } else if a_chars < b_chars {
                     a.next();
-                }
-                Some(DelWithGroup(ref span)) => {
-                    // t.skip_a(1);
-                    // t.group_b(attrs, span);
-                    b_del.with_group(span);
-                    a_del.skip(1);
+                    b.head = Some(DelChars(b_chars - a_chars));
+                } else {
                     a.next();
-                }
-                Some(DelChars(a_chars)) => {
-                    // t.skip_a(a_chars.len());
-                    // t.chars_b(a_chars);
-                    b_del.chars(a_chars);
-                    a.next();
-                }
-                Some(DelMany(a_count)) => {
-                    // t.skip_a(a_chars.len());
-                    // t.chars_b(a_chars);
-                    a.next();
-                    b_del.many(a_count);
-                }
-                Some(DelSkip(a_count)) => {
-                    // t.skip_a(a_count);
-                    // t.skip_b(a_count);
-                    a.next();
-                    b_del.skip(a_count);
-                }
-                Some(DelGroupAll) => {
-                    a.next();
-                    b_del.group_all();
-                }
-                None => {
-                    // t.close_a();
-                    a.exit();
+                    b.next();
                 }
             }
-        } else {
-            println!(
-                "{}",
-                BrightYellow.paint(format!("Next step (del): {:?}", (a.head.clone(), b.head.clone())))
-            );
-
-            match (a.head.clone(), b.head.clone()) {
-                // Groups
-                (Some(DelGroup(a_inner)), Some(DelGroup(b_inner))) => {
-                    let (a_del_inner, b_del_inner) = transform_deletions(&a_inner, &b_inner);
-
-                    a_del.place_all(&a_del_inner);
-                    b_del.place_all(&b_del_inner);
-
-                    a.next();
+            (Some(DelChars(a_chars)), Some(DelSkip(b_count))) => {
+                if a_chars > b_count {
+                    a.head = Some(DelChars(a_chars - b_count));
                     b.next();
-                }
-                (Some(DelGroup(a_inner)), Some(DelWithGroup(b_inner))) => {
-                    let (a_del_inner, b_del_inner) = transform_deletions(&a_inner, &b_inner);
-
-                    a_del.place_all(&a_del_inner);
-                    b_del.group(&b_del_inner);
-
+                } else if a_chars < b_count {
                     a.next();
-                    b.next();
-                }
-                (Some(DelSkip(a_count)), Some(DelGroup(b_inner))) => {
-                    a_del.group(&b_inner);
-                    if a_count > 1 {
-                        a.head = Some(DelSkip(a_count - 1));
-                    } else {
-                        a.next();
-                    }
-
-                    if b_inner.skip_len() > 0 {
-                        b_del.skip(b_inner.skip_post_len());
-                    }
-                    b.next();
-                }
-                (Some(DelSkip(a_count)), Some(DelGroupAll)) => {
-                    a_del.group_all();
-                    if a_count > 1 {
-                        a.head = Some(DelSkip(a_count - 1));
-                    } else {
-                        a.next();
-                    }
-
-                    b.next();
-                }
-                (Some(DelGroup(a_inner)), Some(DelSkip(b_count))) => {
-                    if a_inner.skip_post_len() > 0 {
-                        a_del.skip(a_inner.skip_post_len());
-                    }
-                    b_del.group(&a_inner);
-
-                    a.next();
-                    if b_count > 1 {
-                        b.head = Some(DelSkip(b_count - 1));
-                    } else {
-                        b.next();
-                    }
-                }
-
-                // Rest
-                (Some(DelSkip(a_count)), Some(DelSkip(b_count))) => {
-                    if a_count > b_count {
-                        a.head = Some(DelSkip(a_count - b_count));
-                        b.next();
-                    } else if a_count < b_count {
-                        a.next();
-                        b.head = Some(DelSkip(b_count - a_count));
-                    } else {
-                        a.next();
-                        b.next();
-                    }
-
-                    a_del.skip(cmp::min(a_count, b_count));
-                    b_del.skip(cmp::min(a_count, b_count));
-                }
-                (Some(DelSkip(a_count)), Some(DelChars(b_chars))) => {
-                    if a_count > b_chars {
-                        a.head = Some(DelSkip(a_count - b_chars));
-                        b.next();
-                        a_del.chars(b_chars);
-                    } else if a_count < b_chars {
-                        a.next();
-                        b.head = Some(DelChars(b_chars - a_count));
-                        a_del.chars(a_count);
-                    } else {
-                        a.next();
-                        b.next();
-                        a_del.chars(b_chars);
-                    }
-                }
-                (Some(DelChars(a_chars)), Some(DelChars(b_chars))) => {
-                    if a_chars > b_chars {
-                        a.head = Some(DelChars(a_chars - b_chars));
-                        b.next();
-                    } else if a_chars < b_chars {
-                        a.next();
-                        b.head = Some(DelChars(b_chars - a_chars));
-                    } else {
-                        a.next();
-                        b.next();
-                    }
-                }
-                (Some(DelChars(a_chars)), Some(DelSkip(b_count))) => {
-                    if a_chars > b_count {
-                        a.head = Some(DelChars(a_chars - b_count));
-                        b.next();
-                    } else if a_chars < b_count {
-                        a.next();
-                        b.head = Some(DelSkip(b_count - a_chars));
-                    } else {
-                        a.next();
-                        b.next();
-                    }
-
-                    // a_del.skip(cmp::min(a_chars, b_chars));
-                    b_del.chars(cmp::min(a_chars, b_count));
-                }
-                (Some(DelChars(a_chars)), _) => {
-                    a.next();
-                    b_del.chars(a_chars);
-                }
-
-                // With Groups
-                (Some(DelWithGroup(a_inner)), Some(DelWithGroup(b_inner))) => {
-                    let (a_del_inner, b_del_inner) = transform_deletions(&a_inner, &b_inner);
-
-                    a_del.with_group(&a_del_inner);
-                    b_del.with_group(&b_del_inner);
-
-                    a.next();
-                    b.next();
-                }
-                (Some(DelSkip(a_count)), Some(DelWithGroup(b_inner))) => {
-                    a_del.with_group(&b_inner);
-                    b_del.skip(1);
-
-                    if a_count > 1 {
-                        a.head = Some(DelSkip(a_count - 1));
-                    } else {
-                        a.next();
-                    }
-                    b.next();
-                }
-                (Some(DelWithGroup(a_inner)), Some(DelSkip(b_count))) => {
-                    a_del.skip(1);
-                    b_del.with_group(&a_inner);
-
-                    a.next();
-                    if b_count > 1 {
-                        b.head = Some(DelSkip(b_count - 1));
-                    } else {
-                        b.next();
-                    }
-                }
-
-                // DelGroupAll
-                (Some(DelGroupAll), Some(DelWithGroup(_))) => {
-                    b_del.group_all();
-
-                    a.next();
-                    b.next();
-                }
-                (Some(DelWithGroup(_)), Some(DelGroupAll)) => {
-                    a_del.group_all();
-
-                    a.next();
-                    b.next();
-                }
-                (Some(DelWithGroup(a_inner)), Some(DelGroup(b_inner))) => {
-                    let (a_del_inner, b_del_inner) = transform_deletions(&a_inner, &b_inner);
-
-                    a_del.group(&a_del_inner);
-                    b_del.place_all(&b_del_inner);
-
-                    a.next();
-                    b.next();
-                }
-                (Some(DelGroupAll), Some(DelSkip(b_count))) => {
-                    b_del.group_all();
-
-                    a.next();
-                    if b_count > 1 {
-                        b.head = Some(DelSkip(b_count - 1));
-                    } else {
-                        b.next();
-                    }
-                }
-                // TODO
-                (Some(DelGroupAll), Some(DelGroup(b_inner))) => {
-                    if b_inner.skip_post_len() > 0 {
-                        b_del.many(b_inner.skip_post_len());
-                    }
-
-                    a.next();
-                    b.next();
-                }
-                (Some(DelGroup(a_inner)), Some(DelGroupAll)) => {
-                    if a_inner.skip_post_len() > 0 {
-                        a_del.many(a_inner.skip_post_len());
-                    }
-
-                    a.next();
-                    b.next();
-                }
-                (Some(DelGroupAll), Some(DelGroupAll)) => {
+                    b.head = Some(DelSkip(b_count - a_chars));
+                } else {
                     a.next();
                     b.next();
                 }
 
-                unimplemented => {
-                    println!("Not reachable: {:?}", unimplemented);
-                    unreachable!();
+                // a_del.skip(cmp::min(a_chars, b_chars));
+                b_del.chars(cmp::min(a_chars, b_count));
+            }
+            (Some(DelChars(a_chars)), _) => {
+                a.next();
+                b_del.chars(a_chars);
+            }
+
+            // With Groups
+            (Some(DelWithGroup(a_inner)), Some(DelWithGroup(b_inner))) => {
+                let (a_del_inner, b_del_inner) = transform_deletions(&a_inner, &b_inner);
+
+                a_del.with_group(&a_del_inner);
+                b_del.with_group(&b_del_inner);
+
+                a.next();
+                b.next();
+            }
+            (Some(DelSkip(a_count)), Some(DelWithGroup(b_inner))) => {
+                a_del.with_group(&b_inner);
+                b_del.skip(1);
+
+                if a_count > 1 {
+                    a.head = Some(DelSkip(a_count - 1));
+                } else {
+                    a.next();
                 }
+                b.next();
+            }
+            (Some(DelWithGroup(a_inner)), Some(DelSkip(b_count))) => {
+                a_del.skip(1);
+                b_del.with_group(&a_inner);
+
+                a.next();
+                if b_count > 1 {
+                    b.head = Some(DelSkip(b_count - 1));
+                } else {
+                    b.next();
+                }
+            }
+
+            // DelGroupAll
+            (Some(DelGroupAll), Some(DelWithGroup(_))) => {
+                b_del.group_all();
+
+                a.next();
+                b.next();
+            }
+            (Some(DelWithGroup(_)), Some(DelGroupAll)) => {
+                a_del.group_all();
+
+                a.next();
+                b.next();
+            }
+            (Some(DelWithGroup(a_inner)), Some(DelGroup(b_inner))) => {
+                let mut a_inner_del = DelWriter::new();
+                let mut b_inner_del = DelWriter::new();
+
+                let mut a_inner_step = DelStepper::new(&a_inner);
+                let mut b_inner_step = DelStepper::new(&b_inner);
+
+                transform_del_del_inner(
+                    &mut a_inner_del,
+                    &mut b_inner_del,
+                    &mut a_inner_step,
+                    &mut b_inner_step,
+                );
+
+                assert!(a_inner_step.is_done());
+                
+                while !b_inner_step.is_done() {
+                    match b_inner_step.head.clone() {
+                        Some(ref elem) => {
+                            a_inner_del.place(elem);
+                            b_inner_del.place(elem);
+                            b_inner_step.next();
+                        }
+                        None => {
+                            unreachable!();
+                        }
+                    }
+                }
+
+                a_del.group(&a_inner_del.result());
+                b_del.place_all(&b_inner_del.result());
+
+                a.next();
+                b.next();
+            }
+            (Some(DelGroupAll), Some(DelSkip(b_count))) => {
+                b_del.group_all();
+
+                a.next();
+                if b_count > 1 {
+                    b.head = Some(DelSkip(b_count - 1));
+                } else {
+                    b.next();
+                }
+            }
+            // TODO
+            (Some(DelGroupAll), Some(DelGroup(b_inner))) => {
+                if b_inner.skip_post_len() > 0 {
+                    b_del.many(b_inner.skip_post_len());
+                }
+
+                a.next();
+                b.next();
+            }
+            (Some(DelGroup(a_inner)), Some(DelGroupAll)) => {
+                if a_inner.skip_post_len() > 0 {
+                    a_del.many(a_inner.skip_post_len());
+                }
+
+                a.next();
+                b.next();
+            }
+            (Some(DelGroupAll), Some(DelGroupAll)) => {
+                a.next();
+                b.next();
+            }
+
+            unimplemented => {
+                println!("Not reachable: {:?}", unimplemented);
+                unreachable!();
+            }
+        }
+    }
+}
+
+pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan) {
+    let mut a_del = DelWriter::new();
+    let mut b_del = DelWriter::new();
+
+    let mut a = DelStepper::new(avec);
+    let mut b = DelStepper::new(bvec);
+
+    transform_del_del_inner(&mut a_del, &mut b_del, &mut a, &mut b);
+
+    while !b.is_done() {
+        println!(
+            "{}",
+            BrightYellow.paint(format!("Finishing B: {:?}", b.head.clone()))
+        );
+
+        match b.head.clone() {
+            Some(ref elem) => {
+                a_del.place(elem);
+                b.next();
+            }
+            None => {
+                b.exit();
+            }
+        }
+    }
+
+    while !a.is_done() {
+        println!(
+            "{}",
+            BrightYellow.paint(format!("Finishing A (del): {:?}", a.head.clone()))
+        );
+
+        match a.head.clone() {
+            Some(ref elem) => {
+                a.next();
+                b_del.place(elem);
+            }
+            None => {
+                a.exit();
             }
         }
     }
@@ -1844,10 +1825,32 @@ pub fn transform_add_del_inner(
 
 
                     AddWithGroup(ins_span) => {
-                        // if span.skip_post_len() == 0 {
-                        //     // TODO
-                        //     delres.place(&DelGroupAll);
-                        // } else {
+                        if span.skip_post_len() == 0 {
+                            fn unadd(add: &AddSpan) -> DelSpan {
+                                let mut del: DelSpan = vec![];
+                                for elem in add {
+                                    match elem {
+                                        &AddChars(ref value) => {
+                                            del.place(&DelChars(value.chars().count()));
+                                        }
+                                        &AddSkip(value) => {
+                                            del.place(&DelSkip(value));
+                                        }
+                                        &AddWithGroup(ref ins_span) => {
+                                            del.place(&DelWithGroup(unadd(ins_span)));
+                                        }
+                                        &AddGroup(ref attrs, ref ins_span) => {
+                                            del.place(&DelGroup(unadd(ins_span)));
+                                        }
+                                    }
+                                }
+                                del
+                            }
+
+                            // Undo any additions, then apply the complete deletion.
+                            let del_span = compose::compose_del_del(&unadd(&ins_span), &span);
+                            delres.place(&DelGroup(del_span));
+                        } else {
                             let mut a_inner = AddStepper::new(&ins_span);
                             let mut b_inner = DelStepper::new(&span);
                             let mut delres_inner: DelSpan = vec![];
@@ -1860,8 +1863,8 @@ pub fn transform_add_del_inner(
                             );
 
                             // TODO should this be part of the top-level resolution for transform_add_del
+                            // Finish consuming the Del or Add component
                             if !b_inner.is_done() {
-
                                 if let &Some(ref head) = &b_inner.head {
                                     let len = (vec![head.clone()]).skip_post_len();
                                     if len > 0 {
@@ -1894,7 +1897,7 @@ pub fn transform_add_del_inner(
 
                             delres.place(&DelGroup(delres_inner));
                             addres.place_all(&addres_inner);
-                        // }
+                        }
 
                         a.next();
                         b.next();

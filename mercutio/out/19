@@ -1,16 +1,13 @@
 
 doc:   [
     DocGroup({"tag": "h2"}, [
-        DocGroup({"client": "a", "tag": "caret"}, []),
-        DocChars("H0ell"), DocGroup({"client": "b", "tag": "caret"}, []),
-        DocChars("w lWhat\'s up with you?")
+        DocChars("$")
     ])
 ]
 
 a_del: [
     DelGroup([
-        DelGroup([]),
-        DelChars(1), DelSkip(27)
+        DelSkip(1)
     ])
 ]
 a_add: [
@@ -19,24 +16,20 @@ a_add: [
     ]),
     AddGroup({"tag": "bullet"}, [
         AddGroup({"tag": "p"}, [
-            AddSkip(27)
+            AddSkip(1)
         ])
     ])
 ]
 
 b_del: [
     DelGroup([
-        DelWithGroup([]),
-        DelSkip(5), DelGroup([]),
-        DelChars(3), DelSkip(19)
+        DelSkip(1)
     ])
 ]
 b_add: [
     AddGroup({"tag": "bullet"}, [
         AddGroup({"tag": "h1"}, [
-            AddWithGroup([]),
-            AddSkip(5), AddGroup({"client": "b", "tag": "caret"}, []),
-            AddSkip(19)
+            AddSkip(1),
         ])
     ])
 ]

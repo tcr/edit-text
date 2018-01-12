@@ -1,25 +1,22 @@
 
 doc:   [
     DocGroup({"tag": "p"}, [
-        DocChars(" "), DocGroup({"client": "a", "tag": "caret"}, []),
-        DocChars("JNxello wD"), DocGroup({"client": "b", "tag": "caret"}, [])
+        DocChars("1"),
     ]),
     DocGroup({"tag": "h1"}, [
-        DocChars("\'s up with you?")
+        DocChars("$")
     ])
 ]
 
 a_del: [
     DelGroup([
-        DelChars(1), DelGroup([]),
-        DelSkip(10), DelWithGroup([])
+        DelSkip(1),
     ]),
-    DelWithGroup([])
 ]
 a_add: [
     AddGroup({"tag": "bullet"}, [
         AddGroup({"tag": "h3"}, [
-            AddChars("u"), AddSkip(10), AddWithGroup([])
+            AddSkip(1),
         ])
     ]),
     AddWithGroup([
@@ -29,20 +26,16 @@ a_add: [
 
 b_del: [
     DelGroup([
-        DelSkip(1), DelWithGroup([]),
-        DelSkip(3), DelChars(7), DelGroup([])
+        DelSkip(1),
     ]),
     DelGroup([
-        DelChars(4), DelSkip(11)
+        DelSkip(1)
     ])
 ]
 b_add: [
-    AddGroup({"tag": "p"}, []),
     AddGroup({"tag": "bullet"}, [
         AddGroup({"tag": "h3"}, [
-            AddSkip(1), AddWithGroup([]),
-            AddSkip(3), AddChars("8"), AddSkip(1), AddGroup({"tag": "caret", "client": "b"}, []),
-            AddSkip(10)
+            AddSkip(2)
         ])
     ])
 ]
