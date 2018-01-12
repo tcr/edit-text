@@ -29,7 +29,7 @@ fn launch(counter: Arc<AtomicUsize>, thread_count: usize) {
     println!();
     println!();
 
-    let mut child1 = Command::new("/Users/trim/github/edit-text//target/release/mercutio-sync")
+    let mut child1 = Command::new("/Users/trim/github/edit-text/target/release/mercutio-sync")
         .current_dir(dir.path())
         .env("RUST_BACKTRACE", "1")
         .arg("--port")
@@ -42,7 +42,7 @@ fn launch(counter: Arc<AtomicUsize>, thread_count: usize) {
         .spawn()
         .unwrap();
 
-    let mut child2 = Command::new("/Users/trim/github/edit-text//target/release/mercutio-wasm")
+    let mut child2 = Command::new("/Users/trim/github/edit-text/target/release/mercutio-wasm")
         .current_dir(dir.path())
         .env("RUST_BACKTRACE", "1")
         .arg("--port")
@@ -58,7 +58,7 @@ fn launch(counter: Arc<AtomicUsize>, thread_count: usize) {
     let now = Instant::now();
 
     let success = loop {
-        if now.elapsed().as_secs() > 10 {
+        if now.elapsed().as_secs() > 30 {
             child1.kill();
             child2.kill();
             break false;
