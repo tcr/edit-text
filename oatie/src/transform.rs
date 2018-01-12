@@ -820,13 +820,6 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                         t.close_b();
                     }
                 }
-                (Some(AddChars(ref a_chars)), None) => {
-                    t.regenerate();
-
-                    t.skip_a(a_chars.len());
-                    t.chars_b(a_chars);
-                    a.next();
-                }
 
                 // TODO don't like that this isn't a pattern match;
                 // This case should handle AddWithGroup and AddGroup (I believe)
@@ -989,16 +982,14 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                 (compare, None) => {
                     // println!("... {:?} {:?}", t.a_del, t.a_add);
                     // println!("... {:?} {:?}", t.b_del, t.b_add);
+                    
+                    let is_char = if let Some(AddChars(a_chars)) = compare.clone() {
+                        if t.supports_text() {
+                            t.regenerate();
 
-                    // TODO this logic is evidence AddObject should be broken out
-                    let groupsuccess = if let Some(AddGroup(ref a_attrs, _)) = compare {
-                    t.regenerate(); // TODO is this correct
-                        if a_attrs["tag"] == "caret" && t.supports_text() {
-                            a.enter();
-                            a.exit();
-                            t.enter_a(&Tag::from_attrs(a_attrs), None);
-                            t.close_a();
-
+                            t.skip_a(a_chars.len());
+                            t.chars_b(&a_chars);
+                            a.next();
                             true
                         } else {
                             false
@@ -1006,21 +997,40 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     } else {
                         false
                     };
-                    if !groupsuccess {
-                        let b_typ = t.tracks
-                            .iter()
-                            .rev()
-                            .find(|t| t.tag_b.is_some())
-                            .unwrap()
-                            .tag_b
-                            .clone()
-                            .unwrap()
-                            .tag_type()
-                            .unwrap();
-                        t.interrupt(b_typ, false);
-                        t.close_b();
-                        // t.closeA()
-                        b.exit();
+
+                    if !is_char {
+                        // TODO this logic is evidence AddObject should be broken out
+                        let groupsuccess = if let Some(AddGroup(ref a_attrs, _)) = compare {
+                            t.regenerate(); // TODO is this correct
+                            if a_attrs["tag"] == "caret" && t.supports_text() {
+                                a.enter();
+                                a.exit();
+                                t.enter_a(&Tag::from_attrs(a_attrs), None);
+                                t.close_a();
+
+                                true
+                            } else {
+                                false
+                            }
+                        } else {
+                            false
+                        };
+                        if !groupsuccess {
+                            let b_typ = t.tracks
+                                .iter()
+                                .rev()
+                                .find(|t| t.tag_b.is_some())
+                                .unwrap()
+                                .tag_b
+                                .clone()
+                                .unwrap()
+                                .tag_type()
+                                .unwrap();
+                            t.interrupt(b_typ, false);
+                            t.close_b();
+                            // t.closeA()
+                            b.exit();
+                        }
                     }
                 }
                 (Some(AddGroup(ref a_attrs, _)), _) => {
@@ -1263,13 +1273,52 @@ pub fn transform_del_del_inner(
                 b.next();
             }
             (Some(DelGroup(a_inner)), Some(DelWithGroup(b_inner))) => {
-                let (a_del_inner, b_del_inner) = transform_deletions(&a_inner, &b_inner);
+                let mut a_inner_del = DelWriter::new();
+                let mut b_inner_del = DelWriter::new();
 
-                a_del.place_all(&a_del_inner);
-                b_del.group(&b_del_inner);
+                let mut a_inner_step = DelStepper::new(&a_inner);
+                let mut b_inner_step = DelStepper::new(&b_inner);
+
+                transform_del_del_inner(
+                    &mut a_inner_del,
+                    &mut b_inner_del,
+                    &mut a_inner_step,
+                    &mut b_inner_step,
+                );
+                
+                while !a_inner_step.is_done() {
+                    match a_inner_step.head.clone() {
+                        Some(ref elem) => {
+                            b_inner_del.place(elem);
+                            if let &DelSkip(..) = elem {
+                                a_inner_del.place(elem);
+                            }
+                            if let &DelWithGroup(..) = elem {
+                                a_inner_del.place(elem);
+                            }
+                            a_inner_step.next();
+                        }
+                        None => {
+                            unreachable!();
+                        }
+                    }
+                }
+
+                assert!(b_inner_step.is_done());
+
+                a_del.place_all(&a_inner_del.result());
+                b_del.group(&b_inner_del.result());
 
                 a.next();
                 b.next();
+
+                // let (a_del_inner, b_del_inner) = transform_deletions(&a_inner, &b_inner);
+
+                // a_del.place_all(&a_del_inner);
+                // b_del.group(&b_del_inner);
+
+                // a.next();
+                // b.next();
             }
             (Some(DelSkip(a_count)), Some(DelGroup(b_inner))) => {
                 a_del.group(&b_inner);
@@ -1438,6 +1487,9 @@ pub fn transform_del_del_inner(
                         Some(ref elem) => {
                             a_inner_del.place(elem);
                             if let &DelSkip(..) = elem {
+                                b_inner_del.place(elem);
+                            }
+                            if let &DelWithGroup(..) = elem {
                                 b_inner_del.place(elem);
                             }
                             b_inner_step.next();

@@ -1,0 +1,40 @@
+
+doc:   [
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "p"}, [
+            DocChars("f"),
+        ]),
+        DocGroup({"tag": "p"}, [
+            DocChars("1y3YlRworat's up with you?")
+        ])
+    ])
+]
+
+a_del: [
+    DelWithGroup([
+        DelGroup([
+            DelSkip(1),
+        ]),
+        DelGroup([
+            DelSkip(26)
+        ])
+    ])
+]
+a_add: [
+    AddWithGroup([
+        AddGroup({"tag": "p"}, [
+            AddSkip(27),
+        ])
+    ])
+]
+
+b_del: [
+    DelGroup([
+        DelWithGroup([
+            DelChars(1),
+        ]),
+        DelWithGroup([])
+    ])
+]
+b_add: [
+]
