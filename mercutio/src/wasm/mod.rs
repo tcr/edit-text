@@ -74,8 +74,6 @@ impl Client {
     }
 }
 
-
-
 // // Creates an HTML tree from a document tree.
 // function docToStrings(ret: Array<string>, vec: Array<any>) {
 //   // TODO act like doc
@@ -109,11 +107,12 @@ fn doc_as_html(doc: &DocSpan) -> String {
     for elem in doc {
         match elem {
             &DocGroup(ref attrs, ref span) => {
-                out.push_str(&format!(r#"<div
+                out.push_str(&format!(
+                    r#"<div
                     data-tag={}
                     data-client={}
                     class={}
-                >"#, 
+                >"#,
                     serde_json::to_string(attrs.get("tag").unwrap_or(&"".to_string())).unwrap(),
                     serde_json::to_string(attrs.get("client").unwrap_or(&"".to_string())).unwrap(),
                     serde_json::to_string(attrs.get("class").unwrap_or(&"".to_string())).unwrap(),
@@ -121,13 +120,11 @@ fn doc_as_html(doc: &DocSpan) -> String {
                 out.push_str(&doc_as_html(span));
                 out.push_str(r"</div>");
             }
-            &DocChars(ref text) => {
-                for c in text.chars() {
-                    out.push_str(r"<span>");
-                    out.push(c);
-                    out.push_str(r"</span>");
-                }
-            }
+            &DocChars(ref text) => for c in text.chars() {
+                out.push_str(r"<span>");
+                out.push(c);
+                out.push_str(r"</span>");
+            },
         }
     }
     out
@@ -199,9 +196,7 @@ fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&mut Client) -> Result<(), Err
             8,
             false,
             false,
-            Box::new(|client: &mut Client| {
-                client_op(client, |doc| delete_char(doc))
-            }),
+            Box::new(|client: &mut Client| client_op(client, |doc| delete_char(doc))),
         ),
         // left
         (
@@ -452,7 +447,10 @@ fn handle_task(value: Task, client: &mut Client) -> Result<(), Error> {
             println!("new version is {:?}", version);
 
             // If the caret doesn't exist or was deleted, reinitialize.
-            if !with_action_context(client, |ctx| Ok(has_caret(ctx))).ok().unwrap_or(true) {
+            if !with_action_context(client, |ctx| Ok(has_caret(ctx)))
+                .ok()
+                .unwrap_or(true)
+            {
                 client_op(client, |doc| init_caret(doc)).unwrap();
             }
 

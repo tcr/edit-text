@@ -4,9 +4,6 @@ use oatie::debug_pretty;
 use oatie::doc::*;
 use oatie::schema::{validate_doc_span, ValidateContext};
 use oatie::transform::transform;
-use rocket_contrib::Json;
-use rocket::response::NamedFile;
-use rocket::State;
 use serde_json;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -74,7 +71,8 @@ pub fn action_sync(doc: &Doc, ops_a: Vec<Op>, ops_b: Vec<Op>) -> Result<(Doc, Op
     println!("OP A {:?}", op_a);
     println!("OP B {:?}", op_b);
 
-    let test = format!(r#"
+    let test = format!(
+        r#"
 doc:   {}
 
 a_del: {}
@@ -83,15 +81,15 @@ a_add: {}
 b_del: {}
 b_add: {}
 "#,
-    debug_pretty(&doc.0),
-    debug_pretty(&op_a.0),
-    debug_pretty(&op_a.1),
-    debug_pretty(&op_b.0),
-    debug_pretty(&op_b.1)
-);
+        debug_pretty(&doc.0),
+        debug_pretty(&op_a.0),
+        debug_pretty(&op_a.1),
+        debug_pretty(&op_b.0),
+        debug_pretty(&op_b.1)
+    );
     // TODO dump to document
     {
-        use ::std::io::prelude::*;
+        use std::io::prelude::*;
         let mut f = ::std::fs::File::create("test.txt").unwrap();
         f.write_all(&test.as_bytes()).unwrap();
         f.sync_all().unwrap();
@@ -230,7 +228,10 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
                     // Increase version
                     sync_state.version += 1;
 
-                    bus_capture.lock().unwrap().broadcast((doc.0.clone(), sync_state.version));
+                    bus_capture
+                        .lock()
+                        .unwrap()
+                        .broadcast((doc.0.clone(), sync_state.version));
                 }
             }) {
                 println!("Error: {:?}", value);
@@ -248,9 +249,7 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
                 out.send(serde_json::to_string(&command).unwrap());
             }
 
-            let mut rx = {
-                bus_capture.lock().unwrap().add_rx()
-            };
+            let mut rx = { bus_capture.lock().unwrap().add_rx() };
             thread::spawn(move || {
                 while let Ok((doc, version)) = rx.recv() {
                     let command = SyncClientCommand::Update(doc, version);
