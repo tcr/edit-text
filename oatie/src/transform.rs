@@ -1634,62 +1634,6 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
 
 /// Transforms a insertion preceding a deletion into a deletion preceding an insertion.
 /// After this, sequential deletions and insertions can be composed together in one operation.
-
-/*
-function delAfterIns (insA, delB, schema) {
-  var c, delr, insr, iterA, iterB, _ref;
-  _ref = oatie.record(), delr = _ref[0], insr = _ref[1];
-  iterA = new oatie.OpIterator(insA);
-  iterB = new oatie.OpIterator(delB);
-  iterA.next();
-  iterB.next();
-  c = oatie._combiner([delr, insr], iterA, true, iterB, false);
-  c.delAfterIns = function () {
-    var _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
-    while (!(iterA.isExit() || iterB.isExit())) {
-      if ((_ref1 = iterA.type) === 'text') {
-        c.useA();
-        delr.retain();
-      }
-      if ((_ref2 = iterA.type) === 'open') {
-        delr.enter(iterA.tag, iterA.attrs);
-        c.useA();
-      }
-      if (iterA.type === 'retain' && (iterB.type === 'remove' || iterB.type === 'retain')) {
-        c.pickB();
-      } else if (iterA.type === 'retain' && (iterB.type === 'unopen' || iterB.type === 'enter')) {
-        c.nextA().consumeB();
-      } else if (((_ref6 = iterA.type) === 'enter' || _ref6 === 'attrs') && (iterB.type === 'remove')) {
-        c.retainA();
-      } else if (((_ref6 = iterA.type) === 'enter' || _ref6 === 'attrs') && (iterB.type === 'retain')) {
-        c.retainA().nextB();
-      } else if (((_ref8 = iterA.type) === 'enter' || _ref8 === 'attrs') && ((_ref9 = iterB.type) === 'enter' || _ref9 === 'unopen')) {
-        c.pickB().delAfterIns().pickB();
-      }
-    }
-
-    while (!iterA.isExit()) {
-      c.retainA();
-    }
-    // Catch .close() ending.
-    if (iterA.type == 'close') {
-      delr.leave();
-      c.useA();
-      return this.delAfterIns();
-    }
-    while (!iterB.isExit()) {
-      if (iterB.type === 'retain') {
-        c.useB();
-      } else {
-        c.consumeB();
-      }
-    }
-    return this;
-  };
-  return c.delAfterIns().toJSON();
-}
-*/
-
 pub fn transform_add_del_inner(
     delres: &mut DelSpan,
     addres: &mut AddSpan,
