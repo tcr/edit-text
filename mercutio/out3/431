@@ -1,0 +1,77 @@
+
+doc:   [
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "pre"}, [
+            DocGroup({"tag": "caret", "client": "c"}, []),
+            DocChars("f"), DocGroup({"tag": "caret", "client": "d"}, []),
+            DocChars("NX"), DocGroup({"tag": "caret", "client": "g"}, []),
+            DocChars("63"), DocGroup({"tag": "caret", "client": "b"}, []),
+            DocChars("a  mAodON ")
+        ]),
+        DocGroup({"tag": "pre"}, [
+            DocChars("R"), DocGroup({"tag": "caret", "client": "e"}, []),
+            DocGroup({"tag": "caret", "client": "a"}, []),
+            DocChars("v6w")
+        ]),
+        DocGroup({"tag": "pre"}, [
+            DocChars(" n W")
+        ]),
+        DocGroup({"tag": "pre"}, [
+            DocGroup({"client": "f", "tag": "caret"}, []),
+            DocChars(" Hnhat\'s up with you?")
+        ])
+    ])
+]
+
+a_del: [
+    DelGroup([
+        DelWithGroup([
+            DelWithGroup([]),
+            DelSkip(1), DelWithGroup([]),
+            DelSkip(2), DelWithGroup([]),
+            DelSkip(2), DelWithGroup([]),
+            DelSkip(10)
+        ]),
+        DelWithGroup([
+            DelSkip(1), DelWithGroup([]),
+            DelGroup([])
+        ]),
+        DelSkip(2)
+    ])
+]
+a_add: [
+    AddWithGroup([
+        AddWithGroup([]),
+        AddSkip(1), AddWithGroup([]),
+        AddSkip(2), AddWithGroup([]),
+        AddSkip(2), AddWithGroup([]),
+        AddSkip(10)
+    ]),
+    AddWithGroup([
+        AddSkip(1), AddWithGroup([]),
+        AddChars(" y"), AddGroup({"tag": "caret", "client": "a"}, []),
+        AddChars(" ")
+    ])
+]
+
+b_del: [
+    DelWithGroup([
+        DelWithGroup([
+            DelWithGroup([]),
+            DelSkip(1), DelWithGroup([]),
+            DelSkip(2), DelWithGroup([]),
+            DelSkip(2), DelGroup([])
+        ])
+    ])
+]
+b_add: [
+    AddWithGroup([
+        AddWithGroup([
+            AddGroup({"tag": "caret", "client": "b"}, []),
+            AddWithGroup([]),
+            AddSkip(1), AddWithGroup([]),
+            AddSkip(2), AddWithGroup([]),
+            AddSkip(2)
+        ])
+    ])
+]

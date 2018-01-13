@@ -1,0 +1,70 @@
+
+doc:   [
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "pre"}, [
+            DocChars("V"), DocGroup({"tag": "caret", "client": "e"}, []),
+            DocChars(" U"), DocGroup({"tag": "caret", "client": "d"}, []),
+            DocChars("l 1 "), DocGroup({"tag": "caret", "client": "a"}, []),
+            DocChars("3I "), DocGroup({"client": "b", "tag": "caret"}, []),
+            DocChars(" ")
+        ]),
+        DocGroup({"tag": "h1"}, [
+            DocChars("qu"), DocGroup({"client": "c", "tag": "caret"}, []),
+            DocChars("8Jsog")
+        ])
+    ]),
+    DocGroup({"tag": "h2"}, [
+        DocChars("iQ8R4SuvWhat\'s up with you?")
+    ])
+]
+
+a_del: [
+    DelWithGroup([
+        DelGroup([
+            DelChars(1), DelWithGroup([]),
+            DelSkip(2), DelWithGroup([]),
+            DelSkip(2), DelChars(2), DelGroup([]),
+            DelSkip(1), DelChars(2), DelGroup([]),
+            DelSkip(1)
+        ])
+    ])
+]
+a_add: [
+    AddWithGroup([
+        AddGroup({"tag": "h1"}, [
+            AddGroup({"client": "b", "tag": "caret"}, []),
+            AddWithGroup([]),
+            AddSkip(1), AddChars("0"), AddGroup({"client": "a", "tag": "caret"}, []),
+            AddSkip(1), AddWithGroup([]),
+            AddSkip(2), AddChars("5"), AddSkip(1), AddChars("qH"), AddSkip(1)
+        ])
+    ])
+]
+
+b_del: [
+    DelGroup([
+        DelWithGroup([
+            DelSkip(1), DelWithGroup([]),
+            DelSkip(2), DelWithGroup([]),
+            DelSkip(4), DelWithGroup([]),
+            DelSkip(3), DelWithGroup([]),
+            DelSkip(1)
+        ]),
+        DelWithGroup([
+            DelSkip(1), DelChars(1), DelGroup([])
+        ])
+    ])
+]
+b_add: [
+    AddWithGroup([
+        AddChars("a"), AddGroup({"client": "c", "tag": "caret"}, []),
+        AddSkip(1), AddWithGroup([]),
+        AddSkip(2), AddWithGroup([]),
+        AddSkip(4), AddWithGroup([]),
+        AddSkip(3), AddWithGroup([]),
+        AddSkip(1)
+    ]),
+    AddWithGroup([
+        AddSkip(1), AddChars("l")
+    ])
+]

@@ -1,0 +1,84 @@
+
+doc:   [
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "h2"}, [
+            DocGroup({"tag": "caret", "client": "a"}, []),
+            DocChars("5")
+        ]),
+        DocGroup({"tag": "pre"}, [
+            DocGroup({"client": "b", "tag": "caret"}, []),
+            DocGroup({"client": "f", "tag": "caret"}, []),
+            DocGroup({"client": "e", "tag": "caret"}, []),
+            DocChars("eU"),
+            DocGroup({"tag": "caret", "client": "c"}, []),
+            DocChars("W qaA")
+        ]),
+        DocGroup({"tag": "h3"}, [
+            DocChars("J"),
+            DocGroup({"client": "d", "tag": "caret"}, []),
+            DocChars("8WrWhat\'s up with you?")
+        ])
+    ])
+]
+
+a_del: [
+    DelGroup([
+        DelGroup([
+            DelGroup([]),
+            DelSkip(1)
+        ]),
+        DelGroup([
+            DelWithGroup([]),
+            DelWithGroup([]),
+            DelWithGroup([]),
+            DelSkip(1),
+            DelChars(1),
+            DelWithGroup([]),
+            DelSkip(5)
+        ])
+    ]),
+]
+a_add: [
+    AddGroup({"tag": "h2"}, [
+        AddGroup({"tag": "caret", "client": "a"}, []),
+        AddChars(" "),
+        AddSkip(1),
+        AddWithGroup([]),
+        AddWithGroup([]),
+        AddWithGroup([]),
+        AddSkip(1),
+        AddChars("m"),
+        AddWithGroup([]),
+        AddSkip(5),
+        AddChars("h"),
+        AddGroup({"client": "j", "tag": "caret"}, [])
+    ]),
+]
+
+b_del: [
+    DelWithGroup([
+        DelWithGroup([
+            DelWithGroup([]),
+            DelSkip(1)
+        ]),
+        DelGroup([
+            DelWithGroup([]),
+            DelWithGroup([]),
+            DelSkip(9)
+        ])
+    ])
+]
+b_add: [
+    AddWithGroup([
+        AddWithGroup([
+            AddWithGroup([]),
+            AddSkip(1)
+        ]),
+        AddGroup({"tag": "p"}, [
+            AddWithGroup([]),
+            AddWithGroup([]),
+            AddChars("0 "),
+            AddSkip(9)
+        ])
+    ])
+]

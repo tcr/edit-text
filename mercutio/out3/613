@@ -1,0 +1,71 @@
+
+doc:   [
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "h3"}, [
+            DocGroup({"client": "e", "tag": "caret"}, []),
+            DocChars("1"), DocGroup({"client": "f", "tag": "caret"}, []),
+            DocChars("M 5Y  lG WHq 0"), DocGroup({"client": "d", "tag": "caret"}, []),
+            DocChars("X")
+        ]),
+        DocGroup({"tag": "p"}, [
+            DocGroup({"tag": "caret", "client": "c"}, []),
+            DocChars("6")
+        ]),
+        DocGroup({"tag": "p"}, [
+            DocChars("F8uU"), DocGroup({"client": "a", "tag": "caret"}, []),
+            DocChars(" 3fb"), DocGroup({"client": "b", "tag": "caret"}, []),
+            DocChars("5p1 4aNmCjH250at\'s up with you?")
+        ])
+    ])
+]
+
+a_del: [
+    DelGroup([
+        DelGroup([
+            DelGroup([]),
+            DelSkip(1), DelWithGroup([]),
+            DelSkip(12), DelChars(2), DelGroup([]),
+            DelChars(1)
+        ]),
+        DelGroup([
+            DelGroup([]),
+            DelChars(1)
+        ]),
+        DelWithGroup([
+            DelSkip(4), DelGroup([]),
+            DelSkip(1), DelChars(3), DelGroup([])
+        ])
+    ])
+]
+a_add: [
+    AddGroup({"tag": "h3"}, [
+        AddChars("H"), AddSkip(1), AddGroup({"client": "e", "tag": "caret"}, []),
+        AddWithGroup([]),
+        AddSkip(12), AddGroup({"tag": "caret", "client": "a"}, []),
+        AddGroup({"tag": "caret", "client": "c"}, []),
+        AddChars("k 5 "), AddGroup({"tag": "caret", "client": "d"}, [])
+    ]),
+    AddWithGroup([
+        AddSkip(5), AddChars("0"), AddGroup({"tag": "caret", "client": "b"}, []),
+        AddChars("b")
+    ])
+]
+
+b_del: [
+    DelWithGroup([
+        DelGroup([
+            DelWithGroup([]),
+            DelSkip(1), DelGroup([]),
+            DelSkip(16)
+        ])
+    ])
+]
+b_add: [
+    AddWithGroup([
+        AddGroup({"tag": "h3"}, [
+            AddGroup({"client": "f", "tag": "caret"}, []),
+            AddChars(" "), AddWithGroup([]),
+            AddSkip(17)
+        ])
+    ])
+]

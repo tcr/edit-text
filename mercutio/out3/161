@@ -1,0 +1,82 @@
+
+doc:   [
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "p"}, [
+            DocGroup({"client": "a", "tag": "caret"}, []),
+            DocGroup({"client": "b", "tag": "caret"}, []),
+            DocChars("m8NN1V"), DocGroup({"tag": "caret", "client": "e"}, [])
+        ]),
+        DocGroup({"tag": "p"}, [
+            DocChars("Xbhw2")
+        ]),
+        DocGroup({"tag": "p"}, [
+            DocChars("1  "), DocGroup({"tag": "caret", "client": "c"}, []),
+            DocChars("x")
+        ])
+    ]),
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "p"}, [
+            DocChars("J"), DocGroup({"client": "d", "tag": "caret"}, []),
+            DocChars("7ohat\'s up with you?")
+        ])
+    ])
+]
+
+a_del: [
+    DelGroup([
+        DelGroup([
+            DelGroup([]),
+            DelGroup([]),
+            DelSkip(2), DelChars(4), DelGroup([])
+        ]),
+        DelGroup([
+            DelChars(2), DelSkip(3)
+        ]),
+        DelWithGroup([
+            DelSkip(3), DelWithGroup([]),
+            DelSkip(1)
+        ])
+    ]),
+    DelWithGroup([
+        DelWithGroup([
+            DelChars(1), DelGroup([]),
+            DelChars(2)
+        ])
+    ])
+]
+a_add: [
+    AddGroup({"tag": "h3"}, [
+        AddChars("71j"), AddGroup({"tag": "caret", "client": "b"}, []),
+        AddChars("k 7"), AddSkip(2), AddGroup({"client": "a", "tag": "caret"}, []),
+        AddChars("K4p4nW"), AddGroup({"tag": "caret", "client": "e"}, []),
+        AddChars("f")
+    ]),
+    AddGroup({"tag": "h3"}, [
+        AddSkip(3)
+    ]),
+    AddWithGroup([
+        AddSkip(3), AddWithGroup([]),
+        AddSkip(1)
+    ]),
+    AddWithGroup([
+        AddWithGroup([
+            AddGroup({"tag": "caret", "client": "d"}, [])
+        ])
+    ])
+]
+
+b_del: [
+    DelWithGroup([
+        DelGroup([
+            DelSkip(9)
+        ])
+    ])
+]
+b_add: [
+    AddWithGroup([
+        AddGroup({"tag": "p"}, [
+            AddChars("el"), AddGroup({"tag": "caret", "client": "f"}, []),
+            AddSkip(9)
+        ])
+    ])
+]

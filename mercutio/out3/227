@@ -1,0 +1,88 @@
+
+doc:   [
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "h3"}, [
+            DocChars("h"), DocGroup({"client": "a", "tag": "caret"}, [])
+        ]),
+        DocGroup({"tag": "p"}, [
+            DocChars("S  01")
+        ]),
+        DocGroup({"tag": "h3"}, [
+            DocChars("q  2 ")
+        ])
+    ]),
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "h1"}, [
+            DocChars("0"), DocGroup({"client": "d", "tag": "caret"}, [])
+        ]),
+        DocGroup({"tag": "h1"}, [
+            DocGroup({"tag": "caret", "client": "b"}, []),
+            DocChars("Tg0O  pe")
+        ])
+    ]),
+    DocGroup({"tag": "h3"}, [
+        DocChars(" 1M "), DocGroup({"client": "e", "tag": "caret"}, []),
+        DocChars("Re")
+    ]),
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "p"}, [
+            DocChars("U"), DocGroup({"tag": "caret", "client": "c"}, []),
+            DocChars("w f05at\'s up with you?")
+        ])
+    ])
+]
+
+a_del: [
+    DelWithGroup([
+        DelWithGroup([
+            DelChars(1), DelGroup([])
+        ])
+    ])
+]
+a_add: [
+    AddWithGroup([
+        AddWithGroup([
+            AddGroup({"client": "a", "tag": "caret"}, []),
+            AddChars(" ")
+        ])
+    ])
+]
+
+b_del: [
+    DelGroup([
+        DelGroup([
+            DelSkip(1), DelWithGroup([])
+        ]),
+        DelGroup([
+            DelSkip(5)
+        ]),
+        DelWithGroup([
+            DelSkip(5)
+        ])
+    ]),
+    DelWithGroup([
+        DelGroup([
+            DelChars(1), DelWithGroup([])
+        ]),
+        DelGroup([
+            DelGroup([]),
+            DelSkip(8)
+        ])
+    ])
+]
+b_add: [
+    AddGroup({"tag": "h3"}, [
+        AddSkip(1), AddWithGroup([]),
+        AddGroup({"tag": "caret", "client": "b"}, []),
+        AddSkip(5)
+    ]),
+    AddWithGroup([
+        AddChars(" "), AddSkip(5)
+    ]),
+    AddWithGroup([
+        AddGroup({"tag": "h1"}, [
+            AddWithGroup([]),
+            AddChars(" l"), AddSkip(8)
+        ])
+    ])
+]

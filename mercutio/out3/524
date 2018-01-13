@@ -1,0 +1,76 @@
+
+doc:   [
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "p"}, [
+            DocGroup({"tag": "caret", "client": "f"}, []),
+            DocChars("6y "), DocGroup({"client": "d", "tag": "caret"}, [])
+        ]),
+        DocGroup({"tag": "p"}, [
+            DocChars("y"), DocGroup({"tag": "caret", "client": "a"}, []),
+            DocChars("FD"), DocGroup({"client": "e", "tag": "caret"}, []),
+            DocChars("8L")
+        ]),
+        DocGroup({"tag": "p"}, [
+            DocChars("N5 D ")
+        ])
+    ]),
+    DocGroup({"tag": "pre"}, [
+        DocGroup({"client": "c", "tag": "caret"}, []),
+        DocChars(" "), DocGroup({"client": "b", "tag": "caret"}, []),
+        DocChars("llo worl3hat\'s up with you?")
+    ])
+]
+
+a_del: [
+    DelGroup([
+        DelGroup([
+            DelWithGroup([]),
+            DelSkip(2), DelChars(1), DelGroup([])
+        ]),
+        DelGroup([
+            DelChars(1), DelGroup([]),
+            DelSkip(1), DelChars(1), DelGroup([]),
+            DelSkip(2)
+        ]),
+        DelWithGroup([
+            DelSkip(5)
+        ])
+    ]),
+    DelWithGroup([
+        DelGroup([]),
+        DelSkip(1), DelGroup([]),
+        DelChars(1)
+    ])
+]
+a_add: [
+    AddGroup({"tag": "p"}, [
+        AddWithGroup([]),
+        AddSkip(1), AddChars("P"), AddSkip(1), AddGroup({"tag": "caret", "client": "a"}, []),
+        AddGroup({"tag": "caret", "client": "e"}, []),
+        AddGroup({"tag": "caret", "client": "d"}, []),
+        AddChars("WY"), AddSkip(3)
+    ]),
+    AddWithGroup([
+        AddSkip(5)
+    ]),
+    AddWithGroup([
+        AddGroup({"client": "c", "tag": "caret"}, []),
+        AddChars("P"), AddSkip(1), AddChars("3"), AddGroup({"tag": "caret", "client": "b"}, [])
+    ])
+]
+
+b_del: [
+    DelWithGroup([
+        DelWithGroup([
+            DelGroup([]),
+            DelChars(1)
+        ])
+    ])
+]
+b_add: [
+    AddWithGroup([
+        AddWithGroup([
+            AddChars("l"), AddGroup({"client": "f", "tag": "caret"}, [])
+        ])
+    ])
+]

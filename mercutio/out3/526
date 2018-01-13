@@ -1,0 +1,85 @@
+
+doc:   [
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "p"}, [
+            DocGroup({"tag": "caret", "client": "c"}, []),
+            DocChars(" ")
+        ]),
+        DocGroup({"tag": "h1"}, [
+            DocGroup({"tag": "caret", "client": "b"}, []),
+            DocChars("R5 1D K02h"), DocGroup({"client": "a", "tag": "caret"}, []),
+            DocChars(" ")
+        ]),
+        DocGroup({"tag": "p"}, [
+            DocChars("1")
+        ]),
+        DocGroup({"tag": "p"}, [
+            DocChars("No3 rllo worldj")
+        ])
+    ]),
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "h1"}, [
+            DocChars("i ")
+        ]),
+        DocGroup({"tag": "h1"}, [
+            DocChars("t\'s up with you?")
+        ])
+    ])
+]
+
+a_del: [
+    DelGroup([
+        DelGroup([
+            DelWithGroup([]),
+            DelSkip(1)
+        ]),
+        DelGroup([
+            DelGroup([]),
+            DelSkip(1), DelChars(2), DelSkip(3), DelChars(1), DelSkip(1), DelChars(2), DelGroup([]),
+            DelChars(1)
+        ]),
+        DelSkip(2)
+    ])
+]
+a_add: [
+    AddGroup({"tag": "p"}, [
+        AddGroup({"client": "b", "tag": "caret"}, []),
+        AddChars("8"), AddGroup({"client": "a", "tag": "caret"}, []),
+        AddChars("s  "), AddWithGroup([]),
+        AddSkip(5), AddChars(" "), AddSkip(1)
+    ]),
+    AddSkip(2)
+]
+
+b_del: [
+    DelWithGroup([
+        DelWithGroup([
+            DelGroup([]),
+            DelSkip(1)
+        ]),
+        DelGroup([
+            DelWithGroup([]),
+            DelSkip(10), DelWithGroup([]),
+            DelSkip(1)
+        ]),
+        DelGroup([
+            DelChars(1)
+        ]),
+        DelGroup([
+            DelSkip(15)
+        ])
+    ])
+]
+b_add: [
+    AddWithGroup([
+        AddWithGroup([
+            AddSkip(1)
+        ]),
+        AddGroup({"tag": "h1"}, [
+            AddWithGroup([]),
+            AddSkip(10), AddWithGroup([]),
+            AddSkip(1), AddGroup({"client": "c", "tag": "caret"}, []),
+            AddChars("t"), AddSkip(15)
+        ])
+    ])
+]

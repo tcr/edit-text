@@ -8,7 +8,7 @@ use std::sync::Arc;
 use std::thread;
 
 fn launch(input: &str) -> i32 {
-    let mut child = Command::new("/Users/trim/github/edit-text/target/release/oatie-transform")
+    let mut child = Command::new("/Users/trim/tcr/edit-text/target/release/oatie-transform")
         // .current_dir(dir.path())
         .env("RUST_BACKTRACE", "1")
         // .arg("--port")
