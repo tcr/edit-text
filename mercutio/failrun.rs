@@ -123,7 +123,7 @@ fn main() {
     println!();
 
     let mut files = vec![];
-    for entry in fs::read_dir("out/").unwrap() {
+    for entry in fs::read_dir("in/").unwrap() {
         let entry = entry.unwrap();
         let path = entry.path();
         // println!("path {:?}", path);

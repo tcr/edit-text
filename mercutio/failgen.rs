@@ -103,7 +103,7 @@ fn launch(counter: Arc<AtomicUsize>, thread_count: usize) {
             let cur_value = counter.load(Ordering::Relaxed);
             counter.store(cur_value + 1, Ordering::Relaxed);
 
-            let mut f = File::create(format!("out/{}", cur_value)).expect("file not created");
+            let mut f = File::create(format!("in/{}", cur_value)).expect("file not created");
             f.write_all(contents.as_bytes());
 
             println!("{} ...next", cur_value);
@@ -117,7 +117,7 @@ fn launch(counter: Arc<AtomicUsize>, thread_count: usize) {
 
 fn main() {
     let mut high = 0;
-    for entry in fs::read_dir("out/").unwrap() {
+    for entry in fs::read_dir("in/").unwrap() {
         let entry = entry.unwrap();
         let path = entry.path();
         // println!("path {:?}", path);
@@ -130,7 +130,7 @@ fn main() {
     }
 
     let mut counter = Arc::new(AtomicUsize::new((high as usize) + 1));
-    println!("Start with out/{:?}", counter.load(Ordering::Relaxed));
+    println!("Start with in/{:?}", counter.load(Ordering::Relaxed));
     println!();
 
     // panic!("done");
