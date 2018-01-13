@@ -12,14 +12,14 @@ pub struct ActionContext {
 pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
     let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
     assert!(walker.back_block());
-    
+
     let mut parent_walker = walker.clone();
     if parent_walker.parent() {
         if let Some(DocGroup(ref attrs, ref span)) = parent_walker.doc().head() {
             if attrs["tag"] == "bullet" {
                 // Do the list destructuring here
                 let mut writer = parent_walker.to_writer();
-                
+
                 writer.del.group(&del_span![DelSkip(span.skip_len())]);
                 writer.del.exit_all();
 
@@ -35,7 +35,7 @@ pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
                 //     assert_eq!(attrs["tag"], "ul");
 
                 //     let mut writer = parent_walker.to_writer();
-                
+
                 //     writer.del.group(&del_span![DelSkip(1)]);
                 //     writer.del.exit_all();
 
@@ -58,9 +58,7 @@ pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
 
     writer.add.group(
         &hashmap! { "tag".to_string() => "bullet".to_string() },
-        &add_span![
-            AddSkip(1)
-        ],
+        &add_span![AddSkip(1)],
     );
     writer.add.exit_all();
 
@@ -118,12 +116,12 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
                 }
             }
         }
-        
+
         // Return to block parent.
         assert!(block_walker.back_block());
         let span_2 = match block_walker.stepper().head() {
             Some(DocGroup(.., span)) => span.skip_len(),
-            _ => unreachable!()
+            _ => unreachable!(),
         };
 
         let last_doc_stack = block_walker.doc().stack.clone();
@@ -142,7 +140,7 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
         // Surround block.
         let (attrs, span_1) = match block_walker.stepper().head() {
             Some(DocGroup(attrs, span)) => (attrs, span.skip_len()),
-            _ => unreachable!()
+            _ => unreachable!(),
         };
 
         let mut writer = block_walker.to_writer();
@@ -168,7 +166,7 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
 
         let res = writer.result();
 
-        return Ok(res)
+        return Ok(res);
     }
 
     walker.back_char();
@@ -217,8 +215,7 @@ pub fn split_block(ctx: ActionContext) -> Result<Op, Error> {
 
     let mut prev_walker = walker.clone();
     assert!(prev_walker.back_block());
-    let previous_block = if let Some(DocGroup(attrs, _)) = prev_walker.doc().head()
-    {
+    let previous_block = if let Some(DocGroup(attrs, _)) = prev_walker.doc().head() {
         attrs["tag"].to_string()
     } else {
         // Fill in default value.
