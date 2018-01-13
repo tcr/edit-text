@@ -876,13 +876,6 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     }
                 }
 
-                // caret-42
-                // (None, Some(AddChars(ref b_chars))) => {
-                //     t.chars_a(b_chars);
-                //     t.skip_b(b_chars.len());
-                //     b.next();
-                // }
-
                 // Opening
                 (Some(AddGroup(ref a_attrs, _)), Some(AddGroup(ref b_attrs, _))) => {
                     // TODO should t.regenerate be called??
@@ -980,9 +973,6 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     // TODO if they are different tags THEN WHAT
                 }
                 (compare, None) => {
-                    // println!("... {:?} {:?}", t.a_del, t.a_add);
-                    // println!("... {:?} {:?}", t.b_del, t.b_add);
-                    
                     let is_char = if let Some(AddChars(a_chars)) = compare.clone() {
                         if t.supports_text() {
                             t.regenerate();
@@ -1028,18 +1018,15 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                                 .unwrap();
                             t.interrupt(b_typ, false);
                             t.close_b();
-                            // t.closeA()
                             b.exit();
                         }
                     }
                 }
                 (Some(AddGroup(ref a_attrs, _)), _) => {
-                    // TODO should carets be worked around like this?
-
                     let a_type = Tag::from_attrs(a_attrs).tag_type();
                     t.regenerate_until(&a_type.clone().unwrap());
 
-                    // TODO should t.regenerate be called??
+                    // TODO should carets be worked around like this?
                     if a_attrs["tag"] == "caret" {
                         // Carets
                         a.enter();
@@ -1071,18 +1058,12 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                             t.enter_a(&Tag::from_attrs(a_attrs), None);
                         }
                     }
-
-                    // println!("adding left group:");
-                    // for t in &t.tracks {
-                    //     println!(" - {:?}", t);
-                    // }
                 }
-                (_, Some(AddGroup(ref b_attrs, _))) => {// TODO should carets be worked around like this?
-                    // TODO should t.regenerate be called??
+                (_, Some(AddGroup(ref b_attrs, _))) => {
                     let b_type = Tag::from_attrs(b_attrs).tag_type();
                     t.regenerate_until(&b_type.clone().unwrap());
-                    println!("TRACKS {:?}", t.tracks);
 
+                    // TODO should carets be worked around like this?
                     if b_attrs["tag"] == "caret" {
                         // Carets
                         b.enter();
@@ -1250,6 +1231,7 @@ fn undel(input_del: &DelSpan) -> DelSpan {
     for elem in input_del {
         match elem {
             &DelChars(..) => {
+                // skip
             }
             &DelSkip(value) => {
                 del.place(&DelSkip(value));
@@ -1309,27 +1291,8 @@ pub fn transform_del_del_inner(
                     &mut a_inner_step,
                     &mut b_inner_step,
                 );
-                
-                // while !a_inner_step.is_done() {
-                //     match a_inner_step.head.clone() {
-                //         Some(ref elem) => {
-                //             b_inner_del.place(elem);
-                //             if let &DelSkip(..) = elem {
-                //                 a_inner_del.place(elem);
-                //             }
-                //             if let &DelWithGroup(..) = elem {
-                //                 a_inner_del.place(elem);
-                //             }
-                //             a_inner_step.next();
-                //         }
-                //         None => {
-                //             unreachable!();
-                //         }
-                //     }
-                // }
 
                 assert!(b_inner_step.is_done());
-
 
                 // Del the del
                 let mut del_span = vec![];
@@ -1347,14 +1310,6 @@ pub fn transform_del_del_inner(
 
                 a.next();
                 b.next();
-
-                // let (a_del_inner, b_del_inner) = transform_deletions(&a_inner, &b_inner);
-
-                // a_del.place_all(&a_del_inner);
-                // b_del.group(&b_del_inner);
-
-                // a.next();
-                // b.next();
             }
             (Some(DelSkip(a_count)), Some(DelGroup(b_inner))) => {
                 a_del.group(&b_inner);
@@ -1632,8 +1587,6 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
     (a_res, b_res)
 }
 
-/// Transforms a insertion preceding a deletion into a deletion preceding an insertion.
-/// After this, sequential deletions and insertions can be composed together in one operation.
 pub fn transform_add_del_inner(
     delres: &mut DelSpan,
     addres: &mut AddSpan,
@@ -1831,12 +1784,6 @@ pub fn transform_add_del_inner(
                         addres.place(&AddGroup(attrs, addres_inner));
                         delres.place(&DelWithGroup(delres_inner));
                         a.next();
-
-                        // a.next();
-                        // b.next();
-
-                        // let (_, ins) = transform_add_del(&insspan, &span);
-                        // addres.place(&AddGroup(attr, ins));
                     }
                 }
             }
@@ -1857,11 +1804,6 @@ pub fn transform_add_del_inner(
                             a.next();
                         }
                     }
-
-
-
-
-
                     AddWithGroup(ins_span) => {
                         if span.skip_post_len() == 0 {
                             fn unadd(add: &AddSpan) -> DelSpan {
@@ -1940,15 +1882,7 @@ pub fn transform_add_del_inner(
                         a.next();
                         b.next();
                     }
-                        
-                    // AddWithGroup(ins_span) => {
-                    //     a.next();
-                    //     b.next();
 
-                    //     let (del, ins) = transform_add_del(&ins_span, &span);
-                    //     delres.place(&DelGroup(del));
-                    //     addres.place_all(&ins[..]);
-                    // }
                     AddGroup(tags, ins_span) => {
                         let mut a_inner = AddStepper::new(&ins_span);
                         let mut delres_inner: DelSpan = vec![];
@@ -2013,7 +1947,8 @@ pub fn transform_add_del_inner(
     }
 }
 
-
+/// Transforms a insertion preceding a deletion into a deletion preceding an insertion.
+/// After this, sequential deletions and insertions can be composed together in one operation.
 pub fn transform_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
     let mut delres: DelSpan = Vec::with_capacity(avec.len() + bvec.len());
     let mut addres: AddSpan = Vec::with_capacity(avec.len() + bvec.len());
@@ -2037,7 +1972,6 @@ pub fn transform_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
 }
 
 /// Transform two operations according to a schema.
-
 pub fn transform(a_original: &Op, b_original: &Op) -> (Op, Op) {
     // Transform deletions A and B against each other to get delA` and delB`.
     println!(" # transform[1] transform_deletions");
@@ -2090,10 +2024,6 @@ pub fn transform(a_original: &Op, b_original: &Op) -> (Op, Op) {
 
     // Insertions from both clients must be composed as though they happened against delA` and delB`
     // so that we don't have phantom elements.
-    //var _ = oatie._composer(insA, true, delA_1, false).compose().toJSON(), insA1 = _[1];
-    // var _ = oatie._composer(insB, true, delB_1, false).compose().toJSON(), insB1 = _[1];
-    // let a_ins_1 = a.clone().1;
-    // let b_ins_1 = b.clone().1;
 
     // Transform insert operations together.
     println!(" # transform[4] transform_insertions");
@@ -2107,8 +2037,6 @@ pub fn transform(a_original: &Op, b_original: &Op) -> (Op, Op) {
     println!();
 
     // Our delete operations are now subsequent operations, and so can be composed.
-    //var _ = oatie._composer(delA_1, false, delA_2, false).compose().toJSON(), delA_3 = _[0], _ = _[1];
-    //var _ = oatie._composer(delB_1, false, delB_2, false).compose().toJSON(), delB_3 = _[0], _ = _[1];
     println!(" # transform[5] compose_del_del");
     println!(" a_del_1 {:?}", a_del_1);
     println!(" a_del_2 {:?}", a_del_2);
@@ -2138,109 +2066,3 @@ pub fn transform(a_original: &Op, b_original: &Op) -> (Op, Op) {
 
     ((a_del_3, a_ins_2), (b_del_3, b_ins_2))
 }
-
-// transform with corrections
-// TODO
-
-/*
-pub fn transform_validate(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan) {
-    let mut span = &spanvec[..];
-
-    let mut first = None;
-    if span.len() > 0 {
-        first = Some(span[0].clone());
-        span = &span[1..]
-    }
-
-    let mut exhausted = first.is_none();
-
-    trace!("ABOUT TO APPLY ADD {:?} {:?}", first, span);
-
-    loop {
-        // Flags for whether we have partially or fully consumed an atom.
-        let mut nextdel = true;
-        let mut nextfirst = true;
-
-        trace!("next {:?} {:?} {:?}", d, first, exhausted);
-
-        match d.clone() {
-            AddSkip(count) => match first.clone().unwrap() {
-                DocChars(ref value) => {
-                    let len = value.chars().count();
-                    if len < count {
-                        place_chars(&mut res, value.to_owned());
-                        d = AddSkip(count - len);
-                        nextdel = false;
-                    } else if len > count {
-                        place_chars(&mut res, value[0..count].to_owned());
-                        first = Some(DocChars(value[count..len].to_owned()));
-                        nextfirst = false;
-                    } else {
-                        place_chars(&mut res, value.to_owned());
-                    }
-                }
-                DocGroup(..) => {
-                    res.push(first.clone().unwrap());
-                    if count > 1 {
-                        d = AddSkip(count - 1);
-                        nextdel = false;
-                    }
-                }
-            },
-            AddWithGroup(ref delspan) => match first.clone().unwrap() {
-                DocGroup(ref attrs, ref span) => {
-                    res.push(DocGroup(attrs.clone(), apply_add(span, delspan)));
-                }
-                _ => {
-                    panic!("Invalid AddWithGroup");
-                }
-            },
-            AddChars(value) => {
-                place_chars(&mut res, value);
-                nextfirst = false;
-            }
-            AddGroup(attrs, innerspan) => {
-                let mut subdoc = vec![];
-                if !exhausted {
-                    subdoc.push(first.clone().unwrap());
-                    subdoc.extend_from_slice(span);
-                }
-                trace!("CALLING INNER {:?} {:?}", subdoc, innerspan);
-
-                let (inner, rest) = apply_add_inner(&subdoc, &innerspan);
-                place_any(&mut res, &DocGroup(attrs, inner));
-
-                trace!("REST OF INNER {:?} {:?}", rest, del);
-
-                let inner = apply_add(&rest, &del.to_vec());
-                place_many(&mut res, &inner);
-                return (res, vec![]);
-            }
-        }
-
-        if nextdel {
-            if del.len() == 0 {
-                let mut remaining = vec![];
-                if !nextfirst && !first.is_none() && !exhausted {
-                    remaining.push(first.clone().unwrap());
-                    // place_any(&mut res, &first.clone().unwrap());
-                }
-                remaining.extend_from_slice(span);
-                return (res, remaining);
-            }
-
-            d = del[0].clone();
-            del = &del[1..];
-        }
-
-        if nextfirst {
-            if span.len() == 0 {
-                exhausted = true;
-            } else {
-                first = Some(span[0].clone());
-                span = &span[1..];
-            }
-        }
-    }
-}
-*/
