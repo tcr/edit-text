@@ -1,0 +1,81 @@
+
+doc:   [
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "pre"}, [
+            DocChars("u"), DocGroup({"client": "e", "tag": "caret"}, []),
+            DocChars("  0dLYV")
+        ]),
+        DocGroup({"tag": "h1"}, [
+            DocChars("Y"), DocGroup({"tag": "caret", "client": "b"}, []),
+            DocChars(" "), DocGroup({"client": "f", "tag": "caret"}, []),
+            DocChars("t"), DocGroup({"tag": "caret", "client": "a"}, []),
+            DocChars("45 "), DocGroup({"tag": "caret", "client": "d"}, [])
+        ]),
+        DocGroup({"tag": "p"}, [
+            DocChars("I  d8S87")
+        ])
+    ]),
+    DocGroup({"tag": "pre"}, [
+        DocGroup({"client": "c", "tag": "caret"}, []),
+        DocChars("Q5 "), DocGroup({"client": "g", "tag": "caret"}, [])
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocChars("64poT t r6WBVq J   TBg L02J 0 3  3I6c7 P 46 2 hat\'s up with you?")
+    ])
+]
+
+a_del: [
+    DelGroup([
+        DelWithGroup([
+            DelSkip(1), DelWithGroup([]),
+            DelSkip(7)
+        ]),
+        DelGroup([
+            DelSkip(1), DelGroup([]),
+            DelSkip(1), DelWithGroup([]),
+            DelSkip(1), DelGroup([]),
+            DelSkip(3), DelWithGroup([])
+        ]),
+        DelWithGroup([
+            DelSkip(8)
+        ])
+    ]),
+    DelGroup([
+        DelSkip(5)
+    ])
+]
+a_add: [
+    AddWithGroup([
+        AddSkip(1), AddWithGroup([]),
+        AddSkip(7)
+    ]),
+    AddGroup({"tag": "h3"}, [
+        AddSkip(2), AddGroup({"tag": "caret", "client": "b"}, []),
+        AddWithGroup([]),
+        AddSkip(1), AddGroup({"client": "a", "tag": "caret"}, []),
+        AddChars(" "), AddSkip(3)
+    ]),
+    AddGroup({"tag": "h3"}, [
+        AddChars("D"), AddWithGroup([])
+    ]),
+    AddWithGroup([
+        AddSkip(8)
+    ]),
+    AddGroup({"tag": "pre"}, []),
+    AddGroup({"tag": "p"}, [
+        AddSkip(5)
+    ])
+]
+
+b_del: [
+    DelWithGroup([
+        DelWithGroup([
+            DelChars(1)
+        ])
+    ])
+]
+b_add: [
+    AddWithGroup([
+        AddWithGroup([])
+    ])
+]

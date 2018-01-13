@@ -1,0 +1,97 @@
+
+doc:   [
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "p"}, [
+            DocChars(" ")
+        ])
+    ]),
+    DocGroup({"tag": "h1"}, [
+        DocChars("Sd"), DocGroup({"tag": "caret", "client": "b"}, []),
+        DocChars("mm ")
+    ]),
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "h2"}, [
+            DocChars("oB"), DocGroup({"tag": "caret", "client": "a"}, []),
+            DocChars("7I")
+        ]),
+        DocGroup({"tag": "p"}, [
+            DocGroup({"tag": "caret", "client": "c"}, []),
+            DocChars("jPlo worldW7hat\'s up with you?")
+        ])
+    ])
+]
+
+a_del: [
+    DelWithGroup([
+        DelWithGroup([
+            DelChars(1)
+        ])
+    ]),
+    DelWithGroup([
+        DelChars(2), DelGroup([]),
+        DelSkip(3)
+    ]),
+    DelWithGroup([
+        DelWithGroup([
+            DelSkip(1), DelChars(1), DelGroup([]),
+            DelChars(2)
+        ])
+    ])
+]
+a_add: [
+    AddWithGroup([
+        AddWithGroup([
+            AddChars(" "), AddGroup({"tag": "caret", "client": "b"}, [])
+        ])
+    ]),
+    AddGroup({"tag": "bullet"}, [
+        AddWithGroup([
+            AddSkip(3)
+        ])
+    ]),
+    AddWithGroup([
+        AddWithGroup([
+            AddSkip(1), AddChars("o"), AddGroup({"tag": "caret", "client": "a"}, [])
+        ])
+    ])
+]
+
+b_del: [
+    DelWithGroup([
+        DelWithGroup([
+            DelSkip(1)
+        ])
+    ]),
+    DelWithGroup([
+        DelSkip(2), DelWithGroup([]),
+        DelSkip(3)
+    ]),
+    DelGroup([
+        DelWithGroup([
+            DelSkip(2), DelWithGroup([]),
+            DelSkip(2)
+        ]),
+        DelWithGroup([
+            DelGroup([]),
+            DelChars(1)
+        ])
+    ])
+]
+b_add: [
+    AddWithGroup([
+        AddWithGroup([
+            AddSkip(1)
+        ])
+    ]),
+    AddWithGroup([
+        AddSkip(2), AddWithGroup([]),
+        AddSkip(3)
+    ]),
+    AddWithGroup([
+        AddSkip(2), AddWithGroup([]),
+        AddSkip(2)
+    ]),
+    AddWithGroup([
+        AddChars("I8"), AddGroup({"tag": "caret", "client": "c"}, [])
+    ])
+]

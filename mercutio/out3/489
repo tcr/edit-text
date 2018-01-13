@@ -1,0 +1,73 @@
+
+doc:   [
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "h3"}, [
+            DocGroup({"client": "f", "tag": "caret"}, []),
+            DocChars(" "), DocGroup({"client": "b", "tag": "caret"}, []),
+            DocChars("27VA k1X ")
+        ]),
+        DocGroup({"tag": "h3"}, [
+            DocChars("7"), DocGroup({"tag": "caret", "client": "d"}, []),
+            DocChars("b4UPfj 3yKxnh7L 0WSFq3L ft7J4"), DocGroup({"tag": "caret", "client": "a"}, []),
+            DocGroup({"tag": "caret", "client": "e"}, []),
+            DocChars(" Gu8")
+        ])
+    ]),
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "h3"}, [
+            DocGroup({"tag": "caret", "client": "c"}, []),
+            DocChars(" world!sWhat\'s up with you?")
+        ])
+    ])
+]
+
+a_del: [
+    DelGroup([
+        DelWithGroup([
+            DelWithGroup([]),
+            DelSkip(1), DelWithGroup([]),
+            DelSkip(9)
+        ]),
+        DelWithGroup([
+            DelSkip(1), DelWithGroup([]),
+            DelSkip(26), DelChars(3), DelGroup([]),
+            DelWithGroup([]),
+            DelSkip(1)
+        ])
+    ])
+]
+a_add: [
+    AddWithGroup([
+        AddChars("J"), AddWithGroup([]),
+        AddSkip(1), AddChars("  "), AddWithGroup([]),
+        AddSkip(1), AddChars("x"), AddSkip(1), AddGroup({"tag": "caret", "client": "a"}, []),
+        AddSkip(7)
+    ]),
+    AddWithGroup([
+        AddSkip(1), AddWithGroup([]),
+        AddSkip(26), AddChars(" 2"), AddWithGroup([]),
+        AddSkip(1)
+    ])
+]
+
+b_del: [
+    DelWithGroup([
+        DelGroup([
+            DelWithGroup([]),
+            DelSkip(1), DelGroup([]),
+            DelSkip(1), DelChars(5), DelSkip(3)
+        ])
+    ])
+]
+b_add: [
+    AddWithGroup([
+        AddGroup({"tag": "h1"}, [
+            AddWithGroup([]),
+            AddSkip(2), AddChars("Q")
+        ]),
+        AddGroup({"tag": "pre"}, [
+            AddChars("K"), AddGroup({"tag": "caret", "client": "b"}, []),
+            AddChars(" "), AddSkip(3)
+        ])
+    ])
+]

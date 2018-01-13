@@ -1,0 +1,77 @@
+
+doc:   [
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "h1"}, [
+            DocGroup({"client": "b", "tag": "caret"}, []),
+            DocChars("J "), DocGroup({"client": "f", "tag": "caret"}, []),
+            DocChars(" 6"), DocGroup({"tag": "caret", "client": "c"}, []),
+            DocChars("  "), DocGroup({"client": "e", "tag": "caret"}, [])
+        ]),
+        DocGroup({"tag": "h1"}, [
+            DocChars("  ")
+        ]),
+        DocGroup({"tag": "h1"}, [
+            DocGroup({"tag": "caret", "client": "d"}, []),
+            DocChars("u"), DocGroup({"tag": "caret", "client": "a"}, []),
+            DocChars("Fj8V xHello world!")
+        ])
+    ]),
+    DocGroup({"tag": "h1"}, [
+        DocChars("  WWWat\'s up with you?")
+    ])
+]
+
+a_del: [
+    DelGroup([
+        DelWithGroup([
+            DelGroup([]),
+            DelChars(1), DelSkip(1), DelWithGroup([]),
+            DelSkip(2), DelWithGroup([]),
+            DelSkip(2), DelWithGroup([])
+        ]),
+        DelWithGroup([
+            DelSkip(2)
+        ]),
+        DelWithGroup([
+            DelWithGroup([]),
+            DelSkip(1), DelGroup([]),
+            DelChars(1)
+        ])
+    ])
+]
+a_add: [
+    AddWithGroup([
+        AddChars("BD"), AddGroup({"tag": "caret", "client": "b"}, []),
+        AddSkip(1), AddWithGroup([]),
+        AddSkip(2), AddWithGroup([]),
+        AddSkip(2), AddWithGroup([])
+    ]),
+    AddWithGroup([
+        AddSkip(2)
+    ]),
+    AddWithGroup([
+        AddWithGroup([]),
+        AddSkip(1), AddGroup({"client": "a", "tag": "caret"}, [])
+    ])
+]
+
+b_del: [
+    DelWithGroup([
+        DelGroup([
+            DelWithGroup([]),
+            DelSkip(2), DelWithGroup([]),
+            DelSkip(2), DelGroup([]),
+            DelSkip(3)
+        ])
+    ])
+]
+b_add: [
+    AddWithGroup([
+        AddGroup({"tag": "p"}, [
+            AddWithGroup([]),
+            AddSkip(2), AddGroup({"tag": "caret", "client": "c"}, []),
+            AddWithGroup([]),
+            AddSkip(5)
+        ])
+    ])
+]

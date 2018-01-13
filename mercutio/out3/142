@@ -1,0 +1,79 @@
+
+doc:   [
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "h2"}, [
+            DocGroup({"client": "d", "tag": "caret"}, []),
+            DocChars("855KK 5V"), DocGroup({"tag": "caret", "client": "f"}, []),
+            DocChars("e")
+        ]),
+        DocGroup({"tag": "pre"}, [
+            DocChars(" "), DocGroup({"tag": "caret", "client": "b"}, []),
+            DocChars("t ")
+        ]),
+        DocGroup({"tag": "p"}, [
+            DocChars("R"), DocGroup({"tag": "caret", "client": "a"}, []),
+            DocChars("N "), DocGroup({"tag": "caret", "client": "c"}, []),
+            DocChars("  1"), DocGroup({"tag": "caret", "client": "e"}, [])
+        ])
+    ]),
+    DocGroup({"tag": "p"}, []),
+    DocGroup({"tag": "p"}, [
+        DocChars("E Su5")
+    ]),
+    DocGroup({"tag": "h2"}, [
+        DocChars(" o wrDdWhat\'s up with you?")
+    ])
+]
+
+a_del: [
+    DelGroup([
+        DelGroup([
+            DelWithGroup([]),
+            DelSkip(8), DelWithGroup([]),
+            DelSkip(1)
+        ]),
+        DelGroup([
+            DelSkip(1), DelWithGroup([]),
+            DelSkip(2)
+        ]),
+        DelWithGroup([
+            DelSkip(1), DelGroup([])
+        ])
+    ])
+]
+a_add: [
+    AddGroup({"tag": "h2"}, [
+        AddWithGroup([]),
+        AddSkip(8), AddWithGroup([]),
+        AddSkip(1), AddChars("q"), AddSkip(1), AddGroup({"client": "a", "tag": "caret"}, []),
+        AddWithGroup([]),
+        AddSkip(2)
+    ]),
+    AddWithGroup([
+        AddSkip(1)
+    ])
+]
+
+b_del: [
+    DelWithGroup([
+        DelGroup([
+            DelWithGroup([]),
+            DelSkip(8), DelWithGroup([]),
+            DelSkip(1)
+        ]),
+        DelGroup([
+            DelChars(1), DelGroup([]),
+            DelChars(1), DelSkip(1)
+        ])
+    ])
+]
+b_add: [
+    AddWithGroup([
+        AddGroup({"tag": "h2"}, [
+            AddWithGroup([]),
+            AddSkip(8), AddWithGroup([]),
+            AddSkip(1), AddChars(" a"), AddGroup({"tag": "caret", "client": "b"}, []),
+            AddSkip(1)
+        ])
+    ])
+]

@@ -1,0 +1,117 @@
+
+doc:   [
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "h3"}, [
+            DocGroup({"tag": "caret", "client": "f"}, []),
+            DocGroup({"tag": "caret", "client": "g"}, []),
+            DocChars("K"), DocGroup({"client": "a", "tag": "caret"}, []),
+            DocChars("L5"), DocGroup({"client": "e", "tag": "caret"}, []),
+            DocChars("3gM0")
+        ]),
+        DocGroup({"tag": "p"}, [
+            DocGroup({"tag": "caret", "client": "c"}, []),
+            DocChars("WraG"), DocGroup({"client": "d", "tag": "caret"}, []),
+            DocChars("p6 1Pj7  1ltD")
+        ]),
+        DocGroup({"tag": "h3"}, [
+            DocChars("O ")
+        ])
+    ]),
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "h3"}, [
+            DocChars("tC ")
+        ])
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocChars("1")
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocChars("Q p")
+    ]),
+    DocGroup({"tag": "p"}, [
+        DocChars("f"), DocGroup({"tag": "caret", "client": "b"}, []),
+        DocChars("What\'s up with you?")
+    ])
+]
+
+a_del: [
+    DelGroup([
+        DelGroup([
+            DelWithGroup([]),
+            DelWithGroup([]),
+            DelSkip(1), DelGroup([]),
+            DelSkip(2), DelWithGroup([]),
+            DelSkip(4)
+        ]),
+        DelGroup([
+            DelGroup([]),
+            DelSkip(3), DelChars(1), DelGroup([]),
+            DelSkip(13)
+        ]),
+        DelWithGroup([
+            DelSkip(2)
+        ])
+    ]),
+    DelWithGroup([
+        DelWithGroup([
+            DelSkip(3)
+        ])
+    ]),
+    DelWithGroup([
+        DelSkip(1)
+    ]),
+    DelGroup([
+        DelSkip(1), DelChars(2)
+    ]),
+    DelGroup([
+        DelChars(1), DelGroup([]),
+        DelSkip(19)
+    ])
+]
+a_add: [
+    AddGroup({"tag": "h3"}, [
+        AddGroup({"tag": "caret", "client": "c"}, []),
+        AddWithGroup([]),
+        AddWithGroup([]),
+        AddSkip(1), AddGroup({"tag": "caret", "client": "a"}, []),
+        AddChars("c"), AddSkip(2), AddWithGroup([]),
+        AddSkip(20)
+    ]),
+    AddWithGroup([
+        AddGroup({"tag": "caret", "client": "d"}, []),
+        AddSkip(2)
+    ]),
+    AddWithGroup([
+        AddWithGroup([
+            AddSkip(3)
+        ])
+    ]),
+    AddWithGroup([
+        AddSkip(1)
+    ]),
+    AddGroup({"tag": "p"}, [
+        AddGroup({"tag": "caret", "client": "b"}, []),
+        AddSkip(1), AddChars("1"), AddSkip(19)
+    ])
+]
+
+b_del: [
+    DelWithGroup([
+        DelWithGroup([
+            DelWithGroup([]),
+            DelWithGroup([]),
+            DelSkip(1), DelWithGroup([]),
+            DelSkip(1), DelChars(1)
+        ])
+    ])
+]
+b_add: [
+    AddWithGroup([
+        AddWithGroup([
+            AddWithGroup([]),
+            AddWithGroup([]),
+            AddSkip(1), AddWithGroup([]),
+            AddSkip(1), AddChars("8 ")
+        ])
+    ])
+]

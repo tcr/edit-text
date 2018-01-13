@@ -1245,6 +1245,30 @@ pub fn normalize_delgroupall(del: DelSpan) -> DelSpan {
     ret
 }
 
+fn undel(input_del: &DelSpan) -> DelSpan {
+    let mut del: DelSpan = vec![];
+    for elem in input_del {
+        match elem {
+            &DelChars(..) => {
+            }
+            &DelSkip(value) => {
+                del.place(&DelSkip(value));
+            }
+            &DelWithGroup(ref ins_span) => {
+                del.place(&DelWithGroup(undel(ins_span)));
+            }
+            &DelGroup(ref del_span) => {
+                del.place_all(&undel(&del_span));
+            }
+            _ => {
+                unimplemented!();
+            }
+        }
+    }
+    del
+}
+            
+
 pub fn transform_del_del_inner(
     a_del: &mut DelWriter,
     b_del: &mut DelWriter,
@@ -1258,7 +1282,7 @@ pub fn transform_del_del_inner(
 
         println!(
             "{}",
-            BrightYellow.paint(format!("Next step (del): {:?}", (a.head.clone(), b.head.clone())))
+            BrightYellow.paint(format!("Next step (del):\n A {:?}\n B {:?}", a.head.clone(), b.head.clone()))
         );
 
         match (a.head.clone(), b.head.clone()) {
@@ -1286,25 +1310,37 @@ pub fn transform_del_del_inner(
                     &mut b_inner_step,
                 );
                 
-                while !a_inner_step.is_done() {
-                    match a_inner_step.head.clone() {
-                        Some(ref elem) => {
-                            b_inner_del.place(elem);
-                            if let &DelSkip(..) = elem {
-                                a_inner_del.place(elem);
-                            }
-                            if let &DelWithGroup(..) = elem {
-                                a_inner_del.place(elem);
-                            }
-                            a_inner_step.next();
-                        }
-                        None => {
-                            unreachable!();
-                        }
-                    }
-                }
+                // while !a_inner_step.is_done() {
+                //     match a_inner_step.head.clone() {
+                //         Some(ref elem) => {
+                //             b_inner_del.place(elem);
+                //             if let &DelSkip(..) = elem {
+                //                 a_inner_del.place(elem);
+                //             }
+                //             if let &DelWithGroup(..) = elem {
+                //                 a_inner_del.place(elem);
+                //             }
+                //             a_inner_step.next();
+                //         }
+                //         None => {
+                //             unreachable!();
+                //         }
+                //     }
+                // }
 
                 assert!(b_inner_step.is_done());
+
+
+                // Del the del
+                let mut del_span = vec![];
+                while !a_inner_step.is_done() {
+                    del_span.push(a_inner_step.head.clone().unwrap());
+                    a_inner_step.next();
+                }
+                println!("hello -----> {:?}", &del_span);
+                a_inner_del.place_all(&undel(&del_span));
+                b_inner_del.place_all(&del_span);
+
 
                 a_del.place_all(&a_inner_del.result());
                 b_del.group(&b_inner_del.result());
@@ -1328,7 +1364,7 @@ pub fn transform_del_del_inner(
                     a.next();
                 }
 
-                if b_inner.skip_len() > 0 {
+                if b_inner.skip_post_len() > 0 {
                     b_del.skip(b_inner.skip_post_len());
                 }
                 b.next();
@@ -1481,24 +1517,17 @@ pub fn transform_del_del_inner(
                 );
 
                 assert!(a_inner_step.is_done());
-                
+            
+            
+                // Del the del
+                let mut del_span = vec![];
                 while !b_inner_step.is_done() {
-                    match b_inner_step.head.clone() {
-                        Some(ref elem) => {
-                            a_inner_del.place(elem);
-                            if let &DelSkip(..) = elem {
-                                b_inner_del.place(elem);
-                            }
-                            if let &DelWithGroup(..) = elem {
-                                b_inner_del.place(elem);
-                            }
-                            b_inner_step.next();
-                        }
-                        None => {
-                            unreachable!();
-                        }
-                    }
+                    del_span.push(b_inner_step.head.clone().unwrap());
+                    b_inner_step.next();
                 }
+                a_inner_del.place_all(&del_span);
+                b_inner_del.place_all(&undel(&del_span));
+
 
                 a_del.group(&a_inner_del.result());
                 b_del.place_all(&b_inner_del.result());
@@ -1544,6 +1573,11 @@ pub fn transform_del_del_inner(
             }
         }
     }
+
+    println!(
+        "{}",
+        BrightYellow.paint(format!("done")),
+    );
 }
 
 pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan) {

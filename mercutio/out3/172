@@ -1,0 +1,80 @@
+
+doc:   [
+    DocGroup({"tag": "pre"}, [
+        DocChars("22S"), DocGroup({"tag": "caret", "client": "b"}, []),
+        DocChars("1 IpD")
+    ]),
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "h1"}, [
+            DocChars(" E2Rb5"), DocGroup({"client": "d", "tag": "caret"}, []),
+            DocChars("J"), DocGroup({"tag": "caret", "client": "a"}, []),
+            DocChars(" ")
+        ]),
+        DocGroup({"tag": "h1"}, [
+            DocChars("pluo"), DocGroup({"tag": "caret", "client": "c"}, []),
+            DocGroup({"tag": "caret", "client": "e"}, []),
+            DocChars("H3H"), DocGroup({"client": "f", "tag": "caret"}, [])
+        ]),
+        DocGroup({"tag": "h1"}, [
+            DocChars("What\'s up with you?")
+        ])
+    ])
+]
+
+a_del: [
+    DelWithGroup([
+        DelSkip(3), DelWithGroup([]),
+        DelSkip(5)
+    ]),
+    DelGroup([
+        DelGroup([
+            DelSkip(6), DelWithGroup([]),
+            DelSkip(1), DelGroup([]),
+            DelChars(1)
+        ]),
+        DelGroup([
+            DelSkip(4), DelWithGroup([]),
+            DelWithGroup([]),
+            DelSkip(3), DelWithGroup([])
+        ]),
+        DelWithGroup([
+            DelChars(1)
+        ])
+    ])
+]
+a_add: [
+    AddWithGroup([
+        AddSkip(3), AddWithGroup([]),
+        AddSkip(5)
+    ]),
+    AddGroup({"tag": "h1"}, [
+        AddSkip(6), AddWithGroup([]),
+        AddSkip(1), AddChars("nw "), AddSkip(4), AddWithGroup([]),
+        AddWithGroup([]),
+        AddSkip(3), AddWithGroup([])
+    ]),
+    AddWithGroup([
+        AddChars("6"), AddGroup({"client": "a", "tag": "caret"}, [])
+    ])
+]
+
+b_del: [
+    DelGroup([
+        DelChars(2), DelSkip(1), DelGroup([]),
+        DelSkip(5)
+    ]),
+    DelWithGroup([
+        DelWithGroup([])
+    ])
+]
+b_add: [
+    AddGroup({"tag": "h3"}, [
+        AddChars("2"), AddGroup({"tag": "caret", "client": "b"}, []),
+        AddChars("Xv1N"), AddSkip(6)
+    ]),
+    AddWithGroup([
+        AddWithGroup([
+            AddChars("8")
+        ])
+    ])
+]

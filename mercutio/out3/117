@@ -1,0 +1,105 @@
+
+doc:   [
+    DocGroup({"tag": "h3"}, [
+        DocGroup({"client": "a", "tag": "caret"}, []),
+        DocChars("6 8cy")
+    ]),
+    DocGroup({"tag": "h2"}, [
+        DocChars("1 7J 6RB4x RentW  7dRc G")
+    ]),
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "h3"}, [
+            DocGroup({"client": "b", "tag": "caret"}, []),
+            DocGroup({"client": "e", "tag": "caret"}, []),
+            DocChars("BdhG3lbOGd ")
+        ]),
+        DocGroup({"tag": "p"}, [
+            DocChars("S")
+        ]),
+        DocGroup({"tag": "p"}, [
+            DocChars("i no")
+        ])
+    ]),
+    DocGroup({"tag": "bullet"}, [
+        DocGroup({"tag": "h2"}, [
+            DocGroup({"client": "d", "tag": "caret"}, []),
+            DocChars("x"), DocGroup({"client": "c", "tag": "caret"}, []),
+            DocChars("0 BoCh you?")
+        ])
+    ])
+]
+
+a_del: [
+    DelGroup([
+        DelGroup([]),
+        DelSkip(4), DelChars(1)
+    ]),
+    DelGroup([
+        DelSkip(17), DelChars(7)
+    ]),
+    DelWithGroup([
+        DelWithGroup([])
+    ])
+]
+a_add: [
+    AddGroup({"tag": "p"}, [
+        AddGroup({"tag": "caret", "client": "a"}, []),
+        AddChars("T"), AddSkip(4), AddChars("f"), AddSkip(17), AddChars("s")
+    ]),
+    AddWithGroup([
+        AddWithGroup([
+            AddChars(" I")
+        ])
+    ])
+]
+
+b_del: [
+    DelWithGroup([
+        DelWithGroup([]),
+        DelSkip(5)
+    ]),
+    DelGroup([
+        DelSkip(20), DelChars(4)
+    ]),
+    DelGroup([
+        DelGroup([
+            DelGroup([]),
+            DelWithGroup([]),
+            DelSkip(6), DelChars(5)
+        ]),
+        DelGroup([
+            DelSkip(1)
+        ]),
+        DelWithGroup([
+            DelChars(1), DelSkip(3)
+        ])
+    ]),
+    DelWithGroup([
+        DelGroup([
+            DelWithGroup([]),
+            DelSkip(13)
+        ])
+    ])
+]
+b_add: [
+    AddWithGroup([
+        AddWithGroup([]),
+        AddSkip(5)
+    ]),
+    AddGroup({"tag": "bullet"}, [
+        AddGroup({"tag": "h2"}, [
+            AddSkip(20), AddChars("6I"), AddWithGroup([]),
+            AddSkip(6), AddChars("T"), AddSkip(1), AddChars("4")
+        ])
+    ]),
+    AddWithGroup([
+        AddChars("I"), AddSkip(3)
+    ]),
+    AddWithGroup([
+        AddGroup({"tag": "h3"}, [
+            AddGroup({"tag": "caret", "client": "b"}, []),
+            AddChars(" "), AddWithGroup([]),
+            AddSkip(13)
+        ])
+    ])
+]
