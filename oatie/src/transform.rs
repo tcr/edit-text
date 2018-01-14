@@ -178,13 +178,13 @@ impl Transform {
     }
 
     fn skip_a(&mut self, n: usize) {
-        self.a_del.skip(n);
-        self.a_add.skip(n);
+        self.a_del.place(&DelSkip(n));
+        self.a_add.place(&AddSkip(n));
     }
 
     fn skip_b(&mut self, n: usize) {
-        self.b_del.skip(n);
-        self.b_add.skip(n);
+        self.b_del.place(&DelSkip(n));
+        self.b_add.place(&AddSkip(n));
     }
 
     fn with_group_a(&mut self, span: &AddSpan) {
@@ -953,9 +953,9 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                 (Some(AddWithGroup(a_inner)), Some(AddSkip(b_count))) => {
                     t.regenerate(); // caret-31
 
-                    t.a_del.skip(1);
-                    t.a_add.skip(1);
-                    t.b_del.skip(1);
+                    t.a_del.place(&DelSkip(1));
+                    t.a_add.place(&AddSkip(1));
+                    t.b_del.place(&DelSkip(1));
                     t.b_add.with_group(&a_inner);
 
                     a.next();
@@ -981,10 +981,10 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                 (Some(AddSkip(a_count)), Some(AddWithGroup(b_inner))) => {
                     t.regenerate(); // caret-31
 
-                    t.a_del.skip(1);
+                    t.a_del.place(&DelSkip(1));
                     t.a_add.with_group(&b_inner);
-                    t.b_del.skip(1);
-                    t.b_add.skip(1);
+                    t.b_del.place(&DelSkip(1));
+                    t.b_add.place(&AddSkip(1));
 
                     if a_count > 1 {
                         a.head = Some(AddSkip(a_count - 1));
@@ -998,8 +998,8 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
 
                     t.chars_a(b_chars);
 
-                    t.b_del.skip(b_chars.chars().count());
-                    t.b_add.skip(b_chars.chars().count());
+                    t.b_del.place(&DelSkip(b_chars.chars().count()));
+                    t.b_add.place(&AddSkip(b_chars.chars().count()));
 
                     b.next();
                 }
@@ -1109,13 +1109,13 @@ pub fn transform_del_del_inner(
                 }
 
                 if b_inner.skip_post_len() > 0 {
-                    b_del.skip(b_inner.skip_post_len());
+                    b_del.place(&DelSkip(b_inner.skip_post_len()));
                 }
                 b.next();
             }
             (Some(DelGroup(a_inner)), Some(DelSkip(b_count))) => {
                 if a_inner.skip_post_len() > 0 {
-                    a_del.skip(a_inner.skip_post_len());
+                    a_del.place(&DelSkip(a_inner.skip_post_len()));
                 }
                 b_del.group(&a_inner);
 
@@ -1140,8 +1140,8 @@ pub fn transform_del_del_inner(
                     b.next();
                 }
 
-                a_del.skip(cmp::min(a_count, b_count));
-                b_del.skip(cmp::min(a_count, b_count));
+                a_del.place(&DelSkip(cmp::min(a_count, b_count)));
+                b_del.place(&DelSkip(cmp::min(a_count, b_count)));
             }
             (Some(DelSkip(a_count)), Some(DelChars(b_chars))) => {
                 if a_count > b_chars {
@@ -1202,7 +1202,7 @@ pub fn transform_del_del_inner(
             }
             (Some(DelSkip(a_count)), Some(DelWithGroup(b_inner))) => {
                 a_del.with_group(&b_inner);
-                b_del.skip(1);
+                b_del.place(&DelSkip(1));
 
                 if a_count > 1 {
                     a.head = Some(DelSkip(a_count - 1));
@@ -1212,7 +1212,7 @@ pub fn transform_del_del_inner(
                 b.next();
             }
             (Some(DelWithGroup(a_inner)), Some(DelSkip(b_count))) => {
-                a_del.skip(1);
+                a_del.place(&DelSkip(1));
                 b_del.with_group(&a_inner);
 
                 a.next();

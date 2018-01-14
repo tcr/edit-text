@@ -25,7 +25,6 @@ pub enum TrackType {
     InlineObjects,
 }
 
-// TODO eventually, all this can be declarative (or at least moreso)
 impl TrackType {
     // Rename this do close split? if applicable?
     pub fn do_split(&self) -> bool {
