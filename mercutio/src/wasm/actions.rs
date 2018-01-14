@@ -92,12 +92,6 @@ pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
 pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
     let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
 
-    // TODO fix this without a caret position integer check.
-    // Check if we are at the start of the document.
-    // if walker.caret_pos() < 2 {
-    //     return Ok(op_span!([], []));
-    // }
-
     // Check if caret is at the start of a block.
     let caret_pos = walker.caret_pos();
     let mut block_walker = walker.clone();
@@ -213,14 +207,28 @@ pub fn split_block(ctx: ActionContext) -> Result<Op, Error> {
     let walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
     let skip = walker.doc().skip_len();
 
+    // Identify the tag of the block we're splitting.
     let mut prev_walker = walker.clone();
     assert!(prev_walker.back_block());
     let previous_block = if let Some(DocGroup(attrs, _)) = prev_walker.doc().head() {
         attrs["tag"].to_string()
     } else {
         // Fill in default value.
-        // TODO this should be a panic!
+        // TODO this should be a unreachable!
         "p".to_string()
+    };
+
+    // Identify if we're nested inside of a bullet.
+    let mut parent_walker = prev_walker.clone();
+    let nested_bullet = loop {
+        if parent_walker.parent() {
+            if let Some(DocGroup(ref attrs, _)) = parent_walker.doc().head() {
+                if attrs["tag"] == "bullet" {
+                    break true;
+                }
+            }
+        }
+        break false;
     };
 
     let mut writer = walker.to_writer();
@@ -229,16 +237,28 @@ pub fn split_block(ctx: ActionContext) -> Result<Op, Error> {
         writer.del.place(&DelSkip(skip));
     }
     writer.del.close();
+    if nested_bullet {
+        writer.del.close();
+    }
     writer.del.exit_all();
 
     writer
         .add
         .close(hashmap! { "tag".into() => previous_block });
+    if nested_bullet {
+        writer
+            .add
+            .close(hashmap! { "tag".into() => "bullet".into() });
+        writer.add.begin();
+    }
     writer.add.begin();
     if skip > 0 {
         writer.add.skip(skip);
     }
     writer.add.close(hashmap! { "tag".into() => "p".into() });
+    if nested_bullet {
+        writer.add.close(hashmap! { "tag".into() => "bullet".into() });
+    }
     writer.add.exit_all();
 
     Ok(writer.result())

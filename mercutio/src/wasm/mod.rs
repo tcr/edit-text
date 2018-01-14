@@ -74,34 +74,6 @@ impl Client {
     }
 }
 
-// // Creates an HTML tree from a document tree.
-// function docToStrings(ret: Array<string>, vec: Array<any>) {
-//   // TODO act like doc
-//   // console.log(el);
-//   // var h = newElem(el.DocGroup[0]);
-//   for (var g = 0; g < vec.length; g++) {
-//     const el = vec[g];
-//     if (el.DocGroup) {
-//       const attrs = el.DocGroup[0];
-//       ret.push(`<div
-//         data-tag=${JSON.stringify(String(attrs.tag))}
-//         data-client=${JSON.stringify(String(attrs.client))}
-//         class=${JSON.stringify(String(attrs.class || ''))}
-//       >`);
-//       docToStrings(ret, el.DocGroup[1]);
-//       ret.push('</div>');
-//     } else if (el.DocChars) {
-//       for (var j = 0; j < el.DocChars.length; j++) {
-//         ret.push('<span>');
-//         ret.push(String(el.DocChars[j]));
-//         ret.push('</span>');
-//       }
-//     } else {
-//       throw new Error('unknown');
-//     }
-//   }
-// }
-
 fn doc_as_html(doc: &DocSpan) -> String {
     let mut out = String::new();
     for elem in doc {
