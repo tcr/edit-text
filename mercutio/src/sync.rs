@@ -5,14 +5,11 @@ use oatie::doc::*;
 use oatie::schema::{validate_doc_span, ValidateContext};
 use oatie::transform::transform;
 use serde_json;
-use serde_json::Value;
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
 use bus::Bus;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
-use wasm::start_websocket_server;
 use ws;
 use std::{panic, process};
 
@@ -87,6 +84,7 @@ b_add: {}
         debug_pretty(&op_b.0),
         debug_pretty(&op_b.1)
     );
+
     // TODO dump to document
     {
         use std::io::prelude::*;

@@ -7,16 +7,17 @@ extern crate ws;
 
 use structopt::StructOpt;
 use std::thread;
-use mercutio::wasm::start_websocket_server;
 use std::time::Duration;
-use mercutio::wasm::NativeCommand;
+use mercutio::wasm::{start_websocket_server, NativeCommand};
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "mercutio-wasm", about = "An example of StructOpt usage.")]
 struct Opt {
-    #[structopt(long = "monkies", help = "Monkey count")] monkies: Option<usize>,
+    #[structopt(long = "monkies", help = "Monkey count")]
+    monkies: Option<usize>,
 
-    #[structopt(long = "port", help = "Port", default_value = "3011")] port: u16,
+    #[structopt(long = "port", help = "Port", default_value = "3011")]
+    port: u16,
 }
 
 pub fn main() {
@@ -60,7 +61,8 @@ fn virtual_monkeys() {
                     let json = serde_json::to_string(&command).unwrap();
                     out.send(json.as_str()).unwrap();
 
-                    move |msg: ws::Message| {
+                    // Ignore all incoming messages, as we have no client to update
+                    move |_msg: ws::Message| {
                         // println!("wasm got a packet from sync '{}'. ", msg);
 
                         Ok(())

@@ -1,3 +1,7 @@
+// cargo-deps: rayon="*"
+
+extern crate rayon;
+
 use std::fs::File;
 use std::fs;
 use std::process::{Stdio, Command};
@@ -6,6 +10,7 @@ use std::time::{Duration, Instant};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::thread;
+use rayon::prelude::*;
 
 fn launch(input: &str) -> i32 {
     let mut child = Command::new("/Users/trim/tcr/edit-text/target/release/oatie-transform")
@@ -130,7 +135,7 @@ fn main() {
         files.push(path);
     }
 
-    let res = files.iter()
+    let res = files.par_iter()
         .map(|file| {
             let mut f = File::open(file).unwrap();
             let mut contents = String::new();

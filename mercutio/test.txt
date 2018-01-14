@@ -1,28 +1,21 @@
 
 doc:   [
     DocGroup({"tag": "h1"}, [
-        DocChars(" "), DocGroup({"client": "a", "tag": "caret"}, []),
-        DocChars("ello world!")
+        DocChars("Hello world!")
     ]),
     DocGroup({"tag": "p"}, [
         DocChars("What\'s up with you?")
     ])
 ]
 
-a_del: [
-    DelWithGroup([
-        DelChars(1)
-    ])
-]
-a_add: [
-    AddWithGroup([])
-]
+a_del: []
+a_add: []
 
 b_del: [
     DelWithGroup([])
 ]
 b_add: [
     AddWithGroup([
-        AddChars("J"), AddGroup({"tag": "caret", "client": "b"}, [])
+        AddGroup({"tag": "caret", "client": "c"}, [])
     ])
 ]
