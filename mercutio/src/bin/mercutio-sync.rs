@@ -81,11 +81,11 @@ fn spawn_http_server() {
                                     None
                                 }
                             }) {
-                            println!("found target");
+                            println!("GET 200 {:?}", path);
                             let file = File::open(&target).unwrap();
                             let _ = req.respond(Response::from_file(file));
                         } else {
-                            println!("didn't find target");
+                            println!("GET 404 {:?}", path);
                             let _ = req.respond(Response::from_string("404".to_owned()));
                         }
                     }
@@ -110,9 +110,11 @@ fn spawn_http_server() {
 #[derive(StructOpt, Debug)]
 #[structopt(name = "mercutio-wasm", about = "An example of StructOpt usage.")]
 struct Opt {
-    #[structopt(long = "port", help = "Port", default_value = "3010")] port: u16,
+    #[structopt(long = "port", help = "Port", default_value = "3010")]
+    port: u16,
 
-    #[structopt(long = "period", help = "Sync period", default_value = "100")] period: usize,
+    #[structopt(long = "period", help = "Sync period", default_value = "100")]
+    period: usize,
 }
 
 fn main() {

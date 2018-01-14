@@ -7,16 +7,19 @@ cd oatie
 cat in/1 | cargo +nightly run --bin oatie-transform
 ```
 
-# mote
+# Mercutio
 
 To test out the text editor live live:
 
 ```
-cd mote
-cargo +nightly run
+CARGO_INCREMENTAL=1 RUST_BACKTRACE=1 cargo run --release --bin mercutio-sync
 ```
 
-Modify the two documents. Then hit "Sync".
+In another window:
+
+```
+CARGO_INCREMENTAL=1 RUST_BACKTRACE=1 cargo run --release --bin mercutio-wasm
+```
 
 ## license
 

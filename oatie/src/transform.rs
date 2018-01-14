@@ -92,10 +92,6 @@ impl Transform {
             .and_then(|x| Some(x + 1))
             .unwrap_or(0);
 
-        //   iterA.apply(insrA);
-        //   iterA.apply(insrB);
-        //   delrA.enter();
-        //   delrB.enter();
         self.tracks.insert(
             last,
             Track {
@@ -154,7 +150,7 @@ impl Transform {
         self.b_add.begin();
     }
 
-    fn enter_b(&mut self, a: Option<Tag>, b: Tag) {
+    fn enter_b(&mut self, a: Option<Tag>, b: &Tag) {
         println!("ENTER B");
 
         let last = self.tracks
@@ -231,13 +227,7 @@ impl Transform {
         (track.tag_a, track.tag_real, track.tag_b)
     }
 
-    fn unenter_a(&mut self) {
-        self.a_del.begin();
-        let track = self.tracks.last_mut().unwrap();
-        track.tag_a = track.tag_real.clone();
-    }
-
-    fn unenter_a2(&mut self, ty: TrackType) {
+    fn unenter_a(&mut self, ty: TrackType) {
         self.a_del.begin();
         let track = self.next_track_a_by_type(ty).unwrap();
         track.tag_a = track.tag_real.clone();
@@ -293,7 +283,7 @@ impl Transform {
     }
 
     fn close(&mut self) {
-        let (track, index) = self.top_track_a();
+        let (track, index) = self.top_track_a().unwrap();
 
         if track.is_original_a && track.tag_real == track.tag_a {
             println!("hey {:?} {:?}", track.tag_real, track.tag_a);
@@ -318,55 +308,26 @@ impl Transform {
         self.tracks.remove(index);
     }
 
+    fn top_track_a(&mut self) -> Option<(Track, usize)> {
+        self.tracks
+            .iter()
+            .rposition(|x| x.tag_a.is_some())
+            .map(|index| (self.tracks[index].clone(), index))
+    }
+
     fn top_track_real(&self) -> Option<(Track, usize)> {
-        self.tracks.iter()
+        self.tracks
+            .iter()
             .rposition(|x| x.tag_real.is_some())
             .map(|index| (self.tracks[index].clone(), index))
     }
 
-    fn top_track_a(&mut self) -> (Track, usize) {
-        let index = self.tracks.iter().rposition(|x| x.tag_a.is_some()).unwrap();
-        (self.tracks[index].clone(), index)
+    fn top_track_b(&mut self) -> Option<(Track, usize)> {
+        self.tracks.iter()
+            .rposition(|x| x.tag_b.is_some())
+            .map(|index| (self.tracks[index].clone(), index))
     }
 
-    fn next_track_a(&mut self) -> Option<&mut Track> {
-        if let Some(index) = self.tracks.iter().position(|x| x.tag_a.is_none()) {
-            Some(&mut self.tracks[index])
-        } else {
-            None
-        }
-    }
-
-    fn next_track_a_type(&mut self) -> Option<TrackType> {
-        if let Some(track) = self.next_track_a() {
-            track.tag_real.as_ref().and_then(|x| x.tag_type())
-        } else {
-            None
-        }
-    }
-
-    fn top_track_b(&mut self) -> (Track, usize) {
-        let index = self.tracks.iter().rposition(|x| x.tag_b.is_some()).unwrap();
-        (self.tracks[index].clone(), index)
-    }
-
-    fn next_track_b(&mut self) -> Option<&mut Track> {
-        if let Some(index) = self.tracks.iter().position(|x| x.tag_b.is_none()) {
-            Some(&mut self.tracks[index])
-        } else {
-            None
-        }
-    }
-
-    fn next_track_b_type(&mut self) -> Option<TrackType> {
-        if let Some(track) = self.next_track_b() {
-            track.tag_real.as_ref().and_then(|x| x.tag_type())
-        } else {
-            None
-        }
-    }
-
-    // TODO does this replace its counterpart?
     fn next_track_a_by_type(&mut self, arg: TrackType) -> Option<&mut Track> {
         if let Some(track) = self.tracks.iter()
             .position(|x| x.tag_a.is_none() && x.tag_real.as_ref().and_then(|x| x.tag_type()) == Some(arg)) {
@@ -376,7 +337,6 @@ impl Transform {
         }
     }
 
-    // TODO does this replace its counterpart?
     fn next_track_b_by_type(&mut self, arg: TrackType) -> Option<&mut Track> {
         if let Some(track) = self.tracks.iter()
             .position(|x| x.tag_b.is_none() && x.tag_real.as_ref().and_then(|x| x.tag_type()) == Some(arg)) {
@@ -388,7 +348,7 @@ impl Transform {
 
     fn close_a(&mut self) {
         println!("TRACKS CLOSE A: {:?}", self.tracks);
-        let (track, index) = self.top_track_a();
+        let (track, index) = self.top_track_a().unwrap();
 
         // Determine whether to split tags for this track type.
         // TODO do the same for track opening?
@@ -438,7 +398,7 @@ impl Transform {
             println!(" - {:?}", t);
         }
 
-        let (track, index) = self.top_track_b();
+        let (track, index) = self.top_track_b().unwrap();
 
         println!("CLOSES THE B {:?}", self.b_del);
         println!("CLOSES THE B {:?}", self.b_add);
@@ -583,7 +543,7 @@ impl Transform {
         }
     }
 
-    fn regenerate_until(&mut self, target: &TrackType) {
+    fn regenerate_until(&mut self, target: TrackType) {
         // okay do regen
         // Filter for types that are ancestors of the current type.
         // TODO
@@ -593,8 +553,8 @@ impl Transform {
 
                 let track_type = track._anything().unwrap().tag_type().unwrap();
                 if target.ancestors().iter().position(|x| *x == track_type).is_none()
-                    && *target != track_type {
-                    if *target == track_type {
+                    && target != track_type {
+                    if target == track_type {
                         println!("met {:?}", target);
                         break;
                     } else {
@@ -842,7 +802,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                         if b_attrs["tag"] == "caret" && t.supports_text() {
                             b.enter();
                             b.exit();
-                            t.enter_b(None, Tag::from_attrs(b_attrs));
+                            t.enter_b(None, &Tag::from_attrs(b_attrs));
                             t.close_b();
 
                             true
@@ -880,8 +840,10 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                 (Some(AddGroup(ref a_attrs, _)), Some(AddGroup(ref b_attrs, _))) => {
                     // TODO should t.regenerate be called??
 
-                    let a_type = Tag::from_attrs(a_attrs).tag_type().unwrap();
-                    let b_type = Tag::from_attrs(b_attrs).tag_type().unwrap();
+                    let a_tag = Tag::from_attrs(a_attrs);
+                    let a_type = a_tag.tag_type().unwrap();
+                    let b_tag = Tag::from_attrs(b_attrs);
+                    let b_type = b_tag.tag_type().unwrap();
 
                     let b_is_child_of_a =
                         Tag::from_attrs(b_attrs)
@@ -894,19 +856,19 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     println!("GroupByGroup {:?} {:?}", a_type, b_type);
 
                     if a_attrs["tag"] == "caret" && b_attrs["tag"] == "caret" {
-                        t.regenerate_until(&a_type);
+                        t.regenerate_until(a_type);
 
                         // Carets
                         a.enter();
                         a.exit();
                         b.enter();
                         b.exit();
-                        t.enter_a(&Tag::from_attrs(a_attrs), None);
+                        t.enter_a(&a_tag, None);
                         t.close_a();
-                        t.enter_b(None, Tag::from_attrs(b_attrs));
+                        t.enter_b(None, &b_tag);
                         t.close_b();
                     } else if a_type == b_type {
-                        t.regenerate_until(&a_type);
+                        t.regenerate_until(a_type);
                         
                         a.enter();
                         b.enter();
@@ -916,57 +878,55 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                             t.enter_a(&Tag::from_attrs(a_attrs), Some(Tag::from_attrs(b_attrs)));
                         }
                     } else if b_is_child_of_a {
-                        let a_type = Tag::from_attrs(a_attrs).tag_type();
-                        t.regenerate_until(&a_type.clone().unwrap());
+                        t.regenerate_until(a_type);
 
                         a.enter();
 
                         println!("~~~~ :O");
-                        println!("~~~~ -> {:?} {:?}", t.next_track_a_type(), a_type);
-                        if t.next_track_a_by_type(a_type.unwrap()).is_some() {
+                        println!("~~~~ -> {:?} {:?}", t.next_track_a_by_type(a_type), a_type);
+                        if t.next_track_a_by_type(a_type).is_some() {
                             // if a_type.map_or(false, |x| x.do_open_split()) {
                             if true {
                                 println!("INTERRUPTING A");
-                                t.interrupt(a_type.unwrap(), false);
+                                t.interrupt(a_type.clone(), false);
                                 println!("BUT THE TRACKS -----<> {:?}", t.tracks);
-                                if let Some(j) = t.next_track_a_by_type(a_type.unwrap()) {
+                                if let Some(j) = t.next_track_a_by_type(a_type) {
                                     j.tag_a = Some(Tag::from_attrs(a_attrs));
                                     j.is_original_a = false;
                                     println!("inject A");
                                 }
                                 t.a_del.begin();
                             } else {
-                                t.unenter_a();
+                                t.unenter_a(a_type.clone());
                             }
                         } else {
-                            t.interrupt(a_type.unwrap(), false); // caret-46
+                            t.interrupt(a_type.clone(), false); // caret-46
                             t.enter_a(&Tag::from_attrs(a_attrs), None);
                         }
                     } else /* a is a child of b */ {
-                        let b_type = Tag::from_attrs(b_attrs).tag_type();
-                        t.regenerate_until(&b_type.clone().unwrap());
+                        t.regenerate_until(b_type);
 
                         b.enter();
 
                         // println!("TELL ME {:?} {:?}", t.next_track_by_type(b_type.unwrap()), b_type);
 
-                        if t.next_track_b_by_type(b_type.unwrap()).is_some() {
+                        if t.next_track_b_by_type(b_type.clone()).is_some() {
                             // if b_type.map_or(false, |x| x.do_open_split()) {
                             if true {
                                 println!("INTERRUPTING B");
-                                t.interrupt(b_type.unwrap(), false);
-                                if let Some(j) = t.next_track_b_by_type(b_type.unwrap()) {
+                                t.interrupt(b_type.clone(), false);
+                                if let Some(j) = t.next_track_b_by_type(b_type.clone()) {
                                     j.tag_b = Some(Tag::from_attrs(b_attrs));
                                     j.is_original_b = false;
                                     println!("inject B");
                                 }
                                 t.b_del.begin();
                             } else {
-                                t.unenter_b(b_type.unwrap());
+                                t.unenter_b(b_type.clone());
                             }
                         } else {
-                            t.interrupt(b_type.unwrap(), false); // caret-43
-                            t.enter_b(None, Tag::from_attrs(b_attrs));
+                            t.interrupt(b_type.clone(), false); // caret-43
+                            t.enter_b(None, &Tag::from_attrs(b_attrs));
                         }
                     }
 
@@ -991,11 +951,13 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     if !is_char {
                         // TODO this logic is evidence AddObject should be broken out
                         let groupsuccess = if let Some(AddGroup(ref a_attrs, _)) = compare {
+                            let a_tag = Tag::from_attrs(a_attrs);
+
                             t.regenerate(); // TODO is this correct
                             if a_attrs["tag"] == "caret" && t.supports_text() {
                                 a.enter();
                                 a.exit();
-                                t.enter_a(&Tag::from_attrs(a_attrs), None);
+                                t.enter_a(&a_tag, None);
                                 t.close_a();
 
                                 true
@@ -1023,8 +985,8 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     }
                 }
                 (Some(AddGroup(ref a_attrs, _)), _) => {
-                    let a_type = Tag::from_attrs(a_attrs).tag_type();
-                    t.regenerate_until(&a_type.clone().unwrap());
+                    let a_type = Tag::from_attrs(a_attrs).tag_type().unwrap();
+                    t.regenerate_until(a_type);
 
                     // TODO should carets be worked around like this?
                     if a_attrs["tag"] == "caret" {
@@ -1037,59 +999,59 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                         a.enter();
 
                         println!("~~~~ :) :) :)");
-                        println!("~~~~ -> {:?} {:?}", t.next_track_a_by_type(a_type.unwrap()), a_type);
+                        println!("~~~~ -> {:?} {:?}", t.next_track_a_by_type(a_type), a_type);
                         // in/15, caret-34
                         // if t.next_track_a_type() == a_type {
-                        if t.next_track_a_by_type(a_type.unwrap()).is_some() {
-                            if a_type.map_or(false, |x| x.do_open_split()) {
+                        if t.next_track_a_by_type(a_type).is_some() {
+                            if a_type.do_open_split() {
                             // if true {
                                 println!("INTERRUPTING A");
-                                t.interrupt(a_type.unwrap(), true);
-                                if let Some(j) = t.next_track_a() {
+                                t.interrupt(a_type, true);
+                                if let Some(j) = t.next_track_a_by_type(a_type) {
                                     j.tag_a = Some(Tag::from_attrs(a_attrs));
                                     j.is_original_a = true;
                                 }
                                 t.a_del.begin();
                             } else {
-                                t.unenter_a2(a_type.unwrap());
+                                t.unenter_a(a_type);
                             }
                         } else {
-                            t.interrupt(a_type.unwrap(), true);
+                            t.interrupt(a_type, true);
                             t.enter_a(&Tag::from_attrs(a_attrs), None);
                         }
                     }
                 }
                 (_, Some(AddGroup(ref b_attrs, _))) => {
-                    let b_type = Tag::from_attrs(b_attrs).tag_type();
-                    t.regenerate_until(&b_type.clone().unwrap());
+                    let b_type = Tag::from_attrs(b_attrs).tag_type().unwrap();
+                    t.regenerate_until(b_type);
 
                     // TODO should carets be worked around like this?
                     if b_attrs["tag"] == "caret" {
                         // Carets
                         b.enter();
                         b.exit();
-                        t.enter_b(None, Tag::from_attrs(b_attrs));
+                        t.enter_b(None, &Tag::from_attrs(b_attrs));
                         t.close_b();
                     } else {
                         // println!("groupgruop {:?} {:?}", a_type, b_type);
                         b.enter();
                         // let b_type = Tag::from_attrs(b_attrs).tag_type();
 
-                        if t.next_track_b_by_type(b_type.unwrap()).is_some() {
-                            if b_type.map_or(false, |x| x.do_open_split()) {
+                        if t.next_track_b_by_type(b_type).is_some() {
+                            if b_type.do_open_split() {
                                 println!("INTERRUPTING B");
-                                t.interrupt(b_type.unwrap(), true);
-                                if let Some(j) = t.next_track_b() {
+                                t.interrupt(b_type, true);
+                                if let Some(j) = t.next_track_b_by_type(b_type) {
                                     j.tag_b = Some(Tag::from_attrs(b_attrs));
                                     j.is_original_b = true;
                                 }
                                 t.b_del.begin();
                             } else {
-                                t.unenter_b(b_type.unwrap());
+                                t.unenter_b(b_type);
                             }
                         } else {
-                            t.interrupt(b_type.unwrap(), false); // caret-32
-                            t.enter_b(None, Tag::from_attrs(b_attrs));
+                            t.interrupt(b_type, false); // caret-32
+                            t.enter_b(None, &Tag::from_attrs(b_attrs));
                         }
                     }
                 }
@@ -1972,32 +1934,17 @@ pub fn transform_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
 }
 
 /// Transform two operations according to a schema.
-pub fn transform(a_original: &Op, b_original: &Op) -> (Op, Op) {
+pub fn transform(a: &Op, b: &Op) -> (Op, Op) {
     // Transform deletions A and B against each other to get delA` and delB`.
     println!(" # transform[1] transform_deletions");
-    println!(" a_del   {:?}", a_original.0);
-    println!(" b_del   {:?}", b_original.0);
+    println!(" a_del   {:?}", a.0);
+    println!(" b_del   {:?}", b.0);
     println!();
-
-    let mut a = a_original.clone();
-    let mut b = b_original.clone();
-
-    // a.0 = normalize_delgroupall(a.0);
-    // b.0 = normalize_delgroupall(b.0);
-    // println!(" a_del*  {:?}", a.0);
-    // println!(" b_del*  {:?}", b.0);
-
 
     let (mut a_del_0, mut b_del_0) = transform_deletions(&a.0, &b.0);
     println!(" == a_del_0 {:?}", a_del_0);
     println!(" == b_del_0 {:?}", b_del_0);
     println!();
-
-
-    // a_del_0 = normalize_delgroupall(a_del_0);
-    // b_del_0 = normalize_delgroupall(b_del_0);
-    println!(" a_del_0*  {:?}", a_del_0);
-    println!(" b_del_0*  {:?}", b_del_0);
 
     // How do you apply del' if add has already been applied on the client?
     // The result will be applied after the client's insert operations had already been performed.
