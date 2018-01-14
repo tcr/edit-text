@@ -1,5 +1,7 @@
 //! Defines utility functions and operation application.
 
+#![feature(nll)]
+
 #![allow(unknown_lints)]
 #![allow(single_char_pattern)]
 #![allow(ptr_arg)]

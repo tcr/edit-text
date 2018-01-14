@@ -43,6 +43,28 @@ impl TrackType {
         }
     }
 
+    pub fn supports_text(&self) -> bool {
+        match *self {
+            TrackType::Blocks | TrackType::Inlines => true,
+            _ => false,
+        }
+    }
+
+    pub fn allowed_in_root(&self) -> bool {
+        match *self {
+            TrackType::Blocks | TrackType::ListItems => true,
+            _ => false,
+        }
+    }
+
+    // TODO is this how this should work
+    pub fn is_object(&self) -> bool {
+        match *self {
+            TrackType::BlockObjects | TrackType::InlineObjects => true,
+            _ => false,
+        }
+    }
+
     #[allow(match_same_arms)]
     pub fn parents(&self) -> Vec<TrackType> {
         use self::TrackType::*;
@@ -59,6 +81,7 @@ impl TrackType {
         }
     }
 
+    // TODO extrapolate this from parents()
     #[allow(match_same_arms)]
     pub fn ancestors(&self) -> Vec<TrackType> {
         use self::TrackType::*;
@@ -105,6 +128,36 @@ impl Tag {
             _ => None,
         }
     }
+
+    pub fn merge(a: &Tag, b: &Tag) -> Option<Tag> {
+        if a.0.get("tag") == b.0.get("tag") && a.0.get("tag").map(|x| x == "span").unwrap_or(false) {
+            let c_a: String = a.0.get("class").unwrap_or(&"".to_string()).clone();
+            let c_b: String = b.0.get("class").unwrap_or(&"".to_string()).clone();
+
+            let mut c = parse_classes(&c_a);
+            c.extend(parse_classes(&c_b));
+            Some(Tag(hashmap! {
+                "tag".to_string() => "span".to_string(),
+                "class".to_string() => format_classes(&c),
+            }))
+        } else {
+            None
+        }
+    }
+}
+
+fn parse_classes(input: &str) -> HashSet<String> {
+    input
+        .split_whitespace()
+        .filter(|x| !x.is_empty())
+        .map(|x| x.to_owned())
+        .collect()
+}
+
+fn format_classes(set: &HashSet<String>) -> String {
+    let mut classes: Vec<String> = set.iter().cloned().collect();
+    classes.sort();
+    classes.join(" ")
 }
 
 
@@ -148,8 +201,7 @@ pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<()
                 } else {
                     // Top-level blocks
                     ensure!(
-                        Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks) ||
-                        Tag(attrs.clone()).tag_type() == Some(TrackType::ListItems),
+                        Tag(attrs.clone()).tag_type().unwrap().allowed_in_root(),
                         "Root block has incorrect parent"
                     );
 
@@ -160,8 +212,7 @@ pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<()
 
                 if let Some(block) = ctx.stack.last() {
                     ensure!(
-                        Tag(block.clone()).tag_type() == Some(TrackType::Blocks) ||
-                        Tag(block.clone()).tag_type() == Some(TrackType::Inlines),
+                        Tag(block.clone()).tag_type().unwrap().allowed_in_root(),
                         "Char found outside block"
                     );
                 } else {

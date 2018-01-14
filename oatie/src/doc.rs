@@ -71,64 +71,6 @@ pub use self::AddElement::*;
 
 pub type Op = (DelSpan, AddSpan);
 
-
-fn del_place_chars(res: &mut DelSpan, count: usize) {
-    if !res.is_empty() {
-        let idx = res.len() - 1;
-        if let DelChars(ref mut prefix) = res[idx] {
-            *prefix += count;
-            return;
-        }
-    }
-    res.push(DelChars(count));
-}
-
-fn del_place_skip(res: &mut DelSpan, count: usize) {
-    if !res.is_empty() {
-        let idx = res.len() - 1;
-        if let DelSkip(ref mut prefix) = res[idx] {
-            *prefix += count;
-            return;
-        }
-    }
-
-    assert!(count > 0);
-    res.push(DelSkip(count));
-}
-
-// fn del_place_many(res: &mut DelSpan, count: usize) {
-//     if !res.is_empty() {
-//         let idx = res.len() - 1;
-//         if let DelMany(ref mut prefix) = res[idx] {
-//             *prefix += count;
-//             return;
-//         }
-//     }
-
-//     assert!(count > 0);
-//     res.push(DelMany(count));
-// }
-
-fn del_place_any(res: &mut DelSpan, value: &DelElement) {
-    match *value {
-        DelChars(count) => {
-            del_place_chars(res, count);
-        }
-        DelSkip(count) => {
-            del_place_skip(res, count);
-        }
-        DelGroup(..) | DelWithGroup(..) => {
-            res.push(value.clone());
-        }
-        // DelGroupAll | DelObject => {
-        //     res.push(value.clone());
-        // }
-        // DelMany(count) => {
-        //     del_place_many(res, count);
-        // }
-    }
-}
-
 fn add_place_chars(res: &mut AddSpan, value: String) {
     if !res.is_empty() {
         let idx = res.len() - 1;
@@ -181,8 +123,34 @@ impl DelPlaceable for DelSpan {
         }
     }
 
-    fn place(&mut self, value: &DelElement) {
-        del_place_any(self, value);
+    fn place(&mut self, elem: &DelElement) {
+        match *elem {
+            DelChars(count) => {
+                assert!(count > 0);
+                if let Some(&mut DelChars(ref mut value)) = self.last_mut() {
+                    *value += count;
+                } else {
+                    self.push(DelChars(count));
+                }
+            }
+            DelSkip(count) => {
+                assert!(count > 0);
+                if let Some(&mut DelSkip(ref mut value)) = self.last_mut() {
+                    *value += count;
+                } else {
+                    self.push(DelSkip(count));
+                }
+            }
+            DelGroup(..) | DelWithGroup(..) => {
+                self.push(elem.clone());
+            }
+            // DelGroupAll | DelObject => {
+            //     unimplemented!();
+            // }
+            // DelMany(count) => {
+            //     unimplemented!();
+            // }
+        }
     }
 
     fn skip_len(&self) -> usize {
