@@ -2,10 +2,19 @@
 
 use std::collections::HashMap;
 
+pub use self::DocElement::*;
+pub use self::AddElement::*;
+pub use self::DelElement::*;
+
 pub type Attrs = HashMap<String, String>;
-
-
 pub type DocSpan = Vec<DocElement>;
+
+pub type DelSpan = Vec<DelElement>;
+pub type AddSpan = Vec<AddElement>;
+pub type Op = (DelSpan, AddSpan);
+
+pub type CurSpan = Vec<CurElement>;
+
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum DocElement {
@@ -13,11 +22,8 @@ pub enum DocElement {
     DocGroup(Attrs, DocSpan),
 }
 
-pub use self::DocElement::*;
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Doc(pub Vec<DocElement>);
-
 
 pub trait DocPlaceable {
     fn skip_len(&self) -> usize;
@@ -37,10 +43,6 @@ impl DocPlaceable for DocSpan {
 }
 
 
-
-
-pub type DelSpan = Vec<DelElement>;
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum DelElement {
     DelSkip(usize),
@@ -54,65 +56,10 @@ pub enum DelElement {
     // DelObject,
 }
 
-pub use self::DelElement::*;
-
-
-pub type AddSpan = Vec<AddElement>;
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub enum AddElement {
-    AddSkip(usize),
-    AddWithGroup(AddSpan),
-    AddChars(String),
-    AddGroup(Attrs, AddSpan),
-}
-
-pub use self::AddElement::*;
-
-pub type Op = (DelSpan, AddSpan);
-
-fn add_place_chars(res: &mut AddSpan, value: String) {
-    if !res.is_empty() {
-        let idx = res.len() - 1;
-        if let AddChars(ref mut prefix) = res[idx] {
-            prefix.push_str(&value[..]);
-            return;
-        }
-    }
-    res.push(AddChars(value));
-}
-
-fn add_place_skip(res: &mut AddSpan, count: usize) {
-    if !res.is_empty() {
-        let idx = res.len() - 1;
-        if let AddSkip(ref mut prefix) = res[idx] {
-            *prefix += count;
-            return;
-        }
-    }
-
-    assert!(count > 0);
-    res.push(AddSkip(count));
-}
-
-fn add_place_any(res: &mut AddSpan, value: &AddElement) {
-    match *value {
-        AddChars(ref value) => {
-            add_place_chars(res, value.clone());
-        }
-        AddSkip(count) => {
-            add_place_skip(res, count);
-        }
-        _ => {
-            res.push(value.clone());
-        }
-    }
-}
-
 pub trait DelPlaceable {
     fn place_all(&mut self, all: &[DelElement]);
     fn place(&mut self, value: &DelElement);
-    fn skip_len(&self) -> usize;
+    fn skip_pre_len(&self) -> usize;
     fn skip_post_len(&self) -> usize;
 }
 
@@ -153,7 +100,7 @@ impl DelPlaceable for DelSpan {
         }
     }
 
-    fn skip_len(&self) -> usize {
+    fn skip_pre_len(&self) -> usize {
         let mut ret = 0;
         for item in self {
             ret += match *item {
@@ -181,11 +128,20 @@ impl DelPlaceable for DelSpan {
     }
 }
 
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub enum AddElement {
+    AddSkip(usize),
+    AddWithGroup(AddSpan),
+    AddChars(String),
+    AddGroup(Attrs, AddSpan),
+}
+
 pub trait AddPlaceable {
     fn place_all(&mut self, all: &[AddElement]);
     fn place(&mut self, value: &AddElement);
     fn skip_pre_len(&self) -> usize;
-    fn skip_len(&self) -> usize;
+    fn skip_post_len(&self) -> usize;
 }
 
 impl AddPlaceable for AddSpan {
@@ -195,8 +151,28 @@ impl AddPlaceable for AddSpan {
         }
     }
 
-    fn place(&mut self, value: &AddElement) {
-        add_place_any(self, value);
+    fn place(&mut self, elem: &AddElement) {
+        match *elem {
+            AddChars(ref text) => {
+                assert!(text.chars().count() > 0);
+                if let Some(&mut AddChars(ref mut value)) = self.last_mut() {
+                    value.push_str(text);
+                } else {
+                    self.push(AddChars(text.to_owned()));
+                }
+            }
+            AddSkip(count) => {
+                assert!(count > 0);
+                if let Some(&mut AddSkip(ref mut value)) = self.last_mut() {
+                    *value += count;
+                } else {
+                    self.push(AddSkip(count));
+                }
+            }
+            AddGroup(..) | AddWithGroup(..) => {
+                self.push(elem.clone());
+            }
+        }
     }
 
     fn skip_pre_len(&self) -> usize {
@@ -212,7 +188,7 @@ impl AddPlaceable for AddSpan {
         ret
     }
 
-    fn skip_len(&self) -> usize {
+    fn skip_post_len(&self) -> usize {
         let mut ret = 0;
         for item in self {
             ret += match *item {
@@ -225,9 +201,6 @@ impl AddPlaceable for AddSpan {
     }
 }
 
-
-
-pub type CurSpan = Vec<CurElement>;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum CurElement {
