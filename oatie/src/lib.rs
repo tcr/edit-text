@@ -32,6 +32,7 @@ pub mod writer;
 pub mod transform_test;
 pub mod macros;
 pub mod apply;
+pub mod parse;
 
 pub use apply::*;
 use doc::*;
