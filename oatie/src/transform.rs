@@ -16,40 +16,6 @@ use term_painter::Color::*;
 use term_painter::Attr::*;
 use std::collections::HashSet;
 
-
-
-fn parse_classes(input: &str) -> HashSet<String> {
-    input
-        .split_whitespace()
-        .filter(|x| !x.is_empty())
-        .map(|x| x.to_owned())
-        .collect()
-}
-
-fn format_classes(set: &HashSet<String>) -> String {
-    let mut classes: Vec<String> = set.iter().cloned().collect();
-    classes.sort();
-    classes.join(" ")
-}
-
-// TODO move to schema
-fn get_real_merge(a: &Tag, b: &Tag) -> Option<Tag> {
-    if a.0.get("tag") == b.0.get("tag") && a.0.get("tag").map(|x| x == "span").unwrap_or(false) {
-        let c_a: String = a.0.get("class").unwrap_or(&"".to_string()).clone();
-        let c_b: String = b.0.get("class").unwrap_or(&"".to_string()).clone();
-
-        let mut c = parse_classes(&c_a);
-        c.extend(parse_classes(&c_b));
-        Some(Tag(hashmap! {
-            "tag".to_string() => "span".to_string(),
-            "class".to_string() => format_classes(&c),
-        }))
-    } else {
-        None
-    }
-}
-
-
 #[derive(Clone, Debug)]
 struct Track {
     tag_a: Option<Tag>,
@@ -112,7 +78,7 @@ impl Transform {
 
         // TODO merge this functionality elsewhere
         let real = if let Some(ref b) = b {
-            Some(get_real_merge(a, b).unwrap_or_else(|| a.clone()))
+            Some(Tag::merge(a, b).unwrap_or_else(|| a.clone()))
         } else {
             Some(a.clone())
         };
@@ -154,7 +120,7 @@ impl Transform {
 
         // TODO merge this functionality elsewhere
         let real = if let Some(ref a) = a {
-            Some(get_real_merge(a, &b).unwrap_or_else(|| b.clone()))
+            Some(Tag::merge(a, &b).unwrap_or_else(|| b.clone()))
         } else {
             Some(b.clone())
         };
@@ -191,32 +157,11 @@ impl Transform {
     fn abort(&mut self) -> (Option<Tag>, Option<Tag>, Option<Tag>) {
         let track = self.tracks.pop().unwrap();
 
-        println!("aborting: {:?}", track);
         if let Some(ref real) = track.tag_real {
-            // if track.tag_a.is_some() {
-            //     self.a_del.close();
-            // }
-            self.a_add.close(real.to_attrs()); // fake
-
-            // if track.tag_b.is_some() {
-            //     self.b_del.close();
-            // }
-            self.b_add.close(real.to_attrs()); // fake
-
-            // } else {
-            //     self.a_add.close(map! { "tag" => track.tag_a}); // fake
-            // }
-            // if (a) {
-            //   insrA.alter(r, {}).close();
-            // } else {
-            //   insrA.close();
-            // }
-            // if (b) {
-            //   insrB.alter(r, {}).close();
-            // } else {
-            //   insrB.close();
-            // }
+            self.a_add.close(real.to_attrs());
+            self.b_add.close(real.to_attrs());
         }
+
         (track.tag_a, track.tag_real, track.tag_b)
     }
 
@@ -279,21 +224,17 @@ impl Transform {
         let (track, index) = self.top_track_a().unwrap();
 
         if track.is_original_a && track.tag_real == track.tag_a {
-            println!("hey {:?} {:?}", track.tag_real, track.tag_a);
             self.a_del.exit();
             self.a_add.exit();
         } else {
-            println!("LOVE");
             self.a_del.close();
             self.a_add.close(track.tag_real.clone().unwrap().to_attrs());
         }
 
         if track.is_original_b && track.tag_real == track.tag_b {
-            println!("hey");
             self.b_del.exit();
             self.b_add.exit();
         } else {
-            println!("NO");
             self.b_del.close();
             self.b_add.close(track.tag_real.clone().unwrap().to_attrs());
         }
@@ -468,7 +409,7 @@ impl Transform {
             if track.tag_real.is_none() {
                 println!("REGENERATE: {:?}", track);
                 if let (&Some(ref a), &Some(ref b)) = (&track.tag_a, &track.tag_b) {
-                    track.tag_real = Some(get_real_merge(a, b).unwrap_or_else(|| a.clone()));
+                    track.tag_real = Some(Tag::merge(a, b).unwrap_or_else(|| a.clone()));
                     track.is_original_a = false;
                     track.is_original_b = false;
                 } else if track.tag_b.is_some() {
@@ -510,7 +451,7 @@ impl Transform {
                 }
 
                 if let (&Some(ref a), &Some(ref b)) = (&track.tag_a, &track.tag_b) {
-                    track.tag_real = Some(get_real_merge(a, b).unwrap_or_else(|| a.clone()));
+                    track.tag_real = Some(Tag::merge(a, b).unwrap_or_else(|| a.clone()));
                     track.is_original_a = false;
                     track.is_original_b = false;
                 } else if track.tag_b.is_some() {
@@ -548,10 +489,10 @@ impl Transform {
                 b_add.exit();
             }
         }
-        ((a_del.result(), a_add.result()), (
-            b_del.result(),
-            b_add.result(),
-        ))
+        (
+            (a_del.result(), a_add.result()),
+            (b_del.result(), b_add.result()),
+        )
     }
 
     fn current_type(&self) -> Option<TrackType> {
@@ -568,13 +509,9 @@ impl Transform {
     }
 
     fn supports_text(&self) -> bool {
-        if let Some((track, _)) = self.top_track_real() {
-            // TODO also inlines TODO also move logic to schema
-            if track.tag_real.unwrap().tag_type() == Some(TrackType::Blocks) {
-                return true;
-            }
-        }
-        false
+        self.top_track_real()
+            .map(|(track, _)| track.tag_real.unwrap().tag_type().unwrap().supports_text())
+            .unwrap_or(false)
     }
 }
 
@@ -722,7 +659,10 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
 
                     // TODO this logic is evidence AddObject should be broken out
                     let groupsuccess = if let Some(AddGroup(ref b_attrs, _)) = compare {
-                        if b_attrs["tag"] == "caret" && t.supports_text() {
+                        let b_type = Tag(b_attrs.clone()).tag_type().unwrap();
+
+                        // TODO need to remove t.supports_text() for this use
+                        if b_type.is_object() && t.supports_text() {
                             b.enter();
                             b.exit();
                             t.enter_b(None, &Tag::from_attrs(b_attrs));
@@ -778,27 +718,26 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
 
                     println!("GroupByGroup {:?} {:?}", a_type, b_type);
 
-                    if a_attrs["tag"] == "caret" && b_attrs["tag"] == "caret" {
+                    if a_type == b_type {
                         t.regenerate_until(a_type);
 
-                        // Carets
-                        a.enter();
-                        a.exit();
-                        b.enter();
-                        b.exit();
-                        t.enter_a(&a_tag, None);
-                        t.close_a();
-                        t.enter_b(None, &b_tag);
-                        t.close_b();
-                    } else if a_type == b_type {
-                        t.regenerate_until(a_type);
-                        
-                        a.enter();
-                        b.enter();
-                        if Tag::from_attrs(a_attrs) == Tag::from_attrs(b_attrs) {
-                            t.enter(&Tag::from_attrs(a_attrs));
+                        if a_type.is_object() && b_type.is_object() {
+                            a.enter();
+                            a.exit();
+                            b.enter();
+                            b.exit();
+                            t.enter_a(&a_tag, None);
+                            t.close_a();
+                            t.enter_b(None, &b_tag);
+                            t.close_b();
                         } else {
-                            t.enter_a(&Tag::from_attrs(a_attrs), Some(Tag::from_attrs(b_attrs)));
+                            a.enter();
+                            b.enter();
+                            if Tag::from_attrs(a_attrs) == Tag::from_attrs(b_attrs) {
+                                t.enter(&Tag::from_attrs(a_attrs));
+                            } else {
+                                t.enter_a(&Tag::from_attrs(a_attrs), Some(Tag::from_attrs(b_attrs)));
+                            }
                         }
                     } else if b_is_child_of_a {
                         t.regenerate_until(a_type);
@@ -877,7 +816,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                             let a_tag = Tag::from_attrs(a_attrs);
 
                             t.regenerate(); // TODO is this correct
-                            if a_attrs["tag"] == "caret" && t.supports_text() {
+                            if a_tag.tag_type().unwrap().is_object() && t.supports_text() {
                                 a.enter();
                                 a.exit();
                                 t.enter_a(&a_tag, None);
@@ -912,7 +851,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     t.regenerate_until(a_type);
 
                     // TODO should carets be worked around like this?
-                    if a_attrs["tag"] == "caret" {
+                    if a_type.is_object() {
                         // Carets
                         a.enter();
                         a.exit();
@@ -948,8 +887,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     let b_type = Tag::from_attrs(b_attrs).tag_type().unwrap();
                     t.regenerate_until(b_type);
 
-                    // TODO should carets be worked around like this?
-                    if b_attrs["tag"] == "caret" {
+                    if b_type.is_object() {
                         // Carets
                         b.enter();
                         b.exit();
