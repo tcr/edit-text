@@ -121,10 +121,6 @@ impl DelWriter {
         self.past.push(DelGroup(past));
     }
 
-    pub fn many(&mut self, n: usize) {
-        self.past.place(&DelMany(n));
-    }
-
     pub fn skip(&mut self, n: usize) {
         self.past.place(&DelSkip(n));
     }
@@ -137,13 +133,17 @@ impl DelWriter {
         self.past.place(&DelGroup(span.clone()));
     }
 
-    pub fn group_all(&mut self) {
-        self.past.place(&DelGroupAll);
-    }
-
     pub fn with_group(&mut self, span: &DelSpan) {
         self.past.place(&DelWithGroup(span.clone()));
     }
+
+    // pub fn many(&mut self, n: usize) {
+    //     self.past.place(&DelMany(n));
+    // }
+
+    // pub fn group_all(&mut self) {
+    //     self.past.place(&DelGroupAll);
+    // }
 
     pub fn place(&mut self, elem: &DelElement) {
         self.past.place(elem);

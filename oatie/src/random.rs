@@ -83,10 +83,9 @@ pub fn random_del_span(input: &DocSpan) -> DelSpan {
                 }
             }
             DocGroup(_, ref span) => {
-                match rng.gen_range(0, 3) {
+                match rng.gen_range(0, 2) {
                     0 => res.place(&DelWithGroup(random_del_span(span))),
-                    1 => res.place(&DelGroupAll),
-                    2 => res.place(&DelSkip(1)),
+                    1 => res.place(&DelSkip(1)),
                     _ => {
                         unreachable!();
                     }

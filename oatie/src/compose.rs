@@ -14,26 +14,6 @@ use normalize;
 fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepper) {
     while !a.is_done() && !b.is_done() {
         match a.get_head() {
-            DelObject => {
-                match b.head.clone() {
-                    Some(DelObject) => {
-                        res.place(&DelObject);
-                        a.next();
-                        b.next();
-                    }
-                    None => {
-                        res.place(&DelObject);
-                        a.next();
-                    }
-                    _ => {
-                        panic!("Invalid compose against DelObject");
-                    }
-                }
-            }
-            DelMany(count) => {
-                res.place(&DelMany(count));
-                a.next();
-            }
             DelSkip(acount) => {
                 match b.head.clone() {
                     Some(DelSkip(bcount)) => {
@@ -49,7 +29,7 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
                             b.next();
                         }
                     }
-                    Some(DelObject) |
+                    // Some(DelObject) |
                     Some(DelWithGroup(..)) |
                     Some(DelGroup(..)) => {
                         if acount > 1 {
@@ -72,43 +52,34 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
                             b.next();
                         }
                     }
-                    Some(DelMany(bcount)) => {
-                        res.place(&DelMany(cmp::min(acount, bcount)));
-                        if acount > bcount {
-                            a.head = Some(DelSkip(acount - bcount));
-                            b.next();
-                        } else if acount < bcount {
-                            b.head = Some(DelMany(bcount - acount));
-                            a.next();
-                        } else {
-                            a.next();
-                            b.next();
-                        }
-                    }
-                    Some(DelGroupAll) => {
-                        if acount > 1 {
-                            a.head = Some(DelSkip(acount - 1));
-                        } else {
-                            a.next();
-                        }
-                        res.place(&b.next().unwrap());
-                    }
                     None => {
                         res.place(&a.next().unwrap());
                     }
+                    // Some(DelMany(bcount)) => {
+                    //     res.place(&DelMany(cmp::min(acount, bcount)));
+                    //     if acount > bcount {
+                    //         a.head = Some(DelSkip(acount - bcount));
+                    //         b.next();
+                    //     } else if acount < bcount {
+                    //         b.head = Some(DelMany(bcount - acount));
+                    //         a.next();
+                    //     } else {
+                    //         a.next();
+                    //         b.next();
+                    //     }
+                    // }
+                    // Some(DelGroupAll) => {
+                    //     if acount > 1 {
+                    //         a.head = Some(DelSkip(acount - 1));
+                    //     } else {
+                    //         a.next();
+                    //     }
+                    //     res.place(&b.next().unwrap());
+                    // }
                 }
             }
             DelWithGroup(ref span) => {
                 match b.head.clone() {
-                    Some(DelMany(bcount)) => {
-                        if bcount > 1 {
-                            b.head = Some(DelMany(bcount - 1));
-                        } else {
-                            b.next();
-                        }
-                        a.next();
-                        res.place(&DelMany(1));
-                    }
                     Some(DelSkip(bcount)) => {
                         if bcount > 1 {
                             b.head = Some(DelSkip(bcount - 1));
@@ -127,50 +98,69 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
                         a.next();
                         b.next();
                     }
-                    Some(DelObject) => {
-                        panic!("DelWithGroup vs DelObject is bad");
-                    }
                     Some(DelChars(bcount)) => {
                         panic!("DelWithGroup vs DelChars is bad");
-                    }
-                    Some(DelGroupAll) => {
-                        a.next();
-                        res.place(&b.next().unwrap());
                     }
                     None => {
                         res.place(&a.next().unwrap());
                     }
+                    // Some(DelMany(bcount)) => {
+                    //     if bcount > 1 {
+                    //         b.head = Some(DelMany(bcount - 1));
+                    //     } else {
+                    //         b.next();
+                    //     }
+                    //     a.next();
+                    //     res.place(&DelMany(1));
+                    // }
+                    // Some(DelObject) => {
+                    //     panic!("DelWithGroup vs DelObject is bad");
+                    // }
+                    // Some(DelGroupAll) => {
+                    //     a.next();
+                    //     res.place(&b.next().unwrap());
+                    // }
                 }
             }
             DelGroup(ref span) => {
-                match b.head.clone() {
-                    // TODO more of these :(
-                    // Some(DelGroup(ref bspan)) => {
-                    //     res.place(&DelGroup(compose_del_del(span, bspan)));
-                    //     a.next();
-                    //     b.next();
-                    // },
-                    _ => {
-                        let mut c = DelStepper::new(span);
-                        let mut inner: DelSpan = vec![];
-                        compose_del_del_inner(&mut inner, &mut c, b);
-                        if !c.is_done() {
-                            inner.place(&c.head.unwrap());
-                            inner.place_all(&c.rest);
-                        }
-                        res.place(&DelGroup(inner));
-                        a.next();
-                    }
+                let mut c = DelStepper::new(span);
+                let mut inner: DelSpan = vec![];
+                compose_del_del_inner(&mut inner, &mut c, b);
+                if !c.is_done() {
+                    inner.place(&c.head.unwrap());
+                    inner.place_all(&c.rest);
                 }
+                res.place(&DelGroup(inner));
+                a.next();
             }
             DelChars(count) => {
                 res.place(&DelChars(count));
                 a.next();
             }
-            DelGroupAll => {
-                res.place(&DelGroupAll);
-                a.next();
-            }
+            // DelObject => {
+            //     match b.head.clone() {
+            //         Some(DelObject) => {
+            //             res.place(&DelObject);
+            //             a.next();
+            //             b.next();
+            //         }
+            //         None => {
+            //             res.place(&DelObject);
+            //             a.next();
+            //         }
+            //         _ => {
+            //             panic!("Invalid compose against DelObject");
+            //         }
+            //     }
+            // }
+            // DelMany(count) => {
+            //     res.place(&DelMany(count));
+            //     a.next();
+            // }
+            // DelGroupAll => {
+            //     res.place(&DelGroupAll);
+            //     a.next();
+            // }
         }
     }
 }
@@ -320,72 +310,6 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
 
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
-            DelObject => {
-                match a.get_head() {
-                    AddSkip(acount) => {
-                        if acount > 1 {
-                            a.head = Some(AddSkip(acount - 1));
-                            delres.place(&b.next().unwrap());
-                        } else {
-                            a.next();
-                            delres.place(&b.next().unwrap());
-                        }
-                    }
-                    _ => {
-                        panic!("Bad");
-                    }
-                }
-            }
-            DelMany(bcount) => {
-                match a.get_head() {
-                    AddChars(avalue) => {
-                        let alen = avalue.chars().count();
-                        if bcount < alen {
-                            a.head = Some(AddChars(avalue.chars().skip(bcount).collect()));
-                            b.next();
-                        } else if bcount > alen {
-                            a.next();
-                            b.head = Some(DelMany(bcount - alen));
-                        } else {
-                            a.next();
-                            b.next();
-                        }
-                    }
-                    AddSkip(acount) => {
-                        if bcount < acount {
-                            a.head = Some(AddSkip(acount - bcount));
-                            delres.place(&b.next().unwrap());
-                        } else if bcount > acount {
-                            a.next();
-                            delres.place(&DelMany(acount));
-                            b.head = Some(DelMany(bcount - acount));
-                        } else {
-                            a.next();
-                            b.next();
-                        }
-                    }
-                    AddGroup(attr, ins_span) => {
-                        if bcount > 1 {
-                            a.next();
-                            delres.place(&DelMany(ins_span.skip_len()));
-                            b.head = Some(DelMany(bcount - 1));
-                        } else {
-                            a.next();
-                            b.next();
-                        }
-                    }
-                    AddWithGroup(insspan) => {
-                        if bcount > 1 {
-                            a.next();
-                            b.head = Some(DelMany(bcount - 1));
-                        } else {
-                            a.next();
-                            b.next();
-                        }
-                        delres.place(&DelMany(1));
-                    }
-                }
-            }
             DelChars(bcount) => {
                 match a.get_head() {
                     AddChars(avalue) => {
@@ -538,29 +462,95 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
                     }
                 }
             }
-            DelGroupAll => {
-                match a.get_head() {
-                    AddChars(avalue) => {
-                        panic!("DelGroupAll by AddChars is ILLEGAL");
-                    }
-                    AddSkip(acount) => {
-                        delres.place(&b.next().unwrap());
-                        if acount > 1 {
-                            a.head = Some(AddSkip(acount - 1));
-                        } else {
-                            a.next();
-                        }
-                    }
-                    AddWithGroup(insspan) => {
-                        a.next();
-                        delres.place(&b.next().unwrap());
-                    }
-                    AddGroup(attr, insspan) => {
-                        a.next();
-                        b.next();
-                    }
-                }
-            }
+            // DelObject => {
+            //     match a.get_head() {
+            //         AddSkip(acount) => {
+            //             if acount > 1 {
+            //                 a.head = Some(AddSkip(acount - 1));
+            //                 delres.place(&b.next().unwrap());
+            //             } else {
+            //                 a.next();
+            //                 delres.place(&b.next().unwrap());
+            //             }
+            //         }
+            //         _ => {
+            //             panic!("Bad");
+            //         }
+            //     }
+            // }
+            // DelMany(bcount) => {
+            //     match a.get_head() {
+            //         AddChars(avalue) => {
+            //             let alen = avalue.chars().count();
+            //             if bcount < alen {
+            //                 a.head = Some(AddChars(avalue.chars().skip(bcount).collect()));
+            //                 b.next();
+            //             } else if bcount > alen {
+            //                 a.next();
+            //                 b.head = Some(DelMany(bcount - alen));
+            //             } else {
+            //                 a.next();
+            //                 b.next();
+            //             }
+            //         }
+            //         AddSkip(acount) => {
+            //             if bcount < acount {
+            //                 a.head = Some(AddSkip(acount - bcount));
+            //                 delres.place(&b.next().unwrap());
+            //             } else if bcount > acount {
+            //                 a.next();
+            //                 delres.place(&DelMany(acount));
+            //                 b.head = Some(DelMany(bcount - acount));
+            //             } else {
+            //                 a.next();
+            //                 b.next();
+            //             }
+            //         }
+            //         AddGroup(attr, ins_span) => {
+            //             if bcount > 1 {
+            //                 a.next();
+            //                 delres.place(&DelMany(ins_span.skip_len()));
+            //                 b.head = Some(DelMany(bcount - 1));
+            //             } else {
+            //                 a.next();
+            //                 b.next();
+            //             }
+            //         }
+            //         AddWithGroup(insspan) => {
+            //             if bcount > 1 {
+            //                 a.next();
+            //                 b.head = Some(DelMany(bcount - 1));
+            //             } else {
+            //                 a.next();
+            //                 b.next();
+            //             }
+            //             delres.place(&DelMany(1));
+            //         }
+            //     }
+            // }
+            // DelGroupAll => {
+            //     match a.get_head() {
+            //         AddChars(avalue) => {
+            //             panic!("DelGroupAll by AddChars is ILLEGAL");
+            //         }
+            //         AddSkip(acount) => {
+            //             delres.place(&b.next().unwrap());
+            //             if acount > 1 {
+            //                 a.head = Some(AddSkip(acount - 1));
+            //             } else {
+            //                 a.next();
+            //             }
+            //         }
+            //         AddWithGroup(insspan) => {
+            //             a.next();
+            //             delres.place(&b.next().unwrap());
+            //         }
+            //         AddGroup(attr, insspan) => {
+            //             a.next();
+            //             b.next();
+            //         }
+            //     }
+            // }
         }
     }
 

@@ -130,16 +130,16 @@ pub fn parse_doc_span(input: &str) -> Result<DocSpan, Error> {
 fn parse_del_elem(mut value: &str) -> Result<DelElement, Error> {
     value = value.trim();
 
-    if value == "DelGroupAll" {
-        return Ok(DelElement::DelGroupAll);
-    }
+    // if value == "DelGroupAll" {
+    //     return Ok(DelElement::DelGroupAll);
+    // }
 
     let cap = if value.starts_with("DelSkip(") && value.ends_with(')') {
         Some(("DelSkip", &value["DelSkip(".len()..value.len() - 1]))
     } else if value.starts_with("DelChars(") && value.ends_with(')') {
         Some(("DelChars", &value["DelChars(".len()..value.len() - 1]))
-    } else if value.starts_with("DelMany(") && value.ends_with(')') {
-        Some(("DelMany", &value["DelMany(".len()..value.len() - 1]))
+    // } else if value.starts_with("DelMany(") && value.ends_with(')') {
+    //     Some(("DelMany", &value["DelMany(".len()..value.len() - 1]))
     } else {
         None
     };
@@ -149,7 +149,7 @@ fn parse_del_elem(mut value: &str) -> Result<DelElement, Error> {
         return Ok(match key {
             "DelSkip" => DelElement::DelSkip(inner),
             "DelChars" => DelElement::DelChars(inner),
-            "DelMany" => DelElement::DelMany(inner),
+            // "DelMany" => DelElement::DelMany(inner),
             _ => unreachable!("why"),
         });
     }
