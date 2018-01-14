@@ -32,31 +32,6 @@ fn format_classes(set: &HashSet<String>) -> String {
     classes.join(" ")
 }
 
-
-#[derive(Clone, Debug)]
-struct Track {
-    tag_a: Option<Tag>,
-    tag_real: Option<Tag>,
-    tag_b: Option<Tag>,
-    is_original_a: bool,
-    is_original_b: bool,
-}
-
-impl Track {
-    // TODO dumb, remove this
-    fn _anything(&self) -> Option<Tag> {
-        self.tag_a.clone().or(self.tag_real.clone()).or(self.tag_b.clone())
-    }
-}
-
-struct Transform {
-    tracks: Vec<Track>,
-    a_del: DelWriter,
-    a_add: AddWriter,
-    b_del: DelWriter,
-    b_add: AddWriter,
-}
-
 // TODO move to schema
 fn get_real_merge(a: &Tag, b: &Tag) -> Option<Tag> {
     if a.0.get("tag") == b.0.get("tag") && a.0.get("tag").map(|x| x == "span").unwrap_or(false) {
@@ -72,6 +47,24 @@ fn get_real_merge(a: &Tag, b: &Tag) -> Option<Tag> {
     } else {
         None
     }
+}
+
+
+#[derive(Clone, Debug)]
+struct Track {
+    tag_a: Option<Tag>,
+    tag_real: Option<Tag>,
+    tag_b: Option<Tag>,
+    is_original_a: bool,
+    is_original_b: bool,
+}
+
+struct Transform {
+    tracks: Vec<Track>,
+    a_del: DelWriter,
+    a_add: AddWriter,
+    b_del: DelWriter,
+    b_add: AddWriter,
 }
 
 impl Transform {
@@ -124,12 +117,12 @@ impl Transform {
             Some(a.clone())
         };
 
-        if let Some(last) = self.tracks.last() {
-            if a.tag_type() == last._anything().unwrap().tag_type() {
-                println!("-----> UGH {:?}", last);
-                panic!("Should not have consecutive similar tracks.");
-            }
-        }
+        // if let Some(last) = self.tracks.last() {
+        //     if a.tag_type() == last._anything().unwrap().tag_type() {
+        //         println!("-----> UGH {:?}", last);
+        //         panic!("Should not have consecutive similar tracks.");
+        //     }
+        // }
 
         self.tracks.insert(
             last,
@@ -347,7 +340,6 @@ impl Transform {
     }
 
     fn close_a(&mut self) {
-        println!("TRACKS CLOSE A: {:?}", self.tracks);
         let (track, index) = self.top_track_a().unwrap();
 
         // Determine whether to split tags for this track type.
@@ -360,7 +352,6 @@ impl Transform {
         };
 
         if track.is_original_a && (track_split || track.tag_b.is_none()) {
-            // && track.tag_real == track.tag_a {
             self.a_del.exit();
             self.a_add.exit();
         } else {
@@ -370,10 +361,6 @@ impl Transform {
             }
         }
 
-        // if track.is_original_b {
-        //     self.b_del.close();
-        // }
-        println!("CLOSES THE B {:?}", self.b_add);
         if track_split || track.tag_b.is_none() {
             self.b_add.close(track.tag_real.clone().unwrap().to_attrs());
         }
@@ -393,54 +380,27 @@ impl Transform {
     }
 
     fn close_b(&mut self) {
-        println!("close_b:");
-        for t in &self.tracks {
-            println!(" - {:?}", t);
-        }
-
         let (track, index) = self.top_track_b().unwrap();
-
-        println!("CLOSES THE B {:?}", self.b_del);
-        println!("CLOSES THE B {:?}", self.b_add);
 
         // Determine whether to split tags for this track type.
         // TODO do the same for track opening?
-        // NOTE i might have done this already
         // TODO remove do_split checks from this class? no-schema knowledge possible?
         let track_split = if let Some(tag) = track.tag_real.clone() {
             tag.tag_type().map_or(false, |x| x.do_split())
         } else {
             true
         };
-        println!("TAG {:?}", track);
-        println!(
-            "tag {:?}",
-            track
-                .tag_real
-                .clone()
-                .unwrap()
-                .tag_type()
-                .unwrap()
-                .do_split()
-        );
 
         if track.is_original_b && (track_split || track.tag_a.is_none()) {
-            // && track.tag_real == track.tag_b {
             self.b_del.exit();
             self.b_add.exit();
         } else {
-            println!("1");
-
             self.b_del.close();
             if track_split || track.tag_a.is_none() {
                 self.b_add.close(track.tag_real.clone().unwrap().to_attrs());
             }
-            println!("2 {:?}", self.b_del);
         }
 
-        // if track.is_original_a {
-        //     self.a_del.close();
-        // }
         if track_split || track.tag_a.is_none() {
             self.a_add.close(track.tag_real.clone().unwrap().to_attrs());
         }
@@ -451,7 +411,9 @@ impl Transform {
             if track_split {
                 self.tracks[index].is_original_a = false;
             }
-            self.tracks[index].is_original_b = false;
+            if track_split {
+                self.tracks[index].is_original_b = false;
+            }
             self.tracks[index].tag_b = None;
             if track_split {
                 self.tracks[index].tag_real = None;
@@ -475,8 +437,8 @@ impl Transform {
             } else {
                 (false, false)
             };
+
             if track.tag_real.is_some() && ((!istag && hasparent) || (istag && inclusive)) {
-                // schema.findType(tran.current()[1]) != type && schema.getAncestors(type).indexOf(schema.findType(tran.current()[1])) == -1
                 println!("aborting by {:?} {:?} {:?}", itype, inclusive, istag);
                 let aborted = self.abort();
                 regen.push(aborted);
@@ -499,10 +461,9 @@ impl Transform {
         }
     }
 
+    // TODO combine this with regenerate_until ?
     fn regenerate(&mut self) {
-        // okay do regen
         // Filter for types that are ancestors of the current type.
-        // TODO
         for track in &mut self.tracks {
             if track.tag_real.is_none() {
                 println!("REGENERATE: {:?}", track);
@@ -512,33 +473,12 @@ impl Transform {
                     track.is_original_b = false;
                 } else if track.tag_b.is_some() {
                     track.tag_real = track.tag_b.clone();
-                // track.tag_a = track.tag_b.clone();
-                // track.is_original_b = false;
-
-                // if (origA) {
-                //   insrA.enter();
-                // } else {
-                //   insrA.open(a || b, {});
-                // }
-
-                // if (origB) {
-                //   insrB.enter();
-                // } else {
-                //   insrB.open(a || b, {});
-                // }
                 } else if track.tag_a.is_some() {
                     track.tag_real = track.tag_a.clone();
-                    // track.tag_a = track.tag_a.clone();
-                    // track.is_original_a = false;
                 }
 
-                // This only happens when opening split elements.
-                // if !track.is_original_a {
                 self.a_add.begin();
-                // }
-                // if !track.is_original_b {
                 self.b_add.begin();
-                // }
             }
         }
     }
@@ -549,7 +489,13 @@ impl Transform {
             if track.tag_real.is_none() {
                 println!("REGENERATE UNTIL: {:?}", target);
 
-                let track_type = track._anything().unwrap().tag_type().unwrap();
+                // Get the type of this track.
+                // TODO is there a better way of doing this? Store track type in the track?
+                let track_type = track.tag_a.as_ref().map(|t| t.tag_type().unwrap())
+                    .or(track.tag_real.as_ref().map(|t| t.tag_type().unwrap()))
+                    .or(track.tag_b.as_ref().map(|t| t.tag_type().unwrap()))
+                    .unwrap();
+
                 if target.ancestors().iter().position(|x| *x == track_type).is_none()
                     && target != track_type {
                     if target == track_type {
@@ -1109,20 +1055,14 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     }
                     b.next();
                 }
-
-                // Invalid
-                // TODO not invalid; is this right now?
                 (Some(AddWithGroup(ref a_inner)), Some(AddChars(ref b_chars))) => {
                     t.regenerate(); // caret-35
 
                     t.chars_a(b_chars);
-                    // t.a_del.skip(1);
-                    // t.a_add.skip(1);
+
                     t.b_del.skip(b_chars.chars().count());
                     t.b_add.skip(b_chars.chars().count());
-                    // t.b_add.with_group(&a_inner);
 
-                    // a.next();
                     b.next();
                 }
             }
@@ -1140,31 +1080,6 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
     (op_a, op_b)
 }
 
-
-// fn normalize_delgroupall_element(elem: DelElement) -> DelElement {
-//     match elem {
-//         DelGroup(span) => {
-//             if span.skip_post_len() == 0 {
-//                 DelGroupAll
-//             } else {
-//                 DelGroup(normalize_delgroupall(span))
-//             }
-//         }
-//         DelWithGroup(span) => {
-//             DelWithGroup(normalize_delgroupall(span))
-//         }
-//         _ => elem,
-//     }
-// }
-
-// pub fn normalize_delgroupall(del: DelSpan) -> DelSpan {
-//     let mut ret: DelSpan = vec![];
-//     for elem in del.into_iter() {
-//         ret.place(&normalize_delgroupall_element(elem));
-//     }
-//     ret
-// }
-
 fn undel(input_del: &DelSpan) -> DelSpan {
     let mut del: DelSpan = vec![];
     for elem in input_del {
@@ -1180,9 +1095,6 @@ fn undel(input_del: &DelSpan) -> DelSpan {
             }
             &DelGroup(ref del_span) => {
                 del.place_all(&undel(&del_span));
-            }
-            _ => {
-                unimplemented!();
             }
         }
     }
@@ -1915,7 +1827,7 @@ pub fn transform(a: &Op, b: &Op) -> (Op, Op) {
     println!(" b_del   {:?}", b.0);
     println!();
 
-    let (mut a_del_0, mut b_del_0) = transform_deletions(&a.0, &b.0);
+    let (a_del_0, b_del_0) = transform_deletions(&a.0, &b.0);
     println!(" == a_del_0 {:?}", a_del_0);
     println!(" == b_del_0 {:?}", b_del_0);
     println!();
@@ -1923,8 +1835,6 @@ pub fn transform(a: &Op, b: &Op) -> (Op, Op) {
     // How do you apply del' if add has already been applied on the client?
     // The result will be applied after the client's insert operations had already been performed.
     // Reverse the impact of insA with delA` to not affect already newly added elements or text.
-    // var _ = delAfterIns(insA, delA_0, schema), delA_1 = _[0];
-    // var _ = delAfterIns(insB, delB_0), delB_1 = _[0];
     println!(" # transform[2] transform_add_del");
     println!(" a_ins   {:?}", a.1);
     println!(" a_del_0 {:?}", a_del_0);
@@ -1952,7 +1862,7 @@ pub fn transform(a: &Op, b: &Op) -> (Op, Op) {
     println!(" b_ins_1 {:?}", b_ins_1);
     let ((a_del_2, a_ins_2), (b_del_2, b_ins_2)) = transform_insertions(&a_ins_1, &b_ins_1);
     println!(" == a_del_2 {:?}", a_del_2);
-    println!(" == a_ins_2 {:?}", a_ins_2); // == a_ins_2 [AddWithGroup([AddWithGroup([AddWithGroup([AddSkip(8)]), AddChars("a")])])]
+    println!(" == a_ins_2 {:?}", a_ins_2);
     println!(" == b_del_2 {:?}", b_del_2);
     println!(" == b_ins_2 {:?}", b_ins_2);
     println!();
@@ -1981,7 +1891,7 @@ pub fn transform(a: &Op, b: &Op) -> (Op, Op) {
     println!(" b_del   {:?}", b.0);
     println!(" b_ins   {:?}", b.1);
     println!(" ~ transform()");
-    println!(" =b_del_3  {:?}", b_del_3); // wrong
+    println!(" =b_del_3  {:?}", b_del_3);
     println!(" =b_ins_2  {:?}", b_ins_2);
     println!();
 

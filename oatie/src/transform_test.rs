@@ -268,8 +268,8 @@ fn op_transform_compare(a: &Op, b: &Op) -> (Op, Op, Op, Op) {
     println!(" --> b'\n{:?}", b_);
     println!();
 
-    let mut a_res = normalize(compose::compose(a, &a_));
-    let mut b_res = normalize(compose::compose(b, &b_));
+    let a_res = normalize(compose::compose(a, &a_));
+    let b_res = normalize(compose::compose(b, &b_));
 
     // a_res.0 = normalize_delgroupall(a_res.0);
     // b_res.0 = normalize_delgroupall(b_res.0);
