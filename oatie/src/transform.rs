@@ -544,9 +544,7 @@ impl Transform {
     }
 
     fn regenerate_until(&mut self, target: TrackType) {
-        // okay do regen
         // Filter for types that are ancestors of the current type.
-        // TODO
         for track in &mut self.tracks {
             if track.tag_real.is_none() {
                 println!("REGENERATE UNTIL: {:?}", target);
@@ -571,33 +569,12 @@ impl Transform {
                     track.is_original_b = false;
                 } else if track.tag_b.is_some() {
                     track.tag_real = track.tag_b.clone();
-                // track.tag_a = track.tag_b.clone();
-                // track.is_original_b = false;
-
-                // if (origA) {
-                //   insrA.enter();
-                // } else {
-                //   insrA.open(a || b, {});
-                // }
-
-                // if (origB) {
-                //   insrB.enter();
-                // } else {
-                //   insrB.open(a || b, {});
-                // }
                 } else if track.tag_a.is_some() {
                     track.tag_real = track.tag_a.clone();
-                    // track.tag_a = track.tag_a.clone();
-                    // track.is_original_a = false;
                 }
 
-                // This only happens when opening split elements.
-                // if !track.is_original_a {
                 self.a_add.begin();
-                // }
-                // if !track.is_original_b {
                 self.b_add.begin();
-                // }
             }
         }
     }
@@ -1164,29 +1141,29 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
 }
 
 
-fn normalize_delgroupall_element(elem: DelElement) -> DelElement {
-    match elem {
-        DelGroup(span) => {
-            if span.skip_post_len() == 0 {
-                DelGroupAll
-            } else {
-                DelGroup(normalize_delgroupall(span))
-            }
-        }
-        DelWithGroup(span) => {
-            DelWithGroup(normalize_delgroupall(span))
-        }
-        _ => elem,
-    }
-}
+// fn normalize_delgroupall_element(elem: DelElement) -> DelElement {
+//     match elem {
+//         DelGroup(span) => {
+//             if span.skip_post_len() == 0 {
+//                 DelGroupAll
+//             } else {
+//                 DelGroup(normalize_delgroupall(span))
+//             }
+//         }
+//         DelWithGroup(span) => {
+//             DelWithGroup(normalize_delgroupall(span))
+//         }
+//         _ => elem,
+//     }
+// }
 
-pub fn normalize_delgroupall(del: DelSpan) -> DelSpan {
-    let mut ret: DelSpan = vec![];
-    for elem in del.into_iter() {
-        ret.place(&normalize_delgroupall_element(elem));
-    }
-    ret
-}
+// pub fn normalize_delgroupall(del: DelSpan) -> DelSpan {
+//     let mut ret: DelSpan = vec![];
+//     for elem in del.into_iter() {
+//         ret.place(&normalize_delgroupall_element(elem));
+//     }
+//     ret
+// }
 
 fn undel(input_del: &DelSpan) -> DelSpan {
     let mut del: DelSpan = vec![];
@@ -1284,16 +1261,6 @@ pub fn transform_del_del_inner(
                 if b_inner.skip_post_len() > 0 {
                     b_del.skip(b_inner.skip_post_len());
                 }
-                b.next();
-            }
-            (Some(DelSkip(a_count)), Some(DelGroupAll)) => {
-                a_del.group_all();
-                if a_count > 1 {
-                    a.head = Some(DelSkip(a_count - 1));
-                } else {
-                    a.next();
-                }
-
                 b.next();
             }
             (Some(DelGroup(a_inner)), Some(DelSkip(b_count))) => {
@@ -1405,20 +1372,6 @@ pub fn transform_del_del_inner(
                     b.next();
                 }
             }
-
-            // DelGroupAll
-            (Some(DelGroupAll), Some(DelWithGroup(_))) => {
-                b_del.group_all();
-
-                a.next();
-                b.next();
-            }
-            (Some(DelWithGroup(_)), Some(DelGroupAll)) => {
-                a_del.group_all();
-
-                a.next();
-                b.next();
-            }
             (Some(DelWithGroup(a_inner)), Some(DelGroup(b_inner))) => {
                 let mut a_inner_del = DelWriter::new();
                 let mut b_inner_del = DelWriter::new();
@@ -1452,37 +1405,60 @@ pub fn transform_del_del_inner(
                 a.next();
                 b.next();
             }
-            (Some(DelGroupAll), Some(DelSkip(b_count))) => {
-                b_del.group_all();
 
-                a.next();
-                if b_count > 1 {
-                    b.head = Some(DelSkip(b_count - 1));
-                } else {
-                    b.next();
-                }
-            }
             // TODO
-            (Some(DelGroupAll), Some(DelGroup(b_inner))) => {
-                if b_inner.skip_post_len() > 0 {
-                    b_del.many(b_inner.skip_post_len());
-                }
+            // (Some(DelGroupAll), Some(DelWithGroup(_))) => {
+            //     b_del.group_all();
 
-                a.next();
-                b.next();
-            }
-            (Some(DelGroup(a_inner)), Some(DelGroupAll)) => {
-                if a_inner.skip_post_len() > 0 {
-                    a_del.many(a_inner.skip_post_len());
-                }
+            //     a.next();
+            //     b.next();
+            // }
+            // (Some(DelWithGroup(_)), Some(DelGroupAll)) => {
+            //     a_del.group_all();
 
-                a.next();
-                b.next();
-            }
-            (Some(DelGroupAll), Some(DelGroupAll)) => {
-                a.next();
-                b.next();
-            }
+            //     a.next();
+            //     b.next();
+            // }
+            // (Some(DelSkip(a_count)), Some(DelGroupAll)) => {
+            //     a_del.group_all();
+            //     if a_count > 1 {
+            //         a.head = Some(DelSkip(a_count - 1));
+            //     } else {
+            //         a.next();
+            //     }
+
+            //     b.next();
+            // }
+            // (Some(DelGroupAll), Some(DelSkip(b_count))) => {
+            //     b_del.group_all();
+
+            //     a.next();
+            //     if b_count > 1 {
+            //         b.head = Some(DelSkip(b_count - 1));
+            //     } else {
+            //         b.next();
+            //     }
+            // }
+            // (Some(DelGroupAll), Some(DelGroup(b_inner))) => {
+            //     if b_inner.skip_post_len() > 0 {
+            //         b_del.many(b_inner.skip_post_len());
+            //     }
+
+            //     a.next();
+            //     b.next();
+            // }
+            // (Some(DelGroup(a_inner)), Some(DelGroupAll)) => {
+            //     if a_inner.skip_post_len() > 0 {
+            //         a_del.many(a_inner.skip_post_len());
+            //     }
+
+            //     a.next();
+            //     b.next();
+            // }
+            // (Some(DelGroupAll), Some(DelGroupAll)) => {
+            //     a.next();
+            //     b.next();
+            // }
 
             unimplemented => {
                 println!("Not reachable: {:?}", unimplemented);
@@ -1556,12 +1532,7 @@ pub fn transform_add_del_inner(
     b: &mut DelStepper,
 ) {
     while !b.is_done() && !a.is_done() {
-        println!("TADI---> {:?} {:?}", a.head, b.head);
-
         match b.get_head() {
-            DelObject => {
-                unimplemented!();
-            }
             DelChars(bcount) => {
                 match a.get_head() {
                     AddChars(avalue) => {
@@ -1603,56 +1574,6 @@ pub fn transform_add_del_inner(
                     unknown => {
                         println!("Compare: {:?} {:?}", DelChars(bcount), unknown);
                         panic!("Unimplemented or Unexpected");
-                    }
-                }
-            }
-            DelMany(bcount) => {
-                match a.get_head() {
-                    AddChars(avalue) => {
-                        addres.place(&AddChars(avalue.clone()));
-                        delres.place(&DelSkip(avalue.len()));
-                        a.next();
-                    }
-                    AddSkip(acount) => {
-                        if bcount < acount {
-                            a.head = Some(AddSkip(acount - bcount));
-                            delres.place(&b.next().unwrap());
-                        } else if bcount > acount {
-                            a.next();
-                            delres.place(&DelMany(acount));
-                            b.head = Some(DelMany(bcount - acount));
-                        } else {
-                            a.next();
-                            delres.place(&b.next().unwrap());
-                        }
-                    }
-                    AddGroup(attrs, a_span) => {
-                        let mut a_inner = AddStepper::new(&a_span);
-                        let mut addres_inner: AddSpan = vec![];
-                        let mut delres_inner: DelSpan = vec![];
-                        transform_add_del_inner(
-                            &mut delres_inner,
-                            &mut addres_inner,
-                            &mut a_inner,
-                            b,
-                        );
-                        if !a_inner.is_done() {
-                            addres_inner.place(&a_inner.head.unwrap());
-                            addres_inner.place_all(&a_inner.rest);
-                        }
-                        addres.place(&AddGroup(attrs, addres_inner));
-                        delres.place(&DelWithGroup(delres_inner));
-                        a.next();
-                    }
-                    AddWithGroup(ins_span) => {
-                        if bcount > 1 {
-                            delres.place(&DelMany(1));
-                            b.head = Some(DelMany(bcount - 1));
-                            a.next();
-                        } else {
-                            delres.place(&b.next().unwrap());
-                            a.next();
-                        }
                     }
                 }
             }
@@ -1865,46 +1786,99 @@ pub fn transform_add_del_inner(
                     }
                 }
             }
-            DelGroupAll => {
-                match a.get_head() {
-                    AddChars(avalue) => {
-                        delres.place(&DelSkip(avalue.chars().count()));
-                        addres.place(&a.next().unwrap());
-                    }
-                    AddSkip(acount) => {
-                        delres.place(&b.next().unwrap());
-                        if acount > 1 {
-                            a.head = Some(AddSkip(acount - 1));
-                        } else {
-                            a.next();
-                        }
-                    }
-                    AddWithGroup(insspan) => {
-                        a.next();
-                        delres.place(&b.next().unwrap());
-                    }
-                    AddGroup(attrs, ins_span) => {
-                        let mut a_inner = AddStepper::new(&ins_span);
-                        let mut delres_inner: DelSpan = vec![];
-                        let mut addres_inner: AddSpan = vec![];
-                        transform_add_del_inner(
-                            &mut delres_inner,
-                            &mut addres_inner,
-                            &mut a_inner,
-                            b,
-                        );
-                        if !a_inner.is_done() {
-                            addres_inner.place(&a_inner.head.unwrap());
-                            addres_inner.place_all(&a_inner.rest);
-                        }
-                        addres.place(&AddGroup(attrs, addres_inner));
-                        delres.place(&DelWithGroup(delres_inner));
+            // DelObject => {
+            //     unimplemented!();
+            // }
+            // DelMany(bcount) => {
+            //     match a.get_head() {
+            //         AddChars(avalue) => {
+            //             addres.place(&AddChars(avalue.clone()));
+            //             delres.place(&DelSkip(avalue.len()));
+            //             a.next();
+            //         }
+            //         AddSkip(acount) => {
+            //             if bcount < acount {
+            //                 a.head = Some(AddSkip(acount - bcount));
+            //                 delres.place(&b.next().unwrap());
+            //             } else if bcount > acount {
+            //                 a.next();
+            //                 delres.place(&DelMany(acount));
+            //                 b.head = Some(DelMany(bcount - acount));
+            //             } else {
+            //                 a.next();
+            //                 delres.place(&b.next().unwrap());
+            //             }
+            //         }
+            //         AddGroup(attrs, a_span) => {
+            //             let mut a_inner = AddStepper::new(&a_span);
+            //             let mut addres_inner: AddSpan = vec![];
+            //             let mut delres_inner: DelSpan = vec![];
+            //             transform_add_del_inner(
+            //                 &mut delres_inner,
+            //                 &mut addres_inner,
+            //                 &mut a_inner,
+            //                 b,
+            //             );
+            //             if !a_inner.is_done() {
+            //                 addres_inner.place(&a_inner.head.unwrap());
+            //                 addres_inner.place_all(&a_inner.rest);
+            //             }
+            //             addres.place(&AddGroup(attrs, addres_inner));
+            //             delres.place(&DelWithGroup(delres_inner));
+            //             a.next();
+            //         }
+            //         AddWithGroup(ins_span) => {
+            //             if bcount > 1 {
+            //                 delres.place(&DelMany(1));
+            //                 b.head = Some(DelMany(bcount - 1));
+            //                 a.next();
+            //             } else {
+            //                 delres.place(&b.next().unwrap());
+            //                 a.next();
+            //             }
+            //         }
+            //     }
+            // }
+            // DelGroupAll => {
+            //     match a.get_head() {
+            //         AddChars(avalue) => {
+            //             delres.place(&DelSkip(avalue.chars().count()));
+            //             addres.place(&a.next().unwrap());
+            //         }
+            //         AddSkip(acount) => {
+            //             delres.place(&b.next().unwrap());
+            //             if acount > 1 {
+            //                 a.head = Some(AddSkip(acount - 1));
+            //             } else {
+            //                 a.next();
+            //             }
+            //         }
+            //         AddWithGroup(insspan) => {
+            //             a.next();
+            //             delres.place(&b.next().unwrap());
+            //         }
+            //         AddGroup(attrs, ins_span) => {
+            //             let mut a_inner = AddStepper::new(&ins_span);
+            //             let mut delres_inner: DelSpan = vec![];
+            //             let mut addres_inner: AddSpan = vec![];
+            //             transform_add_del_inner(
+            //                 &mut delres_inner,
+            //                 &mut addres_inner,
+            //                 &mut a_inner,
+            //                 b,
+            //             );
+            //             if !a_inner.is_done() {
+            //                 addres_inner.place(&a_inner.head.unwrap());
+            //                 addres_inner.place_all(&a_inner.rest);
+            //             }
+            //             addres.place(&AddGroup(attrs, addres_inner));
+            //             delres.place(&DelWithGroup(delres_inner));
 
-                        println!("NOW   ->{:?}\n   ->{:?}", addres, delres);
-                        a.next();
-                    }
-                }
-            }
+            //             println!("NOW   ->{:?}\n   ->{:?}", addres, delres);
+            //             a.next();
+            //         }
+            //     }
+            // }
         }
     }
 }

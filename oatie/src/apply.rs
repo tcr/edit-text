@@ -187,9 +187,6 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
         let mut nextfirst = true;
 
         match d.clone() {
-            DelObject => {
-                panic!("TODO");
-            }
             DelSkip(count) => {
                 match first.clone() {
                     DocChars(ref value) => {
@@ -236,28 +233,6 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
                     }
                 }
             }
-            DelMany(count) => {
-                match first.clone() {
-                    DocChars(ref value) => {
-                        let len = value.chars().count();
-                        if len > count {
-                            first = DocChars(value.chars().skip(count).collect());
-                            nextfirst = false;
-                        } else if len < count {
-                            d = DelMany(count - len);
-                            nextdel = false;
-                        }
-                    }
-                    DocGroup(..) => {
-                        if count > 1 {
-                            d = DelMany(count - 1);
-                            nextdel = false;
-                        } else {
-                            nextdel = true;
-                        }
-                    }
-                }
-            }
             DelChars(count) => {
                 match first.clone() {
                     DocChars(ref value) => {
@@ -274,14 +249,39 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
                     }
                 }
             }
-            DelGroupAll => {
-                match first.clone() {
-                    DocGroup(..) => {}
-                    _ => {
-                        panic!("Invalid DelGroupAll");
-                    }
-                }
-            }
+            // DelObject => {
+            //     unimplemented!();
+            // }
+            // DelMany(count) => {
+            //     match first.clone() {
+            //         DocChars(ref value) => {
+            //             let len = value.chars().count();
+            //             if len > count {
+            //                 first = DocChars(value.chars().skip(count).collect());
+            //                 nextfirst = false;
+            //             } else if len < count {
+            //                 d = DelMany(count - len);
+            //                 nextdel = false;
+            //             }
+            //         }
+            //         DocGroup(..) => {
+            //             if count > 1 {
+            //                 d = DelMany(count - 1);
+            //                 nextdel = false;
+            //             } else {
+            //                 nextdel = true;
+            //             }
+            //         }
+            //     }
+            // }
+            // DelGroupAll => {
+            //     match first.clone() {
+            //         DocGroup(..) => {}
+            //         _ => {
+            //             panic!("Invalid DelGroupAll");
+            //         }
+            //     }
+            // }
         }
 
         if nextdel {
