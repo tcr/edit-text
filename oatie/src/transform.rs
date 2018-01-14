@@ -1594,12 +1594,12 @@ pub fn transform_add_del_inner(
                             } else if !a_inner.is_done() {
 
                                 if let &Some(ref head) = &a_inner.head {
-                                    let len = (vec![head.clone()]).skip_len();
+                                    let len = (vec![head.clone()]).skip_post_len();
                                     if len > 0 {
                                         delres_inner.place(&DelSkip(len));
                                     }
                                 }
-                                let len = a_inner.rest.skip_len();
+                                let len = a_inner.rest.skip_post_len();
                                 if len > 0 {
                                     delres_inner.place(&DelSkip(len));
                                 }
@@ -1750,7 +1750,7 @@ pub fn transform_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
 
     if !a.is_done() {
         let rest = a.into_span();
-        delres.place(&DelSkip(rest.skip_len()));
+        delres.place(&DelSkip(rest.skip_post_len()));
         addres.place_all(&rest);
     }
 
