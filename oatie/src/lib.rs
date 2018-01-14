@@ -40,6 +40,7 @@ pub use apply::*;
 use doc::*;
 use compose::*;
 use std::collections::HashMap;
+use std::fmt::Debug;
 
 pub trait OT {
     type Op: Operation;
@@ -69,8 +70,6 @@ impl Operation for Op {
         unimplemented!();
     }
 }
-
-use std::fmt::Debug;
 
 // TODO move this obviously somewhere better
 pub fn debug_pretty<D: Debug>(input: &D) -> String {

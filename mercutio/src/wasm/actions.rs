@@ -147,12 +147,12 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
 
         writer.del.begin();
         if span_1 > 0 {
-            writer.del.skip(span_1);
+            writer.del.place(&DelSkip(span_1));
         }
         writer.del.close();
         writer.del.begin();
         if span_2 > 0 {
-            writer.del.skip(span_2);
+            writer.del.place(&DelSkip(span_2));
         }
         writer.del.close();
         writer.del.exit_all();
@@ -226,7 +226,7 @@ pub fn split_block(ctx: ActionContext) -> Result<Op, Error> {
     let mut writer = walker.to_writer();
 
     if skip > 0 {
-        writer.del.skip(skip);
+        writer.del.place(&DelSkip(skip));
     }
     writer.del.close();
     writer.del.exit_all();

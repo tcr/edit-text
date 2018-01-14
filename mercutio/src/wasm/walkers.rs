@@ -436,8 +436,8 @@ impl Walker {
         while self.stepper.doc != doc_stepper {
             match doc_stepper.head() {
                 Some(DocChars(..)) => {
-                    del.skip(1);
-                    add.skip(1);
+                    del.place(&DelSkip(1));
+                    add.place(&AddSkip(1));
                     doc_stepper.skip(1);
                 }
                 Some(DocGroup(..)) => {

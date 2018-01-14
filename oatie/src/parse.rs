@@ -1,3 +1,5 @@
+//! Parse doc_span, add_span, del_span like strings.
+
 use std::io;
 use std::io::prelude::*;
 use serde_json::Value;
