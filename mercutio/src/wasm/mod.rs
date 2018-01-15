@@ -494,7 +494,7 @@ pub fn server(url: &str, wsp: u16) {
                 ws::connect(format!("ws://127.0.0.1:{}", wsp), move |out| {
                     // Send over operations
                     {
-                        clone_all!(tx_task, rx);
+                        clone_all!(rx);
                         thread::spawn(move || {
                             while let Ok(command) = rx.recv() {
                                 out.send(serde_json::to_string(&command).unwrap()).unwrap();

@@ -165,6 +165,7 @@ button {
     user-select: none;
 
     font-size: 16px;
+    cursor: text;
 
     div {
         /*border: 1px solid #444;*/
@@ -178,10 +179,9 @@ button {
     }
 
     span {
-        background: rgb(220, 255, 220);
+        // background: rgb(220, 255, 220);
         /*border: 1px solid rgba(0, 0, 0, .3);*/
         display: inline;
-        cursor: pointer;
         white-space: pre-wrap;
         z-index: 10;
     }
