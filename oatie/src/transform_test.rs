@@ -9,10 +9,10 @@ use super::normalize;
 use super::{Operation, OT};
 use super::validate::{validate_doc_span, ValidateContext};
 use super::transform::*;
+use super::parse::debug_pretty;
 use serde_json;
 use regex::Regex;
 use failure::Error;
-use debug_pretty;
 use yansi::Paint;
 use parse::*;
 
