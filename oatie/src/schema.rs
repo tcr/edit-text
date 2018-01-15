@@ -13,6 +13,21 @@ use term_painter::ToStyle;
 use term_painter::Color::*;
 use term_painter::Attr::*;
 
+fn parse_classes(input: &str) -> HashSet<String> {
+    input
+        .split_whitespace()
+        .filter(|x| !x.is_empty())
+        .map(|x| x.to_owned())
+        .collect()
+}
+
+fn format_classes(set: &HashSet<String>) -> String {
+    let mut classes: Vec<String> = set.iter().cloned().collect();
+    classes.sort();
+    classes.join(" ")
+}
+
+
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum TrackType {
     NoType,
@@ -98,6 +113,7 @@ impl TrackType {
     }
 }
 
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Tag(pub Attrs);
 
@@ -143,82 +159,4 @@ impl Tag {
             None
         }
     }
-}
-
-fn parse_classes(input: &str) -> HashSet<String> {
-    input
-        .split_whitespace()
-        .filter(|x| !x.is_empty())
-        .map(|x| x.to_owned())
-        .collect()
-}
-
-fn format_classes(set: &HashSet<String>) -> String {
-    let mut classes: Vec<String> = set.iter().cloned().collect();
-    classes.sort();
-    classes.join(" ")
-}
-
-
-#[derive(Clone)]
-pub struct ValidateContext {
-    stack: Vec<Attrs>,
-    carets: HashSet<String>,
-}
-
-impl ValidateContext {
-    pub fn new() -> ValidateContext {
-        ValidateContext {
-            stack: vec![],
-            carets: hashset![],
-        }
-    }
-}
-
-pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<(), Error> {
-    for elem in span {
-        match *elem {
-            DocGroup(ref attrs, ref span) => {
-                if attrs["tag"] == "caret" {
-                    if !ctx.carets.insert(attrs["client"].clone()) {
-                        bail!("Multiple carets for {:?} exist", attrs["client"]);
-                    }
-                }
-
-                ctx.stack.push(attrs.clone());
-                validate_doc_span(ctx, span)?;
-                ctx.stack.pop();
-                
-                // Check parentage.
-                if let Some(parent) = ctx.stack.last() {
-                    let parent_type = Tag(parent.clone()).tag_type().unwrap();
-                    let cur_type = Tag(attrs.clone()).tag_type().unwrap();
-                    ensure!(
-                        cur_type.parents().contains(&parent_type),
-                        "Block has incorrect parent"
-                    );
-                } else {
-                    // Top-level blocks
-                    ensure!(
-                        Tag(attrs.clone()).tag_type().unwrap().allowed_in_root(),
-                        "Root block has incorrect parent"
-                    );
-
-                }
-            }
-            DocChars(ref text) => {
-                ensure!(text.len() > 0, "Empty char string");
-
-                if let Some(block) = ctx.stack.last() {
-                    ensure!(
-                        Tag(block.clone()).tag_type().unwrap().allowed_in_root(),
-                        "Char found outside block"
-                    );
-                } else {
-                    bail!("Found char in root");
-                }
-            }
-        }
-    }
-    Ok(())
 }

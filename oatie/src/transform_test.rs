@@ -7,7 +7,7 @@ use super::compose;
 use super::doc::*;
 use super::normalize;
 use super::{Operation, OT};
-use super::schema::{validate_doc_span, ValidateContext};
+use super::validate::{validate_doc_span, ValidateContext};
 use super::transform::*;
 use serde_json;
 use regex::Regex;

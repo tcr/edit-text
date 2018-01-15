@@ -35,6 +35,7 @@ pub mod transform_test;
 pub mod macros;
 pub mod apply;
 pub mod parse;
+pub mod validate;
 
 pub use apply::*;
 use doc::*;
