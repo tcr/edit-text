@@ -701,8 +701,6 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
 
                 // Opening
                 (Some(AddGroup(ref a_attrs, _)), Some(AddGroup(ref b_attrs, _))) => {
-                    // TODO should t.regenerate be called??
-
                     let a_tag = Tag::from_attrs(a_attrs);
                     let a_type = a_tag.tag_type().unwrap();
                     let b_tag = Tag::from_attrs(b_attrs);
@@ -759,7 +757,8 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                                 }
                                 t.a_del.begin();
                             } else {
-                                t.unenter_a(a_type.clone());
+                                // TODO t.interrupt(a_type, true);
+                                t.unenter_a(a_type);
                             }
                         } else {
                             t.interrupt(a_type.clone(), false); // caret-46
@@ -784,7 +783,8 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                                 }
                                 t.b_del.begin();
                             } else {
-                                t.unenter_b(b_type.clone());
+                                // TODO t.interrupt(b_type, true);
+                                t.unenter_b(b_type);
                             }
                         } else {
                             t.interrupt(b_type.clone(), false); // caret-43
@@ -816,6 +816,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                             let a_tag = Tag::from_attrs(a_attrs);
 
                             t.regenerate(); // TODO is this correct
+                            // TODO improper use of supports_text
                             if a_tag.tag_type().unwrap().is_object() && t.supports_text() {
                                 a.enter();
                                 a.exit();
@@ -888,7 +889,6 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                     t.regenerate_until(b_type);
 
                     if b_type.is_object() {
-                        // Carets
                         b.enter();
                         b.exit();
                         t.enter_b(None, &Tag::from_attrs(b_attrs));
@@ -908,6 +908,7 @@ pub fn transform_insertions(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
                                 }
                                 t.b_del.begin();
                             } else {
+                                // TODO? t.interrupt(b_type, true);
                                 t.unenter_b(b_type);
                             }
                         } else {
