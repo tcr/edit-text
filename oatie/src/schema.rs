@@ -13,7 +13,7 @@ use term_painter::ToStyle;
 use term_painter::Color::*;
 use term_painter::Attr::*;
 use std::fmt::Debug;
-use super::transform::{TrackType, Tag};
+use super::transform::{Schema, Track};
 
 fn parse_classes(input: &str) -> HashSet<String> {
     input
@@ -31,7 +31,7 @@ fn format_classes(set: &HashSet<String>) -> String {
 
 
 #[derive(PartialEq, Copy, Clone, Debug)]
-pub enum RtfTrackType {
+pub enum RtfTrack {
     NoType,
     Lists,
     ListItems,
@@ -42,11 +42,11 @@ pub enum RtfTrackType {
     InlineObjects,
 }
 
-impl TrackType for RtfTrackType {
+impl Track for RtfTrack {
     // Rename this do close split? if applicable?
     fn do_split(&self) -> bool {
         match *self {
-            RtfTrackType::Lists => false,
+            RtfTrack::Lists => false,
             _ => true,
         }
     }
@@ -54,21 +54,21 @@ impl TrackType for RtfTrackType {
     // Unsure about this naming
     fn do_open_split(&self) -> bool {
         match *self {
-            RtfTrackType::Inlines => true,
+            RtfTrack::Inlines => true,
             _ => false,
         }
     }
 
     fn supports_text(&self) -> bool {
         match *self {
-            RtfTrackType::Blocks | RtfTrackType::Inlines => true,
+            RtfTrack::Blocks | RtfTrack::Inlines => true,
             _ => false,
         }
     }
 
     fn allowed_in_root(&self) -> bool {
         match *self {
-            RtfTrackType::Blocks | RtfTrackType::ListItems => true,
+            RtfTrack::Blocks | RtfTrack::ListItems => true,
             _ => false,
         }
     }
@@ -76,14 +76,14 @@ impl TrackType for RtfTrackType {
     // TODO is this how this should work
     fn is_object(&self) -> bool {
         match *self {
-            RtfTrackType::BlockObjects | RtfTrackType::InlineObjects => true,
+            RtfTrack::BlockObjects | RtfTrack::InlineObjects => true,
             _ => false,
         }
     }
 
     #[allow(match_same_arms)]
     fn parents(&self) -> Vec<Self> {
-        use self::RtfTrackType::*;
+        use self::RtfTrack::*;
         match *self {
             // Lists => vec![ListItems, BlockQuotes],
             ListItems => vec![ListItems, BlockQuotes],
@@ -100,10 +100,10 @@ impl TrackType for RtfTrackType {
     // TODO extrapolate this from parents()
     #[allow(match_same_arms)]
     fn ancestors(&self) -> Vec<Self> {
-        use self::RtfTrackType::*;
+        use self::RtfTrack::*;
         match *self {
             // Lists => vec![Lists, ListItems, BlockQuotes],
-            ListItems => vec![ListItems, BlockQuotes,],
+            ListItems => vec![ListItems, BlockQuotes],
             BlockQuotes => vec![ListItems, BlockQuotes],
             Blocks => vec![ListItems, BlockObjects],
             BlockObjects => vec![ListItems, BlockQuotes],
@@ -115,60 +115,45 @@ impl TrackType for RtfTrackType {
     }
 }
 
+// TODO why are these attributes necessary?
+#[derive(Clone, Debug)]
+pub struct RtfSchema;
 
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub struct RtfTag(pub Attrs);
+impl Schema for RtfSchema {
+    type Track = RtfTrack;
 
-impl Tag for RtfTag {
-    type TrackType = RtfTrackType;
-
-    fn to_attrs(&self) -> Attrs {
-        self.0.clone()
+    fn attrs_eq(a: &Attrs, b: &Attrs) -> bool {
+        // TODO normalize?
+        a == b
     }
 
     fn merge_attrs(a: &Attrs, b: &Attrs) -> Option<Attrs> {
-        Self::merge(&Self::from_attrs(a), &Self::from_attrs(b)).map(|x| x.0)
-    }
-
-    fn track_type_from_attrs(attrs: &Attrs) -> Option<Self::TrackType> {
-        Self::from_attrs(attrs).tag_type()
-    }
-
-    fn from_attrs(attrs: &Attrs) -> Self {
-        match attrs.get("tag") {
-            Some(value) => (),
-            None => panic!("expected tag in attrs list: {:?}", attrs),
-        }
-        RtfTag(attrs.clone())
-    }
-
-    fn tag_type(&self) -> Option<Self::TrackType> {
-        match &*self.0["tag"] {
-            // TODO remove these two
-            "ul" => Some(RtfTrackType::Lists),
-            "li" => Some(RtfTrackType::ListItems),
-
-            "bullet" => Some(RtfTrackType::ListItems),
-            "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "pre" => Some(RtfTrackType::Blocks),
-            "span" | "b" => Some(RtfTrackType::Inlines),
-            "caret" => Some(RtfTrackType::InlineObjects),
-            _ => None,
-        }
-    }
-
-    fn merge(a: &Self, b: &Self) -> Option<Self> {
-        if a.0.get("tag") == b.0.get("tag") && a.0.get("tag").map(|x| x == "span").unwrap_or(false) {
-            let c_a: String = a.0.get("class").unwrap_or(&"".to_string()).clone();
-            let c_b: String = b.0.get("class").unwrap_or(&"".to_string()).clone();
+        if a.get("tag") == b.get("tag") && a.get("tag").map(|x| x == "span").unwrap_or(false) {
+            let c_a: String = a.get("class").unwrap_or(&"".to_string()).clone();
+            let c_b: String = b.get("class").unwrap_or(&"".to_string()).clone();
 
             let mut c = parse_classes(&c_a);
             c.extend(parse_classes(&c_b));
-            Some(RtfTag(hashmap! {
+            Some(hashmap! {
                 "tag".to_string() => "span".to_string(),
                 "class".to_string() => format_classes(&c),
-            }))
+            })
         } else {
             None
+        }
+    }
+
+    fn track_type_from_attrs(attrs: &Attrs) -> Option<Self::Track> {
+        match &*attrs["tag"] {
+            // TODO remove these two
+            "ul" => Some(RtfTrack::Lists),
+            "li" => Some(RtfTrack::ListItems),
+
+            "bullet" => Some(RtfTrack::ListItems),
+            "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "pre" => Some(RtfTrack::Blocks),
+            "span" | "b" => Some(RtfTrack::Inlines),
+            "caret" => Some(RtfTrack::InlineObjects),
+            _ => None,
         }
     }
 }
