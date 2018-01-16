@@ -42,6 +42,7 @@ use doc::*;
 use compose::*;
 use std::collections::HashMap;
 use std::fmt::Debug;
+pub use transform::{Tag, TrackType};
 
 pub trait OT {
     type Op: Operation;
@@ -51,7 +52,7 @@ pub trait OT {
 
 pub trait Operation where Self: Sized {
     fn compose(&Self, &Self) -> Self;
-    fn transform(&Self, &Self) -> (Self, Self);
+    fn transform<T: Tag>(&Self, &Self) -> (Self, Self);
 }
 
 impl OT for Doc {
@@ -67,7 +68,7 @@ impl Operation for Op {
         compose(a, b)
     }
 
-    fn transform(a: &Self, b: &Self) -> (Self, Self) {
+    fn transform<T: Tag>(a: &Self, b: &Self) -> (Self, Self) {
         unimplemented!();
     }
 }

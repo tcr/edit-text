@@ -12,6 +12,8 @@ use failure::Error;
 use term_painter::ToStyle;
 use term_painter::Color::*;
 use term_painter::Attr::*;
+use std::fmt::Debug;
+use super::transform::{TrackType, Tag};
 
 fn parse_classes(input: &str) -> HashSet<String> {
     input
@@ -29,7 +31,7 @@ fn format_classes(set: &HashSet<String>) -> String {
 
 
 #[derive(PartialEq, Copy, Clone, Debug)]
-pub enum TrackType {
+pub enum RtfTrackType {
     NoType,
     Lists,
     ListItems,
@@ -40,48 +42,48 @@ pub enum TrackType {
     InlineObjects,
 }
 
-impl TrackType {
+impl TrackType for RtfTrackType {
     // Rename this do close split? if applicable?
-    pub fn do_split(&self) -> bool {
+    fn do_split(&self) -> bool {
         match *self {
-            TrackType::Lists => false,
+            RtfTrackType::Lists => false,
             _ => true,
         }
     }
 
     // Unsure about this naming
-    pub fn do_open_split(&self) -> bool {
+    fn do_open_split(&self) -> bool {
         match *self {
-            TrackType::Inlines => true,
+            RtfTrackType::Inlines => true,
             _ => false,
         }
     }
 
-    pub fn supports_text(&self) -> bool {
+    fn supports_text(&self) -> bool {
         match *self {
-            TrackType::Blocks | TrackType::Inlines => true,
+            RtfTrackType::Blocks | RtfTrackType::Inlines => true,
             _ => false,
         }
     }
 
-    pub fn allowed_in_root(&self) -> bool {
+    fn allowed_in_root(&self) -> bool {
         match *self {
-            TrackType::Blocks | TrackType::ListItems => true,
+            RtfTrackType::Blocks | RtfTrackType::ListItems => true,
             _ => false,
         }
     }
 
     // TODO is this how this should work
-    pub fn is_object(&self) -> bool {
+    fn is_object(&self) -> bool {
         match *self {
-            TrackType::BlockObjects | TrackType::InlineObjects => true,
+            RtfTrackType::BlockObjects | RtfTrackType::InlineObjects => true,
             _ => false,
         }
     }
 
     #[allow(match_same_arms)]
-    pub fn parents(&self) -> Vec<TrackType> {
-        use self::TrackType::*;
+    fn parents(&self) -> Vec<Self> {
+        use self::RtfTrackType::*;
         match *self {
             // Lists => vec![ListItems, BlockQuotes],
             ListItems => vec![ListItems, BlockQuotes],
@@ -97,8 +99,8 @@ impl TrackType {
 
     // TODO extrapolate this from parents()
     #[allow(match_same_arms)]
-    pub fn ancestors(&self) -> Vec<TrackType> {
-        use self::TrackType::*;
+    fn ancestors(&self) -> Vec<Self> {
+        use self::RtfTrackType::*;
         match *self {
             // Lists => vec![Lists, ListItems, BlockQuotes],
             ListItems => vec![ListItems, BlockQuotes,],
@@ -115,43 +117,45 @@ impl TrackType {
 
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct Tag(pub Attrs);
+pub struct RtfTag(pub Attrs);
 
-impl Tag {
-    pub fn to_attrs(&self) -> Attrs {
+impl Tag for RtfTag {
+    type TrackType = RtfTrackType;
+
+    fn to_attrs(&self) -> Attrs {
         self.0.clone()
     }
 
-    pub fn from_attrs(attrs: &Attrs) -> Tag {
+    fn from_attrs(attrs: &Attrs) -> Self {
         match attrs.get("tag") {
             Some(value) => (),
             None => panic!("expected tag in attrs list: {:?}", attrs),
         }
-        Tag(attrs.clone())
+        RtfTag(attrs.clone())
     }
 
-    pub fn tag_type(self: &Tag) -> Option<TrackType> {
+    fn tag_type(&self) -> Option<Self::TrackType> {
         match &*self.0["tag"] {
             // TODO remove these two
-            "ul" => Some(TrackType::Lists),
-            "li" => Some(TrackType::ListItems),
+            "ul" => Some(RtfTrackType::Lists),
+            "li" => Some(RtfTrackType::ListItems),
 
-            "bullet" => Some(TrackType::ListItems),
-            "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "pre" => Some(TrackType::Blocks),
-            "span" | "b" => Some(TrackType::Inlines),
-            "caret" => Some(TrackType::InlineObjects),
+            "bullet" => Some(RtfTrackType::ListItems),
+            "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "pre" => Some(RtfTrackType::Blocks),
+            "span" | "b" => Some(RtfTrackType::Inlines),
+            "caret" => Some(RtfTrackType::InlineObjects),
             _ => None,
         }
     }
 
-    pub fn merge(a: &Tag, b: &Tag) -> Option<Tag> {
+    fn merge(a: &Self, b: &Self) -> Option<Self> {
         if a.0.get("tag") == b.0.get("tag") && a.0.get("tag").map(|x| x == "span").unwrap_or(false) {
             let c_a: String = a.0.get("class").unwrap_or(&"".to_string()).clone();
             let c_b: String = b.0.get("class").unwrap_or(&"".to_string()).clone();
 
             let mut c = parse_classes(&c_a);
             c.extend(parse_classes(&c_b));
-            Some(Tag(hashmap! {
+            Some(RtfTag(hashmap! {
                 "tag".to_string() => "span".to_string(),
                 "class".to_string() => format_classes(&c),
             }))
