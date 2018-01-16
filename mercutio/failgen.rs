@@ -46,7 +46,7 @@ fn launch(counter: Arc<AtomicUsize>, thread_count: usize) {
         .current_dir(dir.path())
         .env("RUST_BACKTRACE", "1")
         .arg("--port")
-        .arg((sync_port + 1).to_string())
+        .arg((sync_port + 2).to_string())
         .arg("--monkies")
         .arg(rnd_monkies.to_string())
         .stdin(Stdio::null())
@@ -108,7 +108,7 @@ fn launch(counter: Arc<AtomicUsize>, thread_count: usize) {
 
             println!("{} ...next", cur_value);
         } else {
-            println!("odd, next");
+            println!("failed without creating a test.txt! did the server run successfully?");
         }
     } else {
         println!("No errors found in time duration");
