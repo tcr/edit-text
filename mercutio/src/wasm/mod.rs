@@ -1,13 +1,15 @@
 pub mod actions;
 pub mod walkers;
 
-use failure::Error;
-use oatie::{debug_pretty, Operation, OT};
-use oatie::doc::*;
-use rand;
-use rand::Rng;
 use self::actions::*;
 use super::sync::{SyncClientCommand, SyncServerCommand};
+use crossbeam_channel::{unbounded, Receiver, Sender};
+use failure::Error;
+use oatie::{Operation, OT};
+use oatie::doc::*;
+use oatie::parse::debug_pretty;
+use rand;
+use rand::Rng;
 use serde_json;
 use std::{panic, process};
 use std::sync::{Arc, Mutex};
@@ -16,7 +18,6 @@ use std::sync::atomic::Ordering;
 use std::thread;
 use std::time::Duration;
 use ws;
-use crossbeam_channel::{unbounded, Receiver, Sender};
 
 macro_rules! clone_all {
     ( $( $x:ident ),* ) => {

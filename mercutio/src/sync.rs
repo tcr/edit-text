@@ -1,8 +1,8 @@
 use failure::Error;
 use oatie::{Operation, OT};
-use oatie::debug_pretty;
+use oatie::parse::debug_pretty;
 use oatie::doc::*;
-use oatie::schema::{validate_doc_span, ValidateContext};
+use oatie::validate::{validate_doc_span, ValidateContext};
 use oatie::transform::transform;
 use serde_json;
 use std::collections::HashMap;
