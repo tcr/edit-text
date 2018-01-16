@@ -16,8 +16,8 @@ use failure::Error;
 use yansi::Paint;
 use parse::*;
 
-fn op_transform_compare(a: &Op, b: &Op) -> (Op, Op, Op, Op) {
-    let (a_, b_) = transform(a, b);
+fn op_transform_compare<T: Tag>(a: &Op, b: &Op) -> (Op, Op, Op, Op) {
+    let (a_, b_) = transform::<T>(a, b);
 
     println!();
     println!(" --> a \n{:?}", a);
@@ -43,7 +43,7 @@ fn op_transform_compare(a: &Op, b: &Op) -> (Op, Op, Op, Op) {
     (a_, b_, a_res, b_res)
 }
 
-pub fn run_transform_test(input: &str) -> Result<(), Error> {
+pub fn run_transform_test<T: Tag>(input: &str) -> Result<(), Error> {
     let re = Regex::new(r"(\n|^)(\w+):([\n\w\W]+?)(\n(?:\w)|(\n\]))").unwrap();
     let mut test: HashMap<_, _> = re.captures_iter(&input)
         .map(|cap| {
@@ -99,7 +99,7 @@ pub fn run_transform_test(input: &str) -> Result<(), Error> {
         "{}",
         Paint::red("(!) comparing transform operation results...")
     );
-    let (a_, b_, a_res, b_res) = op_transform_compare(&a, &b);
+    let (a_, b_, a_res, b_res) = op_transform_compare::<T>(&a, &b);
     println!("ok");
     println!();
 

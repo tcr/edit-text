@@ -2,6 +2,7 @@ use super::compose;
 use super::doc::*;
 use super::normalize;
 use super::schema::*;
+use super::transform::{TrackType, Tag};
 use super::stepper::*;
 use super::writer::*;
 use failure::Error;
@@ -44,8 +45,8 @@ pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<()
 
                 // Check parentage.
                 if let Some(parent) = ctx.stack.last() {
-                    let parent_type = Tag(parent.clone()).tag_type().unwrap();
-                    let cur_type = Tag(attrs.clone()).tag_type().unwrap();
+                    let parent_type = RtfTag(parent.clone()).tag_type().unwrap();
+                    let cur_type = RtfTag(attrs.clone()).tag_type().unwrap();
                     ensure!(
                         cur_type.parents().contains(&parent_type),
                         "Block has incorrect parent"
@@ -53,7 +54,7 @@ pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<()
                 } else {
                     // Top-level blocks
                     ensure!(
-                        Tag(attrs.clone()).tag_type().unwrap().allowed_in_root(),
+                        RtfTag(attrs.clone()).tag_type().unwrap().allowed_in_root(),
                         "Root block has incorrect parent"
                     );
                 }
@@ -63,7 +64,7 @@ pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<()
 
                 if let Some(block) = ctx.stack.last() {
                     ensure!(
-                        Tag(block.clone()).tag_type().unwrap().allowed_in_root(),
+                        RtfTag(block.clone()).tag_type().unwrap().allowed_in_root(),
                         "Char found outside block"
                     );
                 } else {

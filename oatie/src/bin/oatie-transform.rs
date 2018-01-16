@@ -1,9 +1,9 @@
 extern crate oatie;
 
+use oatie::schema::RtfTag;
+use oatie::transform_test::*;
 use std::io;
 use std::io::prelude::*;
-
-use oatie::transform_test::*;
 
 fn main() {
     let mut input = String::new();
@@ -13,7 +13,7 @@ fn main() {
         .read_to_string(&mut input)
         .expect("Could not read stdin");
 
-    match run_transform_test(&input) {
+    match run_transform_test::<RtfTag>(&input) {
         Ok(..) => {
             println!("all set!");
         }

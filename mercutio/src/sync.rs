@@ -1,17 +1,18 @@
+use bus::Bus;
 use failure::Error;
 use oatie::{Operation, OT};
-use oatie::parse::debug_pretty;
 use oatie::doc::*;
-use oatie::validate::{validate_doc_span, ValidateContext};
+use oatie::parse::debug_pretty;
+use oatie::schema::RtfTag;
 use oatie::transform::transform;
+use oatie::validate::{validate_doc_span, ValidateContext};
 use serde_json;
+use std::{panic, process};
 use std::collections::HashMap;
-use bus::Bus;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 use ws;
-use std::{panic, process};
 
 pub fn default_doc() -> Doc {
     Doc(doc_span![
@@ -131,7 +132,7 @@ b_add: {}
     println!("(!) applying transformed operations...");
 
     // Tranform
-    let (a_, b_) = transform(&op_a, &op_b);
+    let (a_, b_) = transform::<RtfTag>(&op_a, &op_b);
 
     println!("");
     println!("DOC A {:?}", doc_a);

@@ -1,11 +1,12 @@
 use oatie::doc::*;
 use oatie::stepper::*;
 use oatie::writer::*;
+use oatie::transform::Tag;
 use take_mut;
 
 fn is_block(attrs: &Attrs) -> bool {
     use oatie::schema::*;
-    Tag(attrs.clone()).tag_type() == Some(TrackType::Blocks)
+    RtfTag::from_attrs(attrs).tag_type() == Some(RtfTrackType::Blocks)
 }
 
 fn is_caret(attrs: &Attrs, client_id: Option<&str>) -> bool {
