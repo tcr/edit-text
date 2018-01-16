@@ -15,19 +15,17 @@ extern crate tiny_http;
 extern crate url;
 extern crate ws;
 
-use structopt::StructOpt;
-use std::sync::{Arc, Mutex};
-use std::path::Path;
-use std::thread;
 use mercutio::sync::*;
-use tiny_http::Response;
+use std::env;
 use std::fs::File;
+use std::sync::{Arc, Mutex};
+use std::thread;
+use structopt::StructOpt;
+use tiny_http::Response;
 use url::Url;
 
-const HTTP_PORT: u16 = 8000;
-
-fn spawn_http_server() {
-    let server = tiny_http::Server::http(&format!("0.0.0.0:{}", HTTP_PORT)).unwrap();
+fn spawn_http_server(port: u16) {
+    let server = tiny_http::Server::http(&format!("0.0.0.0:{}", port)).unwrap();
 
     let server = Arc::new(server);
     let mut guards = Vec::with_capacity(4);
@@ -36,12 +34,21 @@ fn spawn_http_server() {
         let server = server.clone();
 
         let guard = thread::spawn(move || {
-            let dist_path = Path::new(".")
-                .join("frontend/dist/")
+            let root_path = env::current_exe()
+                .unwrap()
+                .parent()
+                .unwrap()
+                .parent()
+                .unwrap()
+                .parent()
+                .unwrap()
+                .to_owned();
+            let dist_path = root_path
+                .join("mercutio/frontend/dist/")
                 .canonicalize()
                 .unwrap();
-            let template_path = Path::new(".")
-                .join("src/templates/")
+            let template_path = root_path
+                .join("mercutio/src/templates/")
                 .canonicalize()
                 .unwrap();
 
@@ -102,7 +109,7 @@ fn spawn_http_server() {
         guards.push(guard);
     }
 
-    println!("Listening on http://localhost:{}/", HTTP_PORT);
+    println!("Listening on http://localhost:{}/", port);
 
     for guard in guards {
         let _ = guard.join();
@@ -112,11 +119,9 @@ fn spawn_http_server() {
 #[derive(StructOpt, Debug)]
 #[structopt(name = "mercutio-wasm", about = "An example of StructOpt usage.")]
 struct Opt {
-    #[structopt(long = "port", help = "Port", default_value = "3010")]
-    port: u16,
+    #[structopt(long = "port", help = "Port", default_value = "8000")] port: u16,
 
-    #[structopt(long = "period", help = "Sync period", default_value = "100")]
-    period: usize,
+    #[structopt(long = "period", help = "Sync period", default_value = "100")] period: usize,
 }
 
 fn main() {
@@ -126,9 +131,10 @@ fn main() {
         body: Arc::new(Mutex::new(default_doc())),
     };
 
-    sync_socket_server(opt.port, opt.period, mercutio_state.clone());
+    // port + 1
+    sync_socket_server(opt.port + 1, opt.period, mercutio_state.clone());
 
-    spawn_http_server();
+    spawn_http_server(opt.port);
 
     // // Loop forever
     // loop {

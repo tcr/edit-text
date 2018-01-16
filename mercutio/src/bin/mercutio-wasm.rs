@@ -16,7 +16,7 @@ struct Opt {
     #[structopt(long = "monkies", help = "Monkey count")]
     monkies: Option<usize>,
 
-    #[structopt(long = "port", help = "Port", default_value = "3011")]
+    #[structopt(long = "port", help = "Port", default_value = "8002")]
     port: u16,
 }
 
