@@ -24,8 +24,10 @@ use tiny_http::Response;
 use std::fs::File;
 use url::Url;
 
+const HTTP_PORT: u16 = 8000;
+
 fn spawn_http_server() {
-    let server = tiny_http::Server::http("0.0.0.0:8000").unwrap();
+    let server = tiny_http::Server::http(&format!("0.0.0.0:{}", HTTP_PORT)).unwrap();
 
     let server = Arc::new(server);
     let mut guards = Vec::with_capacity(4);
@@ -100,7 +102,7 @@ fn spawn_http_server() {
         guards.push(guard);
     }
 
-    println!("Listening on http://localhost:8000/");
+    println!("Listening on http://localhost:{}/", HTTP_PORT);
 
     for guard in guards {
         let _ = guard.join();
