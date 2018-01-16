@@ -126,6 +126,14 @@ impl Tag for RtfTag {
         self.0.clone()
     }
 
+    fn merge_attrs(a: &Attrs, b: &Attrs) -> Option<Attrs> {
+        Self::merge(&Self::from_attrs(a), &Self::from_attrs(b)).map(|x| x.0)
+    }
+
+    fn track_type_from_attrs(attrs: &Attrs) -> Option<Self::TrackType> {
+        Self::from_attrs(attrs).tag_type()
+    }
+
     fn from_attrs(attrs: &Attrs) -> Self {
         match attrs.get("tag") {
             Some(value) => (),
