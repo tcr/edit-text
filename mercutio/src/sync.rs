@@ -25,7 +25,7 @@ pub fn default_doc() -> Doc {
             // DocChars("What's "),
             // DocGroup({"tag": "span", "class": "bold"}, [DocChars("new and great")]),
             // DocChars(" with you?"),
-            DocChars("What's up with you?"),
+            DocChars("This is Mercutio, a rich text editor."),
         ]),
         // DocGroup({"tag": "ul"}, [
         //     DocGroup({"tag": "li"}, [
