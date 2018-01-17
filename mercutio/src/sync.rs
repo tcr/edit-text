@@ -3,7 +3,7 @@ use failure::Error;
 use oatie::{Operation, OT};
 use oatie::doc::*;
 use oatie::parse::debug_pretty;
-use oatie::schema::RtfTag;
+use oatie::schema::RtfSchema;
 use oatie::transform::transform;
 use oatie::validate::{validate_doc_span, ValidateContext};
 use serde_json;
@@ -132,7 +132,7 @@ b_add: {}
     println!("(!) applying transformed operations...");
 
     // Tranform
-    let (a_, b_) = transform::<RtfTag>(&op_a, &op_b);
+    let (a_, b_) = transform::<RtfSchema>(&op_a, &op_b);
 
     println!("");
     println!("DOC A {:?}", doc_a);
