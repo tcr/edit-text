@@ -1,5 +1,6 @@
 pub mod actions;
 pub mod walkers;
+pub mod proxy;
 
 use self::actions::*;
 use super::sync::{SyncClientCommand, SyncServerCommand};
@@ -17,6 +18,9 @@ use std::sync::atomic::Ordering;
 use std::thread;
 use std::time::Duration;
 use ws;
+
+#[cfg(target = "wasm32-unknown-unknown")]
+use self::proxy::*;
 
 macro_rules! clone_all {
     ( $( $x:ident ),* ) => {
@@ -47,30 +51,6 @@ pub enum ClientCommand {
     PromptString(String, String, NativeCommand),
     Update(String, Option<Op>),
     Error(String),
-}
-
-struct Client {
-    name: String,
-
-    doc: Doc,
-    version: usize,
-
-    original_doc: Doc,
-    original_ops: Vec<Op>,
-
-    monkey: Arc<AtomicBool>,
-    alive: Arc<AtomicBool>,
-
-    out: ws::Sender,
-    tx: Sender<SyncServerCommand>,
-}
-
-impl Client {
-    fn send(&self, req: &ClientCommand) -> Result<(), Error> {
-        let json = serde_json::to_string(&req)?;
-        self.out.send(json)?;
-        Ok(())
-    }
 }
 
 fn doc_as_html(doc: &DocSpan) -> String {
@@ -145,10 +125,10 @@ where
 
     // Send update.
     let res = ClientCommand::Update(doc_as_html(&client.doc.0), Some(op.clone()));
-    client.send(&res)?;
+    client.send_client(&res)?;
 
     // Send operation to sync server.
-    client.tx.send(SyncServerCommand::Commit(
+    client.send_sync(SyncServerCommand::Commit(
         client.name.clone(),
         op,
         client.version,
@@ -274,272 +254,113 @@ enum Task {
     NativeCommand(NativeCommand),
 }
 
-macro_rules! monkey_task {
-    ( $alive:expr, $monkey:expr, $tx:expr, $wait_params:expr, $task:expr ) => {
-        {
-            let tx = $tx.clone();
-            let alive = $alive.clone();
-            let monkey = $monkey.clone();
-            thread::spawn::<_, Result<(), Error>>(move || {
-                let mut rng = rand::thread_rng();
-                while alive.load(Ordering::Relaxed) {
-                    thread::sleep(Duration::from_millis(
-                        $wait_params.0 + rng.gen_range($wait_params.1, $wait_params.2),
-                    ));
-                    if monkey.load(Ordering::Relaxed) {
-                        tx.send($task)?;
-                    }
-                }
-                Ok(())
+struct Client {
+    name: String,
+
+    doc: Doc,
+    version: usize,
+
+    original_doc: Doc,
+    original_ops: Vec<Op>,
+
+    monkey: Arc<AtomicBool>,
+    alive: Arc<AtomicBool>,
+
+    out: ws::Sender,
+    tx: Sender<SyncServerCommand>,
+}
+
+impl Client {
+    fn setup(&self) {
+        self
+            .send_client(&ClientCommand::Setup {
+                keys: key_handlers()
+                    .into_iter()
+                    .map(|x| (x.0, x.1, x.2))
+                    .collect(),
+                buttons: button_handlers()
+                    .into_iter()
+                    .enumerate()
+                    .map(|(i, x)| (i, x.0.to_string()))
+                    .collect(),
             })
-        }
-    };
-}
+            .expect("Could not send initial state");
+    }
 
-type MonkeyParam = (u64, u64, u64);
+    fn handle_task(&mut self, value: Task) -> Result<(), Error> {
+        let mut rng = rand::thread_rng();
 
-// "Human-like"
-const MONKEY_BUTTON: MonkeyParam = (500, 0, 2000);
-const MONKEY_LETTER: MonkeyParam = (50, 0, 200);
-const MONKEY_ARROW: MonkeyParam = (0, 0, 500);
-const MONKEY_BACKSPACE: MonkeyParam = (0, 0, 200);
-const MONKEY_ENTER: MonkeyParam = (600, 0, 3_000);
-
-// Race
-// const MONKEY_BUTTON: MonkeyParam = (0, 0, 100);
-// const MONKEY_LETTER: MonkeyParam = (0, 0, 100);
-// const MONKEY_ARROW: MonkeyParam = (0, 0, 100);
-// const MONKEY_BACKSPACE: MonkeyParam = (0, 0, 100);
-// const MONKEY_ENTER: MonkeyParam = (0, 0, 1_000);
-
-#[allow(unused)]
-fn setup_monkey(alive: Arc<AtomicBool>, monkey: Arc<AtomicBool>, tx: Sender<Task>) {
-    // Button monkey.
-    monkey_task!(alive, monkey, tx, MONKEY_BUTTON, Task::ButtonMonkey);
-    monkey_task!(alive, monkey, tx, MONKEY_LETTER, Task::LetterMonkey);
-    monkey_task!(alive, monkey, tx, MONKEY_ARROW, Task::ArrowMonkey);
-    monkey_task!(alive, monkey, tx, MONKEY_BACKSPACE, Task::BackspaceMonkey);
-    monkey_task!(alive, monkey, tx, MONKEY_ENTER, Task::EnterMonkey);
-}
-
-fn setup_client(name: &str, out: ws::Sender, ws_port: u16) -> (Arc<AtomicBool>, Arc<AtomicBool>, Sender<Task>) {
-    let (tx, rx) = unbounded();
-
-    let monkey = Arc::new(AtomicBool::new(false));
-    let alive = Arc::new(AtomicBool::new(true));
-
-    let mut client = Client {
-        name: name.to_owned(),
-
-        doc: Doc(vec![]),
-        version: 100,
-
-        original_doc: Doc(vec![]),
-        original_ops: vec![],
-
-        monkey: monkey.clone(),
-        alive: alive.clone(),
-
-        out,
-        tx,
-    };
-
-    // Send initial setup packet.
-    client
-        .send(&ClientCommand::Setup {
-            keys: key_handlers()
-                .into_iter()
-                .map(|x| (x.0, x.1, x.2))
-                .collect(),
-            buttons: button_handlers()
-                .into_iter()
-                .enumerate()
-                .map(|(i, x)| (i, x.0.to_string()))
-                .collect(),
-        })
-        .expect("Could not send initial state");
-
-    let (tx_task, rx_task) = unbounded();
-    setup_monkey(alive.clone(), monkey.clone(), tx_task.clone());
-
-    // Setup monkey tasks.
-    {
-        thread::spawn::<_, Result<(), Error>>(move || {
-            while let Ok(task) = rx_task.recv() {
-                handle_task(task, &mut client)?;
+        match value {
+            Task::ButtonMonkey => {
+                let index = rng.gen_range(0, button_handlers().len() as u32);
+                let command = NativeCommand::Button(index);
+                native_command(self, command)?;
             }
-            Ok(())
-        });
-    }
+            Task::LetterMonkey => {
+                let char_list = vec![
+                    rng.gen_range(b'A', b'Z'),
+                    rng.gen_range(b'a', b'z'),
+                    rng.gen_range(b'0', b'9'),
+                    b' ',
+                ];
+                let c = *rng.choose(&char_list).unwrap() as u32;
+                let command = NativeCommand::Character(c);
+                native_command(self, command)?;
+            }
+            Task::ArrowMonkey => {
+                let key = *rng.choose(&[37, 39, 37, 39, 37, 39, 38, 40]).unwrap();
+                let command = NativeCommand::Keypress(key, false, false);
+                native_command(self, command)?;
+            }
+            Task::BackspaceMonkey => {
+                let command = NativeCommand::Keypress(8, false, false);
+                native_command(self, command)?;
+            }
+            Task::EnterMonkey => {
+                let command = NativeCommand::Keypress(13, false, false);
+                native_command(self, command)?;
+            }
 
-    // Connect to the sync server.
-    {
-        clone_all!(tx_task);
-        thread::spawn(move || {
-            ws::connect(format!("ws://127.0.0.1:{}", ws_port), move |out| {
-                // While we receive packets, send them to the websocket.
+            // Handle commands from Native.
+            Task::NativeCommand(command) => {
+                native_command(self, command)?;
+            }
+
+            // Sync sent us an Update command.
+            Task::SyncClientCommand(SyncClientCommand::Update(doc, version)) => {
+                self.original_doc = Doc(doc.clone());
+                self.original_ops = vec![];
+
+                self.doc = Doc(doc.clone());
+                self.version = version;
+                println!("new version is {:?}", version);
+
+                // If the caret doesn't exist or was deleted, reinitialize.
+                if !with_action_context(self, |ctx| Ok(has_caret(ctx)))
+                    .ok()
+                    .unwrap_or(true)
                 {
-                    clone_all!(rx);
-                    thread::spawn(move || {
-                        while let Ok(command) = rx.recv() {
-                            out.send(serde_json::to_string(&command).unwrap()).unwrap();
-                        }
-                    });
+                    client_op(self, |doc| init_caret(doc)).unwrap();
                 }
 
-                // Receive packets, deserialize them.
-                {
-                    clone_all!(tx_task);
-                    move |msg: ws::Message| {
-                        // Handle messages received on this connection
-                        println!("wasm got a packet from sync '{}'. ", msg);
-
-                        let req_parse: Result<SyncClientCommand, _> =
-                            serde_json::from_slice(&msg.into_data());
-                        match req_parse {
-                            Err(err) => {
-                                println!("Packet error: {:?}", err);
-                            }
-                            Ok(value) => {
-                                tx_task.send(Task::SyncClientCommand(value));
-                            }
-                        }
-
-                        Ok(())
-                    }
-                }
-            }).unwrap();
-        });
-    }
-
-    (alive, monkey, tx_task)
-}
-
-struct SocketHandler {
-    ws_port: u16,
-    out: Option<ws::Sender>,
-    alive: Option<Arc<AtomicBool>>,
-    monkey: Option<Arc<AtomicBool>>,
-    tx_task: Option<Sender<Task>>,
-}
-
-impl ws::Handler for SocketHandler {
-    fn on_open(&mut self, shake: ws::Handshake) -> Result<(), ws::Error> {
-        let client_id = shake.request.resource()[1..].to_string();
-        let (alive, monkey, tx_task) = setup_client(&client_id, self.out.take().unwrap(), self.ws_port);
-        self.alive = Some(alive);
-        self.monkey = Some(monkey);
-        self.tx_task = Some(tx_task);
+                // Native drives client state.
+                let res = ClientCommand::Update(doc_as_html(&doc), None);
+                self.send_client(&res).unwrap();
+            }
+        }
         Ok(())
     }
 
-    fn on_message(&mut self, msg: ws::Message) -> Result<(), ws::Error> {
-        // Handle messages received on this connection
-        println!("wasm got a packet from client '{}'. ", msg);
-
-        let req_parse: Result<NativeCommand, _> = serde_json::from_slice(&msg.into_data());
-        match req_parse {
-            Err(err) => {
-                println!("Packet error: {:?}", err);
-            }
-            Ok(value) => {
-                self.tx_task.as_mut().map(|x| x.send(Task::NativeCommand(value)));
-            }
-        }
-
+    #[cfg(not(target = "wasm32-unknown-unknown"))]
+    fn send_client(&self, req: &ClientCommand) -> Result<(), Error> {
+        let json = serde_json::to_string(&req)?;
+        self.out.send(json)?;
         Ok(())
     }
 
-    fn on_error(&mut self, err: ws::Error) {
-        println!("Killing after error");
-        self.monkey.as_ref().unwrap().store(false, Ordering::Relaxed);
-        self.alive.as_ref().unwrap().store(false, Ordering::Relaxed);
+    #[cfg(not(target = "wasm32-unknown-unknown"))]
+    fn send_sync(&self, req: SyncServerCommand) -> Result<(), Error> {
+        self.tx.send(req)?;
+        Ok(())
     }
-
-    fn on_close(&mut self, code: ws::CloseCode, reason: &str) {
-        println!("Killing after close");
-        self.monkey.as_ref().unwrap().store(false, Ordering::Relaxed);
-        self.alive.as_ref().unwrap().store(false, Ordering::Relaxed);
-    }
-}
-
-fn handle_task(value: Task, client: &mut Client) -> Result<(), Error> {
-    let mut rng = rand::thread_rng();
-
-    match value {
-        Task::ButtonMonkey => {
-            let index = rng.gen_range(0, button_handlers().len() as u32);
-            let command = NativeCommand::Button(index);
-            native_command(client, command)?;
-        }
-        Task::LetterMonkey => {
-            let char_list = vec![
-                rng.gen_range(b'A', b'Z'),
-                rng.gen_range(b'a', b'z'),
-                rng.gen_range(b'0', b'9'),
-                b' ',
-            ];
-            let c = *rng.choose(&char_list).unwrap() as u32;
-            let command = NativeCommand::Character(c);
-            native_command(client, command)?;
-        }
-        Task::ArrowMonkey => {
-            let key = *rng.choose(&[37, 39, 37, 39, 37, 39, 38, 40]).unwrap();
-            let command = NativeCommand::Keypress(key, false, false);
-            native_command(client, command)?;
-        }
-        Task::BackspaceMonkey => {
-            let command = NativeCommand::Keypress(8, false, false);
-            native_command(client, command)?;
-        }
-        Task::EnterMonkey => {
-            let command = NativeCommand::Keypress(13, false, false);
-            native_command(client, command)?;
-        }
-
-        // Handle commands from Native.
-        Task::NativeCommand(command) => {
-            native_command(client, command)?;
-        }
-
-        // Sync sent us an Update command.
-        Task::SyncClientCommand(SyncClientCommand::Update(doc, version)) => {
-            client.original_doc = Doc(doc.clone());
-            client.original_ops = vec![];
-
-            client.doc = Doc(doc.clone());
-            client.version = version;
-            println!("new version is {:?}", version);
-
-            // If the caret doesn't exist or was deleted, reinitialize.
-            if !with_action_context(client, |ctx| Ok(has_caret(ctx)))
-                .ok()
-                .unwrap_or(true)
-            {
-                client_op(client, |doc| init_caret(doc)).unwrap();
-            }
-
-            // Native drives client state.
-            let res = ClientCommand::Update(doc_as_html(&doc), None);
-            client.send(&res).unwrap();
-        }
-    }
-    Ok(())
-}
-
-pub fn server(url: &str, ws_port: u16) {
-    ws::listen(url, |out| {
-        // Websocket message handler.
-        SocketHandler {
-            ws_port,
-            out: Some(out),
-            alive: None,
-            monkey: None,
-            tx_task: None,
-        }
-    }).unwrap();
-}
-
-pub fn start_websocket_server(port: u16) {
-    server(&format!("127.0.0.1:{}", port), port - 1);
 }

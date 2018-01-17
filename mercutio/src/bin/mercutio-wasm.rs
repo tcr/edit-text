@@ -8,7 +8,8 @@ extern crate ws;
 use structopt::StructOpt;
 use std::thread;
 use std::time::Duration;
-use mercutio::wasm::{start_websocket_server, NativeCommand};
+use mercutio::wasm::NativeCommand;
+use mercutio::wasm::proxy::start_websocket_server;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "mercutio-wasm", about = "An example of StructOpt usage.")]
