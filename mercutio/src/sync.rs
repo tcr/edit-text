@@ -161,17 +161,6 @@ b_add: {}
     Ok((new_doc, Operation::compose(&op_a, &a_)))
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub enum SyncServerCommand {
-    // Connect(String),
-    Commit(String, Op, usize),
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub enum SyncClientCommand {
-    Update(DocSpan, usize),
-}
-
 pub struct SyncState {
     ops: HashMap<String, Vec<Op>>,
     version: usize,

@@ -2,23 +2,27 @@
 authors = ["Tim Ryan <id@timryan.org>"]
 name = "mercutio"
 version = "0.1.0"
-
 [dependencies]
-bus = "1.3.2"
-crossbeam-channel = "0.1.2"
 env_logger = "0.4.3"
 failure = "0.1.1"
+lazy_static = "1.0.0"
 maplit = "1.0.0"
-rand = "0.3.18"
+rand = "0.4"
 serde = "1.0.21"
 serde_derive = "1.0.21"
 serde_json = "1.0.6"
-structopt = "0.1.0"
-structopt-derive = "0.1.0"
 take_mut = "0.2.0"
-tiny_http = "0.5.8"
-url = "1.6.0"
-ws = "0.7.3"
 
 [dependencies.oatie]
 path = "../oatie"
+
+[lib]
+crate-type = ["cdylib"]
+name = "mercutio"
+[target."cfg(not(target_arch=\"wasm32\"))".dependencies]
+bus = "1.3.2"
+crossbeam-channel = "0.1.2"
+structopt = "0.1.0"
+structopt-derive = "0.1.0"
+tiny_http = "0.5.8"
+ws = "0.7.3"
