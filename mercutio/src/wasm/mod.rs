@@ -3,11 +3,10 @@ pub mod walkers;
 
 use self::actions::*;
 use super::sync::{SyncClientCommand, SyncServerCommand};
-use crossbeam_channel::{unbounded, Receiver, Sender};
+use crossbeam_channel::{unbounded, Sender};
 use failure::Error;
 use oatie::{Operation, OT};
 use oatie::doc::*;
-use oatie::parse::debug_pretty;
 use rand;
 use rand::Rng;
 use serde_json;
@@ -51,7 +50,7 @@ pub enum ClientCommand {
 }
 
 struct Client {
-    name: Arc<Mutex<Option<String>>>,
+    name: String,
 
     doc: Doc,
     version: usize,
@@ -59,7 +58,6 @@ struct Client {
     original_doc: Doc,
     original_ops: Vec<Op>,
 
-    first_load: bool,
     monkey: Arc<AtomicBool>,
     alive: Arc<AtomicBool>,
 
@@ -82,10 +80,10 @@ fn doc_as_html(doc: &DocSpan) -> String {
             &DocGroup(ref attrs, ref span) => {
                 out.push_str(&format!(
                     r#"<div
-                    data-tag={}
-                    data-client={}
-                    class={}
-                >"#,
+                        data-tag={}
+                        data-client={}
+                        class={}
+                    >"#,
                     serde_json::to_string(attrs.get("tag").unwrap_or(&"".to_string())).unwrap(),
                     serde_json::to_string(attrs.get("client").unwrap_or(&"".to_string())).unwrap(),
                     serde_json::to_string(attrs.get("class").unwrap_or(&"".to_string())).unwrap(),
@@ -108,10 +106,9 @@ fn with_action_context<C, T>(client: &mut Client, callback: C) -> Result<T, Erro
 where
     C: Fn(ActionContext) -> Result<T, Error>,
 {
-    let client_id = client.name.lock().unwrap().clone().unwrap().to_string();
     callback(ActionContext {
         doc: client.doc.clone(),
-        client_id,
+        client_id: client.name.clone(),
     })
 }
 
@@ -119,10 +116,9 @@ fn client_op<C>(client: &mut Client, callback: C) -> Result<(), Error>
 where
     C: Fn(ActionContext) -> Result<Op, Error>,
 {
-    let client_id = client.name.lock().unwrap().clone().unwrap().to_string();
     let op = callback(ActionContext {
         doc: client.doc.clone(),
-        client_id,
+        client_id: client.name.clone(),
     })?;
 
     // Apply new operation.
@@ -133,7 +129,6 @@ where
     // TODO is this correct
     // println!("ORIGINAL: {:?}", client.original_doc);
     let mut check_op_a = op_span!([], []);
-    let name = client.name.lock().unwrap().clone().unwrap();
     for (i, op) in client.original_ops.iter().enumerate() {
         // println!("  {}: applying {:?}/{:?}", name, i + 1, client.original_ops.len());
         // println!("  {} 1️⃣: let op_left = op_span!{:?};", name, check_op_a);
@@ -154,7 +149,7 @@ where
 
     // Send operation to sync server.
     client.tx.send(SyncServerCommand::Commit(
-        client.name.lock().unwrap().clone().unwrap(),
+        client.name.clone(),
         op,
         client.version,
     ));
@@ -327,17 +322,114 @@ fn setup_monkey(alive: Arc<AtomicBool>, monkey: Arc<AtomicBool>, tx: Sender<Task
     monkey_task!(alive, monkey, tx, MONKEY_ENTER, Task::EnterMonkey);
 }
 
+fn setup_client(name: &str, out: ws::Sender, ws_port: u16) -> (Arc<AtomicBool>, Arc<AtomicBool>, Sender<Task>) {
+    let (tx, rx) = unbounded();
+
+    let monkey = Arc::new(AtomicBool::new(false));
+    let alive = Arc::new(AtomicBool::new(true));
+
+    let mut client = Client {
+        name: name.to_owned(),
+
+        doc: Doc(vec![]),
+        version: 100,
+
+        original_doc: Doc(vec![]),
+        original_ops: vec![],
+
+        monkey: monkey.clone(),
+        alive: alive.clone(),
+
+        out,
+        tx,
+    };
+
+    // Send initial setup packet.
+    client
+        .send(&ClientCommand::Setup {
+            keys: key_handlers()
+                .into_iter()
+                .map(|x| (x.0, x.1, x.2))
+                .collect(),
+            buttons: button_handlers()
+                .into_iter()
+                .enumerate()
+                .map(|(i, x)| (i, x.0.to_string()))
+                .collect(),
+        })
+        .expect("Could not send initial state");
+
+    let (tx_task, rx_task) = unbounded();
+    setup_monkey(alive.clone(), monkey.clone(), tx_task.clone());
+
+    // Setup monkey tasks.
+    {
+        thread::spawn::<_, Result<(), Error>>(move || {
+            while let Ok(task) = rx_task.recv() {
+                handle_task(task, &mut client)?;
+            }
+            Ok(())
+        });
+    }
+
+    // Connect to the sync server.
+    {
+        clone_all!(tx_task);
+        thread::spawn(move || {
+            ws::connect(format!("ws://127.0.0.1:{}", ws_port), move |out| {
+                // While we receive packets, send them to the websocket.
+                {
+                    clone_all!(rx);
+                    thread::spawn(move || {
+                        while let Ok(command) = rx.recv() {
+                            out.send(serde_json::to_string(&command).unwrap()).unwrap();
+                        }
+                    });
+                }
+
+                // Receive packets, deserialize them.
+                {
+                    clone_all!(tx_task);
+                    move |msg: ws::Message| {
+                        // Handle messages received on this connection
+                        println!("wasm got a packet from sync '{}'. ", msg);
+
+                        let req_parse: Result<SyncClientCommand, _> =
+                            serde_json::from_slice(&msg.into_data());
+                        match req_parse {
+                            Err(err) => {
+                                println!("Packet error: {:?}", err);
+                            }
+                            Ok(value) => {
+                                tx_task.send(Task::SyncClientCommand(value));
+                            }
+                        }
+
+                        Ok(())
+                    }
+                }
+            }).unwrap();
+        });
+    }
+
+    (alive, monkey, tx_task)
+}
+
 struct SocketHandler {
-    name: Arc<Mutex<Option<String>>>,
-    monkey: Arc<AtomicBool>,
-    alive: Arc<AtomicBool>,
-    tx_task: Sender<Task>,
+    ws_port: u16,
+    out: Option<ws::Sender>,
+    alive: Option<Arc<AtomicBool>>,
+    monkey: Option<Arc<AtomicBool>>,
+    tx_task: Option<Sender<Task>>,
 }
 
 impl ws::Handler for SocketHandler {
     fn on_open(&mut self, shake: ws::Handshake) -> Result<(), ws::Error> {
         let client_id = shake.request.resource()[1..].to_string();
-        *self.name.lock().unwrap() = Some(client_id);
+        let (alive, monkey, tx_task) = setup_client(&client_id, self.out.take().unwrap(), self.ws_port);
+        self.alive = Some(alive);
+        self.monkey = Some(monkey);
+        self.tx_task = Some(tx_task);
         Ok(())
     }
 
@@ -351,7 +443,7 @@ impl ws::Handler for SocketHandler {
                 println!("Packet error: {:?}", err);
             }
             Ok(value) => {
-                self.tx_task.send(Task::NativeCommand(value));
+                self.tx_task.as_mut().map(|x| x.send(Task::NativeCommand(value)));
             }
         }
 
@@ -360,14 +452,14 @@ impl ws::Handler for SocketHandler {
 
     fn on_error(&mut self, err: ws::Error) {
         println!("Killing after error");
-        self.monkey.store(false, Ordering::Relaxed);
-        self.alive.store(false, Ordering::Relaxed);
+        self.monkey.as_ref().unwrap().store(false, Ordering::Relaxed);
+        self.alive.as_ref().unwrap().store(false, Ordering::Relaxed);
     }
 
     fn on_close(&mut self, code: ws::CloseCode, reason: &str) {
         println!("Killing after close");
-        self.monkey.store(false, Ordering::Relaxed);
-        self.alive.store(false, Ordering::Relaxed);
+        self.monkey.as_ref().unwrap().store(false, Ordering::Relaxed);
+        self.alive.as_ref().unwrap().store(false, Ordering::Relaxed);
     }
 }
 
@@ -435,104 +527,15 @@ fn handle_task(value: Task, client: &mut Client) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn server(url: &str, wsp: u16) {
+pub fn server(url: &str, ws_port: u16) {
     ws::listen(url, |out| {
-        let (tx, rx) = unbounded();
-
-        let name = Arc::new(Mutex::new(None));
-        let monkey = Arc::new(AtomicBool::new(false));
-        let alive = Arc::new(AtomicBool::new(true));
-
-        let mut client = Client {
-            name: name.clone(),
-
-            doc: Doc(vec![]),
-            version: 100,
-
-            original_doc: Doc(vec![]),
-            original_ops: vec![],
-
-            first_load: false,
-            monkey: monkey.clone(),
-            alive: alive.clone(),
-
-            out,
-            tx,
-        };
-
-        // Send initial setup packet.
-        client
-            .send(&ClientCommand::Setup {
-                keys: key_handlers()
-                    .into_iter()
-                    .map(|x| (x.0, x.1, x.2))
-                    .collect(),
-                buttons: button_handlers()
-                    .into_iter()
-                    .enumerate()
-                    .map(|(i, x)| (i, x.0.to_string()))
-                    .collect(),
-            })
-            .expect("Could not send initial state");
-
-        let (tx_task, rx_task) = unbounded();
-        setup_monkey(alive.clone(), monkey.clone(), tx_task.clone());
-
-        // Setup monkey tasks.
-        {
-            thread::spawn::<_, Result<(), Error>>(move || {
-                while let Ok(task) = rx_task.recv() {
-                    handle_task(task, &mut client)?;
-                }
-                Ok(())
-            });
-        }
-
-        // Connect to the sync server.
-        {
-            clone_all!(tx_task);
-            thread::spawn(move || {
-                ws::connect(format!("ws://127.0.0.1:{}", wsp), move |out| {
-                    // Send over operations
-                    {
-                        clone_all!(rx);
-                        thread::spawn(move || {
-                            while let Ok(command) = rx.recv() {
-                                out.send(serde_json::to_string(&command).unwrap()).unwrap();
-                            }
-                        });
-                    }
-
-                    {
-                        clone_all!(tx_task);
-                        move |msg: ws::Message| {
-                            // Handle messages received on this connection
-                            println!("wasm got a packet from sync '{}'. ", msg);
-
-                            let req_parse: Result<SyncClientCommand, _> =
-                                serde_json::from_slice(&msg.into_data());
-                            match req_parse {
-                                Err(err) => {
-                                    println!("Packet error: {:?}", err);
-                                }
-                                Ok(value) => {
-                                    tx_task.send(Task::SyncClientCommand(value));
-                                }
-                            }
-
-                            Ok(())
-                        }
-                    }
-                }).unwrap();
-            });
-        }
-
         // Websocket message handler.
         SocketHandler {
-            name,
-            monkey,
-            alive,
-            tx_task,
+            ws_port,
+            out: Some(out),
+            alive: None,
+            monkey: None,
+            tx_task: None,
         }
     }).unwrap();
 }
