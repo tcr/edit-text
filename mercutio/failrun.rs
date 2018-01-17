@@ -143,9 +143,9 @@ fn main() {
             contents.push_str("\n\n\n");
 
             // Skip these
-            if contents.find("DelGroupAll").is_some() || contents.find("DelMany").is_some() {
-                return Status::Skipped;
-            }
+            // if contents.find("DelGroupAll").is_some() || contents.find("DelMany").is_some() {
+            //     return Status::Skipped;
+            // }
 
             println!("-----> {:?}", file);
             if launch(&contents) == 0 {

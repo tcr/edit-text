@@ -32,51 +32,53 @@ fn format_classes(set: &HashSet<String>) -> String {
 
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum RtfTrack {
-    NoType,
-    Lists,
-    ListItems,
-    BlockQuotes,
-    Blocks,
-    BlockObjects,
-    Inlines,
-    InlineObjects,
+    ListItems,      // bullet
+    BlockQuotes,    // blockquote
+    Blocks,         // h1, h2, h3, h4, h5, h6, p, pre
+    BlockObjects,   // hr
+    Inlines,        // span
+    InlineObjects,  // caret
 }
 
 impl Track for RtfTrack {
     // Rename this do close split? if applicable?
     fn do_split(&self) -> bool {
+        use self::RtfTrack::*;
         match *self {
-            RtfTrack::Lists => false,
             _ => true,
         }
     }
 
     // Unsure about this naming
     fn do_open_split(&self) -> bool {
+        use self::RtfTrack::*;
         match *self {
-            RtfTrack::Inlines => true,
+            Inlines => true,
             _ => false,
         }
     }
 
     fn supports_text(&self) -> bool {
+        use self::RtfTrack::*;
         match *self {
-            RtfTrack::Blocks | RtfTrack::Inlines => true,
+            Blocks | Inlines => true,
             _ => false,
         }
     }
 
     fn allowed_in_root(&self) -> bool {
+        use self::RtfTrack::*;
         match *self {
-            RtfTrack::Blocks | RtfTrack::ListItems => true,
+            Blocks | ListItems => true,
             _ => false,
         }
     }
 
     // TODO is this how this should work
     fn is_object(&self) -> bool {
+        use self::RtfTrack::*;
         match *self {
-            RtfTrack::BlockObjects | RtfTrack::InlineObjects => true,
+            BlockObjects | InlineObjects => true,
             _ => false,
         }
     }
@@ -85,15 +87,11 @@ impl Track for RtfTrack {
     fn parents(&self) -> Vec<Self> {
         use self::RtfTrack::*;
         match *self {
-            // Lists => vec![ListItems, BlockQuotes],
             ListItems => vec![ListItems, BlockQuotes],
             BlockQuotes => vec![ListItems, BlockQuotes],
             Blocks => vec![ListItems, BlockQuotes],
             BlockObjects => vec![ListItems, BlockQuotes],
             Inlines | InlineObjects => vec![Blocks],
-            _ => {
-                panic!("this shouldnt be");
-            }
         }
     }
 
@@ -102,15 +100,11 @@ impl Track for RtfTrack {
     fn ancestors(&self) -> Vec<Self> {
         use self::RtfTrack::*;
         match *self {
-            // Lists => vec![Lists, ListItems, BlockQuotes],
             ListItems => vec![ListItems, BlockQuotes],
             BlockQuotes => vec![ListItems, BlockQuotes],
             Blocks => vec![ListItems, BlockObjects],
             BlockObjects => vec![ListItems, BlockQuotes],
             Inlines | InlineObjects => vec![ListItems, BlockQuotes, Blocks],
-            _ => {
-                panic!("this shouldnt be");
-            }
         }
     }
 }
@@ -145,13 +139,9 @@ impl Schema for RtfSchema {
 
     fn track_type_from_attrs(attrs: &Attrs) -> Option<Self::Track> {
         match &*attrs["tag"] {
-            // TODO remove these two
-            "ul" => Some(RtfTrack::Lists),
-            "li" => Some(RtfTrack::ListItems),
-
             "bullet" => Some(RtfTrack::ListItems),
             "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "pre" => Some(RtfTrack::Blocks),
-            "span" | "b" => Some(RtfTrack::Inlines),
+            "span" => Some(RtfTrack::Inlines),
             "caret" => Some(RtfTrack::InlineObjects),
             _ => None,
         }
