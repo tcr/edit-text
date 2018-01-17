@@ -13,7 +13,7 @@
 extern crate log;
 #[macro_use]
 extern crate maplit;
-extern crate rand;
+// extern crate rand;
 #[macro_use]
 extern crate serde_derive;
 extern crate yansi;
@@ -26,7 +26,7 @@ extern crate either;
 
 pub mod compose;
 pub mod doc;
-pub mod random;
+//pub mod random;
 pub mod schema;
 pub mod stepper;
 pub mod transform;
