@@ -10793,31 +10793,117 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_bootstrap_dist_css_bootstrap_min_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_bootstrap_dist_css_bootstrap_min_css__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__mote_scss__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__mote_scss___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__mote_scss__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__editor_ts__ = __webpack_require__(14);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__parent_ts__ = __webpack_require__(17);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_jquery__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_jquery__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_bootstrap__ = __webpack_require__(18);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_bootstrap___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_bootstrap__);
-
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__parent_ts__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_jquery__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_jquery__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_bootstrap__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_bootstrap___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_bootstrap__);
 
 
 
 
 
 // Consume bootstrap so bootbox works.
-__WEBPACK_IMPORTED_MODULE_5_bootstrap___default.a;
+__WEBPACK_IMPORTED_MODULE_4_bootstrap___default.a;
+function fetchAndInstantiate(url, importObject) {
+    return fetch(url).then(response => response.arrayBuffer()).then(bytes => WebAssembly.instantiate(bytes, importObject)).then(results => results.instance);
+}
+function copyCStr(module, ptr) {
+    let orig_ptr = ptr;
+    const collectCString = function* () {
+        let memory = new Uint8Array(module.memory.buffer);
+        while (memory[ptr] !== 0) {
+            if (memory[ptr] === undefined) {
+                throw new Error("Tried to read undef mem");
+            }
+            yield memory[ptr];
+            ptr += 1;
+        }
+    };
+    const buffer_as_u8 = new Uint8Array(collectCString());
+    const utf8Decoder = new TextDecoder("UTF-8");
+    const buffer_as_utf8 = utf8Decoder.decode(buffer_as_u8);
+    module.dealloc_str(orig_ptr);
+    return buffer_as_utf8;
+}
+function getStr(module, ptr, len) {
+    const getData = function* (ptr, len) {
+        let memory = new Uint8Array(module.memory.buffer);
+        for (let index = 0; index < len; index++) {
+            if (memory[ptr] === undefined) {
+                throw new Error(`Tried to read undef mem at ${ptr}`);
+            }
+            yield memory[ptr + index];
+        }
+    };
+    const buffer_as_u8 = new Uint8Array(getData(ptr / 8, len / 8));
+    const utf8Decoder = new TextDecoder("UTF-8");
+    const buffer_as_utf8 = utf8Decoder.decode(buffer_as_u8);
+    return buffer_as_utf8;
+}
+function newString(module, str) {
+    const utf8Encoder = new TextEncoder("UTF-8");
+    let string_buffer = utf8Encoder.encode(str);
+    let len = string_buffer.length;
+    let ptr = module.alloc(len + 1);
+    let memory = new Uint8Array(module.memory.buffer);
+    for (let i = 0; i < len; i++) {
+        memory[ptr + i] = string_buffer[i];
+    }
+    memory[ptr + len] = 0;
+    return ptr;
+}
+let Module = {};
+console.log('start');
+fetchAndInstantiate("/mercutio.wasm", {
+    env: {
+        js_command: function () {
+        }
+    }
+})
+    .then(mod => {
+    console.log('hi', mod),
+        Module.alloc = mod.exports.alloc;
+    Module.dealloc_str = mod.exports.dealloc_str;
+    Module.memory = mod.exports.memory;
+    // Module.command = function(req) {
+    //   let json = JSON.stringify(req);
+    //   let outptr = mod.exports.command(newString(Module, json));
+    //   let result = copyCStr(Module, outptr);
+    //   return JSON.parse(result);
+    // }
+    alert(mod.exports.wasm_test());
+});
+// .then(_ => {
+//   let input = document.getElementById("input");
+//   let output = document.getElementById("output");
+//   let number_out = document.getElementById("number-out");
+//   function calcFact() {
+//     value = input.value|0;
+//     number_out.innerText = "fact("+value+") = ";
+//     if (value < 0) {
+//       output.innerText = "[Value too small.]"
+//       return;
+//     }
+//     output.innerText = JSON.stringify(Module.command({
+//       'RenameGroup': 
+//         [{"CurSkip":1},{"CurWithGroup":[{"CurWithGroup":['CurGroup']}]}],
+//     }));
+//   }
+//   calcFact();
+//   input.addEventListener("keyup", calcFact);
+// });
 // Blur/Focus classes.
-__WEBPACK_IMPORTED_MODULE_4_jquery___default()(window).on('focus', () => __WEBPACK_IMPORTED_MODULE_4_jquery___default()(document.body).addClass('focused'));
-__WEBPACK_IMPORTED_MODULE_4_jquery___default()(window).on('blur', () => __WEBPACK_IMPORTED_MODULE_4_jquery___default()(document.body).removeClass('focused'));
+__WEBPACK_IMPORTED_MODULE_3_jquery___default()(window).on('focus', () => __WEBPACK_IMPORTED_MODULE_3_jquery___default()(document.body).addClass('focused'));
+__WEBPACK_IMPORTED_MODULE_3_jquery___default()(window).on('blur', () => __WEBPACK_IMPORTED_MODULE_3_jquery___default()(document.body).removeClass('focused'));
 // Entry.
 if (window.MOTE_ENTRY == 'index') {
-    new __WEBPACK_IMPORTED_MODULE_3__parent_ts__["a" /* default */]();
+    new __WEBPACK_IMPORTED_MODULE_2__parent_ts__["a" /* default */]();
 }
 else if (window.MOTE_ENTRY == 'client') {
-    let editor = new __WEBPACK_IMPORTED_MODULE_2__editor_ts__["a" /* default */](__WEBPACK_IMPORTED_MODULE_4_jquery___default()('#mote'), (location.search || '').substr(1));
-    editor.syncConnect();
-    editor.nativeConnect();
+    // let editor = new Editor($('#mote'), (location.search || '').substr(1));
+    // editor.syncConnect();
+    // editor.nativeConnect();
 }
 
 
@@ -11031,383 +11117,9 @@ exports.push([module.i, "body {\n  font-family: Helvetica;\n  padding: 10px 30px
 
 
 /***/ }),
-/* 14 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__commands_ts__ = __webpack_require__(15);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__hashstate_ts__ = __webpack_require__(16);
-
-
-function getActive() {
-    var a = $('.active');
-    return a[0] ? a : null;
-}
-function getTarget() {
-    var a = $('.active');
-    return a[0] ? a : null;
-}
-function isBlock($active) {
-    return $active && $active[0].tagName == 'DIV';
-}
-function isChar($active) {
-    return $active && $active[0].tagName == 'SPAN';
-}
-function isInline($active) {
-    return $active && $active.data('tag') == 'span';
-}
-function clearActive() {
-    $(document).find('.active').removeClass('active');
-}
-function clearTarget() {
-    $(document).find('.target').removeClass('target');
-}
-// Creates an HTML tree from a document tree.
-function docToStrings(ret, vec) {
-    // TODO act like doc
-    // console.log(el);
-    // var h = newElem(el.DocGroup[0]);
-    for (var g = 0; g < vec.length; g++) {
-        const el = vec[g];
-        if (el.DocGroup) {
-            const attrs = el.DocGroup[0];
-            ret.push(`<div
-        data-tag=${JSON.stringify(String(attrs.tag))}
-        data-client=${JSON.stringify(String(attrs.client))}
-        class=${JSON.stringify(String(attrs.class || ''))}
-      >`);
-            docToStrings(ret, el.DocGroup[1]);
-            ret.push('</div>');
-        }
-        else if (el.DocChars) {
-            for (var j = 0; j < el.DocChars.length; j++) {
-                ret.push('<span>');
-                ret.push(String(el.DocChars[j]));
-                ret.push('</span>');
-            }
-        }
-        else {
-            throw new Error('unknown');
-        }
-    }
-}
-function curto(el) {
-    if (!el) {
-        return null;
-    }
-    let then = el.is('div') ? {
-        'CurGroup': null
-    } : {
-        'CurChar': null
-    };
-    var p = el.parents('.mote');
-    if (Array.isArray(then)) {
-        var cur = then;
-    }
-    else {
-        var cur = [then];
-    }
-    while (!el.is(p)) {
-        if (el.prevAll().length > 0) {
-            cur.unshift({
-                "CurSkip": el.prevAll().length,
-            });
-        }
-        el = el.parent();
-        if (el.is(p)) {
-            break;
-        }
-        cur = [{
-                "CurWithGroup": cur,
-            }];
-    }
-    return cur;
-}
-// function serialize (parent) {
-//   var out = []
-//   $(parent).children().each(function () {
-//     if ($(this).is('div')) {
-//       out.push({
-//         "DocGroup": [
-//           serializeAttrs($(this)),
-//           serialize(this),
-//         ],
-//       });
-//     } else {
-//       var txt = this.innerText
-//       if (Object.keys(out[out.length - 1] || {})[0] == 'DocChars') {
-//         txt = out.pop().DocChars + txt;
-//       }
-//       out.push({
-//         "DocChars": txt
-//       });
-//     }
-//   })
-//   return out;
-// }
-function promptString(title, value, callback) {
-    bootbox.prompt({
-        title,
-        value,
-        callback,
-    }).on("shown.bs.modal", function () {
-        $(this).find('input').select();
-    });
-}
-// Initialize child editor.
-class Editor {
-    constructor($elem, editorID) {
-        this.$elem = $elem;
-        this.editorID = editorID;
-        this.ops = [];
-        this.KEY_WHITELIST = [];
-        let editor = this;
-        $('<b style="width: 200px; display: block">Client: ' + editorID + '</b>')
-            .appendTo($('#local-buttons'));
-        // monkey button
-        let monkey = false;
-        $('<button>Monkey</button>')
-            .appendTo($('#local-buttons'))
-            .on('click', function () {
-            monkey = !monkey;
-            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["d" /* MonkeyCommand */](monkey));
-            $(this).css('font-weight') == '700'
-                ? $(this).css('font-weight', 'normal')
-                : $(this).css('font-weight', 'bold');
-        });
-        // switching button
-        $('<button>Toggle Element View</button>')
-            .appendTo($('#local-buttons'))
-            .on('click', function () {
-            $elem.toggleClass('theme-mock');
-            $elem.toggleClass('theme-block');
-            const settings = __WEBPACK_IMPORTED_MODULE_1__hashstate_ts__["a" /* default */].get();
-            if (settings.has(`${editorID}-theme-block`)) {
-                settings.delete(`${editorID}-theme-v`);
-            }
-            else {
-                settings.add(`${editorID}-theme-block`);
-            }
-            __WEBPACK_IMPORTED_MODULE_1__hashstate_ts__["a" /* default */].set(settings);
-        });
-        // theme
-        if (__WEBPACK_IMPORTED_MODULE_1__hashstate_ts__["a" /* default */].get().has(`${editorID}-theme-block`)) {
-            $elem.addClass('theme-block');
-        }
-        else {
-            $elem.addClass('theme-mock');
-        }
-        $elem.on('mousedown', 'span, div', function (e) {
-            const active = getActive();
-            const target = getTarget();
-            if (e.shiftKey) {
-                if (active && active.nextAll().add(active).is(this)) {
-                    clearTarget();
-                    $(this).addClass('target');
-                    // TODO
-                    // send target destination curspan
-                }
-            }
-            else {
-                clearActive();
-                clearTarget();
-                $(this).addClass('active').addClass('target');
-                console.log('Cursor:', curto($(this)));
-                editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["e" /* TargetCommand */](curto($(this))));
-            }
-            // TODO this bubbles if i use preventDEfault?
-            window.focus();
-            return false;
-        });
-        $(document).on('keypress', (e) => {
-            if ($(e.target).closest('.modal').length) {
-                return;
-            }
-            const active = getActive();
-            const target = getTarget();
-            if (active && !active.parents('.mote').is($elem)) {
-                return;
-            }
-            if (e.metaKey) {
-                return;
-            }
-            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["b" /* CharacterCommand */](e.charCode));
-            e.preventDefault();
-        });
-        $(document).on('keydown', (e) => {
-            if ($(e.target).closest('.modal').length) {
-                return;
-            }
-            const active = getActive();
-            const target = getTarget();
-            if (active && !active.parents('.mote').is($elem)) {
-                return;
-            }
-            console.log('KEYDOWN:', e.keyCode);
-            // Match against whitelisted key entries.
-            if (!editor.KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
-                return;
-            }
-            this.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["c" /* KeypressCommand */](e.keyCode, e.metaKey, e.shiftKey));
-            e.preventDefault();
-        });
-    }
-    load(data) {
-        let elem = this.$elem[0];
-        requestAnimationFrame(() => {
-            elem.innerHTML = data;
-        });
-    }
-    nativeCommand(command) {
-        this.nativeSocket.send(JSON.stringify(command));
-    }
-    nativeConnect() {
-        let editor = this;
-        this.nativeSocket = new WebSocket('ws://127.0.0.1:8002/' + editor.editorID);
-        this.nativeSocket.onopen = function (event) {
-            console.log('Editor "%s" is connected.', editor.editorID);
-            // editor.nativeCommand(commands.ConnectCommand(editor.editorID));
-            // window.parent.postMessage({
-            //   "Live": editor.editorID,
-            // }, '*')
-        };
-        this.nativeSocket.onmessage = this.onNativeMessage.bind(this);
-        this.nativeSocket.onclose = function () {
-            $('body').css('background', 'red');
-        };
-    }
-    // Received message on native socket
-    onNativeMessage(event) {
-        let editor = this;
-        let parse = JSON.parse(event.data);
-        console.log(parse);
-        if (parse.Update) {
-            editor.load(parse.Update[0]);
-            if (parse.Update[1] == null) {
-                editor.ops.splice(0, this.ops.length);
-            }
-            else {
-                editor.ops.push(parse.Update[1]);
-            }
-        }
-        else if (parse.PromptString) {
-            promptString(parse.PromptString[0], parse.PromptString[1], (value) => {
-                // Lookup actual key
-                let key = Object.keys(parse.PromptString[2])[0];
-                parse.PromptString[2][key][0] = value;
-                editor.nativeCommand(parse.PromptString[2]);
-            });
-        }
-        else if (parse.Setup) {
-            console.log('SETUP', parse.Setup);
-            editor.KEY_WHITELIST = parse.Setup.keys.map(x => ({ keyCode: x[0], metaKey: x[1], shiftKey: x[2] }));
-            $('#native-buttons').each((_, x) => {
-                parse.Setup.buttons.forEach(btn => {
-                    $('<button>').text(btn[1]).appendTo(x).click(_ => {
-                        editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["a" /* ButtonCommand */](btn[0]));
-                    });
-                });
-            });
-        }
-    }
-    syncConnect() {
-        window.onmessage = this.onSyncMessage.bind(this);
-    }
-    onSyncMessage(event) {
-        let editor = this;
-        // if ('Sync' in event.data) {
-        //   // Push to native
-        //   editor.nativeCommand(commands.LoadCommand(event.data.Sync))
-        // }
-        if ('Monkey' in event.data) {
-            // TODO reflect this in the app
-            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["d" /* MonkeyCommand */](true));
-        }
-    }
-}
-/* harmony export (immutable) */ __webpack_exports__["a"] = Editor;
-
-
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
-
-/***/ }),
-/* 15 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* unused harmony export RenameGroupCommand */
-/* harmony export (immutable) */ __webpack_exports__["c"] = KeypressCommand;
-/* harmony export (immutable) */ __webpack_exports__["b"] = CharacterCommand;
-/* harmony export (immutable) */ __webpack_exports__["e"] = TargetCommand;
-/* harmony export (immutable) */ __webpack_exports__["a"] = ButtonCommand;
-/* unused harmony export LoadCommand */
-/* harmony export (immutable) */ __webpack_exports__["d"] = MonkeyCommand;
-/* unused harmony export ConnectCommand */
-function RenameGroupCommand(tag, curspan) {
-    return {
-        'RenameGroup': [tag, curspan],
-    };
-}
-function KeypressCommand(keyCode, metaKey, shiftKey) {
-    return {
-        'Keypress': [keyCode, metaKey, shiftKey],
-    };
-}
-function CharacterCommand(charCode) {
-    return {
-        'Character': charCode,
-    };
-}
-function TargetCommand(curspan) {
-    return {
-        'Target': curspan,
-    };
-}
-function ButtonCommand(button) {
-    return {
-        'Button': button,
-    };
-}
-function LoadCommand(load) {
-    return {
-        'Load': load,
-    };
-}
-function MonkeyCommand(enabled) {
-    return {
-        'Monkey': enabled,
-    };
-}
-function ConnectCommand(client) {
-    return {
-        'Connect': client,
-    };
-}
-
-
-/***/ }),
-/* 16 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-// Hashtag state
-class HashState {
-    static get() {
-        return new Set((location.hash || '')
-            .replace(/^#/, '')
-            .split(',')
-            .map(x => x.replace(/^\s+|\s+$/g, ''))
-            .filter(x => x.length));
-    }
-    static set(input) {
-        location.hash = Array.from(input).join(',');
-    }
-}
-/* harmony export (immutable) */ __webpack_exports__["a"] = HashState;
-
-
-
-/***/ }),
+/* 14 */,
+/* 15 */,
+/* 16 */,
 /* 17 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 

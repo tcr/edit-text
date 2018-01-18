@@ -408,6 +408,7 @@ dependencies = [
  "structopt-derive 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "take_mut 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tiny_http 0.5.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "url 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ws 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

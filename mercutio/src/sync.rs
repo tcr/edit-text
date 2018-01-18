@@ -12,6 +12,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
+use super::*;
 use ws;
 
 pub fn default_doc() -> Doc {
