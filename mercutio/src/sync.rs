@@ -169,7 +169,9 @@ pub struct SyncState {
 
 pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
     thread::spawn(move || {
-        let url = format!("127.0.0.1:{}", port);
+        let url = format!("0.0.0.0:{}", port);
+
+        println!("Listening sync_socket_server on 0.0.0.0:{}", port);
 
         let sync_state_mutex = Arc::new(Mutex::new(SyncState {
             ops: hashmap![],
