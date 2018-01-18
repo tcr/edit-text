@@ -1,28 +1,32 @@
-use super::actions::*;
-#[cfg(not(target_arch="wasm32"))]
-use super::super::{SyncClientCommand, SyncServerCommand};
-#[cfg(not(target_arch="wasm32"))]
-use crossbeam_channel::{unbounded, Sender};
+//! Connecting to wasm.
+
+extern crate mercutio; 
+#[macro_use]
+extern crate failure;
+#[macro_use]
+extern crate maplit;
+extern crate oatie;
+extern crate rand;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
+extern crate take_mut;
+#[macro_use]
+extern crate lazy_static;
+
+use mercutio::wasm::actions::*;
 use failure::Error;
-use oatie::{Operation, OT};
-use oatie::doc::*;
-use rand;
 use rand::Rng;
-use serde_json;
 use std::{panic, process};
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::sync::atomic::Ordering;
 use std::thread;
 use std::time::Duration;
-use super::*;
-#[cfg(not(target_arch="wasm32"))]
-use ws;
-#[macro_use]
-use lazy_static;
-
-#[cfg(not(target_arch="wasm32"))]
-use self::proxy::*;
+use mercutio::*;
+use mercutio::wasm::*;
+use oatie::doc::*;
 
 use std::mem;
 use std::ffi::CString;
@@ -45,30 +49,47 @@ pub extern "C" fn dealloc_str(ptr: *mut c_char) {
 
 use std::collections::HashMap;
 
-lazy_static! {
-    // TODO instantiate the client
-    static ref WASM_CLIENT: Mutex<Client> = Mutex::new(Client {
-        name: "hello".to_owned(),
 
-        doc: Doc(vec![]),
-        version: 100,
-
-        original_doc: Doc(vec![]),
-        original_ops: vec![],
-
-        monkey: Arc::new(AtomicBool::new(false)),
-        alive: Arc::new(AtomicBool::new(false)),
-    });
-}
 
 extern "C" {
     /// Send a command *to* the js client.
     pub fn js_command(input_ptr: *mut c_char) -> u32;
 }
 
+lazy_static! {
+    // TODO instantiate the client
+    static ref WASM_CLIENT: Mutex<Option<Client>> = Mutex::new(None);
+}
+
 #[no_mangle]
-pub fn wasm_test() -> u32 {
-    1337
+pub fn wasm_setup(input_ptr: *mut c_char) -> u32 {
+    let input = unsafe {
+        CString::from_raw(input_ptr)
+    };
+    let editor_id = input.to_string_lossy().to_string();
+
+    {
+        let mut client_lock = WASM_CLIENT.lock().unwrap();
+
+        let client = Client {
+            name: editor_id,
+
+            doc: Doc(vec![]),
+            version: 100,
+
+            original_doc: Doc(vec![]),
+            original_ops: vec![],
+
+            monkey: Arc::new(AtomicBool::new(false)),
+            alive: Arc::new(AtomicBool::new(false)),
+        };
+
+        client.setup();
+
+        *client_lock = Some(client);
+    }
+
+    0
 }
 
 /// Send a command *to* the wasm client.
@@ -79,7 +100,8 @@ pub fn wasm_command(input_ptr: *mut c_char) -> u32 {
     };
     let req_parse: Result<Task, _> = serde_json::from_slice(&input.into_bytes());
     
-    let mut client = WASM_CLIENT.lock().unwrap();
+    let mut client_lock = WASM_CLIENT.lock().unwrap();
+    let mut client = client_lock.as_mut().unwrap();
 
     match req_parse {
         Ok(task) => {
@@ -87,6 +109,7 @@ pub fn wasm_command(input_ptr: *mut c_char) -> u32 {
         }
         Err(err) => {
             println!("{:?}", err);
+            return 1;
         }
         // _ => command_safe(NativeRequest::Invalid),
     }

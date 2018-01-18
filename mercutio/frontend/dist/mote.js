@@ -10789,22 +10789,24 @@ function updateLink (link, options, obj) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_bootstrap_dist_css_bootstrap_min_css__ = __webpack_require__(5);
+/* WEBPACK VAR INJECTION */(function(setImmediate) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_bootstrap_dist_css_bootstrap_min_css__ = __webpack_require__(5);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_bootstrap_dist_css_bootstrap_min_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_bootstrap_dist_css_bootstrap_min_css__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__mote_scss__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__mote_scss___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__mote_scss__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__parent_ts__ = __webpack_require__(17);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_jquery__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_jquery__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_bootstrap__ = __webpack_require__(18);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_bootstrap___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_bootstrap__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__editor_ts__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__parent_ts__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_jquery__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_jquery__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_bootstrap__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_bootstrap___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_bootstrap__);
+
 
 
 
 
 
 // Consume bootstrap so bootbox works.
-__WEBPACK_IMPORTED_MODULE_4_bootstrap___default.a;
+__WEBPACK_IMPORTED_MODULE_5_bootstrap___default.a;
 function fetchAndInstantiate(url, importObject) {
     return fetch(url).then(response => response.arrayBuffer()).then(bytes => WebAssembly.instantiate(bytes, importObject)).then(results => results.instance);
 }
@@ -10854,26 +10856,6 @@ function newString(module, str) {
     return ptr;
 }
 let Module = {};
-console.log('start');
-fetchAndInstantiate("/mercutio.wasm", {
-    env: {
-        js_command: function () {
-        }
-    }
-})
-    .then(mod => {
-    console.log('hi', mod),
-        Module.alloc = mod.exports.alloc;
-    Module.dealloc_str = mod.exports.dealloc_str;
-    Module.memory = mod.exports.memory;
-    // Module.command = function(req) {
-    //   let json = JSON.stringify(req);
-    //   let outptr = mod.exports.command(newString(Module, json));
-    //   let result = copyCStr(Module, outptr);
-    //   return JSON.parse(result);
-    // }
-    alert(mod.exports.wasm_test());
-});
 // .then(_ => {
 //   let input = document.getElementById("input");
 //   let output = document.getElementById("output");
@@ -10894,18 +10876,67 @@ fetchAndInstantiate("/mercutio.wasm", {
 //   input.addEventListener("keyup", calcFact);
 // });
 // Blur/Focus classes.
-__WEBPACK_IMPORTED_MODULE_3_jquery___default()(window).on('focus', () => __WEBPACK_IMPORTED_MODULE_3_jquery___default()(document.body).addClass('focused'));
-__WEBPACK_IMPORTED_MODULE_3_jquery___default()(window).on('blur', () => __WEBPACK_IMPORTED_MODULE_3_jquery___default()(document.body).removeClass('focused'));
+__WEBPACK_IMPORTED_MODULE_4_jquery___default()(window).on('focus', () => __WEBPACK_IMPORTED_MODULE_4_jquery___default()(document.body).addClass('focused'));
+__WEBPACK_IMPORTED_MODULE_4_jquery___default()(window).on('blur', () => __WEBPACK_IMPORTED_MODULE_4_jquery___default()(document.body).removeClass('focused'));
 // Entry.
 if (window.MOTE_ENTRY == 'index') {
-    new __WEBPACK_IMPORTED_MODULE_2__parent_ts__["a" /* default */]();
+    new __WEBPACK_IMPORTED_MODULE_3__parent_ts__["a" /* default */]();
 }
 else if (window.MOTE_ENTRY == 'client') {
-    // let editor = new Editor($('#mote'), (location.search || '').substr(1));
+    let editorID = (location.search || '').substr(1) || 'unknown';
+    let editor = new __WEBPACK_IMPORTED_MODULE_2__editor_ts__["a" /* default */](__WEBPACK_IMPORTED_MODULE_4_jquery___default()('#mote'), editorID);
+    console.log('start');
+    fetchAndInstantiate("/mercutio.wasm", {
+        env: {
+            js_command: function (inptr) {
+                let data = copyCStr(Module, inptr);
+                console.log('----> js_command:', data);
+                setImmediate(() => {
+                    editor.onNativeMessage({
+                        data: data,
+                    });
+                });
+            }
+        }
+    })
+        .then(mod => {
+        console.log('hi', mod),
+            Module.alloc = mod.exports.alloc;
+        Module.dealloc_str = mod.exports.dealloc_str;
+        Module.memory = mod.exports.memory;
+        Module.wasm_command = function (req) {
+            let json = JSON.stringify(req);
+            let out = mod.exports.wasm_command(newString(Module, json));
+            console.log('----- from wasm_command>', out);
+            // let result = copyCStr(Module, outptr);
+            // return JSON.parse(result);
+        };
+        // TODO encapsulate this
+        mod.exports.wasm_setup(newString(Module, editorID));
+        setImmediate(() => {
+            let syncSocket = new WebSocket('ws://127.0.0.1:8001/');
+            editor.Module = Module;
+            editor.syncSocket = syncSocket;
+            syncSocket.onopen = function (event) {
+                console.log('Editor "%s" is connected.', editor.editorID);
+            };
+            syncSocket.onmessage = function (event) {
+                console.log('GOT SYNC SCOKET MESSAGE:', event.data);
+                Module.wasm_command({
+                    SyncClientCommand: JSON.parse(event.data),
+                });
+            };
+            syncSocket.onclose = function () {
+                __WEBPACK_IMPORTED_MODULE_4_jquery___default()('body').css('background', 'red');
+            };
+        });
+        // alert('done');
+    });
     // editor.syncConnect();
     // editor.nativeConnect();
 }
 
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(31).setImmediate))
 
 /***/ }),
 /* 5 */
@@ -11117,9 +11148,396 @@ exports.push([module.i, "body {\n  font-family: Helvetica;\n  padding: 10px 30px
 
 
 /***/ }),
-/* 14 */,
-/* 15 */,
-/* 16 */,
+/* 14 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__commands_ts__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__hashstate_ts__ = __webpack_require__(16);
+
+
+function getActive() {
+    var a = $('.active');
+    return a[0] ? a : null;
+}
+function getTarget() {
+    var a = $('.active');
+    return a[0] ? a : null;
+}
+function isBlock($active) {
+    return $active && $active[0].tagName == 'DIV';
+}
+function isChar($active) {
+    return $active && $active[0].tagName == 'SPAN';
+}
+function isInline($active) {
+    return $active && $active.data('tag') == 'span';
+}
+function clearActive() {
+    $(document).find('.active').removeClass('active');
+}
+function clearTarget() {
+    $(document).find('.target').removeClass('target');
+}
+// Creates an HTML tree from a document tree.
+function docToStrings(ret, vec) {
+    // TODO act like doc
+    // console.log(el);
+    // var h = newElem(el.DocGroup[0]);
+    for (var g = 0; g < vec.length; g++) {
+        const el = vec[g];
+        if (el.DocGroup) {
+            const attrs = el.DocGroup[0];
+            ret.push(`<div
+        data-tag=${JSON.stringify(String(attrs.tag))}
+        data-client=${JSON.stringify(String(attrs.client))}
+        class=${JSON.stringify(String(attrs.class || ''))}
+      >`);
+            docToStrings(ret, el.DocGroup[1]);
+            ret.push('</div>');
+        }
+        else if (el.DocChars) {
+            for (var j = 0; j < el.DocChars.length; j++) {
+                ret.push('<span>');
+                ret.push(String(el.DocChars[j]));
+                ret.push('</span>');
+            }
+        }
+        else {
+            throw new Error('unknown');
+        }
+    }
+}
+function curto(el) {
+    if (!el) {
+        return null;
+    }
+    let then = el.is('div') ? {
+        'CurGroup': null
+    } : {
+        'CurChar': null
+    };
+    var p = el.parents('.mote');
+    if (Array.isArray(then)) {
+        var cur = then;
+    }
+    else {
+        var cur = [then];
+    }
+    while (!el.is(p)) {
+        if (el.prevAll().length > 0) {
+            cur.unshift({
+                "CurSkip": el.prevAll().length,
+            });
+        }
+        el = el.parent();
+        if (el.is(p)) {
+            break;
+        }
+        cur = [{
+                "CurWithGroup": cur,
+            }];
+    }
+    return cur;
+}
+// function serialize (parent) {
+//   var out = []
+//   $(parent).children().each(function () {
+//     if ($(this).is('div')) {
+//       out.push({
+//         "DocGroup": [
+//           serializeAttrs($(this)),
+//           serialize(this),
+//         ],
+//       });
+//     } else {
+//       var txt = this.innerText
+//       if (Object.keys(out[out.length - 1] || {})[0] == 'DocChars') {
+//         txt = out.pop().DocChars + txt;
+//       }
+//       out.push({
+//         "DocChars": txt
+//       });
+//     }
+//   })
+//   return out;
+// }
+function promptString(title, value, callback) {
+    bootbox.prompt({
+        title,
+        value,
+        callback,
+    }).on("shown.bs.modal", function () {
+        $(this).find('input').select();
+    });
+}
+// Initialize child editor.
+class Editor {
+    constructor($elem, editorID) {
+        this.$elem = $elem;
+        this.editorID = editorID;
+        this.ops = [];
+        this.KEY_WHITELIST = [];
+        let editor = this;
+        $('<b style="width: 200px; display: block">Client: ' + editorID + '</b>')
+            .appendTo($('#local-buttons'));
+        // monkey button
+        let monkey = false;
+        $('<button>Monkey</button>')
+            .appendTo($('#local-buttons'))
+            .on('click', function () {
+            monkey = !monkey;
+            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["d" /* MonkeyCommand */](monkey));
+            $(this).css('font-weight') == '700'
+                ? $(this).css('font-weight', 'normal')
+                : $(this).css('font-weight', 'bold');
+        });
+        // switching button
+        $('<button>Toggle Element View</button>')
+            .appendTo($('#local-buttons'))
+            .on('click', function () {
+            $elem.toggleClass('theme-mock');
+            $elem.toggleClass('theme-block');
+            const settings = __WEBPACK_IMPORTED_MODULE_1__hashstate_ts__["a" /* default */].get();
+            if (settings.has(`${editorID}-theme-block`)) {
+                settings.delete(`${editorID}-theme-v`);
+            }
+            else {
+                settings.add(`${editorID}-theme-block`);
+            }
+            __WEBPACK_IMPORTED_MODULE_1__hashstate_ts__["a" /* default */].set(settings);
+        });
+        // theme
+        if (__WEBPACK_IMPORTED_MODULE_1__hashstate_ts__["a" /* default */].get().has(`${editorID}-theme-block`)) {
+            $elem.addClass('theme-block');
+        }
+        else {
+            $elem.addClass('theme-mock');
+        }
+        $elem.on('mousedown', 'span, div', function (e) {
+            const active = getActive();
+            const target = getTarget();
+            if (e.shiftKey) {
+                if (active && active.nextAll().add(active).is(this)) {
+                    clearTarget();
+                    $(this).addClass('target');
+                    // TODO
+                    // send target destination curspan
+                }
+            }
+            else {
+                clearActive();
+                clearTarget();
+                $(this).addClass('active').addClass('target');
+                console.log('Cursor:', curto($(this)));
+                editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["e" /* TargetCommand */](curto($(this))));
+            }
+            // TODO this bubbles if i use preventDEfault?
+            window.focus();
+            return false;
+        });
+        $(document).on('keypress', (e) => {
+            if ($(e.target).closest('.modal').length) {
+                return;
+            }
+            const active = getActive();
+            const target = getTarget();
+            if (active && !active.parents('.mote').is($elem)) {
+                return;
+            }
+            if (e.metaKey) {
+                return;
+            }
+            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["b" /* CharacterCommand */](e.charCode));
+            e.preventDefault();
+        });
+        $(document).on('keydown', (e) => {
+            if ($(e.target).closest('.modal').length) {
+                return;
+            }
+            const active = getActive();
+            const target = getTarget();
+            if (active && !active.parents('.mote').is($elem)) {
+                return;
+            }
+            console.log('KEYDOWN:', e.keyCode);
+            // Match against whitelisted key entries.
+            if (!editor.KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
+                return;
+            }
+            this.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["c" /* KeypressCommand */](e.keyCode, e.metaKey, e.shiftKey));
+            e.preventDefault();
+        });
+    }
+    load(data) {
+        let elem = this.$elem[0];
+        requestAnimationFrame(() => {
+            elem.innerHTML = data;
+        });
+    }
+    nativeCommand(command) {
+        if (this.Module !== null) {
+            this.Module.wasm_command({
+                NativeCommand: command,
+            });
+        }
+        else {
+            this.nativeSocket.send(JSON.stringify(command));
+        }
+    }
+    nativeConnect() {
+        let editor = this;
+        this.nativeSocket = new WebSocket('ws://127.0.0.1:8002/' + editor.editorID);
+        this.nativeSocket.onopen = function (event) {
+            console.log('Editor "%s" is connected.', editor.editorID);
+            // editor.nativeCommand(commands.ConnectCommand(editor.editorID));
+            // window.parent.postMessage({
+            //   "Live": editor.editorID,
+            // }, '*')
+        };
+        this.nativeSocket.onmessage = this.onNativeMessage.bind(this);
+        this.nativeSocket.onclose = function () {
+            $('body').css('background', 'red');
+        };
+    }
+    // Received message on native socket
+    onNativeMessage(event) {
+        let editor = this;
+        let parse = JSON.parse(event.data);
+        console.log(parse);
+        if (parse.Update) {
+            editor.load(parse.Update[0]);
+            if (parse.Update[1] == null) {
+                editor.ops.splice(0, this.ops.length);
+            }
+            else {
+                editor.ops.push(parse.Update[1]);
+            }
+        }
+        else if (parse.PromptString) {
+            promptString(parse.PromptString[0], parse.PromptString[1], (value) => {
+                // Lookup actual key
+                let key = Object.keys(parse.PromptString[2])[0];
+                parse.PromptString[2][key][0] = value;
+                editor.nativeCommand(parse.PromptString[2]);
+            });
+        }
+        else if (parse.Setup) {
+            console.log('SETUP', parse.Setup);
+            editor.KEY_WHITELIST = parse.Setup.keys.map(x => ({ keyCode: x[0], metaKey: x[1], shiftKey: x[2] }));
+            $('#native-buttons').each((_, x) => {
+                parse.Setup.buttons.forEach(btn => {
+                    $('<button>').text(btn[1]).appendTo(x).click(_ => {
+                        editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["a" /* ButtonCommand */](btn[0]));
+                    });
+                });
+            });
+        }
+        else if (parse.SyncServerCommand) {
+            editor.syncSocket.send(JSON.stringify(parse.SyncServerCommand));
+        }
+        else {
+            console.error('Unknown packet:', parse);
+        }
+    }
+    syncConnect() {
+        window.onmessage = this.onSyncMessage.bind(this);
+    }
+    onSyncMessage(event) {
+        let editor = this;
+        // if ('Sync' in event.data) {
+        //   // Push to native
+        //   editor.nativeCommand(commands.LoadCommand(event.data.Sync))
+        // }
+        if ('Monkey' in event.data) {
+            // TODO reflect this in the app
+            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands_ts__["d" /* MonkeyCommand */](true));
+        }
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Editor;
+
+
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
+
+/***/ }),
+/* 15 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* unused harmony export RenameGroupCommand */
+/* harmony export (immutable) */ __webpack_exports__["c"] = KeypressCommand;
+/* harmony export (immutable) */ __webpack_exports__["b"] = CharacterCommand;
+/* harmony export (immutable) */ __webpack_exports__["e"] = TargetCommand;
+/* harmony export (immutable) */ __webpack_exports__["a"] = ButtonCommand;
+/* unused harmony export LoadCommand */
+/* harmony export (immutable) */ __webpack_exports__["d"] = MonkeyCommand;
+/* unused harmony export ConnectCommand */
+function RenameGroupCommand(tag, curspan) {
+    return {
+        'RenameGroup': [tag, curspan],
+    };
+}
+function KeypressCommand(keyCode, metaKey, shiftKey) {
+    return {
+        'Keypress': [keyCode, metaKey, shiftKey],
+    };
+}
+function CharacterCommand(charCode) {
+    return {
+        'Character': charCode,
+    };
+}
+function TargetCommand(curspan) {
+    return {
+        'Target': curspan,
+    };
+}
+function ButtonCommand(button) {
+    return {
+        'Button': button,
+    };
+}
+function LoadCommand(load) {
+    return {
+        'Load': load,
+    };
+}
+function MonkeyCommand(enabled) {
+    return {
+        'Monkey': enabled,
+    };
+}
+function ConnectCommand(client) {
+    return {
+        'Connect': client,
+    };
+}
+
+
+/***/ }),
+/* 16 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+// Hashtag state
+class HashState {
+    static get() {
+        return new Set((location.hash || '')
+            .replace(/^#/, '')
+            .split(',')
+            .map(x => x.replace(/^\s+|\s+$/g, ''))
+            .filter(x => x.length));
+    }
+    static set(input) {
+        location.hash = Array.from(input).join(',');
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = HashState;
+
+
+
+/***/ }),
 /* 17 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -13599,6 +14017,475 @@ __webpack_require__(30)
 }(jQuery);
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 31 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var apply = Function.prototype.apply;
+
+// DOM APIs, for completeness
+
+exports.setTimeout = function() {
+  return new Timeout(apply.call(setTimeout, window, arguments), clearTimeout);
+};
+exports.setInterval = function() {
+  return new Timeout(apply.call(setInterval, window, arguments), clearInterval);
+};
+exports.clearTimeout =
+exports.clearInterval = function(timeout) {
+  if (timeout) {
+    timeout.close();
+  }
+};
+
+function Timeout(id, clearFn) {
+  this._id = id;
+  this._clearFn = clearFn;
+}
+Timeout.prototype.unref = Timeout.prototype.ref = function() {};
+Timeout.prototype.close = function() {
+  this._clearFn.call(window, this._id);
+};
+
+// Does not start the time, just sets up the members needed.
+exports.enroll = function(item, msecs) {
+  clearTimeout(item._idleTimeoutId);
+  item._idleTimeout = msecs;
+};
+
+exports.unenroll = function(item) {
+  clearTimeout(item._idleTimeoutId);
+  item._idleTimeout = -1;
+};
+
+exports._unrefActive = exports.active = function(item) {
+  clearTimeout(item._idleTimeoutId);
+
+  var msecs = item._idleTimeout;
+  if (msecs >= 0) {
+    item._idleTimeoutId = setTimeout(function onTimeout() {
+      if (item._onTimeout)
+        item._onTimeout();
+    }, msecs);
+  }
+};
+
+// setimmediate attaches itself to the global object
+__webpack_require__(32);
+exports.setImmediate = setImmediate;
+exports.clearImmediate = clearImmediate;
+
+
+/***/ }),
+/* 32 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
+    "use strict";
+
+    if (global.setImmediate) {
+        return;
+    }
+
+    var nextHandle = 1; // Spec says greater than zero
+    var tasksByHandle = {};
+    var currentlyRunningATask = false;
+    var doc = global.document;
+    var registerImmediate;
+
+    function setImmediate(callback) {
+      // Callback can either be a function or a string
+      if (typeof callback !== "function") {
+        callback = new Function("" + callback);
+      }
+      // Copy function arguments
+      var args = new Array(arguments.length - 1);
+      for (var i = 0; i < args.length; i++) {
+          args[i] = arguments[i + 1];
+      }
+      // Store and register the task
+      var task = { callback: callback, args: args };
+      tasksByHandle[nextHandle] = task;
+      registerImmediate(nextHandle);
+      return nextHandle++;
+    }
+
+    function clearImmediate(handle) {
+        delete tasksByHandle[handle];
+    }
+
+    function run(task) {
+        var callback = task.callback;
+        var args = task.args;
+        switch (args.length) {
+        case 0:
+            callback();
+            break;
+        case 1:
+            callback(args[0]);
+            break;
+        case 2:
+            callback(args[0], args[1]);
+            break;
+        case 3:
+            callback(args[0], args[1], args[2]);
+            break;
+        default:
+            callback.apply(undefined, args);
+            break;
+        }
+    }
+
+    function runIfPresent(handle) {
+        // From the spec: "Wait until any invocations of this algorithm started before this one have completed."
+        // So if we're currently running a task, we'll need to delay this invocation.
+        if (currentlyRunningATask) {
+            // Delay by doing a setTimeout. setImmediate was tried instead, but in Firefox 7 it generated a
+            // "too much recursion" error.
+            setTimeout(runIfPresent, 0, handle);
+        } else {
+            var task = tasksByHandle[handle];
+            if (task) {
+                currentlyRunningATask = true;
+                try {
+                    run(task);
+                } finally {
+                    clearImmediate(handle);
+                    currentlyRunningATask = false;
+                }
+            }
+        }
+    }
+
+    function installNextTickImplementation() {
+        registerImmediate = function(handle) {
+            process.nextTick(function () { runIfPresent(handle); });
+        };
+    }
+
+    function canUsePostMessage() {
+        // The test against `importScripts` prevents this implementation from being installed inside a web worker,
+        // where `global.postMessage` means something completely different and can't be used for this purpose.
+        if (global.postMessage && !global.importScripts) {
+            var postMessageIsAsynchronous = true;
+            var oldOnMessage = global.onmessage;
+            global.onmessage = function() {
+                postMessageIsAsynchronous = false;
+            };
+            global.postMessage("", "*");
+            global.onmessage = oldOnMessage;
+            return postMessageIsAsynchronous;
+        }
+    }
+
+    function installPostMessageImplementation() {
+        // Installs an event handler on `global` for the `message` event: see
+        // * https://developer.mozilla.org/en/DOM/window.postMessage
+        // * http://www.whatwg.org/specs/web-apps/current-work/multipage/comms.html#crossDocumentMessages
+
+        var messagePrefix = "setImmediate$" + Math.random() + "$";
+        var onGlobalMessage = function(event) {
+            if (event.source === global &&
+                typeof event.data === "string" &&
+                event.data.indexOf(messagePrefix) === 0) {
+                runIfPresent(+event.data.slice(messagePrefix.length));
+            }
+        };
+
+        if (global.addEventListener) {
+            global.addEventListener("message", onGlobalMessage, false);
+        } else {
+            global.attachEvent("onmessage", onGlobalMessage);
+        }
+
+        registerImmediate = function(handle) {
+            global.postMessage(messagePrefix + handle, "*");
+        };
+    }
+
+    function installMessageChannelImplementation() {
+        var channel = new MessageChannel();
+        channel.port1.onmessage = function(event) {
+            var handle = event.data;
+            runIfPresent(handle);
+        };
+
+        registerImmediate = function(handle) {
+            channel.port2.postMessage(handle);
+        };
+    }
+
+    function installReadyStateChangeImplementation() {
+        var html = doc.documentElement;
+        registerImmediate = function(handle) {
+            // Create a <script> element; its readystatechange event will be fired asynchronously once it is inserted
+            // into the document. Do so, thus queuing up the task. Remember to clean up once it's been called.
+            var script = doc.createElement("script");
+            script.onreadystatechange = function () {
+                runIfPresent(handle);
+                script.onreadystatechange = null;
+                html.removeChild(script);
+                script = null;
+            };
+            html.appendChild(script);
+        };
+    }
+
+    function installSetTimeoutImplementation() {
+        registerImmediate = function(handle) {
+            setTimeout(runIfPresent, 0, handle);
+        };
+    }
+
+    // If supported, we should attach to the prototype of global, since that is where setTimeout et al. live.
+    var attachTo = Object.getPrototypeOf && Object.getPrototypeOf(global);
+    attachTo = attachTo && attachTo.setTimeout ? attachTo : global;
+
+    // Don't get fooled by e.g. browserify environments.
+    if ({}.toString.call(global.process) === "[object process]") {
+        // For Node.js before 0.9
+        installNextTickImplementation();
+
+    } else if (canUsePostMessage()) {
+        // For non-IE10 modern browsers
+        installPostMessageImplementation();
+
+    } else if (global.MessageChannel) {
+        // For web workers, where supported
+        installMessageChannelImplementation();
+
+    } else if (doc && "onreadystatechange" in doc.createElement("script")) {
+        // For IE 6–8
+        installReadyStateChangeImplementation();
+
+    } else {
+        // For older browsers
+        installSetTimeoutImplementation();
+    }
+
+    attachTo.setImmediate = setImmediate;
+    attachTo.clearImmediate = clearImmediate;
+}(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(33), __webpack_require__(34)))
+
+/***/ }),
+/* 33 */
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+
+/***/ }),
+/* 34 */
+/***/ (function(module, exports) {
+
+// shim for using process in browser
+var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
+(function () {
+    try {
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
+    }
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+} ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = runTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    runClearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        runTimeout(drainQueue);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) { return [] }
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
 
 /***/ })
 /******/ ]);
