@@ -3,8 +3,6 @@ pub mod walkers;
 
 #[cfg(not(target_arch="wasm32"))]
 pub mod proxy;
-#[cfg(target_arch="wasm32")]
-pub mod connector;
 
 use self::actions::*;
 #[cfg(not(target_arch="wasm32"))]
@@ -256,7 +254,7 @@ fn native_command(client: &mut Client, req: NativeCommand) -> Result<(), Error> 
 }
 
 #[derive(Serialize, Deserialize)]
-enum Task {
+pub enum Task {
     ButtonMonkey,
     LetterMonkey,
     ArrowMonkey,
@@ -266,26 +264,26 @@ enum Task {
     NativeCommand(NativeCommand),
 }
 
-struct Client {
-    name: String,
+pub struct Client {
+    pub name: String,
 
-    doc: Doc,
-    version: usize,
+    pub doc: Doc,
+    pub version: usize,
 
-    original_doc: Doc,
-    original_ops: Vec<Op>,
+    pub original_doc: Doc,
+    pub original_ops: Vec<Op>,
 
-    monkey: Arc<AtomicBool>,
-    alive: Arc<AtomicBool>,
+    pub monkey: Arc<AtomicBool>,
+    pub alive: Arc<AtomicBool>,
 
     #[cfg(not(target_arch="wasm32"))]
-    out: ws::Sender,
+    pub out: ws::Sender,
     #[cfg(not(target_arch="wasm32"))]
-    tx: Sender<SyncServerCommand>,
+    pub tx: Sender<SyncServerCommand>,
 }
 
 impl Client {
-    fn setup(&self) {
+    pub fn setup(&self) {
         self
             .send_client(&ClientCommand::Setup {
                 keys: key_handlers()
@@ -301,16 +299,16 @@ impl Client {
             .expect("Could not send initial state");
     }
 
-    fn handle_task(&mut self, value: Task) -> Result<(), Error> {
-        let mut rng = rand::thread_rng();
-
+    pub fn handle_task(&mut self, value: Task) -> Result<(), Error> {
         match value {
             Task::ButtonMonkey => {
+                let mut rng = rand::thread_rng();
                 let index = rng.gen_range(0, button_handlers().len() as u32);
                 let command = NativeCommand::Button(index);
                 native_command(self, command)?;
             }
             Task::LetterMonkey => {
+                let mut rng = rand::thread_rng();
                 let char_list = vec![
                     rng.gen_range(b'A', b'Z'),
                     rng.gen_range(b'a', b'z'),
@@ -322,6 +320,7 @@ impl Client {
                 native_command(self, command)?;
             }
             Task::ArrowMonkey => {
+                let mut rng = rand::thread_rng();
                 let key = *rng.choose(&[37, 39, 37, 39, 37, 39, 38, 40]).unwrap();
                 let command = NativeCommand::Keypress(key, false, false);
                 native_command(self, command)?;
@@ -366,40 +365,41 @@ impl Client {
     }
 
     #[cfg(not(target_arch="wasm32"))]
-    fn send_client(&self, req: &ClientCommand) -> Result<(), Error> {
+    pub fn send_client(&self, req: &ClientCommand) -> Result<(), Error> {
         let json = serde_json::to_string(&req)?;
         self.out.send(json)?;
         Ok(())
     }
 
     #[cfg(not(target_arch="wasm32"))]
-    fn send_sync(&self, req: SyncServerCommand) -> Result<(), Error> {
+    pub fn send_sync(&self, req: SyncServerCommand) -> Result<(), Error> {
         self.tx.send(req)?;
         Ok(())
     }
 
     #[cfg(target_arch="wasm32")]
-    fn send_client(&self, req: &ClientCommand) -> Result<(), Error> {
+    pub fn send_client(&self, req: &ClientCommand) -> Result<(), Error> {
         use std::mem;
         use std::ffi::CString;
         use std::os::raw::{c_char, c_void};
-        use self::connector::js_command;
+
+        extern "C" {
+            /// Send a command *to* the js client.
+            pub fn js_command(input_ptr: *mut c_char) -> u32;
+        }
 
         let data = serde_json::to_string(&req)?;
         let s = CString::new(data).unwrap().into_raw();
 
         unsafe {
             let _ = js_command(s);
-
-            // Recreate so we can drop it
-            let c_string = CString::from_raw(s);
         }
 
         Ok(())
     }
 
     #[cfg(target_arch="wasm32")]
-    fn send_sync(&self, req: SyncServerCommand) -> Result<(), Error> {
+    pub fn send_sync(&self, req: SyncServerCommand) -> Result<(), Error> {
         self.send_client(&ClientCommand::SyncServerCommand(req))
     }
 

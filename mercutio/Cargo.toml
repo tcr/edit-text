@@ -23,10 +23,5 @@ tiny_http = "0.5.8"
 url = "1.6.0"
 ws = "0.7.3"
 
-
 [dependencies.oatie]
 path = "../oatie"
-
-[lib]
-crate-type = ["cdylib"]
-name = "mercutio"

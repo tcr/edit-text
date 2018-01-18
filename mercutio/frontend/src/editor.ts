@@ -133,7 +133,11 @@ export default class Editor {
   editorID: string;
   ops: Array<any>;
   nativeSocket: WebSocket;
+  syncSocket: WebSocket;
   KEY_WHITELIST: any;
+
+  // TODO remove this
+  Module: any;
 
   constructor($elem, editorID: string) {
     this.$elem = $elem;
@@ -265,7 +269,13 @@ export default class Editor {
   }
 
   nativeCommand(command: commands.Command) {
-    this.nativeSocket.send(JSON.stringify(command));
+    if (this.Module !== null) {
+      this.Module.wasm_command({
+        NativeCommand: command,
+      });
+    } else {
+      this.nativeSocket.send(JSON.stringify(command));
+    }
   }
 
   nativeConnect() {
@@ -323,6 +333,14 @@ export default class Editor {
           });
         })
       });
+    }
+
+    else if (parse.SyncServerCommand) {
+      editor.syncSocket.send(JSON.stringify(parse.SyncServerCommand));
+    }
+
+    else {
+      console.error('Unknown packet:', parse);
     }
   }
 

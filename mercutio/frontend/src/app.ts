@@ -82,27 +82,6 @@ function newString(module, str) {
 
 let Module = (<any>{});
 
-console.log('start');
-fetchAndInstantiate("/mercutio.wasm", {
-  env: {
-    js_command: function () {
-      
-    }
-  }
-})
-.then(mod => {
-  console.log('hi', mod),
-  Module.alloc = mod.exports.alloc;
-  Module.dealloc_str = mod.exports.dealloc_str;
-  Module.memory = mod.exports.memory;
-  // Module.command = function(req) {
-  //   let json = JSON.stringify(req);
-  //   let outptr = mod.exports.command(newString(Module, json));
-  //   let result = copyCStr(Module, outptr);
-  //   return JSON.parse(result);
-  // }
-  alert(mod.exports.wasm_test());
-})
 // .then(_ => {
 //   let input = document.getElementById("input");
 //   let output = document.getElementById("output");
@@ -140,7 +119,61 @@ if ((<any>window).MOTE_ENTRY == 'index') {
   new Parent();
 }
 else if ((<any>window).MOTE_ENTRY == 'client') {
-  // let editor = new Editor($('#mote'), (location.search || '').substr(1));
+  let editorID = (location.search || '').substr(1) || 'unknown';
+  let editor = new Editor($('#mote'), editorID);
+
+
+  console.log('start');
+  fetchAndInstantiate("/mercutio.wasm", {
+    env: {
+      js_command: function (inptr) {
+        let data = copyCStr(Module, inptr);
+        console.log('----> js_command:', data);
+        setImmediate(() => {
+          editor.onNativeMessage({
+            data: data,
+          });
+        });
+      }
+    }
+  })
+  .then(mod => {
+    console.log('hi', mod),
+    Module.alloc = mod.exports.alloc;
+    Module.dealloc_str = mod.exports.dealloc_str;
+    Module.memory = mod.exports.memory;
+    Module.wasm_command = function(req) {
+      let json = JSON.stringify(req);
+      let out = mod.exports.wasm_command(newString(Module, json));
+      console.log('----- from wasm_command>', out);
+      // let result = copyCStr(Module, outptr);
+      // return JSON.parse(result);
+
+    }
+
+    // TODO encapsulate this
+    mod.exports.wasm_setup(newString(Module, editorID));
+
+    setImmediate(() => {
+      let syncSocket = new WebSocket('ws://127.0.0.1:8001/');
+      editor.Module = Module;
+      editor.syncSocket = syncSocket;
+      syncSocket.onopen = function (event) {
+        console.log('Editor "%s" is connected.', editor.editorID);
+      };
+      syncSocket.onmessage = function (event) {
+        console.log('GOT SYNC SCOKET MESSAGE:', event.data);
+        Module.wasm_command({
+          SyncClientCommand: JSON.parse(event.data),
+        });
+      };
+      syncSocket.onclose = function () {
+        $('body').css('background', 'red');
+      }
+    });
+
+    // alert('done');
+  })
 
   // editor.syncConnect();
   // editor.nativeConnect();
