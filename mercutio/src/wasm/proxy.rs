@@ -1,6 +1,6 @@
 use super::actions::*;
 use super::*;
-use super::super::sync::{SyncClientCommand, SyncServerCommand};
+use super::super::{SyncClientCommand, SyncServerCommand};
 use crossbeam_channel::{unbounded, Sender};
 use failure::Error;
 use oatie::{Operation, OT};

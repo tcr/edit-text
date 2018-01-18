@@ -3,10 +3,12 @@ pub mod walkers;
 
 #[cfg(not(target_arch="wasm32"))]
 pub mod proxy;
+#[cfg(target_arch="wasm32")]
+pub mod connector;
 
 use self::actions::*;
 #[cfg(not(target_arch="wasm32"))]
-use super::sync::{SyncClientCommand, SyncServerCommand};
+use super::{SyncClientCommand, SyncServerCommand};
 #[cfg(not(target_arch="wasm32"))]
 use crossbeam_channel::{unbounded, Sender};
 use failure::Error;
@@ -59,6 +61,7 @@ pub enum ClientCommand {
     PromptString(String, String, NativeCommand),
     Update(String, Option<Op>),
     Error(String),
+    SyncServerCommand(SyncServerCommand),
 }
 
 fn doc_as_html(doc: &DocSpan) -> String {
@@ -362,11 +365,6 @@ impl Client {
         Ok(())
     }
 
-    #[cfg(target_arch="wasm32")]
-    fn send_client(&self, req: &ClientCommand) -> Result<(), Error> {
-        unimplemented!()
-    }
-
     #[cfg(not(target_arch="wasm32"))]
     fn send_client(&self, req: &ClientCommand) -> Result<(), Error> {
         let json = serde_json::to_string(&req)?;
@@ -381,66 +379,31 @@ impl Client {
     }
 
     #[cfg(target_arch="wasm32")]
+    fn send_client(&self, req: &ClientCommand) -> Result<(), Error> {
+        use std::mem;
+        use std::ffi::CString;
+        use std::os::raw::{c_char, c_void};
+        use self::connector::js_command;
+
+        let data = serde_json::to_string(&req)?;
+        let s = CString::new(data).unwrap().into_raw();
+
+        unsafe {
+            let _ = js_command(s);
+
+            // Recreate so we can drop it
+            let c_string = CString::from_raw(s);
+        }
+
+        Ok(())
+    }
+
+    #[cfg(target_arch="wasm32")]
     fn send_sync(&self, req: SyncServerCommand) -> Result<(), Error> {
-        unimplemented!()
+        self.send_client(&ClientCommand::SyncServerCommand(req))
     }
+
 }
 
 
 
-
-use std::mem;
-use std::ffi::CString;
-use std::os::raw::{c_char, c_void};
-
-#[no_mangle]
-pub extern "C" fn alloc(size: usize) -> *mut c_void {
-    let mut buf = Vec::with_capacity(size);
-    let ptr = buf.as_mut_ptr();
-    mem::forget(buf);
-    return ptr as *mut c_void;
-}
-
-#[no_mangle]
-pub extern "C" fn dealloc_str(ptr: *mut c_char) {
-    unsafe {
-        let _ = CString::from_raw(ptr);
-    }
-}
-
-use std::collections::HashMap;
-
-lazy_static! {
-    // TODO instantiate the client
-    static ref HASHMAP: HashMap<u32, &'static str> = {
-        let mut m = HashMap::new();
-        m.insert(0, "foo");
-        m.insert(1, "bar");
-        m.insert(2, "baz");
-        m
-    };
-}
-
-#[no_mangle]
-pub fn command(input_ptr: *mut c_char) -> *mut c_char {
-    let input = unsafe {
-        CString::from_raw(input_ptr)
-    };
-    let req_parse: Result<Task, _> = serde_json::from_slice(&input.into_bytes());
-
-    // let res = match req_parse {
-    //     Ok(req) => command_safe(req),
-    //     Err(err) => NativeResponse::Error(format!("{:?}", err)),
-    //     // _ => command_safe(NativeRequest::Invalid),
-    // };
-
-    // Fetch lazy_static intitialized client.
-    // send it the payload.
-    // if it needs to callback, it just calls the client extern function.
-
-    let res = "hi";
-
-    let json = serde_json::to_string(&res).unwrap();
-    let s = CString::new(json).unwrap();
-    s.into_raw()
-}

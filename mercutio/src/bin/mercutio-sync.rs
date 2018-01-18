@@ -48,7 +48,7 @@ fn spawn_http_server(port: u16) {
                 .canonicalize()
                 .unwrap();
             let template_path = root_path
-                .join("mercutio/src/templates/")
+                .join("mercutio/frontend/templates/")
                 .canonicalize()
                 .unwrap();
 
