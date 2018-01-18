@@ -10914,7 +10914,7 @@ else if (window.MOTE_ENTRY == 'client') {
         // TODO encapsulate this
         mod.exports.wasm_setup(newString(Module, editorID));
         setImmediate(() => {
-            let syncSocket = new WebSocket('ws://127.0.0.1:8001/');
+            let syncSocket = new WebSocket('ws://' + window.location.host.replace(/\:\d+/, ':8001') + '/');
             editor.Module = Module;
             editor.syncSocket = syncSocket;
             syncSocket.onopen = function (event) {
@@ -11387,7 +11387,7 @@ class Editor {
     }
     nativeConnect() {
         let editor = this;
-        this.nativeSocket = new WebSocket('ws://127.0.0.1:8002/' + editor.editorID);
+        this.nativeSocket = new WebSocket('ws://' + window.location.host.replace(/\:\d+/, ':8002') + '/' + editor.editorID);
         this.nativeSocket.onopen = function (event) {
             console.log('Editor "%s" is connected.', editor.editorID);
             // editor.nativeCommand(commands.ConnectCommand(editor.editorID));

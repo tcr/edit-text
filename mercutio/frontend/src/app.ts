@@ -155,7 +155,7 @@ else if ((<any>window).MOTE_ENTRY == 'client') {
     mod.exports.wasm_setup(newString(Module, editorID));
 
     setImmediate(() => {
-      let syncSocket = new WebSocket('ws://127.0.0.1:8001/');
+      let syncSocket = new WebSocket('ws://' + window.location.host.replace(/\:\d+/, ':8001') + '/');
       editor.Module = Module;
       editor.syncSocket = syncSocket;
       syncSocket.onopen = function (event) {

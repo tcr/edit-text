@@ -280,7 +280,7 @@ export default class Editor {
 
   nativeConnect() {
     let editor = this;
-    this.nativeSocket = new WebSocket('ws://127.0.0.1:8002/' + editor.editorID);
+    this.nativeSocket = new WebSocket('ws://' + window.location.host.replace(/\:\d+/, ':8002') + '/' + editor.editorID);
     this.nativeSocket.onopen = function (event) {
       console.log('Editor "%s" is connected.', editor.editorID);
 
