@@ -236,7 +236,8 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
             // Initial document state.
             {
                 let doc = state.body.lock().unwrap();
-                let command = SyncClientCommand::Update(doc.0.clone(), 100);
+                let mut sync_state = sync_state_mutex.lock().unwrap();
+                let command = SyncClientCommand::Update(doc.0.clone(), sync_state.version);
                 out.send(serde_json::to_string(&command).unwrap());
             }
 
@@ -255,12 +256,15 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
                     serde_json::from_slice(&msg.into_data());
                 match req_parse {
                     Ok(value) => {
+                        println!("got value ---> {:?}", value);
                         match value {
                             SyncServerCommand::Commit(client_id, op, version) => {
                                 let mut sync_state = sync_state_mutex_capture.lock().unwrap();
                                 // TODO remove hack version == 0 which lets us add carets from all parties
-                                if version == 0 || version == sync_state.version {
+                                if version == sync_state.version {
                                     sync_state.ops.entry(client_id).or_insert(vec![]).push(op);
+                                } else {
+                                    println!("got version from old client: {:?}, expecting {:?}", version, sync_state.version);
                                 }
                             }
                         }
