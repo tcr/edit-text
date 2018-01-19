@@ -14,6 +14,7 @@ extern crate take_mut;
 extern crate tiny_http;
 extern crate url;
 extern crate ws;
+extern crate uuid;
 
 use mercutio::sync::*;
 use std::env;
@@ -21,8 +22,9 @@ use std::fs::File;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use structopt::StructOpt;
-use tiny_http::Response;
+use tiny_http::{Header, Response};
 use url::Url;
+use uuid::Uuid;
 
 fn spawn_http_server(port: u16) {
     let server = tiny_http::Server::http(&format!("0.0.0.0:{}", port)).unwrap();
@@ -64,6 +66,15 @@ fn spawn_http_server(port: u16) {
 
                 match path.as_ref() {
                     "/" | "/index.html" => {
+                        let my_uuid = Uuid::new_v4().to_string();
+                        // Redirect as random client
+                        let mut res = Response::empty(301);
+                        let dest = format!("/client/?{}", &my_uuid[0..8]);
+                        let mut h = Header::from_bytes(b"Location".to_vec(), dest.as_bytes()).unwrap();
+                        res.add_header(h);
+                        let _ = req.respond(res);
+                    }
+                    "/multi" | "/multi/" => {
                         let path = template_path.join("index.html");
                         let file = File::open(&path).unwrap();
                         let _ = req.respond(Response::from_file(file));
@@ -121,7 +132,7 @@ fn spawn_http_server(port: u16) {
 struct Opt {
     #[structopt(long = "port", help = "Port", default_value = "8000")] port: u16,
 
-    #[structopt(long = "period", help = "Sync period", default_value = "100")] period: usize,
+    #[structopt(long = "period", help = "Sync period", default_value = "50")] period: usize,
 }
 
 fn main() {
