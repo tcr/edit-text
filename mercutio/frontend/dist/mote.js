@@ -10795,10 +10795,12 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__mote_scss___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__mote_scss__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__editor_ts__ = __webpack_require__(14);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__parent_ts__ = __webpack_require__(17);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_jquery__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_jquery__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_bootstrap__ = __webpack_require__(18);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_bootstrap___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_bootstrap__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__interop_ts__ = __webpack_require__(35);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_jquery__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_jquery__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_bootstrap__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_bootstrap___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_bootstrap__);
+
 
 
 
@@ -10806,55 +10808,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 // Consume bootstrap so bootbox works.
-__WEBPACK_IMPORTED_MODULE_5_bootstrap___default.a;
-function fetchAndInstantiate(url, importObject) {
-    return fetch(url).then(response => response.arrayBuffer()).then(bytes => WebAssembly.instantiate(bytes, importObject)).then(results => results.instance);
-}
-function copyCStr(module, ptr) {
-    let orig_ptr = ptr;
-    const collectCString = function* () {
-        let memory = new Uint8Array(module.memory.buffer);
-        while (memory[ptr] !== 0) {
-            if (memory[ptr] === undefined) {
-                throw new Error("Tried to read undef mem");
-            }
-            yield memory[ptr];
-            ptr += 1;
-        }
-    };
-    const buffer_as_u8 = new Uint8Array(collectCString());
-    const utf8Decoder = new TextDecoder("UTF-8");
-    const buffer_as_utf8 = utf8Decoder.decode(buffer_as_u8);
-    module.dealloc_str(orig_ptr);
-    return buffer_as_utf8;
-}
-function getStr(module, ptr, len) {
-    const getData = function* (ptr, len) {
-        let memory = new Uint8Array(module.memory.buffer);
-        for (let index = 0; index < len; index++) {
-            if (memory[ptr] === undefined) {
-                throw new Error(`Tried to read undef mem at ${ptr}`);
-            }
-            yield memory[ptr + index];
-        }
-    };
-    const buffer_as_u8 = new Uint8Array(getData(ptr / 8, len / 8));
-    const utf8Decoder = new TextDecoder("UTF-8");
-    const buffer_as_utf8 = utf8Decoder.decode(buffer_as_u8);
-    return buffer_as_utf8;
-}
-function newString(module, str) {
-    const utf8Encoder = new TextEncoder("UTF-8");
-    let string_buffer = utf8Encoder.encode(str);
-    let len = string_buffer.length;
-    let ptr = module.alloc(len + 1);
-    let memory = new Uint8Array(module.memory.buffer);
-    for (let i = 0; i < len; i++) {
-        memory[ptr + i] = string_buffer[i];
-    }
-    memory[ptr + len] = 0;
-    return ptr;
-}
+__WEBPACK_IMPORTED_MODULE_6_bootstrap___default.a;
 let Module = {};
 // .then(_ => {
 //   let input = document.getElementById("input");
@@ -10882,17 +10836,17 @@ if (window.MOTE_ENTRY == 'index') {
 else if (window.MOTE_ENTRY == 'client') {
     if (window.parent != window) {
         // Blur/Focus classes.
-        __WEBPACK_IMPORTED_MODULE_4_jquery___default()(window).on('focus', () => __WEBPACK_IMPORTED_MODULE_4_jquery___default()(document.body).removeClass('blurred'));
-        __WEBPACK_IMPORTED_MODULE_4_jquery___default()(window).on('blur', () => __WEBPACK_IMPORTED_MODULE_4_jquery___default()(document.body).addClass('blurred'));
-        __WEBPACK_IMPORTED_MODULE_4_jquery___default()(document.body).addClass('blurred');
+        __WEBPACK_IMPORTED_MODULE_5_jquery___default()(window).on('focus', () => __WEBPACK_IMPORTED_MODULE_5_jquery___default()(document.body).removeClass('blurred'));
+        __WEBPACK_IMPORTED_MODULE_5_jquery___default()(window).on('blur', () => __WEBPACK_IMPORTED_MODULE_5_jquery___default()(document.body).addClass('blurred'));
+        __WEBPACK_IMPORTED_MODULE_5_jquery___default()(document.body).addClass('blurred');
     }
     let editorID = (location.search || '').substr(1) || 'unknown';
-    let editor = new __WEBPACK_IMPORTED_MODULE_2__editor_ts__["a" /* default */](__WEBPACK_IMPORTED_MODULE_4_jquery___default()('#mote'), editorID);
+    let editor = new __WEBPACK_IMPORTED_MODULE_2__editor_ts__["a" /* default */](__WEBPACK_IMPORTED_MODULE_5_jquery___default()('#mote'), editorID);
     console.log('start');
-    fetchAndInstantiate("/mercutio.wasm", {
+    __WEBPACK_IMPORTED_MODULE_4__interop_ts__["b" /* fetchAndInstantiate */]("/mercutio.wasm", {
         env: {
             js_command: function (inptr) {
-                let data = copyCStr(Module, inptr);
+                let data = __WEBPACK_IMPORTED_MODULE_4__interop_ts__["a" /* copyCStr */](Module, inptr);
                 console.log('----> js_command:', data);
                 setImmediate(() => {
                     editor.onNativeMessage({
@@ -10909,13 +10863,13 @@ else if (window.MOTE_ENTRY == 'client') {
         Module.memory = mod.exports.memory;
         Module.wasm_command = function (req) {
             let json = JSON.stringify(req);
-            let out = mod.exports.wasm_command(newString(Module, json));
+            let out = mod.exports.wasm_command(__WEBPACK_IMPORTED_MODULE_4__interop_ts__["c" /* newString */](Module, json));
             console.log('----- from wasm_command>', out);
             // let result = copyCStr(Module, outptr);
             // return JSON.parse(result);
         };
         // TODO encapsulate this
-        mod.exports.wasm_setup(newString(Module, editorID));
+        mod.exports.wasm_setup(__WEBPACK_IMPORTED_MODULE_4__interop_ts__["c" /* newString */](Module, editorID));
         setImmediate(() => {
             let syncSocket = new WebSocket('ws://' + window.location.host.replace(/\:\d+/, ':8001') + '/');
             editor.Module = Module;
@@ -10930,7 +10884,7 @@ else if (window.MOTE_ENTRY == 'client') {
                 });
             };
             syncSocket.onclose = function () {
-                __WEBPACK_IMPORTED_MODULE_4_jquery___default()('body').css('background', 'red');
+                __WEBPACK_IMPORTED_MODULE_5_jquery___default()('body').css('background', 'red');
             };
         });
         // alert('done');
@@ -14489,6 +14443,65 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 process.umask = function() { return 0; };
+
+
+/***/ }),
+/* 35 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["b"] = fetchAndInstantiate;
+/* harmony export (immutable) */ __webpack_exports__["a"] = copyCStr;
+/* unused harmony export getStr */
+/* harmony export (immutable) */ __webpack_exports__["c"] = newString;
+function fetchAndInstantiate(url, importObject) {
+    return fetch(url).then(response => response.arrayBuffer()).then(bytes => WebAssembly.instantiate(bytes, importObject)).then(results => results.instance);
+}
+function copyCStr(module, ptr) {
+    let orig_ptr = ptr;
+    const collectCString = function* () {
+        let memory = new Uint8Array(module.memory.buffer);
+        while (memory[ptr] !== 0) {
+            if (memory[ptr] === undefined) {
+                throw new Error("Tried to read undef mem");
+            }
+            yield memory[ptr];
+            ptr += 1;
+        }
+    };
+    const buffer_as_u8 = new Uint8Array(collectCString());
+    const utf8Decoder = new TextDecoder("UTF-8");
+    const buffer_as_utf8 = utf8Decoder.decode(buffer_as_u8);
+    module.dealloc_str(orig_ptr);
+    return buffer_as_utf8;
+}
+function getStr(module, ptr, len) {
+    const getData = function* (ptr, len) {
+        let memory = new Uint8Array(module.memory.buffer);
+        for (let index = 0; index < len; index++) {
+            if (memory[ptr] === undefined) {
+                throw new Error(`Tried to read undef mem at ${ptr}`);
+            }
+            yield memory[ptr + index];
+        }
+    };
+    const buffer_as_u8 = new Uint8Array(getData(ptr / 8, len / 8));
+    const utf8Decoder = new TextDecoder("UTF-8");
+    const buffer_as_utf8 = utf8Decoder.decode(buffer_as_u8);
+    return buffer_as_utf8;
+}
+function newString(module, str) {
+    const utf8Encoder = new TextEncoder("UTF-8");
+    let string_buffer = utf8Encoder.encode(str);
+    let len = string_buffer.length;
+    let ptr = module.alloc(len + 1);
+    let memory = new Uint8Array(module.memory.buffer);
+    for (let i = 0; i < len; i++) {
+        memory[ptr + i] = string_buffer[i];
+    }
+    memory[ptr + len] = 0;
+    return ptr;
+}
 
 
 /***/ })
