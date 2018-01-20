@@ -110,15 +110,18 @@ let Module = (<any>{});
 
 
 
-// Blur/Focus classes.
-$(window).on('focus', () => $(document.body).addClass('focused'));
-$(window).on('blur', () => $(document.body).removeClass('focused'));
-
 // Entry.
 if ((<any>window).MOTE_ENTRY == 'index') {
   new Parent();
 }
 else if ((<any>window).MOTE_ENTRY == 'client') {
+  if (window.parent != window) {
+    // Blur/Focus classes.
+    $(window).on('focus', () => $(document.body).removeClass('blurred'));
+    $(window).on('blur', () => $(document.body).addClass('blurred'));
+    $(document.body).addClass('blurred');
+  }
+
   let editorID = (location.search || '').substr(1) || 'unknown';
   let editor = new Editor($('#mote'), editorID);
 

@@ -75,7 +75,7 @@ fn spawn_http_server(port: u16) {
                         let _ = req.respond(res);
                     }
                     "/multi" | "/multi/" => {
-                        let path = template_path.join("index.html");
+                        let path = template_path.join("multi.html");
                         let file = File::open(&path).unwrap();
                         let _ = req.respond(Response::from_file(file));
                     }
