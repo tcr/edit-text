@@ -20,7 +20,7 @@ pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
                 // Do the list destructuring here
                 let mut writer = parent_walker.to_writer();
 
-                writer.del.group(&del_span![DelSkip(span.skip_len())]);
+                writer.del.place(&DelGroup(del_span![DelSkip(span.skip_len())]));
                 writer.del.exit_all();
 
                 writer.add.exit_all();
@@ -56,10 +56,10 @@ pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
 
     writer.del.exit_all();
 
-    writer.add.group(
-        &hashmap! { "tag".to_string() => "bullet".to_string() },
-        &add_span![AddSkip(1)],
-    );
+    writer.add.place(&AddGroup(
+        hashmap! { "tag".to_string() => "bullet".to_string() },
+        add_span![AddSkip(1)],
+    ));
     writer.add.exit_all();
 
     Ok(writer.result())
@@ -77,13 +77,13 @@ pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
 
     let mut writer = walker.to_writer();
 
-    writer.del.group(&del_span![DelSkip(len)]);
+    writer.del.place(&DelGroup(del_span![DelSkip(len)]));
     writer.del.exit_all();
 
-    writer.add.group(
-        &hashmap! { "tag".to_string() => tag.to_string() },
-        &add_span![AddSkip(len)],
-    );
+    writer.add.place(&AddGroup(
+        hashmap! { "tag".to_string() => tag.to_string() },
+        add_span![AddSkip(len)],
+    ));
     writer.add.exit_all();
 
     Ok(writer.result())
@@ -153,7 +153,7 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
 
         writer.add.begin();
         if span_1 + span_2 > 0 {
-            writer.add.skip(span_1 + span_2);
+            writer.add.place(&AddSkip(span_1 + span_2));
         }
         writer.add.close(attrs);
         writer.add.exit_all();
@@ -182,7 +182,7 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
     let mut writer = walker.to_writer();
 
     // Delete the character.
-    writer.del.chars(1);
+    writer.del.place(&DelChars(1));
     writer.del.exit_all();
 
     writer.add.exit_all();
@@ -197,7 +197,7 @@ pub fn add_char(ctx: ActionContext, key: u32) -> Result<Op, Error> {
 
     // Insert new character.
     let c: char = from_u32(key).unwrap_or('?');
-    writer.add.chars(&format!("{}", c));
+    writer.add.place(&AddChars(format!("{}", c)));
     writer.add.exit_all();
 
     Ok(writer.result())
@@ -254,7 +254,7 @@ pub fn split_block(ctx: ActionContext) -> Result<Op, Error> {
     }
     writer.add.begin();
     if skip > 0 {
-        writer.add.skip(skip);
+        writer.add.place(&AddSkip(skip));
     }
     writer.add.close(hashmap! { "tag".into() => "p".into() });
     if nested_bullet {
