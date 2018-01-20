@@ -340,13 +340,15 @@ impl Client {
             }
 
             // Sync sent us an Update command.
-            Task::SyncClientCommand(SyncClientCommand::Update(doc, version)) => {
+            Task::SyncClientCommand(SyncClientCommand::Update(doc, version, clients)) => {
                 self.original_doc = Doc(doc.clone());
                 self.original_ops = vec![];
 
                 self.doc = Doc(doc.clone());
                 self.version = version;
                 println!("new version is {:?}", version);
+
+                // TODO consume clients
 
                 // If the caret doesn't exist or was deleted, reinitialize.
                 if !with_action_context(self, |ctx| Ok(has_caret(ctx)))

@@ -37,5 +37,5 @@ pub enum SyncServerCommand {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum SyncClientCommand {
-    Update(DocSpan, usize),
+    Update(DocSpan, usize, Vec<String>),
 }

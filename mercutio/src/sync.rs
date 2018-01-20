@@ -222,7 +222,7 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
                     bus_capture
                         .lock()
                         .unwrap()
-                        .broadcast((doc.0.clone(), sync_state.version));
+                        .broadcast((doc.0.clone(), sync_state.version, keys));
                 }
             }) {
                 println!("Error: {:?}", value);
@@ -237,14 +237,14 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
             {
                 let doc = state.body.lock().unwrap();
                 let mut sync_state = sync_state_mutex.lock().unwrap();
-                let command = SyncClientCommand::Update(doc.0.clone(), sync_state.version);
+                let command = SyncClientCommand::Update(doc.0.clone(), sync_state.version, vec![]);
                 out.send(serde_json::to_string(&command).unwrap());
             }
 
             let mut rx = { bus_capture.lock().unwrap().add_rx() };
             thread::spawn(move || {
-                while let Ok((doc, version)) = rx.recv() {
-                    let command = SyncClientCommand::Update(doc, version);
+                while let Ok((doc, version, clients)) = rx.recv() {
+                    let command = SyncClientCommand::Update(doc, version, clients);
                     out.send(serde_json::to_string(&command).unwrap());
                 }
             });

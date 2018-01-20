@@ -281,7 +281,8 @@ export default class Editor {
 
   nativeConnect() {
     let editor = this;
-    this.nativeSocket = new WebSocket('ws://' + window.location.host.replace(/\:\d+/, ':8002') + '/' + editor.editorID);
+    let url = 'ws://' + window.location.host.replace(/\:\d+/, ':8002') + '/' + editor.editorID;
+    this.nativeSocket = new WebSocket(url);
     this.nativeSocket.onopen = function (event) {
       console.log('Editor "%s" is connected.', editor.editorID);
 
@@ -325,7 +326,11 @@ export default class Editor {
     
     else if (parse.Setup) {
       console.log('SETUP', parse.Setup);
-      editor.KEY_WHITELIST = parse.Setup.keys.map(x => ({keyCode: x[0], metaKey: x[1], shiftKey: x[2]}));
+      editor.KEY_WHITELIST = parse.Setup.keys.map(x => ({
+        keyCode: x[0],
+        metaKey: x[1],
+        shiftKey: x[2],
+      }));
   
       $('#native-buttons').each((_, x) => {
         parse.Setup.buttons.forEach(btn => {
