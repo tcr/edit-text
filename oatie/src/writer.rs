@@ -50,21 +50,6 @@ impl DelWriter {
         }
     }
 
-    #[deprecated]
-    pub fn chars(&mut self, count: usize) {
-        self.past.place(&DelChars(count));
-    }
-
-    #[deprecated]
-    pub fn group(&mut self, span: &DelSpan) {
-        self.past.place(&DelGroup(span.clone()));
-    }
-
-    #[deprecated]
-    pub fn with_group(&mut self, span: &DelSpan) {
-        self.past.place(&DelWithGroup(span.clone()));
-    }
-
     pub fn place(&mut self, elem: &DelElement) {
         self.past.place(elem);
     }
@@ -120,26 +105,6 @@ impl AddWriter {
         while !self.stack.is_empty() {
             self.exit();
         }
-    }
-
-    #[deprecated]
-    pub fn skip(&mut self, n: usize) {
-        self.past.place(&AddSkip(n));
-    }
-
-    #[deprecated]
-    pub fn chars(&mut self, chars: &str) {
-        self.past.place(&AddChars(chars.into()));
-    }
-
-    #[deprecated]
-    pub fn group(&mut self, attrs: &Attrs, span: &AddSpan) {
-        self.past.place(&AddGroup(attrs.clone(), span.clone()));
-    }
-
-    #[deprecated]
-    pub fn with_group(&mut self, span: &AddSpan) {
-        self.past.place(&AddWithGroup(span.clone()));
     }
 
     pub fn place(&mut self, elem: &AddElement) {

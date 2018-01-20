@@ -227,27 +227,27 @@ impl<S> Transform<S> where S: Schema {
     }
 
     fn with_group_a(&mut self, span: &AddSpan) {
-        self.a_add.with_group(span);
+        self.a_add.place(&AddWithGroup(span.clone()));
     }
 
     fn with_group_b(&mut self, span: &AddSpan) {
-        self.b_add.with_group(span);
+        self.b_add.place(&AddWithGroup(span.clone()));
     }
 
     fn group_a(&mut self, attrs: &Attrs, span: &AddSpan) {
-        self.a_add.group(attrs, span);
+        self.a_add.place(&AddGroup(attrs.clone(), span.clone()));
     }
 
     fn group_b(&mut self, attrs: &Attrs, span: &AddSpan) {
-        self.b_add.group(attrs, span);
+        self.b_add.place(&AddGroup(attrs.clone(), span.clone()));
     }
 
     fn chars_a(&mut self, chars: &str) {
-        self.a_add.chars(chars);
+        self.a_add.place(&AddChars(chars.to_owned()));
     }
 
     fn chars_b(&mut self, chars: &str) {
-        self.b_add.chars(chars);
+        self.b_add.place(&AddChars(chars.to_owned()));
     }
 
     fn current(&self) -> Option<TrackState<S>> {
@@ -983,7 +983,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                     t.a_del.place(&DelSkip(1));
                     t.a_add.place(&AddSkip(1));
                     t.b_del.place(&DelSkip(1));
-                    t.b_add.with_group(&a_inner);
+                    t.b_add.place(&AddWithGroup(a_inner));
 
                     a.next();
                     if b_count > 1 {
@@ -997,10 +997,10 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
 
                     let (a_op, b_op) = transform_insertions::<S>(&a_inner, &b_inner);
 
-                    t.a_del.with_group(&a_op.0);
-                    t.a_add.with_group(&a_op.1);
-                    t.b_del.with_group(&b_op.0);
-                    t.b_add.with_group(&b_op.1);
+                    t.a_del.place(&DelWithGroup(a_op.0));
+                    t.a_add.place(&AddWithGroup(a_op.1));
+                    t.b_del.place(&DelWithGroup(b_op.0));
+                    t.b_add.place(&AddWithGroup(b_op.1));
 
                     a.next();
                     b.next();
@@ -1009,7 +1009,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                     t.regenerate(); // caret-31
 
                     t.a_del.place(&DelSkip(1));
-                    t.a_add.with_group(&b_inner);
+                    t.a_add.place(&AddWithGroup(b_inner));
                     t.b_del.place(&DelSkip(1));
                     t.b_add.place(&AddSkip(1));
 
@@ -1122,13 +1122,13 @@ pub fn transform_del_del_inner(
 
 
                 a_del.place_all(&a_inner_del.result());
-                b_del.group(&b_inner_del.result());
+                b_del.place(&DelGroup(b_inner_del.result()));
 
                 a.next();
                 b.next();
             }
             (Some(DelSkip(a_count)), Some(DelGroup(b_inner))) => {
-                a_del.group(&b_inner);
+                a_del.place(&DelGroup(b_inner.clone()));
                 if a_count > 1 {
                     a.head = Some(DelSkip(a_count - 1));
                 } else {
@@ -1144,7 +1144,7 @@ pub fn transform_del_del_inner(
                 if a_inner.skip_post_len() > 0 {
                     a_del.place(&DelSkip(a_inner.skip_post_len()));
                 }
-                b_del.group(&a_inner);
+                b_del.place(&DelGroup(a_inner));
 
                 a.next();
                 if b_count > 1 {
@@ -1174,15 +1174,15 @@ pub fn transform_del_del_inner(
                 if a_count > b_chars {
                     a.head = Some(DelSkip(a_count - b_chars));
                     b.next();
-                    a_del.chars(b_chars);
+                    a_del.place(&DelChars(b_chars));
                 } else if a_count < b_chars {
                     a.next();
                     b.head = Some(DelChars(b_chars - a_count));
-                    a_del.chars(a_count);
+                    a_del.place(&DelChars(a_count));
                 } else {
                     a.next();
                     b.next();
-                    a_del.chars(b_chars);
+                    a_del.place(&DelChars(b_chars));
                 }
             }
             (Some(DelChars(a_chars)), Some(DelChars(b_chars))) => {
@@ -1210,25 +1210,25 @@ pub fn transform_del_del_inner(
                 }
 
                 // a_del.skip(cmp::min(a_chars, b_chars));
-                b_del.chars(cmp::min(a_chars, b_count));
+                b_del.place(&DelChars(cmp::min(a_chars, b_count)));
             }
             (Some(DelChars(a_chars)), _) => {
                 a.next();
-                b_del.chars(a_chars);
+                b_del.place(&DelChars(a_chars));
             }
 
             // With Groups
             (Some(DelWithGroup(a_inner)), Some(DelWithGroup(b_inner))) => {
                 let (a_del_inner, b_del_inner) = transform_deletions(&a_inner, &b_inner);
 
-                a_del.with_group(&a_del_inner);
-                b_del.with_group(&b_del_inner);
+                a_del.place(&DelWithGroup(a_del_inner));
+                b_del.place(&DelWithGroup(b_del_inner));
 
                 a.next();
                 b.next();
             }
             (Some(DelSkip(a_count)), Some(DelWithGroup(b_inner))) => {
-                a_del.with_group(&b_inner);
+                a_del.place(&DelWithGroup(b_inner));
                 b_del.place(&DelSkip(1));
 
                 if a_count > 1 {
@@ -1240,7 +1240,7 @@ pub fn transform_del_del_inner(
             }
             (Some(DelWithGroup(a_inner)), Some(DelSkip(b_count))) => {
                 a_del.place(&DelSkip(1));
-                b_del.with_group(&a_inner);
+                b_del.place(&DelWithGroup(a_inner));
 
                 a.next();
                 if b_count > 1 {
@@ -1276,7 +1276,7 @@ pub fn transform_del_del_inner(
                 b_inner_del.place_all(&undel(&del_span));
 
 
-                a_del.group(&a_inner_del.result());
+                a_del.place(&DelGroup(a_inner_del.result()));
                 b_del.place_all(&b_inner_del.result());
 
                 a.next();
