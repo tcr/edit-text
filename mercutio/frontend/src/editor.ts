@@ -147,9 +147,6 @@ export default class Editor {
 
     let editor = this;
 
-    $('<b style="width: 200px; display: block">Client: ' + editorID + '</b>')
-      .appendTo($('#local-buttons'));
-
     // monkey button
     let monkey = false;
     $('<button>Monkey</button>')
@@ -160,10 +157,10 @@ export default class Editor {
         $(this).css('font-weight') == '700'
           ? $(this).css('font-weight', 'normal')
           : $(this).css('font-weight', 'bold');
-      })
+      });
 
     // switching button
-    $('<button>Toggle Element View</button>')
+    $('<button>X-Ray</button>')
       .appendTo($('#local-buttons'))
       .on('click', function () {
         $elem.toggleClass('theme-mock');
@@ -177,6 +174,10 @@ export default class Editor {
         }
         HashState.set(settings);
       });
+
+    // Client Id.
+    $('<b>Client: <kbd>' + editorID + '</kbd></b>')
+      .appendTo($('#local-buttons'));
 
     // theme
     if (HashState.get().has(`${editorID}-theme-block`)) {
