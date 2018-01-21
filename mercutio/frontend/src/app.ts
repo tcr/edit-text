@@ -62,11 +62,13 @@ else if (document.body.id == 'client') {
   }
 
   let editorID = (location.search || '').substr(1) || 'unknown';
-  let editor = new Editor($('#mote'), editorID);
+  let editor = new Editor(document.getElementById('mote'), editorID);
 
   console.log('start');
   interop.instantiate(function (data) {
     console.log('----> js_command:', data);
+
+    // Make this async so we don't have deeply nested call stacks from Rust<->JS interop.
     setImmediate(() => {
       editor.onNativeMessage({
         data: data,
@@ -94,8 +96,6 @@ else if (document.body.id == 'client') {
         $('body').css('background', 'red');
       }
     });
-
-    // alert('done');
   })
 
   // editor.syncConnect();
