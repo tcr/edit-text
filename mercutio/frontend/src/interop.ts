@@ -76,7 +76,7 @@ export function instantiate(js_command_callback) {
     env: {
       js_command: function (inptr) {
         let data = copyCStr(Module, inptr);
-        js_command_callback();
+        js_command_callback(data);
       }
     }
   })

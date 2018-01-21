@@ -10793,8 +10793,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_bootstrap_dist_css_bootstrap_min_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_bootstrap_dist_css_bootstrap_min_css__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__mote_scss__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__mote_scss___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__mote_scss__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__editor__ = __webpack_require__(19);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__parent__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__editor__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__parent__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__interop__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_jquery__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_jquery__);
@@ -10850,10 +10850,11 @@ else if (document.body.id == 'client') {
         __WEBPACK_IMPORTED_MODULE_5_jquery___default()(document.body).addClass('blurred');
     }
     let editorID = (location.search || '').substr(1) || 'unknown';
-    let editor = new __WEBPACK_IMPORTED_MODULE_2__editor__["a" /* default */](__WEBPACK_IMPORTED_MODULE_5_jquery___default()('#mote'), editorID);
+    let editor = new __WEBPACK_IMPORTED_MODULE_2__editor__["a" /* default */](document.getElementById('mote'), editorID);
     console.log('start');
     __WEBPACK_IMPORTED_MODULE_4__interop__["a" /* instantiate */](function (data) {
         console.log('----> js_command:', data);
+        // Make this async so we don't have deeply nested call stacks from Rust<->JS interop.
         setImmediate(() => {
             editor.onNativeMessage({
                 data: data,
@@ -10880,7 +10881,6 @@ else if (document.body.id == 'client') {
                 __WEBPACK_IMPORTED_MODULE_5_jquery___default()('body').css('background', 'red');
             };
         });
-        // alert('done');
     });
     // editor.syncConnect();
     // editor.nativeConnect();
@@ -11574,39 +11574,8 @@ exports.push([module.i, "html, body {\n  display: block;\n  padding: 0;\n  margi
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function($) {class Parent {
-    constructor() {
-        // Timer component.
-        let counter = 0;
-        setInterval(() => {
-            requestAnimationFrame(() => {
-                $('#timer').each(function () {
-                    $(this).text(counter++ + 's');
-                });
-            });
-        }, 1000);
-        // Monkey global click button.
-        $('#action-monkey').on('click', () => {
-            for (let i = 0; i < window.frames.length; i++) {
-                window.frames[i].postMessage({
-                    'Monkey': {}
-                }, '*');
-            }
-        });
-    }
-}
-/* harmony export (immutable) */ __webpack_exports__["a"] = Parent;
-
-
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
-
-/***/ }),
-/* 19 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__commands__ = __webpack_require__(20);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__hashstate__ = __webpack_require__(21);
+/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__commands__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__hashstate__ = __webpack_require__(20);
 
 
 function getActive() {
@@ -11631,35 +11600,6 @@ function clearActive() {
 }
 function clearTarget() {
     $(document).find('.target').removeClass('target');
-}
-// Creates an HTML tree from a document tree.
-function docToStrings(ret, vec) {
-    // TODO act like doc
-    // console.log(el);
-    // var h = newElem(el.DocGroup[0]);
-    for (var g = 0; g < vec.length; g++) {
-        const el = vec[g];
-        if (el.DocGroup) {
-            const attrs = el.DocGroup[0];
-            ret.push(`<div
-        data-tag=${JSON.stringify(String(attrs.tag))}
-        data-client=${JSON.stringify(String(attrs.client))}
-        class=${JSON.stringify(String(attrs.class || ''))}
-      >`);
-            docToStrings(ret, el.DocGroup[1]);
-            ret.push('</div>');
-        }
-        else if (el.DocChars) {
-            for (var j = 0; j < el.DocChars.length; j++) {
-                ret.push('<span>');
-                ret.push(String(el.DocChars[j]));
-                ret.push('</span>');
-            }
-        }
-        else {
-            throw new Error('unknown');
-        }
-    }
 }
 function curto(el) {
     if (!el) {
@@ -11920,7 +11860,7 @@ class Editor {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
 
 /***/ }),
-/* 20 */
+/* 19 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -11975,7 +11915,7 @@ function ConnectCommand(client) {
 
 
 /***/ }),
-/* 21 */
+/* 20 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -11995,6 +11935,37 @@ class HashState {
 /* harmony export (immutable) */ __webpack_exports__["a"] = HashState;
 
 
+
+/***/ }),
+/* 21 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function($) {class Parent {
+    constructor() {
+        // Timer component.
+        let counter = 0;
+        setInterval(() => {
+            requestAnimationFrame(() => {
+                $('#timer').each(function () {
+                    $(this).text(counter++ + 's');
+                });
+            });
+        }, 1000);
+        // Monkey global click button.
+        $('#action-monkey').on('click', () => {
+            for (let i = 0; i < window.frames.length; i++) {
+                window.frames[i].postMessage({
+                    'Monkey': {}
+                }, '*');
+            }
+        });
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Parent;
+
+
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
 
 /***/ }),
 /* 22 */
@@ -12061,7 +12032,7 @@ function instantiate(js_command_callback) {
         env: {
             js_command: function (inptr) {
                 let data = copyCStr(Module, inptr);
-                js_command_callback();
+                js_command_callback(data);
             }
         }
     })
@@ -14536,4 +14507,4 @@ __webpack_require__(35)
 
 /***/ })
 /******/ ]);
-//# sourceMappingURL=mote.js.map
+//# sourceMappingURL=mercutio.js.map

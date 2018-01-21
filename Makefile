@@ -7,8 +7,11 @@ wasm:
 oatie-build:
 	cd oatie && CARGO_INCREMENTAL=1 cargo build --release
 
-watch-js:
-	cd mercutio/frontend && npm run watch
+js-build:
+	cd mercutio/frontend && npx webpack ./src/app.ts ./dist/mercutio.js
+
+js-watch:
+	cd mercutio/frontend && npx webpack --watch ./src/app.ts ./dist/mercutio.js
 
 mercutio-build:
 	cd oatie && CARGO_INCREMENTAL=1 cargo build
