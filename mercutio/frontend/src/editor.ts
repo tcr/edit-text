@@ -1,5 +1,5 @@
-import * as commands from './commands.ts';
-import HashState from './hashstate.ts';
+import * as commands from './commands';
+import HashState from './hashstate';
 
 function getActive() {
   var a = $('.active')

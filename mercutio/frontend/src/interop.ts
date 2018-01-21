@@ -67,3 +67,33 @@ export function newString(module, str) {
 
   return ptr;
 }
+
+// TODO better strategy for having a js command callback
+export function instantiate(js_command_callback) {
+  let Module = (<any>{});
+
+  return fetchAndInstantiate("/mercutio.wasm", {
+    env: {
+      js_command: function (inptr) {
+        let data = copyCStr(Module, inptr);
+        js_command_callback();
+      }
+    }
+  })
+  .then(mod => {
+    Module.alloc = mod.exports.alloc;
+    Module.dealloc_str = mod.exports.dealloc_str;
+    Module.memory = mod.exports.memory;
+    Module.wasm_command = function(req) {
+      let json = JSON.stringify(req);
+      let out = mod.exports.wasm_command(newString(Module, json));
+      console.log('----- from wasm_command>', out);
+      // let result = copyCStr(Module, outptr);
+      // return JSON.parse(result);
+    }
+    Module.wasm_setup = function (editorID) {
+      mod.exports.wasm_setup(newString(Module, editorID));
+    }
+    return Module;
+  })
+}

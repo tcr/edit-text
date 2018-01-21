@@ -9,6 +9,9 @@ module.exports = {
             'window.jQuery': 'jquery',
         }),
     ],
+    resolve: { 
+        extensions: ['.ts', '.tsx', '.js', '.jsx']
+    },
     module: {
         rules: [{
             test: /\.scss$/,
@@ -20,7 +23,9 @@ module.exports = {
                 loader: "sass-loader" // compiles Sass to CSS 
             }]
         },
-        { test: /\.css$/, use: [{loader: "style-loader" }, { loader: "css-loader" }] },
+        { 
+            test: /\.css$/, use: [{loader: "style-loader" }, { loader: "css-loader" }]
+        },
         {
             test   : /\.(ttf|eot|svg|woff2?)(\?[a-z0-9]+)?$/,
             use : [{loader: 'file-loader' }],
