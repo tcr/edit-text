@@ -48,10 +48,84 @@ let Module = (<any>{});
 
 
 // Entry.
-if ((<any>window).MOTE_ENTRY == 'index') {
+if (document.body.id == 'multi') {
+  document.body.innerHTML = `
+
+<h1>Mercutio
+  <button id="action-monkey">🙈🙉🙊</button>
+  <span style="font-family: monospace; padding: 3px 5px;" id="timer"></span>
+</h1>
+
+<table id="clients">
+  <!-- <tr> 
+    <td>
+      <h4>"left"</h4>
+      <iframe style="border: none; width: 100%; height: 800px" src="/client/?left"></iframe>
+    </td>
+    <td>
+      <h4>"middle"</h4>
+      <iframe style="border: none; width: 100%; height: 800px" src="/client/?middle"></iframe>
+    </td>
+    <td>
+      <h4>"right"</h4>
+      <iframe style="border: none; width: 100%; height: 800px" src="/client/?right"></iframe>
+    </td>
+  </tr> -->
+
+  <tr>
+    <td>
+      <iframe src="/client/?a"></iframe>
+    </td>
+    <td>
+      <iframe src="/client/?b"></iframe>
+    </td>
+    <td>
+      <iframe src="/client/?c"></iframe>
+    </td>
+    <!--
+    <td>
+      <iframe src="/client/?d"></iframe>
+    </td>
+    <td>
+      <iframe src="/client/?e"></iframe>
+    </td>
+    -->
+  </tr>
+  <!--
+  <tr>
+    <td>
+      <iframe src="/client/?f"></iframe>
+    </td>
+    <td>
+      <iframe src="/client/?g"></iframe>
+    </td>
+    <td>
+      <iframe src="/client/?h"></iframe>
+    </td>
+    <td>
+      <iframe src="/client/?i"></iframe>
+    </td>
+    <td>
+      <iframe src="/client/?j"></iframe>
+    </td>
+  </tr>
+  -->
+</table>
+
+`;
+
   new Parent();
 }
-else if ((<any>window).MOTE_ENTRY == 'client') {
+else if (document.body.id == 'client') {
+  document.body.innerHTML = `
+<div id="toolbar">
+  <div id="native-buttons"></div>
+  <div id="local-buttons"></div>
+</div>
+<div class="mote" id="mote"></div>
+`;
+
+
   if (window.parent != window) {
     // Blur/Focus classes.
     $(window).on('focus', () => $(document.body).removeClass('blurred'));
@@ -117,4 +191,6 @@ else if ((<any>window).MOTE_ENTRY == 'client') {
 
   // editor.syncConnect();
   // editor.nativeConnect();
+} else {
+  document.body.innerHTML = '404';
 }

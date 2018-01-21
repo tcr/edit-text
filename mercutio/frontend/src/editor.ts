@@ -264,6 +264,7 @@ export default class Editor {
 
   load(data: string) {
     let elem = this.$elem[0];
+    console.log(elem);
     requestAnimationFrame(() => {
       elem.innerHTML = data;
     });
@@ -302,8 +303,6 @@ export default class Editor {
   onNativeMessage(event) {
     let editor = this;
     let parse = JSON.parse(event.data);
-
-    console.log(parse);
   
     if (parse.Update) {
       editor.load(parse.Update[0]);
