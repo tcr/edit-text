@@ -7,6 +7,8 @@ extern crate ws;
 
 use structopt::StructOpt;
 use std::thread;
+use std::panic;
+use std::process;
 use std::time::Duration;
 use mercutio::wasm::NativeCommand;
 use mercutio::wasm::proxy::start_websocket_server;
@@ -22,6 +24,13 @@ struct Opt {
 }
 
 pub fn main() {
+    // Set aborting process handler.
+    let orig_handler = panic::take_hook();
+    panic::set_hook(Box::new(move |panic_info| {
+        orig_handler(panic_info);
+        process::exit(1);
+    }));
+
     println!("started \"wasm\" server");
 
     let opt = Opt::from_args();

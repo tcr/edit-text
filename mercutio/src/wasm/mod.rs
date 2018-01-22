@@ -135,22 +135,22 @@ where
     client.doc = new_doc;
 
     // Check that our operations can compose well.
-    if cfg!(not(target_arch = "wasm32")) {
-        // println!("ORIGINAL: {:?}", client.original_doc);
-        let mut check_op_a = client.op_outstanding.clone().unwrap_or(op_span!([], []));
-        for (i, op) in client.ops.iter().enumerate() {
-            // println!("  {}: applying {:?}/{:?}", name, i + 1, client.ops.len());
-            // println!("  {} 1️⃣: let op_left = op_span!{:?};", name, check_op_a);
-            // println!("  {} 1️⃣: let op_right = op_span!{:?};", name, op);
-            check_op_a = Operation::compose(&check_op_a, &op);
-            // println!("  {} 1️⃣: let res = op_span!{:?};", name, check_op_a);
-            // println!("  {} 1️⃣: let original = doc_span!{:?};", name, client.original_doc);
-            // println!("  {} 1️⃣: let latest_doc = doc_span!{:?};", name, client.doc);
-            let _ = OT::apply(&client.original_doc, &check_op_a);
-        }
+    // if cfg!(not(target_arch = "wasm32")) {
+    //     // println!("ORIGINAL: {:?}", client.original_doc);
+    //     let mut check_op_a = client.op_outstanding.clone().unwrap_or(op_span!([], []));
+    //     for (i, op) in client.ops.iter().enumerate() {
+    //         // println!("  {}: applying {:?}/{:?}", name, i + 1, client.ops.len());
+    //         // println!("  {} 1️⃣: let op_left = op_span!{:?};", name, check_op_a);
+    //         // println!("  {} 1️⃣: let op_right = op_span!{:?};", name, op);
+    //         check_op_a = Operation::compose(&check_op_a, &op);
+    //         // println!("  {} 1️⃣: let res = op_span!{:?};", name, check_op_a);
+    //         // println!("  {} 1️⃣: let original = doc_span!{:?};", name, client.original_doc);
+    //         // println!("  {} 1️⃣: let latest_doc = doc_span!{:?};", name, client.doc);
+    //         let _ = OT::apply(&client.original_doc, &check_op_a);
+    //     }
     
-        assert_eq!(OT::apply(&client.original_doc, &check_op_a), client.doc);
-    }
+    //     assert_eq!(OT::apply(&client.original_doc, &check_op_a), client.doc);
+    // }
 
     // Send update.
     let res = ClientCommand::Update(doc_as_html(&client.doc.0), Some(op));

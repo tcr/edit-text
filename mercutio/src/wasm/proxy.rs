@@ -140,6 +140,7 @@ fn setup_client(name: &str, out: ws::Sender, ws_port: u16) -> (Arc<AtomicBool>, 
                     }
                 }
             }).unwrap();
+            panic!("sync server socket disconnected.")
         });
     }
 
