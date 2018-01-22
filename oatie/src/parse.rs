@@ -1,6 +1,6 @@
 //! Parse doc_span, add_span, del_span like strings.
 
-use super::{Operation, OT};
+use super::OT;
 use super::compose;
 use super::doc::*;
 use super::normalize;

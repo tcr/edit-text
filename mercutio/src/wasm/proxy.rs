@@ -3,7 +3,7 @@ use super::*;
 use super::super::{SyncClientCommand, SyncServerCommand};
 use crossbeam_channel::{unbounded, Sender};
 use failure::Error;
-use oatie::{Operation, OT};
+use oatie::OT;
 use oatie::doc::*;
 use rand;
 use rand::Rng;
