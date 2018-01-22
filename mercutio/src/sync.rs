@@ -14,6 +14,7 @@ use std::thread;
 use std::time::Duration;
 use super::*;
 use ws;
+use std::collections::VecDeque;
 
 pub fn default_doc() -> Doc {
     Doc(doc_span![
@@ -163,7 +164,7 @@ b_add: {}
 }
 
 pub struct SyncState {
-    ops: HashMap<String, Vec<Op>>,
+    ops: VecDeque<(String, usize, Op)>,
     version: usize,
     history: HashMap<usize, Op>,
 }
@@ -175,7 +176,7 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
         println!("Listening sync_socket_server on 0.0.0.0:{}", port);
 
         let sync_state_mutex = Arc::new(Mutex::new(SyncState {
-            ops: hashmap![],
+            ops: VecDeque::new(),
             version: 100,
             history: hashmap![],
         }));
@@ -191,43 +192,58 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
                     // Wait a set duration between transforms.
                     thread::sleep(Duration::from_millis(period as u64));
 
-                    // Extract the client map and dump active client operations.
                     let mut sync_state = sync_state_mutex_capture.lock().unwrap();
-                    let mut keys: Vec<_> = sync_state.ops.keys().cloned().collect();
-                    keys.sort();
-                    if keys.is_empty() {
-                        continue;
+
+                    // Go through the deque and update our operations.
+                    while let Some((client_id, mut version, mut op)) = sync_state.ops.pop_front() {
+                        // Transform against each interim operation.
+                        while version < sync_state.version {
+                            if let Some(ref version_op) = sync_state.history.get(&version) {
+                                let (updated_op, _) = Op::transform::<RtfSchema>(version_op, &op);
+                                op = updated_op;
+                            }
+                            version += 1;
+                        }
+
+                        // Apply.
+                        // let res = action_sync(&doc, new_op, op_group).unwrap();
+                        // new_doc = res.0;
+                        // new_op = vec![res.1];
+
+                        let mut doc = state_capture.body.lock().unwrap();
+                        let new_doc = OT::apply(&*doc, &op);
+
+                        // Bump document version.
+                        *doc = new_doc;
+                        sync_state.version += 1;
+
+                        // Add it to the state history.
+                        let version = sync_state.version;
+                        sync_state.history.insert(version, op.clone());
+
+                        bus_capture
+                            .lock()
+                            .unwrap()
+                            .broadcast((doc.0.clone(), version, client_id, op));
                     }
 
-                    // List the clients.
-                    println!("evaluating: {:?}", keys);
+
+                    // let mut keys: Vec<_> = sync_state.ops.keys().cloned().collect();
+                    // keys.sort();
+                    // if keys.is_empty() {
+                    //     continue;
+                    // }
 
                     // Perform the document operation transformation.
-                    let mut doc = state_capture.body.lock().unwrap();
-                    let mut new_doc = doc.clone();
-                    let mut new_op = vec![op_span!([], [])];
-                    for op_group in keys.iter().map(|x| sync_state.ops.remove(x).unwrap()) {
-                        let res = action_sync(&doc, new_op, op_group).unwrap();
-                        new_doc = res.0;
-                        new_op = vec![res.1];
-                    }
-                    let result_op = new_op.remove(0);
-
-                    // Bump document version.
-                    *doc = new_doc;
-                    sync_state.version += 1;
-
-                    // Add it to the state history.
-                    let version = sync_state.version;
-                    sync_state.history.insert(version, result_op.clone());
-
-                    // TODO definitely remove the use of client_id
-                    let client_id = keys.remove(0);
-
-                    bus_capture
-                        .lock()
-                        .unwrap()
-                        .broadcast((doc.0.clone(), sync_state.version, client_id, result_op));
+                    // let mut doc = state_capture.body.lock().unwrap();
+                    // let mut new_doc = doc.clone();
+                    // let mut new_op = vec![op_span!([], [])];
+                    // for op_group in keys.iter().map(|x| sync_state.ops.remove(x).unwrap()) {
+                    //     let res = action_sync(&doc, new_op, op_group).unwrap();
+                    //     new_doc = res.0;
+                    //     new_op = vec![res.1];
+                    // }
+                    // let result_op = new_op.remove(0);
                 }
             }) {
                 println!("Error: {:?}", value);
@@ -265,12 +281,7 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
                         match value {
                             SyncServerCommand::Commit(client_id, op, version) => {
                                 let mut sync_state = sync_state_mutex_capture.lock().unwrap();
-                                // TODO remove hack version == 0 which lets us add carets from all parties
-                                if version == sync_state.version {
-                                    sync_state.ops.entry(client_id).or_insert(vec![]).push(op);
-                                } else {
-                                    println!("got version from old client: {:?}, expecting {:?}", version, sync_state.version);
-                                }
+                                sync_state.ops.push_back((client_id, version, op));
                             }
                         }
                     }

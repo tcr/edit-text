@@ -22,8 +22,10 @@ use std::fs::File;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use structopt::StructOpt;
+use std::process;
 use tiny_http::{Header, Response};
 use url::Url;
+use std::panic;
 use uuid::Uuid;
 
 fn spawn_http_server(port: u16) {
@@ -136,6 +138,13 @@ struct Opt {
 }
 
 fn main() {
+    // Set aborting process handler.
+    let orig_handler = panic::take_hook();
+    panic::set_hook(Box::new(move |panic_info| {
+        orig_handler(panic_info);
+        process::exit(1);
+    }));
+
     let opt = Opt::from_args();
 
     let mercutio_state = MoteState {

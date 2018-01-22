@@ -2,7 +2,7 @@
 members = ["oatie", "mercutio", "mercutio/mercutio-wasm"]
 
 [profile.dev]
-panic = 'abort'
+#panic = 'abort'
 debug = true
 
 [profile.release]
