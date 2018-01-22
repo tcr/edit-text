@@ -187,67 +187,65 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
         let state_capture = state.clone();
         let bus_capture = bus.clone();
         thread::spawn(move || {
-            if let Err(value) = panic::catch_unwind(|| {
-                loop {
-                    // Wait a set duration between transforms.
-                    thread::sleep(Duration::from_millis(period as u64));
+            loop {
+                // Wait a set duration between transforms.
+                thread::sleep(Duration::from_millis(period as u64));
 
-                    let mut sync_state = sync_state_mutex_capture.lock().unwrap();
+                let mut sync_state = sync_state_mutex_capture.lock().unwrap();
 
-                    // Go through the deque and update our operations.
-                    while let Some((client_id, mut version, mut op)) = sync_state.ops.pop_front() {
-                        // Transform against each interim operation.
-                        while version < sync_state.version {
-                            if let Some(ref version_op) = sync_state.history.get(&version) {
-                                let (updated_op, _) = Op::transform::<RtfSchema>(version_op, &op);
-                                op = updated_op;
-                            }
-                            version += 1;
+                // TODO MOVE THIS STUFF OUT TO A FN like handle_operation()
+
+                // Go through the deque and update our operations.
+                while let Some((client_id, mut version, mut op)) = sync_state.ops.pop_front() {
+                    // Transform against each interim operation.
+                    while version < sync_state.version {
+                        if let Some(ref version_op) = sync_state.history.get(&version) {
+                            let (updated_op, _) = Op::transform::<RtfSchema>(version_op, &op);
+                            op = updated_op;
                         }
-
-                        // Apply.
-                        // let res = action_sync(&doc, new_op, op_group).unwrap();
-                        // new_doc = res.0;
-                        // new_op = vec![res.1];
-
-                        let mut doc = state_capture.body.lock().unwrap();
-                        let new_doc = OT::apply(&*doc, &op);
-
-                        // Bump document version.
-                        *doc = new_doc;
-                        sync_state.version += 1;
-
-                        // Add it to the state history.
-                        let version = sync_state.version;
-                        sync_state.history.insert(version, op.clone());
-
-                        bus_capture
-                            .lock()
-                            .unwrap()
-                            .broadcast((doc.0.clone(), version, client_id, op));
+                        version += 1;
                     }
 
+                    // Apply.
+                    // let res = action_sync(&doc, new_op, op_group).unwrap();
+                    // new_doc = res.0;
+                    // new_op = vec![res.1];
 
-                    // let mut keys: Vec<_> = sync_state.ops.keys().cloned().collect();
-                    // keys.sort();
-                    // if keys.is_empty() {
-                    //     continue;
-                    // }
+                    let mut doc = state_capture.body.lock().unwrap();
+                    let new_doc = OT::apply(&*doc, &op);
 
-                    // Perform the document operation transformation.
-                    // let mut doc = state_capture.body.lock().unwrap();
-                    // let mut new_doc = doc.clone();
-                    // let mut new_op = vec![op_span!([], [])];
-                    // for op_group in keys.iter().map(|x| sync_state.ops.remove(x).unwrap()) {
-                    //     let res = action_sync(&doc, new_op, op_group).unwrap();
-                    //     new_doc = res.0;
-                    //     new_op = vec![res.1];
-                    // }
-                    // let result_op = new_op.remove(0);
+                    // Bump document version.
+                    *doc = new_doc;
+                    sync_state.version += 1;
+
+                    // Add it to the state history.
+                    let version = sync_state.version;
+                    sync_state.history.insert(version, op.clone());
+
+                    bus_capture
+                        .lock()
+                        .unwrap()
+                        .broadcast((doc.0.clone(), version, client_id, op));
                 }
-            }) {
-                println!("Error: {:?}", value);
-                process::exit(1);
+
+                // DELETE BELOW
+
+                // let mut keys: Vec<_> = sync_state.ops.keys().cloned().collect();
+                // keys.sort();
+                // if keys.is_empty() {
+                //     continue;
+                // }
+
+                // Perform the document operation transformation.
+                // let mut doc = state_capture.body.lock().unwrap();
+                // let mut new_doc = doc.clone();
+                // let mut new_op = vec![op_span!([], [])];
+                // for op_group in keys.iter().map(|x| sync_state.ops.remove(x).unwrap()) {
+                //     let res = action_sync(&doc, new_op, op_group).unwrap();
+                //     new_doc = res.0;
+                //     new_op = vec![res.1];
+                // }
+                // let result_op = new_op.remove(0);
             }
         });
 
