@@ -10852,38 +10852,43 @@ else if (document.body.id == 'client') {
     let editorID = (location.search || '').substr(1) || 'unknown';
     let editor = new __WEBPACK_IMPORTED_MODULE_2__editor__["a" /* default */](document.getElementById('mote'), editorID);
     console.log('start');
-    __WEBPACK_IMPORTED_MODULE_4__interop__["a" /* instantiate */](function (data) {
-        console.log('----> js_command:', data);
-        // Make this async so we don't have deeply nested call stacks from Rust<->JS interop.
-        setImmediate(() => {
-            editor.onNativeMessage({
-                data: data,
+    let WASM = false;
+    if (!WASM) {
+        editor.syncConnect();
+        editor.nativeConnect();
+    }
+    else {
+        __WEBPACK_IMPORTED_MODULE_4__interop__["a" /* instantiate */](function (data) {
+            console.log('----> js_command:', data);
+            // Make this async so we don't have deeply nested call stacks from Rust<->JS interop.
+            setImmediate(() => {
+                editor.onNativeMessage({
+                    data: data,
+                });
+            });
+        })
+            .then(Module => {
+            Module.wasm_setup(editorID);
+            setImmediate(() => {
+                let url = 'ws://' + window.location.host.replace(/\:\d+/, ':8001') + '/';
+                let syncSocket = new WebSocket(url);
+                editor.Module = Module;
+                editor.syncSocket = syncSocket;
+                syncSocket.onopen = function (event) {
+                    console.log('Editor "%s" is connected.', editor.editorID);
+                };
+                syncSocket.onmessage = function (event) {
+                    console.log('GOT SYNC SCOKET MESSAGE:', event.data);
+                    Module.wasm_command({
+                        SyncClientCommand: JSON.parse(event.data),
+                    });
+                };
+                syncSocket.onclose = function () {
+                    __WEBPACK_IMPORTED_MODULE_5_jquery___default()('body').css('background', 'red');
+                };
             });
         });
-    })
-        .then(Module => {
-        Module.wasm_setup(editorID);
-        setImmediate(() => {
-            let url = 'ws://' + window.location.host.replace(/\:\d+/, ':8001') + '/';
-            let syncSocket = new WebSocket(url);
-            editor.Module = Module;
-            editor.syncSocket = syncSocket;
-            syncSocket.onopen = function (event) {
-                console.log('Editor "%s" is connected.', editor.editorID);
-            };
-            syncSocket.onmessage = function (event) {
-                console.log('GOT SYNC SCOKET MESSAGE:', event.data);
-                Module.wasm_command({
-                    SyncClientCommand: JSON.parse(event.data),
-                });
-            };
-            syncSocket.onclose = function () {
-                __WEBPACK_IMPORTED_MODULE_5_jquery___default()('body').css('background', 'red');
-            };
-        });
-    });
-    // editor.syncConnect();
-    // editor.nativeConnect();
+    }
 }
 else {
     document.body.innerHTML = '404';
@@ -11666,12 +11671,13 @@ function promptString(title, value, callback) {
 }
 // Initialize child editor.
 class Editor {
-    constructor($elem, editorID) {
-        this.$elem = $elem;
+    constructor(elem, editorID) {
+        this.$elem = $(elem);
         this.editorID = editorID;
         this.ops = [];
         this.KEY_WHITELIST = [];
         let editor = this;
+        let $elem = this.$elem;
         // monkey button
         let monkey = false;
         $('<button>Monkey</button>')
@@ -11765,13 +11771,12 @@ class Editor {
     }
     load(data) {
         let elem = this.$elem[0];
-        console.log(elem);
         requestAnimationFrame(() => {
             elem.innerHTML = data;
         });
     }
     nativeCommand(command) {
-        if (this.Module !== null) {
+        if (this.Module) {
             this.Module.wasm_command({
                 NativeCommand: command,
             });
@@ -11803,6 +11808,7 @@ class Editor {
         if (parse.Update) {
             editor.load(parse.Update[0]);
             if (parse.Update[1] == null) {
+                console.log('Sync Update');
                 editor.ops.splice(0, this.ops.length);
             }
             else {
@@ -11844,6 +11850,9 @@ class Editor {
     }
     onSyncMessage(event) {
         let editor = this;
+        if (typeof event.data != 'object') {
+            return;
+        }
         // if ('Sync' in event.data) {
         //   // Push to native
         //   editor.nativeCommand(commands.LoadCommand(event.data.Sync))

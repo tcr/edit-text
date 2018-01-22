@@ -110,13 +110,14 @@ export default class Editor {
   // TODO remove this
   Module: any;
 
-  constructor($elem, editorID: string) {
-    this.$elem = $elem;
+  constructor(elem: HTMLElement, editorID: string) {
+    this.$elem = $(elem);
     this.editorID = editorID;
     this.ops = [];
     this.KEY_WHITELIST = [];
 
     let editor = this;
+    let $elem = this.$elem;
 
     // monkey button
     let monkey = false;
@@ -235,14 +236,13 @@ export default class Editor {
 
   load(data: string) {
     let elem = this.$elem[0];
-    console.log(elem);
     requestAnimationFrame(() => {
       elem.innerHTML = data;
     });
   }
 
   nativeCommand(command: commands.Command) {
-    if (this.Module !== null) {
+    if (this.Module) {
       this.Module.wasm_command({
         NativeCommand: command,
       });
@@ -279,6 +279,7 @@ export default class Editor {
       editor.load(parse.Update[0]);
   
       if (parse.Update[1] == null) {
+        console.log('Sync Update');
         editor.ops.splice(0, this.ops.length);
       } else {
         editor.ops.push(parse.Update[1]);
@@ -326,6 +327,10 @@ export default class Editor {
   
   onSyncMessage(event) {
     let editor = this;
+
+    if (typeof event.data != 'object') {
+      return;
+    }
 
     // if ('Sync' in event.data) {
     //   // Push to native

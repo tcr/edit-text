@@ -57,7 +57,6 @@ extern "C" {
 }
 
 lazy_static! {
-    // TODO instantiate the client
     static ref WASM_CLIENT: Mutex<Option<Client>> = Mutex::new(None);
 }
 
@@ -76,9 +75,10 @@ pub fn wasm_setup(input_ptr: *mut c_char) -> u32 {
 
             doc: Doc(vec![]),
             version: 100,
+            ops: vec![],
+            op_outstanding: None,
 
             original_doc: Doc(vec![]),
-            original_ops: vec![],
 
             monkey: Arc::new(AtomicBool::new(false)),
             alive: Arc::new(AtomicBool::new(false)),
