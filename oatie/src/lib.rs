@@ -43,6 +43,7 @@ use compose::*;
 use std::collections::HashMap;
 use std::fmt::Debug;
 pub use transform::{Schema, Track};
+use transform::transform;
 
 pub trait OT {
     type Op: Operation;
@@ -51,7 +52,9 @@ pub trait OT {
 }
 
 pub trait Operation where Self: Sized {
+    fn empty() -> Self;
     fn compose(&Self, &Self) -> Self;
+    fn compose_iter<'a, I>(iter: I) -> Self where I: Iterator<Item=&'a Self>, Self: 'a;
     fn transform<S: Schema>(&Self, &Self) -> (Self, Self);
 }
 
@@ -64,11 +67,23 @@ impl OT for Doc {
 }
 
 impl Operation for Op {
+    fn empty() -> Self {
+        (vec![], vec![])
+    }
+
     fn compose(a: &Self, b: &Self) -> Self {
         compose(a, b)
     }
 
+    fn compose_iter<'a, I>(iter: I) -> Self where I: Iterator<Item=&'a Self> {
+        let mut base = Self::empty();
+        for item in iter {
+            base = Self::compose(&base, item);
+        }
+        base
+    }
+
     fn transform<S: Schema>(a: &Self, b: &Self) -> (Self, Self) {
-        unimplemented!();
+        transform::<S>(&a, &b)
     }
 }

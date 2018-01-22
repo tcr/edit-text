@@ -65,41 +65,45 @@ else if (document.body.id == 'client') {
   let editor = new Editor(document.getElementById('mote'), editorID);
 
   console.log('start');
-  interop.instantiate(function (data) {
-    console.log('----> js_command:', data);
 
-    // Make this async so we don't have deeply nested call stacks from Rust<->JS interop.
-    setImmediate(() => {
-      editor.onNativeMessage({
-        data: data,
-      });
-    });
-  })
-  .then(Module => {
-    Module.wasm_setup(editorID);
+  let WASM = false;
+  if (!WASM) {
+    editor.syncConnect();
+    editor.nativeConnect();
+  } else {
+    interop.instantiate(function (data) {
+      console.log('----> js_command:', data);
 
-    setImmediate(() => {
-      let url = 'ws://' + window.location.host.replace(/\:\d+/, ':8001') + '/';
-      let syncSocket = new WebSocket(url);
-      editor.Module = Module; 
-      editor.syncSocket = syncSocket;
-      syncSocket.onopen = function (event) {
-        console.log('Editor "%s" is connected.', editor.editorID);
-      };
-      syncSocket.onmessage = function (event) {
-        console.log('GOT SYNC SCOKET MESSAGE:', event.data);
-        Module.wasm_command({
-          SyncClientCommand: JSON.parse(event.data),
+      // Make this async so we don't have deeply nested call stacks from Rust<->JS interop.
+      setImmediate(() => {
+        editor.onNativeMessage({
+          data: data,
         });
-      };
-      syncSocket.onclose = function () {
-        $('body').css('background', 'red');
-      }
-    });
-  })
+      });
+    })
+    .then(Module => {
+      Module.wasm_setup(editorID);
 
-  // editor.syncConnect();
-  // editor.nativeConnect();
+      setImmediate(() => {
+        let url = 'ws://' + window.location.host.replace(/\:\d+/, ':8001') + '/';
+        let syncSocket = new WebSocket(url);
+        editor.Module = Module; 
+        editor.syncSocket = syncSocket;
+        syncSocket.onopen = function (event) {
+          console.log('Editor "%s" is connected.', editor.editorID);
+        };
+        syncSocket.onmessage = function (event) {
+          console.log('GOT SYNC SCOKET MESSAGE:', event.data);
+          Module.wasm_command({
+            SyncClientCommand: JSON.parse(event.data),
+          });
+        };
+        syncSocket.onclose = function () {
+          $('body').css('background', 'red');
+        }
+      });
+    })
+  }
 } else {
   document.body.innerHTML = '404';
 }

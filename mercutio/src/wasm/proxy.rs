@@ -81,9 +81,10 @@ fn setup_client(name: &str, out: ws::Sender, ws_port: u16) -> (Arc<AtomicBool>, 
 
         doc: Doc(vec![]),
         version: 100,
+        ops: vec![],
+        op_outstanding: None,
 
         original_doc: Doc(vec![]),
-        original_ops: vec![],
 
         monkey: monkey.clone(),
         alive: alive.clone(),

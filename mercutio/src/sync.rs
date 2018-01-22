@@ -8,7 +8,7 @@ use oatie::transform::transform;
 use oatie::validate::{validate_doc_span, ValidateContext};
 use serde_json;
 use std::{panic, process};
-use std::collections::HashMap;
+use std::collections::{HashSet, HashMap};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
@@ -165,6 +165,7 @@ b_add: {}
 pub struct SyncState {
     ops: HashMap<String, Vec<Op>>,
     version: usize,
+    history: HashMap<usize, Op>,
 }
 
 pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
@@ -176,6 +177,7 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
         let sync_state_mutex = Arc::new(Mutex::new(SyncState {
             ops: hashmap![],
             version: 100,
+            history: hashmap![],
         }));
 
         let bus = Arc::new(Mutex::new(Bus::new(255)));
@@ -209,20 +211,23 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
                         new_doc = res.0;
                         new_op = vec![res.1];
                     }
+                    let result_op = new_op.remove(0);
+
+                    // Bump document version.
                     *doc = new_doc;
-
-                    // let mut doc = state_capture.body.lock().unwrap();
-                    // let (_, new_op) = action_sync(&doc, left_ops, middle_ops).unwrap();
-                    // let (new_doc, _) = action_sync(&doc, vec![new_op], right_ops).unwrap();
-                    // *doc = new_doc;
-
-                    // Increase version
                     sync_state.version += 1;
+
+                    // Add it to the state history.
+                    let version = sync_state.version;
+                    sync_state.history.insert(version, result_op.clone());
+
+                    // TODO definitely remove the use of client_id
+                    let client_id = keys.remove(0);
 
                     bus_capture
                         .lock()
                         .unwrap()
-                        .broadcast((doc.0.clone(), sync_state.version, keys));
+                        .broadcast((doc.0.clone(), sync_state.version, client_id, result_op));
                 }
             }) {
                 println!("Error: {:?}", value);
@@ -237,14 +242,14 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
             {
                 let doc = state.body.lock().unwrap();
                 let mut sync_state = sync_state_mutex.lock().unwrap();
-                let command = SyncClientCommand::Update(doc.0.clone(), sync_state.version, vec![]);
+                let command = SyncClientCommand::Update(doc.0.clone(), sync_state.version, "$sync".to_string(), Operation::empty());
                 out.send(serde_json::to_string(&command).unwrap());
             }
 
             let mut rx = { bus_capture.lock().unwrap().add_rx() };
             thread::spawn(move || {
-                while let Ok((doc, version, clients)) = rx.recv() {
-                    let command = SyncClientCommand::Update(doc, version, clients);
+                while let Ok((doc, version, client_id, op)) = rx.recv() {
+                    let command = SyncClientCommand::Update(doc, version, client_id, op);
                     out.send(serde_json::to_string(&command).unwrap());
                 }
             });
