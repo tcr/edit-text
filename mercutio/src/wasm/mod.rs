@@ -6,7 +6,7 @@ pub mod proxy;
 
 use self::actions::*;
 use failure::Error;
-use oatie::{Operation, OT};
+use oatie::OT;
 use oatie::doc::*;
 use oatie::schema::RtfSchema;
 use rand;
@@ -107,7 +107,7 @@ fn synchronize_op(client: &mut Client) {
     if client.op_outstanding.is_none() && client.ops.len() > 0 {
         // Compose all ops.
         let ops = client.ops.split_off(0);
-        let op = Operation::compose_iter(ops.iter());
+        let op = OT::compose_iter(ops.iter());
         client.op_outstanding = Some(op.clone());
 
         // Send operation to sync server.
@@ -142,7 +142,7 @@ where
     //         // println!("  {}: applying {:?}/{:?}", name, i + 1, client.ops.len());
     //         // println!("  {} 1️⃣: let op_left = op_span!{:?};", name, check_op_a);
     //         // println!("  {} 1️⃣: let op_right = op_span!{:?};", name, op);
-    //         check_op_a = Operation::compose(&check_op_a, &op);
+    //         check_op_a = OT::compose(&check_op_a, &op);
     //         // println!("  {} 1️⃣: let res = op_span!{:?};", name, check_op_a);
     //         // println!("  {} 1️⃣: let original = doc_span!{:?};", name, client.original_doc);
     //         // println!("  {} 1️⃣: let latest_doc = doc_span!{:?};", name, client.doc);
@@ -364,7 +364,7 @@ impl Client {
                 // Set the document.
                 if self.name == client_id {
                     // Reattach to client.
-                    self.doc = OT::apply(&doc, &Operation::compose_iter(self.ops.iter()));
+                    self.doc = OT::apply(&doc, &OT::compose_iter(self.ops.iter()));
                 } else if !self.ops.is_empty() {
                     println!("\n----> TRANSFORMING");
 
@@ -372,7 +372,7 @@ impl Client {
 
                     // Cumulative client operation.
                     let pending_op = self.op_outstanding.clone().unwrap();
-                    let local_op = Operation::compose_iter(ops.iter());
+                    let local_op = OT::compose_iter(ops.iter());
 
                     // Transform.
                     println!();
@@ -383,9 +383,9 @@ impl Client {
                     println!("client: {:?}", local_op);
                     println!("</test>");
                     println!();
-                    let (prending_op_transform, _) = Operation::transform::<RtfSchema>(&input_op, &pending_op);
-                    let (local_op_transform, _) = Operation::transform::<RtfSchema>(&input_op, &local_op);
-                    let client_op = Operation::compose(&prending_op_transform, &local_op_transform);
+                    let (prending_op_transform, _) = OT::transform::<RtfSchema>(&input_op, &pending_op);
+                    let (local_op_transform, _) = OT::transform::<RtfSchema>(&input_op, &local_op);
+                    let client_op = OT::compose(&prending_op_transform, &local_op_transform);
 
                     // Reattach to client.
                     self.doc = OT::apply(&doc, &client_op);

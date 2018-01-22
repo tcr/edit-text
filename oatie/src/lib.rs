@@ -45,28 +45,23 @@ use std::fmt::Debug;
 pub use transform::{Schema, Track};
 use transform::transform;
 
-pub trait OT {
-    type Op: Operation;
+pub trait OT where Self: Sized {
+    type Doc;
     
-    fn apply(&self, &Self::Op) -> Self;
-}
-
-pub trait Operation where Self: Sized {
+    fn apply(&Self::Doc, &Self) -> Self::Doc;
     fn empty() -> Self;
     fn compose(&Self, &Self) -> Self;
     fn compose_iter<'a, I>(iter: I) -> Self where I: Iterator<Item=&'a Self>, Self: 'a;
     fn transform<S: Schema>(&Self, &Self) -> (Self, Self);
 }
 
-impl OT for Doc {
-    type Op = Op;
+impl OT for Op {
+    type Doc = Doc;
 
-    fn apply(&self, op: &Self::Op) -> Self {
-        Doc(apply_operation(&self.0, op))
+    fn apply(doc: &Self::Doc, op: &Self) -> Self::Doc {
+        Doc(apply_operation(&doc.0, op))
     }
-}
 
-impl Operation for Op {
     fn empty() -> Self {
         (vec![], vec![])
     }

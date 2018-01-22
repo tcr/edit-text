@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use super::compose;
 use super::doc::*;
 use super::normalize;
-use super::{Operation, OT};
+use super::OT;
 use super::validate::{validate_doc_span, ValidateContext};
 use super::transform::*;
 use super::parse::debug_pretty;
@@ -157,14 +157,14 @@ pub fn run_transform_test<T: Schema>(input: &str) -> Result<(), Error> {
             Paint::red("(!) testing op composed (double check)...")
         );
         println!(" ---> doc a : (a : a')");
-        let doc_a_cmp = OT::apply(&doc, &Operation::compose(&a, &a_));
+        let doc_a_cmp = OT::apply(&doc, &OT::compose(&a, &a_));
         println!("{}", debug_pretty(&doc));
         println!();
-        println!("{}", debug_pretty(&Operation::compose(&a, &a_)));
+        println!("{}", debug_pretty(&OT::compose(&a, &a_)));
         println!("{}", debug_pretty(&doc_a_cmp));
         validate_doc_span(&mut ValidateContext::new(), &doc_a_cmp.0)?;
         println!(" ---> doc b : (b : b')");
-        let doc_b_cmp = OT::apply(&doc, &Operation::compose(&a, &a_));
+        let doc_b_cmp = OT::apply(&doc, &OT::compose(&a, &a_));
         println!("{}", debug_pretty(&doc_b_cmp));
         validate_doc_span(&mut ValidateContext::new(), &doc_b_cmp.0)?;
         println!();

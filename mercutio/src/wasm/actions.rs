@@ -1,5 +1,5 @@
 use oatie::doc::*;
-use oatie::Operation;
+use oatie::OT;
 use failure::Error;
 use std::char::from_u32;
 use super::walkers::*;
@@ -302,9 +302,9 @@ pub fn caret_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
     // Return composed operations. Select proper order or otherwise composition
     // will be invalid.
     if increase {
-        Ok(Operation::compose(&op_2, &op_1))
+        Ok(OT::compose(&op_2, &op_1))
     } else {
-        Ok(Operation::compose(&op_1, &op_2))
+        Ok(OT::compose(&op_1, &op_2))
     }
 }
 
@@ -373,9 +373,9 @@ pub fn caret_block_move(ctx: ActionContext, increase: bool) -> Result<Op, Error>
     // Return composed operations. Select proper order or otherwise composition
     // will be invalid.
     if increase {
-        Ok(Operation::compose(&op_2, &op_1))
+        Ok(OT::compose(&op_2, &op_1))
     } else {
-        Ok(Operation::compose(&op_1, &op_2))
+        Ok(OT::compose(&op_1, &op_2))
     }
 }
 
@@ -415,8 +415,8 @@ pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan) -> Result<Op, Error> {
     // Return composed operations. Select proper order or otherwise composition
     // will be invalid.
     if pos_1 < pos_2 {
-        Ok(Operation::compose(&op_2, &op_1))
+        Ok(OT::compose(&op_2, &op_1))
     } else {
-        Ok(Operation::compose(&op_1, &op_2))
+        Ok(OT::compose(&op_1, &op_2))
     }
 }

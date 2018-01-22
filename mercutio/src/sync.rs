@@ -1,6 +1,6 @@
 use bus::Bus;
 use failure::Error;
-use oatie::{Operation, OT};
+use oatie::OT;
 use oatie::doc::*;
 use oatie::parse::debug_pretty;
 use oatie::schema::RtfSchema;
@@ -55,7 +55,7 @@ pub fn action_sync(doc: &Doc, ops_a: Vec<Op>, ops_b: Vec<Op>) -> Result<(Doc, Op
     // Flatten client A operations.
     let mut op_a = op_span!([], []);
     for op in &ops_a {
-        op_a = Operation::compose(&op_a, op);
+        op_a = OT::compose(&op_a, op);
     }
 
     println!(" ---> input ops_b");
@@ -65,7 +65,7 @@ pub fn action_sync(doc: &Doc, ops_a: Vec<Op>, ops_b: Vec<Op>) -> Result<(Doc, Op
     // Flatten client B operations.
     let mut op_b = op_span!([], []);
     for op in &ops_b {
-        op_b = Operation::compose(&op_b, op);
+        op_b = OT::compose(&op_b, op);
     }
 
     println!("OP A {:?}", op_a);
@@ -110,7 +110,7 @@ b_add: {}
     // let mut check_op_a = op_span!([], []);
     // for (i, op) in ops_a.iter().enumerate() {
     //     println!("  A: applying {:?}/{:?}", i + 1, ops_a.len());
-    //     check_op_a = Operation::compose(&check_op_a, &op);
+    //     check_op_a = OT::compose(&check_op_a, &op);
     //     println!(" op: {}", debug_pretty(&check_op_a));
     //     let _ = OT::apply(&doc.clone(), &check_op_a);
     // }
@@ -120,7 +120,7 @@ b_add: {}
     // let mut check_op_b = op_span!([], []);
     // for (i, op) in ops_b.iter().enumerate() {
     //     println!("  B: applying {:?}/{:?}", i + 1, ops_b.len());
-    //     check_op_b = Operation::compose(&check_op_b, &op);
+    //     check_op_b = OT::compose(&check_op_b, &op);
     //     println!(" op: {}", debug_pretty(&check_op_b));
     //     let _ = OT::apply(&doc.clone(), &check_op_b);
     // }
@@ -160,13 +160,35 @@ b_add: {}
     let mut validate_ctx = ValidateContext::new();
     validate_doc_span(&mut validate_ctx, &new_doc.0).expect("Validation error");
 
-    Ok((new_doc, Operation::compose(&op_a, &a_)))
+    Ok((new_doc, OT::compose(&op_a, &a_)))
 }
 
 pub struct SyncState {
     ops: VecDeque<(String, usize, Op)>,
     version: usize,
     history: HashMap<usize, Op>,
+}
+
+pub fn handle_operation(doc: &Doc, history: &mut HashMap<usize, Op>, target_version: usize, mut input_version: usize, mut op: Op) -> (Doc, Op) {
+    // Transform against each interim operation.
+    // TODO upgrade_operation_to_current or something
+    while input_version < target_version {
+        if let Some(ref version_op) = history.get(&input_version) {
+            let (updated_op, _) = Op::transform::<RtfSchema>(version_op, &op);
+            op = updated_op;
+        }
+        input_version += 1;
+    }
+
+    // let res = action_sync(&doc, new_op, op_group).unwrap();
+
+    // Apply the op.    
+    let new_doc = OT::apply(doc, &op);
+
+    // Add it to the state history.
+    history.insert(target_version, op.clone());
+
+    (new_doc, op)
 }
 
 pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
@@ -193,35 +215,18 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
 
                 let mut sync_state = sync_state_mutex_capture.lock().unwrap();
 
-                // TODO MOVE THIS STUFF OUT TO A FN like handle_operation()
+                let mut doc = state_capture.body.lock().unwrap();
 
                 // Go through the deque and update our operations.
-                while let Some((client_id, mut version, mut op)) = sync_state.ops.pop_front() {
-                    // Transform against each interim operation.
-                    while version < sync_state.version {
-                        if let Some(ref version_op) = sync_state.history.get(&version) {
-                            let (updated_op, _) = Op::transform::<RtfSchema>(version_op, &op);
-                            op = updated_op;
-                        }
-                        version += 1;
-                    }
-
-                    // Apply.
-                    // let res = action_sync(&doc, new_op, op_group).unwrap();
-                    // new_doc = res.0;
-                    // new_op = vec![res.1];
-
-                    let mut doc = state_capture.body.lock().unwrap();
-                    let new_doc = OT::apply(&*doc, &op);
+                while let Some((client_id, version, op)) = sync_state.ops.pop_front() {
+                    let target_version = sync_state.version;
+                    let (new_doc, op) = handle_operation(&doc, &mut sync_state.history, version, version, op);
 
                     // Bump document version.
                     *doc = new_doc;
-                    sync_state.version += 1;
+                    sync_state.version = target_version + 1;
 
-                    // Add it to the state history.
-                    let version = sync_state.version;
-                    sync_state.history.insert(version, op.clone());
-
+                    // Broadcast to all connected websockets.
                     bus_capture
                         .lock()
                         .unwrap()
@@ -256,7 +261,7 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
             {
                 let doc = state.body.lock().unwrap();
                 let mut sync_state = sync_state_mutex.lock().unwrap();
-                let command = SyncClientCommand::Update(doc.0.clone(), sync_state.version, "$sync".to_string(), Operation::empty());
+                let command = SyncClientCommand::Update(doc.0.clone(), sync_state.version, "$sync".to_string(), OT::empty());
                 out.send(serde_json::to_string(&command).unwrap());
             }
 
