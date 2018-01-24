@@ -18,6 +18,7 @@ use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::sync::atomic::Ordering;
 use std::thread;
 use std::time::Duration;
+use std::mem;
 use super::*;
 
 #[cfg(not(target_arch="wasm32"))]
@@ -64,6 +65,8 @@ pub enum ClientCommand {
     SyncServerCommand(SyncServerCommand),
 }
 
+
+/// Converts a DocSpan to an HTML string.
 fn doc_as_html(doc: &DocSpan) -> String {
     let mut out = String::new();
     for elem in doc {
@@ -92,6 +95,7 @@ fn doc_as_html(doc: &DocSpan) -> String {
     out
 }
 
+
 // TODO combine with client_op?
 fn with_action_context<C, T>(client: &mut Client, callback: C) -> Result<T, Error>
 where
@@ -104,16 +108,15 @@ where
 }
 
 fn synchronize_op(client: &mut Client) {
-    if client.op_outstanding.is_none() && client.ops.len() > 0 {
+    if client.op_outstanding.is_none() && client.local_op != Op::empty() {
         // Compose all ops.
-        let ops = client.ops.split_off(0);
-        let op = OT::compose_iter(ops.iter());
-        client.op_outstanding = Some(op.clone());
+        let local_op = mem::replace(&mut client.local_op, Op::empty());
+        client.op_outstanding = Some(local_op.clone());
 
         // Send operation to sync server.
         client.send_sync(SyncServerCommand::Commit(
             client.name.clone(),
-            op,
+            local_op,
             client.version,
         ));
     }
@@ -131,7 +134,7 @@ where
     // Apply new operation.
     let new_doc = OT::apply(&client.doc, &op);
 
-    client.ops.push(op.clone());
+    client.local_op = Op::compose(&client.local_op, &op);
     client.doc = new_doc;
 
     // Check that our operations can compose well.
@@ -279,12 +282,24 @@ pub enum Task {
     NativeCommand(NativeCommand),
 }
 
+// pub struct ClientDoc {
+//     pub client_id: String,
+
+//     pub doc: Doc,
+//     pub version: usize,
+
+//     pub original_doc: Doc,
+//     pub pending_op: Option<Op>,
+//     pub local_op: Option<Op>,
+// }
+
 pub struct Client {
+    // pub client_doc: ClientDoc,
     pub name: String,
 
     pub doc: Doc,
     pub version: usize,
-    pub ops: Vec<Op>,
+    pub local_op: Op,
     pub op_outstanding: Option<Op>,
 
     pub original_doc: Doc,
@@ -314,6 +329,20 @@ impl Client {
             })
             .expect("Could not send initial state");
     }
+
+    // pub fn sync_confirmed_outstanding_op(&mut self, new_doc: Doc) {
+    //     assert!(self.op_outstanding.is_some());
+
+    //     self.original_doc = new_doc.clone();
+
+    //     // Reattach to client.
+    //     let local_op = OT::compose_iter(self.ops.iter());
+    //     self.doc = OT::apply(&new_doc, &local_op);
+
+    //     // Now that we have an ack, we can send up our new ops.
+    //     self.op_outstanding = None;
+    //     synchronize_op(self);
+    // }
 
     pub fn handle_task(&mut self, value: Task) -> Result<(), Error> {
         match value {
@@ -363,17 +392,18 @@ impl Client {
 
                 // Set the document.
                 if self.name == client_id {
+                    assert!(self.op_outstanding.is_some());
+
                     // Reattach to client.
-                    self.doc = OT::apply(&doc, &OT::compose_iter(self.ops.iter()));
-                } else if !self.ops.is_empty() {
+                    self.doc = OT::apply(&doc, &self.local_op);
+                } else if self.local_op != Op::empty() {
                     println!("\n----> TRANSFORMING");
 
                     // Extract the pending op.
                     let pending_op = self.op_outstanding.clone().unwrap();
 
                     // Extract and compose all local ops.
-                    let ops = self.ops.split_off(0);
-                    let local_op = OT::compose_iter(ops.iter());
+                    let local_op = mem::replace(&mut self.local_op, Op::empty());
 
                     // Transform.
                     println!();
@@ -389,14 +419,15 @@ impl Client {
                     let (prending_op_transform, input_op_transform) = OT::transform::<RtfSchema>(&input_op, &pending_op);
                     // P' x L -> P'', L'
                     let (local_op_transform, _) = OT::transform::<RtfSchema>(&input_op_transform, &local_op);
+                    
                     // client_doc = input_doc : I' : P''
                     let client_op = OT::compose(&prending_op_transform, &local_op_transform);
-
                     // Reattach to client.
-                    self.doc = OT::apply(&doc, &client_op);
+                    self.doc = OT::apply(&doc, &prending_op_transform);
+                    self.doc = OT::apply(&doc, &local_op_transform);
 
                     self.op_outstanding = Some(prending_op_transform);
-                    self.ops.push(local_op_transform);
+                    self.local_op = local_op_transform;
                 } else {
                     self.doc = doc;
                 }
