@@ -169,26 +169,20 @@ pub struct SyncState {
     history: HashMap<usize, Op>,
 }
 
-pub fn handle_operation(doc: &Doc, history: &mut HashMap<usize, Op>, target_version: usize, mut input_version: usize, mut op: Op) -> (Doc, Op) {
+/// Transform an operation incrementally against each interim document operation.
+pub fn update_operation(mut op: Op, history: &HashMap<usize, Op>, target_version: usize, mut input_version: usize) -> Op {
     // Transform against each interim operation.
     // TODO upgrade_operation_to_current or something
     while input_version < target_version {
+        // If the version exists (it should) transform against it.
         if let Some(ref version_op) = history.get(&input_version) {
             let (updated_op, _) = Op::transform::<RtfSchema>(version_op, &op);
             op = updated_op;
         }
+
         input_version += 1;
     }
-
-    // let res = action_sync(&doc, new_op, op_group).unwrap();
-
-    // Apply the op.    
-    let new_doc = OT::apply(doc, &op);
-
-    // Add it to the state history.
-    history.insert(target_version, op.clone());
-
-    (new_doc, op)
+    op  
 }
 
 pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
@@ -218,39 +212,25 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
                 let mut doc = state_capture.body.lock().unwrap();
 
                 // Go through the deque and update our operations.
-                while let Some((client_id, version, op)) = sync_state.ops.pop_front() {
+                while let Some((client_id, input_version, op)) = sync_state.ops.pop_front() {
                     let target_version = sync_state.version;
-                    let (new_doc, op) = handle_operation(&doc, &mut sync_state.history, version, version, op);
+                    
+                    // let res = action_sync(&doc, new_op, op_group).unwrap();
 
-                    // Bump document version.
-                    *doc = new_doc;
+                    // Update the operation so we can apply it to the document.
+                    let op = update_operation(op, &sync_state.history, target_version, input_version);
+                    sync_state.history.insert(target_version, op.clone());
+
+                    // Update the document with this operation.
+                    *doc = Op::apply(&doc, &op);
                     sync_state.version = target_version + 1;
 
                     // Broadcast to all connected websockets.
                     bus_capture
                         .lock()
                         .unwrap()
-                        .broadcast((doc.0.clone(), version, client_id, op));
+                        .broadcast((doc.0.clone(), sync_state.version, client_id, op));
                 }
-
-                // DELETE BELOW
-
-                // let mut keys: Vec<_> = sync_state.ops.keys().cloned().collect();
-                // keys.sort();
-                // if keys.is_empty() {
-                //     continue;
-                // }
-
-                // Perform the document operation transformation.
-                // let mut doc = state_capture.body.lock().unwrap();
-                // let mut new_doc = doc.clone();
-                // let mut new_op = vec![op_span!([], [])];
-                // for op_group in keys.iter().map(|x| sync_state.ops.remove(x).unwrap()) {
-                //     let res = action_sync(&doc, new_op, op_group).unwrap();
-                //     new_doc = res.0;
-                //     new_op = vec![res.1];
-                // }
-                // let result_op = new_op.remove(0);
             }
         });
 

@@ -368,10 +368,11 @@ impl Client {
                 } else if !self.ops.is_empty() {
                     println!("\n----> TRANSFORMING");
 
-                    let ops = self.ops.split_off(0);
-
-                    // Cumulative client operation.
+                    // Extract the pending op.
                     let pending_op = self.op_outstanding.clone().unwrap();
+
+                    // Extract and compose all local ops.
+                    let ops = self.ops.split_off(0);
                     let local_op = OT::compose_iter(ops.iter());
 
                     // Transform.
@@ -383,8 +384,12 @@ impl Client {
                     println!("client: {:?}", local_op);
                     println!("</test>");
                     println!();
-                    let (prending_op_transform, _) = OT::transform::<RtfSchema>(&input_op, &pending_op);
-                    let (local_op_transform, _) = OT::transform::<RtfSchema>(&input_op, &local_op);
+
+                    // I x P -> I', P'
+                    let (prending_op_transform, input_op_transform) = OT::transform::<RtfSchema>(&input_op, &pending_op);
+                    // P' x L -> P'', L'
+                    let (local_op_transform, _) = OT::transform::<RtfSchema>(&input_op_transform, &local_op);
+                    // client_doc = input_doc : I' : P''
                     let client_op = OT::compose(&prending_op_transform, &local_op_transform);
 
                     // Reattach to client.
