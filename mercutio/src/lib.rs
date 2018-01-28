@@ -19,7 +19,7 @@ extern crate lazy_static;
 
 #[cfg(not(target_arch="wasm32"))]
 extern crate ws;
-
+#[macro_use]
 pub mod wasm;
 #[cfg(not(target_arch="wasm32"))]
 pub mod sync;
