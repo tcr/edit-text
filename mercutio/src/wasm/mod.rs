@@ -1,12 +1,24 @@
+// Macros can only be used after they are defined
+macro_rules! log_wasm {
+    ( $x:expr ) => {
+        use $crate::wasm::LogWasm::*;
+        println!("{:?}", $x);
+    };
+}
+
 pub mod actions;
 pub mod walkers;
 
 #[cfg(not(target_arch="wasm32"))]
 pub mod proxy;
 
+pub mod util;
+pub mod state;
+
+use self::state::*;
+
 use self::actions::*;
 use failure::Error;
-use oatie::OT;
 use oatie::doc::*;
 use oatie::schema::RtfSchema;
 use rand;
@@ -16,10 +28,7 @@ use std::{panic, process};
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::sync::atomic::Ordering;
-use std::thread;
-use std::time::Duration;
-use std::mem;
-use super::*;
+use self::util::*;
 
 #[cfg(not(target_arch="wasm32"))]
 use super::{SyncClientCommand, SyncServerCommand};
@@ -32,6 +41,11 @@ use lazy_static;
 
 #[cfg(not(target_arch="wasm32"))]
 use self::proxy::*;
+
+#[derive(Debug)]
+pub enum LogWasm {
+    SyncNew(String),
+}
 
 macro_rules! clone_all {
     ( $( $x:ident ),* ) => {
@@ -65,105 +79,6 @@ pub enum ClientCommand {
     SyncServerCommand(SyncServerCommand),
 }
 
-
-/// Converts a DocSpan to an HTML string.
-fn doc_as_html(doc: &DocSpan) -> String {
-    let mut out = String::new();
-    for elem in doc {
-        match elem {
-            &DocGroup(ref attrs, ref span) => {
-                out.push_str(&format!(
-                    r#"<div
-                        data-tag={}
-                        data-client={}
-                        class={}
-                    >"#,
-                    serde_json::to_string(attrs.get("tag").unwrap_or(&"".to_string())).unwrap(),
-                    serde_json::to_string(attrs.get("client").unwrap_or(&"".to_string())).unwrap(),
-                    serde_json::to_string(attrs.get("class").unwrap_or(&"".to_string())).unwrap(),
-                ));
-                out.push_str(&doc_as_html(span));
-                out.push_str(r"</div>");
-            }
-            &DocChars(ref text) => for c in text.chars() {
-                out.push_str(r"<span>");
-                out.push(c);
-                out.push_str(r"</span>");
-            },
-        }
-    }
-    out
-}
-
-
-// TODO combine with client_op?
-fn with_action_context<C, T>(client: &mut Client, callback: C) -> Result<T, Error>
-where
-    C: Fn(ActionContext) -> Result<T, Error>,
-{
-    callback(ActionContext {
-        doc: client.doc.clone(),
-        client_id: client.name.clone(),
-    })
-}
-
-fn synchronize_op(client: &mut Client) {
-    if client.op_outstanding.is_none() && client.local_op != Op::empty() {
-        // Compose all ops.
-        let local_op = mem::replace(&mut client.local_op, Op::empty());
-        client.op_outstanding = Some(local_op.clone());
-
-        // Send operation to sync server.
-        client.send_sync(SyncServerCommand::Commit(
-            client.name.clone(),
-            local_op,
-            client.version,
-        ));
-    }
-}
-
-fn client_op<C>(client: &mut Client, callback: C) -> Result<(), Error>
-where
-    C: Fn(ActionContext) -> Result<Op, Error>,
-{
-    let op = callback(ActionContext {
-        doc: client.doc.clone(),
-        client_id: client.name.clone(),
-    })?;
-
-    // Apply new operation.
-    let new_doc = OT::apply(&client.doc, &op);
-
-    client.local_op = Op::compose(&client.local_op, &op);
-    client.doc = new_doc;
-
-    // Check that our operations can compose well.
-    // if cfg!(not(target_arch = "wasm32")) {
-    //     // println!("ORIGINAL: {:?}", client.original_doc);
-    //     let mut check_op_a = client.op_outstanding.clone().unwrap_or(op_span!([], []));
-    //     for (i, op) in client.ops.iter().enumerate() {
-    //         // println!("  {}: applying {:?}/{:?}", name, i + 1, client.ops.len());
-    //         // println!("  {} 1️⃣: let op_left = op_span!{:?};", name, check_op_a);
-    //         // println!("  {} 1️⃣: let op_right = op_span!{:?};", name, op);
-    //         check_op_a = OT::compose(&check_op_a, &op);
-    //         // println!("  {} 1️⃣: let res = op_span!{:?};", name, check_op_a);
-    //         // println!("  {} 1️⃣: let original = doc_span!{:?};", name, client.original_doc);
-    //         // println!("  {} 1️⃣: let latest_doc = doc_span!{:?};", name, client.doc);
-    //         let _ = OT::apply(&client.original_doc, &check_op_a);
-    //     }
-    
-    //     assert_eq!(OT::apply(&client.original_doc, &check_op_a), client.doc);
-    // }
-
-    // Send update.
-    let res = ClientCommand::Update(doc_as_html(&client.doc.0), Some(op));
-    client.send_client(&res)?;
-
-    synchronize_op(client);
-
-    Ok(())
-}
-
 fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&mut Client) -> Result<(), Error>>)> {
     vec![
         // backspace
@@ -171,42 +86,42 @@ fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&mut Client) -> Result<(), Err
             8,
             false,
             false,
-            Box::new(|client: &mut Client| client_op(client, |doc| delete_char(doc))),
+            Box::new(|client: &mut Client| client.client_op(|doc| delete_char(doc))),
         ),
         // left
         (
             37,
             false,
             false,
-            Box::new(|client: &mut Client| client_op(client, |doc| caret_move(doc, false))),
+            Box::new(|client: &mut Client| client.client_op(|doc| caret_move(doc, false))),
         ),
         // right
         (
             39,
             false,
             false,
-            Box::new(|client: &mut Client| client_op(client, |doc| caret_move(doc, true))),
+            Box::new(|client: &mut Client| client.client_op(|doc| caret_move(doc, true))),
         ),
         // up
         (
             38,
             false,
             false,
-            Box::new(|client: &mut Client| client_op(client, |doc| caret_block_move(doc, false))),
+            Box::new(|client: &mut Client| client.client_op(|doc| caret_block_move(doc, false))),
         ),
         // down
         (
             40,
             false,
             false,
-            Box::new(|client: &mut Client| client_op(client, |doc| caret_block_move(doc, true))),
+            Box::new(|client: &mut Client| client.client_op(|doc| caret_block_move(doc, true))),
         ),
         // enter
         (
             13,
             false,
             false,
-            Box::new(|client: &mut Client| client_op(client, |doc| split_block(doc))),
+            Box::new(|client: &mut Client| client.client_op(|doc| split_block(doc))),
         ),
     ]
 }
@@ -215,34 +130,34 @@ fn button_handlers() -> Vec<(&'static str, Box<Fn(&mut Client) -> Result<(), Err
     vec![
         (
             "Heading 1",
-            Box::new(|client: &mut Client| client_op(client, |doc| replace_block(doc, "h1"))),
+            Box::new(|client: &mut Client| client.client_op(|doc| replace_block(doc, "h1"))),
         ),
         (
             "Heading 2",
-            Box::new(|client: &mut Client| client_op(client, |doc| replace_block(doc, "h2"))),
+            Box::new(|client: &mut Client| client.client_op(|doc| replace_block(doc, "h2"))),
         ),
         (
             "Heading 3",
-            Box::new(|client: &mut Client| client_op(client, |doc| replace_block(doc, "h3"))),
+            Box::new(|client: &mut Client| client.client_op(|doc| replace_block(doc, "h3"))),
         ),
         (
             "Paragraph",
-            Box::new(|client: &mut Client| client_op(client, |doc| replace_block(doc, "p"))),
+            Box::new(|client: &mut Client| client.client_op(|doc| replace_block(doc, "p"))),
         ),
         (
             "Code",
-            Box::new(|client: &mut Client| client_op(client, |doc| replace_block(doc, "pre"))),
+            Box::new(|client: &mut Client| client.client_op(|doc| replace_block(doc, "pre"))),
         ),
         (
             "List",
-            Box::new(|client: &mut Client| client_op(client, |doc| toggle_list(doc))),
+            Box::new(|client: &mut Client| client.client_op(|doc| toggle_list(doc))),
         ),
     ]
 }
 
 fn native_command(client: &mut Client, req: NativeCommand) -> Result<(), Error> {
     match req {
-        NativeCommand::RenameGroup(tag, _) => client_op(client, |doc| replace_block(doc, &tag))?,
+        NativeCommand::RenameGroup(tag, _) => client.client_op(|doc| replace_block(doc, &tag))?,
         NativeCommand::Button(index) => {
             // Find which button handler to respond to this command.
             button_handlers()
@@ -260,9 +175,9 @@ fn native_command(client: &mut Client, req: NativeCommand) -> Result<(), Error> 
                 }
             }
         }
-        NativeCommand::Character(char_code) => client_op(client, |doc| add_char(doc, char_code))?,
+        NativeCommand::Character(char_code) => client.client_op(|doc| add_char(doc, char_code))?,
         NativeCommand::Target(cur) => {
-            client_op(client, |doc| cur_to_caret(doc, &cur))?;
+            client.client_op(|doc| cur_to_caret(doc, &cur))?;
         }
         NativeCommand::Monkey(setting) => {
             client.monkey.store(setting, Ordering::Relaxed);
@@ -282,27 +197,9 @@ pub enum Task {
     NativeCommand(NativeCommand),
 }
 
-// pub struct ClientDoc {
-//     pub client_id: String,
-
-//     pub doc: Doc,
-//     pub version: usize,
-
-//     pub original_doc: Doc,
-//     pub pending_op: Option<Op>,
-//     pub local_op: Option<Op>,
-// }
-
 pub struct Client {
-    // pub client_doc: ClientDoc,
-    pub name: String,
-
-    pub doc: Doc,
-    pub version: usize,
-    pub local_op: Op,
-    pub op_outstanding: Option<Op>,
-
-    pub original_doc: Doc,
+    pub client_id: String,
+    pub client_doc: ClientDoc,
 
     pub monkey: Arc<AtomicBool>,
     pub alive: Arc<AtomicBool>,
@@ -329,20 +226,6 @@ impl Client {
             })
             .expect("Could not send initial state");
     }
-
-    // pub fn sync_confirmed_outstanding_op(&mut self, new_doc: Doc) {
-    //     assert!(self.op_outstanding.is_some());
-
-    //     self.original_doc = new_doc.clone();
-
-    //     // Reattach to client.
-    //     let local_op = OT::compose_iter(self.ops.iter());
-    //     self.doc = OT::apply(&new_doc, &local_op);
-
-    //     // Now that we have an ack, we can send up our new ops.
-    //     self.op_outstanding = None;
-    //     synchronize_op(self);
-    // }
 
     pub fn handle_task(&mut self, value: Task) -> Result<(), Error> {
         match value {
@@ -388,74 +271,97 @@ impl Client {
             Task::SyncClientCommand(SyncClientCommand::Update(doc_span, version, client_id, input_op)) => {
                 // TODO this can be generated from original_doc X input_op too
                 let doc = Doc(doc_span);
-                self.original_doc = doc.clone();
 
-                // Set the document.
-                if self.name == client_id {
-                    assert!(self.op_outstanding.is_some());
-
-                    // Reattach to client.
-                    self.doc = OT::apply(&doc, &self.local_op);
-                } else if self.local_op != Op::empty() {
-                    println!("\n----> TRANSFORMING");
-
-                    // Extract the pending op.
-                    let pending_op = self.op_outstanding.clone().unwrap();
-
-                    // Extract and compose all local ops.
-                    let local_op = mem::replace(&mut self.local_op, Op::empty());
-
-                    // Transform.
-                    println!();
-                    println!("<test>");
-                    println!("server: {:?}", input_op);
-                    println!();
-                    println!("pending: {:?}", pending_op);
-                    println!("client: {:?}", local_op);
-                    println!("</test>");
-                    println!();
-
-                    // I x P -> I', P'
-                    let (prending_op_transform, input_op_transform) = OT::transform::<RtfSchema>(&input_op, &pending_op);
-                    // P' x L -> P'', L'
-                    let (local_op_transform, _) = OT::transform::<RtfSchema>(&input_op_transform, &local_op);
-                    
-                    // client_doc = input_doc : I' : P''
-                    let client_op = OT::compose(&prending_op_transform, &local_op_transform);
-                    // Reattach to client.
-                    self.doc = OT::apply(&doc, &prending_op_transform);
-                    self.doc = OT::apply(&doc, &local_op_transform);
-
-                    self.op_outstanding = Some(prending_op_transform);
-                    self.local_op = local_op_transform;
+                // If this operation is an acknowledgment...
+                if self.client_id == client_id {
+                    if let Some(local_op) = self.client_doc.sync_confirmed_pending_op(&doc, version) {
+                        // Send our next operation.
+                        self.upload(local_op)?;
+                    }
                 } else {
-                    self.doc = doc;
+                    // Update with new version.
+                    self.client_doc.sync_sent_new_version(&doc, version, &input_op);
                 }
 
-                self.version = version;
+                // Announce.
                 println!("new version is {:?}", version);
 
-                // If we get an ack, we can start pushing a new op.
-                if self.name == client_id {
-                    self.op_outstanding = None;
-                    synchronize_op(self);
-                }
-
                 // If the caret doesn't exist or was deleted, reinitialize it.
-                if !with_action_context(self, |ctx| Ok(has_caret(ctx)))
+                if !self.with_action_context(|ctx| Ok(has_caret(ctx)))
                     .ok()
                     .unwrap_or(true)
                 {
-                    client_op(self, |doc| init_caret(doc)).unwrap();
+                    self.client_op(|doc| init_caret(doc)).unwrap();
                 }
 
                 // Native drives client state.
-                let res = ClientCommand::Update(doc_as_html(&self.doc.0), None);
+                let res = ClientCommand::Update(doc_as_html(&self.client_doc.doc.0), None);
                 self.send_client(&res).unwrap();
             }
         }
         Ok(())
     }
+
+    pub fn upload(&self, local_op: Op) -> Result<(), Error> {
+        Ok(self.send_sync(SyncServerCommand::Commit(
+            self.client_id.clone(),
+            local_op,
+            self.client_doc.version,
+        ))?)
+    }
+
+    // TODO combine with client_op?
+    fn with_action_context<C, T>(&mut self, callback: C) -> Result<T, Error>
+    where
+        C: Fn(ActionContext) -> Result<T, Error>,
+    {
+        callback(ActionContext {
+            doc: self.client_doc.doc.clone(),
+            client_id: self.client_id.clone(),
+        })
+    }
+
+    fn client_op<C>(&mut self, callback: C) -> Result<(), Error>
+    where
+        C: Fn(ActionContext) -> Result<Op, Error>,
+    {
+        // Apply operation.
+        let op = self.with_action_context(callback)?;
+
+        // Apply new operation.
+        self.client_doc.apply_local_op(&op);
+
+        // Check that our operations can compose well.
+        // if cfg!(not(target_arch = "wasm32")) {
+        //     // println!("ORIGINAL: {:?}", client.original_doc);
+        //     let mut check_op_a = client.op_outstanding.clone().unwrap_or(op_span!([], []));
+        //     for (i, op) in client.ops.iter().enumerate() {
+        //         // println!("  {}: applying {:?}/{:?}", name, i + 1, client.ops.len());
+        //         // println!("  {} 1️⃣: let op_left = op_span!{:?};", name, check_op_a);
+        //         // println!("  {} 1️⃣: let op_right = op_span!{:?};", name, op);
+        //         check_op_a = OT::compose(&check_op_a, &op);
+        //         // println!("  {} 1️⃣: let res = op_span!{:?};", name, check_op_a);
+        //         // println!("  {} 1️⃣: let original = doc_span!{:?};", name, client.original_doc);
+        //         // println!("  {} 1️⃣: let latest_doc = doc_span!{:?};", name, client.doc);
+        //         let _ = OT::apply(&client.original_doc, &check_op_a);
+        //     }
+        
+        //     assert_eq!(OT::apply(&client.original_doc, &check_op_a), client.doc);
+        // }
+
+        // Render the update.
+        let res = ClientCommand::Update(doc_as_html(&self.client_doc.doc.0), Some(op));
+        self.send_client(&res)?;
+
+        // Send any queued payloads.
+        if let Some(local_op) = self.client_doc.next_payload() {
+            self.upload(local_op)?;
+        }
+
+        Ok(())
+    }
+
+    // server
 
     #[cfg(not(target_arch="wasm32"))]
     pub fn send_client(&self, req: &ClientCommand) -> Result<(), Error> {
@@ -469,6 +375,8 @@ impl Client {
         self.tx.send(req)?;
         Ok(())
     }
+
+    // wasm
 
     #[cfg(target_arch="wasm32")]
     pub fn send_client(&self, req: &ClientCommand) -> Result<(), Error> {
@@ -495,8 +403,4 @@ impl Client {
     pub fn send_sync(&self, req: SyncServerCommand) -> Result<(), Error> {
         self.send_client(&ClientCommand::SyncServerCommand(req))
     }
-
 }
-
-
-

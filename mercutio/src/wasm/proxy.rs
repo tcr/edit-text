@@ -77,14 +77,15 @@ fn setup_client(name: &str, out: ws::Sender, ws_port: u16) -> (Arc<AtomicBool>, 
     let alive = Arc::new(AtomicBool::new(true));
 
     let mut client = Client {
-        name: name.to_owned(),
+        client_id: name.to_owned(),
+        client_doc: ClientDoc {
+            doc: Doc(vec![]),
+            version: 100,
 
-        doc: Doc(vec![]),
-        version: 100,
-        local_op: Op::empty(),
-        op_outstanding: None,
-
-        original_doc: Doc(vec![]),
+            original_doc: Doc(vec![]),
+            pending_op: None,
+            local_op: Op::empty(),
+        },
 
         monkey: monkey.clone(),
         alive: alive.clone(),
