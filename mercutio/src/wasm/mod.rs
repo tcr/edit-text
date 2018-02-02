@@ -1,3 +1,5 @@
+/* logging */
+
 // Macros can only be used after they are defined
 macro_rules! log_wasm {
     ( $x:expr ) => {
@@ -5,6 +7,13 @@ macro_rules! log_wasm {
         println!("{:?}", $x);
     };
 }
+
+#[derive(Debug)]
+pub enum LogWasm {
+    SyncNew(String),
+}
+
+/* /logging */
 
 pub mod actions;
 pub mod walkers;
@@ -41,11 +50,6 @@ use lazy_static;
 
 #[cfg(not(target_arch="wasm32"))]
 use self::proxy::*;
-
-#[derive(Debug)]
-pub enum LogWasm {
-    SyncNew(String),
-}
 
 macro_rules! clone_all {
     ( $( $x:ident ),* ) => {
