@@ -122,7 +122,7 @@ impl<S> Transform<S> where S: Schema {
 
         // if let Some(last) = self.tracks.last() {
         //     if a.tag_type() == last._anything().unwrap().tag_type() {
-        //         println!("-----> UGH {:?}", last);
+        //         log_transform!("-----> UGH {:?}", last);
         //         panic!("Should not have consecutive similar tracks.");
         //     }
         // }
@@ -148,7 +148,7 @@ impl<S> Transform<S> where S: Schema {
     }
 
     fn enter_b(&mut self, a: Option<Attrs>, b: &Attrs) {
-        println!("ENTER B");
+        log_transform!("ENTER B");
 
         let last = self.tracks
             .iter()
@@ -163,11 +163,11 @@ impl<S> Transform<S> where S: Schema {
             Some(b.clone())
         };
 
-        println!("dump all {:?}", self.tracks);
+        log_transform!("dump all {:?}", self.tracks);
 
         if let Some(last) = self.tracks.last() {
             if S::track_type_from_attrs(b) == S::track_type_from_attrs(last.tag_a.as_ref().or(last.tag_real.as_ref()).or(last.tag_b.as_ref()).unwrap()) {
-                println!("-----> UGH {:?}", last);
+                log_transform!("-----> UGH {:?}", last);
                 panic!("Should not have consecutive similar tracks.");
             }
         }
@@ -408,7 +408,7 @@ impl<S> Transform<S> where S: Schema {
         let mut regen = vec![];
         while let Some(track) = self.current() {
             let (istag, hasparent) = if let Some(ref real) = track.tag_real {
-                println!("WOW {:?} {:?}", real, itype);
+                log_transform!("WOW {:?} {:?}", real, itype);
                 let tag_type = S::track_type_from_attrs(real).unwrap();
                 (
                     tag_type == itype,
@@ -419,7 +419,7 @@ impl<S> Transform<S> where S: Schema {
             };
 
             if track.tag_real.is_some() && ((!istag && hasparent) || (istag && inclusive)) {
-                println!("aborting by {:?} {:?} {:?}", itype, inclusive, istag);
+                log_transform!("aborting by {:?} {:?} {:?}", itype, inclusive, istag);
                 let aborted = self.abort();
                 regen.push(aborted);
                 if istag && inclusive {
@@ -447,7 +447,7 @@ impl<S> Transform<S> where S: Schema {
         // Filter for types that are ancestors of the current type.
         for track in &mut self.tracks {
             if track.tag_real.is_none() {
-                println!("REGENERATE: {:?}", track);
+                log_transform!("REGENERATE: {:?}", track);
                 if let (&Some(ref a), &Some(ref b)) = (&track.tag_a, &track.tag_b) {
                     track.tag_real = Some(S::merge_attrs(a, b).unwrap_or_else(|| a.clone()));
                     track.is_original_a = false;
@@ -468,7 +468,7 @@ impl<S> Transform<S> where S: Schema {
         // Filter for types that are ancestors of the current type.
         for track in &mut self.tracks {
             if track.tag_real.is_none() {
-                println!("REGENERATE UNTIL: {:?}", target);
+                log_transform!("REGENERATE UNTIL: {:?}", target);
 
                 // Get the type of this track.
                 // TODO is there a better way of doing this? Store track type in the track?
@@ -480,14 +480,14 @@ impl<S> Transform<S> where S: Schema {
                 if target.ancestors().iter().position(|x| *x == track_type).is_none()
                     && target != track_type {
                     if target == track_type {
-                        println!("met {:?}", target);
+                        log_transform!("met {:?}", target);
                         break;
                     } else {
-                        println!(":O mismatched ancestor {:?} of {:?}", track_type, target);
+                        log_transform!(":O mismatched ancestor {:?} of {:?}", track_type, target);
                         break;
                     }
                 } else {
-                    println!(":) regen {:?}", track_type);
+                    log_transform!(":) regen {:?}", track_type);
                 }
 
                 if let (&Some(ref a), &Some(ref b)) = (&track.tag_a, &track.tag_b) {
@@ -513,7 +513,7 @@ impl<S> Transform<S> where S: Schema {
         let mut b_add = self.b_add;
 
         for track in self.tracks.iter_mut().rev() {
-            println!("TRACK RESULT: {:?}", track);
+            log_transform!("TRACK RESULT: {:?}", track);
             if !track.is_original_a && track.tag_real.is_some() {
                 a_add.close(track.tag_a.clone().unwrap());
             }
@@ -558,20 +558,20 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
     let mut t: Transform<S> = Transform::new();
 
     while !(a.is_done() && b.is_done()) {
-        println!("{}", Green.bold().paint("Tracks:"));
+        log_transform!("{}", Green.bold().paint("Tracks:"));
         for t in &t.tracks {
-            println!("{}", BrightGreen.paint(format!(" - {:?}", t)));
+            log_transform!("{}", BrightGreen.paint(format!(" - {:?}", t)));
         }
 
-        println!("{}", BrightGreen.paint(format!(" @ a_del: {:?}", t.a_del)));
-        println!("{}", BrightGreen.paint(format!(" @ a_add: {:?}", t.a_add)));
-        println!("{}", BrightGreen.paint(format!(" @ b_del: {:?}", t.b_del)));
-        println!("{}", BrightGreen.paint(format!(" @ b_add: {:?}", t.b_add)));
+        log_transform!("{}", BrightGreen.paint(format!(" @ a_del: {:?}", t.a_del)));
+        log_transform!("{}", BrightGreen.paint(format!(" @ a_add: {:?}", t.a_add)));
+        log_transform!("{}", BrightGreen.paint(format!(" @ b_del: {:?}", t.b_del)));
+        log_transform!("{}", BrightGreen.paint(format!(" @ b_add: {:?}", t.b_add)));
 
         if a.is_done() {
-            // println!("tracks {:?}", t.tracks);
+            // log_transform!("tracks {:?}", t.tracks);
             t.regenerate();
-            println!(
+            log_transform!(
                 "{}",
                 BrightYellow.paint(format!("Finishing B (ins): {:?}", b.head.clone()))
             );
@@ -604,7 +604,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
             }
         } else if b.is_done() {
             t.regenerate();
-            println!(
+            log_transform!(
                 "{}",
                 BrightYellow.paint(format!("Finishing A (add): {:?}", a.head.clone()))
             );
@@ -636,7 +636,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                 }
             }
         } else {
-            println!(
+            log_transform!(
                 "{}",
                 BrightYellow.paint(format!("Next step (ins):\n A {:?}\n B {:?}", a.head.clone(), b.head.clone()))
             );
@@ -719,16 +719,16 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                             .as_ref()
                             .unwrap())
                             .unwrap();
-                        println!("what is up with a {:?}", t.a_add);
+                        log_transform!("what is up with a {:?}", t.a_add);
                         t.interrupt(a_typ, false);
-                        // println!("... {:?} {:?}", t.a_del, t.a_add);
-                        // println!("... {:?} {:?}", t.b_del, t.b_add);
-                        println!("~~~> tracks {:?}", t.tracks);
+                        // log_transform!("... {:?} {:?}", t.a_del, t.a_add);
+                        // log_transform!("... {:?} {:?}", t.b_del, t.b_add);
+                        log_transform!("~~~> tracks {:?}", t.tracks);
                         t.close_a();
-                        // println!("...");
+                        // log_transform!("...");
                         a.exit();
-                        println!("<~~~ tracks {:?}", t.tracks);
-                        // println!("WHERE ARE WE WITH A {:?}", a);
+                        log_transform!("<~~~ tracks {:?}", t.tracks);
+                        // log_transform!("WHERE ARE WE WITH A {:?}", a);
                     }
                 }
 
@@ -744,7 +744,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                             .iter()
                             .any(|x| *x == S::track_type_from_attrs(a_attrs).unwrap());
 
-                    println!("GroupByGroup {:?} {:?}", a_type, b_type);
+                    log_transform!("GroupByGroup {:?} {:?}", a_type, b_type);
 
                     if a_type == b_type {
                         t.regenerate_until(a_type);
@@ -772,18 +772,18 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
 
                         a.enter();
 
-                        println!("~~~~ :O");
-                        println!("~~~~ -> {:?} {:?}", t.next_track_a_by_type(a_type), a_type);
+                        log_transform!("~~~~ :O");
+                        log_transform!("~~~~ -> {:?} {:?}", t.next_track_a_by_type(a_type), a_type);
                         if t.next_track_a_by_type(a_type).is_some() {
                             // if a_type.map_or(false, |x| x.do_open_split()) {
                             if true {
-                                println!("INTERRUPTING A");
+                                log_transform!("INTERRUPTING A");
                                 t.interrupt(a_type.clone(), false);
-                                println!("BUT THE TRACKS -----<> {:?}", t.tracks);
+                                log_transform!("BUT THE TRACKS -----<> {:?}", t.tracks);
                                 if let Some(j) = t.next_track_a_by_type(a_type) {
                                     j.tag_a = Some(a_attrs.clone());
                                     j.is_original_a = false;
-                                    println!("inject A");
+                                    log_transform!("inject A");
                                 }
                                 t.a_del.begin();
                             } else {
@@ -799,17 +799,17 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
 
                         b.enter();
 
-                        // println!("TELL ME {:?} {:?}", t.next_track_by_type(b_type.unwrap()), b_type);
+                        // log_transform!("TELL ME {:?} {:?}", t.next_track_by_type(b_type.unwrap()), b_type);
 
                         if t.next_track_b_by_type(b_type.clone()).is_some() {
                             // if b_type.map_or(false, |x| x.do_open_split()) {
                             if true {
-                                println!("INTERRUPTING B");
+                                log_transform!("INTERRUPTING B");
                                 t.interrupt(b_type.clone(), false);
                                 if let Some(j) = t.next_track_b_by_type(b_type.clone()) {
                                     j.tag_b = Some(b_attrs.clone());
                                     j.is_original_b = false;
-                                    println!("inject B");
+                                    log_transform!("inject B");
                                 }
                                 t.b_del.begin();
                             } else {
@@ -887,14 +887,14 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                     } else {
                         a.enter();
 
-                        println!("~~~~ :) :) :)");
-                        println!("~~~~ -> {:?} {:?}", t.next_track_a_by_type(a_type), a_type);
+                        log_transform!("~~~~ :) :) :)");
+                        log_transform!("~~~~ -> {:?} {:?}", t.next_track_a_by_type(a_type), a_type);
                         // in/15, caret-34
                         // if t.next_track_a_type() == a_type {
                         if t.next_track_a_by_type(a_type).is_some() {
                             if a_type.do_open_split() {
                             // if true {
-                                println!("INTERRUPTING A");
+                                log_transform!("INTERRUPTING A");
                                 t.interrupt(a_type, true);
                                 if let Some(j) = t.next_track_a_by_type(a_type) {
                                     j.tag_a = Some(a_attrs.clone());
@@ -920,13 +920,13 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                         t.enter_b(None, &b_attrs);
                         t.close_b();
                     } else {
-                        // println!("groupgruop {:?} {:?}", a_type, b_type);
+                        // log_transform!("groupgruop {:?} {:?}", a_type, b_type);
                         b.enter();
                         // let b_type = Tag::from_attrs(b_attrs).tag_type();
 
                         if t.next_track_b_by_type(b_type).is_some() {
                             if b_type.do_open_split() {
-                                println!("INTERRUPTING B");
+                                log_transform!("INTERRUPTING B");
                                 t.interrupt(b_type, true);
                                 if let Some(j) = t.next_track_b_by_type(b_type) {
                                     j.tag_b = Some(b_attrs.clone());
@@ -1034,14 +1034,14 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
         }
     }
 
-    println!("TRACK A DEL {:?}", t.a_del);
-    println!("TRACK A ADD {:?}", t.a_add);
-    println!("TRACK B DEL {:?}", t.b_del);
-    println!("TRACK B ADD {:?}", t.b_add);
+    log_transform!("TRACK A DEL {:?}", t.a_del);
+    log_transform!("TRACK A ADD {:?}", t.a_add);
+    log_transform!("TRACK B DEL {:?}", t.b_del);
+    log_transform!("TRACK B ADD {:?}", t.b_add);
 
     let (op_a, op_b) = t.result();
-    println!("RESULT A: {:?}", op_a.clone());
-    println!("RESULT B: {:?}", op_b.clone());
+    log_transform!("RESULT A: {:?}", op_a.clone());
+    log_transform!("RESULT B: {:?}", op_b.clone());
     (op_a, op_b)
 }
 
@@ -1074,11 +1074,11 @@ pub fn transform_del_del_inner(
     b: &mut DelStepper,
 ) {
     while !a.is_done() && !b.is_done() {
-        println!("{}", Green.bold().paint("transform_deletions:"));
-        println!("{}", BrightGreen.paint(format!(" @ a_del: {:?}", a_del)));
-        println!("{}", BrightGreen.paint(format!(" @ b_del: {:?}", b_del)));
+        log_transform!("{}", Green.bold().paint("transform_deletions:"));
+        log_transform!("{}", BrightGreen.paint(format!(" @ a_del: {:?}", a_del)));
+        log_transform!("{}", BrightGreen.paint(format!(" @ b_del: {:?}", b_del)));
 
-        println!(
+        log_transform!(
             "{}",
             BrightYellow.paint(format!("Next step (del):\n A {:?}\n B {:?}", a.head.clone(), b.head.clone()))
         );
@@ -1116,7 +1116,7 @@ pub fn transform_del_del_inner(
                     del_span.push(a_inner_step.head.clone().unwrap());
                     a_inner_step.next();
                 }
-                println!("hello -----> {:?}", &del_span);
+                log_transform!("hello -----> {:?}", &del_span);
                 a_inner_del.place_all(&undel(&del_span));
                 b_inner_del.place_all(&del_span);
 
@@ -1338,13 +1338,13 @@ pub fn transform_del_del_inner(
             // }
 
             unimplemented => {
-                println!("Not reachable: {:?}", unimplemented);
+                log_transform!("Not reachable: {:?}", unimplemented);
                 unreachable!();
             }
         }
     }
 
-    println!(
+    log_transform!(
         "{}",
         BrightYellow.paint(format!("done")),
     );
@@ -1360,7 +1360,7 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
     transform_del_del_inner(&mut a_del, &mut b_del, &mut a, &mut b);
 
     while !b.is_done() {
-        println!(
+        log_transform!(
             "{}",
             BrightYellow.paint(format!("Finishing B: {:?}", b.head.clone()))
         );
@@ -1377,7 +1377,7 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
     }
 
     while !a.is_done() {
-        println!(
+        log_transform!(
             "{}",
             BrightYellow.paint(format!("Finishing A (del): {:?}", a.head.clone()))
         );
@@ -1396,8 +1396,8 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
     let a_res = a_del.result();
     let b_res = b_del.result();
 
-    println!("{}", BrightYellow.paint(format!("Result A: {:?}", a_res)));
-    println!("{}", BrightYellow.paint(format!("Result B: {:?}", b_res)));
+    log_transform!("{}", BrightYellow.paint(format!("Result A: {:?}", a_res)));
+    log_transform!("{}", BrightYellow.paint(format!("Result B: {:?}", b_res)));
 
     (a_res, b_res)
 }
@@ -1449,7 +1449,7 @@ pub fn transform_add_del_inner(
                         a.next();
                     }
                     unknown => {
-                        println!("Compare: {:?} {:?}", DelChars(bcount), unknown);
+                        log_transform!("Compare: {:?} {:?}", DelChars(bcount), unknown);
                         panic!("Unimplemented or Unexpected");
                     }
                 }
@@ -1751,7 +1751,7 @@ pub fn transform_add_del_inner(
             //             addres.place(&AddGroup(attrs, addres_inner));
             //             delres.place(&DelWithGroup(delres_inner));
 
-            //             println!("NOW   ->{:?}\n   ->{:?}", addres, delres);
+            //             log_transform!("NOW   ->{:?}\n   ->{:?}", addres, delres);
             //             a.next();
             //         }
             //     }
@@ -1789,78 +1789,78 @@ pub fn transform<S: Schema>(a: &Op, b: &Op) -> (Op, Op) {
     use super::schema::*;
 
     // Transform deletions A and B against each other to get delA` and delB`.
-    println!(" # transform[1] transform_deletions");
-    println!(" a_del   {:?}", a.0);
-    println!(" b_del   {:?}", b.0);
-    println!();
+    log_transform!(" # transform[1] transform_deletions");
+    log_transform!(" a_del   {:?}", a.0);
+    log_transform!(" b_del   {:?}", b.0);
+    log_transform!();
 
     let (a_del_0, b_del_0) = transform_deletions(&a.0, &b.0);
-    println!(" == a_del_0 {:?}", a_del_0);
-    println!(" == b_del_0 {:?}", b_del_0);
-    println!();
+    log_transform!(" == a_del_0 {:?}", a_del_0);
+    log_transform!(" == b_del_0 {:?}", b_del_0);
+    log_transform!();
 
     // How do you apply del' if add has already been applied on the client?
     // The result will be applied after the client's insert operations had already been performed.
     // Reverse the impact of insA with delA` to not affect already newly added elements or text.
-    println!(" # transform[2] transform_add_del");
-    println!(" a_ins   {:?}", a.1);
-    println!(" a_del_0 {:?}", a_del_0);
-    println!(" ~ transform_add_del()");
+    log_transform!(" # transform[2] transform_add_del");
+    log_transform!(" a_ins   {:?}", a.1);
+    log_transform!(" a_del_0 {:?}", a_del_0);
+    log_transform!(" ~ transform_add_del()");
     let (a_del_1, a_ins_1) = transform_add_del(&a.1, &a_del_0);
-    println!(" == a_del_1 {:?}", a_del_1);
-    println!(" == a_ins_1 {:?}", a_ins_1);
-    println!();
+    log_transform!(" == a_del_1 {:?}", a_del_1);
+    log_transform!(" == a_ins_1 {:?}", a_ins_1);
+    log_transform!();
 
-    println!(" # transform[3] transform_add_del");
-    println!(" b_ins   {:?}", b.1);
-    println!(" b_del_0 {:?}", b_del_0);
-    println!(" ~ transform_add_del()");
+    log_transform!(" # transform[3] transform_add_del");
+    log_transform!(" b_ins   {:?}", b.1);
+    log_transform!(" b_del_0 {:?}", b_del_0);
+    log_transform!(" ~ transform_add_del()");
     let (b_del_1, b_ins_1) = transform_add_del(&b.1, &b_del_0);
-    println!(" == b_del_1 {:?}", b_del_1);
-    println!(" == b_ins_1 {:?}", b_ins_1);
-    println!();
+    log_transform!(" == b_del_1 {:?}", b_del_1);
+    log_transform!(" == b_ins_1 {:?}", b_ins_1);
+    log_transform!();
 
     // Insertions from both clients must be composed as though they happened against delA` and delB`
     // so that we don't have phantom elements.
 
     // Transform insert operations together.
-    println!(" # transform[4] transform_insertions");
-    println!(" a_ins_1 {:?}", a_ins_1);
-    println!(" b_ins_1 {:?}", b_ins_1);
+    log_transform!(" # transform[4] transform_insertions");
+    log_transform!(" a_ins_1 {:?}", a_ins_1);
+    log_transform!(" b_ins_1 {:?}", b_ins_1);
     let ((a_del_2, a_ins_2), (b_del_2, b_ins_2)) = transform_insertions::<S>(&a_ins_1, &b_ins_1);
-    println!(" == a_del_2 {:?}", a_del_2);
-    println!(" == a_ins_2 {:?}", a_ins_2);
-    println!(" == b_del_2 {:?}", b_del_2);
-    println!(" == b_ins_2 {:?}", b_ins_2);
-    println!();
+    log_transform!(" == a_del_2 {:?}", a_del_2);
+    log_transform!(" == a_ins_2 {:?}", a_ins_2);
+    log_transform!(" == b_del_2 {:?}", b_del_2);
+    log_transform!(" == b_ins_2 {:?}", b_ins_2);
+    log_transform!();
 
     // Our delete operations are now subsequent operations, and so can be composed.
-    println!(" # transform[5] compose_del_del");
-    println!(" a_del_1 {:?}", a_del_1);
-    println!(" a_del_2 {:?}", a_del_2);
+    log_transform!(" # transform[5] compose_del_del");
+    log_transform!(" a_del_1 {:?}", a_del_1);
+    log_transform!(" a_del_2 {:?}", a_del_2);
     let a_del_3 = compose::compose_del_del(&a_del_1, &a_del_2);
-    println!(" == a_del_3 {:?}", a_del_3);
-    println!();
-    println!(" # transform[6] compose_del_del");
-    println!(" b_del_1 {:?}", b_del_1);
-    println!(" b_del_2 {:?}", b_del_2);
+    log_transform!(" == a_del_3 {:?}", a_del_3);
+    log_transform!();
+    log_transform!(" # transform[6] compose_del_del");
+    log_transform!(" b_del_1 {:?}", b_del_1);
+    log_transform!(" b_del_2 {:?}", b_del_2);
     let b_del_3 = compose::compose_del_del(&b_del_1, &b_del_2);
-    println!(" == b_del_3 {:?}", b_del_3);
-    println!();
+    log_transform!(" == b_del_3 {:?}", b_del_3);
+    log_transform!();
 
-    println!(" # transform[result]");
-    println!(" a_del   {:?}", a.0);
-    println!(" a_ins   {:?}", a.1);
-    println!(" ~ transform()");
-    println!(" =a_del_3  {:?}", a_del_3);
-    println!(" =a_ins_2  {:?}", a_ins_2);
-    println!(" ---");
-    println!(" b_del   {:?}", b.0);
-    println!(" b_ins   {:?}", b.1);
-    println!(" ~ transform()");
-    println!(" =b_del_3  {:?}", b_del_3);
-    println!(" =b_ins_2  {:?}", b_ins_2);
-    println!();
+    log_transform!(" # transform[result]");
+    log_transform!(" a_del   {:?}", a.0);
+    log_transform!(" a_ins   {:?}", a.1);
+    log_transform!(" ~ transform()");
+    log_transform!(" =a_del_3  {:?}", a_del_3);
+    log_transform!(" =a_ins_2  {:?}", a_ins_2);
+    log_transform!(" ---");
+    log_transform!(" b_del   {:?}", b.0);
+    log_transform!(" b_ins   {:?}", b.1);
+    log_transform!(" ~ transform()");
+    log_transform!(" =b_del_3  {:?}", b_del_3);
+    log_transform!(" =b_ins_2  {:?}", b_ins_2);
+    log_transform!();
 
     ((a_del_3, a_ins_2), (b_del_3, b_ins_2))
 }

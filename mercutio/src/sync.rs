@@ -15,6 +15,34 @@ use std::time::Duration;
 use super::*;
 use ws;
 use std::collections::VecDeque;
+use std::fs::File;
+use std::io::prelude::*;
+
+lazy_static! {
+    static ref LOG_SYNC_FILE: Arc<Mutex<File>> = Arc::new(Mutex::new(File::create("/tmp/mercutio-sync").unwrap()));
+}
+
+#[derive(Debug)]
+pub enum LogSync {
+    Launch,
+    ServerSpawn,
+    ClientConnect,
+    ClientPacket(SyncServerCommand),
+    Debug(String),
+}
+
+// Macros can only be used after they are defined
+macro_rules! log_sync {
+    ( $x:expr ) => {
+        {
+            // use $crate::wasm::LogWasm::*;
+            let mut file_guard = LOG_SYNC_FILE.lock().unwrap();
+            use $crate::sync::LogSync::*;
+            writeln!(*file_guard, "{:?}", $x);
+            let _ = file_guard.sync_data();
+        }
+    };
+}
 
 pub fn default_doc() -> Doc {
     Doc(doc_span![
@@ -187,6 +215,8 @@ pub fn update_operation(mut op: Op, history: &HashMap<usize, Op>, target_version
 
 pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
     thread::spawn(move || {
+        log_sync!(Spawn);
+
         let url = format!("0.0.0.0:{}", port);
 
         println!("Listening sync_socket_server on 0.0.0.0:{}", port);
@@ -214,6 +244,8 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
                 // Go through the deque and update our operations.
                 while let Some((client_id, input_version, op)) = sync_state.ops.pop_front() {
                     let target_version = sync_state.version;
+
+                    log_sync!(Debug(format!("{:?}", op)));
                     
                     // let res = action_sync(&doc, new_op, op_group).unwrap();
 
@@ -237,6 +269,8 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
         let state_capture = state.clone();
         let bus_capture = bus.clone();
         ws::listen(url, move |out| {
+            log_sync!(ClientConnect);
+
             // Initial document state.
             {
                 let doc = state.body.lock().unwrap();
@@ -260,7 +294,8 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
                     serde_json::from_slice(&msg.into_data());
                 match req_parse {
                     Ok(value) => {
-                        println!("got value ---> {:?}", value);
+                        log_sync!(ClientPacket(value.clone()));
+
                         match value {
                             SyncServerCommand::Commit(client_id, op, version) => {
                                 let mut sync_state = sync_state_mutex_capture.lock().unwrap();

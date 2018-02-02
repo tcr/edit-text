@@ -24,6 +24,25 @@ extern crate failure;
 extern crate regex;
 extern crate either;
 
+/* logging */
+
+// Macros can only be used after they are defined
+
+macro_rules! log_transform {
+    ( $( $x:expr ),* $(,)* ) => {
+        // println!( $( $x ),* );
+    };
+}
+
+macro_rules! log_compose {
+    ( $( $x:expr ),* $(,)* ) => {
+        // println!( $( $x ),* );
+    };
+}
+
+/* /logging */
+
+
 pub mod compose;
 pub mod doc;
 //pub mod random;
