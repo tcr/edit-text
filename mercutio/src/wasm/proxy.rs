@@ -71,10 +71,19 @@ fn setup_monkey(alive: Arc<AtomicBool>, monkey: Arc<AtomicBool>, tx: Sender<Task
 }
 
 fn setup_client(name: &str, out: ws::Sender, ws_port: u16) -> (Arc<AtomicBool>, Arc<AtomicBool>, Sender<Task>) {
-    let (tx, rx) = unbounded();
+    let (tx_sync, rx) = unbounded();
 
     let monkey = Arc::new(AtomicBool::new(false));
     let alive = Arc::new(AtomicBool::new(true));
+
+    let (tx_client, rx_client) = unbounded();
+    thread::spawn(|| {
+        take!(rx_client, out);
+        while let Ok(req) = rx_client.recv() {
+            let json = serde_json::to_string(&req).unwrap();
+            out.send(json.as_bytes());
+        }
+    });
 
     let mut client = Client {
         client_id: name.to_owned(),
@@ -90,8 +99,8 @@ fn setup_client(name: &str, out: ws::Sender, ws_port: u16) -> (Arc<AtomicBool>, 
         monkey: monkey.clone(),
         alive: alive.clone(),
 
-        out,
-        tx,
+        tx_client,
+        tx_sync,
     };
 
     // Send initial setup packet.

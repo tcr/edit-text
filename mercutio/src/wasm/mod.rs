@@ -21,6 +21,7 @@ pub enum LogWasm {
     Setup,
     Task(String, client::Task),
     SyncNew(String),
+    SendClient(ClientCommand),
     SendSync(SyncServerCommand),
     Debug(String),
 }
