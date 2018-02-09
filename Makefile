@@ -23,5 +23,8 @@ mercutio-server:
 wasm-proxy:
 	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 cargo run --bin mercutio-wasm-proxy
 
+mercutio-replay:
+	cd mercutio && CARGO_INCREMENTAL=1 cargo run --bin mercutio-replay
+
 test: oatie-build
 	cd mercutio && cargo script failrun.rs
