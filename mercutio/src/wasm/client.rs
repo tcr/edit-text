@@ -43,7 +43,7 @@ pub enum NativeCommand {
 }
 
 // Commands to send to JavaScript.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum ClientCommand {
     Setup {
         keys: Vec<(u32, bool, bool)>,
@@ -181,9 +181,9 @@ pub struct Client {
     pub alive: Arc<AtomicBool>,
 
     #[cfg(not(target_arch="wasm32"))]
-    pub out: ws::Sender,
+    pub tx_client: Sender<ClientCommand>,
     #[cfg(not(target_arch="wasm32"))]
-    pub tx: Sender<SyncServerCommand>,
+    pub tx_sync: Sender<SyncServerCommand>,
 }
 
 impl Client {
@@ -346,15 +346,15 @@ impl Client {
 
     #[cfg(not(target_arch="wasm32"))]
     pub fn send_client(&self, req: &ClientCommand) -> Result<(), Error> {
-        let json = serde_json::to_string(&req)?;
-        self.out.send(json)?;
+        log_wasm!(SendClient(req.clone()));
+        self.tx_client.send(req.clone())?;
         Ok(())
     }
 
     #[cfg(not(target_arch="wasm32"))]
     pub fn send_sync(&self, req: SyncServerCommand) -> Result<(), Error> {
         log_wasm!(SendSync(req.clone()));
-        self.tx.send(req)?;
+        self.tx_sync.send(req)?;
         Ok(())
     }
 
