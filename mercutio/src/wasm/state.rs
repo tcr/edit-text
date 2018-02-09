@@ -42,7 +42,7 @@ impl ClientDoc {
         self.next_payload()
     }
 
-    /// Sync gave us an intervening operation.
+    /// Sync gave us an operation not originating from us.
     // TODO we can determine new_doc without needing it passed in
     pub fn sync_sent_new_version(&mut self, new_doc: &Doc, version: usize, input_op: &Op) {
         log_wasm!(SyncNew("new_op".into()));
@@ -97,7 +97,8 @@ impl ClientDoc {
 
     /// When there are no payloads queued, queue a next one.
     pub fn next_payload(&mut self) -> Option<Op> {
-        if self.pending_op.is_none() && self.local_op == Op::empty() {
+        log_wasm!(Debug(format!("NEXT_PAYLOAD: {:?}", self.local_op)));
+        if self.pending_op.is_none() && self.local_op != Op::empty() {
             // Take the contents of local_op.
             self.pending_op = Some(mem::replace(&mut self.local_op, Op::empty()));
             self.pending_op.clone()

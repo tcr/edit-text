@@ -109,11 +109,12 @@ fn setup_client(name: &str, out: ws::Sender, ws_port: u16) -> (Arc<AtomicBool>, 
         clone_all!(tx_task);
         thread::spawn(move || {
             ws::connect(format!("ws://127.0.0.1:{}", ws_port), move |out| {
-                // While we receive packets, send them to the websocket.
+                // While we receive packets from the client, send them to sync.
                 {
                     clone_all!(rx);
                     thread::spawn(move || {
                         while let Ok(command) = rx.recv() {
+                            log_wasm!(Debug("HI TIM HAVE PACKET TO SEND TO SERVER".to_string()));
                             out.send(serde_json::to_string(&command).unwrap()).unwrap();
                         }
                     });

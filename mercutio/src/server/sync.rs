@@ -12,23 +12,29 @@ use std::collections::{HashSet, HashMap};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
-use super::*;
+use crate::{SyncClientCommand, SyncServerCommand};
 use ws;
 use std::collections::VecDeque;
 use std::fs::File;
 use std::io::prelude::*;
+use std::path::Path;
+use ron;
 
 lazy_static! {
-    static ref LOG_SYNC_FILE: Arc<Mutex<File>> = Arc::new(Mutex::new(File::create("/tmp/mercutio-sync").unwrap()));
+    static ref LOG_SYNC_FILE: Arc<Mutex<File>> = {
+        let path = Path::new("./log/server");
+        Arc::new(Mutex::new(File::create(path).unwrap()))
+    };
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum LogSync {
     Launch,
     ServerSpawn,
     ClientConnect,
     ClientPacket(SyncServerCommand),
     Debug(String),
+    Spawn,
 }
 
 // Macros can only be used after they are defined
@@ -38,7 +44,7 @@ macro_rules! log_sync {
             // use $crate::wasm::LogWasm::*;
             let mut file_guard = LOG_SYNC_FILE.lock().unwrap();
             use $crate::sync::LogSync::*;
-            writeln!(*file_guard, "{:?}", $x);
+            writeln!(*file_guard, "{}", ron::ser::to_string(&$x).unwrap());
             let _ = file_guard.sync_data();
         }
     };
