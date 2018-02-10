@@ -187,6 +187,20 @@ pub struct Client {
 }
 
 impl Client {
+    // TODO this
+    // pub fn new() -> (Client, Receiver, Receiver) {
+    //     Client {
+    //         client_id: "hello".to_string(),
+    //         client_doc: ClientDoc::new(),
+
+    //         monkey: Arc::new(AtomicBool::new(false)),
+    //         alive: Arc::new(AtomicBool::new(true)),
+
+    //         tx_client,
+    //         tx_sync,
+    //     };
+    // }
+
     pub fn setup(&self) {
         log_wasm!(Setup);
 
@@ -271,6 +285,7 @@ impl Client {
                     .ok()
                     .unwrap_or(true)
                 {
+                    println!("add caret");
                     self.client_op(|doc| init_caret(doc)).unwrap();
                 }
 

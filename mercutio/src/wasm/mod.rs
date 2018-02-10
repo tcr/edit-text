@@ -11,7 +11,7 @@ use super::*;
 
 lazy_static! {
     static ref LOG_WASM_FILE: Arc<Mutex<File>> = {
-        let path = Path::new("./log/client");
+        let path = Path::new("./log/client2");
         Arc::new(Mutex::new(File::create(path).unwrap()))
     };
 }
@@ -34,7 +34,9 @@ macro_rules! log_wasm {
             // use $crate::wasm::LogWasm::*;
             let mut file_guard = LOG_WASM_FILE.lock().unwrap();
             use $crate::wasm::LogWasm::*;
-            writeln!(*file_guard, "{}", ::ron::ser::to_string(&$x).unwrap());
+            let mut ron = ::ron::ser::to_string(&$x).unwrap();
+            ron = ron.replace("\n", "\\n"); // Escape newlines
+            writeln!(*file_guard, "{}", ron);
             let _ = file_guard.sync_data();
         }
     };

@@ -81,20 +81,13 @@ fn setup_client(name: &str, out: ws::Sender, ws_port: u16) -> (Arc<AtomicBool>, 
         take!(rx_client, out);
         while let Ok(req) = rx_client.recv() {
             let json = serde_json::to_string(&req).unwrap();
-            out.send(json.as_bytes());
+            out.send(json);
         }
     });
 
     let mut client = Client {
         client_id: name.to_owned(),
-        client_doc: ClientDoc {
-            doc: Doc(vec![]),
-            version: 100,
-
-            original_doc: Doc(vec![]),
-            pending_op: None,
-            local_op: Op::empty(),
-        },
+        client_doc: ClientDoc::new(),
 
         monkey: monkey.clone(),
         alive: alive.clone(),
