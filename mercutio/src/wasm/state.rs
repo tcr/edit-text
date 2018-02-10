@@ -13,6 +13,7 @@ use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::mem;
 use super::*;
 
+#[derive(Debug)]
 pub struct ClientDoc {
     pub doc: Doc,
     pub version: usize,
@@ -23,6 +24,18 @@ pub struct ClientDoc {
 }
 
 impl ClientDoc {
+    // Default
+    pub fn new() -> ClientDoc {
+        ClientDoc {
+            doc: Doc(vec![]),
+            version: 100,
+
+            original_doc: Doc(vec![]),
+            pending_op: None,
+            local_op: Op::empty(),
+        }
+    }
+
     /// Sync ACK'd our pending operation.
     /// Returns the next op to send to sync, if any.
     // TODO we can determine new_doc without needing it passed in
