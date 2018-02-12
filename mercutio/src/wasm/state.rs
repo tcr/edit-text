@@ -120,17 +120,19 @@ impl ClientDoc {
         }
     }
 
-    /// An operation was applied to my document.
+    /// An operation was applied to the document locally.
     pub fn apply_local_op(&mut self, op: &Op) {
         // Apply the new operation.
         self.doc = Op::apply(&self.doc, &op);
 
         // Combine operation with previous queued operations.
+        println!("----> apply_local_op {:?} {:?}", self.local_op, op);
         self.local_op = Op::compose(&self.local_op, &op);
 
+        let total_op = Op::compose(self.pending_op.as_ref().unwrap_or(&op_span!([], [])), &self.local_op);
         assert_eq!(
             self.doc,
-            OT::apply(&self.original_doc, &self.local_op),
+            OT::apply(&self.original_doc, &total_op),
         );
     }
 }
