@@ -202,7 +202,7 @@ impl Client {
     // }
 
     pub fn setup(&self) {
-        log_wasm!(Setup);
+        log_wasm!(Setup(self.client_id.clone()));
 
         self
             .send_client(&ClientCommand::Setup {
@@ -274,6 +274,7 @@ impl Client {
                     }
                 } else {
                     // Update with new version.
+                    println!("---> sync sent new version");
                     self.client_doc.sync_sent_new_version(&doc, version, &input_op);
                 }
 

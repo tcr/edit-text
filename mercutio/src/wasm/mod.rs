@@ -23,9 +23,10 @@ lazy_static! {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum LogWasm {
-    Setup,
+    Setup(String),
     Task(String, client::Task),
     SyncNew(String),
+
     SendClient(ClientCommand),
     SendSync(SyncServerCommand),
     Debug(String),

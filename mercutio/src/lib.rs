@@ -23,6 +23,7 @@ extern crate lazy_static;
 extern crate ron;
 #[cfg(not(target_arch="wasm32"))]
 extern crate ws;
+extern crate colored;
 
 pub mod server;
 #[macro_use]
