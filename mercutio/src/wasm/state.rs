@@ -12,6 +12,7 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::mem;
 use super::*;
+use colored::Colorize;
 
 #[derive(Debug)]
 pub struct ClientDoc {
@@ -43,6 +44,7 @@ impl ClientDoc {
         log_wasm!(SyncNew("confirmed_pending_op".into()));
 
         assert!(self.pending_op.is_some());
+        assert_eq!(new_doc, &OT::apply(&self.original_doc, self.pending_op.as_ref().unwrap()));
 
         self.original_doc = new_doc.clone();
 
@@ -58,10 +60,10 @@ impl ClientDoc {
     /// Sync gave us an operation not originating from us.
     // TODO we can determine new_doc without needing it passed in
     pub fn sync_sent_new_version(&mut self, new_doc: &Doc, version: usize, input_op: &Op) {
-        log_wasm!(SyncNew("new_op".into()));
+        // log_wasm!(SyncNew("new_op".into()));
 
         // Optimization
-        if self.local_op == Op::empty() {
+        if self.pending_op.is_none() && self.local_op == Op::empty() {
             // Skip ahead
             self.doc = new_doc.clone();
             self.version = version;
@@ -89,23 +91,25 @@ impl ClientDoc {
         println!();
 
         // I x P -> I', P'
-        let (prending_op_transform, input_op_transform) = Op::transform::<RtfSchema>(&input_op, &pending_op);
+        let (pending_op_transform, input_op_transform) = Op::transform::<RtfSchema>(&input_op, &pending_op);
         // P' x L -> P'', L'
         let (local_op_transform, _) = Op::transform::<RtfSchema>(&input_op_transform, &local_op);
 
         // client_doc = input_doc : I' : P''
-        let client_op = Op::compose(&prending_op_transform, &local_op_transform);
+        let client_op = Op::compose(&pending_op_transform, &local_op_transform);
         // Reattach to doc.
-        self.doc = Op::apply(&new_doc, &prending_op_transform);
-        self.doc = Op::apply(&new_doc, &local_op_transform);
+        self.doc = Op::apply(&new_doc, &pending_op_transform);
+        self.doc = Op::apply(&self.doc, &local_op_transform);
 
         // Set pending and local ops.
-        self.pending_op = Some(prending_op_transform);
+        self.pending_op = Some(pending_op_transform);
         self.local_op = local_op_transform;   
 
         // Update other variables.
         self.version = version;
         self.original_doc = new_doc.clone();
+
+        println!("{}", format!("\n----> result {:?}\n{:?}\n{:?}\n\n{:?}\n\n", self.original_doc, self.pending_op, self.local_op, self.doc).red());
     }
 
     /// When there are no payloads queued, queue a next one.
