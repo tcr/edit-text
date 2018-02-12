@@ -11,7 +11,12 @@ use super::*;
 
 lazy_static! {
     static ref LOG_WASM_FILE: Arc<Mutex<File>> = {
-        let path = Path::new("./log/client2");
+        use std::env::var;
+        let path = Path::new(if var("MERCUTIO_WASM_LOG") != Ok("0".to_string()) {
+            "./log/client"
+        } else {
+            "./log/replay"
+        });
         Arc::new(Mutex::new(File::create(path).unwrap()))
     };
 }
