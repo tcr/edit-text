@@ -281,6 +281,13 @@ export default class Editor {
       if (parse.Update[1] == null) {
         console.log('Sync Update');
         editor.ops.splice(0, this.ops.length);
+
+        requestAnimationFrame(() => {
+          $(this.$elem).addClass('load-ping');
+          requestAnimationFrame(() => {
+            $(this.$elem).removeClass('load-ping');
+          })
+        });
       } else {
         editor.ops.push(parse.Update[1]);
       }
@@ -338,7 +345,7 @@ export default class Editor {
     // }
     if ('Monkey' in event.data) {
       // TODO reflect this in the app
-      editor.nativeCommand(commands.MonkeyCommand(true));
+      editor.nativeCommand(commands.MonkeyCommand(event.data.Monkey));
     }
   }
 }

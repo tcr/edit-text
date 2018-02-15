@@ -102,7 +102,7 @@ fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&mut Client) -> Result<(), Err
     ]
 }
 
-fn button_handlers() -> Vec<(&'static str, Box<Fn(&mut Client) -> Result<(), Error>>)> {
+pub fn button_handlers() -> Vec<(&'static str, Box<Fn(&mut Client) -> Result<(), Error>>)> {
     vec![
         (
             "Heading 1",
@@ -164,11 +164,6 @@ fn native_command(client: &mut Client, req: NativeCommand) -> Result<(), Error> 
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Task {
-    ButtonMonkey,
-    LetterMonkey,
-    ArrowMonkey,
-    BackspaceMonkey,
-    EnterMonkey,
     SyncClientCommand(SyncClientCommand),
     NativeCommand(NativeCommand),
 }
@@ -223,39 +218,6 @@ impl Client {
         log_wasm!(Task(self.client_id.clone(), value.clone()));
 
         match value {
-            Task::ButtonMonkey => {
-                let mut rng = rand::thread_rng();
-                let index = rng.gen_range(0, button_handlers().len() as u32);
-                let command = NativeCommand::Button(index);
-                native_command(self, command)?;
-            }
-            Task::LetterMonkey => {
-                let mut rng = rand::thread_rng();
-                let char_list = vec![
-                    rng.gen_range(b'A', b'Z'),
-                    rng.gen_range(b'a', b'z'),
-                    rng.gen_range(b'0', b'9'),
-                    b' ',
-                ];
-                let c = *rng.choose(&char_list).unwrap() as u32;
-                let command = NativeCommand::Character(c);
-                native_command(self, command)?;
-            }
-            Task::ArrowMonkey => {
-                let mut rng = rand::thread_rng();
-                let key = *rng.choose(&[37, 39, 37, 39, 37, 39, 38, 40]).unwrap();
-                let command = NativeCommand::Keypress(key, false, false);
-                native_command(self, command)?;
-            }
-            Task::BackspaceMonkey => {
-                let command = NativeCommand::Keypress(8, false, false);
-                native_command(self, command)?;
-            }
-            Task::EnterMonkey => {
-                let command = NativeCommand::Keypress(13, false, false);
-                native_command(self, command)?;
-            }
-
             // Handle commands from Native.
             Task::NativeCommand(command) => {
                 native_command(self, command)?;
