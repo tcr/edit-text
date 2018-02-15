@@ -235,86 +235,93 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
 
         let bus = Arc::new(Mutex::new(Bus::new(255)));
 
-        let sync_state_mutex_capture = sync_state_mutex.clone();
-        let state_capture = state.clone();
-        let bus_capture = bus.clone();
-        thread::spawn(move || {
-            loop {
-                // Wait a set duration between transforms.
-                thread::sleep(Duration::from_millis(period as u64));
+        thread::spawn({
+            take!(=state, =bus, =sync_state_mutex);
+            move || {
+                loop {
+                    // Wait a set duration between transforms.
+                    thread::sleep(Duration::from_millis(period as u64));
 
-                let mut sync_state = sync_state_mutex_capture.lock().unwrap();
+                    let mut sync_state = sync_state_mutex.lock().unwrap();
 
-                let mut doc = state_capture.body.lock().unwrap();
+                    let mut doc = state.body.lock().unwrap();
 
-                // Go through the deque and update our operations.
-                while let Some((client_id, input_version, op)) = sync_state.ops.pop_front() {
-                    let target_version = sync_state.version;
+                    // Go through the deque and update our operations.
+                    while let Some((client_id, input_version, op)) = sync_state.ops.pop_front() {
+                        let target_version = sync_state.version;
 
-                    log_sync!(Debug(format!("{:?}", op)));
-                    
-                    // let res = action_sync(&doc, new_op, op_group).unwrap();
+                        log_sync!(Debug(format!("client {:?} sent {:?}", client_id, op)));
+                        
+                        // let res = action_sync(&doc, new_op, op_group).unwrap();
 
-                    // Update the operation so we can apply it to the document.
-                    let op = update_operation(op, &sync_state.history, target_version, input_version);
-                    sync_state.history.insert(target_version, op.clone());
+                        // Update the operation so we can apply it to the document.
+                        let op = update_operation(op, &sync_state.history, target_version, input_version);
+                        sync_state.history.insert(target_version, op.clone());
 
-                    // Update the document with this operation.
-                    *doc = Op::apply(&doc, &op);
-                    sync_state.version = target_version + 1;
+                        log_sync!(Debug(format!("updated op to {:?}", op)));
 
-                    // Broadcast to all connected websockets.
-                    bus_capture
-                        .lock()
-                        .unwrap()
-                        .broadcast((doc.0.clone(), sync_state.version, client_id, op));
+                        // Update the document with this operation.
+                        *doc = Op::apply(&doc, &op);
+                        sync_state.version = target_version + 1;
+
+                        log_sync!(Debug(format!("doc is now {:?}", *doc)));
+
+                        // Broadcast to all connected websockets.
+                        let command = SyncClientCommand::Update(doc.0.clone(), sync_state.version, client_id, op);
+                        bus
+                            .lock()
+                            .unwrap()
+                            .broadcast(command);
+                    }
                 }
             }
         });
 
-        let state_capture = state.clone();
-        let bus_capture = bus.clone();
-        ws::listen(url, move |out| {
-            log_sync!(ClientConnect);
+        ws::listen(url, {
+            take!(=state, =bus);
+            move |out| {
+                log_sync!(ClientConnect);
 
-            // Initial document state.
-            {
-                let doc = state.body.lock().unwrap();
-                let mut sync_state = sync_state_mutex.lock().unwrap();
-                let command = SyncClientCommand::Update(doc.0.clone(), sync_state.version, "$sync".to_string(), OT::empty());
-                out.send(serde_json::to_string(&command).unwrap());
-            }
-
-            let mut rx = { bus_capture.lock().unwrap().add_rx() };
-            thread::spawn(move || {
-                while let Ok((doc, version, client_id, op)) = rx.recv() {
-                    let command = SyncClientCommand::Update(doc, version, client_id, op);
+                // Forcibly set this new client's initial document state.
+                {
+                    let doc = state.body.lock().unwrap();
+                    let mut sync_state = sync_state_mutex.lock().unwrap();
+                    let command = SyncClientCommand::Update(doc.0.clone(), sync_state.version, "$sync".to_string(), OT::empty());
                     out.send(serde_json::to_string(&command).unwrap());
                 }
-            });
 
-            let state = state.clone();
-            let sync_state_mutex_capture = sync_state_mutex.clone();
-            move |msg: ws::Message| {
-                let req_parse: Result<SyncServerCommand, _> =
-                    serde_json::from_slice(&msg.into_data());
-                match req_parse {
-                    Ok(value) => {
-                        log_sync!(ClientPacket(value.clone()));
+                // Forward new packets on bus to all clients.
+                let mut rx = { bus.lock().unwrap().add_rx() };
+                thread::spawn(|| {
+                    take!(out, mut rx);
+                    while let Ok(command) = rx.recv() {
+                        out.send(serde_json::to_string(&command).unwrap());
+                    }
+                });
 
-                        match value {
-                            SyncServerCommand::Commit(client_id, op, version) => {
-                                let mut sync_state = sync_state_mutex_capture.lock().unwrap();
-                                sync_state.ops.push_back((client_id, version, op));
+                // Listen to server commands.
+                let state = state.clone();
+                let sync_state_mutex_capture = sync_state_mutex.clone();
+                move |msg: ws::Message| {
+                    let req_parse: Result<SyncServerCommand, _> = serde_json::from_slice(&msg.into_data());
+                    match req_parse {
+                        Ok(value) => {
+                            log_sync!(ClientPacket(value.clone()));
+
+                            match value {
+                                SyncServerCommand::Commit(client_id, op, version) => {
+                                    let mut sync_state = sync_state_mutex_capture.lock().unwrap();
+                                    sync_state.ops.push_back((client_id, version, op));
+                                }
                             }
                         }
+                        Err(err) => {
+                            println!("Packet error: {:?}", err);
+                        }
                     }
-                    Err(err) => {
-                        println!("Packet error: {:?}", err);
-                    }
-                }
 
-                Ok(())
+                    Ok(())
+                }
             }
         })
     });

@@ -308,6 +308,28 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
     let mut a = AddStepper::new(avec);
     let mut b = DelStepper::new(bvec);
 
+    compose_add_del_inner(&mut delres, &mut addres, &mut a, &mut b);
+
+    if !b.is_done() {
+        let rest = b.into_span();
+        if rest.skip_post_len() > 0 {
+            addres.place(&AddSkip(rest.skip_post_len()));
+        }
+        delres.place_all(&rest);
+    }
+
+    if !a.is_done() {
+        let rest = a.into_span();
+        if rest.skip_pre_len() > 0 {
+            delres.place(&DelSkip(rest.skip_pre_len()));
+        }
+        addres.place_all(&rest);
+    }
+
+    (delres, addres)
+}
+
+fn compose_add_del_inner(delres: &mut DelSpan, addres: &mut AddSpan, a: &mut AddStepper, b: &mut DelStepper) {
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
             DelChars(bcount) => {
@@ -451,6 +473,31 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
                         let (del, ins) = compose_add_del(&insspan, &span);
                         delres.place(&DelGroup(del));
                         addres.place_all(&ins[..]);
+
+                        // let mut a_stepper = AddStepper::new(&insspan);
+                        // let mut b_stepper = DelStepper::new(&span);
+
+                        // let mut del_inner = vec![];
+                        // compose_add_del_inner(&mut del_inner, addres, &mut a_stepper, &mut b_stepper);
+
+                        // if !b_stepper.is_done() {
+                        //     del_inner.place_all(&b_stepper.into_span());
+                        // }
+
+                        // if !a_stepper.is_done() {
+                        //     let rest = a_stepper.into_span();
+                        //     if rest.skip_pre_len() > 0 {
+                        //         del_inner.place(&DelSkip(rest.skip_pre_len()));
+                        //     }
+                        //     addres.place_all(&rest);
+                        // }
+
+                        // delres.place(&DelGroup(del_inner));
+
+                        // if b_stepper.clone().into_span().skip_post_len() > 0 {
+                        //     addres.place(&AddSkip(b_stepper.into_span().skip_post_len()));
+                        // }
+
                     }
                     AddGroup(attr, insspan) => {
                         a.next();
@@ -553,20 +600,6 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
             // }
         }
     }
-
-    if !b.is_done() {
-        delres.place_all(&b.into_span());
-    }
-
-    if !a.is_done() {
-        let rest = a.into_span();
-        if rest.skip_pre_len() > 0 {
-            delres.place(&DelSkip(rest.skip_pre_len()));
-        }
-        addres.place_all(&rest);
-    }
-
-    (delres, addres)
 }
 
 pub fn compose(a: &Op, b: &Op) -> Op {

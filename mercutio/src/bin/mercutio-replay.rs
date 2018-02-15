@@ -51,17 +51,26 @@ fn run() -> Result<(), Error> {
     let file = ::std::io::BufReader::new(&f);
 
     let mut clients = hashmap![];
+
+    let mut i = 0;
     
     for line in file.lines() {
         if let Ok(line) = line {
             if line.trim().len() != 0 {
                 let hi: LogWasm = ron::de::from_str(&line)?;
 
+                i += 1;
+                println!("TASK ~~~~ {:?} ~~~~", i);
                 match hi {
                     LogWasm::Setup(client_id) => {
                         clients.insert(client_id.clone(), init_new_client(&client_id));
                     }
                     LogWasm::Task(client_id, task) => {
+                        // TODO real command-line subfilters
+                        if client_id != "b" {
+                            continue;
+                        }
+
                         println!("{}", format!("{:?}: {:?}", client_id, task).green().bold());
                         println!();
                         match clients.get_mut(&client_id) {

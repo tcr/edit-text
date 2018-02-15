@@ -46,6 +46,14 @@ button {
     background: #ccc;
 }
 
+.load-ping {
+    background: yellow;
+    transition: 0s background linear;
+}
+:not(.load-ping) {
+    transition: 0.25s background linear;
+}
+
 .mote {
     padding: 15px 30px;
     margin: 0;

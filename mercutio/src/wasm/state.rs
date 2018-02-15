@@ -43,8 +43,16 @@ impl ClientDoc {
     pub fn sync_confirmed_pending_op(&mut self, new_doc: &Doc, version: usize) -> Option<Op> {
         log_wasm!(SyncNew("confirmed_pending_op".into()));
 
+        // Server can't acknowledge an operation that wasn't pending.
         assert!(self.pending_op.is_some());
-        assert_eq!(new_doc, &OT::apply(&self.original_doc, self.pending_op.as_ref().unwrap()));
+        // Likewise, the new doc update should be equivalent to original_doc : pending_op 
+        // or otherwise server acknowledged something improper.
+        println!("pending {:?}", self.pending_op);
+        assert_eq!(
+            new_doc, 
+            &OT::apply(&self.original_doc, self.pending_op.as_ref().unwrap()),
+            "invalid ack from Sync"
+        );
 
         self.original_doc = new_doc.clone();
 
@@ -124,19 +132,40 @@ impl ClientDoc {
         }
     }
 
+    fn assert_compose_correctness(&self) {
+        // Test matching against the local doc.
+        let mut recreated_doc = OT::apply(&self.original_doc, self.pending_op.as_ref().unwrap_or(&Op::empty()));
+        recreated_doc = OT::apply(&recreated_doc, &self.local_op);
+        assert_eq!(self.doc, recreated_doc);
+
+        let total_op = Op::compose(
+            self.pending_op.as_ref().unwrap_or(&Op::empty()),
+            &self.local_op
+        );
+        let recreated_doc = OT::apply(&self.original_doc, &total_op);
+        assert_eq!(self.doc, recreated_doc);
+    }
+
     /// An operation was applied to the document locally.
     pub fn apply_local_op(&mut self, op: &Op) {
+        self.assert_compose_correctness();
+
+
+        let mut recreated_doc = OT::apply(&self.original_doc, self.pending_op.as_ref().unwrap_or(&Op::empty()));
+        println!("----> apply_local_op\n{:?}\n{:?}\n{:?}\n\n", recreated_doc, self.local_op, op);
+        let mut recreated_doc2 = OT::apply(&recreated_doc, &self.local_op);
+        assert_eq!(self.doc, recreated_doc2);
+        // Op::apply(&self.doc, op);
+        OT::apply(&recreated_doc2, op);
+        let mut recreated_doc3 = OT::apply(&recreated_doc, &Op::compose(&self.local_op, op));
+
         // Apply the new operation.
-        self.doc = Op::apply(&self.doc, &op);
+        self.doc = Op::apply(&self.doc, op);
 
         // Combine operation with previous queued operations.
-        println!("----> apply_local_op {:?} {:?}", self.local_op, op);
         self.local_op = Op::compose(&self.local_op, &op);
+        println!("--!! {:?}\n{:?}\n{:?}\n\n", self.original_doc, self.pending_op, self.local_op);
 
-        let total_op = Op::compose(self.pending_op.as_ref().unwrap_or(&op_span!([], [])), &self.local_op);
-        assert_eq!(
-            self.doc,
-            OT::apply(&self.original_doc, &total_op),
-        );
+        self.assert_compose_correctness();
     }
 }
