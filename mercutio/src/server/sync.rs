@@ -204,6 +204,7 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
 
         let bus = Arc::new(Mutex::new(Bus::new(255)));
 
+        // Handle incoming packets.
         thread::spawn({
             take!(=state, =bus, =sync_state_mutex);
             move || {
@@ -248,6 +249,7 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
             }
         });
 
+        // Listen to incoming clients.
         ws::listen(url, {
             take!(=state, =bus);
             move |out| {
@@ -261,7 +263,7 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
                     out.send(serde_json::to_string(&command).unwrap());
                 }
 
-                // Forward new packets on bus to all clients.
+                // Forward packets from sync to all clients.
                 let mut rx = { bus.lock().unwrap().add_rx() };
                 thread::spawn(|| {
                     take!(out, mut rx);
@@ -270,7 +272,7 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
                     }
                 });
 
-                // Listen to server commands.
+                // Listen to commands from the clients and submit to sync server.
                 let state = state.clone();
                 let sync_state_mutex_capture = sync_state_mutex.clone();
                 move |msg: ws::Message| {
