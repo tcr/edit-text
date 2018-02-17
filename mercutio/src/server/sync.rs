@@ -5,7 +5,7 @@ use oatie::doc::*;
 use oatie::parse::debug_pretty;
 use oatie::schema::RtfSchema;
 use oatie::transform::transform;
-use oatie::validate::{validate_doc_span, ValidateContext};
+use oatie::validate::{validate_doc};
 use serde_json;
 use std::{panic, process};
 use std::collections::{HashSet, HashMap};
@@ -19,36 +19,6 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 use ron;
-
-lazy_static! {
-    static ref LOG_SYNC_FILE: Arc<Mutex<File>> = {
-        let path = Path::new("./log/server");
-        Arc::new(Mutex::new(File::create(path).unwrap()))
-    };
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub enum LogSync {
-    Launch,
-    ServerSpawn,
-    ClientConnect,
-    ClientPacket(SyncServerCommand),
-    Debug(String),
-    Spawn,
-}
-
-// Macros can only be used after they are defined
-macro_rules! log_sync {
-    ( $x:expr ) => {
-        {
-            // use $crate::wasm::LogWasm::*;
-            let mut file_guard = LOG_SYNC_FILE.lock().unwrap();
-            use $crate::sync::LogSync::*;
-            writeln!(*file_guard, "{}", ron::ser::to_string(&$x).unwrap());
-            let _ = file_guard.sync_data();
-        }
-    };
-}
 
 pub fn default_doc() -> Doc {
     Doc(doc_span![
@@ -191,8 +161,7 @@ b_add: {}
     // TODO return error when success is false
 
     let new_doc = Doc(a_res.0);
-    let mut validate_ctx = ValidateContext::new();
-    validate_doc_span(&mut validate_ctx, &new_doc.0).expect("Validation error");
+    validate_doc(&new_doc).expect("Validation error");
 
     Ok((new_doc, OT::compose(&op_a, &a_)))
 }
@@ -263,6 +232,8 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
                         // Update the document with this operation.
                         *doc = Op::apply(&doc, &op);
                         sync_state.version = target_version + 1;
+                        
+                        validate_doc(&doc).expect("Validation error");
 
                         log_sync!(Debug(format!("doc is now {:?}", *doc)));
 

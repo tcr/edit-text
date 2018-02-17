@@ -28,6 +28,11 @@ impl ValidateContext {
     }
 }
 
+pub fn validate_doc(doc: &Doc) -> Result<(), Error> {
+    let mut ctx = ValidateContext::new();
+    validate_doc_span(&mut ctx, &doc.0)
+}
+
 // TODO caret-specific validation should be moved out to the schema!
 pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<(), Error> {
     for elem in span {
@@ -37,6 +42,10 @@ pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<()
                     if !ctx.carets.insert(attrs["client"].clone()) {
                         bail!("Multiple carets for {:?} exist", attrs["client"]);
                     }
+                }
+
+                if attrs["tag"] == "bullet" {
+                    ensure!(!span.is_empty(), "Expected non-empty bullet");
                 }
 
                 ctx.stack.push(attrs.clone());

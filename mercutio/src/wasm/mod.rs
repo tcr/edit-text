@@ -12,11 +12,7 @@ use super::*;
 lazy_static! {
     static ref LOG_WASM_FILE: Arc<Mutex<File>> = {
         use std::env::var;
-        let path = Path::new(if var("MERCUTIO_WASM_LOG") != Ok("0".to_string()) {
-            "./log/client"
-        } else {
-            "./log/replay"
-        });
+        let path = Path::new("./log/client");
         Arc::new(Mutex::new(File::create(path).unwrap()))
     };
 }
@@ -36,14 +32,17 @@ macro_rules! log_wasm {
     ( $x:expr ) => {
         {
             use std::io::prelude::*;
+            use std::env::var;
 
-            // use $crate::wasm::LogWasm::*;
-            let mut file_guard = LOG_WASM_FILE.lock().unwrap();
-            use $crate::wasm::LogWasm::*;
-            let mut ron = ::ron::ser::to_string(&$x).unwrap();
-            ron = ron.replace("\n", "\\n"); // Escape newlines
-            writeln!(*file_guard, "{}", ron);
-            let _ = file_guard.sync_data();
+            // Only if MERCUTIO_WASM_LOG=1 is set
+            if var("MERCUTIO_WASM_LOG") == Ok("1".to_string()) {
+                use $crate::wasm::LogWasm::*;
+                let mut file_guard = LOG_WASM_FILE.lock().unwrap();
+                let mut ron = ::ron::ser::to_string(&$x).unwrap();
+                ron = ron.replace("\n", "\\n"); // Escape newlines
+                writeln!(*file_guard, "{}", ron);
+                let _ = file_guard.sync_data();
+            }
         }
     };
 }
