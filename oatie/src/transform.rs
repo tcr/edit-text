@@ -1565,6 +1565,11 @@ pub fn transform_add_del_inner(
                         }
                     }
                     AddWithGroup(ins_span) => {
+                        // Transform hack to avoid fully deleted elements that
+                        // leave their content unwrapped. Because one side deletes the
+                        // group, we can't recreate it (because we have no knowledge of
+                        // the document). Instead, we just delete all the newly added
+                        // content of the group.
                         if span.skip_post_len() == 0 {
                             fn unadd(add: &AddSpan) -> DelSpan {
                                 let mut del: DelSpan = vec![];

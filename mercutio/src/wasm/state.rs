@@ -116,10 +116,19 @@ impl ClientDoc {
 
         println!();
         println!("<test>");
-        println!("doc: {:?}", new_doc);
+        println!("pending_op: {:?}", pending_op);
         println!();
-        println!("pending: {:?}", pending_op_transform);
-        println!("local: {:?}", local_op_transform);
+        println!("local_op: {:?}", local_op);
+        println!();
+        println!("input_op: {:?}", input_op);
+        println!();
+        println!("new_doc: {:?}", new_doc);
+        println!();
+        println!("pending_op_transform: {:?}", pending_op_transform);
+        println!();
+        println!("new_doc_pending: {:?}", Op::apply(&new_doc, &pending_op_transform));
+        println!();
+        println!("local_op_transform: {:?}", local_op_transform);
         println!("</test>");
         println!();
 
