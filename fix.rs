@@ -10,42 +10,36 @@ use oatie::*;
 use oatie::doc::*;
 
 fn main() {
-    let doc = doc_span!(
-DocGroup({"tag": "h3"}, [
-    DocGroup({"client": "c", "tag": "caret"}, []),
-    DocChars(" Ka"), DocGroup({"client": "b", "tag": "caret"}, []),
-    DocChars("eRylC14 5 ")
-]),
-DocGroup({"tag": "pre"}, [
-    DocChars(" 5 4"), DocGroup({"client": "a", "tag": "caret"}, [])
-]),
-DocGroup({"tag": "h1"}, [
-    DocChars("mwis Mercutio, a rich text editor.")
-]));
-    let first = op_span!(
-[
-    DelWithGroup([
-        DelSkip(6),
+    let doc = 
+doc_span![
+    DocGroup({"tag": "p"}, [
+        DocChars("1"),
     ]),
-    DelSkip(2),
+    DocGroup({"tag": "h2"}, [
+        DocChars("1")
+    ]),
+];
+
+    let pending =
+op_span!([
+    DelGroup([
+        DelSkip(1),
+    ]),
 ], [
-    AddWithGroup([
-        AddSkip(6),
-        AddGroup({"tag": "caret", "client": "b"}, [])
-    ]),
-    AddWithGroup([
-        AddSkip(5)
+    AddGroup({"tag": "bullet"}, [
+        AddGroup({"tag": "p"}, [
+            AddSkip(1),
+        ])
     ]),
 ]);
-    let next = op_span!(
-[
-    DelGroup([
-        DelSkip(16)
-    ])
-], [
-    AddGroup({"tag": "h3"}, [
-        AddSkip(16)
+    let local =
+op_span!([
+    DelSkip(1),
+    DelWithGroup([
+        DelSkip(1)
     ]),
+], [
+    AddSkip(2),
 ]);
 
 // ([
@@ -63,12 +57,15 @@ DocGroup({"tag": "h1"}, [
 //     ])
 // ])
 
+    println!("DOC\n{:?}\n\n", doc);
 
-    let r = OT::apply(&Doc(doc.clone()), &first);
-    OT::apply(&r, &next);
+    let mut r = OT::apply(&Doc(doc.clone()), &pending);
+    r = OT::apply(&r, &local);
 
-    println!("----> {:?}", OT::compose(&first, &next));
-    OT::apply(&Doc(doc.clone()), &OT::compose(&first, &next));
+    println!("HELP\n{:?}\n\n", r);
+
+    println!("----> {:?}", OT::compose(&pending, &local));
+    OT::apply(&Doc(doc.clone()), &OT::compose(&pending, &local));
 
     println!("lol");
 }

@@ -607,19 +607,19 @@ pub fn compose(a: &Op, b: &Op) -> Op {
     let &(ref bdel, ref bins) = b;
 
     log_compose!("`````````````` >(compose)<");
-    log_compose!("`````````````` lins {:?}", ains);
-    log_compose!("`````````````` rdel {:?}", bdel);
+    log_compose!("``````````````a_ins {:?}", ains);
+    log_compose!("``````````````b_del {:?}", bdel);
     let (mdel, mins) = compose_add_del(ains, bdel);
-    log_compose!("``````````````  d=> {:?}", mdel);
-    log_compose!("``````````````  i=> {:?}", mins);
+    log_compose!("``````````````  a=> {:?}", mdel);
+    log_compose!("``````````````  b=> {:?}", mins);
 
-    log_compose!("`````````````` ldel {:?}", adel);
-    log_compose!("``````````````  d=>  {:?}", mdel);
+    log_compose!("``````````````a_del {:?}", adel);
+    log_compose!("``````````````  a=>  {:?}", mdel);
     let a_ = compose_del_del(adel, &mdel);
     log_compose!("``````````````  del' {:?}", a_);
 
-    log_compose!("``````````````  i=> {:?}", mins);
-    log_compose!("`````````````` rins {:?}", bins);
+    log_compose!("``````````````  b=> {:?}", mins);
+    log_compose!("`````````````b_ins {:?}", bins);
     let b_ = compose_add_add(&mins, bins);
     log_compose!("`````````````` ins' {:?}", b_);
     log_compose!();

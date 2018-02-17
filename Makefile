@@ -18,13 +18,13 @@ mercutio-build:
 	cd oatie && CARGO_INCREMENTAL=1 cargo build
 
 mercutio-server:
-	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 cargo run --bin mercutio-sync -- --period 2000
+	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 MERCUTIO_SYNC_LOG=1 cargo run --bin mercutio-sync --release -- --period 2000
 
 wasm-proxy:
-	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 cargo run --bin mercutio-wasm-proxy
+	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 MERCUTIO_WASM_LOG=1 cargo run --bin mercutio-wasm-proxy  --release
 
 mercutio-replay:
-	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 MERCUTIO_WASM_LOG=0 cargo run --bin mercutio-replay
+	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 cargo run --release --bin mercutio-replay
 
 test: oatie-build
 	cd mercutio && cargo script failrun.rs

@@ -47,46 +47,55 @@ fn init_new_client(client_id: &str) -> (Client, Receiver<ClientCommand>, Receive
 }
 
 fn run() -> Result<(), Error> {
-    let f = ::std::fs::File::open("log/client")?;
-    let file = ::std::io::BufReader::new(&f);
+    let (tx_line, rx_line) = unbounded();
+    ::std::thread::spawn::<_, Result<(), Error>>(move || {
+        let f = ::std::fs::File::open("log/client")?;
+        let file = ::std::io::BufReader::new(&f);
+
+        for line in file.lines() {
+            if let Ok(line) = line {
+                if line.trim().len() != 0 {
+                    let hi: LogWasm = ron::de::from_str(&line)?;
+                    tx_line.try_send(hi);
+                }
+            }
+        }
+
+        Ok(())
+    });
+
 
     let mut clients = hashmap![];
 
     let mut i = 0;
     
-    for line in file.lines() {
-        if let Ok(line) = line {
-            if line.trim().len() != 0 {
-                let hi: LogWasm = ron::de::from_str(&line)?;
+    while let Ok(hi) = rx_line.recv() {
+        i += 1;
+        println!("TASK ~~~~ {:?} ~~~~", i);
+        match hi {
+            LogWasm::Setup(client_id) => {
+                clients.insert(client_id.clone(), init_new_client(&client_id));
+            }
+            LogWasm::Task(client_id, task) => {
+                // TODO real command-line subfilters
+                if client_id != "a" {
+                    continue;
+                }
 
-                i += 1;
-                println!("TASK ~~~~ {:?} ~~~~", i);
-                match hi {
-                    LogWasm::Setup(client_id) => {
-                        clients.insert(client_id.clone(), init_new_client(&client_id));
+                println!("{}", format!("{:?}: {:?}", client_id, task).green().bold());
+                println!();
+                match clients.get_mut(&client_id) {
+                    Some(&mut (ref mut client, _, _)) => {
+                        client.handle_task(task)?;
                     }
-                    LogWasm::Task(client_id, task) => {
-                        // TODO real command-line subfilters
-                        if client_id != "b" {
-                            continue;
-                        }
-
-                        println!("{}", format!("{:?}: {:?}", client_id, task).green().bold());
-                        println!();
-                        match clients.get_mut(&client_id) {
-                            Some(&mut (ref mut client, _, _)) => {
-                                client.handle_task(task)?;
-                            }
-                            None => {
-                                panic!("Client {:?} was not set up.", client_id);
-                            }
-                        }
+                    None => {
+                        panic!("Client {:?} was not set up.", client_id);
                     }
-                    _ => {}
                 }
             }
+            _ => {}
         }
     }
-    println!("hi sweetie {:?}", f);
+    println!("hi sweetie");
     Ok(())
 }

@@ -6,5 +6,5 @@ members = ["oatie", "mercutio"] #, "mercutio/mercutio-wasm"]
 debug = true
 
 [profile.release]
-panic = 'abort'
+#panic = 'abort'
 debug = true

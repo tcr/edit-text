@@ -181,7 +181,7 @@ impl AddPlaceable for AddSpan {
             ret += match *item {
                 AddSkip(len) => len,
                 AddChars(ref chars) => 0,
-                AddGroup(..) => 0,
+                AddGroup(_, ref span) => span.skip_pre_len(),
                 AddWithGroup(..) => 1,
             };
         }
