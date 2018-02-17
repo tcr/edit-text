@@ -72,6 +72,7 @@ pub trait OT where Self: Sized {
     fn compose(&Self, &Self) -> Self;
     fn compose_iter<'a, I>(iter: I) -> Self where I: Iterator<Item=&'a Self>, Self: 'a;
     fn transform<S: Schema>(&Self, &Self) -> (Self, Self);
+    fn transform_advance<S: Schema>(a: &Self, b: &Self) -> Self;
 }
 
 impl OT for Op {
@@ -99,5 +100,13 @@ impl OT for Op {
 
     fn transform<S: Schema>(a: &Self, b: &Self) -> (Self, Self) {
         transform::<S>(&a, &b)
+    }
+
+    fn transform_advance<S: Schema>(a: &Self, b: &Self) -> Self {
+        let (a_transform, b_transform) = Self::transform::<S>(a, b);
+        let a_res = Self::compose(a, &a_transform);
+        let b_res = Self::compose(a, &a_transform);
+        // assert_eq!(a_res, b_res); 
+        a_res
     }
 }

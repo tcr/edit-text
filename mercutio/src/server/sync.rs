@@ -5,7 +5,7 @@ use oatie::doc::*;
 use oatie::parse::debug_pretty;
 use oatie::schema::RtfSchema;
 use oatie::transform::transform;
-use oatie::validate::{validate_doc};
+use oatie::validate::{validate_doc, correct_op};
 use serde_json;
 use std::{panic, process};
 use std::collections::{HashSet, HashMap};
@@ -180,6 +180,8 @@ pub fn update_operation(mut op: Op, history: &HashMap<usize, Op>, target_version
         // If the version exists (it should) transform against it.
         if let Some(ref version_op) = history.get(&input_version) {
             let (updated_op, _) = Op::transform::<RtfSchema>(version_op, &op);
+            // let correction = correct_op(&updated_op).unwrap();
+            // op = OT::compose(&updated_op, &correction);
             op = updated_op;
         }
 

@@ -28,11 +28,6 @@ impl ValidateContext {
     }
 }
 
-pub fn validate_doc(doc: &Doc) -> Result<(), Error> {
-    let mut ctx = ValidateContext::new();
-    validate_doc_span(&mut ctx, &doc.0)
-}
-
 // TODO caret-specific validation should be moved out to the schema!
 pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<(), Error> {
     for elem in span {
@@ -83,4 +78,49 @@ pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<()
         }
     }
     Ok(())
+}
+
+pub fn validate_doc(doc: &Doc) -> Result<(), Error> {
+    let mut ctx = ValidateContext::new();
+    validate_doc_span(&mut ctx, &doc.0)
+}
+
+
+fn correct_op_span(span: &AddSpan) -> Result<DelSpan, Error> {
+    let mut ret: DelSpan = vec![];
+
+    for elem in span {
+        match *elem {
+            AddGroup(ref attrs, ref span) => {
+                if span.len() == 0 && attrs["tag"] == "bullet" {
+                    // Delete
+                    println!("\n\n#########\nTRIMMING\n########\n\n\n");
+                    ret.place(&DelGroup(vec![]));
+                } else {
+                    let res = correct_op_span(span)?;
+                    ret.place(&DelWithGroup(res));
+                }
+            }
+            AddWithGroup(ref span) => {
+                let res = correct_op_span(span)?;
+                if res.skip_pre_len() == res.skip_post_len() {
+                    // Delete
+                    ret.place(&DelSkip(1));
+                } else {
+                    ret.place(&DelWithGroup(res));
+                }
+            }
+            AddChars(ref text) => {
+                ret.place(&DelSkip(text.chars().count()));
+            }
+            AddSkip(len) => {
+                ret.place(&DelSkip(len));
+            }
+        }
+    }
+    Ok(ret)
+}
+
+pub fn correct_op(op: &Op) -> Result<Op, Error> {
+    Ok((correct_op_span(&op.1)?, vec![]))
 }
