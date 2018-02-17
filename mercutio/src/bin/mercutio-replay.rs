@@ -78,7 +78,7 @@ fn run() -> Result<(), Error> {
             }
             LogWasm::Task(client_id, task) => {
                 // TODO real command-line subfilters
-                if client_id != "b" {
+                if client_id != "c" {
                     continue;
                 }
 

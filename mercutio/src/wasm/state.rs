@@ -12,7 +12,7 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::mem;
 use super::*;
-use oatie::validate::validate_doc;
+use oatie::validate::{validate_doc, correct_op};
 use colored::Colorize;
 
 #[derive(Debug)]
@@ -103,16 +103,47 @@ impl ClientDoc {
         println!();
 
         // I x P -> I', P'
-        let (pending_op_transform, input_op_transform) = Op::transform::<RtfSchema>(&input_op, &pending_op);
+        let (pending_transform, input_transform) = Op::transform::<RtfSchema>(&input_op, &pending_op);
+        
+        // let correction = correct_op(&pending_transform).unwrap();
+        // let input_correction = correct_op(&input_transform).unwrap();
+        // let correction_transform = Op::transform_advance::<RtfSchema>(&pending_correction, &input_correction);
+        // let correction = OT::compose(&pending_correction, &correction_transform);
+
+        // println!("\n^^^^^\nCORRECTION\n{:?}\n^^^^^\n\n", correction);
+// 
+        // let pending_final = OT::compose(&pending_transform, &correction);
+        // let input_final = OT::compose(&input_transform, &correction);
+
         // P' x L -> P'', L'
-        let (local_op_transform, _) = Op::transform::<RtfSchema>(&input_op_transform, &local_op);
+        let (local_transform, _) = Op::transform::<RtfSchema>(&input_transform, &local_op);
+        
+        // let correction = correct_op(&local_transform).unwrap();
+        // let input_correction = correct_op(&input_transform).unwrap();
+        // let correction_transform = Op::transform_advance::<RtfSchema>(&local_correction, &input_correction);
+        // let correction = OT::compose(&local_correction, &correction_transform);
+
+
+        // let local_final = OT::compose(&local_transform, &correction);
+        // Drop input_final
 
         // client_doc = input_doc : I' : P''
-        let client_op = Op::compose(&pending_op_transform, &local_op_transform);
+        // let client_op = Op::compose(&pending_op_transform, &local_op_transform);
+
+        // Do each operation in order, because we are going to apply corrections
+        // to each new doc.
+
         // Reattach to doc.
-        self.doc = Op::apply(&new_doc, &pending_op_transform);
+        self.doc = Op::apply(&new_doc, &pending_transform);
+        // get corrections1
+        // println!("\n^^^^^\nCORRECTION2\n{:?}\n\n{:?}\n^^^^^\n\n", new_doc, pending_final);
+        // transform with local_op_transform
+        // apply  local_op_transform' to self.doc
+        // get corrections2
+        // self.pending_op = Some(pending_op_transform : corrections1)
+        // self.local_op = local_op_transform : corrections2
         validate_doc(&self.doc).expect("Validation error after unrelated pending op");
-        self.doc = Op::apply(&self.doc, &local_op_transform);
+        self.doc = Op::apply(&self.doc, &local_transform);
 
         println!();
         println!("<test>");
@@ -124,22 +155,26 @@ impl ClientDoc {
         println!();
         println!("new_doc: {:?}", new_doc);
         println!();
-        println!("pending_op_transform: {:?}", pending_op_transform);
+        println!("pending_op_transform: {:?}", pending_transform);
         println!();
-        println!("new_doc_pending: {:?}", Op::apply(&new_doc, &pending_op_transform));
+        println!("new_doc_pending: {:?}", Op::apply(&new_doc, &pending_transform));
         println!();
-        println!("local_op_transform: {:?}", local_op_transform);
+        println!("local_op_transform: {:?}", local_transform);
+        println!();
+        println!("doc: {:?}", self.doc);
         println!("</test>");
         println!();
 
         validate_doc(&self.doc).expect("Validation error after unrelated op");
 
-        let mirror = Op::apply(&new_doc, &Op::compose(&pending_op_transform, &local_op_transform));
-        assert_eq!(self.doc, mirror);
+        // {
+            // let mirror = Op::apply(&new_doc, &Op::compose(&pending_op_transform, &local_op_transform));
+            // assert_eq!(self.doc, mirror);
+        // }
 
         // Set pending and local ops.
-        self.pending_op = Some(pending_op_transform);
-        self.local_op = local_op_transform;   
+        self.pending_op = Some(pending_transform);
+        self.local_op = local_transform;   
 
         // Update other variables.
         self.version = version;
@@ -180,13 +215,15 @@ impl ClientDoc {
     pub fn apply_local_op(&mut self, op: &Op) {
         self.assert_compose_correctness();
 
-        let mut recreated_doc = OT::apply(&self.original_doc, self.pending_op.as_ref().unwrap_or(&Op::empty()));
-        let mut recreated_doc2 = OT::apply(&recreated_doc, &self.local_op);
-        println!("---->\n<apply_local_op>\nrec_doc2: {:?}\n\nlocal_op: {:?}\n\nincoming op:{:?}\n</apply_local_op>\n", recreated_doc2, self.local_op, op);
-        assert_eq!(self.doc, recreated_doc2);
-        // Op::apply(&self.doc, op);
-        let mut recreated_doc3 = OT::apply(&recreated_doc, &Op::compose(&self.local_op, op));
-        OT::apply(&recreated_doc2, op);
+        {
+            let mut recreated_doc = OT::apply(&self.original_doc, self.pending_op.as_ref().unwrap_or(&Op::empty()));
+            let mut recreated_doc2 = OT::apply(&recreated_doc, &self.local_op);
+            println!("---->\n<apply_local_op>\nrec_doc2: {:?}\n\nlocal_op: {:?}\n\nincoming op:{:?}\n</apply_local_op>\n", recreated_doc2, self.local_op, op);
+            assert_eq!(self.doc, recreated_doc2);
+            // Op::apply(&self.doc, op);
+            let mut recreated_doc3 = OT::apply(&recreated_doc, &Op::compose(&self.local_op, op));
+            OT::apply(&recreated_doc2, op);
+        }
 
         use ::oatie::validate::*;
         validate_doc(&self.doc).expect("Validation error BEFORE op application");
