@@ -1,3 +1,5 @@
+extern crate ron;
+
 use std::io;
 use std::io::prelude::*;
 use serde_json::Value;
@@ -43,22 +45,48 @@ fn op_transform_compare<T: Schema>(a: &Op, b: &Op) -> (Op, Op, Op, Op) {
     (a_, b_, a_res, b_res)
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+enum TestSpec {
+    TransformTest {
+        doc: DocSpan,
+        a: Op,
+        b: Op,
+    },
+}
+
 pub fn run_transform_test<T: Schema>(input: &str) -> Result<(), Error> {
-    let re = Regex::new(r"(\n|^)(\w+):([\n\w\W]+?)(\n(?:\w)|(\n\]))").unwrap();
-    let mut test: HashMap<_, _> = re.captures_iter(&input)
-        .map(|cap| {
-            let name = cap[2].to_string();
-            let end_cap = cap.get(5).map(|x| x.as_str()).unwrap_or("");
-            let body = [&cap[3], end_cap].join("");
-            (name, body)
-        })
-        .collect();
+    let mut test: HashMap<String, String> = HashMap::new();
+
+    // ron-defined test specs
+    if input.find("TransformTest").is_some() {
+        match ron::de::from_str::<TestSpec>(input)? {
+            TestSpec::TransformTest { ref doc, ref a, ref b } => {
+                test.insert("doc".into(), ron::ser::to_string(&doc)?);
+                test.insert("a_del".into(), ron::ser::to_string(&a.0)?);
+                test.insert("a_add".into(), ron::ser::to_string(&a.1)?);
+                test.insert("b_del".into(), ron::ser::to_string(&b.0)?);
+                test.insert("b_add".into(), ron::ser::to_string(&b.1)?);
+            }
+        }
+    // line by line
+    } else {
+        let re = Regex::new(r"(\n|^)(\w+):([\n\w\W]+?)(\n(?:\w)|(\n\]))").unwrap();
+        let res: HashMap<String, String> = re.captures_iter(&input)
+            .map(|cap| {
+                let name = cap[2].to_string();
+                let end_cap = cap.get(5).map(|x| x.as_str()).unwrap_or("");
+                let body = [&cap[3], end_cap].join("");
+                (name, body)
+            })
+            .collect();
+        test.extend(res);
+    }
 
     // Attempt old-style transform test which matches by line.
     if test.len() == 0 {
         let four = input.lines().filter(|x| !x.is_empty()).collect::<Vec<_>>();
         if four.len() != 4 && four.len() != 6 {
-            Err(MalformedData("Needed four or six lines as input".into()))?;
+            bail!("Needed four or six lines as input");
         }
 
         test.insert("a_del".into(), four[0].into());
@@ -78,17 +106,17 @@ pub fn run_transform_test<T: Schema>(input: &str) -> Result<(), Error> {
 
     // Extract test entries.
     let a = (
-        parse_del_span(&test["a_del"])?,
-        parse_add_span(&test["a_add"])?,
+        ron::de::from_str::<DelSpan>(&test["a_del"])?,
+        ron::de::from_str::<AddSpan>(&test["a_add"])?,
     );
     let b = (
-        parse_del_span(&test["b_del"])?,
-        parse_add_span(&test["b_add"])?,
+        ron::de::from_str::<DelSpan>(&test["b_del"])?,
+        ron::de::from_str::<AddSpan>(&test["b_add"])?,
     );
     let check = if test.contains_key("op_del") || test.contains_key("op_add") {
         Some((
-            parse_del_span(&test["op_del"])?,
-            parse_add_span(&test["op_add"])?,
+            ron::de::from_str::<DelSpan>(&test["op_del"])?,
+            ron::de::from_str::<AddSpan>(&test["op_add"])?,
         ))
     } else {
         None
@@ -118,7 +146,7 @@ pub fn run_transform_test<T: Schema>(input: &str) -> Result<(), Error> {
     if let Some(doc) = test.get("doc") {
         println!("{}", Paint::red("(!) validating docs..."));
 
-        let doc = Doc(parse_doc_span(doc)?);
+        let doc = Doc(ron::de::from_str::<DocSpan>(doc)?);
         println!("original document: {:?}", doc);
         validate_doc_span(&mut ValidateContext::new(), &doc.0)?;
         println!();
