@@ -1,8 +1,0 @@
-[DelWithGroup([DelWithGroup([DelWithGroup([DelSkip(8), DelChars(1)])])])]
-[]
-
-[DelWithGroup([DelWithGroup([DelWithGroup([DelSkip(7), DelGroupAll])])])]
-[]
-
-[DelWithGroup([DelWithGroup([DelWithGroup([DelSkip(7), DelGroupAll, DelChars(1)])])])]
-[]
