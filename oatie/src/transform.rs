@@ -1565,7 +1565,7 @@ pub fn transform_add_del_inner(
                         }
                     }
                     AddWithGroup(ins_span) => {
-                        // Transform hack to avoid fully deleted elements that
+                        // "Delall" transform hack to avoid fully deleted elements that
                         // leave their content unwrapped. Because one side deletes the
                         // group, we can't recreate it (because we have no knowledge of
                         // the document). Instead, we just delete all the newly added
@@ -1662,8 +1662,18 @@ pub fn transform_add_del_inner(
                             addres_inner.place(&a_inner.head.unwrap());
                             addres_inner.place_all(&a_inner.rest);
                         }
-                        addres.place(&AddGroup(tags, addres_inner));
-                        delres.place(&DelWithGroup(delres_inner));
+
+                        // "Delall" hack for adding in bullets
+                        if !(addres_inner.skip_post_len() == 0 && tags["tag"] == "bullet") {
+                            addres.place(&AddGroup(tags, addres_inner));
+                            delres.place(&DelWithGroup(delres_inner));
+                        } else {
+                            delres.place(&DelGroup(delres_inner));
+                        }
+
+                        // addres.place(&AddGroup(tags, addres_inner));
+                        // delres.place(&DelWithGroup(delres_inner));
+
                         a.next();
                     }
                 }

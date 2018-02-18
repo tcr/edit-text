@@ -23,6 +23,7 @@ extern crate term_painter;
 extern crate failure;
 extern crate regex;
 extern crate either;
+extern crate ron;
 
 /* logging */
 
