@@ -133,17 +133,6 @@ impl ClientDoc {
         // Do each operation in order, because we are going to apply corrections
         // to each new doc.
 
-        // Reattach to doc.
-        self.doc = Op::apply(&new_doc, &pending_transform);
-        // get corrections1
-        // println!("\n^^^^^\nCORRECTION2\n{:?}\n\n{:?}\n^^^^^\n\n", new_doc, pending_final);
-        // transform with local_op_transform
-        // apply  local_op_transform' to self.doc
-        // get corrections2
-        // self.pending_op = Some(pending_op_transform : corrections1)
-        // self.local_op = local_op_transform : corrections2
-        validate_doc(&self.doc).expect("Validation error after unrelated pending op");
-        self.doc = Op::apply(&self.doc, &local_transform);
 
         println!();
         println!("<test>");
@@ -165,7 +154,18 @@ impl ClientDoc {
         println!("</test>");
         println!();
 
-        validate_doc(&self.doc).expect("Validation error after unrelated op");
+        // Reattach to doc.
+        self.doc = Op::apply(&new_doc, &pending_transform);
+        // get corrections1
+        // println!("\n^^^^^\nCORRECTION2\n{:?}\n\n{:?}\n^^^^^\n\n", new_doc, pending_final);
+        // transform with local_op_transform
+        // apply  local_op_transform' to self.doc
+        // get corrections2
+        // self.pending_op = Some(pending_op_transform : corrections1)
+        // self.local_op = local_op_transform : corrections2
+        validate_doc(&self.doc).expect("Validation error after pending_op transform");
+        self.doc = Op::apply(&self.doc, &local_transform);
+        validate_doc(&self.doc).expect("Validation error after local_op transform");
 
         // {
             // let mirror = Op::apply(&new_doc, &Op::compose(&pending_op_transform, &local_op_transform));

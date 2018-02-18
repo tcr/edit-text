@@ -82,19 +82,15 @@ fn run() -> Result<(), Error> {
 
 
 
-
-
-
-
-
 let local_op = op_span!([
     DelWithGroup([
-        DelChars(1),
+        DelSkip(1),
     ]),
 ], [
     AddGroup({"tag": "bullet"}, [
         AddWithGroup([
-            AddGroup({"tag": "caret", "client": "b"}, [])
+            AddGroup({"tag": "caret", "client": "b"}, []),
+            AddSkip(1),
         ])
     ]),
 ]);
@@ -102,14 +98,42 @@ let local_op = op_span!([
 
 let input_transform = op_span!([
     DelGroup([
-        DelSkip(1),
+        DelChars(1),
     ]),
 ], [
     AddGroup({"tag": "h3"}, [
         AddChars("5"),
-        AddSkip(1),
     ]),
 ]);
+
+
+
+
+// This also fails
+
+// let local_op = op_span!([
+//     DelWithGroup([
+//         DelChars(1),
+//     ]),
+// ], [
+//     AddGroup({"tag": "bullet"}, [
+//         AddWithGroup([
+//             AddGroup({"tag": "caret", "client": "b"}, [])
+//         ])
+//     ]),
+// ]);
+
+
+// let input_transform = op_span!([
+//     DelGroup([
+//         DelSkip(1),
+//     ]),
+// ], [
+//     AddGroup({"tag": "h3"}, [
+//         AddChars("5"),
+//         AddSkip(1),
+//     ]),
+// ]);
 
     // P' x L -> P'', L'
     let (local_transform, _) = Op::transform::<RtfSchema>(&input_transform, &local_op);
