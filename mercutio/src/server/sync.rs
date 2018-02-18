@@ -18,6 +18,7 @@ use std::collections::VecDeque;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
+use std::time::Instant;
 use ron;
 
 pub fn default_doc() -> Doc {
@@ -214,6 +215,8 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
                     // Wait a set duration between transforms.
                     thread::sleep(Duration::from_millis(period as u64));
 
+                    let now = Instant::now();
+
                     let mut sync_state = sync_state_mutex.lock().unwrap();
 
                     let mut doc = state.body.lock().unwrap();
@@ -247,6 +250,9 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
                             .unwrap()
                             .broadcast(command);
                     }
+
+                    let elapsed = now.elapsed();
+                    // println!("sync duration: {}s, {}us", elapsed.as_secs(), elapsed.subsec_nanos()/1_000);
                 }
             }
         });
