@@ -2,3 +2,5 @@ target/
 mercutio/test.txt
 mercutio/log/
 mercutio/log2/
+Vagrantfile
+.vagrant

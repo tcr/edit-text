@@ -17,11 +17,11 @@ js-watch:
 mercutio-build:
 	cd oatie && CARGO_INCREMENTAL=1 cargo build
 
-mercutio-server:
+mercutio-sync:
 	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 MERCUTIO_SYNC_LOG=1 cargo run --bin mercutio-sync --release -- --period 100
 
 wasm-proxy:
-	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 MERCUTIO_WASM_LOG=1 cargo run --bin mercutio-wasm-proxy  --release
+	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 MERCUTIO_WASM_LOG=1 cargo run --bin mercutio-wasm-proxy --release
 
 mercutio-replay:
 	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 cargo run --release --bin mercutio-replay

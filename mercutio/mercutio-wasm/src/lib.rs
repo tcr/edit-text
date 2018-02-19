@@ -70,15 +70,12 @@ pub fn wasm_setup(input_ptr: *mut c_char) -> u32 {
     {
         let mut client_lock = WASM_CLIENT.lock().unwrap();
 
+        let monkey = Arc::new(AtomicBool::new(false));
+        let alive = Arc::new(AtomicBool::new(true));
+
         let client = Client {
-            name: editor_id,
-
-            doc: Doc(vec![]),
-            version: 100,
-            ops: vec![],
-            op_outstanding: None,
-
-            original_doc: Doc(vec![]),
+            client_id: editor_id,
+            client_doc: ClientDoc::new(),
 
             monkey: Arc::new(AtomicBool::new(false)),
             alive: Arc::new(AtomicBool::new(false)),
