@@ -23,6 +23,9 @@ mercutio-sync-build:
 mercutio-sync:
 	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 MERCUTIO_SYNC_LOG=1 cargo run --bin mercutio-sync --release -- --period 100
 
+mercutio-sync-nolog:
+	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 cargo run --bin mercutio-sync --release -- --period 100
+
 wasm-proxy:
 	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 MERCUTIO_WASM_LOG=1 cargo run --bin mercutio-wasm-proxy --release
 
