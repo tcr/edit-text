@@ -7,18 +7,32 @@ rustup override set `cat rust-toolchain`
 rustup target add wasm32-unknown-unknown
 ```
 
+You'll also need `cargo-script` to run the build tool:
+
+```
+cargo install cargo-script
+```
+
 To test out the text editor live, run the sync server in one terminal:
 
 ```
-cd mercutio
-CARGO_INCREMENTAL=1 RUST_BACKTRACE=1 cargo run --release --bin mercutio-sync
+./x.rs mercutio-sync
 ```
 
-And in another terminal, run the client proxy:
+Then go to <localhost:8000> and start editing.
+
+## Proxy mode
+
+Set the sync server with this switch (TODO: switch doesnt work atm):
 
 ```
-cd mercutio
-CARGO_INCREMENTAL=1 RUST_BACKTRACE=1 cargo run --release --bin mercutio-wasm
+./x.rs mercutio-sync --client-proxy
+```
+
+In another terminal, run the client proxy:
+
+```
+./x.rs wasm-proxy
 ```
 
 Then go to <localhost:8000> and start editing.

@@ -4,3 +4,4 @@ mercutio/log/
 mercutio/log2/
 Vagrantfile
 .vagrant
+node_modules

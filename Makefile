@@ -17,6 +17,9 @@ js-watch:
 mercutio-build:
 	cd oatie && CARGO_INCREMENTAL=1 cargo build
 
+mercutio-sync-build:
+	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 MERCUTIO_SYNC_LOG=1 cargo build --bin mercutio-sync --release
+
 mercutio-sync:
 	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 MERCUTIO_SYNC_LOG=1 cargo run --bin mercutio-sync --release -- --period 100
 
