@@ -21,4 +21,4 @@ ADD . /app
 RUN ["make", "mercutio-sync-build"]
 
 # Run app.py when the container launches
-CMD ["make", "mercutio-sync"]
+CMD ["make", "mercutio-sync-nolog"]

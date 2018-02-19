@@ -1,7 +1,8 @@
 target/
 mercutio/test.txt
-mercutio/log/
-mercutio/log2/
+mercutio/log
+mercutio/log2
+mercutio/in
 Vagrantfile
 .vagrant
 node_modules
