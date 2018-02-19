@@ -4,6 +4,7 @@ Clone and set the Rust version:
 
 ```
 rustup override set `cat rust-toolchain`
+rustup target add wasm32-unknown-unknown
 ```
 
 To test out the text editor live, run the sync server in one terminal:

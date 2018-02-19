@@ -67,7 +67,7 @@ else if (document.body.id == 'client') {
   console.log('start');
 
   // Use cross-compiled WASM bundle.
-  let WASM = false;
+  let WASM = true;
   if (!WASM) {
     editor.syncConnect();
     editor.nativeConnect();

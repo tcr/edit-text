@@ -1,10 +1,8 @@
 [workspace]
-members = ["oatie", "mercutio"] #, "mercutio/mercutio-wasm"]
+members = ["oatie", "mercutio", "mercutio/mercutio-wasm"]
 
 [profile.dev]
-#panic = 'abort'
 debug = true
 
 [profile.release]
-#panic = 'abort'
 debug = true

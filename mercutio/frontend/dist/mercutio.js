@@ -10853,7 +10853,7 @@ else if (document.body.id == 'client') {
     let editor = new __WEBPACK_IMPORTED_MODULE_2__editor__["a" /* default */](document.getElementById('mote'), editorID);
     console.log('start');
     // Use cross-compiled WASM bundle.
-    let WASM = false;
+    let WASM = true;
     if (!WASM) {
         editor.syncConnect();
         editor.nativeConnect();

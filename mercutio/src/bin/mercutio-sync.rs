@@ -70,7 +70,7 @@ fn spawn_http_server(port: u16) {
                     "/" | "/index.html" => {
                         let my_uuid = Uuid::new_v4().to_string();
                         // Redirect as random client
-                        let mut res = Response::empty(301);
+                        let mut res = Response::empty(302);
                         let dest = format!("/client/?{}", &my_uuid[0..8]);
                         let mut h = Header::from_bytes(b"Location".to_vec(), dest.as_bytes()).unwrap();
                         res.add_header(h);
@@ -90,6 +90,9 @@ fn spawn_http_server(port: u16) {
                         let path = template_path.join("favicon.png");
                         let file = File::open(&path).unwrap();
                         let _ = req.respond(Response::from_file(file));
+                    }
+                    "/quit" | "/quit/" => {
+                        process::exit(0);
                     }
                     path => {
                         if let Some(target) = dist_path

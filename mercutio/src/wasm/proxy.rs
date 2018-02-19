@@ -249,5 +249,5 @@ pub fn server(url: &str, ws_port: u16) {
 }
 
 pub fn start_websocket_server(port: u16) {
-    server(&format!("127.0.0.1:{}", port), port - 1);
+    server(&format!("0.0.0.0:{}", port), port - 1);
 }
