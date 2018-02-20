@@ -18,13 +18,13 @@ mercutio-build:
 	cd oatie && CARGO_INCREMENTAL=1 cargo build
 
 mercutio-sync-build:
-	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 MERCUTIO_SYNC_LOG=1 cargo build --bin mercutio-sync --release
+	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 MERCUTIO_SYNC_LOG=1 cargo build --bin mercutio-sync
 
 mercutio-sync:
 	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 MERCUTIO_SYNC_LOG=1 cargo run --bin mercutio-sync --release -- --period 100
 
 mercutio-sync-nolog:
-	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 cargo run --bin mercutio-sync --release -- --period 100
+	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 cargo run --bin mercutio-sync -- --period 100
 
 wasm-proxy:
 	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 MERCUTIO_WASM_LOG=1 cargo run --bin mercutio-wasm-proxy --release
