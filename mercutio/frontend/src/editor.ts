@@ -234,6 +234,11 @@ export default class Editor {
     });
   }
 
+  setID(id: string) {
+    // Update the client identifier
+    $('kbd').text(id);
+  }
+
   load(data: string) {
     let elem = this.$elem[0];
     requestAnimationFrame(() => {
@@ -275,7 +280,10 @@ export default class Editor {
     let editor = this;
     let parse = JSON.parse(event.data);
   
-    if (parse.Update) {
+    if (parse.Init) {
+      editor.setID(parse.Init);
+
+    } else if (parse.Update) {
       editor.load(parse.Update[0]);
   
       if (parse.Update[1] == null) {

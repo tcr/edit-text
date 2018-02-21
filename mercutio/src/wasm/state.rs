@@ -38,6 +38,16 @@ impl ClientDoc {
         }
     }
 
+    /// Overwrite current state
+    pub fn init(&mut self, new_doc: &Doc, version: usize) {
+        self.doc = new_doc.clone();
+        self.version = version;
+
+        self.original_doc = new_doc.clone();
+        self.pending_op = None;
+        self.local_op = Op::empty();
+    }
+
     /// Sync ACK'd our pending operation.
     /// Returns the next op to send to sync, if any.
     // TODO we can determine new_doc without needing it passed in

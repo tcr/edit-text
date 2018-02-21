@@ -19,6 +19,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 use std::time::Instant;
+use rand::{thread_rng, Rng};
 use ron;
 
 pub fn default_doc() -> Doc {
@@ -265,9 +266,12 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
 
                 // Forcibly set this new client's initial document state.
                 {
+                    // TODO how to select from unused client IDs?
+                    let new_id = thread_rng().gen_ascii_chars().take(6).collect::<String>();
+
                     let doc = state.body.lock().unwrap();
                     let mut sync_state = sync_state_mutex.lock().unwrap();
-                    let command = SyncClientCommand::Update(doc.0.clone(), sync_state.version, "$sync".to_string(), OT::empty());
+                    let command = SyncClientCommand::Init(new_id.clone(), doc.0.clone(), sync_state.version);
                     out.send(serde_json::to_string(&command).unwrap());
                 }
 

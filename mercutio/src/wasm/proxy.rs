@@ -197,8 +197,8 @@ pub struct SocketHandler {
 
 impl ws::Handler for SocketHandler {
     fn on_open(&mut self, shake: ws::Handshake) -> Result<(), ws::Error> {
-        let client_id = shake.request.resource()[1..].to_string();
-        let (alive, monkey, tx_task) = setup_client(&client_id, self.out.take().unwrap(), self.ws_port);
+        // let client_id = shake.request.resource()[1..].to_string();
+        let (alive, monkey, tx_task) = setup_client("$$$$$$", self.out.take().unwrap(), self.ws_port);
         self.alive = Some(alive);
         self.monkey = Some(monkey);
         self.tx_task = Some(tx_task);

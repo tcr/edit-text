@@ -18,7 +18,6 @@ extern crate take_mut;
 extern crate tiny_http;
 extern crate url;
 extern crate ws;
-extern crate uuid;
 extern crate include_dir_macro;
 
 use include_dir_macro::include_dir;
@@ -30,7 +29,6 @@ use std::process;
 use tiny_http::{Header, Response};
 use url::Url;
 use std::panic;
-use uuid::Uuid;
 use std::path::Path;
 
 fn spawn_http_server(port: u16) {
@@ -45,9 +43,6 @@ fn spawn_http_server(port: u16) {
     assert!(template_dir.contains_key(Path::new("client.html")));
     assert!(template_dir.contains_key(Path::new("favicon.png")));
 
-    // println!("DIST_DIR {:?}", dist_dir.keys());
-    // panic!("deaD");
-
     for _ in 0..4 {
         let server = server.clone();
 
@@ -58,6 +53,8 @@ fn spawn_http_server(port: u16) {
                 loop {
                     let req = server.recv().unwrap();
 
+                    // Extract just the path segment from this URL.
+                    // The `url` crate needs an absolute base to create a Url.
                     let path = Url::parse("http://localhost/")
                         .unwrap()
                         .join(req.url())
@@ -67,11 +64,9 @@ fn spawn_http_server(port: u16) {
 
                     match path.as_ref() {
                         "/" | "/index.html" => {
-                            let my_uuid = Uuid::new_v4().to_string();
                             // Redirect as random client
                             let mut res = Response::empty(302);
-                            let dest = format!("/client/?{}", &my_uuid[0..8]);
-                            let mut h = Header::from_bytes(b"Location".to_vec(), dest.as_bytes()).unwrap();
+                            let mut h = Header::from_bytes(b"Location".to_vec(), "/client/".as_bytes()).unwrap();
                             res.add_header(h);
                             let _ = req.respond(res);
                         }
@@ -123,11 +118,13 @@ fn spawn_http_server(port: u16) {
 }
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "mercutio-wasm", about = "An example of StructOpt usage.")]
+#[structopt(name = "mercutio", about = "Sync server.")]
 struct Opt {
-    #[structopt(long = "port", help = "Port", default_value = "8000")] port: u16,
+    #[structopt(long = "port", help = "Port", default_value = "8000")]
+    port: u16,
 
-    #[structopt(long = "period", help = "Sync period", default_value = "50")] period: usize,
+    #[structopt(long = "period", help = "Sync period", default_value = "50")]
+    period: usize,
 }
 
 fn main() {

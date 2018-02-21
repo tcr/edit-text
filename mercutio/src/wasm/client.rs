@@ -39,6 +39,7 @@ pub enum NativeCommand {
 // Commands to send to JavaScript.
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum ClientCommand {
+    Init(String),
     Setup {
         keys: Vec<(u32, bool, bool)>,
         buttons: Vec<(usize, String)>,
@@ -214,11 +215,48 @@ impl Client {
         match value {
             // Handle commands from Native.
             Task::NativeCommand(command) => {
+                if self.client_id == "$$$$$$" {
+                    return Ok(());
+                }
+
                 native_command(self, command)?;
             }
 
             // Sync sent us an Update command with a new document version.
-            Task::SyncClientCommand(SyncClientCommand::Update(doc_span, version, client_id, input_op)) => {
+            Task::SyncClientCommand(
+                SyncClientCommand::Init(new_client_id, doc_span, version)
+            ) => {
+                self.client_id = new_client_id.clone();
+                self.client_doc.init(&Doc(doc_span), version);
+
+                // Announce.
+                println!("inital version is {:?}", version);
+
+                // If the caret doesn't exist or was deleted, reinitialize it.
+                if !self.with_action_context(|ctx| Ok(has_caret(ctx)))
+                    .ok()
+                    .unwrap_or(true)
+                {
+                    println!("add caret");
+                    self.client_op(|doc| init_caret(doc)).unwrap();
+                }
+                
+                let res = ClientCommand::Init(new_client_id);
+                self.send_client(&res).unwrap();
+
+                // Native drives client state.
+                let res = ClientCommand::Update(doc_as_html(&self.client_doc.doc.0), None);
+                self.send_client(&res).unwrap();
+            }
+
+            // Sync sent us an Update command with a new document version.
+            Task::SyncClientCommand(
+                SyncClientCommand::Update(doc_span, version, client_id, input_op)
+            ) => {
+                if self.client_id == "$$$$$$" {
+                    return Ok(());
+                }
+
                 // TODO this can be generated from original_doc X input_op too
                 let doc = Doc(doc_span);
 
