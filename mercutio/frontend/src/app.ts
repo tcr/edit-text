@@ -73,7 +73,7 @@ else if (document.body.id == 'client') {
     editor.nativeConnect();
   } else {
     interop.instantiate(function (data) {
-      console.log('----> js_command:', data);
+      // console.log('----> js_command:', data);
 
       // Make this async so we don't have deeply nested call stacks from Rust<->JS interop.
       setImmediate(() => {
@@ -98,13 +98,15 @@ else if (document.body.id == 'client') {
           console.log('Editor "%s" is connected.', editor.editorID);
         };
         syncSocket.onmessage = function (event) {
-          console.log('GOT SYNC SCOKET MESSAGE:', event.data);
+          // console.log('GOT SYNC SOCKET MESSAGE:', event.data);
           Module.wasm_command({
             SyncClientCommand: JSON.parse(event.data),
           });
         };
         syncSocket.onclose = function () {
-          $('body').css('background', 'red');
+          // TODO use a class
+          $('html').css('background', '#f00');
+          $('body').css('opacity', '0.7');
         }
       });
     })

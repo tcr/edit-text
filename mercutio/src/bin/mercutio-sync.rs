@@ -1,3 +1,5 @@
+#![feature(proc_macro)]
+
 extern crate bus;
 extern crate crossbeam_channel;
 extern crate failure;
@@ -9,16 +11,18 @@ extern crate serde;
 extern crate serde_json;
 extern crate structopt;
 #[macro_use]
+extern crate taken;
+#[macro_use]
 extern crate structopt_derive;
 extern crate take_mut;
 extern crate tiny_http;
 extern crate url;
 extern crate ws;
 extern crate uuid;
+extern crate include_dir_macro;
 
+use include_dir_macro::include_dir;
 use mercutio::sync::*;
-use std::env;
-use std::fs::File;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use structopt::StructOpt;
@@ -27,6 +31,7 @@ use tiny_http::{Header, Response};
 use url::Url;
 use std::panic;
 use uuid::Uuid;
+use std::path::Path;
 
 fn spawn_http_server(port: u16) {
     let server = tiny_http::Server::http(&format!("0.0.0.0:{}", port)).unwrap();
@@ -34,91 +39,76 @@ fn spawn_http_server(port: u16) {
     let server = Arc::new(server);
     let mut guards = Vec::with_capacity(4);
 
+    let dist_dir = include_dir!("mercutio/frontend/dist");
+    let template_dir = include_dir!("mercutio/frontend/templates");
+    assert!(template_dir.contains_key(Path::new("multi.html")));
+    assert!(template_dir.contains_key(Path::new("client.html")));
+    assert!(template_dir.contains_key(Path::new("favicon.png")));
+
+    // println!("DIST_DIR {:?}", dist_dir.keys());
+    // panic!("deaD");
+
     for _ in 0..4 {
         let server = server.clone();
 
-        let guard = thread::spawn(move || {
-            let root_path = env::current_exe()
-                .unwrap()
-                .parent()
-                .unwrap()
-                .parent()
-                .unwrap()
-                .parent()
-                .unwrap()
-                .to_owned();
-            let dist_path = root_path
-                .join("mercutio/frontend/dist/")
-                .canonicalize()
-                .unwrap();
-            let template_path = root_path
-                .join("mercutio/frontend/templates/")
-                .canonicalize()
-                .unwrap();
+        let guard = thread::spawn({
+            take!(=dist_dir, =template_dir);
 
-            loop {
-                let req = server.recv().unwrap();
+            move || {
+                loop {
+                    let req = server.recv().unwrap();
 
-                let path = Url::parse("http://localhost/")
-                    .unwrap()
-                    .join(req.url())
-                    .unwrap()
-                    .path()
-                    .to_owned();
+                    let path = Url::parse("http://localhost/")
+                        .unwrap()
+                        .join(req.url())
+                        .unwrap()
+                        .path()
+                        .to_owned();
 
-                match path.as_ref() {
-                    "/" | "/index.html" => {
-                        let my_uuid = Uuid::new_v4().to_string();
-                        // Redirect as random client
-                        let mut res = Response::empty(302);
-                        let dest = format!("/client/?{}", &my_uuid[0..8]);
-                        let mut h = Header::from_bytes(b"Location".to_vec(), dest.as_bytes()).unwrap();
-                        res.add_header(h);
-                        let _ = req.respond(res);
-                    }
-                    "/multi" | "/multi/" => {
-                        let path = template_path.join("multi.html");
-                        let file = File::open(&path).unwrap();
-                        let _ = req.respond(Response::from_file(file));
-                    }
-                    "/client" | "/client/" => {
-                        let path = template_path.join("client.html");
-                        let file = File::open(&path).unwrap();
-                        let _ = req.respond(Response::from_file(file));
-                    }
-                    "/favicon.png" => {
-                        let path = template_path.join("favicon.png");
-                        let file = File::open(&path).unwrap();
-                        let _ = req.respond(Response::from_file(file));
-                    }
-                    "/quit" | "/quit/" => {
-                        process::exit(0);
-                    }
-                    path => {
-                        if let Some(target) = dist_path
-                            .join(path.chars().skip(1).collect::<String>())
-                            .canonicalize()
-                            .ok()
-                            .and_then(|x| {
-                                if x.starts_with(&dist_path) {
-                                    Some(x)
-                                } else {
-                                    None
-                                }
-                            }) {
-                            println!("GET 200 {:?}", path);
-                            let file = File::open(&target).unwrap();
-                            let _ = req.respond(Response::from_file(file));
-                        } else {
-                            println!("GET 404 {:?}", path);
-                            let _ = req.respond(Response::from_string("404".to_owned()));
+                    match path.as_ref() {
+                        "/" | "/index.html" => {
+                            let my_uuid = Uuid::new_v4().to_string();
+                            // Redirect as random client
+                            let mut res = Response::empty(302);
+                            let dest = format!("/client/?{}", &my_uuid[0..8]);
+                            let mut h = Header::from_bytes(b"Location".to_vec(), dest.as_bytes()).unwrap();
+                            res.add_header(h);
+                            let _ = req.respond(res);
+                        }
+
+                        "/multi" | "/multi/" => {
+                            let data = template_dir.get(Path::new("multi.html")).unwrap();
+                            let _ = req.respond(Response::from_data(*data)
+                                .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
+                        }
+                        "/client" | "/client/" => {
+                            let data = template_dir.get(Path::new("client.html")).unwrap();
+                            let _ = req.respond(Response::from_data(*data)
+                                .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
+                        }
+                        "/favicon.png" => {
+                            let data = template_dir.get(Path::new("favicon.png")).unwrap();
+                            let _ = req.respond(Response::from_data(*data)
+                                .with_header(Header::from_bytes("content-type".as_bytes(), "image/png".as_bytes()).unwrap()));
+                        }
+
+                        // // For callgrind
+                        // "/quit" | "/quit/" => {
+                        //     process::exit(0);
+                        // }
+
+                        path => {
+                            let path = path.chars().skip(1).collect::<String>();
+                            if let Some(target) = dist_dir.get(Path::new(&path)) {
+                                let _ = req.respond(Response::from_data(*target)
+                                    .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
+                            } else {
+                                // TODO real 404 error code
+                                let _ = req.respond(Response::from_string("404".to_owned()));
+                            }
                         }
                     }
                 }
-
-                // let file = File::open(&Path::new("image.png")).unwrap();
-                // let response = tiny_http::Response::from_file(file);
-                // let _ = request.respond(response);
             }
         });
 
