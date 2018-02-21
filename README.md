@@ -46,6 +46,8 @@ cd oatie
 cat in/1 | cargo run --bin oatie-transform
 ```
 
-## license
+## License
 
-mit
+Apache-2.0
+
+Bear by Alexander Krasnov from the Noun Project
