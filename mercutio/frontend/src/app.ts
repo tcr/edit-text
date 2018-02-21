@@ -61,13 +61,12 @@ else if (document.body.id == 'client') {
     $(document.body).addClass('blurred');
   }
 
-  let editorID = (location.search || '').substr(1) || 'unknown';
-  let editor = new Editor(document.getElementById('mote'), editorID);
+  let editor = new Editor(document.getElementById('mote'), '$$$$$$');
 
   console.log('start');
 
   // Use cross-compiled WASM bundle.
-  let WASM = true;
+  let WASM = false;
   if (!WASM) {
     editor.syncConnect();
     editor.nativeConnect();
@@ -83,7 +82,7 @@ else if (document.body.id == 'client') {
       });
     })
     .then(Module => {
-      Module.wasm_setup(editorID);
+      Module.wasm_setup();
 
       setImmediate(() => {
         // Websocket port

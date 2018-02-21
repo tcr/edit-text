@@ -32,7 +32,6 @@ pub mod wasm;
 #[cfg(not(target_arch="wasm32"))]
 pub use server::sync;
 
-// use include_dir_macro::include_dir;
 
 use oatie::doc::*;
 
@@ -47,5 +46,9 @@ pub enum SyncServerCommand {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum SyncClientCommand {
+    // Client id assignment, initial doc, initial version
+    Init(String, DocSpan, usize),
+
+    // New document, version, client-id, operation
     Update(DocSpan, usize, String, Op),
 }

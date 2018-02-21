@@ -61,11 +61,11 @@ lazy_static! {
 }
 
 #[no_mangle]
-pub fn wasm_setup(input_ptr: *mut c_char) -> u32 {
-    let input = unsafe {
-        CString::from_raw(input_ptr)
-    };
-    let editor_id = input.to_string_lossy().to_string();
+pub fn wasm_setup() -> u32 { //input_ptr: *mut c_char) -> u32 {
+    // let input = unsafe {
+    //     CString::from_raw(input_ptr)
+    // };
+    let editor_id = "$$$$$$".to_string();
 
     {
         let mut client_lock = WASM_CLIENT.lock().unwrap();
