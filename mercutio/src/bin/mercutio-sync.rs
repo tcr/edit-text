@@ -39,6 +39,7 @@ fn spawn_http_server(port: u16, wasm: bool) {
 
     let dist_dir = include_dir!("mercutio/frontend/dist");
     let template_dir = include_dir!("mercutio/frontend/templates");
+    // Necessary files
     assert!(template_dir.contains_key(Path::new("multi.html")));
     assert!(template_dir.contains_key(Path::new("client.html")));
     assert!(template_dir.contains_key(Path::new("favicon.png")));
