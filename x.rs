@@ -56,6 +56,9 @@ main!(|| {
         args.insert(2, "--".into());
     }
 
+    let release = args.iter().find(|x| *x == "--release").is_some();
+    args = args.into_iter().filter(|x| *x != "--release").collect();
+
     let args = Cli::from_iter(args.into_iter());
     match args {
         Cli::Test { args } => {
@@ -88,8 +91,9 @@ main!(|| {
         }
 
         Cli::MercutioSyncRun { args } => {
+            let release_flag = if release { vec!["--release"] } else { vec![] };
             cmd!(
-                cargo run ("--bin") ("mercutio-sync") ("--") ("--period") ("100") [args]
+                cargo run ("--bin") ("mercutio-sync") [release_flag] ("--") ("--period") ("100") [args]
             )
                 .current_dir("mercutio")
                 .env("RUST_BACKTRACE", "1")
