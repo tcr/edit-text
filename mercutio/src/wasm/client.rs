@@ -23,12 +23,6 @@ use lazy_static;
 #[cfg(not(target_arch="wasm32"))]
 use self::proxy::*;
 
-macro_rules! clone_all {
-    ( $( $x:ident ),* ) => {
-        $(let $x = $x.clone();)*
-    };
-}
-
 // Commands to send back to native.
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum NativeCommand {

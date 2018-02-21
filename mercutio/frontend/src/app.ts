@@ -86,8 +86,11 @@ else if (document.body.id == 'client') {
       Module.wasm_setup(editorID);
 
       setImmediate(() => {
-        let url = (window.location.protocol.match(/^https/) ?
-         'wss://' : 'ws://') + window.location.host + '/ws/';
+        // Websocket port
+        let url = window.location.host.match(/localhost/) ?
+          'ws://' + window.location.host.replace(/:\d+$|$/, ':8001') + '/' :
+          'wss://' + window.location.host + '/ws/';
+
         let syncSocket = new WebSocket(url);
         editor.Module = Module; 
         editor.syncSocket = syncSocket;
