@@ -123,8 +123,11 @@ struct Opt {
     #[structopt(long = "port", help = "Port", default_value = "8000")]
     port: u16,
 
-    #[structopt(long = "period", help = "Sync period", default_value = "50")]
+    #[structopt(long = "period", help = "Sync period", default_value = "100")]
     period: usize,
+
+    // #[structopt(help = "Enable wasm bundle", default_value = false)]
+    // wasm: boolean,
 }
 
 fn main() {

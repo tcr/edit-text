@@ -34,7 +34,7 @@ macro_rules! log_sync {
                 use $crate::server::LOG_SYNC_FILE;
                 use $crate::server::LogSync::*;
                 let mut file_guard = LOG_SYNC_FILE.lock().unwrap();
-                writeln!(*file_guard, "{}", ron::ser::to_string(&$x).unwrap());
+                let _ = writeln!(*file_guard, "{}", ron::ser::to_string(&$x).unwrap());
                 let _ = file_guard.sync_data();
             }
         }

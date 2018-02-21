@@ -40,7 +40,7 @@ macro_rules! log_wasm {
                 let mut file_guard = LOG_WASM_FILE.lock().unwrap();
                 let mut ron = ::ron::ser::to_string(&$x).unwrap();
                 ron = ron.replace("\n", "\\n"); // Escape newlines
-                writeln!(*file_guard, "{}", ron);
+                let _ = writeln!(*file_guard, "{}", ron);
                 let _ = file_guard.sync_data();
             }
         }

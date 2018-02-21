@@ -41,6 +41,7 @@ use oatie::doc::*;
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum SyncServerCommand {
     // Connect(String),
+    Keepalive,
     Commit(String, Op, usize),
 }
 
