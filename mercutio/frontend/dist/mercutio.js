@@ -11744,7 +11744,13 @@ class Editor {
                 clearTarget();
                 $(this).addClass('active').addClass('target');
                 console.log('Cursor:', curto($(this)));
-                editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["e" /* TargetCommand */](curto($(this))));
+                let last = $(this).children().last();
+                if (isBlock($(this))) {
+                    editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["e" /* TargetCommand */](curto(last)));
+                }
+                else {
+                    editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["e" /* TargetCommand */](curto($(this))));
+                }
             }
             // TODO this bubbles if i use preventDEfault?
             window.focus();
