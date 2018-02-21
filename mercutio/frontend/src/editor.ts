@@ -176,7 +176,12 @@ export default class Editor {
         $(this).addClass('active').addClass('target');
 
         console.log('Cursor:', curto($(this)));
-        editor.nativeCommand(commands.TargetCommand(curto($(this))));
+        let last = $(this).children().last();
+        if (isBlock($(this))) {
+          editor.nativeCommand(commands.TargetCommand(curto(last)));
+        } else {
+          editor.nativeCommand(commands.TargetCommand(curto($(this))));
+        }
       }
 
       // TODO this bubbles if i use preventDEfault?
