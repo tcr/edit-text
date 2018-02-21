@@ -106,12 +106,17 @@ button {
     
     div[data-tag="caret"] {
         display: inline;
-        border-right: 2px red solid;
-        overflow: visible;
         font-size: inherit;
         vertical-align: bottom;
-        animation: caret step-end 1.2s infinite;
+    }
 
+    div[data-tag="caret"]::before {
+        border-left: 1px red solid;
+        border-right: 1px red solid;
+        margin-right: -1px;
+        margin-left: -1px;
+        content: '';
+        // animation: caret step-end 1.4s infinite;
     }
 
     div[data-tag="caret"][data-client="middle"] {
@@ -122,17 +127,18 @@ button {
         border-right-color: blue;
     }
 
-    @keyframes caret {
-        0% {
-            border-right-width: 2px;
-            margin-right: -2px;
-            margin-left: -1px;
-        }
-        // 50% {
-        //     border-right-width: 0;
-        //     margin-right: 0;
-        // }
-      }
+    // @keyframes caret {
+    //     0% {
+    //         border-left-width: 1px;
+    //         border-right-width: 1px;
+    //         // margin-right: -2px;
+    //         // margin-left: -1px;
+    //     }
+    //     50% {
+    //         border-left-width: 0;
+    //         border-right-width: 0;
+    //     }
+    //   }
 
     /**
      * span styles
@@ -162,6 +168,9 @@ button {
     
     div[data-tag="pre"] {
         font-family: monospace;
+        padding: 5px 8px;
+        font-size: 0.9em;
+        background: #eee;
     }
 
     div[data-tag="bullet"] {
