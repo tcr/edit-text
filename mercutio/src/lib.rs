@@ -32,6 +32,8 @@ pub mod wasm;
 #[cfg(not(target_arch="wasm32"))]
 pub use server::sync;
 
+// use include_dir_macro::include_dir;
+
 use oatie::doc::*;
 
 
