@@ -6,4 +6,4 @@ mercutio/in
 Vagrantfile
 .vagrant
 node_modules
-dist
+dist/mercutio-sync
