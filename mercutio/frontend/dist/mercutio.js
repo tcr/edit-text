@@ -10851,8 +10851,11 @@ else if (document.body.id == 'client') {
     }
     let editor = new __WEBPACK_IMPORTED_MODULE_2__editor__["a" /* default */](document.getElementById('mote'), '$$$$$$');
     console.log('start');
+    if (!window['CONFIG'].configured) {
+        alert('The window.CONFIG variable was not configured by the server!');
+    }
     // Use cross-compiled WASM bundle.
-    let WASM = true;
+    let WASM = window['CONFIG'].wasm;
     if (!WASM) {
         editor.syncConnect();
         editor.nativeConnect();

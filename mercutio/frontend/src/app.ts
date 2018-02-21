@@ -65,8 +65,12 @@ else if (document.body.id == 'client') {
 
   console.log('start');
 
+  if (!window['CONFIG'].configured) {
+    alert('The window.CONFIG variable was not configured by the server!')
+  }
+
   // Use cross-compiled WASM bundle.
-  let WASM = true;
+  let WASM = window['CONFIG'].wasm;
   if (!WASM) {
     editor.syncConnect();
     editor.nativeConnect();
