@@ -10852,7 +10852,7 @@ else if (document.body.id == 'client') {
     let editor = new __WEBPACK_IMPORTED_MODULE_2__editor__["a" /* default */](document.getElementById('mote'), '$$$$$$');
     console.log('start');
     // Use cross-compiled WASM bundle.
-    let WASM = false;
+    let WASM = true;
     if (!WASM) {
         editor.syncConnect();
         editor.nativeConnect();
@@ -10873,13 +10873,19 @@ else if (document.body.id == 'client') {
                 // Websocket port
                 let url = window.location.host.match(/localhost/) ?
                     'ws://' + window.location.host.replace(/:\d+$|$/, ':8001') + '/' :
-                    'wss://' + window.location.host + '/ws/';
+                    'ws://' + window.location.host + '/ws/';
                 let syncSocket = new WebSocket(url);
                 editor.Module = Module;
                 editor.syncSocket = syncSocket;
                 syncSocket.onopen = function (event) {
                     console.log('Editor "%s" is connected.', editor.editorID);
                 };
+                // Keepalive
+                setInterval(() => {
+                    syncSocket.send(JSON.stringify({
+                        Keepalive: null,
+                    }));
+                }, 1000);
                 syncSocket.onmessage = function (event) {
                     // console.log('GOT SYNC SOCKET MESSAGE:', event.data);
                     Module.wasm_command({

@@ -6,3 +6,4 @@ mercutio/in
 Vagrantfile
 .vagrant
 node_modules
+dist

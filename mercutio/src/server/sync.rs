@@ -294,6 +294,9 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
                             log_sync!(ClientPacket(value.clone()));
 
                             match value {
+                                SyncServerCommand::Keepalive => {
+                                    // noop
+                                }
                                 SyncServerCommand::Commit(client_id, op, version) => {
                                     let mut sync_state = sync_state_mutex_capture.lock().unwrap();
                                     sync_state.ops.push_back((client_id, version, op));
