@@ -4,19 +4,24 @@
 //! command-macros = "*"
 //! failure = "*"
 //! quicli = "*"
+//! clap = "*"
 //! ```
+
+#![deny(warnings)]
 
 #[macro_use]
 extern crate command_macros;
 #[macro_use]
 extern crate quicli;
+extern crate clap;
 
 use quicli::prelude::*;
+// use clap::{App, SubCommand, Arg};
 
 // Add cool slogan for your app here, e.g.:
 /// Get first n lines of a file
 #[derive(StructOpt)]
-#[structopt(name = "edit-text", about = "scripts")]
+#[structopt(name = "edit-text", about = "Build scripts for mercutio and oatie")]
 enum Cli {
     #[structopt(name = "test")]
     Test {
@@ -44,7 +49,14 @@ enum Cli {
     },
 }
 
-main!(|args: Cli| {
+main!(|| {
+    // Pass arguments directly to subcommands (no -h, -v, or verification)
+    let mut args = ::std::env::args().collect::<Vec<_>>();
+    if args.len() > 2 {
+        args.insert(2, "--".into());
+    }
+
+    let args = Cli::from_iter(args.into_iter());
     match args {
         Cli::Test { args } => {
             cmd!(
