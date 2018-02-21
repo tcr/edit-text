@@ -94,6 +94,15 @@ fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&mut Client) -> Result<(), Err
             false,
             Box::new(|client: &mut Client| client.client_op(|doc| split_block(doc))),
         ),
+        // enter
+        (
+            13,
+            false,
+            true,
+            Box::new(|client: &mut Client| {
+                client.client_op(|doc| add_char(doc, 13))
+            }),
+        ),
     ]
 }
 
