@@ -77,7 +77,7 @@ main!(|args: Cli| {
 
         Cli::MercutioSyncRun { args } => {
             cmd!(
-                cargo run ("--release") ("--bin") ("mercutio-sync") ("--") ("--period") ("100") [args]
+                cargo run ("--bin") ("mercutio-sync") ("--") ("--period") ("100") [args]
             )
                 .current_dir("mercutio")
                 .env("RUST_BACKTRACE", "1")

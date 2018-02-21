@@ -31,7 +31,7 @@ use url::Url;
 use std::panic;
 use std::path::Path;
 
-fn spawn_http_server(port: u16) {
+fn spawn_http_server(port: u16, wasm: bool) {
     let server = tiny_http::Server::http(&format!("0.0.0.0:{}", port)).unwrap();
 
     let server = Arc::new(server);
@@ -61,6 +61,13 @@ fn spawn_http_server(port: u16) {
                         .unwrap()
                         .path()
                         .to_owned();
+                    
+                    let update_config_var = |data: &[u8]| -> Vec<u8> {
+                        let input = String::from_utf8_lossy(data);
+                        let output = input.replace("CONFIG = {}",
+                            &format!("CONFIG = {{configured: true, wasm: {}}}", if wasm { "true" } else { "false"} ));
+                        output.into_bytes()
+                    };
 
                     match path.as_ref() {
                         "/" | "/index.html" => {
@@ -73,12 +80,12 @@ fn spawn_http_server(port: u16) {
 
                         "/multi" | "/multi/" => {
                             let data = template_dir.get(Path::new("multi.html")).unwrap();
-                            let _ = req.respond(Response::from_data(*data)
+                            let _ = req.respond(Response::from_data(update_config_var(data))
                                 .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
                         }
                         "/client" | "/client/" => {
                             let data = template_dir.get(Path::new("client.html")).unwrap();
-                            let _ = req.respond(Response::from_data(*data)
+                            let _ = req.respond(Response::from_data(update_config_var(data))
                                 .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
                         }
                         "/favicon.png" => {
@@ -126,8 +133,8 @@ struct Opt {
     #[structopt(long = "period", help = "Sync period", default_value = "100")]
     period: usize,
 
-    // #[structopt(help = "Enable wasm bundle", default_value = false)]
-    // wasm: boolean,
+    #[structopt(help = "Enable wasm bundle", long = "wasm")]
+    wasm: bool,
 }
 
 fn main() {
@@ -147,7 +154,7 @@ fn main() {
     // port + 1
     sync_socket_server(opt.port + 1, opt.period, mercutio_state.clone());
 
-    spawn_http_server(opt.port);
+    spawn_http_server(opt.port, opt.wasm);
 
     // // Loop forever
     // loop {
