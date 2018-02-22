@@ -40,6 +40,13 @@ enum Cli {
 
     #[structopt(name = "mercutio-sync")]
     MercutioSyncRun {
+        #[structopt(long = "no-log", help = "Do not export log")]
+        no_log: bool,
+        args: Vec<String>,
+    },
+
+    #[structopt(name = "mercutio-sync-build")]
+    MercutioSyncBuild {
         args: Vec<String>,
     },
 
@@ -52,7 +59,7 @@ enum Cli {
 main!(|| {
     // Pass arguments directly to subcommands (no -h, -v, or verification)
     let mut args = ::std::env::args().collect::<Vec<_>>();
-    if args.len() > 2 {
+    if args.len() > 2 && args[1] != "help" {
         args.insert(2, "--".into());
     }
 
@@ -90,7 +97,7 @@ main!(|| {
                 .status()?;
         }
 
-        Cli::MercutioSyncRun { args } => {
+        Cli::MercutioSyncRun { no_log, args } => {
             let release_flag = if release { vec!["--release"] } else { vec![] };
             cmd!(
                 cargo run ("--bin") ("mercutio-sync") [release_flag] ("--") ("--period") ("100") [args]
@@ -98,7 +105,18 @@ main!(|| {
                 .current_dir("mercutio")
                 .env("RUST_BACKTRACE", "1")
                 .env("CARGO_INCREMENTAL", "1")
-                .env("MERCUTIO_SYNC_LOG", "1")
+                .env("MERCUTIO_SYNC_LOG", if no_log { "0" } else { "1" })
+                .status()?;
+        }
+
+        Cli::MercutioSyncBuild { args } => {
+            let release_flag = if release { vec!["--release"] } else { vec![] };
+            cmd!(
+                cargo build ("--bin") ("mercutio-sync") [release_flag] ("--") ("--period") ("100") [args]
+            )
+                .current_dir("mercutio")
+                .env("RUST_BACKTRACE", "1")
+                .env("CARGO_INCREMENTAL", "1")
                 .status()?;
         }
 
