@@ -33,6 +33,7 @@ pub enum NativeCommand {
     RenameGroup(String, CurSpan),
     // Load(DocSpan),
     Target(CurSpan),
+    RandomTarget(f64),
     Monkey(bool),
 }
 
@@ -135,6 +136,64 @@ pub fn button_handlers() -> Vec<(&'static str, Box<Fn(&mut Client) -> Result<(),
     ]
 }
 
+
+
+
+// TODO move the below to a random.rs ?
+
+use oatie::writer::CurWriter;
+
+pub struct RandomCursorContext {
+    cur: CurWriter,
+    history: Vec<CurSpan>,
+}
+
+impl Default for RandomCursorContext {
+    fn default() -> Self {
+        RandomCursorContext {
+            cur: CurWriter::new(),
+            history: vec![],
+        }
+    }
+}
+
+pub fn collect_cursors_span(ctx: &mut RandomCursorContext, span: &DocSpan) -> Result<(), Error> {
+    for elem in span {
+        match *elem {
+            DocGroup(ref attrs, ref span) => {
+                {
+                    let mut c = ctx.cur.clone();
+                    c.place(&CurElement::CurGroup);
+                    c.exit_all();
+                    ctx.history.push(c.result());
+                }
+
+                ctx.cur.begin();
+                collect_cursors_span(ctx, span)?;
+                ctx.cur.exit();
+            }
+            DocChars(ref text) => {
+                ensure!(text.chars().count() > 0, "Empty char string");
+
+                for _ in 0..text.chars().count() {
+                    let mut c = ctx.cur.clone();
+                    c.place(&CurElement::CurChar);
+                    c.exit_all();
+                    ctx.history.push(c.result());
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+pub fn collect_cursors(doc: &Doc) -> Result<Vec<CurSpan>, Error> {
+    let mut ctx = RandomCursorContext::default();
+    collect_cursors_span(&mut ctx, &doc.0)?;
+    Ok(ctx.history)
+}
+
+
 fn native_command(client: &mut Client, req: NativeCommand) -> Result<(), Error> {
     match req {
         NativeCommand::RenameGroup(tag, _) => client.client_op(|doc| replace_block(doc, &tag))?,
@@ -156,6 +215,12 @@ fn native_command(client: &mut Client, req: NativeCommand) -> Result<(), Error> 
             }
         }
         NativeCommand::Character(char_code) => client.client_op(|doc| add_char(doc, char_code))?,
+        NativeCommand::RandomTarget(pos) => {
+            let cursors = collect_cursors(&client.client_doc.doc)?;
+            let idx = ((pos * (cursors.len() as f64)) as usize);
+
+            client.client_op(|doc| cur_to_caret(doc, &cursors[idx]))?;
+        }
         NativeCommand::Target(cur) => {
             client.client_op(|doc| cur_to_caret(doc, &cur))?;
         }

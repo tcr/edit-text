@@ -16,85 +16,13 @@ use std::thread;
 use std::time::Duration;
 use ws;
 use super::client::button_handlers;
+use super::monkey::*;
+use wasm::monkey::setup_monkey;
 
 macro_rules! clone_all {
     ( $( $x:ident ),* ) => {
         $(let $x = $x.clone();)*
     };
-}
-
-macro_rules! monkey_task {
-    ( $alive:expr, $monkey:expr, $tx:expr, $wait_params:expr, $task:expr ) => {
-        {
-            let tx = $tx.clone();
-            let alive = $alive.clone();
-            let monkey = $monkey.clone();
-            thread::spawn::<_, Result<(), Error>>(move || {
-                let mut rng = rand::thread_rng();
-                while alive.load(Ordering::Relaxed) {
-                    thread::sleep(Duration::from_millis(
-                        $wait_params.0 + rng.gen_range($wait_params.1, $wait_params.2),
-                    ));
-                    if monkey.load(Ordering::Relaxed) {
-                        tx.send(Task::NativeCommand($task))?;
-                    }
-                }
-                Ok(())
-            })
-        }
-    };
-}
-
-pub type MonkeyParam = (u64, u64, u64);
-
-// "Human-like"
-pub const MONKEY_BUTTON: MonkeyParam = (500, 0, 2000);
-pub const MONKEY_LETTER: MonkeyParam = (50, 0, 200);
-pub const MONKEY_ARROW: MonkeyParam = (0, 0, 500);
-pub const MONKEY_BACKSPACE: MonkeyParam = (0, 0, 200);
-pub const MONKEY_ENTER: MonkeyParam = (600, 0, 3_000);
-
-// Race
-// const MONKEY_BUTTON: MonkeyParam = (0, 0, 100);
-// const MONKEY_LETTER: MonkeyParam = (0, 0, 100);
-// const MONKEY_ARROW: MonkeyParam = (0, 0, 100);
-// const MONKEY_BACKSPACE: MonkeyParam = (0, 0, 100);
-// const MONKEY_ENTER: MonkeyParam = (0, 0, 1_000);
-
-#[allow(unused)]
-fn setup_monkey(alive: Arc<AtomicBool>, monkey: Arc<AtomicBool>, tx: Sender<Task>) {
-
-    monkey_task!(alive, monkey, tx, MONKEY_BUTTON, {
-        let mut rng = rand::thread_rng();
-        let index = rng.gen_range(0, button_handlers().len() as u32);
-        NativeCommand::Button(index)
-    });
-
-    monkey_task!(alive, monkey, tx, MONKEY_LETTER, {
-        let mut rng = rand::thread_rng();
-        let char_list = vec![
-            rng.gen_range(b'A', b'Z'),
-            rng.gen_range(b'a', b'z'),
-            rng.gen_range(b'0', b'9'),
-            b' ',
-        ];
-        let c = *rng.choose(&char_list).unwrap() as u32;
-        NativeCommand::Character(c)
-    });
-
-    monkey_task!(alive, monkey, tx, MONKEY_ARROW, {
-        let mut rng = rand::thread_rng();
-        let key = *rng.choose(&[37, 39, 37, 39, 37, 39, 38, 40]).unwrap();
-        NativeCommand::Keypress(key, false, false)
-    });
-
-    monkey_task!(alive, monkey, tx, MONKEY_BACKSPACE, {
-        NativeCommand::Keypress(8, false, false)
-    });
-
-    monkey_task!(alive, monkey, tx, MONKEY_ENTER, {
-        NativeCommand::Keypress(13, false, false)
-    });
 }
 
 fn setup_client(name: &str, out: ws::Sender, ws_port: u16) -> (Arc<AtomicBool>, Arc<AtomicBool>, Sender<Task>) {

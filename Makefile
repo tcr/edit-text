@@ -14,9 +14,6 @@ js-build:
 js-watch:
 	cd mercutio/frontend && npx webpack --watch ./src/app.ts ./dist/mercutio.js
 
-wasm-proxy:
-	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 MERCUTIO_WASM_LOG=1 cargo run --bin mercutio-wasm-proxy --release
-
 mercutio-replay:
 	cd mercutio && RUST_BACKTRACE=1 CARGO_INCREMENTAL=1 cargo run --release --bin mercutio-replay
 

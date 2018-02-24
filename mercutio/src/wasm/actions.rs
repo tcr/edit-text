@@ -219,16 +219,16 @@ pub fn split_block(ctx: ActionContext) -> Result<Op, Error> {
     };
 
     // Identify if we're nested inside of a bullet.
-    // let mut parent_walker = prev_walker.clone();
+    let mut parent_walker = prev_walker.clone();
     let nested_bullet = loop {
         //TODO re-enable once DocGroup aborts when has too few items
-        // if parent_walker.parent() {
-        //     if let Some(DocGroup(ref attrs, _)) = parent_walker.doc().head() {
-        //         if attrs["tag"] == "bullet" {
-        //             break true;
-        //         }
-        //     }
-        // }
+        if parent_walker.parent() {
+            if let Some(DocGroup(ref attrs, _)) = parent_walker.doc().head() {
+                if attrs["tag"] == "bullet" {
+                    break true;
+                }
+            }
+        }
         break false;
     };
 
