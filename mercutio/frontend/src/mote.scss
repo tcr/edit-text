@@ -182,6 +182,10 @@ kbd {
         display: list-item;
         margin-left: 25px;
     }
+
+    div[data-tag="bullet"] + div[data-tag="bullet"] {
+        margin-top: -5px;
+    }
 }
 
 .mote.theme-block {

@@ -279,7 +279,7 @@ impl Walker {
         }
 
         // Next, increment by one full char (so cursor is always on right).
-        let mut stepper = rstepper.rev();
+        let mut stepper = rstepper.clone().rev();
         loop {
             if stepper.next().is_none() {
                 break;
@@ -287,6 +287,9 @@ impl Walker {
             if stepper.is_valid_caret_pos() {
                 break;
             }
+        }
+        if !stepper.is_valid_caret_pos() {
+            stepper = rstepper.rev();
         }
 
         Walker {

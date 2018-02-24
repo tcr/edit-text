@@ -228,7 +228,7 @@ impl ClientDoc {
         {
             let mut recreated_doc = OT::apply(&self.original_doc, self.pending_op.as_ref().unwrap_or(&Op::empty()));
             let mut recreated_doc2 = OT::apply(&recreated_doc, &self.local_op);
-            println!("---->\n<apply_local_op>\nrec_doc2: {:?}\n\nlocal_op: {:?}\n\nincoming op:{:?}\n</apply_local_op>\n", recreated_doc2, self.local_op, op);
+            // println!("---->\n<apply_local_op>\nrec_doc2: {:?}\n\nlocal_op: {:?}\n\nincoming op:{:?}\n</apply_local_op>\n", recreated_doc2, self.local_op, op);
             assert_eq!(self.doc, recreated_doc2);
             // Op::apply(&self.doc, op);
             let mut recreated_doc3 = OT::apply(&recreated_doc, &Op::compose(&self.local_op, op));
@@ -244,7 +244,7 @@ impl ClientDoc {
 
         // Combine operation with previous queued operations.
         self.local_op = Op::compose(&self.local_op, &op);
-        println!("--!! {:?}\n{:?}\n{:?}\n\n", self.original_doc, self.pending_op, self.local_op);
+        // println!("--!! {:?}\n{:?}\n{:?}\n\n", self.original_doc, self.pending_op, self.local_op);
 
         self.assert_compose_correctness();
     }

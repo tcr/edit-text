@@ -196,7 +196,9 @@ pub fn collect_cursors(doc: &Doc) -> Result<Vec<CurSpan>, Error> {
 
 fn native_command(client: &mut Client, req: NativeCommand) -> Result<(), Error> {
     match req {
-        NativeCommand::RenameGroup(tag, _) => client.client_op(|doc| replace_block(doc, &tag))?,
+        NativeCommand::RenameGroup(tag, _) => {
+            client.client_op(|doc| replace_block(doc, &tag))?;
+        }
         NativeCommand::Button(index) => {
             // Find which button handler to respond to this command.
             button_handlers()
@@ -214,7 +216,9 @@ fn native_command(client: &mut Client, req: NativeCommand) -> Result<(), Error> 
                 }
             }
         }
-        NativeCommand::Character(char_code) => client.client_op(|doc| add_char(doc, char_code))?,
+        NativeCommand::Character(char_code) => {
+            client.client_op(|doc| add_char(doc, char_code))?;
+        }
         NativeCommand::RandomTarget(pos) => {
             let cursors = collect_cursors(&client.client_doc.doc)?;
             let idx = ((pos * (cursors.len() as f64)) as usize);
