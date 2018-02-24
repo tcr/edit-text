@@ -15,7 +15,7 @@ fn is_caret(attrs: &Attrs, client_id: Option<&str>) -> bool {
 
 #[derive(Clone, Debug)]
 pub struct CaretStepper {
-    doc: DocStepper,
+    pub doc: DocStepper,
     caret_pos: isize,
 }
 
