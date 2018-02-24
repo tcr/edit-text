@@ -2,7 +2,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './mote.scss';
 import * as commands from './commands';
 import Editor from './editor';
-import Parent from './parent';
+import Multi from './multi';
 import * as interop from './interop';
 
 import $ from 'jquery';
@@ -42,7 +42,7 @@ if (document.body.id == 'multi') {
 
 `;
 
-  new Parent();
+  new Multi();
 }
 else if (document.body.id == 'client') {
   document.body.innerHTML = `

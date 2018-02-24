@@ -13,12 +13,13 @@ export default class Parent {
     // Monkey global click button.
     let monkey = false;
     $('#action-monkey').on('click', () => {
+      monkey = !monkey;
       for (let i = 0; i < window.frames.length; i++) {
         window.frames[i].postMessage({
-          'Monkey': !monkey,
+          'Monkey': monkey,
         }, '*');
       }
-      monkey = !monkey;
+      $('#action-monkey').css('background', monkey ? '#0f0' : 'transparent');
     })
   }
 }
