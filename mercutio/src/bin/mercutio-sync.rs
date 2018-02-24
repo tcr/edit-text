@@ -31,7 +31,7 @@ use url::Url;
 use std::panic;
 use std::path::Path;
 
-fn spawn_http_server(port: u16, wasm: bool) {
+fn spawn_http_server(port: u16, client_proxy: bool) {
     let server = tiny_http::Server::http(&format!("0.0.0.0:{}", port)).unwrap();
 
     let server = Arc::new(server);
@@ -66,7 +66,7 @@ fn spawn_http_server(port: u16, wasm: bool) {
                     let update_config_var = |data: &[u8]| -> Vec<u8> {
                         let input = String::from_utf8_lossy(data);
                         let output = input.replace("CONFIG = {}",
-                            &format!("CONFIG = {{configured: true, wasm: {}}}", if wasm { "true" } else { "false"} ));
+                            &format!("CONFIG = {{configured: true, wasm: {}}}", if client_proxy { "false" } else { "true"} ));
                         output.into_bytes()
                     };
 
@@ -134,8 +134,8 @@ struct Opt {
     #[structopt(long = "period", help = "Sync period", default_value = "100")]
     period: usize,
 
-    #[structopt(help = "Enable wasm bundle", long = "wasm")]
-    wasm: bool,
+    #[structopt(help = "Enable client proxy", long = "client-proxy")]
+    client_proxy: bool,
 }
 
 fn main() {
@@ -155,7 +155,7 @@ fn main() {
     // port + 1
     sync_socket_server(opt.port + 1, opt.period, mercutio_state.clone());
 
-    spawn_http_server(opt.port, opt.wasm);
+    spawn_http_server(opt.port, opt.client_proxy);
 
     // // Loop forever
     // loop {

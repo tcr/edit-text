@@ -1,21 +1,13 @@
-use super::actions::*;
 use super::*;
-use super::super::{SyncClientCommand, SyncServerCommand};
-use crossbeam_channel::{unbounded, Sender};
+use crossbeam_channel::{Sender};
 use failure::Error;
-use oatie::OT;
-use oatie::doc::*;
 use rand;
-use rand::{Rng, thread_rng};
-use serde_json;
-use std::{panic, process};
-use std::sync::{Arc, Mutex};
-use std::sync::atomic::{AtomicBool, AtomicUsize};
+use rand::{Rng};
+use std::sync::{Arc};
+use std::sync::atomic::{AtomicBool};
 use std::sync::atomic::Ordering;
 use std::thread;
 use std::time::Duration;
-use ws;
-use oatie::writer::CurWriter;
 use super::client::button_handlers;
 
 macro_rules! monkey_task {

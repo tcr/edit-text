@@ -33,7 +33,7 @@ fn main() {
 fn init_new_client(client_id: &str) -> (Client, Receiver<ClientCommand>, Receiver<SyncServerCommand>) {
     let (tx_client, rx_client) = unbounded();
     let (tx_sync, rx_sync) = unbounded();
-    let mut client = Client {
+    let client = Client {
         client_id: client_id.to_owned(),
         client_doc: ClientDoc::new(),
 

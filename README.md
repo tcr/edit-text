@@ -21,9 +21,9 @@ To test out the text editor live, run the sync server in one terminal:
 
 Then go to <localhost:8000> and start editing.
 
-## Proxy mode
+## Local wasm (client) proxy
 
-Set the sync server with this switch (TODO: switch doesnt work atm):
+Set the sync server with this switch:
 
 ```
 ./x.rs mercutio-sync --client-proxy
