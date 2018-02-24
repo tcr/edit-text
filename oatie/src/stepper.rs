@@ -51,7 +51,7 @@ impl DelStepper {
                 self.rest = span.to_vec();
                 self.next();
             }
-            _ => panic!("Entered wrong thing"),
+            _ => panic!("DelStepper::enter() called on inappropriate element"),
         }
     }
 
@@ -131,7 +131,7 @@ impl AddStepper {
                 self.rest = span.to_vec();
                 self.next();
             }
-            _ => panic!("Entered wrong thing"),
+            _ => panic!("AddStepper::enter() called on inappropriate element"),
         }
     }
 
@@ -210,7 +210,7 @@ impl CurStepper {
                 self.rest = span.to_vec();
                 self.next();
             }
-            _ => panic!("Entered wrong thing"),
+            _ => panic!("CurStepper::enter() called on inappropriate element"),
         }
     }
 
@@ -324,7 +324,7 @@ impl DocStepper {
                 self.char_debt = 0;
                 self.rest = span.to_vec();
             }
-            _ => panic!("Entered wrong thing"),
+            _ => panic!("DocStepper::enter() called on inappropriate element"),
         }
 
         self
@@ -344,7 +344,7 @@ impl DocStepper {
                 //     self.prev();
                 // }
             }
-            _ => panic!("Entered wrong thing"),
+            _ => panic!("Unexited wrong thing"),
         }
 
         assert!(self.head >= 0);

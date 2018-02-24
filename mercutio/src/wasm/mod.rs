@@ -56,6 +56,7 @@ pub mod proxy;
 pub mod util;
 pub mod state;
 pub mod client;
+pub mod monkey;
 
 pub use self::client::*;
 pub use self::state::*;

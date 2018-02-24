@@ -123,3 +123,52 @@ impl AddWriter {
         self.past
     }
 }
+
+#[derive(Clone, Debug, Default)]
+pub struct CurWriter {
+    pub past: Vec<CurElement>,
+    stack: Vec<Vec<CurElement>>,
+}
+
+impl CurWriter {
+    pub fn new() -> CurWriter {
+        CurWriter {
+            past: vec![],
+            stack: vec![],
+        }
+    }
+
+    pub fn begin(&mut self) {
+        let past = self.past.clone();
+        self.past = vec![];
+        self.stack.push(past);
+    }
+
+    pub fn exit(&mut self) {
+        let past = self.past.clone();
+        self.past = self.stack.pop().unwrap();
+        self.past.push(CurWithGroup(past));
+    }
+
+    pub fn exit_all(&mut self) {
+        while !self.stack.is_empty() {
+            self.exit();
+        }
+    }
+
+    pub fn place(&mut self, elem: &CurElement) {
+        self.past.place(elem);
+    }
+
+    pub fn place_all(&mut self, span: &CurSpan) {
+        self.past.place_all(span);
+    }
+
+    pub fn result(self) -> CurSpan {
+        if !self.stack.is_empty() {
+            println!("{:?}", self);
+            assert!(false, "cannot get result when stack is still full");
+        }
+        self.past
+    }
+}

@@ -211,3 +211,32 @@ pub enum CurElement {
 }
 
 pub use self::CurElement::*;
+
+pub trait CurPlaceable {
+    fn place_all(&mut self, all: &[CurElement]);
+    fn place(&mut self, value: &CurElement);
+}
+
+impl CurPlaceable for CurSpan {
+    fn place_all(&mut self, all: &[CurElement]) {
+        for i in all {
+            self.place(i);
+        }
+    }
+
+    fn place(&mut self, elem: &CurElement) {
+        match *elem {
+            CurSkip(count) => {
+                assert!(count > 0);
+                if let Some(&mut CurSkip(ref mut value)) = self.last_mut() {
+                    *value += count;
+                } else {
+                    self.push(CurSkip(count));
+                }
+            }
+            CurGroup | CurChar | CurWithGroup(..) => {
+                self.push(elem.clone());
+            }
+        }
+    }
+}
