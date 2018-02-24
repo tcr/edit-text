@@ -28,7 +28,7 @@ macro_rules! monkey_task {
                 let mut rng = rand::thread_rng();
                 while alive.load(Ordering::Relaxed) {
                     thread::sleep(Duration::from_millis(
-                        $wait_params.0 + rng.gen_range($wait_params.1, $wait_params.2),
+                        rng.gen_range($wait_params.0, $wait_params.1),
                     ));
                     if monkey.load(Ordering::Relaxed) {
                         tx.send(Task::NativeCommand($task))?;
@@ -40,15 +40,15 @@ macro_rules! monkey_task {
     };
 }
 
-pub type MonkeyParam = (u64, u64, u64);
+pub type MonkeyParam = (u64, u64);
 
 // "Human-like"
-pub const MONKEY_BUTTON: MonkeyParam = (0, 0, 2000);
-pub const MONKEY_LETTER: MonkeyParam = (0, 0, 200);
-pub const MONKEY_ARROW: MonkeyParam = (0, 0, 500);
-pub const MONKEY_BACKSPACE: MonkeyParam = (0, 0, 200);
-pub const MONKEY_ENTER: MonkeyParam = (0, 6_000, 12_000);
-pub const MONKEY_CLICK: MonkeyParam = (0, 400, 1000);
+pub const MONKEY_BUTTON: MonkeyParam = (0, 2000);
+pub const MONKEY_LETTER: MonkeyParam = (0, 200);
+pub const MONKEY_ARROW: MonkeyParam = (0, 500);
+pub const MONKEY_BACKSPACE: MonkeyParam = (0, 200);
+pub const MONKEY_ENTER: MonkeyParam = (6_000, 12_000);
+pub const MONKEY_CLICK: MonkeyParam = (400, 1000);
 
 // Race
 // const MONKEY_BUTTON: MonkeyParam = (0, 0, 100);
