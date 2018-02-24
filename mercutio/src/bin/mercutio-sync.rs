@@ -152,6 +152,8 @@ fn main() {
         body: Arc::new(Mutex::new(default_doc())),
     };
 
+    println!("client proxy: {:?}", opt.client_proxy);
+
     // port + 1
     sync_socket_server(opt.port + 1, opt.period, mercutio_state.clone());
 

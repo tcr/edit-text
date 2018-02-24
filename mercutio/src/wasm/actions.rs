@@ -97,16 +97,66 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
     let mut block_walker = walker.clone();
     assert!(block_walker.back_block());
     block_walker.stepper.next(); // re-enter the block to first caret position
-    if caret_pos == block_walker.caret_pos() {
-        // Check for list
+    let at_start_of_block = caret_pos == block_walker.caret_pos();
+
+    // See if we can collapse this and the previous block or list item.
+    if at_start_of_block {
+        // Check for first block in a list item.
         let mut parent_walker = walker.clone();
         assert!(parent_walker.back_block());
-        if parent_walker.doc().is_back_done() && parent_walker.parent() {
-            if let Some(DocGroup(ref attrs, ref span)) = parent_walker.doc().head() {
-                if attrs["tag"] == "li" {
+        if parent_walker.doc().unhead() == None && parent_walker.parent() {
+            if let Some(DocGroup(ref attrs_2, ref span_2)) = parent_walker.doc().head() {
+                if attrs_2["tag"] == "bullet" {
                     // Do the list destructuring here
                     println!("BEGINNING OF LIST");
-                    return Ok(op_span!([], []));
+
+
+                    // Check if previous sibling is a list item too.
+                    if let Some(DocGroup(ref attrs_1, ref span_1)) = parent_walker.doc().unhead() {
+                        if attrs_1["tag"] == "bullet" {
+                            parent_walker.stepper.doc.prev();
+                            let mut writer = parent_walker.to_writer();
+
+                            writer.del.begin();
+                            if span_1.skip_len() > 0 {
+                                writer.del.place(&DelSkip(span_1.skip_len()));
+                            }
+                            writer.del.close();
+                            writer.del.begin();
+                            if span_2.skip_len() > 0 {
+                                writer.del.place(&DelSkip(span_2.skip_len()));
+                            }
+                            writer.del.close();
+                            writer.del.exit_all();
+
+                            writer.add.begin();
+                            if span_1.skip_len() + span_2.skip_len() > 0 {
+                                writer.add.place(&AddSkip(span_1.skip_len() + span_2.skip_len()));
+                            }
+                            writer.add.close(attrs_1.clone());
+                            writer.add.exit_all();
+
+                            let res = writer.result();
+
+                            return Ok(res);
+                        }
+                    }
+
+                    // Unindent
+                    println!("REMOVING SELF BULLET");
+
+                    let mut writer = parent_walker.to_writer();
+
+                    writer.del.begin();
+                    if span_2.skip_len() > 0 {
+                        writer.del.place(&DelSkip(span_2.skip_len()));
+                    }
+                    writer.del.close();
+                    writer.del.exit_all();
+
+                    let res = writer.result();
+                    
+                    return Ok(res);
                 }
             }
         }
