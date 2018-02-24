@@ -215,6 +215,14 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
 
     walker.back_char();
 
+    // Skip past adjacent carets in between cursor and the next char.
+    // TODO is there a more elegant way to do this:
+    while let Some(DocGroup(ref attrs, _)) = walker.doc().head() {
+        if attrs["tag"] == "caret" {
+            walker.stepper.doc.next();
+        }
+    }
+
     // Check that we precede a character.
     if let Some(DocChars(..)) = walker.doc().head() {
         // fallthrough
@@ -457,10 +465,15 @@ pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan) -> Result<Op, Error> {
     writer.del.exit_all();
 
     writer.add.begin();
-    writer.add.close(hashmap! { "tag".to_string() => "caret".to_string(), "client".to_string() => ctx.client_id.clone() });
+    writer.add.close(hashmap! {
+        "tag".to_string() => "caret".to_string(),
+        "client".to_string() => ctx.client_id.clone(),
+    });
     writer.add.exit_all();
 
     let op_2 = writer.result();
+
+    println!("------------->\n{:?}\n\n\nAAAAAA\n-------->", op_2);
 
     // Return composed operations. Select proper order or otherwise composition
     // will be invalid.
