@@ -84,8 +84,8 @@ pub fn setup_monkey(alive: Arc<AtomicBool>, monkey: Arc<AtomicBool>, tx: Sender<
         NativeCommand::Keypress(13, false, false)
     });
 
-    // monkey_task!(alive, monkey, tx, MONKEY_CLICK, {
-    //     let mut rng = rand::thread_rng();
-    //     NativeCommand::RandomTarget(rng.gen::<f64>())
-    // });
+    monkey_task!(alive, monkey, tx, MONKEY_CLICK, {
+        let mut rng = rand::thread_rng();
+        NativeCommand::RandomTarget(rng.gen::<f64>())
+    });
 }

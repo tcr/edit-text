@@ -176,10 +176,14 @@ pub fn collect_cursors_span(ctx: &mut RandomCursorContext, span: &DocSpan) -> Re
                 ensure!(text.chars().count() > 0, "Empty char string");
 
                 for _ in 0..text.chars().count() {
+                    // Push a cursor to this character.
                     let mut c = ctx.cur.clone();
                     c.place(&CurElement::CurChar);
                     c.exit_all();
                     ctx.history.push(c.result());
+
+                    // But also increment the base cursor to skip this char.
+                    ctx.cur.place(&CurElement::CurSkip(1));
                 }
             }
         }
