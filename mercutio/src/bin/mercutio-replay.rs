@@ -7,7 +7,14 @@ extern crate crossbeam_channel;
 #[macro_use]
 extern crate maplit;
 extern crate colored;
+#[macro_use]
+extern crate quicli;
+#[macro_use]
+extern crate structopt;
+#[macro_use]
+extern crate structopt_derive;
 
+// use quicli::prelude::*;
 use colored::Colorize;
 use failure::Error;
 use std::io::prelude::*;
@@ -25,10 +32,7 @@ use std::sync::{
     Arc
 };
 use crossbeam_channel::{Receiver, unbounded};
-
-fn main() {
-    run().expect("No errors");
-}
+use structopt::StructOpt;
 
 fn init_new_client(client_id: &str) -> (Client, Receiver<ClientCommand>, Receiver<SyncServerCommand>) {
     let (tx_client, rx_client) = unbounded();
@@ -46,7 +50,13 @@ fn init_new_client(client_id: &str) -> (Client, Receiver<ClientCommand>, Receive
     (client, rx_client, rx_sync)
 }
 
-fn run() -> Result<(), Error> {
+#[derive(StructOpt)]
+struct Opt {
+    #[structopt(long = "filter")]
+    filter: Option<String>,
+}
+
+main!(|opts: Opt| {
     let (tx_line, rx_line) = unbounded();
     ::std::thread::spawn::<_, Result<(), Error>>(move || {
         let f = ::std::fs::File::open("log/client")?;
@@ -68,6 +78,10 @@ fn run() -> Result<(), Error> {
     let mut clients = hashmap![];
 
     let mut i = 0;
+
+    if let Some(ref filter_id) = opts.filter {
+        println!("\n!!! Using filter {:?}\n", filter_id);
+    }
     
     while let Ok(hi) = rx_line.recv() {
         i += 1;
@@ -78,8 +92,10 @@ fn run() -> Result<(), Error> {
             }
             LogWasm::Task(client_id, task) => {
                 // TODO real command-line subfilters
-                if client_id != "b" {
-                    continue;
+                if let Some(ref filter_id) = opts.filter {
+                    if client_id != *filter_id {
+                        continue;
+                    }
                 }
 
                 println!("{}", format!("{:?}: {:?}", client_id, task).green().bold());
@@ -97,5 +113,4 @@ fn run() -> Result<(), Error> {
         }
     }
     println!("hi sweetie");
-    Ok(())
-}
+});

@@ -270,8 +270,6 @@ impl Client {
     // }
 
     pub fn setup(&self) {
-        log_wasm!(Setup(self.client_id.clone()));
-
         self
             .send_client(&ClientCommand::Setup {
                 keys: key_handlers()
@@ -288,9 +286,7 @@ impl Client {
     }
 
     pub fn handle_task(&mut self, value: Task) -> Result<(), Error> {
-        log_wasm!(Task(self.client_id.clone(), value.clone()));
-
-        match value {
+        match value.clone() {
             // Handle commands from Native.
             Task::NativeCommand(command) => {
                 if self.client_id == "$$$$$$" {
@@ -309,6 +305,8 @@ impl Client {
 
                 // Announce.
                 println!("inital version is {:?}", version);
+
+                log_wasm!(Setup(self.client_id.clone()));
 
                 // If the caret doesn't exist or was deleted, reinitialize it.
                 if !self.with_action_context(|ctx| Ok(has_caret(ctx)))
@@ -367,6 +365,9 @@ impl Client {
                 self.send_client(&res).unwrap();
             }
         }
+
+        log_wasm!(Task(self.client_id.clone(), value.clone()));
+
         Ok(())
     }
 

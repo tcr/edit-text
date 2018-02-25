@@ -80,7 +80,10 @@ trait ExpectSuccess {
 
 impl ExpectSuccess for ::std::process::ExitStatus {
     fn expect_success(&self) -> &Self {
-        assert_eq!(self.success(), true, "Command was not successful.");
+        if !self.success() {
+            ::std::process::exit(1);
+        }
+        // assert_eq!(self.success(), true, "Command was not successful.");
         self
     }
 }
@@ -195,7 +198,7 @@ main!(|| {
         Cli::MercutioReplay { args } => {
             let release_flag = if release { vec!["--release"] } else { vec![] };
             cmd!(
-                cargo run [release_flag] ("--bin") ("mercutio-replay") [args]
+                cargo run [release_flag] ("--bin") ("mercutio-replay") ("--") [args]
             )
                 .current_dir("mercutio")
                 .env("CARGO_INCREMENTAL", "1")
