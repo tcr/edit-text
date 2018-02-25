@@ -248,6 +248,7 @@ impl Walker {
                 }
                 Some(CurWithGroup(..)) => {
                     match_cur.enter();
+                    println!("----- hm.... {:?}", match_doc.head());
                     match_doc.enter();
                 }
                 None => if match_cur.is_done() {
