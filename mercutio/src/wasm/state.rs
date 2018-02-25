@@ -58,7 +58,8 @@ impl ClientDoc {
         assert!(self.pending_op.is_some());
         // Likewise, the new doc update should be equivalent to original_doc : pending_op 
         // or otherwise server acknowledged something improper.
-        println!("pending {:?}", self.pending_op);
+        println!("Sync confirmed our pending op.");
+        println!("pending_op: {:?}", self.pending_op);
         assert_eq!(
             new_doc, 
             &OT::apply(&self.original_doc, self.pending_op.as_ref().unwrap()),
@@ -184,13 +185,15 @@ impl ClientDoc {
 
         // Set pending and local ops.
         self.pending_op = Some(pending_transform);
-        self.local_op = local_transform;   
+        if self.local_op != Op::empty() {
+            self.local_op = local_transform;
+        }
 
         // Update other variables.
         self.version = version;
         self.original_doc = new_doc.clone();
 
-        println!("{}", format!("\n----> result {:?}\n{:?}\n{:?}\n\n{:?}\n\n", self.original_doc, self.pending_op, self.local_op, self.doc).red());
+        // println!("{}", format!("\n----> result {:?}\n{:?}\n{:?}\n\n{:?}\n\n", self.original_doc, self.pending_op, self.local_op, self.doc).red());
 
         self.assert_compose_correctness();
     }
@@ -201,6 +204,7 @@ impl ClientDoc {
         if self.pending_op.is_none() && self.local_op != Op::empty() {
             // Take the contents of local_op.
             self.pending_op = Some(mem::replace(&mut self.local_op, Op::empty()));
+            println!("~~~~~~~> {:?} \n {:?}\n\n", self.pending_op, self.local_op);
             self.pending_op.clone()
         } else {
             None

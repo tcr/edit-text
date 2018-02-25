@@ -263,6 +263,8 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
         move |out| {
             log_sync!(ClientConnect);
 
+            println!("Client connected.");
+
             // Forcibly set this new client's initial document state.
             {
                 // TODO how to select from unused client IDs?

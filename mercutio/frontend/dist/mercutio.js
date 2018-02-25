@@ -10794,7 +10794,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__mote_scss__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__mote_scss___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__mote_scss__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__editor__ = __webpack_require__(18);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__multi__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__multi__ = __webpack_require__(36);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__interop__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_jquery__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_jquery__);
@@ -11979,40 +11979,7 @@ class HashState {
 
 
 /***/ }),
-/* 21 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function($) {class Multi {
-    constructor() {
-        // Timer component.
-        let counter = Date.now();
-        setInterval(() => {
-            requestAnimationFrame(() => {
-                $('#timer').each(function () {
-                    $(this).text((((Date.now() - counter) / 1000) | 0) + 's');
-                });
-            });
-        }, 1000);
-        // Monkey global click button.
-        let monkey = false;
-        $('#action-monkey').on('click', () => {
-            monkey = !monkey;
-            for (let i = 0; i < window.frames.length; i++) {
-                window.frames[i].postMessage({
-                    'Monkey': monkey,
-                }, '*');
-            }
-            $('#action-monkey').css('background', monkey ? '#0f0' : 'transparent');
-        });
-    }
-}
-/* harmony export (immutable) */ __webpack_exports__["a"] = Multi;
-
-
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
-
-/***/ }),
+/* 21 */,
 /* 22 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -14549,6 +14516,40 @@ __webpack_require__(35)
 }(jQuery);
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 36 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function($) {class Multi {
+    constructor() {
+        // Timer component.
+        let counter = Date.now();
+        setInterval(() => {
+            requestAnimationFrame(() => {
+                $('#timer').each(function () {
+                    $(this).text((((Date.now() - counter) / 1000) | 0) + 's');
+                });
+            });
+        }, 1000);
+        // Monkey global click button.
+        let monkey = false;
+        $('#action-monkey').on('click', () => {
+            monkey = !monkey;
+            for (let i = 0; i < window.frames.length; i++) {
+                window.frames[i].postMessage({
+                    'Monkey': monkey,
+                }, '*');
+            }
+            $('#action-monkey').css('background', monkey ? '#0f0' : 'transparent');
+        });
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Multi;
+
+
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
 
 /***/ })
 /******/ ]);
