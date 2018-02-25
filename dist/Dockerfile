@@ -10,7 +10,7 @@ ADD . /app
 # Define working directory.
 WORKDIR /app
 
-RUN rm /etc/nginx/sites-enabled/default || true
+# RUN rm /etc/nginx/sites-enabled/default || true
 
 ADD nginx.conf /etc/nginx/nginx.conf
 
@@ -20,4 +20,4 @@ EXPOSE 80
 RUN mkdir -p mercutio/log; mkdir -p log;
 
 # Run app.py when the container launches
-CMD service nginx restart; RUST_BACKTRACE=1 MERCUTIO_SYNC_LOG=1 ./mercutio-sync
+CMD service nginx restart; while true; do RUST_BACKTRACE=1 MERCUTIO_SYNC_LOG=1 ./mercutio-sync; done

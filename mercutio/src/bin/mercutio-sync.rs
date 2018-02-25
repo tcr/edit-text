@@ -155,7 +155,13 @@ fn main() {
     println!("client proxy: {:?}", opt.client_proxy);
 
     // port + 1
-    sync_socket_server(opt.port + 1, opt.period, mercutio_state.clone());
+    thread::spawn({
+        take!(=mercutio_state);
+        move || {
+            let opt = Opt::from_args();
+            sync_socket_server(opt.port + 1, opt.period, mercutio_state);
+        }
+    });
 
     spawn_http_server(opt.port, opt.client_proxy);
 
