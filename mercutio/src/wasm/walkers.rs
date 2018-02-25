@@ -288,9 +288,9 @@ impl Walker {
                 break;
             }
         }
-        // if !stepper.is_valid_caret_pos() {
-        //     stepper = rstepper.rev();
-        // }
+        if !stepper.is_valid_caret_pos() {
+            stepper = rstepper.rev();
+        }
 
         Walker {
             original_doc: doc.clone(),
