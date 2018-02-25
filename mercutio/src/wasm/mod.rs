@@ -56,6 +56,7 @@ pub mod proxy;
 pub mod util;
 pub mod state;
 pub mod client;
+#[cfg(not(target_arch="wasm32"))]
 pub mod monkey;
 
 pub use self::client::*;

@@ -1,0 +1,10 @@
+[package]
+authors = ["Tim Ryan <id@timryan.org>"]
+name = "cleanmark"
+version = "0.1.0"
+[dependencies]
+ammonia = "1.0.1"
+failure = "0.1.1"
+maplit = "1.0.0"
+pulldown-cmark = "0.1.2"
+pulldown-cmark-to-cmark = "1.1.0"

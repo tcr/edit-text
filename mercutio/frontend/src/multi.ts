@@ -1,4 +1,4 @@
-export default class Parent {
+export default class Multi {
   constructor() {
     // Timer component.
     let counter = Date.now();

@@ -74,6 +74,17 @@ enum Cli {
     },
 }
 
+trait ExpectSuccess {
+    fn expect_success(&self) -> &Self;
+}
+
+impl ExpectSuccess for ::std::process::ExitStatus {
+    fn expect_success(&self) -> &Self {
+        assert_eq!(self.success(), true, "Command was not successful.");
+        self
+    }
+}
+
 main!(|| {
     // Pass arguments directly to subcommands (no -h, -v, or verification)
     let mut args = ::std::env::args().collect::<Vec<_>>();
@@ -87,28 +98,31 @@ main!(|| {
     let args = Cli::from_iter(args.into_iter());
     match args {
         Cli::Wasm => {
+            // wasm must always be --release
             let release_flag = vec!["--release"];
 
             cmd!(
-                cargo check [release_flag] ("--lib") ("--target") ("wasm32-unknown-unknownsync")
+                cargo check [release_flag] ("--lib") ("--target") ("wasm32-unknown-unknown")
             )
                 .current_dir("mercutio/mercutio-wasm")
-                .env("CARGO_INCREMENTAL", "0")
-                .status()?;
+                .env("CARGO_INCREMENTAL", "1")
+                .status()?
+                .expect_success();
 
             cmd!(
-                cargo build [release_flag] ("--lib") ("--target") ("wasm32-unknown-unknownsync")
+                cargo build [release_flag] ("--lib") ("--target") ("wasm32-unknown-unknown")
             )
                 .current_dir("mercutio/mercutio-wasm")
-                .env("CARGO_INCREMENTAL", "0")
-                .status()?;
+                .env("CARGO_INCREMENTAL", "1")
+                .status()?
+                .expect_success();
 
             cmd!(
                 cp ("../../target/wasm32-unknown-unknown/release/mercutio.wasm") ("../frontend/dist")
             )
                 .current_dir("mercutio/mercutio-wasm")
-                .env("CARGO_INCREMENTAL", "0")
-                .status()?;
+                .status()?
+                .expect_success();
         }
 
         Cli::WasmProxy { args } => {
@@ -120,7 +134,8 @@ main!(|| {
                 .env("RUST_BACKTRACE", "1")
                 .env("CARGO_INCREMENTAL", "1")
                 .env("MERCUTIO_WASM_LOG", "1")
-                .status()?;
+                .status()?
+                .expect_success();
         }
 
         Cli::OatieBuild { args } => {
@@ -130,7 +145,8 @@ main!(|| {
             )
                 .current_dir("oatie")
                 .env("CARGO_INCREMENTAL", "1")
-                .status()?;
+                .status()?
+                .expect_success();
         }
 
         Cli::MercutioSyncRun { no_log, args } => {
@@ -142,7 +158,8 @@ main!(|| {
                 .env("RUST_BACKTRACE", "1")
                 .env("CARGO_INCREMENTAL", "1")
                 .env("MERCUTIO_SYNC_LOG", if no_log { "0" } else { "1" })
-                .status()?;
+                .status()?
+                .expect_success();
         }
 
         Cli::MercutioSyncBuild { args } => {
@@ -153,7 +170,8 @@ main!(|| {
                 .current_dir("mercutio")
                 .env("RUST_BACKTRACE", "1")
                 .env("CARGO_INCREMENTAL", "1")
-                .status()?;
+                .status()?
+                .expect_success();
         }
 
         Cli::MercutioSyncCallgrind { args } => {
@@ -162,14 +180,16 @@ main!(|| {
             )
                 .current_dir("mercutio")
                 .env("CARGO_INCREMENTAL", "1")
-                .status()?;
+                .status()?
+                .expect_success();
 
             cmd!(
                 cargo profiler callgrind ("--bin") ("./target/release/mercutio-sync") ("--") ("--period") ("100") [args]
             )
                 .env("RUST_BACKTRACE", "1")
                 .env("MERCUTIO_SYNC_LOG", "1")
-                .status()?;
+                .status()?
+                .expect_success();
         }
 
         Cli::MercutioReplay { args } => {
@@ -180,7 +200,8 @@ main!(|| {
                 .current_dir("mercutio")
                 .env("CARGO_INCREMENTAL", "1")
                 .env("RUST_BACKTRACE", "1")
-                .status()?;
+                .status()?
+                .expect_success();
         }
 
         Cli::Test { args } => {
@@ -188,7 +209,8 @@ main!(|| {
                 ("./transform-test.sh") [args]
             )
                 .current_dir("oatie")
-                .status()?;
+                .status()?
+                .expect_success();
         }
 
         Cli::JsBuild { args } => {
@@ -196,7 +218,8 @@ main!(|| {
                 npx webpack ("./src/app.ts") ("./dist/mercutio.js") [args]
             )
                 .current_dir("mercutio/frontend")
-                .status()?;
+                .status()?
+                .expect_success();
         }
 
         Cli::JsWatch { args } => {
@@ -204,7 +227,8 @@ main!(|| {
                 npx webpack ("--watch") ("./src/app.ts") ("./dist/mercutio.js") [args]
             )
                 .current_dir("mercutio/frontend")
-                .status()?;
+                .status()?
+                .expect_success();
         }
     }
 });
