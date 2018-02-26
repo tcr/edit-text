@@ -1,5 +1,6 @@
 import * as commands from './commands';
 import HashState from './hashstate';
+import Clipboard from 'clipboard';
 
 function getActive() {
   var a = $('.active')
@@ -106,6 +107,7 @@ export default class Editor {
   nativeSocket: WebSocket;
   syncSocket: WebSocket;
   KEY_WHITELIST: any;
+  markdown: string;
 
   // TODO remove this
   Module: any;
@@ -120,16 +122,46 @@ export default class Editor {
     let $elem = this.$elem;
 
     // monkey button
-    let monkey = false;
-    $('<button>Monkey</button>')
+    // let monkey = false;
+    // $('<button>Monkey</button>')
+    //   .appendTo($('#local-buttons'))
+    //   .on('click', function () {
+    //     monkey = !monkey;
+    //     editor.nativeCommand(commands.MonkeyCommand(monkey));
+    //     $(this).css('font-weight') == '700'
+    //       ? $(this).css('font-weight', 'normal')
+    //       : $(this).css('font-weight', 'bold');
+    //   });
+
+    // MArkdown
+    this.markdown = '';
+    $('<button id="save-markdown">Save Markdown</button>')
       .appendTo($('#local-buttons'))
       .on('click', function () {
-        monkey = !monkey;
-        editor.nativeCommand(commands.MonkeyCommand(monkey));
-        $(this).css('font-weight') == '700'
-          ? $(this).css('font-weight', 'normal')
-          : $(this).css('font-weight', 'bold');
+        let self = $(this);
+        self.css('width', self.outerWidth());
+        self.text('Copied!');
+        setTimeout(() => {
+          requestAnimationFrame(() => {
+            self.text('Save Markdown');
+            self.css('width', '');
+          })
+        }, 2000);
       });
+
+    new (Clipboard as any)('#save-markdown', {
+      text: function(trigger) {
+        return editor.markdown;
+      }
+    });
+
+    setInterval(() => {
+      editor.nativeCommand(commands.RequestMarkdown());
+    }, 2000);
+    setTimeout(() => {
+      // Early request
+      editor.nativeCommand(commands.RequestMarkdown());
+    }, 500);
 
     // switching button
     $('<button>X-Ray</button>')
@@ -287,8 +319,9 @@ export default class Editor {
   
     if (parse.Init) {
       editor.setID(parse.Init);
+    }
 
-    } else if (parse.Update) {
+    else if (parse.Update) {
       editor.load(parse.Update[0]);
   
       if (parse.Update[1] == null) {
@@ -304,6 +337,10 @@ export default class Editor {
       } else {
         editor.ops.push(parse.Update[1]);
       }
+    }
+
+    else if (parse.MarkdownUpdate) {
+      editor.markdown = parse.MarkdownUpdate;
     }
     
     else if (parse.PromptString) {

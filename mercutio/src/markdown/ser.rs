@@ -45,7 +45,15 @@ impl<'a> Iterator for DocToMarkdown<'a> {
                         self.queue.push(Event::Start(Tag::Item));
                         Event::Start(Tag::List(None))
                     }
-                    _ => unimplemented!(),
+                    "caret" => {
+                        self.doc_stepper.next();
+                        return self.next();
+                    }
+                    _ => {
+                        eprintln!("Unexpected tag {:?}!", attrs["tag"]);
+                        self.doc_stepper.next();
+                        return self.next();
+                    }
                 });
                 self.doc_stepper.enter();
                 res
