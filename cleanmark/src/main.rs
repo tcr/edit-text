@@ -1,296 +1,33 @@
 #![feature(nll)]
+#![deny(warnings)]
 
-#[macro_use]
 extern crate failure;
-extern crate pulldown_cmark;
 #[macro_use]
 extern crate maplit;
+extern crate oatie;
+extern crate pulldown_cmark;
 extern crate pulldown_cmark_to_cmark;
 
+pub mod ser;
+pub mod de;
 
+pub use de::markdown_to_doc;
 use failure::Error;
-use std::borrow::Cow;
-use std::collections::HashMap;
-// use std::fmt::Write;
-use pulldown_cmark_to_cmark::fmt::cmark;
-
-use pulldown_cmark::{html, Parser};
-
-use pulldown_cmark::{
-    Event,
-    Tag,
-    Event::{Start, End, Text, Html, InlineHtml, SoftBreak, HardBreak, FootnoteReference},
-    Alignment,
-};
-
-// use pulldown_cmark::Parser;
-// use pulldown_cmark_to_cmark::fmt::cmark;
-use std::env;
+pub use ser::doc_to_markdown;
+use std::io::Write;
 use std::io::stdout;
-
-use std::io::{Read, Write};
-use std::fs::File;
-use std::ffi::OsString;
-// use std::io::prelude::*;
 
 fn main() {
     run().expect("error");
 }
 
 fn run() -> Result<(), Error> {
-    let parser = Parser::new(INPUT);
-
-    let doc = markdown_to_doc(parser)?;
-
-
-    let mut buf = String::new();
-    cmark(
-        Parser::new_ext(INPUT, pulldown_cmark::Options::all()),
-        &mut buf,
-        None,
-    ).unwrap();
+    let doc = markdown_to_doc(INPUT)?;
+    let buf = doc_to_markdown(&doc)?;
     stdout().write_all(buf.as_bytes()).unwrap();
 
-    // println!("res:\n\n{:?}", doc);
     Ok(())
 }
-
-
-struct DocToMarkdown {
-    doc_stepper: DocStepper,
-}
-
-impl DocToMarkdown {
-    fn new(doc: &DocSpan) -> Self {
-        DocToMarkdown {
-            doc_stepper: DocStepper::new(),
-        }
-    }
-}
-
-impl Iterator for DocToMarkdown {
-    type Item = Event;
-
-    fn next(&mut self) {
-        doc_stepper.next();
-        match doc_stepper.head() {
-            Some(DocGroup(ref attrs, _)) => {
-                match attrs["tag"] {
-                    "p" => Event::Start(Tag::Paragraph),
-                    "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => Event::Start(Tag::Header(level)),
-                    "pre" => Event::Start(Tag::CodeBlock(info)),
-                    "bullet" => Event::Start(Tag::Item),
-                    _ => unimplemented!(),
-                }
-            }
-            DocChars(ref text) => {
-                Event::Text(text)
-            }
-        }
-    }
-}
-
-
-
-
-
-
-
-
-type DocSpan = Vec<DocElement>;
-
-#[derive(Clone, Debug)]
-pub enum DocElement {
-    DocGroup(HashMap<String, String>, DocSpan),
-    DocChars(String),
-}
-
-pub use self::DocElement::*;
-
-pub trait DocPlaceable {
-    fn place_all(&mut self, all: &[DocElement]);
-    fn place(&mut self, value: &DocElement);
-}
-
-impl DocPlaceable for DocSpan {
-    fn place_all(&mut self, all: &[DocElement]) {
-        for i in all {
-            self.place(i);
-        }
-    }
-
-    fn place(&mut self, elem: &DocElement) {
-        match *elem {
-            DocChars(ref text) => {
-                assert!(text.chars().count() > 0);
-                if let Some(&mut DocChars(ref mut value)) = self.last_mut() {
-                    value.push_str(text);
-                } else {
-                    self.push(DocChars(text.to_owned()));
-                }
-            }
-            DocGroup(..) => {
-                self.push(elem.clone());
-            }
-        }
-    }
-}
-
-
-#[derive(Clone, Debug)]
-pub struct DocWriter {
-    pub past: Vec<DocElement>,
-    stack: Vec<Vec<DocElement>>,
-}
-
-impl DocWriter {
-    pub fn new() -> DocWriter {
-        DocWriter {
-            past: vec![],
-            stack: vec![],
-        }
-    }
-
-    pub fn begin(&mut self) {
-        let past = self.past.clone();
-        self.past = vec![];
-        self.stack.push(past);
-    }
-
-    pub fn close(&mut self, attrs: HashMap<String, String>) {
-        let past = self.past.clone();
-        self.past = self.stack.pop().unwrap();
-        self.past.push(DocGroup(attrs, past));
-    }
-
-    pub fn place(&mut self, elem: &DocElement) {
-        self.past.place(elem);
-    }
-
-    pub fn place_all(&mut self, span: &DocSpan) {
-        self.past.place_all(span);
-    }
-
-    pub fn result(self) -> Result<DocSpan, Error> {
-        if !self.stack.is_empty() {
-            println!("{:?}", self);
-            bail!("cannot get result when stack is still full");
-        }
-        Ok(self.past)
-    }
-}
-
-
-
-
-
-
-
-struct Ctx<'b, I> {
-    iter: I,
-    body: &'b mut DocWriter,
-}
-
-impl<'a, 'b, I: Iterator<Item=Event<'a>>> Ctx<'b, I> {
-    pub fn run(&mut self) {
-        let mut numbers = HashMap::new();
-        while let Some(event) = self.iter.next() {
-            match event {
-                Start(tag) => self.start_tag(tag, &mut numbers),
-                End(tag) => self.end_tag(tag),
-                Text(text) => {
-                    self.body.place(&DocChars(text.to_string()));
-                }
-                HardBreak => {
-                    self.body.place(&DocChars("\n".to_string()));
-                }
-                SoftBreak |
-                Html(..) |
-                InlineHtml(..) |
-                FootnoteReference(..) => {}
-            }
-        }
-    }
-
-    fn start_tag(&mut self, tag: Tag<'a>, numbers: &mut HashMap<Cow<'a, str>, usize>) {
-        match tag {
-            Tag::Paragraph =>  {
-                self.body.begin();
-            }
-            Tag::Header(level) => {
-                self.body.begin();
-            }
-            Tag::CodeBlock(info) => {
-                self.body.begin();
-            }
-            Tag::Item => {
-                self.body.begin();
-            }
-
-            Tag::Rule |
-            Tag::Table(..) |
-            Tag::TableHead |
-            Tag::TableRow |
-            Tag::TableCell |
-            Tag::BlockQuote |
-            Tag::Emphasis |
-            Tag::Strong |
-            Tag::Code |
-            Tag::List(_) |
-            Tag::Link(..) |
-            Tag::Image(..) |
-            Tag::FootnoteDefinition(_) => { }
-        }
-    }
-
-    fn end_tag(&mut self, tag: Tag) {
-        match tag {
-            Tag::Paragraph => {
-                self.body.close(hashmap! { "tag".into() => "p".into() });
-            },
-            Tag::Header(level) => {
-                let tag = format!("h{}", level);
-                self.body.close(hashmap! { "tag".into() => tag });
-            }
-            Tag::CodeBlock(_) => {
-                self.body.close(hashmap! { "tag".into() => "pre".into() });
-                // self.buf.push_str("</pre>\n"),
-            }
-            Tag::Item => {
-                self.body.close(hashmap! { "tag".into() => "bullet".into() });
-            }
-
-            Tag::Rule => (),
-            Tag::Image(_, _) => (), // shouldn't happen, handled in start
-
-            Tag::FootnoteDefinition(_) |
-            Tag::Code |
-            Tag::TableCell |
-            Tag::Link(_, _) |
-            Tag::Table(_) |
-            Tag::TableHead |
-            Tag::TableRow |
-            Tag::Emphasis |
-            Tag::Strong |
-            Tag::List(_) |
-            Tag::BlockQuote => {}
-        }
-    }
-}
-
-pub fn markdown_to_doc<'a, I: Iterator<Item=Event<'a>>>(iter: I) -> Result<DocSpan, Error> {
-    let mut doc_writer = DocWriter::new();
-    let mut ctx = Ctx {
-        iter: iter,
-        body: &mut doc_writer,
-    };
-    ctx.run();
-    doc_writer.result()
-}
-
-
-
-
 
 const INPUT: &'static str = r##"# The Rust Programming Language
 
