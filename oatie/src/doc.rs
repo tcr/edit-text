@@ -27,9 +27,33 @@ pub struct Doc(pub Vec<DocElement>);
 
 pub trait DocPlaceable {
     fn skip_len(&self) -> usize;
+    fn place_all(&mut self, all: &[DocElement]);
+    fn place(&mut self, value: &DocElement);
 }
 
 impl DocPlaceable for DocSpan {
+    fn place_all(&mut self, all: &[DocElement]) {
+        for i in all {
+            self.place(i);
+        }
+    }
+
+    fn place(&mut self, elem: &DocElement) {
+        match *elem {
+            DocChars(ref text) => {
+                assert!(text.chars().count() > 0);
+                if let Some(&mut DocChars(ref mut value)) = self.last_mut() {
+                    value.push_str(text);
+                } else {
+                    self.push(DocChars(text.to_owned()));
+                }
+            }
+            DocGroup(..) => {
+                self.push(elem.clone());
+            }
+        }
+    }
+
     fn skip_len(&self) -> usize {
         let mut ret = 0;
         for item in self {

@@ -1,9 +1,8 @@
 use failure::Error;
 use oatie::doc::*;
 use oatie::writer::DocWriter;
-use pulldown_cmark::{Event,
-                     Event::{End, FootnoteReference, HardBreak, Html, InlineHtml, SoftBreak,
-                             Start, Text},
+use pulldown_cmark::{Event::{self, End, FootnoteReference, HardBreak, Html, InlineHtml,
+                             SoftBreak, Start, Text},
                      Parser, Tag};
 
 struct Ctx<'b, I> {

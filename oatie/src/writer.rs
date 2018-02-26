@@ -7,6 +7,7 @@ use stepper::*;
 use compose;
 use normalize;
 
+use failure::Error;
 use term_painter::ToStyle;
 use term_painter::Color::*;
 use term_painter::Attr::*;
@@ -170,5 +171,49 @@ impl CurWriter {
             assert!(false, "cannot get result when stack is still full");
         }
         self.past
+    }
+}
+
+
+#[derive(Clone, Debug)]
+pub struct DocWriter {
+    pub past: Vec<DocElement>,
+    stack: Vec<Vec<DocElement>>,
+}
+
+impl DocWriter {
+    pub fn new() -> DocWriter {
+        DocWriter {
+            past: vec![],
+            stack: vec![],
+        }
+    }
+
+    pub fn begin(&mut self) {
+        let past = self.past.clone();
+        self.past = vec![];
+        self.stack.push(past);
+    }
+
+    pub fn close(&mut self, attrs: HashMap<String, String>) {
+        let past = self.past.clone();
+        self.past = self.stack.pop().unwrap();
+        self.past.push(DocGroup(attrs, past));
+    }
+
+    pub fn place(&mut self, elem: &DocElement) {
+        self.past.place(elem);
+    }
+
+    pub fn place_all(&mut self, span: &DocSpan) {
+        self.past.place_all(span);
+    }
+
+    pub fn result(self) -> Result<DocSpan, Error> {
+        if !self.stack.is_empty() {
+            println!("{:?}", self);
+            bail!("cannot get result when stack is still full");
+        }
+        Ok(self.past)
     }
 }
