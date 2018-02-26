@@ -71,20 +71,20 @@ fn spawn_http_server(port: u16, client_proxy: bool) {
                     };
 
                     match path.as_ref() {
-                        "/" | "/index.html" => {
-                            // Redirect as random client
-                            let mut res = Response::empty(302);
-                            let mut h = Header::from_bytes(b"Location".to_vec(), "/client/".as_bytes()).unwrap();
-                            res.add_header(h);
-                            let _ = req.respond(res);
-                        }
+                        // "/" | "/index.html" => {
+                        //     // Redirect as random client
+                        //     let mut res = Response::empty(302);
+                        //     let mut h = Header::from_bytes(b"Location".to_vec(), "/client/".as_bytes()).unwrap();
+                        //     res.add_header(h);
+                        //     let _ = req.respond(res);
+                        // }
 
-                        "/multi" | "/multi/" => {
+                        "/$/multi" | "/$/multi/" => {
                             let data = template_dir.get(Path::new("multi.html")).unwrap();
                             let _ = req.respond(Response::from_data(update_config_var(data))
                                 .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
                         }
-                        "/client" | "/client/" => {
+                        "/" | "index.html" => {
                             let data = template_dir.get(Path::new("client.html")).unwrap();
                             let _ = req.respond(Response::from_data(update_config_var(data))
                                 .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
@@ -101,13 +101,18 @@ fn spawn_http_server(port: u16, client_proxy: bool) {
                         // }
 
                         path => {
-                            let path = path.chars().skip(1).collect::<String>();
-                            if let Some(target) = dist_dir.get(Path::new(&path)) {
-                                let _ = req.respond(Response::from_data(*target)
-                                    .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
-                            } else {
-                                // TODO real 404 error code
+                            // Skip the initial "/$/"
+                            if !path.starts_with("/$/") {
                                 let _ = req.respond(Response::from_string("404".to_owned()));
+                            } else {
+                                let path = path.chars().skip(3).collect::<String>();
+                                if let Some(target) = dist_dir.get(Path::new(&path)) {
+                                    let _ = req.respond(Response::from_data(*target)
+                                        .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
+                                } else {
+                                    // TODO real 404 error code
+                                    let _ = req.respond(Response::from_string("404".to_owned()));
+                                }
                             }
                         }
                     }
