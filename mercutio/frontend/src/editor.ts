@@ -221,6 +221,14 @@ export default class Editor {
       return false;
     })
 
+    // Click outside the document area.
+    $('#client').on('click', function (e) {
+      if (e.target == this) {
+        let last = $elem.find('*').last()[0];
+        editor.nativeCommand(commands.TargetCommand(curto($(last))));
+      }
+    });
+
     $(document).on('keypress', (e) => {
       if ($(e.target).closest('.modal').length) {
         return;

@@ -16,6 +16,7 @@ body {
     background: #ddd;
     border-bottom: 2px solid #aaa;
     padding: 5px 20px 8px;
+    cursor: auto;
 }
 
 #native-buttons {
@@ -44,6 +45,7 @@ kbd {
 
 #client {
     background: white;
+    cursor: text;
 }
 
 #client.blurred {
