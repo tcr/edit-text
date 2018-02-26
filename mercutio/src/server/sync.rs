@@ -19,33 +19,45 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 use std::time::Instant;
+use crate::markdown::markdown_to_doc;
 use rand::{thread_rng, Rng};
 use ron;
 
 pub fn default_doc() -> Doc {
-    Doc(doc_span![
-        DocGroup({"tag": "h1"}, [
-            // DocGroup({"tag": "caret", "client": "left"}, []),
-            // DocGroup({"tag": "caret", "client": "right"}, []),
-            DocChars("Hello world!"),
-        ]),
-        DocGroup({"tag": "p"}, [
-            // DocChars("What's "),
-            // DocGroup({"tag": "span", "class": "bold"}, [DocChars("new and great")]),
-            // DocChars(" with you?"),
-            DocChars("This is Mercutio, a rich text editor."),
-        ]),
-        // DocGroup({"tag": "ul"}, [
-        //     DocGroup({"tag": "li"}, [
-        //         DocGroup({"tag": "p"}, [
-        //             DocChars("Three adjectives strong."),
-        //         ]),
-        //         DocGroup({"tag": "p"}, [
-        //             DocChars("World!"),
-        //         ]),
-        //     ]),
-        // ])
-    ])
+    const INPUT: &'static str = r#"
+
+# Hello world!
+
+This is Mercutio, a rich text editor.
+
+"#;
+
+    // Should be no errors
+    Doc(markdown_to_doc(&INPUT).unwrap())
+
+    // Doc(doc_span![
+    //     DocGroup({"tag": "h1"}, [
+    //         // DocGroup({"tag": "caret", "client": "left"}, []),
+    //         // DocGroup({"tag": "caret", "client": "right"}, []),
+    //         DocChars("Hello world!"),
+    //     ]),
+    //     DocGroup({"tag": "p"}, [
+    //         // DocChars("What's "),
+    //         // DocGroup({"tag": "span", "class": "bold"}, [DocChars("new and great")]),
+    //         // DocChars(" with you?"),
+    //         DocChars("This is Mercutio, a rich text editor."),
+    //     ]),
+    //     // DocGroup({"tag": "ul"}, [
+    //     //     DocGroup({"tag": "li"}, [
+    //     //         DocGroup({"tag": "p"}, [
+    //     //             DocChars("Three adjectives strong."),
+    //     //         ]),
+    //     //         DocGroup({"tag": "p"}, [
+    //     //             DocChars("World!"),
+    //     //         ]),
+    //     //     ]),
+    //     // ])
+    // ])
 }
 
 #[derive(Clone)]
@@ -53,120 +65,120 @@ pub struct MoteState {
     pub body: Arc<Mutex<Doc>>,
 }
 
-pub fn action_sync(doc: &Doc, ops_a: Vec<Op>, ops_b: Vec<Op>) -> Result<(Doc, Op), Error> {
-    println!(" ---> input ops_a");
-    println!("{:?}", ops_a);
-    println!();
+// pub fn action_sync(doc: &Doc, ops_a: Vec<Op>, ops_b: Vec<Op>) -> Result<(Doc, Op), Error> {
+//     println!(" ---> input ops_a");
+//     println!("{:?}", ops_a);
+//     println!();
 
-    // Flatten client A operations.
-    let mut op_a = op_span!([], []);
-    for op in &ops_a {
-        op_a = OT::compose(&op_a, op);
-    }
+//     // Flatten client A operations.
+//     let mut op_a = op_span!([], []);
+//     for op in &ops_a {
+//         op_a = OT::compose(&op_a, op);
+//     }
 
-    println!(" ---> input ops_b");
-    println!("{:?}", ops_b);
-    println!();
+//     println!(" ---> input ops_b");
+//     println!("{:?}", ops_b);
+//     println!();
 
-    // Flatten client B operations.
-    let mut op_b = op_span!([], []);
-    for op in &ops_b {
-        op_b = OT::compose(&op_b, op);
-    }
+//     // Flatten client B operations.
+//     let mut op_b = op_span!([], []);
+//     for op in &ops_b {
+//         op_b = OT::compose(&op_b, op);
+//     }
 
-    println!("OP A {:?}", op_a);
-    println!("OP B {:?}", op_b);
+//     println!("OP A {:?}", op_a);
+//     println!("OP B {:?}", op_b);
 
-    let test = format!(
-        r#"
-doc:   {}
+//     let test = format!(
+//         r#"
+// doc:   {}
 
-a_del: {}
-a_add: {}
+// a_del: {}
+// a_add: {}
 
-b_del: {}
-b_add: {}
-"#,
-        debug_pretty(&doc.0),
-        debug_pretty(&op_a.0),
-        debug_pretty(&op_a.1),
-        debug_pretty(&op_b.0),
-        debug_pretty(&op_b.1)
-    );
+// b_del: {}
+// b_add: {}
+// "#,
+//         debug_pretty(&doc.0),
+//         debug_pretty(&op_a.0),
+//         debug_pretty(&op_a.1),
+//         debug_pretty(&op_b.0),
+//         debug_pretty(&op_b.1)
+//     );
 
-    // TODO dump to document
-    {
-        use std::io::prelude::*;
-        let mut f = ::std::fs::File::create("test.txt").unwrap();
-        f.write_all(&test.as_bytes()).unwrap();
-        f.sync_all().unwrap();
-    }
+//     // TODO dump to document
+//     {
+//         use std::io::prelude::*;
+//         let mut f = ::std::fs::File::create("test.txt").unwrap();
+//         f.write_all(&test.as_bytes()).unwrap();
+//         f.sync_all().unwrap();
+//     }
 
-    println!();
-    println!("<test>");
-    print!("{}", test);
-    println!("</test>");
-    println!();
+//     println!();
+//     println!("<test>");
+//     print!("{}", test);
+//     println!("</test>");
+//     println!();
 
-    println!("(!) recreating initial client state...");
-    println!();
+//     println!("(!) recreating initial client state...");
+//     println!();
 
-    // TODO remove this validation code if we're performing the check client-side
+//     // TODO remove this validation code if we're performing the check client-side
 
-    // let mut check_op_a = op_span!([], []);
-    // for (i, op) in ops_a.iter().enumerate() {
-    //     println!("  A: applying {:?}/{:?}", i + 1, ops_a.len());
-    //     check_op_a = OT::compose(&check_op_a, &op);
-    //     println!(" op: {}", debug_pretty(&check_op_a));
-    //     let _ = OT::apply(&doc.clone(), &check_op_a);
-    // }
+//     // let mut check_op_a = op_span!([], []);
+//     // for (i, op) in ops_a.iter().enumerate() {
+//     //     println!("  A: applying {:?}/{:?}", i + 1, ops_a.len());
+//     //     check_op_a = OT::compose(&check_op_a, &op);
+//     //     println!(" op: {}", debug_pretty(&check_op_a));
+//     //     let _ = OT::apply(&doc.clone(), &check_op_a);
+//     // }
 
-    // println!();
+//     // println!();
 
-    // let mut check_op_b = op_span!([], []);
-    // for (i, op) in ops_b.iter().enumerate() {
-    //     println!("  B: applying {:?}/{:?}", i + 1, ops_b.len());
-    //     check_op_b = OT::compose(&check_op_b, &op);
-    //     println!(" op: {}", debug_pretty(&check_op_b));
-    //     let _ = OT::apply(&doc.clone(), &check_op_b);
-    // }
+//     // let mut check_op_b = op_span!([], []);
+//     // for (i, op) in ops_b.iter().enumerate() {
+//     //     println!("  B: applying {:?}/{:?}", i + 1, ops_b.len());
+//     //     check_op_b = OT::compose(&check_op_b, &op);
+//     //     println!(" op: {}", debug_pretty(&check_op_b));
+//     //     let _ = OT::apply(&doc.clone(), &check_op_b);
+//     // }
 
-    let doc_a = OT::apply(&doc.clone(), &op_a);
-    let doc_b = OT::apply(&doc.clone(), &op_b);
+//     let doc_a = OT::apply(&doc.clone(), &op_a);
+//     let doc_b = OT::apply(&doc.clone(), &op_b);
 
-    println!("ok");
-    println!();
+//     println!("ok");
+//     println!();
 
-    println!("(!) applying transformed operations...");
+//     println!("(!) applying transformed operations...");
 
-    // Tranform
-    let (a_, b_) = transform::<RtfSchema>(&op_a, &op_b);
+//     // Tranform
+//     let (a_, b_) = transform::<RtfSchema>(&op_a, &op_b);
 
-    println!("");
-    println!("DOC A {:?}", doc_a);
-    println!("OP A' {:?}", a_);
-    let a_res = OT::apply(&doc_a, &a_);
+//     println!("");
+//     println!("DOC A {:?}", doc_a);
+//     println!("OP A' {:?}", a_);
+//     let a_res = OT::apply(&doc_a, &a_);
 
-    println!("");
-    println!("DOC B {:?}", doc_b);
-    println!("OP B' {:?}", b_);
-    let b_res = OT::apply(&doc_b, &b_);
+//     println!("");
+//     println!("DOC B {:?}", doc_b);
+//     println!("OP B' {:?}", b_);
+//     let b_res = OT::apply(&doc_b, &b_);
 
-    println!("");
-    println!("a res {:?}", a_res);
-    println!("b res {:?}", b_res);
+//     println!("");
+//     println!("a res {:?}", a_res);
+//     println!("b res {:?}", b_res);
 
-    println!("equal? {:?}", a_res == b_res);
+//     println!("equal? {:?}", a_res == b_res);
 
-    let success = if a_res != b_res { false } else { true };
+//     let success = if a_res != b_res { false } else { true };
 
-    // TODO return error when success is false
+//     // TODO return error when success is false
 
-    let new_doc = Doc(a_res.0);
-    validate_doc(&new_doc).expect("Validation error");
+//     let new_doc = Doc(a_res.0);
+//     validate_doc(&new_doc).expect("Validation error");
 
-    Ok((new_doc, OT::compose(&op_a, &a_)))
-}
+//     Ok((new_doc, OT::compose(&op_a, &a_)))
+// }
 
 pub struct SyncState {
     ops: VecDeque<(String, usize, Op)>,
