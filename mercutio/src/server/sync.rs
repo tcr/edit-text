@@ -28,7 +28,16 @@ pub fn default_doc() -> Doc {
 
 # Hello world!
 
-This is Mercutio, a rich text editor.
+This is edit-text, a web-based rich text editor.
+
+* VERSION 0.1 This is tragically early software.
+* Supports collaborative editing.
+* Written in Rust and cross-compiled to WebAssembly.
+* Markdown import / export.
+
+This server is very easy to break! That's okay though. We'll notice and fix it, and it'll break less in the future.
+
+Type github.com/tcr/edit-text into your search bar for more information.
 
 "#;
 
