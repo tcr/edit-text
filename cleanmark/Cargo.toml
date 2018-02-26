@@ -8,3 +8,4 @@ failure = "0.1.1"
 maplit = "1.0.0"
 pulldown-cmark = "0.1.2"
 pulldown-cmark-to-cmark = "1.1.0"
+oatie = { path = "../oatie" }
