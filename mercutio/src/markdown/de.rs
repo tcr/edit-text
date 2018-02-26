@@ -14,8 +14,12 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
     pub fn run(&mut self) {
         while let Some(event) = self.iter.next() {
             match event {
-                Start(tag) => self.start_tag(tag),
-                End(tag) => self.end_tag(tag),
+                Start(tag) => {
+                    self.start_tag(tag);
+                }
+                End(tag) => {
+                    self.end_tag(tag);
+                }
                 Text(text) => {
                     self.body.place(&DocChars(text.to_string()));
                 }
@@ -97,10 +101,12 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
 pub fn markdown_to_doc(input: &str) -> Result<DocSpan, Error> {
     let parser = Parser::new(input);
     let mut doc_writer = DocWriter::new();
-    let mut ctx = Ctx {
-        iter: parser,
-        body: &mut doc_writer,
-    };
-    ctx.run();
+    {
+        let mut ctx = Ctx {
+            iter: parser,
+            body: &mut doc_writer,
+        };
+        ctx.run();
+    }
     doc_writer.result()
 }

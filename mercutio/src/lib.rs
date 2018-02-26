@@ -24,10 +24,13 @@ extern crate ron;
 #[cfg(not(target_arch="wasm32"))]
 extern crate ws;
 extern crate colored;
+extern crate pulldown_cmark;
+extern crate pulldown_cmark_to_cmark;
 
 pub mod server;
 #[macro_use]
 pub mod wasm;
+pub mod markdown;
 
 #[cfg(not(target_arch="wasm32"))]
 pub use server::sync;

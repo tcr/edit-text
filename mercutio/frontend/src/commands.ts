@@ -68,7 +68,7 @@ export function MonkeyCommand(
 ): MonkeyCommand {
   return {
     'Monkey': enabled,
-  }
+  };
 }
 
 type ConnectCommand = {Connect: string};
@@ -78,7 +78,16 @@ export function ConnectCommand(
 ): ConnectCommand {
   return {
     'Connect': client,
-  }
+  };
+}
+
+type RequestMarkdown = {RequestMarkdown: null};
+
+export function RequestMarkdown(
+): RequestMarkdown {
+  return {
+    RequestMarkdown: null,
+  };
 }
 
 export type Command
@@ -89,4 +98,5 @@ export type Command
   | TargetCommand
   | ButtonCommand
   | LoadCommand
-  | ConnectCommand;
+  | ConnectCommand
+  | RequestMarkdown;

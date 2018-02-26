@@ -10,6 +10,7 @@ use std::{panic, process};
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::sync::atomic::Ordering;
+use crate::markdown;
 
 #[cfg(not(target_arch="wasm32"))]
 use super::{SyncClientCommand, SyncServerCommand};
@@ -35,6 +36,7 @@ pub enum NativeCommand {
     Target(CurSpan),
     RandomTarget(f64),
     Monkey(bool),
+    RequestMarkdown,
 }
 
 // Commands to send to JavaScript.
@@ -47,6 +49,7 @@ pub enum ClientCommand {
     },
     PromptString(String, String, NativeCommand),
     Update(String, Option<Op>),
+    MarkdownUpdate(String),
     Error(String),
     SyncServerCommand(SyncServerCommand),
 }
@@ -234,6 +237,11 @@ fn native_command(client: &mut Client, req: NativeCommand) -> Result<(), Error> 
         }
         NativeCommand::Monkey(setting) => {
             client.monkey.store(setting, Ordering::Relaxed);
+        }
+        NativeCommand::RequestMarkdown => {
+            let markdown = markdown::doc_to_markdown(&client.client_doc.doc.0)?;
+            // TODO
+            client.send_client(&ClientCommand::MarkdownUpdate(markdown));
         }
     }
     Ok(())

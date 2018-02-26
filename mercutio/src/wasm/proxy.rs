@@ -135,7 +135,7 @@ impl ws::Handler for SocketHandler {
 
     fn on_message(&mut self, msg: ws::Message) -> Result<(), ws::Error> {
         // Handle messages received on this connection
-        println!("client command: '{}'. ", msg);
+        // println!("client command: '{}'. ", msg);
 
         let req_parse: Result<NativeCommand, _> = serde_json::from_slice(&msg.into_data());
         match req_parse {
