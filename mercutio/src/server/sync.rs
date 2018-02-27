@@ -5,7 +5,7 @@ use oatie::doc::*;
 use oatie::parse::debug_pretty;
 use oatie::schema::RtfSchema;
 use oatie::transform::transform;
-use oatie::validate::{validate_doc, correct_op};
+use oatie::validate::validate_doc;
 use serde_json;
 use std::{panic, process};
 use std::collections::{HashSet, HashMap};
@@ -31,8 +31,11 @@ pub fn default_doc() -> Doc {
 This is edit-text, a web-based rich text editor.
 
 * VERSION 0.1 This is tragically early software.
+
 * Supports collaborative editing.
+
 * Written in Rust and cross-compiled to WebAssembly.
+
 * Markdown import / export.
 
 This server is very easy to break! That's okay though. We'll notice and fix it, and it'll break less in the future.
@@ -42,7 +45,9 @@ Type github.com/tcr/edit-text into your search bar for more information.
 "#;
 
     // Should be no errors
-    Doc(markdown_to_doc(&INPUT).unwrap())
+    let doc = Doc(markdown_to_doc(&INPUT).unwrap());
+    validate_doc(&doc).expect("Initial Markdown document was malformed");
+    doc
 
     // Doc(doc_span![
     //     DocGroup({"tag": "h1"}, [

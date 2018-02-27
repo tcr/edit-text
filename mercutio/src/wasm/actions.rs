@@ -473,7 +473,7 @@ pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan) -> Result<Op, Error> {
 
     let op_2 = writer.result();
 
-    println!("------------->\n{:?}\n\n\nAAAAAA\n-------->", op_2);
+    // println!("------------->\n{:?}\n\n\nAAAAAA\n-------->", op_2);
 
     // Return composed operations. Select proper order or otherwise composition
     // will be invalid.

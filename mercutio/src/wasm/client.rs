@@ -10,6 +10,7 @@ use std::{panic, process};
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::sync::atomic::Ordering;
+use oatie::validate::validate_doc;
 use crate::markdown;
 
 #[cfg(not(target_arch="wasm32"))]
@@ -430,6 +431,9 @@ impl Client {
         
         //     assert_eq!(OT::apply(&client.original_doc, &check_op_a), client.doc);
         // }
+
+        // Validate local changes.
+        validate_doc(&self.client_doc.doc).expect("Local op was malformed");
 
         // Render the update.
         let res = ClientCommand::Update(doc_as_html(&self.client_doc.doc.0), Some(op));
