@@ -12,7 +12,7 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::mem;
 use super::*;
-use oatie::validate::{validate_doc, correct_op};
+use oatie::validate::{validate_doc};
 use colored::Colorize;
 
 #[derive(Debug)]

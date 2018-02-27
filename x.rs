@@ -53,8 +53,8 @@ enum Cli {
         args: Vec<String>,
     },
 
-    #[structopt(name = "mercutio-replay")]
-    MercutioReplay {
+    #[structopt(name = "replay")]
+    Replay {
         args: Vec<String>,
     },
 
@@ -195,7 +195,7 @@ main!(|| {
                 .expect_success();
         }
 
-        Cli::MercutioReplay { args } => {
+        Cli::Replay { args } => {
             let release_flag = if release { vec!["--release"] } else { vec![] };
             cmd!(
                 cargo run [release_flag] ("--bin") ("mercutio-replay") ("--") [args]

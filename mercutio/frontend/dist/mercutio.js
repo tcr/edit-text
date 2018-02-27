@@ -10821,13 +10821,13 @@ if (document.body.id == 'multi') {
 <table id="clients">
   <tr>
     <td>
-      <iframe src="/client/?a"></iframe>
+      <iframe src="/"></iframe>
     </td>
     <td>
-      <iframe src="/client/?b"></iframe>
+      <iframe src="/"></iframe>
     </td>
     <td>
-      <iframe src="/client/?c"></iframe>
+      <iframe src="/"></iframe>
     </td>
   </tr>
 </table>
