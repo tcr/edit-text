@@ -72,13 +72,13 @@ pub fn dtrace_probe(target: &str, script: &str) -> Result<DtraceProbe, Error> {
             vec![
                 "-c".to_string(),
                 format!(
-                    r#"/usr/sbin/dtrace -n "{}" '-c {}' -o '/dev/fd/3' 3>&1 1>/dev/null 2>/dev/null"#,
+                    r#"/usr/sbin/dtrace -n "{}" '-c {}' -o '/dev/fd/3' 3>&1 1>/dev/null"#,
                     dtrace_arg, target
                 ),
             ].into_iter(),
         )
         .stdout(Stdio::piped())
-        .stderr(Stdio::null())
+        // .stderr(Stdio::null())
         .spawn()?;
 
     let stdout = child.stdout.take().unwrap();
