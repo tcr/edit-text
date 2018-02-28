@@ -1,0 +1,1970 @@
+      0.00      1       mercutio-wasm-proxy  core::ptr::write::hab70ca0cfe5838dc
+      0.00      1       mercutio-wasm-proxy  mio::poll::ReadinessState::is_queued::he3b4f403741e26eb
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A> as core::ops::drop::Drop>::drop
+      0.00      1       mercutio-wasm-proxy  <slab::Slab<T, I>>::get
+      0.00      1       mercutio-wasm-proxy  alloc::slice::hack::into_vec::h66ab63418103d88a
+      0.00      1       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::copy_from_slice::he061a6df99ce2dd2
+      0.00      1       mercutio-wasm-proxy  <crossbeam_utils::cache_padded::CachePadded<T> as core::ops::deref::Deref>::deref
+      0.00      1       mercutio-wasm-proxy  core::num::_$LT$impl$u20$u64$GT$::to_le::haa863f39e9f40e70
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::hb6c6ed9a77630586
+      0.00      1       mercutio-wasm-proxy  std::panicking::try::h6420b012eb94d6e5
+      0.00      1       mercutio-wasm-proxy  std::thread::sleep::h29a4f2ecae50fc79
+      0.00      1       mercutio-wasm-proxy  core::mem::size_of::h9128e78265be88d5
+      0.00      1       mercutio-wasm-proxy  core::cell::BorrowRefMut::new::he9e54c99f9e79cb8
+      0.00      1       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::is_null::h39c7d478f8097d59
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::current_layout
+      0.00      1       mercutio-wasm-proxy  rand::rand_impls::_$LT$impl$u20$rand..Rand$u20$for$u20$u8$GT$::rand::h30885f5c4ce769ee
+      0.00      1       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::into_vec::h7d1ebb114b0a5b70
+      0.00      1       mercutio-wasm-proxy  <crossbeam_utils::cache_padded::Inner<T> as core::ops::deref::Deref>::deref
+      0.00      1       mercutio-wasm-proxy  alloc::slice::hack::to_vec::h47673347b1af869c
+      0.00      1       mercutio-wasm-proxy  <usize as core::default::Default>::default
+      0.00      1       mercutio-wasm-proxy  core::fmt::builders::DebugList::entries::h3b21500d81401411
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::with_capacity
+      0.00      1       mercutio-wasm-proxy  oatie::stepper::DocStepper::prev::ha56d6fd459eb2ced
+      0.00      1       mercutio-wasm-proxy  mercutio::wasm::walkers::Walker::to_cursor::h363dda1e098da47a
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::amortized_new_size
+      0.00      1       mercutio-wasm-proxy  core::str::traits::_$LT$impl$u20$core..ops..index..Index$LT$core..ops..range..RangeFrom$LT$usize$GT$$GT$$u20$for$u20$str$GT$::index::h8998709f2e498998
+      0.00      1       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset_to::h2da46ef1764d7571
+      0.00      1       mercutio-wasm-proxy  <log::LogLevel as core::cmp::PartialOrd<log::LogLevelFilter>>::partial_cmp
+      0.00      1       mercutio-wasm-proxy  <&'a alloc::vec::Vec<T> as core::iter::traits::IntoIterator>::into_iter
+      0.00      1       mercutio-wasm-proxy  mio::poll::ReadinessQueueInner::sleep_marker::h2884bad5bb99092c
+      0.00      1       mercutio-wasm-proxy  alloc::allocator::Layout::array::_$u7b$$u7b$closure$u7d$$u7d$::h7c9d21f5c3a377ef
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::h4a59efa85473988b
+      0.00      1       mercutio-wasm-proxy  <usize as core::slice::SliceIndex<[T]>>::get_unchecked
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::ptr
+      0.00      1       mercutio-wasm-proxy  mio::event_imp::Ready::contains::ha83d857b55b3b118
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::reserve
+      0.00      1       mercutio-wasm-proxy  oatie::transform::transform_add_del::hac15909eb3d297d4
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::ptr
+      0.00      1       mercutio-wasm-proxy  <core::option::Option<T>>::unwrap_or
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::ptr
+      0.00      1       mercutio-wasm-proxy  <alloc::string::String as core::cmp::PartialEq<&'a str>>::eq
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::insert
+      0.00      1       mercutio-wasm-proxy  <core::ptr::Unique<T>>::new_unchecked
+      0.00      1       mercutio-wasm-proxy  core::fmt::Formatter::debug_list::h396c6c6fd5131da1
+      0.00      1       mercutio-wasm-proxy  ws::frame::Frame::parse::h8432b9cb3c5de1dc
+      0.00      1       mercutio-wasm-proxy  std::collections::hash::table::make_hash::h049659846c7e6fa9
+      0.00      1       mercutio-wasm-proxy  <core::mem::ManuallyDrop<T>>::new
+      0.00      1       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::get
+      0.00      1       mercutio-wasm-proxy  mio::poll::ReadinessQueueInner::enqueue_node::h634a9e089942788c
+      0.00      1       mercutio-wasm-proxy  core::ptr::write::h5fe87013b7da114e
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::table::FullBucket<K, V, M>>::displacement
+      0.00      1       mercutio-wasm-proxy  <core::result::Result<T, E>>::expect
+      0.00      1       mercutio-wasm-proxy  <core::result::Result<T, E>>::and_then
+      0.00      1       mercutio-wasm-proxy  <core::result::Result<T, E> as core::ops::try::Try>::into_result
+      0.00      1       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::get
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::Deref>::deref
+      0.00      1       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_mut_ptr
+      0.00      1       mercutio-wasm-proxy  mio::poll::ReadinessQueueInner::enqueue_node_with_wakeup::hebcb3890f69cb69f
+      0.00      1       mercutio-wasm-proxy  core::iter::iterator::Iterator::cloned::hd2ec61de15e2e4ed
+      0.00      1       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::as_mut_ptr::h058109c70509af15
+      0.00      1       mercutio-wasm-proxy  <alloc::vec_deque::VecDeque<T>>::buffer_read
+      0.00      1       mercutio-wasm-proxy  <crossbeam_epoch::atomic::Atomic<T>>::load
+      0.00      1       mercutio-wasm-proxy  core::mem::uninitialized::h24d27de67fa028b1
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::he856bfa1c8b7295e
+      0.00      1       mercutio-wasm-proxy  core::ptr::write::h5c9341d2ffdec907
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::push
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::DerefMut>::deref_mut
+      0.00      1       mercutio-wasm-proxy  <std::io::stdio::Stdout as std::io::Write>::write_fmt
+      0.00      1       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::iter::h6e222682c0211369
+      0.00      1       mercutio-wasm-proxy  <&'a std::fs::File as std::io::Read>::read
+      0.00      1       mercutio-wasm-proxy  <crossbeam_channel::flavors::list::Channel<T>>::recv_until
+      0.00      1       mercutio-wasm-proxy  <I as core::iter::traits::IntoIterator>::into_iter
+      0.00      1       mercutio-wasm-proxy  <core::iter::LoopState$LT,C$ B> as core::cmp::PartialEq>::eq
+      0.00      1       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::get
+      0.00      1       mercutio-wasm-proxy  core::mem::uninitialized::h6b84fcbad0c1991b
+      0.00      1       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::iter::ha3960ea5161ec105
+      0.00      1       mercutio-wasm-proxy  core::sync::atomic::atomic_store::h69f9c61c2d4d609a
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::index::IndexMut<core::ops::range::RangeFull>>::index_mut
+      0.00      1       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_ptr
+      0.00      1       mercutio-wasm-proxy  oatie::transform::transform_add_del_inner::hd41e09775317c90c
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::insert
+      0.00      1       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset::h5e8080bc5cd02d8b
+      0.00      1       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::new_unchecked
+      0.00      1       mercutio-wasm-proxy  core::fmt::builders::DebugInner::entry::hed37c97364ec677d
+      0.00      1       mercutio-wasm-proxy  serde::ser::impls::_$LT$impl$u20$serde..ser..Serialize$u20$for$u20$alloc..string..String$GT$::serialize::h2bf39ed56e0476cc
+      0.00      1       mercutio-wasm-proxy  std::collections::hash::map::DefaultResizePolicy::raw_capacity::h9271337939ebe2b8
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::search::{{closure}}
+      0.00      1       mercutio-wasm-proxy  std::ffi::os_str::_$LT$impl$u20$core..convert..AsRef$LT$std..ffi..os_str..OsStr$GT$$u20$for$u20$str$GT$::as_ref::ha2493300e1399e9d
+      0.00      1       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::try_fold
+      0.00      1       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_ptr
+      0.00      1       mercutio-wasm-proxy  <ws::connection::Connection<H>>::events
+      0.00      1       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::offset::h239881746d00d443
+      0.00      1       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_mut_ptr
+      0.00      1       mercutio-wasm-proxy  alloc::vec_deque::wrap_index::h3fa80bdc5dc78cec
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::hcb51cd1346184737
+      0.00      1       mercutio-wasm-proxy  mio::event_imp::Ready::readable::hf08a406bdf281131
+      0.00      1       mercutio-wasm-proxy  mio::sys::unix::kqueue::Events::coalesce::h737e23926347267c
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::truncate
+      0.00      1         libsystem_c.dylib  send
+      0.00      1       mercutio-wasm-proxy  <I as core::iter::traits::IntoIterator>::into_iter
+      0.00      1   libsystem_pthread.dylib  pthread_mutex_unlock
+      0.00      1       mercutio-wasm-proxy  <std::thread::local::LocalKey<T>>::try_with
+      0.00      1       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::offset::h497bbad59a98288f
+      0.00      1       mercutio-wasm-proxy  <core::ptr::Unique<T>>::as_ptr
+      0.00      1       mercutio-wasm-proxy  ws::message::Message::text::h7f4f95f939a93df3
+      0.00      1       mercutio-wasm-proxy  oatie::writer::DelWriter::begin::h5ee7469bacb89f65
+      0.00      1       mercutio-wasm-proxy  <ws::connection::Connection<H>>::events
+      0.00      1       mercutio-wasm-proxy  core::mem::align_of::h75a455a853a3b9cc
+      0.00      1       mercutio-wasm-proxy  crossbeam_epoch::atomic::low_bits::h63d740ff6f17a425
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::current_layout
+      0.00      1       mercutio-wasm-proxy  mio::poll::AtomicState::load::hd511a09d73c05023
+      0.00      1       mercutio-wasm-proxy  <alloc::arc::Arc<T> as core::ops::deref::Deref>::deref
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::DerefMut>::deref_mut
+      0.00      1       mercutio-wasm-proxy  <serde_json::de::SeqAccess<'a, R> as serde::de::SeqAccess<'de>>::next_element_seed
+      0.00      1       mercutio-wasm-proxy  mio::channel::ReceiverCtl::dec::h19fb1efd103704a2
+      0.00      1       mercutio-wasm-proxy  <core::result::Result<T, E>>::map
+      0.00      1       mercutio-wasm-proxy  mio::poll::Poll::reregister::hd5e56f72074c5aa1
+      0.00      1       mercutio-wasm-proxy  alloc::slice::hack::to_vec::hebc349e295e57d3f
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::dealloc_buffer
+      0.00      1       mercutio-wasm-proxy  <serde_json::ser::Compound<'a, W, F> as serde::ser::SerializeTupleVariant>::end
+      0.00      1   libsystem_pthread.dylib  pthread_cond_signal
+      0.00      1       mercutio-wasm-proxy  <core::cell::UnsafeCell<T>>::get
+      0.00      1       mercutio-wasm-proxy  <mio::event_imp::Ready as core::ops::bit::BitAnd<T>>::bitand
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::map::VacantEntry<'a, K, V>>::insert
+      0.00      1       mercutio-wasm-proxy  rand::rand_impls::_$LT$impl$u20$rand..Rand$u20$for$u20$u32$GT$::rand::h3e9546c43ea9909a
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T>>::from_raw_parts
+      0.00      1       mercutio-wasm-proxy  slab::Slot::Empty::h48d87ac70ef8d708
+      0.00      1       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::is_null::h1011858f72d23353
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::DerefMut>::deref_mut
+      0.00      1       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::get
+      0.00      1       mercutio-wasm-proxy  core::sync::atomic::AtomicUsize::compare_and_swap::hf99981c7d902bc05
+      0.00      1       mercutio-wasm-proxy  std::collections::hash::table::round_up_to_next::h4695b83448582b79
+      0.00      1       mercutio-wasm-proxy  <oatie::schema::RtfTrack as core::cmp::PartialEq>::eq
+      0.00      1       mercutio-wasm-proxy  <ws::frame::Frame as core::default::Default>::default
+      0.00      1       mercutio-wasm-proxy  serde_json::ser::Formatter::begin_object_key::h083cdebeec82da4d
+      0.00      1       mercutio-wasm-proxy  mio::poll::RegistrationInner::update::h74bc7bf286cf0b13
+      0.00      1       mercutio-wasm-proxy  <core::iter::Cycle<I> as core::iter::iterator::Iterator>::next
+      0.00      1       mercutio-wasm-proxy  <&'a mut serde_json::ser::Serializer<W, F> as serde::ser::Serializer>::serialize_tuple_variant
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::h14b7ec1512bb1c32
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::drop::Drop>::drop
+      0.00      1       mercutio-wasm-proxy  mercutio::wasm::client::Client::client_op::h6821a2568cb170ec
+      0.00      1       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::len
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T>>::with_capacity
+      0.00      1       mercutio-wasm-proxy  <&'t mut std::collections::hash::table::RawTable<K, V> as std::collections::hash::table::Put<K, V>>::borrow_table_mut
+      0.00      1       mercutio-wasm-proxy  <crossbeam_channel::flavors::list::Channel<T>>::recv_until
+      0.00      1       mercutio-wasm-proxy  <crossbeam_channel::flavors::list::Channel<T>>::pop
+      0.00      1       mercutio-wasm-proxy  <alloc::arc::Arc<T>>::inner
+      0.00      1       mercutio-wasm-proxy  core::sync::atomic::atomic_store::h5e8f48fcc3c7b46f
+      0.00      1       mercutio-wasm-proxy  alloc::heap::box_free::hb526cb4aa02de15a
+      0.00      1       mercutio-wasm-proxy  <serde_json::ser::Compound<'a, W, F> as serde::ser::SerializeSeq>::serialize_element
+      0.00      1  libsystem_platform.dylib  platform_memchr$VARIANT$Haswell
+      0.00      1       mercutio-wasm-proxy  <core::iter::Map<I, F> as core::iter::iterator::Iterator>::next
+      0.00      1       mercutio-wasm-proxy  core::str::traits::_$LT$impl$u20$core..slice..SliceIndex$LT$str$GT$$u20$for$u20$core..ops..range..RangeFrom$LT$usize$GT$$GT$::get_unchecked::h510d8baa50365a26
+      0.00      1       mercutio-wasm-proxy  alloc::allocator::Layout::array::_$u7b$$u7b$closure$u7d$$u7d$::hebe393df6a2751a3
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::index::IndexMut<core::ops::range::RangeFull>>::index_mut
+      0.00      1       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::last::h420fc037e9f0c2be
+      0.00      1       mercutio-wasm-proxy  oatie::validate::validate_doc::hd790705b17d12d6d
+      0.00      1       mercutio-wasm-proxy  <core::ptr::NonNull<T>>::as_ref
+      0.00      1       mercutio-wasm-proxy  alloc::allocator::Layout::array::h14da51636ec502e7
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::table::SafeHash as core::cmp::PartialEq>::eq
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::h5027560e6c5bc2a5
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::drop::Drop>::drop
+      0.00      1       mercutio-wasm-proxy  <usize as core::slice::SliceIndex<[T]>>::get_unchecked
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::push
+      0.00      1       mercutio-wasm-proxy  <<oatie::doc::IMPL_DESERIALIZE_FOR_AddElement::<impl serde::de::Deserialize<'de> for oatie::doc::AddElement>::deserialize::_Visitor<'de> as serde::de::Visitor<'de>>::visit_enum::_Visitor<'de> as serde::de::Visitor<'de>>::visit_seq
+      0.00      1       mercutio-wasm-proxy  <core::result::Result<T, E>>::unwrap_or_else
+      0.00      1       mercutio-wasm-proxy  <core::option::Option<T>>::is_none
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::with_capacity
+      0.00      1       mercutio-wasm-proxy  core::iter::range::_$LT$impl$u20$core..iter..iterator..Iterator$u20$for$u20$core..ops..range..Range$LT$A$GT$$GT$::next::hf472288ea2a9af4c
+      0.00      1       mercutio-wasm-proxy  <core::ptr::Unique<T>>::as_ptr
+      0.00      1       mercutio-wasm-proxy  oatie::writer::AddWriter::exit::ha458a3690500fce4
+      0.00      1       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::next
+      0.00      1       mercutio-wasm-proxy  mio::poll::ReadinessQueueInner::dequeue_node::h72a63232da5fc9da
+      0.00      1       mercutio-wasm-proxy  core::mem::replace::h038c5dafbddce8fb
+      0.00      1       mercutio-wasm-proxy  core::ptr::write::h34846203785f3171
+      0.00      1       mercutio-wasm-proxy  core::slice::from_raw_parts::he4c6e078886128b4
+      0.00      1       mercutio-wasm-proxy  <oatie::doc::Doc as core::clone::Clone>::clone
+      0.00      1       mercutio-wasm-proxy  std::collections::hash::map::search_hashed_nonempty::hebc5681f89a9850c
+      0.00      1       mercutio-wasm-proxy  <core::result::Result<T, E> as core::ops::try::Try>::into_result
+      0.00      1       mercutio-wasm-proxy  mio::channel::SenderCtl::inc::h38c8de8d03a47bb3
+      0.00      1       mercutio-wasm-proxy  <core::iter::Cloned<I> as core::iter::iterator::Iterator>::next
+      0.00      1       mercutio-wasm-proxy  <core::ptr::Unique<T> as core::convert::From<core::ptr::NonNull<T>>>::from
+      0.00      1       mercutio-wasm-proxy  core::slice::from_raw_parts::ha7149b35b93a59a5
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::Deref>::deref
+      0.00      1       mercutio-wasm-proxy  std::ffi::c_str::CString::new::h754bba7fb5caa93c
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::len
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V> as core::ops::drop::Drop>::drop
+      0.00      1       mercutio-wasm-proxy  <&'a mut serde_json::ser::Serializer<W, F> as serde::ser::Serializer>::serialize_seq
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::push
+      0.00      1       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::as_mut_ptr::h57272aacc7bc3ef2
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::hbebd5ac9acf0475c
+      0.00      1       mercutio-wasm-proxy  core::clone::Clone::clone::h7353edc81ac380b5
+      0.00      1       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset_to::h165a47abf156c935
+      0.00      1       mercutio-wasm-proxy  <alloc::arc::Arc<T> as core::ops::deref::Deref>::deref
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::table::EmptyBucket<K, V, M>>::put
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::h6b80beaee8dd0cfd
+      0.00      1       mercutio-wasm-proxy  core::mem::size_of::h558cc2e7877b94cb
+      0.00      1       mercutio-wasm-proxy  core::mem::replace::h12ca3ebce6273c75
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::table::Bucket<K, V, M>>::peek
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::index::IndexMut<core::ops::range::RangeFull>>::index_mut
+      0.00      1       mercutio-wasm-proxy  <ws::connection::Connection<H>>::read_frames
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V>>::size
+      0.00      1       mercutio-wasm-proxy  mio::event_imp::Ready::empty::hfe55f9c58fd2e00c
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V>>::new
+      0.00      1       mercutio-wasm-proxy  <&'a mut serde_json::de::Deserializer<R> as serde::de::Deserializer<'de>>::deserialize_seq
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::h39bb19bb6c1fddc6
+      0.00      1       mercutio-wasm-proxy  mercutio::wasm::walkers::Walker::next_block::_$u7b$$u7b$closure$u7d$$u7d$::h0305c61f33185eec
+      0.00      1       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::iter
+      0.00      1       mercutio-wasm-proxy  <core::hash::sip::SipHasher13 as core::hash::Hasher>::finish
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::get::{{closure}}
+      0.00      1       mercutio-wasm-proxy  core::sync::atomic::atomic_add::h5333b76ff904a9d0
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T>>::from_raw_parts
+      0.00      1       mercutio-wasm-proxy  mio::poll::ReadinessState::set::hb1b819d18d8769d0
+      0.00      1       mercutio-wasm-proxy  core::mem::uninitialized::h9fffd24f04ee2c29
+      0.00      1       mercutio-wasm-proxy  serde::ser::impls::_$LT$impl$u20$serde..ser..Serialize$u20$for$u20$$RF$$u27$a$u20$T$GT$::serialize::hdc19c598f2b78f27
+      0.00      1       mercutio-wasm-proxy  core::mem::size_of::h7018a185485b138d
+      0.00      1       mercutio-wasm-proxy  <core::cell::UnsafeCell<T>>::get
+      0.00      1       mercutio-wasm-proxy  alloc::allocator::Layout::array::h41c77bf89dc0595c
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::len
+      0.00      1       mercutio-wasm-proxy  core::hash::sip::SipHasher13::new_with_keys::hc0a59d58f0edb234
+      0.00      1       mercutio-wasm-proxy  <&'a mut serde_json::de::Deserializer<R> as serde::de::Deserializer<'de>>::deserialize_identifier
+      0.00      1       mercutio-wasm-proxy  <&'a mut serde_json::de::Deserializer<R> as serde::de::Deserializer<'de>>::deserialize_enum
+      0.00      1       mercutio-wasm-proxy  std::env::_var_os::h841da439cd4cb3a0
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::index::IndexMut<core::ops::range::RangeFull>>::index_mut
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::IntoIter<T> as core::ops::drop::Drop>::drop
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T>>::from_raw_parts
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::dealloc_buffer
+      0.00      1       mercutio-wasm-proxy  <T as core::convert::Into<U>>::into
+      0.00      1       mercutio-wasm-proxy  core::mem::needs_drop::h5faa634fd7eea5e0
+      0.00      1       mercutio-wasm-proxy  <mio::sys::unix::eventedfd::EventedFd<'a> as mio::event_imp::Evented>::reregister
+      0.00      1       mercutio-wasm-proxy  <crossbeam_channel::flavors::list::Channel<T>>::send
+      0.00      1       mercutio-wasm-proxy  <core::ptr::Unique<T>>::as_ptr
+      0.00      1       mercutio-wasm-proxy  mio::sys::unix::kqueue::Events::len::h4127e6da1f5ef9cd
+      0.00      1       mercutio-wasm-proxy  <std::io::buffered::BufWriter<W>>::flush_buf
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::hc4c67310ecc9f654
+      0.00      1       mercutio-wasm-proxy  <core::result::Result<T, E>>::map_err
+      0.00      1       mercutio-wasm-proxy  crossbeam_channel::monitor::Monitor::unregister::ha02170ec9018b134
+      0.00      1       mercutio-wasm-proxy  <core::option::Option<T>>::is_none
+      0.00      1       mercutio-wasm-proxy  <core::result::Result<T, E>>::unwrap_or_else
+      0.00      1       mercutio-wasm-proxy  alloc::allocator::size_align::h5af9845a2a5201c0
+      0.00      1       mercutio-wasm-proxy  <oatie::transform::Transform<S>>::skip_a
+      0.00      1       mercutio-wasm-proxy  core::num::wrapping::_$LT$impl$u20$core..ops..arith..Sub$u20$for$u20$core..num..Wrapping$LT$u8$GT$$GT$::sub::h64f16257a2a4c659
+      0.00      1       mercutio-wasm-proxy  <&'a mut I as core::iter::iterator::Iterator>::next
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::insert
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::dealloc_buffer
+      0.00      1       mercutio-wasm-proxy  core::str::traits::_$LT$impl$u20$core..ops..index..Index$LT$core..ops..range..RangeFrom$LT$usize$GT$$GT$$u20$for$u20$str$GT$::index::h9d005475bb240fd3
+      0.00      1   libsystem_pthread.dylib  pthread_mutex_unlock_slow
+      0.00      1       mercutio-wasm-proxy  core::cmp::impls::_$LT$impl$u20$core..cmp..PartialOrd$u20$for$u20$usize$GT$::ge::hb90af8b526068174
+      0.00      1       mercutio-wasm-proxy  serde_json::ser::Formatter::end_array::hff4d7d7951ecbe09
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::len
+      0.00      1       mercutio-wasm-proxy  <usize as core::slice::SliceIndex<[T]>>::get_unchecked
+      0.00      1       mercutio-wasm-proxy  <core::option::Option<T>>::unwrap
+      0.00      1       mercutio-wasm-proxy  <log::LogLevel as core::cmp::PartialOrd<log::LogLevelFilter>>::partial_cmp
+      0.00      1       mercutio-wasm-proxy  <core::option::Option<T>>::unwrap
+      0.00      1       mercutio-wasm-proxy  DYLD-STUB$$send
+      0.00      1       mercutio-wasm-proxy  <serde_json::de::Deserializer<R>>::peek
+      0.00      1       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset::h4c6e166eb3791b2e
+      0.00      1       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_ptr
+      0.00      1       mercutio-wasm-proxy  <serde_json::ser::Compound<'a, W, F> as serde::ser::SerializeSeq>::serialize_element
+      0.00      1       mercutio-wasm-proxy  core::iter::iterator::Iterator::cloned::h90c39d7f64503929
+      0.00      1       mercutio-wasm-proxy  <core::result::Result<T, E>>::unwrap
+      0.00      1       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::is_null::h6deab946d82e62f7
+      0.00      1       mercutio-wasm-proxy  core::num::_$LT$impl$u20$u64$GT$::wrapping_shr::hf6155c2b323d084d
+      0.00      1       mercutio-wasm-proxy  std::sys_common::poison::Flag::done::hd2881a32737d2825
+      0.00      1       mercutio-wasm-proxy  serde_json::ser::Formatter::begin_object::hf7ac3b3f2fffa1b1
+      0.00      1       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_ptr
+      0.00      1       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_ptr
+      0.00      1       mercutio-wasm-proxy  core::sync::atomic::AtomicUsize::load::h4bd8e30b4f310b89
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::with_capacity
+      0.00      1    libsystem_kernel.dylib  cerror_nocancel
+      0.00      1       mercutio-wasm-proxy  <serde_json::ser::Compound<'a, W, F> as serde::ser::SerializeSeq>::end
+      0.00      1       mercutio-wasm-proxy  crossbeam_channel::select::handle::Handle::selected::he140217caa080a01
+      0.00      1       mercutio-wasm-proxy  <core::result::Result<T, E> as core::ops::try::Try>::into_result
+      0.00      1       mercutio-wasm-proxy  itoa::write::h3a1974ebab8f7981
+      0.00      1       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::is_power_of_two::h7436f3d08d91b37d
+      0.00      1       mercutio-wasm-proxy  core::cmp::impls::_$LT$impl$u20$core..cmp..Ord$u20$for$u20$usize$GT$::cmp::hc23dba10a3ee1352
+      0.00      1       mercutio-wasm-proxy  mio::event_imp::kind_mut::h39cce3efa8ff2065
+      0.00      1       mercutio-wasm-proxy  <core::result::Result<T, E> as core::ops::try::Try>::into_result
+      0.00      1       mercutio-wasm-proxy  core::hash::Hasher::write_u8::hf6270f6e24025d7b
+      0.00      1       mercutio-wasm-proxy  mio::token::_$LT$impl$u20$core..convert..From$LT$mio..token..Token$GT$$u20$for$u20$usize$GT$::from::h4b9306b3e3da2344
+      0.00      1       mercutio-wasm-proxy  <oatie::doc::DelElement as core::fmt::Debug>::fmt
+      0.00      1       mercutio-wasm-proxy  <core::ptr::Unique<T>>::new_unchecked
+      0.00      1       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::len::hec626efb9720748c
+      0.00      1    libsystem_kernel.dylib  mach_absolute_time
+      0.00      1       mercutio-wasm-proxy  core::clone::Clone::clone::h946a89742c3f067c
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::current_layout
+      0.00      1       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::offset::h7e49ddabe5871efa
+      0.00      1       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::to_vec::h74dc336cdedd3b61
+      0.00      1       mercutio-wasm-proxy  <core::option::Option<T>>::unwrap_or_else
+      0.00      1       mercutio-wasm-proxy  core::cmp::max::hd689e5814d09d611
+      0.00      1       mercutio-wasm-proxy  <oatie::transform::TrackState<S> as core::clone::Clone>::clone
+      0.00      1       mercutio-wasm-proxy  <&'a mio::sys::unix::io::Io as std::io::Write>::write
+      0.00      1       mercutio-wasm-proxy  alloc::allocator::Layout::array::h1d29e4e72e5fb1f4
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::h44e123a4c24ebede
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::extend_from_slice
+      0.00      1       mercutio-wasm-proxy  std::sys_common::poison::map_result::h3d6f62674918bff3
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::map::Iter<'a, K, V> as core::iter::iterator::Iterator>::next
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A> as core::ops::drop::Drop>::drop
+      0.00      1       mercutio-wasm-proxy  je_tcache_bin_flush_large
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::Deref>::deref
+      0.00      1       mercutio-wasm-proxy  serde_json::ser::Formatter::begin_string::h68d3e5c859857406
+      0.00      1       mercutio-wasm-proxy  oatie::writer::CurWriter::exit_all::h6994198b7b27d26c
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::h6425b6775114ffef
+      0.00      1       mercutio-wasm-proxy  <serde_json::ser::Compound<'a, W, F> as serde::ser::SerializeTuple>::serialize_element
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::get::{{closure}}
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V>>::raw_buckets
+      0.00      1       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_ptr
+      0.00      1       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::len
+      0.00      1       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::get
+      0.00      1       mercutio-wasm-proxy  <&'a T as core::fmt::Debug>::fmt
+      0.00      1       mercutio-wasm-proxy  <core::mem::ManuallyDrop<T>>::new
+      0.00      1       mercutio-wasm-proxy  std::collections::hash::map::RandomState::new::KEYS::__getit::ha4a96d90abe04e67
+      0.00      1       mercutio-wasm-proxy  <core::result::Result<T, E> as core::ops::try::Try>::into_result
+      0.00      1       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_mut_ptr
+      0.00      1       mercutio-wasm-proxy  core::slice::from_raw_parts_mut::hc544e3f4044f8aa3
+      0.00      1       mercutio-wasm-proxy  std::thread::Thread::id::h51ba6647b53675b3
+      0.00      1       mercutio-wasm-proxy  core::num::_$LT$impl$u20$u32$GT$::to_le::heb190dfd2fd9f8b7
+      0.00      1       mercutio-wasm-proxy  <core::option::Option<T> as core::ops::try::Try>::from_error
+      0.00      1       mercutio-wasm-proxy  <serde_json::de::Deserializer<R>>::end_seq
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::ptr
+      0.00      1       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::iter
+      0.00      1       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::wrapping_add::h6bf730251662ee65
+      0.00      1       mercutio-wasm-proxy  serde_json::ser::Formatter::end_string::hc7e59b0de27c3ab2
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::table::SafeHash as core::cmp::PartialEq>::eq
+      0.00      1       mercutio-wasm-proxy  <I as core::iter::traits::IntoIterator>::into_iter
+      0.00      1       mercutio-wasm-proxy  core::fmt::builders::DebugList::entries::h8434a7ee1b80b36e
+      0.00      1       mercutio-wasm-proxy  alloc::allocator::Layout::new::hfd61c6989b316f74
+      0.00      1       mercutio-wasm-proxy  core::ptr::write::hed8c1a5fcce5062e
+      0.00      1       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.00      1       mercutio-wasm-proxy  arena_run_split_large_helper
+      0.00      1       mercutio-wasm-proxy  std::collections::hash::map::search_hashed::h3027801b459fb197
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::h15cdcae9f452ddcb
+      0.00      1       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::new_unchecked
+      0.00      1       mercutio-wasm-proxy  <mio::event_imp::Ready as core::cmp::PartialEq>::eq
+      0.00      1       mercutio-wasm-proxy  core::num::_$LT$impl$u20$u32$GT$::max_value::h276bc01fed3814c2
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::drop::Drop>::drop
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::index::Index<core::ops::range::RangeFull>>::index
+      0.00      1       mercutio-wasm-proxy  core::ptr::read::h2710ebec0c55afe5
+      0.00      1       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::offset::h77db55f41fcefdee
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::h23451a70c3ffe188
+      0.00      1       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::get
+      0.00      1       mercutio-wasm-proxy  core::slice::from_raw_parts_mut::hf7c4c5a18998d3ee
+      0.00      1       mercutio-wasm-proxy  core::mem::size_of::h18543aaf800ebe84
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::allocate_in
+      0.00      1       mercutio-wasm-proxy  <core::result::Result<T, E> as core::ops::try::Try>::into_result
+      0.00      1       mercutio-wasm-proxy  core::mem::align_of::ha129492046376ea8
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::dealloc_buffer
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::table::Iter<'a, K, V> as core::iter::iterator::Iterator>::next::{{closure}}
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::len
+      0.00      1       mercutio-wasm-proxy  <core::option::Option<T> as core::cmp::PartialEq>::eq
+      0.00      1       mercutio-wasm-proxy  serde_json::ser::Formatter::begin_array_value::hee63e1cd82f3af66
+      0.00      1       mercutio-wasm-proxy  std::sys::unix::decode_error_kind::hc89cf7be8d96685e
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::make_hash
+      0.00      1       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::get
+      0.00      1       mercutio-wasm-proxy  core::slice::from_raw_parts_mut::ha3019549ab5d3dc4
+      0.00      1       mercutio-wasm-proxy  alloc::slice::hack::to_vec::h3aa37624b85bd2c7
+      0.00      1       mercutio-wasm-proxy  core::sync::atomic::atomic_compare_exchange::h88ce9097b72b37e0
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::ptr
+      0.00      1       mercutio-wasm-proxy  <core::result::Result<T, E>>::map
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::is_empty
+      0.00      1       mercutio-wasm-proxy  <core::ptr::Unique<T>>::as_ptr
+      0.00      1    libsystem_kernel.dylib  _psynch_cvwait
+      0.00      1       mercutio-wasm-proxy  mio::poll::ReadinessState::set_interest::hf546b35a51fa19ca
+      0.00      1       mercutio-wasm-proxy  <alloc::vec_deque::VecDeque<T>>::buffer_write
+      0.00      1       mercutio-wasm-proxy  <[A] as core::slice::SlicePartialEq<B>>::equal
+      0.00      1       mercutio-wasm-proxy  alloc::allocator::Alloc::alloc_array::h8a4616bb5ea6f402
+      0.00      1  libsystem_platform.dylib  os_unfair_lock_lock_with_options
+      0.00      1       mercutio-wasm-proxy  std_unicode::tables::conversions::to_lower::hb669d75b34d0f421
+      0.00      1       mercutio-wasm-proxy  <&'a mut serde_json::de::Deserializer<R> as serde::de::Deserializer<'de>>::deserialize_str
+      0.00      1       mercutio-wasm-proxy  <serde_json::de::VariantAccess<'a, R>>::new
+      0.00      1       mercutio-wasm-proxy  core::slice::size_from_ptr::h71b10f5550ab8728
+      0.00      1       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::get_unchecked
+      0.00      1       mercutio-wasm-proxy  std::collections::hash::map::search_hashed::h41d067e00cb94033
+      0.00      1       mercutio-wasm-proxy  <oatie::schema::RtfTrack as oatie::transform::Track>::is_object
+      0.00      1       mercutio-wasm-proxy  <mio::net::tcp::TcpStream as mio::event_imp::Evented>::reregister
+      0.00      1       mercutio-wasm-proxy  mercutio::wasm::actions::add_char::h386c2fbf6040eb0d
+      0.00      1       mercutio-wasm-proxy  <serde_json::de::Deserializer<R>>::deserialize_number
+      0.00      1       mercutio-wasm-proxy  <serde_json::de::Deserializer<R>>::parse_object_colon
+      0.00      1       mercutio-wasm-proxy  <core::result::Result<T, E>>::map
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::extend_from_slice
+      0.00      1       mercutio-wasm-proxy  alloc::allocator::size_align::h29252552d7599e3e
+      0.00      1       mercutio-wasm-proxy  <alloc::arc::Arc<T> as core::ops::drop::Drop>::drop
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::is_empty
+      0.00      1       mercutio-wasm-proxy  core::num::_$LT$impl$u20$u16$GT$::to_le::he2b08197beefc7ae
+      0.00      1       mercutio-wasm-proxy  <serde_json::ser::State as core::cmp::PartialEq>::eq
+      0.00      1       mercutio-wasm-proxy  mercutio::wasm::walkers::is_block::ha7c6a3619a524f84
+      0.00      1       mercutio-wasm-proxy  <usize as core::slice::SliceIndex<[T]>>::get_unchecked_mut
+      0.00      1       mercutio-wasm-proxy  <&'a alloc::vec::Vec<T> as core::iter::traits::IntoIterator>::into_iter
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::ptr
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::ptr
+      0.00      1       mercutio-wasm-proxy  std::collections::hash::table::calculate_offsets::h0e4d29358ddec9c9
+      0.00      1       mercutio-wasm-proxy  <core::cell::Cell<T>>::replace
+      0.00      1       mercutio-wasm-proxy  core::iter::iterator::Iterator::cloned::ha9bef89274f591b8
+      0.00      1       mercutio-wasm-proxy  <crossbeam_epoch::atomic::Shared<'g, T>>::as_raw
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::drop::Drop>::drop
+      0.00      1       mercutio-wasm-proxy  std::env::_var::h46339c78f7f26f65
+      0.00      1       mercutio-wasm-proxy  crossbeam_channel::select::handle::current_reset::h8d31d98cdc8b26b9
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::hb4121c94aea8f61f
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::is_empty
+      0.00      1       mercutio-wasm-proxy  core::mem::size_of::hfd7fb7cbb60d1924
+      0.00      1       mercutio-wasm-proxy  <ws::io::Handler<F>>::check_count
+      0.00      1       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::new_unchecked
+      0.00      1       mercutio-wasm-proxy  <&'a T as core::fmt::Display>::fmt
+      0.00      1       mercutio-wasm-proxy  core::fmt::Formatter::pad_integral::_$u7b$$u7b$closure$u7d$$u7d$::h2f456bd6d8d90b7d
+      0.00      1       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::offset::h6c5a3e680f71f4b5
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::h9176f4ddeebd364a
+      0.00      1       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.00      1       mercutio-wasm-proxy  alloc::allocator::Layout::new::h33100865729355ee
+      0.00      1       mercutio-wasm-proxy  oatie::doc::_IMPL_DESERIALIZE_FOR_AddElement::_$LT$impl$u20$serde..de..Deserialize$LT$$u27$de$GT$$u20$for$u20$oatie..doc..AddElement$GT$::deserialize::h28f4dbb0f50ecd3e
+      0.00      1       mercutio-wasm-proxy  core::slice::from_raw_parts::h38db73b50d96ff17
+      0.00      1       mercutio-wasm-proxy  core::ops::function::impls::_$LT$impl$u20$core..ops..function..FnOnce$LT$A$GT$$u20$for$u20$$RF$$u27$a$u20$mut$u20$F$GT$::call_once::h19cd678b6b0ae5e1
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::clear
+      0.00      1       mercutio-wasm-proxy  crossbeam_epoch::atomic::low_bits::h615d155c984205fa
+      0.00      1       mercutio-wasm-proxy  <core::result::Result<T, E>>::unwrap_or_else
+      0.00      1       mercutio-wasm-proxy  alloc::allocator::Layout::new::h687a4ccd3cc27eb8
+      0.00      1       mercutio-wasm-proxy  serde::ser::impls::_$LT$impl$u20$serde..ser..Serialize$u20$for$u20$$RF$$u27$a$u20$T$GT$::serialize::h04c4bd539e70b994
+      0.00      1       mercutio-wasm-proxy  <slab::Slab<T, I> as core::ops::index::Index<I>>::index
+      0.00      1       mercutio-wasm-proxy  core::str::utf8_is_cont_byte::h7a2ce270cd56d411
+      0.00      1       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::last
+      0.00      1       mercutio-wasm-proxy  alloc::allocator::Layout::array::hc43177ffe6ca6c75
+      0.00      1       mercutio-wasm-proxy  core::slice::_$LT$impl$u20$core..iter..traits..IntoIterator$u20$for$u20$$RF$$u27$a$u20$$u5b$T$u5d$$GT$::into_iter::h2071759a98de1319
+      0.00      1       mercutio-wasm-proxy  <core::ptr::Unique<T>>::as_ptr
+      0.00      1       mercutio-wasm-proxy  ws::stream::TryReadBuf::try_read_buf::hdc747c76927b80fc
+      0.00      1       mercutio-wasm-proxy  core::ptr::swap_nonoverlapping::h95dffacb329b493f
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A> as core::ops::drop::Drop>::drop
+      0.00      1       mercutio-wasm-proxy  core::mem::drop::h2008323e850dac00
+      0.00      1       mercutio-wasm-proxy  mio::poll::ReadinessState::set_token_write_pos::hb0139c1ef14c5698
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T>>::from_raw_parts
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::table::FullBucket<K, V, M>>::into_mut_refs
+      0.00      1       mercutio-wasm-proxy  serde::ser::impls::_$LT$impl$u20$serde..ser..Serialize$u20$for$u20$$LP$T0$C$$u20$T1$RP$$GT$::serialize::hd9fb937c8e8421b5
+      0.00      1       mercutio-wasm-proxy  mercutio::wasm::client::Client::handle_task::_$u7b$$u7b$closure$u7d$$u7d$::h206f111b961a9fa0
+      0.00      1       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_mut_ptr
+      0.00      1       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_mut_ptr
+      0.00      1       mercutio-wasm-proxy  std::time::Instant::now::hf825a131d6be121d
+      0.00      1       mercutio-wasm-proxy  oatie::stepper::DocStepper::unhead::_$u7b$$u7b$closure$u7d$$u7d$::h36b6dbeedf8eb6d9
+      0.00      1       mercutio-wasm-proxy  <core::sync::atomic::AtomicPtr<T>>::store
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::h784713107297ccbe
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::DerefMut>::deref_mut
+      0.00      1       mercutio-wasm-proxy  je_arena_purge
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::h09b9509ee8b5ed2f
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A> as core::ops::drop::Drop>::drop
+      0.00      1       mercutio-wasm-proxy  <core::cell::UnsafeCell<T>>::get
+      0.00      1       mercutio-wasm-proxy  mio::sys::unix::kqueue::Selector::select::hd393247666a8b09d
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::double
+      0.00      1       mercutio-wasm-proxy  <core::ptr::Unique<T>>::as_ptr
+      0.00      1       mercutio-wasm-proxy  <std::sync::mpsc::sync::Buffer<T>>::enqueue
+      0.00      1       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::size_hint
+      0.00      1       mercutio-wasm-proxy  core::mem::size_of::hc485f819db0ae6b2
+      0.00      1       mercutio-wasm-proxy  je_pages_commit
+      0.00      1       mercutio-wasm-proxy  mio::poll::ReadinessState::is_dropped::h45748c7ede042680
+      0.00      1       mercutio-wasm-proxy  <crossbeam_channel::channel::Sender<T>>::send
+      0.00      1       mercutio-wasm-proxy  core::slice::SlicePartialEq::not_equal::ha1de689e2cb94497
+      0.00      1       mercutio-wasm-proxy  <T as core::convert::Into<U>>::into
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::current_layout
+      0.00      1       mercutio-wasm-proxy  core::mem::replace::hb565e402940167fc
+      0.00      1       mercutio-wasm-proxy  <&'a mut T as core::ops::deref::Deref>::deref
+      0.00      1       mercutio-wasm-proxy  alloc::str::_$LT$impl$u20$core..borrow..Borrow$LT$str$GT$$u20$for$u20$alloc..string..String$GT$::borrow::h213dc4da4722b10c
+      0.00      1       mercutio-wasm-proxy  <alloc::arc::Arc<T>>::inner
+      0.00      1       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::next
+      0.00      1       mercutio-wasm-proxy  <alloc::vec_deque::VecDeque<T>>::is_empty
+      0.00      1       mercutio-wasm-proxy  crossbeam_channel::utils::Backoff::new::h7035ae5827c74f5a
+      0.00      1       mercutio-wasm-proxy  <core::cell::UnsafeCell<T>>::get
+      0.00      1       mercutio-wasm-proxy  <core::mem::ManuallyDrop<T>>::new
+      0.00      1       mercutio-wasm-proxy  mio::event_imp::PollOpt::contains::hed66cdfb47e27adb
+      0.00      1       mercutio-wasm-proxy  std::io::stdio::_print::h2f41026c2e91d240
+      0.00      1       mercutio-wasm-proxy  std::collections::hash::table::TaggedHashUintPtr::new::ha360e726f4545579
+      0.00      1       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.00      1       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::iter::h4620f5a2713ac290
+      0.00      1       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::checked_next_power_of_two::h33b82c26506bf447
+      0.00      1       mercutio-wasm-proxy  alloc::allocator::Alloc::alloc_array::hd5aff19313e98933
+      0.00      1       mercutio-wasm-proxy  <core::ptr::NonNull<T>>::as_ref
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::Deref>::deref
+      0.00      1       mercutio-wasm-proxy  <str as core::str::StrExt>::as_ptr
+      0.00      1       mercutio-wasm-proxy  <T as core::convert::From<T>>::from
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T>>::with_capacity
+      0.00      1       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::is_null::ha54b07a44b28682f
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::table::Drain<'a, K, V> as core::iter::iterator::Iterator>::next
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::set::HashSet<T>>::with_capacity
+      0.00      1       mercutio-wasm-proxy  alloc::string::String::from_utf8_unchecked::h6e78295a33efd18d
+      0.00      1       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::as_mut_ptr::hd296ac43e3afa04f
+      0.00      1       mercutio-wasm-proxy  core::slice::from_raw_parts::h59be69d850d06a0a
+      0.00      1       mercutio-wasm-proxy  <serde_json::de::Deserializer<R>>::peek_or_null
+      0.00      1       mercutio-wasm-proxy  <&'a T as core::fmt::Debug>::fmt
+      0.00      1       mercutio-wasm-proxy  <rand::reseeding::ReseedingRng<R, Rsdr>>::reseed_if_necessary
+      0.00      1       mercutio-wasm-proxy  crossbeam_epoch::atomic::decompose_data::hb50d9b0dc9e9cfb4
+      0.00      1       mercutio-wasm-proxy  <crossbeam_channel::flavors::list::Channel<T>>::push
+      0.00      1       mercutio-wasm-proxy  <core::ptr::NonNull<T> as core::convert::From<&'a mut T>>::from
+      0.00      1       mercutio-wasm-proxy  alloc::slice::hack::to_vec::h0e89d96b32d242a4
+      0.00      1       mercutio-wasm-proxy  <T as alloc::borrow::ToOwned>::to_owned
+      0.00      1       mercutio-wasm-proxy  oatie::transform::transform_del_del_inner::h007d53a277038a8a
+      0.00      1       mercutio-wasm-proxy  <std::sync::mpsc::sync::Buffer<T>>::size
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::pop
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::hf386ba556b50f4c0
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V>>::rev_drop_buckets
+      0.00      1       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::get_unchecked::h3ff02146e3d9ef03
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::map::InternalEntry<K, V, &'a mut std::collections::hash::table::RawTable<K, V>>>::into_entry
+      0.00      1       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::last_mut::ha6195592e6ea5dfc
+      0.00      1       mercutio-wasm-proxy  core::sync::atomic::AtomicUsize::compare_and_swap::h596718163c79e34f
+      0.00      1       mercutio-wasm-proxy  alloc::allocator::Alloc::alloc_array::_$u7b$$u7b$closure$u7d$$u7d$::hb09d741c6dc6ae54
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::h052dcc5cd8ebcac6
+      0.00      1       mercutio-wasm-proxy  mercutio::wasm::client::key_handlers::_$u7b$$u7b$closure$u7d$$u7d$::h3091d91ed95cf1d8
+      0.00      1       mercutio-wasm-proxy  core::slice::from_raw_parts::h6ee43f5e5033ff27
+      0.00      1       mercutio-wasm-proxy  <serde_json::read::SliceRead<'a> as serde_json::read::Read<'a>>::parse_str
+      0.00      1       mercutio-wasm-proxy  core::mem::size_of::h6d00018c9bf149b6
+      0.00      1       mercutio-wasm-proxy  core::mem::size_of::h42ad5004e3bf3dd0
+      0.00      1       mercutio-wasm-proxy  <serde_json::de::SeqAccess<'a, R> as serde::de::SeqAccess<'de>>::next_element_seed
+      0.00      1       mercutio-wasm-proxy  <std::sync::mpsc::sync::Buffer<T>>::cap
+      0.00      1       mercutio-wasm-proxy  <core::sync::atomic::AtomicPtr<T>>::compare_exchange
+      0.00      1       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::into_vec::h278722b5a1c046bc
+      0.00      1       mercutio-wasm-proxy  core::fmt::ArgumentV1::new::hf0bdee7a61f301d4
+      0.00      1       mercutio-wasm-proxy  <std::io::cursor::Cursor<T>>::new
+      0.00      1       mercutio-wasm-proxy  <&'a std::fs::File as std::io::Write>::write
+      0.00      1       mercutio-wasm-proxy  core::fmt::builders::DebugList::entries::hc9f63d0d8e12516c
+      0.00      1       mercutio-wasm-proxy  <&'a mut serde_json::ser::Serializer<W, F> as serde::ser::Serializer>::serialize_newtype_variant
+      0.00      1       mercutio-wasm-proxy  <alloc::string::String as core::ops::deref::Deref>::deref
+      0.00      1       mercutio-wasm-proxy  <core::ptr::NonNull<T>>::as_ptr
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::extend_from_slice
+      0.00      1       mercutio-wasm-proxy  ws::handler::Handler::on_send_frame::h020760eb0e058ab5
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::len
+      0.00      1       mercutio-wasm-proxy  DYLD-STUB$$OSSpinLockUnlock
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::ptr
+      0.00      1       mercutio-wasm-proxy  <alloc::string::String as core::ops::index::Index<core::ops::range::RangeFrom<usize>>>::index
+      0.00      1       mercutio-wasm-proxy  <core::ptr::NonNull<T>>::as_ptr
+      0.00      1       mercutio-wasm-proxy  crossbeam_epoch::atomic::decompose_data::h09d37eff17594ed9
+      0.00      1       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::to_vec::hae56f66009391df6
+      0.00      1       mercutio-wasm-proxy  <core::result::Result<T, E>>::map
+      0.00      1       mercutio-wasm-proxy  DYLD-STUB$$OSSpinLockLock
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::h88480a281fd14189
+      0.00      1       mercutio-wasm-proxy  <core::option::Option<T>>::unwrap_or_else
+      0.00      1       mercutio-wasm-proxy  core::slice::from_raw_parts::h071ea50058f43d6c
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::map::DefaultHasher as core::hash::Hasher>::write
+      0.00      1       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::next
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::current_layout
+      0.00      1       mercutio-wasm-proxy  std::collections::hash::map::DefaultResizePolicy::capacity::h64317a98143d7f1f
+      0.00      1       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::len
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::Deref>::deref
+      0.00      1       mercutio-wasm-proxy  crossbeam_channel::utils::Backoff::step::hde8245537c388782
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::index::IndexMut<core::ops::range::RangeFull>>::index_mut
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::h39d0c2e1efbf48c3
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::table::Drain<'a, K, V> as core::ops::drop::Drop>::drop
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::from_raw_parts
+      0.00      1       mercutio-wasm-proxy  oatie::compose::compose_del_del::hda3d4cd242de4fc2
+      0.00      1       mercutio-wasm-proxy  oatie::writer::AddWriter::begin::h0f05de9675463819
+      0.00      1       mercutio-wasm-proxy  <I as serde::ser::LenHint>::len_hint
+      0.00      1       mercutio-wasm-proxy  <crossbeam_channel::flavors::list::Channel<T>>::is_closed
+      0.00      1       mercutio-wasm-proxy  core::mem::uninitialized::ha20aca54c9862dbb
+      0.00      1       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset::hf59a2bdff636c31d
+      0.00      1   libsystem_pthread.dylib  pthread_create
+      0.00      1       mercutio-wasm-proxy  <mio::event_imp::Ready as core::cmp::PartialEq>::eq
+      0.00      1       mercutio-wasm-proxy  <core::option::Option<T>>::ok_or
+      0.00      1       mercutio-wasm-proxy  <std::sync::mpsc::Receiver<T>>::try_recv
+      0.00      1       mercutio-wasm-proxy  <core::ptr::NonNull<T>>::new_unchecked
+      0.00      1       mercutio-wasm-proxy  mio::sys::unix::cvt::h567812b34872c54d
+      0.00      1       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::is_null::h9e62893eb5f7a6a7
+      0.00      1       mercutio-wasm-proxy  alloc::allocator::Layout::new::h45cedcc47e2c39af
+      0.00      1       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::get
+      0.00      1       mercutio-wasm-proxy  <core::option::Option<T>>::expect
+      0.00      1       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_ptr
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V>>::set_tag
+      0.00      1       mercutio-wasm-proxy  <core::ptr::Unique<T>>::new_unchecked
+      0.00      1       mercutio-wasm-proxy  crossbeam_epoch::epoch::AtomicEpoch::compare_and_swap::h8e31afea4949ce30
+      0.00      1       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::new_unchecked
+      0.00      1         libsystem_c.dylib  nanosleep
+      0.00      1       mercutio-wasm-proxy  core::mem::align_of::hb0f9abc9bf0f5c96
+      0.00      1       mercutio-wasm-proxy  alloc::allocator::size_align::h2d1c1cbd57221b1c
+      0.00      1       mercutio-wasm-proxy  <core::ptr::NonNull<T>>::new_unchecked
+      0.00      1       mercutio-wasm-proxy  serde_json::ser::to_string::h4d9623f792d90ddf
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::map::DefaultHasher as core::hash::Hasher>::finish
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::with_capacity
+      0.00      1       mercutio-wasm-proxy  <std::sync::mutex::Mutex<T>>::lock
+      0.00      1       mercutio-wasm-proxy  core::slice::SliceExt::is_empty::h9c14560691766099
+      0.00      1       mercutio-wasm-proxy  <I as core::iter::traits::IntoIterator>::into_iter
+      0.00      1       mercutio-wasm-proxy  <alloc::arc::Arc<T> as core::ops::deref::Deref>::deref
+      0.00      1       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::offset::h5510bf2bb0006e49
+      0.00      1       mercutio-wasm-proxy  <core::cell::Cell<T>>::set
+      0.00      1       mercutio-wasm-proxy  <&'a T as core::fmt::Debug>::fmt
+      0.00      1       mercutio-wasm-proxy  parking_lot::stable::AtomicUsize::compare_exchange_weak::h11434629bb1de8ed
+      0.00      1       mercutio-wasm-proxy  <alloc::vec_deque::VecDeque<T>>::grow_if_necessary
+      0.00      1       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::get_unchecked
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::dealloc_buffer
+      0.00      1       mercutio-wasm-proxy  core::fmt::builders::DebugList::entries::h43cda6800c7a4567
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::with_capacity
+      0.00      1       mercutio-wasm-proxy  oatie::stepper::DocStepper::unenter::hea36ff8d935c4443
+      0.00      1       mercutio-wasm-proxy  core::slice::size_from_ptr::h93ac4d82f24360c0
+      0.00      1       mercutio-wasm-proxy  <crossbeam_channel::flavors::list::Channel<T>>::send
+      0.00      1       mercutio-wasm-proxy  core::sync::atomic::atomic_sub::h00eb0db9e326ae79
+      0.00      1       mercutio-wasm-proxy  <crossbeam_channel::flavors::list::Channel<T>>::push
+      0.00      1       mercutio-wasm-proxy  core::mem::uninitialized::h7e5aa35bc8f1026f
+      0.00      1       mercutio-wasm-proxy  <core::ptr::NonNull<T>>::as_ptr
+      0.00      1       mercutio-wasm-proxy  core::mem::forget::h010d3651a376b6a9
+      0.00      1       mercutio-wasm-proxy  <core::cell::Cell<T>>::get
+      0.00      1       mercutio-wasm-proxy  DYLD-STUB$$memcmp
+      0.00      1       mercutio-wasm-proxy  core::ptr::write::h3b5dca303a7a3f39
+      0.00      1       mercutio-wasm-proxy  alloc::allocator::Layout::new::h38132cecc0a011ee
+      0.00      1       mercutio-wasm-proxy  <oatie::doc::AddElement as core::fmt::Debug>::fmt
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::len
+      0.00      1       mercutio-wasm-proxy  core::ptr::swap_nonoverlapping::h8c58fc7b20a0238d
+      0.00      1       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::len::hfcbdf34d16d5a593
+      0.00      1       mercutio-wasm-proxy  <serde_json::ser::Compound<'a, W, F> as serde::ser::SerializeSeq>::serialize_element
+      0.00      1       mercutio-wasm-proxy  <core::result::Result<T, E>>::unwrap_or_else
+      0.00      1       mercutio-wasm-proxy  oatie::stepper::AddStepper::into_span::h77734baee1f3a61b
+      0.00      1       mercutio-wasm-proxy  <I as core::iter::traits::IntoIterator>::into_iter
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::drop::Drop>::drop
+      0.00      1       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset::hb58c5a547c3da2ff
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::set_len
+      0.00      1       mercutio-wasm-proxy  <oatie::doc::DocElement as core::fmt::Debug>::fmt
+      0.00      1       mercutio-wasm-proxy  <alloc::rc::Rc<T> as core::clone::Clone>::clone
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V>>::capacity
+      0.00      1       mercutio-wasm-proxy  <core::iter::Cloned<I> as core::iter::iterator::Iterator>::next
+      0.00      1       mercutio-wasm-proxy  <ws::connection::Connection<H>>::connection_id
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::hdbe3f1f6f18c91b8
+      0.00      1       mercutio-wasm-proxy  <core::mem::ManuallyDrop<T>>::new
+      0.00      1       mercutio-wasm-proxy  core::ptr::drop_in_place::ha79febea54ce0a6e
+      0.00      1       mercutio-wasm-proxy  serde::ser::impls::_$LT$impl$u20$serde..ser..Serialize$u20$for$u20$core..option..Option$LT$T$GT$$GT$::serialize::hb163b6999c90f36d
+      0.00      1       mercutio-wasm-proxy  <serde_json::read::SliceRead<'a> as serde_json::read::Read<'a>>::next
+      0.00      1       mercutio-wasm-proxy  mercutio::wasm::state::ClientDoc::next_payload::h54db2ee5ecf97cb3
+      0.00      1       mercutio-wasm-proxy  <core::result::Result<T, E>>::is_err
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::Deref>::deref
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::extend_from_slice
+      0.00      1       mercutio-wasm-proxy  <std::collections::hash::table::Iter<'a, K, V> as core::iter::iterator::Iterator>::next::{{closure}}
+      0.00      1       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::iter
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T>>::from_raw_parts
+      0.00      1       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::new_in
+      0.00      1       mercutio-wasm-proxy  core::slice::SliceExt::is_empty::h2b24eaf413be0a50
+      0.00      1       mercutio-wasm-proxy  core::mem::drop::h370e0c5bff7c99dc
+      0.00      1       mercutio-wasm-proxy  <core::result::Result<T, E>>::map
+      0.00      1       mercutio-wasm-proxy  mio::poll::ReadinessState::set_queued::h36fb95ff92ede9c7
+      0.00      1       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::index::IndexMut<core::ops::range::RangeFull>>::index_mut
+      0.00      1       mercutio-wasm-proxy  <ws::connection::Connection<H>>::write
+      0.00      1       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.00      1       mercutio-wasm-proxy  oatie::transform::transform::h3a962fa78fe649b5
+      0.00      1       mercutio-wasm-proxy  <(alloc::vec::Vec<oatie::doc::DelElement>, alloc::vec::Vec<oatie::doc::AddElement>) as oatie::OT>::empty
+      0.00      1       mercutio-wasm-proxy  std::panicking::panicking::h8e20c6b180434afe
+      0.00      1       mercutio-wasm-proxy  mercutio::wasm::client::Client::with_action_context::h8a8ea8b45a15f39a
+      0.00      1       mercutio-wasm-proxy  core::str::from_utf8::h5747fa14c25db5cd
+      0.00      2       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::len
+      0.00      2       mercutio-wasm-proxy  core::ptr::drop_in_place::h23f0e291b1bbd8fe
+      0.00      2       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::len::h744f57f98edff50e
+      0.00      2       mercutio-wasm-proxy  <core::option::Option<T>>::as_ref
+      0.00      2       mercutio-wasm-proxy  <std::thread::local::LocalKey<T>>::try_with
+      0.00      2       mercutio-wasm-proxy  core::str::run_utf8_validation::h6f0a07263b981aa2
+      0.00      2       mercutio-wasm-proxy  oatie::stepper::AddStepper::get_head::hdc4efe420ae2adb0
+      0.00      2         libsystem_c.dylib  NSGetEnviron
+      0.00      2       mercutio-wasm-proxy  mio::poll::Poll::poll2::he3533e3ed93fc8b5
+      0.00      2       mercutio-wasm-proxy  core::mem::forget::hd45183824bb5004e
+      0.00      2       mercutio-wasm-proxy  alloc::str::_$LT$impl$u20$core..borrow..Borrow$LT$str$GT$$u20$for$u20$alloc..string..String$GT$::borrow::h0d22cad1ca242969
+      0.00      2    libsystem_kernel.dylib  kevent
+      0.00      2       mercutio-wasm-proxy  <core::option::Option<&'a T>>::cloned::{{closure}}
+      0.00      2       mercutio-wasm-proxy  core::sync::atomic::strongest_failure_ordering::ha136fed079edd1c8
+      0.00      2       mercutio-wasm-proxy  <core::option::Option<T> as core::clone::Clone>::clone
+      0.00      2       mercutio-wasm-proxy  <I as core::iter::traits::IntoIterator>::into_iter
+      0.00      2       mercutio-wasm-proxy  <serde_json::de::SeqAccess<'a, R> as serde::de::SeqAccess<'de>>::next_element_seed
+      0.00      2       mercutio-wasm-proxy  serde::ser::impls::_$LT$impl$u20$serde..ser..Serialize$u20$for$u20$$RF$$u27$a$u20$T$GT$::serialize::hd37baf7d63afa660
+      0.00      2       mercutio-wasm-proxy  core::ptr::drop_in_place::ha30e68358a1da1e2
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::table::Bucket<K, V, M>>::at_index
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::table::Bucket<K, V, M>>::new
+      0.00      2       mercutio-wasm-proxy  <core::option::Option<&'a T>>::cloned
+      0.00      2       mercutio-wasm-proxy  core::mem::size_of::hff25bfbc1da2df2f
+      0.00      2       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::with_capacity
+      0.00      2       mercutio-wasm-proxy  core::fmt::num::_$LT$impl$u20$core..fmt..Display$u20$for$u20$u32$GT$::fmt::h9db662650262bb15
+      0.00      2       mercutio-wasm-proxy  mio::sys::unix::kqueue::Events::push_event::h4743b7c69b6d6f23
+      0.00      2       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::allocate_in
+      0.00      2       mercutio-wasm-proxy  serde_json::ser::to_string::hf713564faf0367e7
+      0.00      2       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_mut_ptr
+      0.00      2       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::get_unchecked
+      0.00      2       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::DerefMut>::deref_mut
+      0.00      2       mercutio-wasm-proxy  core::mem::size_of::hf63f27510d05b11f
+      0.00      2       mercutio-wasm-proxy  core::str::traits::_$LT$impl$u20$core..slice..SliceIndex$LT$str$GT$$u20$for$u20$core..ops..range..RangeFrom$LT$usize$GT$$GT$::get::h4681a814b5de7fd9
+      0.00      2       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::is_null::h28c25c6cd0c12891
+      0.00      2       mercutio-wasm-proxy  <core::option::Option<T>>::expect
+      0.00      2       mercutio-wasm-proxy  core::slice::from_raw_parts::h7409a889a27af2fd
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::iter
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::map::RandomState as core::clone::Clone>::clone
+      0.00      2       mercutio-wasm-proxy  core::mem::uninitialized::h84d3a2a548e413c0
+      0.00      2       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_ptr
+      0.00      2       mercutio-wasm-proxy  <core::ptr::Unique<T>>::new_unchecked
+      0.00      2       mercutio-wasm-proxy  core::ptr::write::hee4753d3c85230cb
+      0.00      2       mercutio-wasm-proxy  core::ptr::swap_nonoverlapping_bytes::habd20393768d4278
+      0.00      2       mercutio-wasm-proxy  core::slice::from_raw_parts_mut::h22565dbd07d963fc
+      0.00      2       mercutio-wasm-proxy  <core::result::Result<T, E>>::map_err
+      0.00      2       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::ptr
+      0.00      2       mercutio-wasm-proxy  core::slice::from_raw_parts_mut::h353fc4e1834d49a2
+      0.00      2       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::insert_hashed_nocheck
+      0.00      2       mercutio-wasm-proxy  <core::iter::LoopState$LT,C$ B> as core::ops::try::Try>::from_ok
+      0.00      2       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::reserve
+      0.00      2       mercutio-wasm-proxy  <core::iter::Cloned<I> as core::iter::iterator::Iterator>::size_hint
+      0.00      2       mercutio-wasm-proxy  core::slice::from_raw_parts_mut::h94a611f8d91896fe
+      0.00      2       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::is_empty
+      0.00      2       mercutio-wasm-proxy  core::num::_$LT$impl$u20$u16$GT$::to_le::hee2845e05ce93efc
+      0.00      2       mercutio-wasm-proxy  <I as core::iter::traits::IntoIterator>::into_iter
+      0.00      2       mercutio-wasm-proxy  <core::option::Option<T>>::unwrap
+      0.00      2       mercutio-wasm-proxy  <mio::poll::RegistrationInner as core::ops::deref::Deref>::deref
+      0.00      2       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset_to::hb78e195ee3794dc6
+      0.00      2       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.00      2       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::get
+      0.00      2       mercutio-wasm-proxy  core::ptr::drop_in_place::ha66f4f87392ea736
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::table::FullBucket<K, V, M>>::read
+      0.00      2       mercutio-wasm-proxy  <core::ptr::NonNull<T>>::as_ref
+      0.00      2       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.00      2       mercutio-wasm-proxy  <core::str::Chars<'a> as core::iter::iterator::Iterator>::count
+      0.00      2       mercutio-wasm-proxy  crossbeam_epoch::epoch::AtomicEpoch::load::hcb6030a10224b988
+      0.00      2       mercutio-wasm-proxy  <core::iter::Cloned<I> as core::iter::iterator::Iterator>::next
+      0.00      2       mercutio-wasm-proxy  crossbeam_channel::select::handle::Handle::wait_until::h80edea106b188861
+      0.00      2       mercutio-wasm-proxy  <I as core::iter::traits::IntoIterator>::into_iter
+      0.00      2       mercutio-wasm-proxy  <std::io::cursor::Cursor<T>>::get_ref
+      0.00      2       mercutio-wasm-proxy  core::ptr::drop_in_place::h91ff787992a6cacf
+      0.00      2       mercutio-wasm-proxy  core::mem::forget::h2f843177a9d1b699
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::reserve
+      0.00      2       mercutio-wasm-proxy  <core::cell::Cell<T>>::set
+      0.00      2       mercutio-wasm-proxy  alloc::vec::SetLenOnDrop::new::h688b8538cbd89673
+      0.00      2       mercutio-wasm-proxy  mercutio::wasm::walkers::ReverseCaretStepper::is_valid_caret_pos::h67dff5fda4256eb0
+      0.00      2       mercutio-wasm-proxy  <mio::token::Token as core::cmp::PartialEq>::eq
+      0.00      2       mercutio-wasm-proxy  <core::option::Option<T>>::unwrap_or
+      0.00      2       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::is_null::hf7e128c29dcd76da
+      0.00      2       mercutio-wasm-proxy  oatie::writer::DelWriter::new::hd14e72b144a9573c
+      0.00      2       mercutio-wasm-proxy  core::ptr::read::ha835d4fff8ab0e95
+      0.00      2       mercutio-wasm-proxy  <T as core::convert::Into<U>>::into
+      0.00      2       mercutio-wasm-proxy  <str as core::str::StrExt>::len
+      0.00      2       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::try_fold
+      0.00      2       mercutio-wasm-proxy  byteorder::io::WriteBytesExt::write_uint::hb2dc29412660f3d2
+      0.00      2       mercutio-wasm-proxy  oatie::writer::DelWriter::result::h7d6c0fbb7774c97d
+      0.00      2       mercutio-wasm-proxy  <core::result::Result<T, E>>::unwrap
+      0.00      2       mercutio-wasm-proxy  <core::result::Result<T, E>>::map
+      0.00      2       mercutio-wasm-proxy  <core::option::Option<T>>::unwrap_or
+      0.00      2       mercutio-wasm-proxy  <&'a alloc::vec::Vec<T> as core::iter::traits::IntoIterator>::into_iter
+      0.00      2       mercutio-wasm-proxy  <u64 as itoa::IntegerPrivate>::write_to
+      0.00      2       mercutio-wasm-proxy  <crossbeam_channel::channel::Sender<T>>::send
+      0.00      2       mercutio-wasm-proxy  mercutio::wasm::client::Client::send_client::hbf94e4d1a9ad68f3
+      0.00      2       mercutio-wasm-proxy  core::ptr::drop_in_place::h993165f53586fb40
+      0.00      2       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::is_null::h5d131712ae7fcc0e
+      0.00      2       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::as_ptr::h323dbd6f354fe5bf
+      0.00      2       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::len::h14f73cf0b7ca150c
+      0.00      2       mercutio-wasm-proxy  core::slice::size_from_ptr::hf6d5315420d18d04
+      0.00      2       mercutio-wasm-proxy  DYLD-STUB$$memmove
+      0.00      2       mercutio-wasm-proxy  serde_json::ser::to_writer::h45e8721c1d7a4be5
+      0.00      2       mercutio-wasm-proxy  <&'a mut serde_json::ser::Serializer<W, F> as serde::ser::Serializer>::serialize_u64
+      0.00      2       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A> as core::ops::drop::Drop>::drop
+      0.00      2       mercutio-wasm-proxy  <&'a T as core::fmt::Debug>::fmt
+      0.00      2       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::last_mut::ha5b4307a3e27fc7f
+      0.00      2       mercutio-wasm-proxy  core::hash::Hasher::write_u8::ha49346772639f58d
+      0.00      2       mercutio-wasm-proxy  oatie::doc::_IMPL_SERIALIZE_FOR_DelElement::_$LT$impl$u20$serde..ser..Serialize$u20$for$u20$oatie..doc..DelElement$GT$::serialize::h4d0b608710c86eb3
+      0.00      2       mercutio-wasm-proxy  core::str::traits::_$LT$impl$u20$core..slice..SliceIndex$LT$str$GT$$u20$for$u20$core..ops..range..Range$LT$usize$GT$$GT$::get_unchecked::hd9209082014d930f
+      0.00      2       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::iter
+      0.00      2       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::from_raw_parts
+      0.00      2       mercutio-wasm-proxy  <core::result::Result<T, E>>::map_err
+      0.00      2       mercutio-wasm-proxy  <ws::connection::Connection<H>>::is_client
+      0.00      2       mercutio-wasm-proxy  <ws::connection::Connection<H>>::check_events
+      0.00      2       mercutio-wasm-proxy  <oatie::writer::CurWriter as core::clone::Clone>::clone
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::table::Bucket<K, V, M>>::new
+      0.00      2       mercutio-wasm-proxy  std::thread::yield_now::h3235d0080db04e4f
+      0.00      2       mercutio-wasm-proxy  <alloc::vec_deque::VecDeque<T>>::cap
+      0.00      2       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::is_null::hbfa143b5061d08a4
+      0.00      2       mercutio-wasm-proxy  <&'a T as core::convert::AsRef<U>>::as_ref
+      0.00      2       mercutio-wasm-proxy  <std::sync::mpsc::sync::Packet<T>>::send
+      0.00      2       mercutio-wasm-proxy  mio::poll::ReadinessQueue::poll::hf53b850a8bd1566d
+      0.00      2       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::DerefMut>::deref_mut
+      0.00      2       mercutio-wasm-proxy  serde_json::ser::format_escaped_str::h4cd4caed72b889c0
+      0.00      2       mercutio-wasm-proxy  <T as alloc::borrow::ToOwned>::to_owned
+      0.00      2       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::index::Index<core::ops::range::RangeFull>>::index
+      0.00      2       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::new_unchecked
+      0.00      2       mercutio-wasm-proxy  <crossbeam_epoch::guard::Guard as core::ops::drop::Drop>::drop
+      0.00      2       mercutio-wasm-proxy  core::slice::size_from_ptr::hac0c6419403341ad
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::map::VacantEntry<'a, K, V>>::insert
+      0.00      2       mercutio-wasm-proxy  <core::cell::UnsafeCell<T>>::get
+      0.00      2       mercutio-wasm-proxy  oatie::writer::CurWriter::exit::h9fdf58c158f079a6
+      0.00      2       mercutio-wasm-proxy  <alloc::vec_deque::VecDeque<T>>::remove
+      0.00      2       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::new_unchecked
+      0.00      2       mercutio-wasm-proxy  <serde::de::impls::<impl serde::de::Deserialize<'de> for std::collections::hash::map::HashMap<K, V, S>>::deserialize::MapVisitor<K, V, S> as serde::de::Visitor<'de>>::visit_map
+      0.00      2       mercutio-wasm-proxy  core::str::traits::_$LT$impl$u20$core..ops..index..Index$LT$core..ops..range..Range$LT$usize$GT$$GT$$u20$for$u20$str$GT$::index::h98e826d80f8e7bfa
+      0.00      2       mercutio-wasm-proxy  crossbeam_channel::monitor::Monitor::notify_one::hfc373d48f2b3d331
+      0.00      2       mercutio-wasm-proxy  core::mem::replace::h3696567d3c969087
+      0.00      2       mercutio-wasm-proxy  <crossbeam_channel::flavors::list::Channel<T>>::recv_until
+      0.00      2       mercutio-wasm-proxy  core::mem::size_of::hb36aa4774c33274e
+      0.00      2       mercutio-wasm-proxy  core::str::traits::_$LT$impl$u20$core..slice..SliceIndex$LT$str$GT$$u20$for$u20$core..ops..range..RangeFrom$LT$usize$GT$$GT$::get_unchecked::hf71c6507f5dcebdb
+      0.00      2       mercutio-wasm-proxy  core::cmp::PartialOrd::le::h2d784799a832853b
+      0.00      2       mercutio-wasm-proxy  std::panicking::try::h117380bc9e77dcc8
+      0.00      2       mercutio-wasm-proxy  arena_avail_remove
+      0.00      2       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset_to::heabcde694838b783
+      0.00      2       mercutio-wasm-proxy  mercutio::wasm::proxy::setup_client::_$u7b$$u7b$closure$u7d$$u7d$::hbacc8549c5bd8a44
+      0.00      2       mercutio-wasm-proxy  core::ptr::drop_in_place::h953c0d538838d732
+      0.00      2       mercutio-wasm-proxy  core::mem::size_of::hd938c0d846e7a829
+      0.00      2       mercutio-wasm-proxy  <str as core::fmt::Display>::fmt
+      0.00      2       mercutio-wasm-proxy  <core::sync::atomic::AtomicPtr<T>>::load
+      0.00      2       mercutio-wasm-proxy  core::mem::size_of_val::h8e0a4b44ee470ee5
+      0.00      2       mercutio-wasm-proxy  core::slice::from_raw_parts::ha794aa3c9e5b8055
+      0.00      2       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::double
+      0.00      2       mercutio-wasm-proxy  core::mem::size_of::h72b9e70a26b29ab2
+      0.00      2       mercutio-wasm-proxy  <alloc::arc::Arc<T>>::inner
+      0.00      2       mercutio-wasm-proxy  core::fmt::num::_$LT$impl$u20$core..fmt..Display$u20$for$u20$usize$GT$::fmt::h819783484dbd9c47
+      0.00      2       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::clone::Clone>::clone
+      0.00      2       mercutio-wasm-proxy  <alloc::vec::Vec<T> as alloc::vec::SpecExtend<&'a T, I>>::spec_extend
+      0.00      2       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::current_layout
+      0.00      2       mercutio-wasm-proxy  <&'a alloc::vec::Vec<T> as core::iter::traits::IntoIterator>::into_iter
+      0.00      2       mercutio-wasm-proxy  alloc::allocator::Layout::new::hd3045a4a64217e29
+      0.00      2       mercutio-wasm-proxy  core::clone::Clone::clone::hd1d95101bd0d38cb
+      0.00      2       mercutio-wasm-proxy  <mio::poll::ReadinessState as core::cmp::PartialEq>::eq
+      0.00      2       mercutio-wasm-proxy  <core::ptr::NonNull<T>>::as_ref
+      0.00      2       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T>>::with_capacity
+      0.00      2       mercutio-wasm-proxy  <core::ptr::NonNull<T>>::as_ref
+      0.00      2       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::current_layout
+      0.00      2       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::len
+      0.00      2       mercutio-wasm-proxy  ws::frame::Frame::format::h049377fc8fef2367
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V>>::raw_buckets
+      0.00      2       mercutio-wasm-proxy  core::sync::atomic::AtomicUsize::compare_and_swap::ha96009d9c1c7db9d
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::len
+      0.00      2       mercutio-wasm-proxy  <core::result::Result<T, E>>::expect
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::table::Bucket<K, V, M>>::peek
+      0.00      2       mercutio-wasm-proxy  <crossbeam_utils::cache_padded::CachePadded<T> as core::ops::deref::Deref>::deref
+      0.00      2       mercutio-wasm-proxy  <core::option::Option<T>>::and_then
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::table::FullBucket<K, V, M>>::into_refs
+      0.00      2       mercutio-wasm-proxy  core::mem::align_of::hc366a55344592c30
+      0.00      2       mercutio-wasm-proxy  <core::option::Option<&'a T>>::cloned::{{closure}}
+      0.00      2       mercutio-wasm-proxy  <core::ptr::Unique<T>>::as_ptr
+      0.00      2       mercutio-wasm-proxy  <core::cell::UnsafeCell<T>>::get
+      0.00      2       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::into_vec::h5409094c3e301648
+      0.00      2       mercutio-wasm-proxy  core::ptr::write::hd605bda48d544bc2
+      0.00      2       mercutio-wasm-proxy  core::fmt::builders::DebugTuple::field::hef31d163a46e0323
+      0.00      2       mercutio-wasm-proxy  <core::result::Result<T, E>>::map
+      0.00      2       mercutio-wasm-proxy  <alloc::vec::Vec<oatie::doc::DelElement> as oatie::doc::DelPlaceable>::place_all
+      0.00      2       mercutio-wasm-proxy  <core::option::Option<&'a T>>::cloned
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::table::EmptyBucket<K, V, M>>::put
+      0.00      2       mercutio-wasm-proxy  mercutio::wasm::walkers::Walker::back_block::_$u7b$$u7b$closure$u7d$$u7d$::h7fd27e2655a98376
+      0.00      2       mercutio-wasm-proxy  oatie::apply::place_many::h0a09a9036540cb6c
+      0.00      2         libsystem_c.dylib  _findenv_locked
+      0.00      2       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::is_null::hd1539ac9b445808c
+      0.00      2       mercutio-wasm-proxy  mercutio::wasm::state::ClientDoc::sync_sent_new_version::hf5fc124ab21066f4
+      0.00      2       mercutio-wasm-proxy  <core::result::Result<T, E>>::map
+      0.00      2       mercutio-wasm-proxy  core::mem::swap::h0afbc5c1c635461f
+      0.00      2       mercutio-wasm-proxy  <core::ptr::Unique<T>>::empty
+      0.00      2       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::as_mut_ptr::h5776a8a103d3b48d
+      0.00      2       mercutio-wasm-proxy  <crossbeam_utils::cache_padded::Inner<T> as core::ops::deref::Deref>::deref
+      0.00      2       mercutio-wasm-proxy  <core::option::Option<T>>::unwrap_or_else
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::is_empty
+      0.00      2       mercutio-wasm-proxy  <core::ptr::Unique<T>>::new_unchecked
+      0.00      2       mercutio-wasm-proxy  core::mem::swap::h899b7954f4469fa0
+      0.00      2       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_ptr
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::make_hash
+      0.00      2       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::len
+      0.00      2       mercutio-wasm-proxy  core::clone::Clone::clone::h50231c884b279202
+      0.00      2       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::dealloc_buffer
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S> as core::cmp::PartialEq>::eq
+      0.00      2       mercutio-wasm-proxy  <ws::io::Handler<F>>::check_active
+      0.00      2       mercutio-wasm-proxy  core::ptr::read::hc678300413f8e06d
+      0.00      2       mercutio-wasm-proxy  alloc::allocator::Alloc::alloc_array::h7ca9909fc1f78c36
+      0.00      2       mercutio-wasm-proxy  crossbeam_epoch::default::HANDLE::__getit::h1fa9ce97c9893635
+      0.00      2       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::push
+      0.00      2       mercutio-wasm-proxy  core::slice::from_raw_parts_mut::hf406f74ed2893e04
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::map::RandomState as core::hash::BuildHasher>::build_hasher
+      0.00      2       mercutio-wasm-proxy  core::mem::uninitialized::hb7374da551a70791
+      0.00      2       mercutio-wasm-proxy  core::ptr::drop_in_place::h501cde54c19bc675
+      0.00      2       mercutio-wasm-proxy  <core::cell::UnsafeCell<T>>::get
+      0.00      2       mercutio-wasm-proxy  <parking_lot::mutex::MutexGuard<'a, T> as core::ops::deref::Deref>::deref
+      0.00      2       mercutio-wasm-proxy  core::mem::forget::h3f3967b1ab5169f1
+      0.00      2       mercutio-wasm-proxy  <alloc::vec::Vec<oatie::doc::CurElement> as oatie::doc::CurPlaceable>::place
+      0.00      2       mercutio-wasm-proxy  core::fmt::Formatter::pad::h3052d6b8519405d1
+      0.00      2       mercutio-wasm-proxy  oatie::writer::DelWriter::exit::hc5ec591404668cd4
+      0.00      2       mercutio-wasm-proxy  je_bitmap_init
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::get
+      0.00      2       mercutio-wasm-proxy  oatie::transform::transform_insertions::h734fa99833bdde23
+      0.00      2       mercutio-wasm-proxy  core::mem::size_of_val::h6e65ef01ba3d221a
+      0.00      2       mercutio-wasm-proxy  <core::option::Option<T> as core::cmp::PartialEq>::eq
+      0.00      2       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::double
+      0.00      2       mercutio-wasm-proxy  <oatie::schema::RtfTrack as oatie::transform::Track>::supports_text
+      0.00      2       mercutio-wasm-proxy  core::ptr::drop_in_place::hbcee321c41bae36e
+      0.00      2       mercutio-wasm-proxy  <core::mem::ManuallyDrop<T>>::new
+      0.00      2       mercutio-wasm-proxy  <core::slice::IterMut<'a, T> as core::iter::iterator::Iterator>::next
+      0.00      2       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::new_unchecked
+      0.00      2       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::as_mut_ptr::h19101f29af0d595d
+      0.00      2       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::index::Index<usize>>::index
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::map::DefaultHasher as core::hash::Hasher>::finish
+      0.00      2       mercutio-wasm-proxy  <T as core::convert::From<T>>::from
+      0.00      2       mercutio-wasm-proxy  <core::ptr::Unique<T>>::new_unchecked
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::len
+      0.00      2   libsystem_pthread.dylib  pthread_mutex_lock
+      0.00      2       mercutio-wasm-proxy  core::str::traits::_$LT$impl$u20$core..slice..SliceIndex$LT$str$GT$$u20$for$u20$core..ops..range..RangeFrom$LT$usize$GT$$GT$::index::hf524a0fa8378e042
+      0.00      2       mercutio-wasm-proxy  ws::frame::apply_mask::h859c36a5e09efaaa
+      0.00      2       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::is_empty
+      0.00      2       mercutio-wasm-proxy  <core::iter::Cloned<I> as core::iter::iterator::Iterator>::next
+      0.00      2       mercutio-wasm-proxy  <core::option::Option<T> as core::cmp::PartialEq>::eq
+      0.00      2       mercutio-wasm-proxy  mercutio::wasm::client::Client::with_action_context::hf499f3a219a8f3ae
+      0.00      2       mercutio-wasm-proxy  <usize as core::slice::SliceIndex<[T]>>::get
+      0.00      2       mercutio-wasm-proxy  core::ptr::swap_nonoverlapping::hbd173906f24f2bf3
+      0.00      2       mercutio-wasm-proxy  <oatie::doc::AddElement as core::clone::Clone>::clone
+      0.00      2       mercutio-wasm-proxy  alloc::str::_$LT$impl$u20$str$GT$::chars::habb1aab6180ae3a0
+      0.00      2       mercutio-wasm-proxy  serde_json::ser::to_vec::h9ab5e4182d8c8912
+      0.00      2       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::len
+      0.00      2       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::get
+      0.00      2       mercutio-wasm-proxy  <core::cell::UnsafeCell<T>>::get
+      0.00      2       mercutio-wasm-proxy  mio::sys::unix::kqueue::Selector::register::h5fd1c7e01a966660
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S> as core::ops::index::Index<&'a Q>>::index
+      0.00      2       mercutio-wasm-proxy  oatie::stepper::DelStepper::get_head::h8c352451aa4e9d7e
+      0.00      2       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::into_vec::h8e102e3bd5504c12
+      0.00      2       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::new_unchecked
+      0.00      2       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::search::{{closure}}
+      0.00      2       mercutio-wasm-proxy  core::fmt::ArgumentV1::new::h85f84f670a2111ea
+      0.00      2       mercutio-wasm-proxy  <serde_json::ser::Compound<'a, W, F> as serde::ser::SerializeSeq>::serialize_element
+      0.00      2       mercutio-wasm-proxy  alloc::allocator::Alloc::alloc_array::hfc619b63275c4676
+      0.00      2       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::ptr
+      0.00      2       mercutio-wasm-proxy  <&'a mut serde_json::de::Deserializer<R> as serde::de::Deserializer<'de>>::deserialize_enum
+      0.00      2       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::len::h740e64b890835dad
+      0.00      2       mercutio-wasm-proxy  <ws::message::Message as core::convert::From<alloc::string::String>>::from
+      0.00      2       mercutio-wasm-proxy  core::ptr::drop_in_place::h74158645e1a03df8
+      0.00      2       mercutio-wasm-proxy  core::ptr::drop_in_place::h263819c9e1746324
+      0.00      2       mercutio-wasm-proxy  alloc::string::String::new::h8fbbac1b39cbf139
+      0.00      2       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::len::h006b4715bab33d06
+      0.00      2       mercutio-wasm-proxy  crossbeam_channel::select::handle::Handle::try_select::hc86a010d593cefbb
+      0.00      2       mercutio-wasm-proxy  mercutio::wasm::actions::delete_char::hc7c88ebe6e29cc27
+      0.00      2       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::len
+      0.00      2       mercutio-wasm-proxy  core::ptr::drop_in_place::h170ec290a263b30a
+      0.00      3       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S> as core::cmp::PartialEq>::eq::{{closure}}
+      0.00      3       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::clone::Clone>::clone
+      0.00      3       mercutio-wasm-proxy  <alloc::string::String as core::hash::Hash>::hash
+      0.00      3  libsystem_platform.dylib  platform_memset$VARIANT$Haswell
+      0.00      3       mercutio-wasm-proxy  std::thread::park::h038f2b9324739898
+      0.00      3       mercutio-wasm-proxy  core::ptr::read::hc71073d7d270b9ef
+      0.00      3       mercutio-wasm-proxy  <std::collections::hash::map::InternalEntry<K, V, M>>::into_occupied_bucket
+      0.00      3       mercutio-wasm-proxy  core::slice::from_raw_parts_mut::h29417becabc3bfff
+      0.00      3       mercutio-wasm-proxy  <core::ptr::Unique<T>>::as_ptr
+      0.00      3       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::allocate_in
+      0.00      3       mercutio-wasm-proxy  <ws::io::Handler<F>>::handle_event
+      0.00      3       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::set_len
+      0.00      3       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::get_unchecked
+      0.00      3       mercutio-wasm-proxy  core::ptr::drop_in_place::hd4200a09de46ff3a
+      0.00      3       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::capacity
+      0.00      3       mercutio-wasm-proxy  core::mem::size_of::h0f0f2e4f51c2c443
+      0.00      3       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A> as core::ops::drop::Drop>::drop
+      0.00      3       mercutio-wasm-proxy  core::ptr::write::h54a28a6d05c52a2e
+      0.00      3       mercutio-wasm-proxy  <core::hash::sip::SipHasher13 as core::hash::Hasher>::write
+      0.00      3       mercutio-wasm-proxy  <serde_json::de::Deserializer<R>>::parse_whitespace
+      0.00      3       mercutio-wasm-proxy  core::sync::atomic::atomic_load::heeede2e3413c9b50
+      0.00      3       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::size_hint
+      0.00      3       mercutio-wasm-proxy  core::cmp::min::hcc1c45f61e0a3eb5
+      0.00      3       mercutio-wasm-proxy  <core::ptr::Unique<T>>::new_unchecked
+      0.00      3       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::offset::h3754ab9ec3147f27
+      0.00      3       mercutio-wasm-proxy  alloc::raw_vec::alloc_guard::h08ddc32cab2cc2d3
+      0.00      3       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::allocate_in
+      0.00      3       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S> as core::cmp::PartialEq>::eq::{{closure}}::{{closure}}
+      0.00      3       mercutio-wasm-proxy  core::slice::from_raw_parts_mut::h3e0ba2356ae9b739
+      0.00      3       mercutio-wasm-proxy  <alloc::vec::Vec<T> as alloc::vec::SpecExtend<&'a T, I>>::spec_extend
+      0.00      3       mercutio-wasm-proxy  core::ptr::write::hb61f23e11a1c1e36
+      0.00      3       mercutio-wasm-proxy  <alloc::vec::Vec<oatie::doc::AddElement> as oatie::doc::AddPlaceable>::place_all
+      0.00      3       mercutio-wasm-proxy  core::ptr::drop_in_place::h39f7d50ecf797051
+      0.00      3       mercutio-wasm-proxy  core::ptr::read::hfeecf74467d8b612
+      0.00      3       mercutio-wasm-proxy  core::sync::atomic::atomic_store::h237641c4cb23ec0b
+      0.00      3       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::search
+      0.00      3       mercutio-wasm-proxy  core::str::traits::_$LT$impl$u20$core..cmp..PartialEq$u20$for$u20$str$GT$::eq::h2ef821bcfbf80e51
+      0.00      3       mercutio-wasm-proxy  <oatie::doc::Doc as core::cmp::PartialEq>::eq
+      0.00      3       mercutio-wasm-proxy  core::ptr::drop_in_place::h4c655e8cc0bdcfd4
+      0.00      3       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::as_ref::h229a0c444f0340ef
+      0.00      3       mercutio-wasm-proxy  serde_json::ser::CharEscape::from_escape_table::h55aebecb0ec5567b
+      0.00      3       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::is_empty
+      0.00      3       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::push
+      0.00      3       mercutio-wasm-proxy  <core::hash::sip::SipHasher13 as core::hash::Hasher>::finish
+      0.00      3       mercutio-wasm-proxy  <&'a mut serde_json::de::Deserializer<R> as serde::de::Deserializer<'de>>::deserialize_str
+      0.00      3       mercutio-wasm-proxy  crossbeam_epoch::internal::Local::unpin::h640d733f10bfb2d5
+      0.00      3       mercutio-wasm-proxy  mercutio::wasm::client::collect_cursors_span::hbe1979fed9161973
+      0.00      3       mercutio-wasm-proxy  core::str::traits::_$LT$impl$u20$core..slice..SliceIndex$LT$str$GT$$u20$for$u20$core..ops..range..Range$LT$usize$GT$$GT$::get::hcd010ea12fc8b544
+      0.00      3       mercutio-wasm-proxy  core::slice::from_raw_parts::h7a39cb09279c2f0c
+      0.00      3       mercutio-wasm-proxy  mercutio::wasm::walkers::Walker::to_caret_safe::h0cc4c2e9a4c57019
+      0.00      3       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::is_null::hedc7661e6b7e66fb
+      0.00      3       mercutio-wasm-proxy  <ws::io::Handler<F>>::schedule
+      0.00      3       mercutio-wasm-proxy  core::slice::from_raw_parts::h4fefb340dda56eb2
+      0.00      3       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.00      3       mercutio-wasm-proxy  <std::thread::local::LocalKey<T>>::try_with
+      0.00      3       mercutio-wasm-proxy  <&'a mut serde_json::de::Deserializer<R> as serde::de::Deserializer<'de>>::deserialize_enum
+      0.00      3       mercutio-wasm-proxy  alloc::fmt::format::h3c378e93190cc96d
+      0.00      3       mercutio-wasm-proxy  core::sync::atomic::atomic_compare_exchange::h6825175b54f7b983
+      0.00      3       mercutio-wasm-proxy  core::str::traits::_$LT$impl$u20$core..slice..SliceIndex$LT$str$GT$$u20$for$u20$core..ops..range..Range$LT$usize$GT$$GT$::get_unchecked::he067c34c888c4fdb
+      0.00      3       mercutio-wasm-proxy  core::fmt::Formatter::debug_tuple::h292b5fb4c61b17f4
+      0.00      3       mercutio-wasm-proxy  std::io::stdio::stdout::h8ccb3b344fa93132
+      0.00      3       mercutio-wasm-proxy  core::iter::iterator::Iterator::cloned::h311d7024c1db801b
+      0.00      3       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::DerefMut>::deref_mut
+      0.00      3       mercutio-wasm-proxy  core::mem::size_of::he67166b4dd95d26f
+      0.00      3       mercutio-wasm-proxy  <slab::Slab<T, I>>::get_mut
+      0.00      3       mercutio-wasm-proxy  crossbeam_epoch::internal::Local::global::hff958ce200eb6d18
+      0.00      3       mercutio-wasm-proxy  serde_json::ser::Formatter::write_string_fragment::h6772b9406da5fb23
+      0.00      3       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::set_len
+      0.00      3       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T>>::from_raw_parts
+      0.00      3       mercutio-wasm-proxy  core::mem::align_of::hbcc8255d45058278
+      0.00      3       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.00      3       mercutio-wasm-proxy  alloc::allocator::size_align::he340756369994e3c
+      0.00      3       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::search
+      0.00      3       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::as_mut_ptr::h44b0477fa0d6341a
+      0.00      3       mercutio-wasm-proxy  <core::ptr::Unique<T>>::new_unchecked
+      0.00      3       mercutio-wasm-proxy  alloc::slice::hack::into_vec::h2835d7975b2a8f3e
+      0.00      3       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::get_unchecked_mut
+      0.00      3       mercutio-wasm-proxy  core::mem::swap::hc48fd4a7d8a18e5a
+      0.00      3       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::dealloc_buffer
+      0.00      3       mercutio-wasm-proxy  oatie::apply::apply_operation::h6f5bb0accf1dfb16
+      0.00      3       mercutio-wasm-proxy  <alloc::vec::Vec<T> as alloc::vec::SpecExtend<T, I>>::spec_extend
+      0.00      3       mercutio-wasm-proxy  arena_bin_lower_run
+      0.00      3       mercutio-wasm-proxy  core::num::_$LT$impl$u20$u64$GT$::wrapping_add::he3ea207e9e587e08
+      0.00      3       mercutio-wasm-proxy  core::slice::from_raw_parts_mut::h93621a39f915f7b3
+      0.00      3       mercutio-wasm-proxy  core::str::from_utf8_unchecked::hfe13f4291c18ea90
+      0.00      3       mercutio-wasm-proxy  <oatie::doc::DelElement as core::clone::Clone>::clone
+      0.00      3       mercutio-wasm-proxy  <ws::io::Handler<F>>::handle_event
+      0.00      3       mercutio-wasm-proxy  <std::collections::hash::map::InternalEntry<K, V, M>>::into_occupied_bucket
+      0.00      3       mercutio-wasm-proxy  core::iter::iterator::Iterator::cloned::h5507e93b7b4b542b
+      0.00      3       mercutio-wasm-proxy  oatie::stepper::DocStepper::next::h81ffeb495928e597
+      0.00      3       mercutio-wasm-proxy  <core::iter::Cloned<I> as core::iter::iterator::Iterator>::next
+      0.00      3       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::current_layout
+      0.00      3       mercutio-wasm-proxy  <core::ops::range::Range<usize> as core::slice::SliceIndex<[T]>>::get_unchecked
+      0.00      3       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::pop
+      0.00      3       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::DerefMut>::deref_mut
+      0.00      3       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::reserve
+      0.00      3       mercutio-wasm-proxy  <alloc::vec::Vec<A> as core::cmp::PartialEq<alloc::vec::Vec<B>>>::eq
+      0.00      3       mercutio-wasm-proxy  core::slice::size_from_ptr::h98b53bf675f3c27d
+      0.00      3       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::reserve
+      0.00      3       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::to_vec::h59dfa621b95b1ded
+      0.00      3       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::min_value::h371746ab04cb7361
+      0.00      3       mercutio-wasm-proxy  <std::collections::hash::table::FullBucket<K, V, M>>::read
+      0.00      3       mercutio-wasm-proxy  <crossbeam_utils::cache_padded::Inner<T> as core::ops::deref::Deref>::deref
+      0.00      3       mercutio-wasm-proxy  oatie::compose::compose::h1a606ddde24491c7
+      0.00      3       mercutio-wasm-proxy  core::slice::size_from_ptr::hb36bd14090ac8529
+      0.00      3       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset::h3dc5bc083604f496
+      0.00      3       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S> as core::ops::index::Index<&'a Q>>::index
+      0.00      3       mercutio-wasm-proxy  <<mercutio::IMPL_DESERIALIZE_FOR_SyncClientCommand::<impl serde::de::Deserialize<'de> for mercutio::SyncClientCommand>::deserialize::_Visitor<'de> as serde::de::Visitor<'de>>::visit_enum::_Visitor<'de> as serde::de::Visitor<'de>>::visit_seq
+      0.00      3       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T>>::with_capacity
+      0.00      3       mercutio-wasm-proxy  oatie::stepper::DocStepper::exit::hfb5ba08b8ede7124
+      0.00      3       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::get
+      0.00      3       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A> as core::ops::drop::Drop>::drop
+      0.00      3       mercutio-wasm-proxy  <ws::io::Handler<F>>::event_loop
+      0.00      3       mercutio-wasm-proxy  core::ptr::drop_in_place::h65c6cffca13b550a
+      0.00      3       mercutio-wasm-proxy  <core::iter::LoopState$LT,C$ B> as core::ops::try::Try>::into_result
+      0.00      3       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::dealloc_buffer
+      0.00      3       mercutio-wasm-proxy  arena_run_split_remove
+      0.00      3       mercutio-wasm-proxy  <alloc::string::String as core::ops::index::Index<core::ops::range::RangeFull>>::index
+      0.00      3       mercutio-wasm-proxy  alloc::slice::hack::into_vec::h51189df56ebf8a6f
+      0.00      3       mercutio-wasm-proxy  <alloc::string::String as core::ops::index::Index<core::ops::range::Range<usize>>>::index
+      0.00      3       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::len
+      0.00      3       mercutio-wasm-proxy  core::mem::size_of::hccee30e5cda483a4
+      0.00      3       mercutio-wasm-proxy  core::ptr::drop_in_place::h4815e1994c33bbba
+      0.00      3       mercutio-wasm-proxy  <alloc::string::String as core::cmp::PartialEq<&'a str>>::eq
+      0.00      3       mercutio-wasm-proxy  arena_run_dalloc
+      0.00      3       mercutio-wasm-proxy  <mercutio::wasm::client::NativeCommand as core::clone::Clone>::clone
+      0.00      3       mercutio-wasm-proxy  <I as core::iter::traits::IntoIterator>::into_iter
+      0.00      3       mercutio-wasm-proxy  alloc::allocator::Layout::padding_needed_for::hbfc5f70d67090ae8
+      0.00      3       mercutio-wasm-proxy  <alloc::arc::Arc<T>>::inner
+      0.00      3       mercutio-wasm-proxy  core::slice::_$LT$impl$u20$core..ops..index..Index$LT$I$GT$$u20$for$u20$$u5b$T$u5d$$GT$::index::hb7521b9f045d8303
+      0.00      3       mercutio-wasm-proxy  core::mem::size_of::hb5152aeb2119251f
+      0.00      3       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::index::Index<core::ops::range::RangeFull>>::index
+      0.00      3       mercutio-wasm-proxy  <std::collections::hash::table::Bucket<K, V, M>>::at_index
+      0.00      3       mercutio-wasm-proxy  core::mem::align_of::hfe3238560b866f30
+      0.00      3       mercutio-wasm-proxy  <std::collections::hash::map::DefaultHasher as core::hash::Hasher>::write
+      0.00      3       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::get
+      0.00      3       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V>>::tag
+      0.00      3       mercutio-wasm-proxy  <std::collections::hash::map::DefaultResizePolicy as core::clone::Clone>::clone
+      0.00      3       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset::haff3ec0543e30228
+      0.00      3       mercutio-wasm-proxy  <core::ops::range::RangeFrom<usize> as core::slice::SliceIndex<[T]>>::index
+      0.00      3       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::ptr
+      0.00      3       mercutio-wasm-proxy  <core::iter::Cloned<I> as core::iter::iterator::Iterator>::next
+      0.00      3       mercutio-wasm-proxy  core::sync::atomic::strongest_failure_ordering::h64e163575c397a9d
+      0.00      3       mercutio-wasm-proxy  core::ptr::drop_in_place::hd918da952efac1c4
+      0.00      3       mercutio-wasm-proxy  <core::cell::UnsafeCell<T>>::get
+      0.00      3       mercutio-wasm-proxy  <std::thread::local::fast::Key<T>>::get
+      0.00      3       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::get
+      0.00      3    libsystem_kernel.dylib  swtch_pri
+      0.00      3       mercutio-wasm-proxy  <alloc::vec::Vec<T> as alloc::vec::SpecExtend<T, I>>::spec_extend
+      0.00      3       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::len
+      0.00      3       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::reserve
+      0.00      3       mercutio-wasm-proxy  core::str::traits::_$LT$impl$u20$core..slice..SliceIndex$LT$str$GT$$u20$for$u20$core..ops..range..Range$LT$usize$GT$$GT$::index::h6de630dbfa2677d0
+      0.00      3  libsystem_platform.dylib  OSSpinLockUnlock
+      0.00      3       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.00      3       mercutio-wasm-proxy  crossbeam_epoch::default::pin::hcaaea7eb7118456f
+      0.00      3       mercutio-wasm-proxy  <usize as core::slice::SliceIndex<[T]>>::get
+      0.00      3       mercutio-wasm-proxy  <alloc::vec::Vec<T> as alloc::vec::SpecExtend<T, I>>::spec_extend
+      0.00      3       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset::h38109038811437ae
+      0.00      3       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::Deref>::deref
+      0.00      3       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::from_raw_parts
+      0.00      3       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::ptr
+      0.00      3       mercutio-wasm-proxy  <alloc::string::String as core::ops::deref::Deref>::deref
+      0.00      3       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::drop::Drop>::drop
+      0.00      3       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::offset::h8ba343f49866bc66
+      0.00      3       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::iter::h9b0a25da8237c88e
+      0.00      3       mercutio-wasm-proxy  <std::thread::local::LocalKey<T>>::try_with
+      0.00      3       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::double
+      0.00      3       mercutio-wasm-proxy  mercutio::wasm::client::Client::handle_task::h5e9ff5412a326854
+      0.00      3       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::iter
+      0.00      3       mercutio-wasm-proxy  oatie::stepper::DocStepper::unskip::hf441dd9f6120835b
+      0.00      4       mercutio-wasm-proxy  alloc::slice::hack::to_vec::he8bb9b3ece280b44
+      0.00      4       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::is_empty::h26cbd527958e6e23
+      0.00      4       mercutio-wasm-proxy  core::cmp::impls::_$LT$impl$u20$core..cmp..PartialOrd$u20$for$u20$usize$GT$::le::hcc46ef35f1a87320
+      0.00      4       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_mut_ptr
+      0.00      4       mercutio-wasm-proxy  core::sync::atomic::atomic_compare_exchange::h3b6629171757d825
+      0.00      4       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::as_ptr::h5c1c49521ea65195
+      0.00      4       mercutio-wasm-proxy  core::sync::atomic::atomic_load::ha4f308f5026ab6e5
+      0.00      4       mercutio-wasm-proxy  core::mem::uninitialized::he57ab341668f1952
+      0.00      4       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::double
+      0.00      4       mercutio-wasm-proxy  <core::cell::Cell<T>>::get
+      0.00      4       mercutio-wasm-proxy  <core::ptr::Unique<T>>::as_ptr
+      0.00      4       mercutio-wasm-proxy  <&'a mut serde_json::ser::Serializer<W, F> as serde::ser::Serializer>::serialize_str
+      0.00      4       mercutio-wasm-proxy  serde::ser::Serializer::collect_seq::h367b688c0bab1b69
+      0.00      4       mercutio-wasm-proxy  core::ptr::drop_in_place::h4207bdc901449a17
+      0.00      4       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::is_null::h2f5ab9a950e35de6
+      0.00      4       mercutio-wasm-proxy  core::mem::size_of::h73d5da93044288e6
+      0.00      4       mercutio-wasm-proxy  <core::option::Option<&'a T>>::cloned::{{closure}}
+      0.00      4       mercutio-wasm-proxy  <T as core::convert::From<T>>::from
+      0.00      4       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::search::{{closure}}
+      0.00      4       mercutio-wasm-proxy  <core::option::Option<T>>::unwrap
+      0.00      4       mercutio-wasm-proxy  <core::ptr::Unique<T>>::as_ptr
+      0.00      4       mercutio-wasm-proxy  std::collections::hash::table::TaggedHashUintPtr::set_tag::h09684d6281f7962e
+      0.00      4       mercutio-wasm-proxy  <core::mem::ManuallyDrop<T> as core::ops::deref::DerefMut>::deref_mut
+      0.00      4       mercutio-wasm-proxy  core::sync::atomic::AtomicBool::load::h39b094e169ace0dc
+      0.00      4       mercutio-wasm-proxy  <core::fmt::Write::write_fmt::Adapter<'a, T> as core::fmt::Write>::write_str
+      0.00      4       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::get
+      0.00      4       mercutio-wasm-proxy  <std::io::buffered::BufWriter<W> as std::io::Write>::write
+      0.00      4       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::next
+      0.00      4       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::wrapping_mul::hf1fecdd666a3fab1
+      0.00      4       mercutio-wasm-proxy  je_tcache_alloc_small_hard
+      0.00      4       mercutio-wasm-proxy  <core::ptr::NonNull<T>>::new_unchecked
+      0.00      4       mercutio-wasm-proxy  core::mem::uninitialized::h853ca3289425990c
+      0.00      4       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::len
+      0.00      4       mercutio-wasm-proxy  core::iter::iterator::Iterator::collect::h3ec68908b9026c95
+      0.00      4       mercutio-wasm-proxy  <&'a T as core::ops::deref::Deref>::deref
+      0.00      4       mercutio-wasm-proxy  <alloc::vec::Vec<T> as alloc::vec::SpecExtend<&'a T, core::slice::Iter<'a, T>>>::spec_extend
+      0.00      4       mercutio-wasm-proxy  <ws::connection::Connection<H>>::buffer_frame
+      0.00      4       mercutio-wasm-proxy  std::collections::hash::table::TaggedHashUintPtr::tag::h78995fe642048e21
+      0.00      4       mercutio-wasm-proxy  <core::option::Option<&'a T>>::cloned
+      0.00      4       mercutio-wasm-proxy  <alloc::string::String as core::iter::traits::FromIterator<char>>::from_iter
+      0.00      4       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::get
+      0.00      4       mercutio-wasm-proxy  mercutio::wasm::client::_IMPL_SERIALIZE_FOR_ClientCommand::_$LT$impl$u20$serde..ser..Serialize$u20$for$u20$mercutio..wasm..client..ClientCommand$GT$::serialize::h4208e31298c72029
+      0.00      4       mercutio-wasm-proxy  <ws::connection::Connection<H>>::send_message
+      0.00      4       mercutio-wasm-proxy  serde::ser::Serializer::collect_seq::h8d8c836c49f0b556
+      0.00      4       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::len
+      0.00      4       mercutio-wasm-proxy  std::collections::hash::table::make_hash::h4ab9833c558203ea
+      0.00      4       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::as_mut_ptr::h1de61b3b765a3150
+      0.00      4       mercutio-wasm-proxy  <crossbeam_channel::channel::Receiver<T>>::recv
+      0.00      4       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::reserve
+      0.00      4       mercutio-wasm-proxy  core::iter::iterator::Iterator::take::hb5d4e6c8e3ac9501
+      0.00      4       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::DerefMut>::deref_mut
+      0.00      4       mercutio-wasm-proxy  core::mem::size_of::h75d70006edca60da
+      0.00      4       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::drop::Drop>::drop
+      0.00      4       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S>>::insert_hashed_nocheck
+      0.00      4       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::allocate_in
+      0.00      4       mercutio-wasm-proxy  core::str::traits::_$LT$impl$u20$core..slice..SliceIndex$LT$str$GT$$u20$for$u20$core..ops..range..Range$LT$usize$GT$$GT$::index::h4ac3b58c7189a9b5
+      0.00      4       mercutio-wasm-proxy  <core::result::Result<T, E>>::map_err
+      0.00      4       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::current_layout
+      0.00      4       mercutio-wasm-proxy  alloc::allocator::Layout::new::hbb0b25b814d55dde
+      0.00      4       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::is_null::ha326bf94b3865839
+      0.00      4       mercutio-wasm-proxy  <alloc::vec::SetLenOnDrop<'a> as core::ops::drop::Drop>::drop
+      0.00      4       mercutio-wasm-proxy  core::slice::_$LT$impl$u20$core..cmp..PartialEq$LT$$u5b$B$u5d$$GT$$u20$for$u20$$u5b$A$u5d$$GT$::eq::hc8505428bf85d647
+      0.00      4       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::DerefMut>::deref_mut
+      0.00      4       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::get
+      0.00      4       mercutio-wasm-proxy  <core::option::Option<T> as core::ops::try::Try>::into_result
+      0.00      4       mercutio-wasm-proxy  <core::iter::Cloned<I> as core::iter::iterator::Iterator>::size_hint
+      0.00      4       mercutio-wasm-proxy  <core::hash::sip::Hasher<S>>::new_with_keys
+      0.00      4       mercutio-wasm-proxy  core::ptr::read::h7217f0de84542286
+      0.00      4       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::DerefMut>::deref_mut
+      0.00      4       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset_to::h4f5db28861109123
+      0.00      4       mercutio-wasm-proxy  std::collections::hash::table::make_hash::h05bc6ed6927dd4e8
+      0.00      4       mercutio-wasm-proxy  core::sync::atomic::atomic_load::hcb1caff2fe50d418
+      0.00      4       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::extend_from_slice
+      0.00      4       mercutio-wasm-proxy  core::ptr::write::hdb9cf37d1fa77869
+      0.00      4       mercutio-wasm-proxy  <core::result::Result<T, E>>::expect
+      0.00      4       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.00      4       mercutio-wasm-proxy  core::num::_$LT$impl$u20$isize$GT$::wrapping_sub::ha467d069285ebfde
+      0.00      4       mercutio-wasm-proxy  core::ptr::drop_in_place::hf492c11f7d9de39e
+      0.00      4       mercutio-wasm-proxy  <std::collections::hash::map::RandomState as core::hash::BuildHasher>::build_hasher
+      0.00      4       mercutio-wasm-proxy  arena_run_heap_remove
+      0.00      4       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::len
+      0.00      4       mercutio-wasm-proxy  <std::collections::hash::table::Bucket<K, V, M>>::peek
+      0.00      4       mercutio-wasm-proxy  <oatie::stepper::DocStepper as core::clone::Clone>::clone
+      0.00      4       mercutio-wasm-proxy  <core::hash::sip::Hasher<S> as core::hash::Hasher>::finish
+      0.00      4       mercutio-wasm-proxy  core::mem::size_of::h7ac0c6dd05f37887
+      0.00      4       mercutio-wasm-proxy  alloc::slice::hack::into_vec::h709059427982ec37
+      0.00      4       mercutio-wasm-proxy  crossbeam_epoch::collector::Handle::pin::h9a7d3d0dbde2c777
+      0.00      4       mercutio-wasm-proxy  alloc::allocator::Layout::repeat::hd22c2cecb18442f0
+      0.00      4       mercutio-wasm-proxy  <alloc::string::String as core::cmp::PartialEq>::eq
+      0.00      4       mercutio-wasm-proxy  core::iter::iterator::Iterator::all::_$u7b$$u7b$closure$u7d$$u7d$::h34ebf30a85f62575
+      0.00      4       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::get_unchecked_mut::h22d788855335a8ee
+      0.00      4       mercutio-wasm-proxy  core::num::wrapping::_$LT$impl$u20$core..ops..arith..Add$u20$for$u20$core..num..Wrapping$LT$usize$GT$$GT$::add::h2b000573a085f9e9
+      0.00      4       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::extend_from_slice
+      0.00      4       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::iter::h4627529193f2a07d
+      0.00      4       mercutio-wasm-proxy  core::ptr::write::h87508a12f560f20e
+      0.00      4       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::current_layout
+      0.00      4       mercutio-wasm-proxy  core::iter::iterator::Iterator::all::h8135be4798a46fc8
+      0.00      4       mercutio-wasm-proxy  mercutio::wasm::client::native_command::h54186c3b04f7dead
+      0.00      4       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V>>::iter
+      0.00      4       mercutio-wasm-proxy  <std::thread::local::LocalKey<T>>::try_with
+      0.00      4       mercutio-wasm-proxy  alloc::vec::SetLenOnDrop::increment_len::h780510ff10620dee
+      0.00      4       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::as_mut_ptr::h79a60dbae61912a8
+      0.00      4       mercutio-wasm-proxy  core::ptr::drop_in_place::h608a5491e2afa76e
+      0.00      4       mercutio-wasm-proxy  <core::hash::sip::SipHasher13 as core::hash::Hasher>::write
+      0.00      5       mercutio-wasm-proxy  core::mem::align_of::h301f90ed0bdee27d
+      0.00      5       mercutio-wasm-proxy  core::slice::memchr::memrchr::hffdbd0c25634a0be
+      0.00      5       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::dealloc_buffer
+      0.00      5       mercutio-wasm-proxy  <std::collections::hash::table::RawBuckets<'a, K, V> as core::iter::iterator::Iterator>::next
+      0.00      5       mercutio-wasm-proxy  core::cmp::impls::_$LT$impl$u20$core..cmp..Ord$u20$for$u20$usize$GT$::cmp::hf132ac125044e1f9
+      0.00      5       mercutio-wasm-proxy  _rust_dealloc
+      0.00      5       mercutio-wasm-proxy  mercutio::wasm::state::ClientDoc::apply_local_op::h0d4a2b53b5098e82
+      0.00      5       mercutio-wasm-proxy  <core::hash::sip::Hasher<S>>::reset
+      0.00      5       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::next
+      0.00      5       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::len::hc86542a7c50bac60
+      0.00      5       mercutio-wasm-proxy  <I as core::iter::traits::IntoIterator>::into_iter
+      0.00      5       mercutio-wasm-proxy  core::cmp::impls::_$LT$impl$u20$core..cmp..PartialOrd$u20$for$u20$usize$GT$::lt::h5ad9a80a9f2898b5
+      0.00      5       mercutio-wasm-proxy  oatie::stepper::DelStepper::new::h0af8afe8774a7725
+      0.00      5       mercutio-wasm-proxy  <str as core::fmt::Debug>::fmt
+      0.00      5       mercutio-wasm-proxy  core::ptr::drop_in_place::h6ca769aacfb8e47d
+      0.00      5       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::to_vec::hbffeea84ece2fc03
+      0.00      5       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::reserve
+      0.00      5       mercutio-wasm-proxy  std::io::impls::_$LT$impl$u20$std..io..Write$u20$for$u20$$RF$$u27$a$u20$mut$u20$W$GT$::write_all::h9b9e4d2e12915511
+      0.00      5       mercutio-wasm-proxy  <core::iter::Cloned<I> as core::iter::iterator::Iterator>::size_hint
+      0.00      5       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::index::IndexMut<core::ops::range::RangeFull>>::index_mut
+      0.00      5       mercutio-wasm-proxy  core::num::_$LT$impl$u20$u64$GT$::rotate_left::h99d7e8ea9c15f3f1
+      0.00      5       mercutio-wasm-proxy  <&'a mut serde_json::ser::Serializer<W, F> as serde::ser::Serializer>::serialize_newtype_variant
+      0.00      5       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.00      5       mercutio-wasm-proxy  core::hash::sip::SipHasher13::new_with_keys::h060233b90cfcaf08
+      0.00      5       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::double
+      0.00      5       mercutio-wasm-proxy  core::ptr::drop_in_place::hed5b6fe874b7f553
+      0.00      5       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::is_null::h611db67f411b275f
+      0.00      5       mercutio-wasm-proxy  <core::option::Option<T>>::unwrap_or_else
+      0.00      5       mercutio-wasm-proxy  std::collections::hash::table::make_hash::hf8ec7acae405e0ba
+      0.00      5       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.00      5       mercutio-wasm-proxy  alloc::string::String::len::hcb6aacbfa6b69bc7
+      0.00      5       mercutio-wasm-proxy  <std::collections::hash::table::Iter<'a, K, V> as core::iter::iterator::Iterator>::next
+      0.00      5       mercutio-wasm-proxy  core::hash::impls::_$LT$impl$u20$core..hash..Hash$u20$for$u20$str$GT$::hash::h57a20e1e5e1fc6f2
+      0.00      5       mercutio-wasm-proxy  core::ptr::drop_in_place::hbc39cc9df3ee1f80
+      0.00      5       mercutio-wasm-proxy  <core::ops::range::Range<usize> as core::slice::SliceIndex<[T]>>::index
+      0.00      5       mercutio-wasm-proxy  core::iter::iterator::Iterator::try_fold::hc67c88710b203aa2
+      0.00      5       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::index::Index<core::ops::range::RangeFull>>::index
+      0.00      5       mercutio-wasm-proxy  <str as core::str::StrExt>::len
+      0.00      5       mercutio-wasm-proxy  <std::collections::hash::map::DefaultHasher as core::hash::Hasher>::write
+      0.00      5       mercutio-wasm-proxy  core::ptr::drop_in_place::h864f0edae1b847c1
+      0.00      5       mercutio-wasm-proxy  <ws::connection::Connection<H>>::write
+      0.00      5       mercutio-wasm-proxy  <str as core::str::StrExt>::is_char_boundary
+      0.00      5       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::get
+      0.00      5       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.00      5       mercutio-wasm-proxy  core::slice::_$LT$impl$u20$core..cmp..PartialEq$LT$$u5b$B$u5d$$GT$$u20$for$u20$$u5b$A$u5d$$GT$::eq::hb9d0107701bf310b
+      0.00      5       mercutio-wasm-proxy  <alloc::heap::Heap as alloc::allocator::Alloc>::realloc
+      0.00      5       mercutio-wasm-proxy  <std::collections::hash::table::FullBucket<K, V, M>>::into_refs
+      0.00      5       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::to_vec::h641ef6752cbeac92
+      0.00      5       mercutio-wasm-proxy  core::slice::from_raw_parts_mut::h6863cbb0437e11d9
+      0.00      5       mercutio-wasm-proxy  <core::result::Result<T, E>>::unwrap_or_else
+      0.00      5       mercutio-wasm-proxy  core::ptr::drop_in_place::h6e40a2e605ddf0c6
+      0.00      5       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::offset::h748e96d2269701eb
+      0.00      5       mercutio-wasm-proxy  core::cmp::Ord::min::h9e5ce6c5f7079e11
+      0.00      5       mercutio-wasm-proxy  <alloc::vec::Vec<T> as alloc::vec::SpecExtend<T, I>>::spec_extend
+      0.00      5       mercutio-wasm-proxy  <core::option::Option<T>>::ok_or
+      0.00      5       mercutio-wasm-proxy  <core::mem::ManuallyDrop<T>>::new
+      0.00      5       mercutio-wasm-proxy  core::ptr::drop_in_place::hb810c6c382b2d232
+      0.00      5   libsystem_pthread.dylib  sched_yield
+      0.00      5       mercutio-wasm-proxy  serde_json::read::SliceRead::parse_str_bytes::h1b182a15e261c8a0
+      0.00      5       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T>>::from_raw_parts
+      0.00      5       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.00      5       mercutio-wasm-proxy  core::fmt::write::h9b1966ae5bbbf9d5
+      0.00      5       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::drop::Drop>::drop
+      0.00      5       mercutio-wasm-proxy  <I as core::iter::traits::IntoIterator>::into_iter
+      0.00      5       mercutio-wasm-proxy  core::str::traits::_$LT$impl$u20$core..slice..SliceIndex$LT$str$GT$$u20$for$u20$core..ops..range..Range$LT$usize$GT$$GT$::get::h48586c8df068b704
+      0.00      5       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::push
+      0.00      5       mercutio-wasm-proxy  core::hash::impls::_$LT$impl$u20$core..hash..Hash$u20$for$u20$str$GT$::hash::hd71462a79562c2c7
+      0.01      6       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::len
+      0.01      6       mercutio-wasm-proxy  je_arena_dalloc_bin_junked_locked
+      0.01      6       mercutio-wasm-proxy  oatie::writer::DelWriter::place::h419e465ddaa04c07
+      0.01      6       mercutio-wasm-proxy  alloc::string::String::push_str::h26844046896314d9
+      0.01      6       mercutio-wasm-proxy  <std::io::Write::write_fmt::Adaptor<'a, T> as core::fmt::Write>::write_str
+      0.01      6       mercutio-wasm-proxy  <I as core::iter::traits::IntoIterator>::into_iter
+      0.01      6       mercutio-wasm-proxy  core::ptr::drop_in_place::hdffa8da2b42f1672
+      0.01      6       mercutio-wasm-proxy  <core::iter::LoopState$LT,C$ B> as core::cmp::PartialEq>::eq
+      0.01      6       mercutio-wasm-proxy  crossbeam_epoch::internal::Local::pin::h219b30a19b639720
+      0.01      6       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset::h089b9a4dda5d07f7
+      0.01      6       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::allocate_in
+      0.01      6       mercutio-wasm-proxy  std::io::impls::_$LT$impl$u20$std..io..Write$u20$for$u20$alloc..vec..Vec$LT$u8$GT$$GT$::write_all::h71bf75a1347431d1
+      0.01      6       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_ptr
+      0.01      6       mercutio-wasm-proxy  core::char::from_u32_unchecked::h0ff0a6eec6e518df
+      0.01      6       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.01      6       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A> as core::ops::drop::Drop>::drop
+      0.01      6       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::reserve
+      0.01      6       mercutio-wasm-proxy  core::slice::_$LT$impl$u20$core..ops..index..Index$LT$I$GT$$u20$for$u20$$u5b$T$u5d$$GT$::index::h83480affeda28c91
+      0.01      6       mercutio-wasm-proxy  <I as core::iter::traits::IntoIterator>::into_iter
+      0.01      6       mercutio-wasm-proxy  <std::collections::hash::table::FullBucket<K, V, M>>::displacement
+      0.01      6       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_mut_ptr
+      0.01      6       mercutio-wasm-proxy  core::slice::from_raw_parts_mut::h66e1e32ec733211a
+      0.01      6       mercutio-wasm-proxy  <mercutio::wasm::walkers::ReverseCaretStepper as core::iter::iterator::Iterator>::next
+      0.01      6       mercutio-wasm-proxy  <core::iter::Cloned<I> as core::iter::iterator::Iterator>::size_hint
+      0.01      6       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::from_raw_parts
+      0.01      6       mercutio-wasm-proxy  core::slice::SliceExt::is_empty::h6aecdce08ca3a8ac
+      0.01      6       mercutio-wasm-proxy  <std::collections::hash::table::Bucket<K, V, M>>::at_index
+      0.01      6       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::double
+      0.01      6       mercutio-wasm-proxy  <core::hash::sip::Sip13Rounds as core::hash::sip::Sip>::c_rounds
+      0.01      6       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::is_null::h68a4b42d2ac1c18c
+      0.01      6       mercutio-wasm-proxy  oatie::compose::compose_add_add::h271d520ae4119652
+      0.01      6       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::double
+      0.01      6       mercutio-wasm-proxy  <usize as core::iter::range::Step>::add_usize
+      0.01      6       mercutio-wasm-proxy  core::mem::size_of::had5128b6cdec05d5
+      0.01      6       mercutio-wasm-proxy  core::ptr::drop_in_place::hd902ce474fb3bfc1
+      0.01      6       mercutio-wasm-proxy  core::cmp::max::hccf87d3dd3e6a259
+      0.01      6       mercutio-wasm-proxy  core::ptr::drop_in_place::h84b7d99f1ae2fcfe
+      0.01      6       mercutio-wasm-proxy  alloc::slice::hack::to_vec::h8ed2864cd68b2d7b
+      0.01      6       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::as_mut_ptr::he6d07c774c5c2812
+      0.01      6       mercutio-wasm-proxy  oatie::doc::_IMPL_SERIALIZE_FOR_AddElement::_$LT$impl$u20$serde..ser..Serialize$u20$for$u20$oatie..doc..AddElement$GT$::serialize::hd0b81726b67ca997
+      0.01      6       mercutio-wasm-proxy  <ws::io::Handler<F>>::handle_queue
+      0.01      6       mercutio-wasm-proxy  <(alloc::vec::Vec<oatie::doc::DelElement>, alloc::vec::Vec<oatie::doc::AddElement>) as oatie::OT>::apply
+      0.01      6       mercutio-wasm-proxy  <core::ptr::Unique<T>>::as_ptr
+      0.01      6       mercutio-wasm-proxy  core::ptr::drop_in_place::h41d662f2e6e9b782
+      0.01      6       mercutio-wasm-proxy  core::hash::sip::SipHasher13::new_with_keys::h2bb4a1cc8e7f0fd8
+      0.01      7       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::iter
+      0.01      7       mercutio-wasm-proxy  core::ptr::write::h37598f08574cabee
+      0.01      7       mercutio-wasm-proxy  <core::str::Chars<'a> as core::iter::iterator::Iterator>::next
+      0.01      7       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::get
+      0.01      7       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::len::hd7f4f4b4f5362cca
+      0.01      7       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::is_empty
+      0.01      7       mercutio-wasm-proxy  arena_avail_insert
+      0.01      7       mercutio-wasm-proxy  core::cmp::Ord::max::h3543e935c7951de3
+      0.01      7       mercutio-wasm-proxy  <alloc::vec::Vec<oatie::doc::AddElement> as oatie::doc::AddPlaceable>::skip_pre_len
+      0.01      7       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::copy_from_slice
+      0.01      7       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.01      7       mercutio-wasm-proxy  core::slice::_$LT$impl$u20$core..ops..index..Index$LT$I$GT$$u20$for$u20$$u5b$T$u5d$$GT$::index::h5d24886a5a4c41ce
+      0.01      7       mercutio-wasm-proxy  core::sync::atomic::AtomicUsize::load::h0a69ceb4608b6e50
+      0.01      7       mercutio-wasm-proxy  <core::option::Option<T>>::is_none
+      0.01      7       mercutio-wasm-proxy  core::slice::SliceExt::is_empty::h9c3e2266948af680
+      0.01      7       mercutio-wasm-proxy  <core::hash::sip::Hasher<S> as core::hash::Hasher>::write
+      0.01      7       mercutio-wasm-proxy  <&'a T as core::ops::deref::Deref>::deref
+      0.01      7       mercutio-wasm-proxy  <core::hash::sip::Hasher<S> as core::hash::Hasher>::finish
+      0.01      7       mercutio-wasm-proxy  mercutio::wasm::state::ClientDoc::assert_compose_correctness::h20ef6eb7d1a23e85
+      0.01      7       mercutio-wasm-proxy  <core::option::Option<T>>::map_or
+      0.01      7       mercutio-wasm-proxy  core::ptr::drop_in_place::h0bfa8a9333a145c7
+      0.01      7       mercutio-wasm-proxy  core::ptr::drop_in_place::h1e816a27196d59eb
+      0.01      7       mercutio-wasm-proxy  core::sync::atomic::AtomicUsize::load::hab2d627ffafedcec
+      0.01      7       mercutio-wasm-proxy  core::slice::from_raw_parts::h86d06dc73adbfc81
+      0.01      7       mercutio-wasm-proxy  <core::hash::sip::Hasher<S>>::new_with_keys
+      0.01      7       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::index::IndexMut<usize>>::index_mut
+      0.01      7       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::len
+      0.01      7       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::dealloc_buffer
+      0.01      7       mercutio-wasm-proxy  alloc::allocator::Alloc::alloc_array::h8bfbd5e9236a5353
+      0.01      7       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::clone::Clone>::clone
+      0.01      7       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::reserve
+      0.01      7       mercutio-wasm-proxy  core::slice::_$LT$impl$u20$core..cmp..PartialEq$LT$$u5b$B$u5d$$GT$$u20$for$u20$$u5b$A$u5d$$GT$::eq::h6249d5d53794d623
+      0.01      7       mercutio-wasm-proxy  <core::ops::range::Range<usize> as core::slice::SliceIndex<[T]>>::get_unchecked_mut
+      0.01      7       mercutio-wasm-proxy  core::sync::atomic::atomic_load::ha01f5a6f9dd305d9
+      0.01      7       mercutio-wasm-proxy  oatie::stepper::DelStepper::is_done::ha7e41dcab296589e
+      0.01      7       mercutio-wasm-proxy  alloc::str::_$LT$impl$u20$alloc..borrow..ToOwned$u20$for$u20$str$GT$::to_owned::h9cbd2f5b372946a2
+      0.01      7       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::ptr
+      0.01      7       mercutio-wasm-proxy  oatie::apply::place_any::h53a83bad8e3dd556
+      0.01      7       mercutio-wasm-proxy  <core::option::Option<T>>::is_some
+      0.01      7       mercutio-wasm-proxy  alloc::slice::hack::into_vec::ha88a3a9f12364368
+      0.01      7       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S> as core::clone::Clone>::clone
+      0.01      7       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset_to::h6be2820fc60b5d99
+      0.01      7       mercutio-wasm-proxy  core::cmp::impls::_$LT$impl$u20$core..cmp..PartialEq$LT$$RF$$u27$b$u20$B$GT$$u20$for$u20$$RF$$u27$a$u20$A$GT$::eq::h323c3a9dc38f2a64
+      0.01      7       mercutio-wasm-proxy  alloc::slice::hack::into_vec::ha0a570c9a22cd7c2
+      0.01      8       mercutio-wasm-proxy  core::hash::sip::u8to64_le::h9b27955f7987fd2e
+      0.01      8       mercutio-wasm-proxy  core::cmp::impls::_$LT$impl$u20$core..cmp..PartialEq$LT$$RF$$u27$b$u20$B$GT$$u20$for$u20$$RF$$u27$a$u20$A$GT$::eq::h1ef8f6c91435f64c
+      0.01      8       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::allocate_in
+      0.01      8       mercutio-wasm-proxy  <core::ops::range::Range<usize> as core::slice::SliceIndex<[T]>>::get_unchecked
+      0.01      8       mercutio-wasm-proxy  oatie::apply::apply_add::hc0f93025840d0eb8
+      0.01      8       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::iter
+      0.01      8       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::to_vec::hf2d1c0ea7e1c63cc
+      0.01      8       mercutio-wasm-proxy  oatie::stepper::DocStepper::enter::heed8360b2056feba
+      0.01      8       mercutio-wasm-proxy  core::mem::size_of::h7855cb657f00ebc1
+      0.01      8       mercutio-wasm-proxy  arena_bin_malloc_hard
+      0.01      8       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::reserve
+      0.01      8       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_ptr
+      0.01      8       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::copy_from_slice::h8bb62a4163ea3656
+      0.01      8       mercutio-wasm-proxy  <core::ops::range::Range<usize> as core::slice::SliceIndex<[T]>>::index
+      0.01      8       mercutio-wasm-proxy  _rust_realloc
+      0.01      8       mercutio-wasm-proxy  <oatie::schema::RtfSchema as oatie::transform::Schema>::track_type_from_attrs
+      0.01      8       mercutio-wasm-proxy  <core::option::Option<T>>::is_some
+      0.01      8       mercutio-wasm-proxy  core::cmp::min::he10822c0da133854
+      0.01      8       mercutio-wasm-proxy  <I as core::iter::traits::IntoIterator>::into_iter
+      0.01      8       mercutio-wasm-proxy  core::sync::atomic::atomic_compare_exchange::h009b58906042b1e7
+      0.01      8       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::is_null::h76a9a630fbfa24e6
+      0.01      8       mercutio-wasm-proxy  <core::option::Option<T>>::is_none
+      0.01      8       mercutio-wasm-proxy  <T as core::convert::TryFrom<U>>::try_from
+      0.01      8       mercutio-wasm-proxy  <core::hash::sip::Hasher<S>>::reset
+      0.01      8       mercutio-wasm-proxy  core::ptr::drop_in_place::h292bf7b4bf1dc9ee
+      0.01      8       mercutio-wasm-proxy  core::mem::needs_drop::hf4c1a9459c6055eb
+      0.01      8       mercutio-wasm-proxy  <std::collections::hash::table::FullBucket<K, V, M>>::hash
+      0.01      8       mercutio-wasm-proxy  core::mem::size_of::h993a2e47b3216bb8
+      0.01      8       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A> as core::ops::drop::Drop>::drop
+      0.01      8       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::is_null::h82b436344e709d55
+      0.01      8       mercutio-wasm-proxy  alloc::allocator::Layout::array::heb0ed5195ccdcfcc
+      0.01      8       mercutio-wasm-proxy  <alloc::vec::Vec<T> as alloc::vec::SpecExtend<T, I>>::spec_extend
+      0.01      8       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::dealloc_buffer
+      0.01      8       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::index::IndexMut<core::ops::range::RangeFull>>::index_mut
+      0.01      8       mercutio-wasm-proxy  core::slice::SliceExt::is_empty::hda1ff966f1e19ab8
+      0.01      8       mercutio-wasm-proxy  core::iter::iterator::Iterator::take::h2ab90c3fd029fa40
+      0.01      9       mercutio-wasm-proxy  alloc::string::String::push_str::h83ab0dedbfc13bf5
+      0.01      9       mercutio-wasm-proxy  <core::ops::range::Range<usize> as core::slice::SliceIndex<[T]>>::get_unchecked
+      0.01      9       mercutio-wasm-proxy  <core::ops::range::RangeFrom<usize> as core::slice::SliceIndex<[T]>>::index
+      0.01      9       mercutio-wasm-proxy  core::char_private::check::h4f893bdbe5fd414f
+      0.01      9       mercutio-wasm-proxy  core::ptr::swap_nonoverlapping::hcd2dda471d9d4814
+      0.01      9       mercutio-wasm-proxy  core::slice::from_raw_parts_mut::h90c19ef2e133b47a
+      0.01      9       mercutio-wasm-proxy  core::iter::iterator::Iterator::cloned::h359a1ba37ccde03f
+      0.01      9       mercutio-wasm-proxy  <core::ops::range::RangeFrom<usize> as core::slice::SliceIndex<[T]>>::get_unchecked_mut
+      0.01      9       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::is_empty
+      0.01      9       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::iter::h2177aeea5f22b328
+      0.01      9       mercutio-wasm-proxy  <alloc::string::String as core::ops::index::Index<core::ops::range::RangeFull>>::index
+      0.01      9       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.01      9       mercutio-wasm-proxy  oatie::compose::compose_add_del::h48751f5ef782addf
+      0.01      9       mercutio-wasm-proxy  arena_run_first_best_fit
+      0.01      9       mercutio-wasm-proxy  core::ptr::drop_in_place::h8d2c912238d6eeeb
+      0.01      9       mercutio-wasm-proxy  <core::result::Result<T, E>>::map
+      0.01      9       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::drop::Drop>::drop
+      0.01      9       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::len
+      0.01      9       mercutio-wasm-proxy  crossbeam_channel::utils::Backoff::step::h04d2cfa9ac156ff9
+      0.01      9       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::reserve
+      0.01      9       mercutio-wasm-proxy  <serde_json::read::SliceRead<'a> as serde_json::read::Read<'a>>::peek
+      0.01      9       mercutio-wasm-proxy  core::mem::size_of::h5e6b1726a1e406ab
+      0.01      9       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::ptr
+      0.01      9       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::size_hint
+      0.01      9       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::offset::h0662391764ab7d44
+      0.01      9       mercutio-wasm-proxy  <char as core::char::CharExt>::len_utf8
+      0.01      9       mercutio-wasm-proxy  oatie::validate::validate_doc_span::h794a8775d217427e
+      0.01      9       mercutio-wasm-proxy  <core::option::Option<T> as core::clone::Clone>::clone
+      0.01     10       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset_to::h8fdb772a08fb528c
+      0.01     10       mercutio-wasm-proxy  <usize as core::slice::SliceIndex<[T]>>::get_unchecked
+      0.01     10       mercutio-wasm-proxy  serde_json::ser::Formatter::write_char_escape::h130acc2ac2d4feda
+      0.01     10       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::drop::Drop>::drop
+      0.01     10       mercutio-wasm-proxy  <crossbeam_channel::flavors::list::Channel<T>>::pop
+      0.01     10       mercutio-wasm-proxy  <T as core::convert::From<T>>::from
+      0.01     10       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::drop::Drop>::drop
+      0.01     10       mercutio-wasm-proxy  std_unicode::char::_$LT$impl$u20$char$GT$::len_utf8::hc8787576045f9066
+      0.01     10       mercutio-wasm-proxy  <oatie::doc::CurElement as core::clone::Clone>::clone
+      0.01     10       mercutio-wasm-proxy  core::mem::needs_drop::h6acfa0188fe2e657
+      0.01     10       mercutio-wasm-proxy  <std::collections::hash::map::DefaultResizePolicy as core::clone::Clone>::clone
+      0.01     10       mercutio-wasm-proxy  core::iter::iterator::Iterator::cloned::h7eeb5253d724703e
+      0.01     10       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V>>::size
+      0.01     10       mercutio-wasm-proxy  core::iter::iterator::Iterator::cloned::hb276a59a6bc55b26
+      0.01     10       mercutio-wasm-proxy  <core::option::Option<T>>::expect
+      0.01     10       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::Deref>::deref
+      0.01     10       mercutio-wasm-proxy  <core::str::Chars<'a> as core::iter::iterator::Iterator>::next::{{closure}}
+      0.01     10       mercutio-wasm-proxy  core::ptr::swap_nonoverlapping_bytes::h74b05b519cf2b2ba
+      0.01     10       mercutio-wasm-proxy  oatie::writer::AddWriter::place::h09b89ea528975126
+      0.01     10       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_mut_ptr
+      0.01     10       mercutio-wasm-proxy  <std::collections::hash::table::FullBucket<K, V, M>>::hash
+      0.01     10       mercutio-wasm-proxy  core::cmp::impls::_$LT$impl$u20$core..cmp..Ord$u20$for$u20$usize$GT$::cmp::hb3f338f2aeb8f071
+      0.01     10       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::current_layout
+      0.01     10       mercutio-wasm-proxy  <usize as core::slice::SliceIndex<[T]>>::get_unchecked
+      0.01     10       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::size_hint
+      0.01     10       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::is_empty::h63ec51bb42048897
+      0.01     10       mercutio-wasm-proxy  core::hash::sip::u8to64_le::h594eca87410bbc4e
+      0.01     10       mercutio-wasm-proxy  oatie::stepper::AddStepper::is_done::hb6dad9a966c3066d
+      0.01     11       mercutio-wasm-proxy  oatie::stepper::AddStepper::new::hf4f6bdbb50843ed3
+      0.01     11       mercutio-wasm-proxy  <core::iter::Cloned<I> as core::iter::iterator::Iterator>::size_hint
+      0.01     11       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::is_null::hee789c92077ab521
+      0.01     11       mercutio-wasm-proxy  core::ptr::swap_nonoverlapping::he39b4765537fb4aa
+      0.01     11       mercutio-wasm-proxy  <core::option::Option<T>>::is_none
+      0.01     11       mercutio-wasm-proxy  std::collections::hash::map::search_hashed_nonempty::h1c9f3f907217e285
+      0.01     11       mercutio-wasm-proxy  <core::hash::sip::Hasher<S> as core::hash::Hasher>::write
+      0.01     11             libdyld.dylib  tlv_get_addr
+      0.01     11       mercutio-wasm-proxy  std::collections::hash::map::search_hashed_nonempty::hd2abdcc22bd539c8
+      0.01     11       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::checked_add::h3282aa4e511888c6
+      0.01     12       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A> as core::ops::drop::Drop>::drop
+      0.01     12       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::offset::hc02d2c0b8e9cf083
+      0.01     12       mercutio-wasm-proxy  <I as core::iter::traits::IntoIterator>::into_iter
+      0.01     12       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::set_len
+      0.01     12       mercutio-wasm-proxy  <oatie::doc::CurElement as core::clone::Clone>::clone
+      0.01     12       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::checked_mul::hf88ee64c9173141b
+      0.01     12       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::is_empty::h824f2e26cc29025a
+      0.01     12       mercutio-wasm-proxy  core::ptr::drop_in_place::h5dc67e104b8470ad
+      0.01     12       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::drop::Drop>::drop
+      0.01     12       mercutio-wasm-proxy  <core::option::Option<T>>::is_none
+      0.01     12       mercutio-wasm-proxy  std::io::Write::write_all::h5039cff7bb26073d
+      0.01     12       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_mut_ptr
+      0.01     12       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::with_capacity
+      0.01     12       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::index::IndexMut<core::ops::range::RangeFull>>::index_mut
+      0.01     12       mercutio-wasm-proxy  core::iter::iterator::Iterator::collect::h7b55ba90aa414307
+      0.01     12       mercutio-wasm-proxy  core::mem::size_of::h1ab9af096705a5b9
+      0.01     12       mercutio-wasm-proxy  <core::option::Option<T>>::is_some
+      0.01     12       mercutio-wasm-proxy  <std::io::stdio::StdoutLock<'a> as std::io::Write>::write
+      0.01     12       mercutio-wasm-proxy  oatie::stepper::AddStepper::next::h6c7418e9e6fa8534
+      0.01     12       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::clone::Clone>::clone
+      0.01     12       mercutio-wasm-proxy  <std::collections::hash::table::RawBucket<K, V>>::hash
+      0.01     12       mercutio-wasm-proxy  <alloc::vec::Vec<T> as alloc::vec::SpecExtend<&'a T, I>>::spec_extend
+      0.01     12       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T>>::with_capacity
+      0.01     13       mercutio-wasm-proxy  core::ptr::drop_in_place::h85a46e7ff8268fed
+      0.01     13       mercutio-wasm-proxy  <std::collections::hash::table::Bucket<K, V, M>>::peek
+      0.01     13       mercutio-wasm-proxy  <core::option::Option<&'a T>>::cloned::{{closure}}
+      0.01     13       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::overflowing_mul::h1cd9fd1d0b427d18
+      0.01     13       mercutio-wasm-proxy  mercutio::wasm::walkers::CaretStepper::is_valid_caret_pos::h4574f8b40bc3dd70
+      0.01     13       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::last_mut
+      0.01     13       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::is_null::hfd3068c4b2a74d71
+      0.01     13       mercutio-wasm-proxy  <core::option::Option<&'a T>>::cloned::{{closure}}
+      0.01     13       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::iter::hf18819bf84b36da9
+      0.01     13       mercutio-wasm-proxy  <str as core::str::StrExt>::is_char_boundary
+      0.01     13       mercutio-wasm-proxy  core::ptr::drop_in_place::h1d15023bbce2179c
+      0.01     13       mercutio-wasm-proxy  core::ptr::drop_in_place::h0d535d3718071043
+      0.01     13       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::index::IndexMut<core::ops::range::RangeFull>>::index_mut
+      0.01     13       mercutio-wasm-proxy  core::mem::align_of::hf0825ca8ba5713f9
+      0.01     13       mercutio-wasm-proxy  core::mem::size_of::h99cf4d22cbdb4913
+      0.01     13       mercutio-wasm-proxy  core::ptr::drop_in_place::hd3812f4dd35904ce
+      0.01     13       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::new_unchecked
+      0.01     13       mercutio-wasm-proxy  core::ptr::read::hf0788cabe5b97f9a
+      0.01     14       mercutio-wasm-proxy  core::ptr::drop_in_place::hdec40fe6dedd9ab4
+      0.01     14       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::double
+      0.01     14       mercutio-wasm-proxy  <T as core::convert::Into<U>>::into
+      0.01     14       mercutio-wasm-proxy  <core::ptr::Unique<T>>::as_ptr
+      0.01     14       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::get_unchecked_mut
+      0.01     14       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A> as core::ops::drop::Drop>::drop
+      0.01     14       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::remove
+      0.01     14       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::len
+      0.01     14       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::allocate_in
+      0.01     14       mercutio-wasm-proxy  <core::option::Option<T>>::is_some
+      0.01     14       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::extend_from_slice
+      0.01     14       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::extend_from_slice
+      0.01     14       mercutio-wasm-proxy  <core::option::Option<T>>::unwrap
+      0.01     14       mercutio-wasm-proxy  <alloc::heap::Heap as alloc::allocator::Alloc>::alloc
+      0.01     14       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T>>::with_capacity
+      0.01     14       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::iter::hd87e09ea1a2e2494
+      0.01     14       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::len::hf3c045a67e8f9da0
+      0.01     14       mercutio-wasm-proxy  core::ptr::drop_in_place::h994c99aac42193ea
+      0.01     14       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::Deref>::deref
+      0.01     14       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::as_mut_ptr::h70349565dc0af7d4
+      0.01     14       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V>>::new_uninitialized
+      0.01     14       mercutio-wasm-proxy  core::ptr::null_mut::hd4cba564f3e7e652
+      0.01     15       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::DerefMut>::deref_mut
+      0.01     15       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::len
+      0.01     15       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::next
+      0.01     15       mercutio-wasm-proxy  std::collections::hash::table::round_up_to_next::h86ac714eb8336313
+      0.01     15       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::with_capacity
+      0.01     15       mercutio-wasm-proxy  <core::ops::range::RangeFrom<usize> as core::slice::SliceIndex<[T]>>::index
+      0.01     15       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::last_mut
+      0.01     15       mercutio-wasm-proxy  <core::ptr::Unique<T>>::new_unchecked
+      0.01     15       mercutio-wasm-proxy  alloc::heap::exchange_malloc::hd6d4b297fb8ddb75
+      0.01     15       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::index::IndexMut<core::ops::range::RangeFull>>::index_mut
+      0.01     15       mercutio-wasm-proxy  <core::ops::range::Range<usize> as core::slice::SliceIndex<[T]>>::index
+      0.01     16       mercutio-wasm-proxy  core::num::_$LT$impl$u20$u32$GT$::overflowing_add::h040af83dc9ca3914
+      0.01     16       mercutio-wasm-proxy  std::collections::hash::table::TaggedHashUintPtr::ptr::hdd98c0b754503c20
+      0.01     16       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::is_null::h3dea309d3689f5dc
+      0.01     16       mercutio-wasm-proxy  <[A] as core::slice::SlicePartialEq<A>>::equal
+      0.01     16       mercutio-wasm-proxy  _rust_alloc
+      0.01     16       mercutio-wasm-proxy  <core::hash::sip::Sip13Rounds as core::hash::sip::Sip>::c_rounds
+      0.01     16       mercutio-wasm-proxy  std::collections::hash::map::search_hashed_nonempty::h3a5344248f058b2c
+      0.01     16       mercutio-wasm-proxy  core::str::traits::_$LT$impl$u20$core..cmp..PartialEq$u20$for$u20$str$GT$::eq::hb2f3d37f0b2117b6
+      0.01     16       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::next
+      0.01     16       mercutio-wasm-proxy  <str as core::str::StrExt>::as_bytes
+      0.01     16       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T>>::new
+      0.01     17       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::clone::Clone>::clone
+      0.01     17       mercutio-wasm-proxy  <core::option::Option<&'a T>>::cloned::{{closure}}
+      0.01     17       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::clone::Clone>::clone
+      0.01     17       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.01     17       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::offset::h55e043ed2061a373
+      0.01     17       mercutio-wasm-proxy  core::cmp::impls::_$LT$impl$u20$core..cmp..PartialOrd$u20$for$u20$u32$GT$::lt::hfaf407a8c4e59aa6
+      0.01     17       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::len
+      0.01     17       mercutio-wasm-proxy  alloc::vec::SetLenOnDrop::new::hecbd9ceb11fb82d2
+      0.01     17       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::get
+      0.01     17       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::Deref>::deref
+      0.01     17       mercutio-wasm-proxy  core::slice::size_from_ptr::h590f18115a0817f5
+      0.01     17       mercutio-wasm-proxy  alloc::string::String::push::h5472f0e52b2be612
+      0.01     17       mercutio-wasm-proxy  <core::ptr::Unique<T>>::new_unchecked
+      0.01     17       mercutio-wasm-proxy  core::ptr::drop_in_place::h99d363ff1d584313
+      0.01     17       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.02     18       mercutio-wasm-proxy  <alloc::vec::Vec<T> as alloc::vec::SpecExtend<&'a T, I>>::spec_extend
+      0.02     18       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V>>::set_tag
+      0.02     18       mercutio-wasm-proxy  core::cmp::impls::_$LT$impl$u20$core..cmp..PartialOrd$u20$for$u20$usize$GT$::le::hdbf578032fbecef0
+      0.02     18       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.02     18       mercutio-wasm-proxy  core::cmp::impls::_$LT$impl$u20$core..cmp..PartialOrd$u20$for$u20$usize$GT$::ge::h9a38491fc7ad4a69
+      0.02     18       mercutio-wasm-proxy  <[A] as core::slice::SlicePartialEq<B>>::equal
+      0.02     18       mercutio-wasm-proxy  _rust_probestack
+      0.02     18       mercutio-wasm-proxy  <u32 as core::iter::range::Step>::add_usize
+      0.02     18       mercutio-wasm-proxy  core::slice::from_raw_parts::h6f9eec4f596c38aa
+      0.02     18       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::current_layout
+      0.02     18       mercutio-wasm-proxy  <[A] as core::slice::SlicePartialEq<A>>::equal
+      0.02     18       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::get
+      0.02     19       mercutio-wasm-proxy  core::iter::range::_$LT$impl$u20$core..iter..iterator..Iterator$u20$for$u20$core..ops..range..Range$LT$A$GT$$GT$::next::h96ca594ac70b6648
+      0.02     19       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::Deref>::deref
+      0.02     19       mercutio-wasm-proxy  <oatie::doc::DocElement as core::cmp::PartialEq>::eq
+      0.02     19       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::with_capacity
+      0.02     19       mercutio-wasm-proxy  core::sync::atomic::atomic_load::hb433503b9e2f7090
+      0.02     19       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::push
+      0.02     19       mercutio-wasm-proxy  <core::option::Option<T>>::ok_or
+      0.02     19       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::get_unchecked_mut::hd82599b145c85aa6
+      0.02     19       mercutio-wasm-proxy  <oatie::doc::DocElement as core::clone::Clone>::clone
+      0.02     19       mercutio-wasm-proxy  core::ptr::drop_in_place::h3b2b5f6e082262bf
+      0.02     19       mercutio-wasm-proxy  <core::slice::Iter<'a, T>>::as_slice
+      0.02     19       mercutio-wasm-proxy  <core::option::Option<&'a T>>::cloned
+      0.02     19       mercutio-wasm-proxy  <core::iter::Take<I> as core::iter::iterator::Iterator>::size_hint
+      0.02     19       mercutio-wasm-proxy  <alloc::string::String as core::iter::traits::FromIterator<char>>::from_iter
+      0.02     19       mercutio-wasm-proxy  <core::ptr::Unique<T>>::as_ptr
+      0.02     19       mercutio-wasm-proxy  core::mem::align_of::ha4a74ea63b8d3c49
+      0.02     19       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V>>::tag
+      0.02     19       mercutio-wasm-proxy  core::ptr::swap_nonoverlapping_bytes::h2a9b25c20a9ab0c5
+      0.02     19       mercutio-wasm-proxy  core::num::_$LT$impl$u20$u64$GT$::wrapping_add::h9784477107901a19
+      0.02     20       mercutio-wasm-proxy  alloc::allocator::Layout::array::_$u7b$$u7b$closure$u7d$$u7d$::haee3b13a712f262d
+      0.02     20       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::extend_from_slice
+      0.02     20       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::get::ha31f20948f045f59
+      0.02     20       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::len::hac6b40db7a7c8b3e
+      0.02     20       mercutio-wasm-proxy  <core::option::Option<T> as core::clone::Clone>::clone
+      0.02     20       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::get
+      0.02     20       mercutio-wasm-proxy  <alloc::vec::Vec<T> as alloc::vec::SpecExtend<&'a T, I>>::spec_extend
+      0.02     20       mercutio-wasm-proxy  <alloc::vec::Vec<T> as alloc::vec::SpecExtend<T, I>>::spec_extend
+      0.02     20       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::dealloc_buffer
+      0.02     20       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::new_unchecked
+      0.02     20       mercutio-wasm-proxy  <core::option::Option<T>>::unwrap
+      0.02     21       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::size_hint
+      0.02     21       mercutio-wasm-proxy  core::ptr::drop_in_place::hd414b19781401f24
+      0.02     21       mercutio-wasm-proxy  core::cmp::Ord::min::h46dc6b46e64565f2
+      0.02     21       mercutio-wasm-proxy  core::iter::iterator::Iterator::skip::hc3d1dc919f8f64e2
+      0.02     21       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::reserve
+      0.02     21       mercutio-wasm-proxy  <log::LogLevel as core::cmp::PartialOrd<log::LogLevelFilter>>::partial_cmp
+      0.02     21       mercutio-wasm-proxy  alloc::slice::hack::to_vec::hf9abcc3f44bd4726
+      0.02     21       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::push
+      0.02     21       mercutio-wasm-proxy  parking_lot_core::spinwait::cpu_relax::hbe6e92b098ded29c
+      0.02     21       mercutio-wasm-proxy  core::num::_$LT$impl$u20$u32$GT$::checked_add::h4b46dd10b88b1091
+      0.02     21       mercutio-wasm-proxy  core::num::_$LT$impl$u20$u64$GT$::wrapping_add::hf9e922f6b1d8540b
+      0.02     22       mercutio-wasm-proxy  core::mem::align_of::h3c26f21a6b384c15
+      0.02     22       mercutio-wasm-proxy  oatie::compose::compose_del_del_inner::hf1b0ca705bf0bb99
+      0.02     22       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::current_layout
+      0.02     22       mercutio-wasm-proxy  std::collections::hash::table::TaggedHashUintPtr::tag::h3532b5f0ce87cb74
+      0.02     22       mercutio-wasm-proxy  <core::option::Option<T> as core::clone::Clone>::clone
+      0.02     22       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::as_mut_ptr::h6acff4d002e98783
+      0.02     22       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A> as core::ops::drop::Drop>::drop
+      0.02     22       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::get
+      0.02     22       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::iter::h20ba1cbd1ccbcea2
+      0.02     23       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::is_power_of_two::hee5f5cedab793049
+      0.02     23       mercutio-wasm-proxy  core::cmp::Ord::max::h64b9773b8ec250fc
+      0.02     23       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::remove
+      0.02     23       mercutio-wasm-proxy  <core::ptr::Unique<T>>::new_unchecked
+      0.02     23       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::dealloc_buffer
+      0.02     23       mercutio-wasm-proxy  core::ptr::drop_in_place::h217924da1ec04cf8
+      0.02     23       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::new_unchecked
+      0.02     23       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::len::h0f8cb7bb2fff5d39
+      0.02     23       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::reserve
+      0.02     24       mercutio-wasm-proxy  oatie::stepper::DelStepper::next::he926b000280a5552
+      0.02     24       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::ptr
+      0.02     24       mercutio-wasm-proxy  core::mem::align_of::hb7a6dc7c9139954b
+      0.02     24       mercutio-wasm-proxy  core::mem::size_of::h149d8fd1ad57ce75
+      0.02     24       mercutio-wasm-proxy  arena_bin_nonfull_run_tryget
+      0.02     24       mercutio-wasm-proxy  <alloc::vec::Vec<T> as alloc::vec::SpecExtend<T, I>>::spec_extend
+      0.02     24       mercutio-wasm-proxy  alloc::allocator::Alloc::alloc_array::_$u7b$$u7b$closure$u7d$$u7d$::hccf31c1973292c5e
+      0.02     24       mercutio-wasm-proxy  std::collections::hash::table::TaggedHashUintPtr::new::he8a032fa60622753
+      0.02     24       mercutio-wasm-proxy  <usize as core::slice::SliceIndex<[T]>>::get_unchecked
+      0.02     24       mercutio-wasm-proxy  core::mem::align_of::h401c782dec553fec
+      0.02     25       mercutio-wasm-proxy  core::num::ptr_try_from_impls::_$LT$impl$u20$core..convert..TryFrom$LT$usize$GT$$u20$for$u20$u32$GT$::try_from::h81c755e6ff014189
+      0.02     25       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_ptr
+      0.02     25       mercutio-wasm-proxy  <std::collections::hash::map::RandomState as core::clone::Clone>::clone
+      0.02     25       mercutio-wasm-proxy  core::clone::Clone::clone::h88a0d733fc095373
+      0.02     25       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::as_mut_ptr::h865b1c7e695081db
+      0.02     25       mercutio-wasm-proxy  core::ptr::write::h07b5797fc28eb778
+      0.02     25       mercutio-wasm-proxy  core::ptr::drop_in_place::ha3561e6222bd1ba6
+      0.02     25       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V> as core::ops::drop::Drop>::drop
+      0.02     25       mercutio-wasm-proxy  DYLD-STUB$$pthread_getspecific
+      0.02     25       mercutio-wasm-proxy  core::slice::from_raw_parts::h924da70f0f0055e8
+      0.02     25       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::extend_from_slice
+      0.02     25       mercutio-wasm-proxy  <core::option::Option<&'a T>>::cloned
+      0.02     25       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_ptr
+      0.02     26       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset::hc3da65885d27ef5c
+      0.02     26       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::reserve
+      0.02     26       mercutio-wasm-proxy  <std::collections::hash::table::RawBucket<K, V>>::pair
+      0.02     26       mercutio-wasm-proxy  core::slice::size_from_ptr::h0c1eb9ba92dc368b
+      0.02     26       mercutio-wasm-proxy  oatie::stepper::DocStepper::is_done::h53a675b0a5447bc2
+      0.02     26       mercutio-wasm-proxy  core::ptr::drop_in_place::h6310c8eebea86cd6
+      0.02     27       mercutio-wasm-proxy  alloc::allocator::Layout::from_size_align::hb7154ff24c985aba
+      0.02     27       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::amortized_new_size
+      0.02     27       mercutio-wasm-proxy  core::mem::align_of::hd3bdfeb093265311
+      0.02     27       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_ptr
+      0.02     27       mercutio-wasm-proxy  alloc::vec::SetLenOnDrop::increment_len::h0dbd380a8df2bf8b
+      0.02     27       mercutio-wasm-proxy  std::collections::hash::table::calculate_offsets::h349a791ccf8c3b67
+      0.02     27       mercutio-wasm-proxy  alloc::allocator::Layout::align::h429158cefada964e
+      0.02     27       mercutio-wasm-proxy  alloc::slice::hack::to_vec::hfadcd88dea23072f
+      0.02     27       mercutio-wasm-proxy  je_tcache_event_hard
+      0.02     27       mercutio-wasm-proxy  <core::ptr::Unique<T> as core::convert::From<core::ptr::NonNull<T>>>::from
+      0.02     28       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V>>::capacity
+      0.02     28       mercutio-wasm-proxy  core::mem::align_of::h49fe8e38c68d3028
+      0.02     28       mercutio-wasm-proxy  DYLD-STUB$$memcpy
+      0.02     28       mercutio-wasm-proxy  std::collections::hash::table::calculate_allocation::h13f67d97eecd3378
+      0.02     28       mercutio-wasm-proxy  core::ptr::drop_in_place::he1b821021d79f2eb
+      0.02     28       mercutio-wasm-proxy  core::slice::size_from_ptr::hc8a4d333e020979e
+      0.02     28       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::push
+      0.02     28       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::size_hint
+      0.02     28       mercutio-wasm-proxy  <core::ptr::NonNull<T>>::new_unchecked
+      0.02     29       mercutio-wasm-proxy  core::iter::range::_$LT$impl$u20$core..iter..iterator..Iterator$u20$for$u20$core..ops..range..Range$LT$A$GT$$GT$::next::h863f52fb31179d1d
+      0.02     29       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset::he2de6168d50dc1d2
+      0.02     29       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::len
+      0.02     29       mercutio-wasm-proxy  alloc::slice::hack::to_vec::ha42b9cf0d0002cc1
+      0.02     29       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::dealloc_buffer
+      0.02     29  libsystem_platform.dylib  platform_memcmp
+      0.03     30       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::wrapping_add::hc8695892fcf766d2
+      0.03     30       mercutio-wasm-proxy  core::str::from_utf8_unchecked::he2cbf03a7d202c22
+      0.03     30       mercutio-wasm-proxy  <alloc::allocator::Layout as core::clone::Clone>::clone
+      0.03     30       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::iter
+      0.03     30       mercutio-wasm-proxy  mercutio::wasm::walkers::Walker::to_caret::hf6c2eaf38e93be11
+      0.03     30       mercutio-wasm-proxy  core::slice::from_raw_parts::h8f5ee6a72f7a5213
+      0.03     30       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V>>::size
+      0.03     30       mercutio-wasm-proxy  <core::iter::Cloned<I> as core::iter::iterator::Iterator>::next
+      0.03     31       mercutio-wasm-proxy  alloc::allocator::Layout::size::h815d9d0b30879956
+      0.03     31       mercutio-wasm-proxy  <core::option::Option<T>>::unwrap
+      0.03     31       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::drop::Drop>::drop
+      0.03     31       mercutio-wasm-proxy  oatie::stepper::DocStepper::unhead::hd847e86208502207
+      0.03     31       mercutio-wasm-proxy  core::ptr::null::hcb8a9816074bf193
+      0.03     31       mercutio-wasm-proxy  <core::ops::range::Range<usize> as core::slice::SliceIndex<[T]>>::get_unchecked_mut
+      0.03     31       mercutio-wasm-proxy  <core::iter::Cloned<I> as core::iter::iterator::Iterator>::next
+      0.03     31       mercutio-wasm-proxy  alloc::allocator::Layout::array::hf7e3024a6c6d4669
+      0.03     31       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::current_layout
+      0.03     32       mercutio-wasm-proxy  alloc::string::String::new::h8768dbc6b9f2e760
+      0.03     32       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::reserve
+      0.03     32       mercutio-wasm-proxy  <str as core::str::StrExt>::as_bytes
+      0.03     32       mercutio-wasm-proxy  <core::option::Option<&'a T>>::cloned
+      0.03     32       mercutio-wasm-proxy  oatie::compose::compose_add_add_inner::h87e1e494b462fbb8
+      0.03     32       mercutio-wasm-proxy  std::collections::hash::table::TaggedHashUintPtr::set_tag::h7ec21197ea44442b
+      0.03     32       mercutio-wasm-proxy  core::ptr::write::hf213b09448c65040
+      0.03     32       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::new_unchecked
+      0.03     32       mercutio-wasm-proxy  <mercutio::wasm::walkers::CaretStepper as core::iter::iterator::Iterator>::next
+      0.03     32       mercutio-wasm-proxy  oatie::apply::place_chars::h6a2d78675a7e25be
+      0.03     33       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::new
+      0.03     33       mercutio-wasm-proxy  <core::hash::sip::Sip13Rounds as core::hash::sip::Sip>::d_rounds
+      0.03     33       mercutio-wasm-proxy  <oatie::stepper::DocStepper as core::cmp::PartialEq>::ne
+      0.03     34       mercutio-wasm-proxy  <core::iter::Skip<I> as core::iter::iterator::Iterator>::size_hint::{{closure}}
+      0.03     34       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::push
+      0.03     34       mercutio-wasm-proxy  core::str::next_code_point::hf2755919975fe986
+      0.03     34       mercutio-wasm-proxy  <core::ops::range::RangeFrom<usize> as core::slice::SliceIndex<[T]>>::get_unchecked_mut
+      0.03     34       mercutio-wasm-proxy  alloc::string::String::reserve::hb014757136f9c492
+      0.03     34       mercutio-wasm-proxy  <core::iter::Take<I> as core::iter::iterator::Iterator>::next
+      0.03     35       mercutio-wasm-proxy  je_tcache_bin_flush_small
+      0.03     35       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T>>::with_capacity
+      0.03     35       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::overflowing_add::h24a8ffc7ff81a408
+      0.03     35       mercutio-wasm-proxy  core::ptr::drop_in_place::h4511d63422dd07d3
+      0.03     35       mercutio-wasm-proxy  core::ptr::write::h0900122755b16c6a
+      0.03     35       mercutio-wasm-proxy  mercutio::wasm::util::doc_as_html::h15254271a223f796
+      0.03     36       mercutio-wasm-proxy  core::ptr::drop_in_place::hfb0a7b94e0c3b822
+      0.03     36       mercutio-wasm-proxy  <core::ptr::Unique<T>>::as_ptr
+      0.03     36       mercutio-wasm-proxy  <core::option::Option<T>>::unwrap
+      0.03     36       mercutio-wasm-proxy  <core::option::Option<T> as core::ops::try::Try>::into_result
+      0.03     36       mercutio-wasm-proxy  core::mem::forget::hc9c4d83810b4fa77
+      0.03     37       mercutio-wasm-proxy  core::cmp::impls::_$LT$impl$u20$core..cmp..PartialEq$u20$for$u20$usize$GT$::eq::h6162ba9818aa783f
+      0.03     37       mercutio-wasm-proxy  <core::mem::ManuallyDrop<T> as core::ops::deref::DerefMut>::deref_mut
+      0.03     37       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::get
+      0.03     37       mercutio-wasm-proxy  core::cmp::PartialOrd::le::hc611d2bec5f60ca4
+      0.03     38  libsystem_platform.dylib  OSSpinLockLock
+      0.03     38       mercutio-wasm-proxy  log::LogLevelFilter::from_new::hdef0c5f4c0c0e523
+      0.03     39       mercutio-wasm-proxy  core::slice::from_raw_parts_mut::h9bbb5b4d0d91e930
+      0.03     39       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::DerefMut>::deref_mut
+      0.03     39       mercutio-wasm-proxy  alloc::str::_$LT$impl$u20$str$GT$::chars::hd977323a9e00d67d
+      0.03     40       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::reserve
+      0.03     40       mercutio-wasm-proxy  <std::collections::hash::table::RawBuckets<'a, K, V> as core::iter::iterator::Iterator>::next
+      0.03     40       mercutio-wasm-proxy  core::ptr::drop_in_place::h1e72e5dea119e351
+      0.04     41       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::len
+      0.04     41       mercutio-wasm-proxy  <alloc::vec::Vec<T> as alloc::vec::SpecExtend<&'a T, core::slice::Iter<'a, T>>>::spec_extend
+      0.04     41       mercutio-wasm-proxy  core::mem::size_of::h669c66463ad102dc
+      0.04     41       mercutio-wasm-proxy  <std::collections::hash::map::HashMap<K, V, S> as core::clone::Clone>::clone
+      0.04     41       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::copy_from_slice
+      0.04     42       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::reserve
+      0.04     42       mercutio-wasm-proxy  oatie::stepper::DocStepper::skip::h7924406258eb6d2b
+      0.04     42       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::wrapping_mul::h3887b112689598e3
+      0.04     42       mercutio-wasm-proxy  core::slice::from_raw_parts_mut::hb10c52260d4276c5
+      0.04     43       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::get
+      0.04     43       mercutio-wasm-proxy  <I as core::iter::traits::IntoIterator>::into_iter
+      0.04     43       mercutio-wasm-proxy  <core::iter::Cloned<I> as core::iter::iterator::Iterator>::next
+      0.04     44       mercutio-wasm-proxy  <core::ptr::Unique<T>>::new_unchecked
+      0.04     44       mercutio-wasm-proxy  <usize as core::slice::SliceIndex<[T]>>::get
+      0.04     44       mercutio-wasm-proxy  core::ptr::drop_in_place::hacd0994e469d6396
+      0.04     44       mercutio-wasm-proxy  <core::ptr::Unique<T>>::as_ptr
+      0.04     44       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A> as core::ops::drop::Drop>::drop
+      0.04     44       mercutio-wasm-proxy  oatie::compose::compose_add_del_inner::hd026370208b21417
+      0.04     44       mercutio-wasm-proxy  alloc::allocator::Layout::new::h4c28ff1ff3908cb7
+      0.04     44       mercutio-wasm-proxy  core::ptr::write::h84670a96b9d406ea
+      0.04     44       mercutio-wasm-proxy  alloc::allocator::Layout::from_size_align_unchecked::h23d607c6ce0580de
+      0.04     45       mercutio-wasm-proxy  core::num::_$LT$impl$u20$u64$GT$::rotate_left::hfdcc00bd77ea8803
+      0.04     45       mercutio-wasm-proxy  core::ptr::drop_in_place::h6a898d8627e7942c
+      0.04     45       mercutio-wasm-proxy  <std::collections::hash::table::RawBuckets<'a, K, V> as core::iter::iterator::Iterator>::next
+      0.04     45       mercutio-wasm-proxy  mercutio::wasm::walkers::Walker::to_writer::h4989f6d717552193
+      0.04     45       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::reserve
+      0.04     46       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::iter
+      0.04     46       mercutio-wasm-proxy  alloc::allocator::Alloc::alloc_array::hbf8b7c9144f905ea
+      0.04     46       mercutio-wasm-proxy  core::slice::from_raw_parts_mut::h9adb4090a80ec363
+      0.04     46       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::offset::hc2aaa7ee474dd545
+      0.04     47       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::offset::h432898f4194f6937
+      0.04     47       mercutio-wasm-proxy  <alloc::heap::Heap as alloc::allocator::Alloc>::dealloc
+      0.04     47       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V>>::raw_bucket_at
+      0.04     47       mercutio-wasm-proxy  <alloc::string::String as core::ops::deref::Deref>::deref
+      0.04     47       mercutio-wasm-proxy  <alloc::vec::Vec<oatie::doc::DelElement> as oatie::doc::DelPlaceable>::place
+      0.04     47       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::index::IndexMut<core::ops::range::RangeFull>>::index_mut
+      0.04     47       mercutio-wasm-proxy  <core::option::Option<T> as core::ops::try::Try>::from_error
+      0.04     48       mercutio-wasm-proxy  core::num::_$LT$impl$u20$u64$GT$::rotate_left::h23a2881540504fbf
+      0.04     48       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::ptr
+      0.04     48       mercutio-wasm-proxy  <core::ptr::Unique<T>>::empty
+      0.04     48       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::is_null::h2323dc2d67757e42
+      0.04     48       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::DerefMut>::deref_mut
+      0.04     50       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::offset::h1b6a96aa205daf1f
+      0.04     50       mercutio-wasm-proxy  <core::hash::sip::Sip13Rounds as core::hash::sip::Sip>::d_rounds
+      0.04     51       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset_to::h4ce233039c7549b4
+      0.04     51       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset::hcc540fb133c9604c
+      0.04     51       mercutio-wasm-proxy  <alloc::vec::Vec<oatie::doc::AddElement> as oatie::doc::AddPlaceable>::place
+      0.04     51       mercutio-wasm-proxy  <alloc::vec::SetLenOnDrop<'a> as core::ops::drop::Drop>::drop
+      0.04     52       mercutio-wasm-proxy  <core::result::Result<T, E>>::unwrap_or_else
+      0.04     52       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::index::IndexMut<core::ops::range::RangeFull>>::index_mut
+      0.05     53       mercutio-wasm-proxy  core::sync::atomic::fence::hef4c523ec763ef4e
+      0.05     53       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::offset::h6ef56c5552c4e92f
+      0.05     53       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::is_null::h877eeddb632c1f6a
+      0.05     53       mercutio-wasm-proxy  alloc::allocator::size_align::h94a2696d44fb89f4
+      0.05     54       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::Deref>::deref
+      0.05     54       mercutio-wasm-proxy  core::ptr::drop_in_place::h28af0bd5e5fad570
+      0.05     54       mercutio-wasm-proxy  core::num::_$LT$impl$u20$isize$GT$::wrapping_sub::hd4915a738cc722ed
+      0.05     55       mercutio-wasm-proxy  std::collections::hash::table::round_up_to_next::h65d1bf276a72b372
+      0.05     55       mercutio-wasm-proxy  core::ptr::drop_in_place::h71ab1ee0d637ec87
+      0.05     55       mercutio-wasm-proxy  core::ptr::drop_in_place::h8a80a5bca3fb9423
+      0.05     55       mercutio-wasm-proxy  core::ptr::drop_in_place::h59e4fe7e8615033d
+      0.05     56       mercutio-wasm-proxy  <core::str::Chars<'a> as core::iter::iterator::Iterator>::size_hint
+      0.05     57       mercutio-wasm-proxy  _rde_dealloc
+      0.05     57       mercutio-wasm-proxy  <core::result::Result<T, E>>::map
+      0.05     58       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::iter
+      0.05     58       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset_to::ha291d4a3d62cda90
+      0.05     59       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::drop::Drop>::drop
+      0.05     59       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::size_hint
+      0.05     60       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::DerefMut>::deref_mut
+      0.05     60       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::is_null::ha6630d57a45e94b3
+      0.05     60       mercutio-wasm-proxy  je_arena_tcache_fill_small
+      0.05     60       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::allocate_in
+      0.05     60       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::wrapping_sub::hb8e69eb861be48d0
+      0.05     60       mercutio-wasm-proxy  core::slice::from_raw_parts::hf68ac8361a651344
+      0.05     61       mercutio-wasm-proxy  _rde_realloc
+      0.05     62       mercutio-wasm-proxy  <core::iter::Skip<I> as core::iter::iterator::Iterator>::size_hint
+      0.05     62       mercutio-wasm-proxy  <core::ptr::Unique<T>>::as_ptr
+      0.05     62       mercutio-wasm-proxy  core::ptr::drop_in_place::h0275e46f6cbf40fb
+      0.05     62       mercutio-wasm-proxy  core::clone::Clone::clone::ha3dca5dd3e9d5120
+      0.05     63       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::iter
+      0.05     63       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::new_in
+      0.06     65       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::saturating_sub::h48b07c773eb55f35
+      0.06     65       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::len
+      0.06     66       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::ptr
+      0.06     66       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.06     66       mercutio-wasm-proxy  std::collections::hash::table::TaggedHashUintPtr::ptr::hee75d422368a83d4
+      0.06     67       mercutio-wasm-proxy  <core::iter::Enumerate<I> as core::iter::iterator::Iterator>::next
+      0.06     67       mercutio-wasm-proxy  <str as core::str::StrExt>::chars
+      0.06     69       mercutio-wasm-proxy  <alloc::string::String as core::iter::traits::FromIterator<char>>::from_iter
+      0.06     69       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.06     69       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::allocate_in
+      0.06     70       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::is_null::h6c22da5e97313c57
+      0.06     72       mercutio-wasm-proxy  <core::mem::ManuallyDrop<T>>::new
+      0.06     73       mercutio-wasm-proxy  core::ptr::drop_in_place::h58677c35c7de3d4a
+      0.06     73       mercutio-wasm-proxy  arena_dalloc_bin_locked_impl
+      0.06     73       mercutio-wasm-proxy  alloc::allocator::Layout::padding_needed_for::h19156ab9b478f714
+      0.06     74       mercutio-wasm-proxy  core::iter::traits::ExactSizeIterator::len::h8d8f7062d982043a
+      0.06     74       mercutio-wasm-proxy  core::mem::size_of::h6bf88b66037eaf96
+      0.06     75       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.07     76       mercutio-wasm-proxy  core::iter::iterator::Iterator::collect::he689a7f3ff90b862
+      0.07     76       mercutio-wasm-proxy  core::mem::uninitialized::hddf09ce4d5bceafa
+      0.07     77       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::Deref>::deref
+      0.07     77       mercutio-wasm-proxy  <alloc::vec::Vec<T> as alloc::vec::SpecExtend<T, I>>::spec_extend
+      0.07     77       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::current_layout
+      0.07     78       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset::h0c98832fc1a8b8fe
+      0.07     79       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset::h993e299209b8774c
+      0.07     80       mercutio-wasm-proxy  std::collections::hash::table::calculate_offsets::h3ee6f94b12d96e84
+      0.07     83       mercutio-wasm-proxy  core::ptr::drop_in_place::h5cf7ffdcb8f0f828
+      0.07     83       mercutio-wasm-proxy  core::slice::from_raw_parts::hab9bb5b448dba358
+      0.07     83       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.07     84       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::len
+      0.07     85       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::DerefMut>::deref_mut
+      0.07     85       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset_to::hf277c7de77453fba
+      0.08     91       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V> as core::ops::drop::Drop>::drop
+      0.08     92       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::allocate_in
+      0.08     93       mercutio-wasm-proxy  <core::ptr::Unique<T>>::as_ptr
+      0.08     93       mercutio-wasm-proxy  <core::slice::Iter<'a, T>>::as_slice
+      0.08     94       mercutio-wasm-proxy  oatie::apply::apply_delete::h39e7f99fd8a67c3d
+      0.08     96       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::is_null::h7931e917f459d6a9
+      0.08     96       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::is_null::h262317070f3dfe47
+      0.08     96       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::checked_sub::hc2f9598a97742b3b
+      0.08     97       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::iter
+      0.08     97       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::is_null::h8e34fb5901c47428
+      0.08     97       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::overflowing_sub::hccf94fae0f70f46d
+      0.08     98       mercutio-wasm-proxy  core::mem::size_of::h3e294fee690a6e9b
+      0.08     98       mercutio-wasm-proxy  <core::ptr::Unique<T>>::as_ptr
+      0.08     98       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::size_hint
+      0.08     99       mercutio-wasm-proxy  <core::option::Option<T>>::unwrap
+      0.09    100       mercutio-wasm-proxy  core::mem::size_of::hf7aa3d3b03000002
+      0.09    102       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::checked_add::h47ef8f6a6b1ea871
+      0.09    102       mercutio-wasm-proxy  core::mem::size_of::h68fdda021eea774e
+      0.09    106       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.09    108       mercutio-wasm-proxy  <core::option::Option<T>>::expect
+      0.09    108       mercutio-wasm-proxy  <std::collections::hash::table::RawBucket<K, V>>::pair
+      0.09    109       mercutio-wasm-proxy  core::ptr::drop_in_place::h52bfd18f07c0dde0
+      0.10    111       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset::hc34b97565ced820f
+      0.10    112       mercutio-wasm-proxy  <alloc::string::String as core::iter::traits::Extend<char>>::extend
+      0.10    113       mercutio-wasm-proxy  core::slice::from_raw_parts_mut::h9627c5305dda4c38
+      0.10    116       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::dealloc_buffer
+      0.10    119       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V>>::new_uninitialized
+      0.10    120       mercutio-wasm-proxy  <core::ptr::Unique<T>>::new_unchecked
+      0.10    121       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::new_unchecked
+      0.10    122       mercutio-wasm-proxy  <core::option::Option<T>>::ok_or
+      0.11    125       mercutio-wasm-proxy  core::slice::size_from_ptr::hfa6e44c8c42f7566
+      0.11    126       mercutio-wasm-proxy  alloc::raw_vec::alloc_guard::he439ae05eaf1c59a
+      0.11    128       mercutio-wasm-proxy  <std::collections::hash::table::RawBucket<K, V>>::hash
+      0.11    130       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::checked_mul::hb12f16ecd8e11ec5
+      0.11    130       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::offset::h488951b755571303
+      0.11    131       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::next
+      0.11    131       mercutio-wasm-proxy  <core::option::Option<T> as core::cmp::PartialEq>::eq
+      0.11    134       mercutio-wasm-proxy  <alloc::heap::Heap as alloc::allocator::Alloc>::dealloc
+      0.12    138       mercutio-wasm-proxy  <oatie::doc::DocElement as core::clone::Clone>::clone
+      0.12    139       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::next
+      0.12    140       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::len
+      0.12    140       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::reserve
+      0.12    141       mercutio-wasm-proxy  core::mem::align_of::h6cbe01cb50f03d91
+      0.12    143       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::next
+      0.12    144       mercutio-wasm-proxy  <alloc::heap::Heap as alloc::allocator::Alloc>::alloc
+      0.13    148       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V> as core::clone::Clone>::clone
+      0.13    149       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V>>::rev_drop_buckets
+      0.13    151       mercutio-wasm-proxy  <core::option::Option<T>>::unwrap
+      0.13    152       mercutio-wasm-proxy  <core::iter::Enumerate<I> as core::iter::iterator::Iterator>::next::{{closure}}
+      0.13    153       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::ptr
+      0.13    157       mercutio-wasm-proxy  core::str::utf8_is_cont_byte::h920bf753d24cb676
+      0.14    158       mercutio-wasm-proxy  <core::mem::ManuallyDrop<T>>::new
+      0.14    160       mercutio-wasm-proxy  oatie::apply::apply_add_inner::he8714bf3ce9bdb4b
+      0.14    162       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V>>::capacity
+      0.14    165       mercutio-wasm-proxy  alloc::allocator::Layout::repeat::h0d9425596685bfe6
+      0.14    166       mercutio-wasm-proxy  _rde_alloc
+      0.14    166       mercutio-wasm-proxy  core::ptr::null_mut::h40d1a52a93fb5e64
+      0.14    169       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::ptr
+      0.15    172       mercutio-wasm-proxy  alloc::allocator::Layout::align::h962ee5d6af15834c
+      0.15    174       mercutio-wasm-proxy  <oatie::doc::DelElement as core::clone::Clone>::clone
+      0.15    176       mercutio-wasm-proxy  oatie::stepper::DocStepper::head::h3cbb2b67b4cbee94
+      0.15    179       mercutio-wasm-proxy  <alloc::vec::Vec<T> as alloc::vec::SpecExtend<T, I>>::spec_extend
+      0.16    185       mercutio-wasm-proxy  <core::iter::Take<I> as core::iter::iterator::Iterator>::next
+      0.16    188       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset_to::h3e8857330b9a7f2a
+      0.17    200   libsystem_pthread.dylib  pthread_getspecific
+      0.17    204       mercutio-wasm-proxy  alloc::allocator::Layout::from_size_align_unchecked::h55e386a9a4f96694
+      0.18    208       mercutio-wasm-proxy  alloc::allocator::Layout::from_size_align::ha064b3a730bf7c0f
+      0.18    209       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::is_power_of_two::h031cddd21c864aa8
+      0.18    211       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::dealloc_buffer
+      0.18    215       mercutio-wasm-proxy  <oatie::doc::AddElement as core::clone::Clone>::clone
+      0.18    216       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::wrapping_add::hc7a649d9882ce494
+      0.19    217       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::overflowing_mul::h4d62fc71b33305d2
+      0.19    223       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      0.20    228       mercutio-wasm-proxy  core::mem::size_of::hf0c74be8a623870d
+      0.20    232       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::overflowing_add::h2cccdfdef37ea5b4
+      0.20    234       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V>>::raw_bucket_at
+      0.21    241       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::is_null::he8f725d41e989663
+      0.22    256       mercutio-wasm-proxy  <alloc::string::String as core::clone::Clone>::clone
+      0.22    262       mercutio-wasm-proxy  je_sdallocx
+      0.23    266       mercutio-wasm-proxy  alloc::allocator::Layout::size::h462b5ba4ae64406b
+      0.25    289       mercutio-wasm-proxy  <alloc::heap::Heap as alloc::allocator::Alloc>::realloc
+      0.29    340       mercutio-wasm-proxy  serde_json::ser::format_escaped_str_contents::hd2cf798b230c61f0
+      0.30    355       mercutio-wasm-proxy  je_arena_ralloc_no_move
+      0.31    360       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::next
+      0.31    366       mercutio-wasm-proxy  core::num::_$LT$impl$u20$usize$GT$::wrapping_sub::hd3c91ee147ac3c6c
+      0.33    383       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::current_layout
+      0.34    400       mercutio-wasm-proxy  <alloc::string::String as core::iter::traits::Extend<char>>::extend
+      0.36    417       mercutio-wasm-proxy  <alloc::vec::Vec<T> as alloc::vec::SpecExtend<T, I>>::spec_extend
+      0.36    422       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V>>::rev_drop_buckets
+      0.38    441       mercutio-wasm-proxy  isfree
+      0.40    467       mercutio-wasm-proxy  <alloc::vec::Vec<T> as alloc::vec::SpecExtend<T, I>>::spec_extend
+      0.41    482       mercutio-wasm-proxy  <core::str::Chars<'a> as core::iter::iterator::Iterator>::count
+      0.42    494       mercutio-wasm-proxy  <core::nonzero::NonZero<T>>::get
+      0.43    499       mercutio-wasm-proxy  <[T] as core::slice::SliceExt>::as_mut_ptr
+      0.53    614       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::double
+      0.54    625       mercutio-wasm-proxy  je_rallocx
+      0.55    642       mercutio-wasm-proxy  std_unicode::char::_$LT$impl$u20$char$GT$::len_utf8::hb76c00da397ec6c0
+      0.56    656       mercutio-wasm-proxy  core::ptr::null::h0dd4d7409ef86160
+      0.61    709       mercutio-wasm-proxy  je_arena_ralloc
+      0.62    725       mercutio-wasm-proxy  je_mallocx
+      0.70    814       mercutio-wasm-proxy  <core::iter::Skip<I> as core::iter::iterator::Iterator>::next
+      0.79    917       mercutio-wasm-proxy  <&'a mut I as core::iter::iterator::Iterator>::next
+      0.85    992       mercutio-wasm-proxy  <std::collections::hash::table::RawBucket<K, V>>::hash
+      0.85    994       mercutio-wasm-proxy  <core::ptr::Unique<T>>::as_ptr
+      0.99   1157       mercutio-wasm-proxy  alloc::slice::_$LT$impl$u20$$u5b$T$u5d$$GT$::as_mut_ptr::ha52e01ecab52f03a
+      1.00   1171       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::offset::h38793d7dfcf38ecb
+      1.00   1172       mercutio-wasm-proxy  <alloc::raw_vec::RawVec<T, A>>::ptr
+      1.02   1197       mercutio-wasm-proxy  <char as core::char::CharExt>::len_utf8
+      1.05   1232       mercutio-wasm-proxy  core::ptr::write::h6a95930e522ea125
+      1.16   1356       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::offset::h24ee17c811f143f2
+      1.17   1370       mercutio-wasm-proxy  alloc::string::String::push::ha7d81ed90d701e47
+      1.22   1424       mercutio-wasm-proxy  <core::str::Chars<'a> as core::iter::iterator::Iterator>::next::{{closure}}
+      1.29   1503       mercutio-wasm-proxy  <core::option::Option<T> as core::ops::try::Try>::into_result
+      1.31   1533       mercutio-wasm-proxy  core::slice::from_raw_parts_mut::hab87f6e6e5d1c85e
+      1.38   1608       mercutio-wasm-proxy  <std::collections::hash::table::RawTable<K, V> as core::clone::Clone>::clone
+      1.39   1626       mercutio-wasm-proxy  <alloc::vec::Vec<T> as core::ops::deref::DerefMut>::deref_mut
+      1.40   1632       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$mut$u20$T$GT$::is_null::ha7528dcdb308efff
+      1.42   1654  libsystem_platform.dylib  platform_memmove$VARIANT$Haswell
+      1.84   2145       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::offset::hfcef840b3056d44e
+      1.84   2150       mercutio-wasm-proxy  core::iter::iterator::Iterator::nth::hbbacd74e77ab922f
+      1.98   2313       mercutio-wasm-proxy  core::char::from_u32_unchecked::h0d0372c683a8a339
+      2.03   2371       mercutio-wasm-proxy  <core::str::Chars<'a> as core::iter::iterator::Iterator>::next
+      2.08   2427       mercutio-wasm-proxy  <alloc::string::String as core::iter::traits::Extend<char>>::extend
+      2.28   2668       mercutio-wasm-proxy  core::slice::size_from_ptr::hdc5c089a206cef68
+      3.21   3747       mercutio-wasm-proxy  <core::option::Option<T>>::ok_or
+      3.53   4123       mercutio-wasm-proxy  core::mem::size_of::h5e5fd3de9782e01d
+      4.10   4786       mercutio-wasm-proxy  <core::option::Option<T>>::map
+      4.66   5443       mercutio-wasm-proxy  core::ptr::_$LT$impl$u20$$BP$const$u20$T$GT$::is_null::he957fd48a410f9be
+      4.97   5807       mercutio-wasm-proxy  <alloc::vec::Vec<T>>::push
+      7.00   8180       mercutio-wasm-proxy  core::str::next_code_point::h00361cd6468b962c
+      7.74   9043       mercutio-wasm-proxy  <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::next
