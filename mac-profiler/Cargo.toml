@@ -12,6 +12,7 @@ quicli = "*"
 regex = "0.2.6"
 rustc-demangle = "0.1.7"
 shlex = "*"
+structopt = "0.2.4"
 toml = "0.4.5"
 
 [dependencies.ctrlc]

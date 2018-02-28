@@ -11,6 +11,7 @@ extern crate toml;
 
 pub mod dtrace;
 
+use quicli::prelude::*;
 use regex::Regex;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -41,28 +42,34 @@ struct Frame {
     address: Option<String>,
 }
 
-fn toml_to_frame(toml: &Value) -> Option<Frame> {
-    if let Some((Some(count), Some(target))) = toml.as_table().map(|x| {
+fn toml_to_frames(toml: &Value) -> Vec<Frame> {
+    let mut res = vec![];
+    if let Some((Some(count), Some(targets))) = toml.as_table().map(|x| {
         (
             x.get("count").and_then(|v| v.as_integer()),
             x.get("value").and_then(|v| v.as_str()),
         )
     }) {
-        let mut iter = target.rsplitn(2, '`');
-        let target = iter.next().unwrap().to_owned();
-        let library = iter.next().map(str::to_owned);
-        let mut iter = target.splitn(2, '+');
-        let target = iter.next().unwrap().to_owned();
-        let address = iter.next().map(str::to_owned);
-        Some(Frame {
-            count,
-            library,
-            target,
-            address,
-        })
-    } else {
-        None
+        for target in targets.split("\n") {
+            if target.trim().len() == 0 {
+                continue;
+            }
+
+            let mut iter = target.rsplitn(2, '`');
+            let target = iter.next().unwrap().to_owned();
+            let library = iter.next().map(str::to_owned);
+            let mut iter = target.splitn(2, '+');
+            let target = iter.next().unwrap().to_owned();
+            let address = iter.next().map(str::to_owned);
+            res.push(Frame {
+                count,
+                library,
+                target,
+                address,
+            })
+        }
     }
+    res
 }
 
 thread_local! {
@@ -79,16 +86,16 @@ fn regex_replace(input: &str, re: &str, rep: &str) -> String {
     })
 }
 
-/// https://github.com/Yamakaky/rust-unmangle/blob/master/rust-unmangle
-fn demangle_maybe(input: &str) -> String {
+fn rust_demangle_maybe(input: &str) -> String {
     if input.starts_with("_") {
-        demangle(&input[1..])
+        rust_demangle(&input[1..])
     } else {
         input.to_owned()
     }
 }
 
-fn demangle(input: &str) -> String {
+/// https://github.com/Yamakaky/rust-unmangle/blob/master/rust-unmangle
+fn rust_demangle(input: &str) -> String {
     let mut input = input.to_owned();
 
     input = regex_replace(&input, r"::h[0-9a-f]{16}", "");
@@ -119,8 +126,35 @@ fn demangle(input: &str) -> String {
     return input;
 }
 
-main!(|| {
-    let script = r#"
+#[derive(StructOpt, Debug)]
+#[structopt(name = "rust-macos-profiler")]
+enum Opt {
+    #[structopt(name = "time-spent")]
+    /// Time spent in a function total. (bottom-up)
+    TimeSpent,
+
+    #[structopt(name = "frequency")]
+    /// How frequently a function is invoked. (top-down)
+    Frequency,
+}
+
+main!(|opts: Opt| {
+    let script = match opts {
+        Opt::TimeSpent => r#"
+    
+#pragma D option quiet
+profile:::profile-1000hz
+/pid == $target/
+{
+    @[ustack(100)] = count();
+}
+dtrace:::END
+{
+    printa("[[entry]]\ncount=%@d\nvalue='''%k'''\n\n", @[ustack(100)]);
+}
+
+"#,
+        Opt::Frequency => r#"
     
 #pragma D option quiet
 profile:::profile-1000hz
@@ -133,7 +167,8 @@ dtrace:::END
     printa("[[entry]]\ncount=%@d\nvalue='''%A'''\n\n", @pc);
 }
 
-"#;
+"#,
+    };
 
     let probe = dtrace_probe("./target/release/mercutio-wasm-proxy", script)?;
 
@@ -149,7 +184,7 @@ dtrace:::END
     let mut frames_cache = HashMap::<_, Frame>::new();
     let mut total = 0;
     for toml in probe {
-        if let Some(frame) = toml_to_frame(&toml) {
+        for frame in toml_to_frames(&toml) {
             if frame.target == "0x0" {
                 continue;
             }
@@ -178,10 +213,9 @@ dtrace:::END
             pct,
             item.count,
             lib,
-            demangle_maybe(&item.target),
+            rust_demangle_maybe(&item.target),
         );
     }
 
-    eprintln!();
     eprintln!("done.");
 });
