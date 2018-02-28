@@ -1,0 +1,19 @@
+[package]
+authors = ["Tim Ryan <id@timryan.org>"]
+name = "mac-profiler"
+version = "0.1.0"
+[dependencies]
+clap = "*"
+command-macros = "*"
+failure = "*"
+lazy_static = "1.0.0"
+nix = "0.10.0"
+quicli = "*"
+regex = "0.2.6"
+rustc-demangle = "0.1.7"
+shlex = "*"
+toml = "0.4.5"
+
+[dependencies.ctrlc]
+features = ["termination"]
+version = "3.0"
