@@ -136,7 +136,7 @@ main!(|| {
                 .current_dir("mercutio")
                 .env("RUST_BACKTRACE", "1")
                 .env("CARGO_INCREMENTAL", "1")
-                .env("MERCUTIO_WASM_LOG", "1")
+                .env("MERCUTIO_WASM_LOG", "0")
                 .status()?
                 .expect_success();
         }
