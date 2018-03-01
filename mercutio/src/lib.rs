@@ -26,6 +26,7 @@ extern crate ws;
 extern crate colored;
 extern crate pulldown_cmark;
 extern crate pulldown_cmark_to_cmark;
+extern crate time;
 
 pub mod server;
 #[macro_use]

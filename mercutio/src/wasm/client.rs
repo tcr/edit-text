@@ -267,6 +267,11 @@ pub struct Client {
     pub tx_sync: Sender<SyncServerCommand>,
 }
 
+use std::cell::RefCell;
+thread_local! {
+    static BAR: RefCell<Vec<i64>> = RefCell::new(vec![]);
+}
+
 impl Client {
     // TODO this
     // pub fn new() -> (Client, Receiver, Receiver) {
@@ -299,6 +304,8 @@ impl Client {
     }
 
     pub fn handle_task(&mut self, value: Task) -> Result<(), Error> {
+        let start = ::time::PreciseTime::now();
+
         match value.clone() {
             // Handle commands from Native.
             Task::NativeCommand(command) => {
@@ -378,6 +385,20 @@ impl Client {
                 self.send_client(&res).unwrap();
             }
         }
+
+        fn average(numbers: &[i64]) -> f32 {
+            numbers.iter().sum::<i64>() as f32 / numbers.len() as f32
+        }
+
+        let end = ::time::PreciseTime::now();
+
+        BAR.with(|bar| {
+            let mut b = bar.borrow_mut();
+        
+            b.push(start.to(end).num_milliseconds());
+
+            println!("{} ms per task.", average(b.as_slice()));
+        });
 
         log_wasm!(Task(self.client_id.clone(), value.clone()));
 
