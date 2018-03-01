@@ -38,8 +38,8 @@ enum Cli {
 
     #[structopt(name = "mercutio-sync")]
     MercutioSyncRun {
-        #[structopt(long = "no-log", help = "Do not export log")]
-        no_log: bool,
+        #[structopt(long = "log", help = "Export a log")]
+        log: bool,
         args: Vec<String>,
     },
 
@@ -152,7 +152,7 @@ main!(|| {
                 .expect_success();
         }
 
-        Cli::MercutioSyncRun { no_log, args } => {
+        Cli::MercutioSyncRun { log, args } => {
             let release_flag = if release { vec!["--release"] } else { vec![] };
             cmd!(
                 cargo run ("--bin") ("mercutio-sync") [release_flag] ("--") ("--period") ("100") [args]
@@ -160,7 +160,7 @@ main!(|| {
                 .current_dir("mercutio")
                 .env("RUST_BACKTRACE", "1")
                 .env("CARGO_INCREMENTAL", "1")
-                .env("MERCUTIO_SYNC_LOG", if no_log { "0" } else { "1" })
+                .env("MERCUTIO_SYNC_LOG", if log { "1" } else { "0" })
                 .status()?
                 .expect_success();
         }
