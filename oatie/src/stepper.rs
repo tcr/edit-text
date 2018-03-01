@@ -245,7 +245,7 @@ impl DocStepper {
         let res = self.head();
         self.head -= 1;
         self.char_debt = match self.head() {
-            Some(DocChars(ref text)) => text.chars().count() - 1,
+            Some(DocChars(ref text)) => text.char_len() - 1,
             _ => 0,
         };
         res
@@ -265,7 +265,7 @@ impl DocStepper {
     pub fn head(&self) -> Option<DocElement> {
         match self.rest.get(self.head as usize) {
             Some(&DocChars(ref text)) => {
-                Some(DocChars(text.chars().skip(self.char_debt).collect()))
+                Some(DocChars(text.clone().truncate(self.char_debt)))
             }
             Some(value) => {
                 Some(value.clone())
@@ -277,7 +277,7 @@ impl DocStepper {
     pub fn unhead(&self) -> Option<DocElement> {
         if self.char_debt > 0 {
             if let Some(&DocChars(ref text)) = self.rest.get(self.head as usize) {
-                return Some(DocChars(text.chars().take(self.char_debt).collect()));
+                return Some(DocChars(text.clone_slice(0, self.char_debt)));
             } else {
                 unreachable!();
             }
@@ -289,7 +289,7 @@ impl DocStepper {
     pub fn peek(&self) -> Option<DocElement> {
         match self.rest.get((self.head + 1) as usize) {
             Some(&DocChars(ref text)) => {
-                Some(DocChars(text.chars().skip(self.char_debt).collect()))
+                Some(DocChars(text.clone().truncate(self.char_debt)))
             }
             Some(value) => {
                 Some(value.clone())
@@ -388,9 +388,9 @@ impl DocStepper {
         while skip > 0 && !self.is_done() {
             match self.head().unwrap() {
                 DocChars(ref inner) => {
-                    if inner.len() <= skip {
+                    if inner.char_len() <= skip {
                         self.next();
-                        skip -= inner.len();
+                        skip -= inner.char_len();
                     } else {
                         self.char_debt += skip;
                         break;

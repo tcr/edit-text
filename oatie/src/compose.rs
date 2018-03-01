@@ -195,10 +195,10 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddStepper, b: &mut AddStepp
             AddSkip(bcount) => {
                 match a.get_head() {
                     AddChars(value) => {
-                        let len = value.chars().count();
+                        let len = value.char_len();
                         if bcount < len {
-                            res.place(&AddChars(value.chars().take(bcount).collect()));
-                            a.head = Some(AddChars(value.chars().skip(bcount).collect()));
+                            res.place(&AddChars(value.clone_slice(0, bcount)));
+                            a.head = Some(AddChars(value.truncate(bcount)));
                             b.next();
                         } else if bcount > len {
                             res.place(&a.next().unwrap());
@@ -335,9 +335,9 @@ fn compose_add_del_inner(delres: &mut DelSpan, addres: &mut AddSpan, a: &mut Add
             DelChars(bcount) => {
                 match a.get_head() {
                     AddChars(avalue) => {
-                        let alen = avalue.chars().count();
+                        let alen = avalue.char_len();
                         if bcount < alen {
-                            a.head = Some(AddChars(avalue.chars().skip(bcount).collect()));
+                            a.head = Some(AddChars(avalue.truncate(bcount)));
                             b.next();
                         } else if bcount > alen {
                             a.next();
@@ -368,10 +368,10 @@ fn compose_add_del_inner(delres: &mut DelSpan, addres: &mut AddSpan, a: &mut Add
             DelSkip(bcount) => {
                 match a.get_head() {
                     AddChars(avalue) => {
-                        let alen = avalue.chars().count();
+                        let alen = avalue.char_len();
                         if bcount < alen {
-                            addres.place(&AddChars(avalue.chars().take(bcount).collect()));
-                            a.head = Some(AddChars(avalue.chars().skip(bcount).collect()));
+                            addres.place(&AddChars(avalue.clone_slice(0, bcount)));
+                            a.head = Some(AddChars(avalue.truncate(bcount)));
                             b.next();
                         } else if bcount > alen {
                             addres.place(&a.next().unwrap());

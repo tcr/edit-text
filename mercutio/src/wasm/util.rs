@@ -22,7 +22,7 @@ pub fn doc_as_html(doc: &DocSpan) -> String {
             }
             &DocChars(ref text) => for c in text.chars() {
                 out.push_str(r"<span>");
-                out.push(c);
+                out.push(*c);
                 out.push_str(r"</span>");
             },
         }

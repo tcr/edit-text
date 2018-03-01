@@ -3,7 +3,7 @@
 macro_rules! doc_span {
     ( @str_literal $e:expr ) => { $e };
     ( @kind DocChars $b:expr $(,)* ) => {
-        DocChars($b.to_owned())
+        DocChars(DocString::from_str($b))
     };
     ( @kind DocGroup { $( $e:tt : $b:expr ),+  $(,)* } , [ $( $v:tt )* ] $(,)* ) => {
         {
@@ -29,7 +29,7 @@ macro_rules! add_span {
         AddSkip($b)
     };
     ( @kind AddChars $b:expr $(,)* ) => {
-        AddChars($b.to_owned())
+        AddChars(DocString::from_str($b))
     };
     ( @kind AddWithGroup [ $( $v:tt )* ] $(,)* ) => {
         AddWithGroup(add_span![ $( $v )* ])

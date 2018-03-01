@@ -1,21 +1,21 @@
 use super::doc::*;
 use std::collections::HashMap;
 
-fn place_chars(res: &mut DocSpan, value: String) {
+fn place_chars(res: &mut DocSpan, value: &DocString) {
     if !res.is_empty() {
         let idx = res.len() - 1;
         if let DocChars(ref mut prefix) = res[idx] {
-            prefix.push_str(&value[..]);
+            prefix.push_doc_string(value);
             return;
         }
     }
-    res.push(DocChars(value));
+    res.push(DocChars(value.clone()));
 }
 
 fn place_any(res: &mut DocSpan, value: &DocElement) {
     match *value {
         DocChars(ref string) => {
-            place_chars(res, string.clone());
+            place_chars(res, string);
         }
         _ => {
             res.push(value.clone());
@@ -73,17 +73,17 @@ fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan) {
             AddSkip(count) => {
                 match first.clone().unwrap() {
                     DocChars(ref value) => {
-                        let len = value.chars().count();
+                        let len = value.char_len();
                         if len < count {
-                            place_chars(&mut res, value.to_owned());
+                            place_chars(&mut res, &value);
                             d = AddSkip(count - len);
                             nextdel = false;
                         } else if len > count {
-                            place_chars(&mut res, value.chars().take(count).collect());
-                            first = Some(DocChars(value.chars().skip(count).take(len).collect()));
+                            place_chars(&mut res, &value.clone_slice(0, count));
+                            first = Some(DocChars(value.clone_slice(count, len)));
                             nextfirst = false;
                         } else {
-                            place_chars(&mut res, value.to_owned());
+                            place_chars(&mut res, value);
                         }
                     }
                     DocGroup(..) => {
@@ -106,7 +106,7 @@ fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan) {
                 }
             }
             AddChars(value) => {
-                place_chars(&mut res, value);
+                place_chars(&mut res, &value);
                 nextfirst = false;
             }
             AddGroup(attrs, innerspan) => {
@@ -190,17 +190,17 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
             DelSkip(count) => {
                 match first.clone() {
                     DocChars(ref value) => {
-                        let len = value.chars().count();
+                        let len = value.char_len();
                         if len < count {
-                            place_chars(&mut res, value.clone());
+                            place_chars(&mut res, value);
                             d = DelSkip(count - len);
                             nextdel = false;
                         } else if len > count {
-                            place_chars(&mut res, value[0..count].to_owned());
-                            first = DocChars(value[count..len].to_owned());
+                            place_chars(&mut res, &value.clone_slice(0, count));
+                            first = DocChars(value.clone_slice(count, len));
                             nextfirst = false;
                         } else {
-                            place_chars(&mut res, value.clone());
+                            place_chars(&mut res, value);
                             nextdel = true;
                         }
                     }
@@ -236,9 +236,9 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
             DelChars(count) => {
                 match first.clone() {
                     DocChars(ref value) => {
-                        let len = value.chars().count();
+                        let len = value.char_len();
                         if len > count {
-                            first = DocChars(value[count..].to_owned());
+                            first = DocChars(value.clone().truncate(count));
                             nextfirst = false;
                         } else if len < count {
                             panic!("attempted deletion of too much");

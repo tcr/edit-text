@@ -20,6 +20,49 @@ pub type CurSpan = Vec<CurElement>;
 #[derive(Clone, Debug, PartialEq)]
 pub struct DocString(Vec<char>);
 
+impl DocString {
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn from_slice(input: &[char]) -> DocString {
+        DocString(input.to_vec())
+    }
+
+    pub fn from_str(input: &str) -> DocString {
+        DocString(input.chars().collect())
+    }
+
+    pub fn push_str(&mut self, input: &str) {
+        self.0.extend(input.chars());
+    }
+
+    pub fn push_doc_string(&mut self, input: &DocString) {
+        self.0.extend(input.0.iter());
+    }
+
+    pub fn to_string(&self) -> String {
+        self.0.iter().collect()
+    }
+
+    pub fn char_len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn truncate(mut self, count: usize) -> Self {
+        self.0 = self.0.split_off(count);
+        self
+    }
+
+    pub fn clone_slice(&self, start: usize, len: usize) -> DocString {
+        DocString::from_slice(&self.0[start..start+len])
+    }
+
+    pub fn chars(&self) -> ::std::slice::Iter<char> {
+        self.0.iter()
+    }
+}
+
 impl Serialize for DocString {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
@@ -38,9 +81,12 @@ impl<'de> Deserialize<'de> for DocString {
     }
 }
 
+
+
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum DocElement {
-    DocChars(String),
+    DocChars(DocString),
     DocGroup(Attrs, DocSpan),
 }
 
@@ -63,9 +109,9 @@ impl DocPlaceable for DocSpan {
     fn place(&mut self, elem: &DocElement) {
         match *elem {
             DocChars(ref text) => {
-                assert!(text.chars().count() > 0);
+                assert!(!text.is_empty());
                 if let Some(&mut DocChars(ref mut value)) = self.last_mut() {
-                    value.push_str(text);
+                    value.push_doc_string(text);
                 } else {
                     self.push(DocChars(text.to_owned()));
                 }
@@ -80,7 +126,7 @@ impl DocPlaceable for DocSpan {
         let mut ret = 0;
         for item in self {
             ret += match *item {
-                DocChars(ref value) => value.chars().count(),
+                DocChars(ref value) => value.char_len(),
                 DocGroup(..) => 1,
             };
         }
@@ -179,7 +225,7 @@ impl DelPlaceable for DelSpan {
 pub enum AddElement {
     AddSkip(usize),
     AddWithGroup(AddSpan),
-    AddChars(String),
+    AddChars(DocString),
     AddGroup(Attrs, AddSpan),
 }
 
@@ -200,9 +246,9 @@ impl AddPlaceable for AddSpan {
     fn place(&mut self, elem: &AddElement) {
         match *elem {
             AddChars(ref text) => {
-                assert!(text.chars().count() > 0);
+                assert!(!text.is_empty());
                 if let Some(&mut AddChars(ref mut value)) = self.last_mut() {
-                    value.push_str(text);
+                    value.push_doc_string(text);
                 } else {
                     self.push(AddChars(text.to_owned()));
                 }
@@ -239,7 +285,7 @@ impl AddPlaceable for AddSpan {
         for item in self {
             ret += match *item {
                 AddSkip(len) => len,
-                AddChars(ref chars) => chars.chars().count(),
+                AddChars(ref chars) => chars.char_len(),
                 AddGroup(..) | AddWithGroup(..) => 1,
             };
         }
