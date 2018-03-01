@@ -13,7 +13,6 @@
 extern crate log;
 #[macro_use]
 extern crate maplit;
-// extern crate rand;
 #[macro_use]
 extern crate serde_derive;
 extern crate yansi;
@@ -23,6 +22,7 @@ extern crate term_painter;
 extern crate failure;
 extern crate regex;
 extern crate either;
+extern crate serde;
 extern crate ron;
 
 /* logging */

@@ -1,6 +1,7 @@
 //! Document definitions.
 
 use std::collections::HashMap;
+use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
 pub use self::DocElement::*;
 pub use self::AddElement::*;
@@ -15,6 +16,27 @@ pub type Op = (DelSpan, AddSpan);
 
 pub type CurSpan = Vec<CurElement>;
 
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct DocString(Vec<char>);
+
+impl Serialize for DocString {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        serializer.serialize_str(&self.0.iter().cloned().collect::<String>())
+    }
+}
+
+impl<'de> Deserialize<'de> for DocString {
+    fn deserialize<D>(deserializer: D) -> Result<DocString, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let string = <String as Deserialize>::deserialize(deserializer)?;
+        Ok(DocString(string.chars().collect()))
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum DocElement {
