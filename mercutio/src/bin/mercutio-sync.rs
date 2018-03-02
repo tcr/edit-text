@@ -159,19 +159,12 @@ fn main() {
 
     let opt = Opt::from_args();
 
-    let mercutio_state = MoteState {
-        body: Arc::new(Mutex::new(default_doc())),
-    };
-
     println!("client proxy: {:?}", opt.client_proxy);
 
     // port + 1
-    thread::spawn({
-        take!(=mercutio_state);
-        move || {
-            let opt = Opt::from_args();
-            sync_socket_server(opt.port + 1, opt.period, mercutio_state);
-        }
+    thread::spawn(|| {
+        let opt = Opt::from_args();
+        sync_socket_server(opt.port + 1, opt.period);
     });
 
     spawn_http_server(opt.port, opt.client_proxy);

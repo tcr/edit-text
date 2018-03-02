@@ -92,10 +92,10 @@ Type github.com/tcr/edit-text into your search bar for more information.
     // ])
 }
 
-#[derive(Clone)]
-pub struct MoteState {
-    pub body: Arc<Mutex<Doc>>,
-}
+// #[derive(Clone)]
+// pub struct MoteState {
+//     pub body: Arc<Mutex<Doc>>,
+// }
 
 // pub fn action_sync(doc: &Doc, ops_a: Vec<Op>, ops_b: Vec<Op>) -> Result<(Doc, Op), Error> {
 //     println!(" ---> input ops_a");
@@ -216,6 +216,7 @@ pub struct SyncState {
     ops: VecDeque<(String, usize, Op)>,
     version: usize,
     history: HashMap<usize, Op>,
+    doc: Doc,
 }
 
 /// Transform an operation incrementally against each interim document operation.
@@ -287,7 +288,7 @@ fn db_help() -> HashMap<String, String> {
     ret
 }
 
-pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
+pub fn sync_socket_server(port: u16, period: usize) {
     log_sync!(Spawn);
 
     let url = format!("0.0.0.0:{}", port);
@@ -298,6 +299,8 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
         ops: VecDeque::new(),
         version: 100,
         history: hashmap![],
+        // body: Arc::new(Mutex::new(default_doc())),
+        doc: default_doc(),
     }));
 
     let bus = Arc::new(Mutex::new(Bus::new(255)));
@@ -306,7 +309,7 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
 
     // Handle incoming packets.
     let join_process = thread::Builder::new().name("sync_thread_processor".into()).spawn({
-        take!(=state, =bus, =sync_state_mutex);
+        take!(=bus, =sync_state_mutex);
         move || {
             loop {
                 // Wait a set duration between transforms.
@@ -315,8 +318,6 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
                 let now = Instant::now();
 
                 let mut sync_state = sync_state_mutex.lock().unwrap();
-
-                let mut doc = state.body.lock().unwrap();
 
                 // Go through the deque and update our operations.
                 while let Some((client_id, input_version, op)) = sync_state.ops.pop_front() {
@@ -333,15 +334,15 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
                     log_sync!(Debug(format!("updated op to {:?}", op)));
 
                     // Update the document with this operation.
-                    *doc = Op::apply(&doc, &op);
+                    sync_state.doc = Op::apply(&sync_state.doc, &op);
                     sync_state.version = target_version + 1;
                     
-                    validate_doc(&doc).expect("Validation error");
+                    validate_doc(&sync_state.doc).expect("Validation error");
 
-                    log_sync!(Debug(format!("doc is now {:?}", *doc)));
+                    log_sync!(Debug(format!("doc is now {:?}", sync_state.doc)));
 
                     // Broadcast to all connected websockets.
-                    let command = SyncClientCommand::Update(doc.0.clone(), sync_state.version, client_id, op);
+                    let command = SyncClientCommand::Update(sync_state.doc.0.clone(), sync_state.version, client_id, op);
                     bus
                         .lock()
                         .unwrap()
@@ -356,7 +357,7 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
 
     // Listen to incoming clients.
     ws::listen(url, {
-        take!(=state, =bus);
+        take!(=bus);
         move |out| {
             log_sync!(ClientConnect);
 
@@ -367,9 +368,8 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
                 // TODO how to select from unused client IDs?
                 let new_id = thread_rng().gen_ascii_chars().take(6).collect::<String>();
 
-                let doc = state.body.lock().unwrap();
                 let mut sync_state = sync_state_mutex.lock().unwrap();
-                let command = SyncClientCommand::Init(new_id.clone(), doc.0.clone(), sync_state.version);
+                let command = SyncClientCommand::Init(new_id.clone(), sync_state.doc.0.clone(), sync_state.version);
                 out.send(serde_json::to_string(&command).unwrap());
             }
 
@@ -383,7 +383,6 @@ pub fn sync_socket_server(port: u16, period: usize, state: MoteState) {
             });
 
             // Listen to commands from the clients and submit to sync server.
-            let state = state.clone();
             let sync_state_mutex_capture = sync_state_mutex.clone();
             move |msg: ws::Message| {
                 let req_parse: Result<SyncServerCommand, _> = serde_json::from_slice(&msg.into_data());
