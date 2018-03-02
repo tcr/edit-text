@@ -108,7 +108,7 @@ main!(|| {
                 cargo check [release_flag] ("--lib") ("--target") ("wasm32-unknown-unknown")
             )
                 .current_dir("mercutio/mercutio-wasm")
-                .env("CARGO_INCREMENTAL", "1")
+                // .env("CARGO_INCREMENTAL", "1")
                 .status()?
                 .expect_success();
 
@@ -116,7 +116,7 @@ main!(|| {
                 cargo build [release_flag] ("--lib") ("--target") ("wasm32-unknown-unknown")
             )
                 .current_dir("mercutio/mercutio-wasm")
-                .env("CARGO_INCREMENTAL", "1")
+                // .env("CARGO_INCREMENTAL", "1")
                 .status()?
                 .expect_success();
 

@@ -12994,7 +12994,7 @@ function newString(module, str) {
 // TODO better strategy for having a js command callback
 function instantiate(js_command_callback) {
     let Module = {};
-    return fetchAndInstantiate("/mercutio.wasm", {
+    return fetchAndInstantiate("/$/mercutio.wasm", {
         env: {
             js_command: function (inptr) {
                 let data = copyCStr(Module, inptr);
