@@ -69,7 +69,7 @@ impl Track for RtfTrack {
     fn allowed_in_root(&self) -> bool {
         use self::RtfTrack::*;
         match *self {
-            Blocks | ListItems => true,
+            Blocks | ListItems | BlockObjects => true,
             _ => false,
         }
     }
@@ -143,6 +143,7 @@ impl Schema for RtfSchema {
             "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "pre" => Some(RtfTrack::Blocks),
             "span" => Some(RtfTrack::Inlines),
             "caret" => Some(RtfTrack::InlineObjects),
+            "hr" => Some(RtfTrack::BlockObjects),
             _ => None,
         }
     }
