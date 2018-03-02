@@ -42,6 +42,7 @@ fn spawn_http_server(port: u16, client_proxy: bool) {
     // Necessary files
     assert!(template_dir.contains_key(Path::new("multi.html")));
     assert!(template_dir.contains_key(Path::new("client.html")));
+    assert!(template_dir.contains_key(Path::new("presentation.html")));
     assert!(template_dir.contains_key(Path::new("favicon.png")));
 
     for _ in 0..4 {
@@ -81,6 +82,11 @@ fn spawn_http_server(port: u16, client_proxy: bool) {
 
                         "/$/multi" | "/$/multi/" => {
                             let data = template_dir.get(Path::new("multi.html")).unwrap();
+                            let _ = req.respond(Response::from_data(update_config_var(data))
+                                .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
+                        }
+                        "/$/presentation" | "/$/presentation/" => {
+                            let data = template_dir.get(Path::new("presentation.html")).unwrap();
                             let _ = req.respond(Response::from_data(update_config_var(data))
                                 .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
                         }
