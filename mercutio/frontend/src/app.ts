@@ -20,6 +20,7 @@ declare var TextDecoder: any;
 // Entry.
 if (document.body.id == 'multi') {
   document.body.innerHTML = `
+<div id="footer"></div>
 
 <h1>Mercutio
   <button id="action-monkey">🙈🙉🙊</button>
@@ -46,7 +47,9 @@ if (document.body.id == 'multi') {
 }
 else if (document.body.id == 'client') {
   document.body.innerHTML = `
+<div id="footer"></div>
 <div id="toolbar">
+  <a href="https://github.com/tcr/edit-text" id="logo">edit-text</a>
   <div id="native-buttons"></div>
   <div id="local-buttons"></div>
 </div>
@@ -153,3 +156,9 @@ else if (document.body.id == 'presentation') {
 else {
   document.body.innerHTML = '404';
 }
+
+$('#footer').html(`
+⚠️ You are viewing a sandbox for <b><a href="https://github.com/tcr/edit-text">edit-text</a></b>.
+There is a high chance of data loss, so don't store anything important here.
+Thanks for trying it out!
+`);

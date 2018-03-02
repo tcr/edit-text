@@ -30,15 +30,15 @@ pub fn default_doc() -> Doc {
 
 This is edit-text, a web-based rich text editor.
 
-* VERSION 0.1 This is tragically early software.
+* Version 0.1. This is a very early preview. :)
 
 * Supports collaborative editing.
 
 * Written in Rust and cross-compiled to WebAssembly.
 
-* Markdown export.
+* Supports Markdown export.
 
-This server is very easy to break! That's okay though. We'll notice and fix it, and it'll break less in the future.
+This app is very easy to break! That's okay though. We'll notice and fix it, and it'll break less in the future.
 
 ---
 

@@ -19,6 +19,24 @@ body {
     cursor: auto;
 }
 
+#logo {
+    content: "edit-text";
+    margin: 3px 20px 0 0;
+    font-family: Helvetica, Arial, sans-serif;
+    color: #444;
+    font-size: 20px;
+    height: 0;
+    overflow: visible;
+    vertical-align: middle;
+    display: inline-block;
+    text-decoration: none;
+}
+
+#logo:hover {
+    color: black;
+    text-decoration: underline;
+}
+
 #native-buttons {
     flex: 1;
 }
@@ -52,6 +70,18 @@ kbd {
     background: #ddd;
 }
 
+#footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    box-sizing: border-box;
+    border-top: 1px solid #ca4;
+    background: #fff3bb;
+    padding: 8px 10px;
+    opacity: 0.85;
+    z-index: 100;
+}
+
 // .load-ping {
 //     background: yellow;
 //     transition: 0s background linear;
@@ -61,7 +91,7 @@ kbd {
 // }
 
 .mote {
-    padding: 15px 30px;
+    padding: 15px 30px 50px; // bottom padding for footer
     margin: 0;
 }
 
