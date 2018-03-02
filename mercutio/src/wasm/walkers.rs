@@ -9,6 +9,11 @@ fn is_block(attrs: &Attrs) -> bool {
     RtfSchema::track_type_from_attrs(attrs) == Some(RtfTrack::Blocks)
 }
 
+fn is_block_object(attrs: &Attrs) -> bool {
+    use oatie::schema::*;
+    RtfSchema::track_type_from_attrs(attrs) == Some(RtfTrack::BlockObjects)
+}
+
 fn is_caret(attrs: &Attrs, client_id: Option<&str>) -> bool {
     attrs["tag"] == "caret" && client_id.map(|id| attrs["client"] == id).unwrap_or(false)
 }
@@ -319,6 +324,34 @@ impl Walker {
             matched = depth == 0;
 
             rstepper.rev()
+        });
+
+        matched
+    }
+
+    // TODO this might be worth a better name
+    pub fn back_block_or_block_object(&mut self) -> bool {
+        let mut matched = false;
+        take_mut::take(&mut self.stepper, |prev_stepper| {
+            let mut rstepper = prev_stepper.clone().rev();
+
+            // Iterate until we reach a block.
+            matched = loop {
+                if rstepper.next().is_none() {
+                    break false;
+                }
+                if let Some(DocGroup(attrs, _)) = rstepper.doc.head() {
+                    if is_block(&attrs) || is_block_object(&attrs) {
+                        break true;
+                    }
+                }
+            };
+
+            if matched {
+                rstepper.rev()
+            } else {
+                prev_stepper
+            }
         });
 
         matched

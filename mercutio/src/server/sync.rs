@@ -36,9 +36,11 @@ This is edit-text, a web-based rich text editor.
 
 * Written in Rust and cross-compiled to WebAssembly.
 
-* Markdown import / export.
+* Markdown export.
 
 This server is very easy to break! That's okay though. We'll notice and fix it, and it'll break less in the future.
+
+---
 
 Type github.com/tcr/edit-text into your search bar for more information.
 

@@ -49,6 +49,7 @@ impl<'a> Iterator for DocToMarkdown<'a> {
                         self.doc_stepper.next();
                         return self.next();
                     }
+                    "hr" => Event::Start(Tag::Rule),
                     _ => {
                         eprintln!("Unexpected tag {:?}!", attrs["tag"]);
                         self.doc_stepper.next();
@@ -88,6 +89,7 @@ impl<'a> Iterator for DocToMarkdown<'a> {
                             }
                             Event::End(Tag::Item)
                         }
+                        "hr" => Event::End(Tag::Rule),
                         _ => unimplemented!(),
                     })
                 }

@@ -97,7 +97,7 @@ fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&mut Client) -> Result<(), Err
             13,
             false,
             false,
-            Box::new(|client: &mut Client| client.client_op(|doc| split_block(doc))),
+            Box::new(|client: &mut Client| client.client_op(|doc| split_block(doc, false))),
         ),
         // enter
         (
@@ -136,6 +136,10 @@ pub fn button_handlers() -> Vec<(&'static str, Box<Fn(&mut Client) -> Result<(),
         (
             "List",
             Box::new(|client: &mut Client| client.client_op(|doc| toggle_list(doc))),
+        ),
+        (
+            "HR",
+            Box::new(|client: &mut Client| client.client_op(|doc| split_block(doc, true))),
         ),
     ]
 }
@@ -304,7 +308,7 @@ impl Client {
     }
 
     pub fn handle_task(&mut self, value: Task) -> Result<(), Error> {
-        let start = ::time::PreciseTime::now();
+        let start = ::std::time::Instant::now();
 
         match value.clone() {
             // Handle commands from Native.
@@ -390,15 +394,13 @@ impl Client {
             numbers.iter().sum::<i64>() as f32 / numbers.len() as f32
         }
 
-        let end = ::time::PreciseTime::now();
-
-        BAR.with(|bar| {
-            let mut b = bar.borrow_mut();
+        // BAR.with(|bar| {
+        //     let mut b = bar.borrow_mut();
         
-            b.push(start.to(end).num_milliseconds());
+        //     b.push(start.elapsed().num_milliseconds());
 
-            println!("{} ms per task.", average(b.as_slice()));
-        });
+        //     println!("{} ms per task.", average(b.as_slice()));
+        // });
 
         log_wasm!(Task(self.client_id.clone(), value.clone()));
 

@@ -168,17 +168,35 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
             _ => unreachable!(),
         };
 
+        // TODO what is this? is it needed?
         let last_doc_stack = block_walker.doc().stack.clone();
 
         // Move to prior block to join it, or abort.
-        if !block_walker.back_block() {
+        if !block_walker.back_block_or_block_object() {
             return Ok(op_span!([], []));
         }
 
+        // TODO what is this? is it needed?
         let next_doc_stack = block_walker.doc().stack.clone();
-
         if last_doc_stack != next_doc_stack {
             return Ok(op_span!([], []));
+        }
+
+        // If block is an "hr", delete it.
+        if let Some(DocGroup(ref attrs, _)) = block_walker.doc().head() {
+            if attrs["tag"] == "hr" {
+                let mut writer = block_walker.to_writer();
+
+                writer.del.begin();
+                writer.del.close();
+                writer.del.exit_all();
+
+                writer.add.exit_all();
+
+                return Ok(writer.result());
+            }
+        } else {
+            unreachable!();
         }
 
         // Surround block.
@@ -261,7 +279,7 @@ pub fn add_char(ctx: ActionContext, key: u32) -> Result<Op, Error> {
     Ok(writer.result())
 }
 
-pub fn split_block(ctx: ActionContext) -> Result<Op, Error> {
+pub fn split_block(ctx: ActionContext, add_hr: bool) -> Result<Op, Error> {
     let walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
     let skip = walker.doc().skip_len();
 
@@ -309,6 +327,10 @@ pub fn split_block(ctx: ActionContext) -> Result<Op, Error> {
             .add
             .close(hashmap! { "tag".into() => "bullet".into() });
         writer.add.begin();
+    }
+    if add_hr {
+        writer.add.begin();
+        writer.add.close(hashmap! { "tag".into() => "hr".into() });
     }
     writer.add.begin();
     if skip > 0 {

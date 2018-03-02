@@ -45,9 +45,11 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
             Tag::Item => {
                 self.body.begin();
             }
+            Tag::Rule => {
+                self.body.begin();
+            }
 
-            Tag::Rule
-            | Tag::Table(..)
+            Tag::Table(..)
             | Tag::TableHead
             | Tag::TableRow
             | Tag::TableCell
@@ -80,7 +82,10 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                     .close(hashmap! { "tag".into() => "bullet".into() });
             }
 
-            Tag::Rule => (),
+            Tag::Rule => {
+                self.body
+                    .close(hashmap! { "tag".into() => "hr".into() });
+            }
             Tag::Image(_, _) => (), // shouldn't happen, handled in start
 
             Tag::FootnoteDefinition(_)

@@ -117,8 +117,8 @@ kbd {
     }
 
     div[data-tag="caret"]::before {
-        border-left: 1px red solid;
-        border-right: 1px red solid;
+        border-left: 1px #089 solid;
+        border-right: 1px #089 solid;
         margin-right: -1px;
         margin-left: -1px;
         content: '';
@@ -131,6 +131,14 @@ kbd {
 
     div[data-tag="caret"][data-client="right"] {
         border-right-color: blue;
+    }
+    
+    div[data-tag="hr"] {
+        margin: 16px 0;
+        height: 2px;
+        min-height: 0 !important;
+        border-bottom: 1px solid #eee;
+        background: #ccc;
     }
 
     // @keyframes caret {
