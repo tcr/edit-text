@@ -10904,6 +10904,29 @@ else if (document.body.id == 'client') {
         });
     }
 }
+else if (document.body.id == 'presentation') {
+    let url = 'ws://' + window.location.host.replace(/\:\d+/, ':8002') + '/$presenter';
+    let nativeSocket = new WebSocket(url);
+    let md = null;
+    nativeSocket.onmessage = function (event) {
+        let packet = JSON.parse(event.data);
+        if (packet.MarkdownUpdate) {
+            md = packet.MarkdownUpdate;
+            window.remark.create({
+                source: md,
+            });
+        }
+        // Module.wasm_command({
+        //   SyncClientCommand: JSON.parse(event.data),
+        // });
+    };
+    setInterval(() => {
+        if (md == null) {
+            nativeSocket.send(JSON.stringify({ RequestMarkdown: null }));
+        }
+    }, 500);
+    nativeSocket.send(JSON.stringify({ RequestMarkdown: null }));
+}
 else {
     document.body.innerHTML = '404';
 }
