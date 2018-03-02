@@ -308,7 +308,7 @@ impl Client {
     }
 
     pub fn handle_task(&mut self, value: Task) -> Result<(), Error> {
-        let start = ::std::time::Instant::now();
+        // let start = ::std::time::Instant::now();
 
         match value.clone() {
             // Handle commands from Native.

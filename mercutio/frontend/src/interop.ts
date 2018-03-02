@@ -72,7 +72,7 @@ export function newString(module, str) {
 export function instantiate(js_command_callback) {
   let Module = (<any>{});
 
-  return fetchAndInstantiate("/mercutio.wasm", {
+  return fetchAndInstantiate("/$/mercutio.wasm", {
     env: {
       js_command: function (inptr) {
         let data = copyCStr(Module, inptr);
