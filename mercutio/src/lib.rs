@@ -26,11 +26,17 @@ extern crate ws;
 extern crate colored;
 extern crate pulldown_cmark;
 extern crate pulldown_cmark_to_cmark;
+#[cfg(not(target_arch="wasm32"))]
+#[macro_use]
+extern crate diesel;
+#[cfg(not(target_arch="wasm32"))]
+extern crate dotenv;
 
 pub mod server;
 #[macro_use]
 pub mod wasm;
 pub mod markdown;
+
 
 #[cfg(not(target_arch="wasm32"))]
 pub use server::sync;

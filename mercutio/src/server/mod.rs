@@ -44,3 +44,5 @@ macro_rules! log_sync {
 // Macros can only be used after they are defined
 #[cfg(not(target_arch="wasm32"))]
 pub mod sync;
+#[cfg(not(target_arch="wasm32"))]
+pub mod schema;

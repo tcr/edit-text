@@ -7,3 +7,4 @@ Vagrantfile
 .vagrant
 node_modules
 dist/mercutio-sync
+*.sqlite3
