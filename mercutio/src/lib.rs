@@ -31,6 +31,8 @@ extern crate pulldown_cmark_to_cmark;
 extern crate diesel;
 #[cfg(not(target_arch="wasm32"))]
 extern crate dotenv;
+#[cfg(not(target_arch="wasm32"))]
+extern crate url;
 
 pub mod server;
 #[macro_use]

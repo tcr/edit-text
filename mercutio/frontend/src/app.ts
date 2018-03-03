@@ -20,9 +20,7 @@ declare var TextDecoder: any;
 // Entry.
 if (document.body.id == 'multi') {
   document.body.innerHTML = `
-<div id="footer"></div>
-
-<h1>Mercutio
+<h1>Multimonkey
   <button id="action-monkey">🙈🙉🙊</button>
   <span style="font-family: monospace; padding: 3px 5px;" id="timer"></span>
 </h1>
