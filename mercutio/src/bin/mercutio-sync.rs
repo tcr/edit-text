@@ -104,10 +104,9 @@ fn spawn_http_server(port: u16, client_proxy: bool) {
                                 .with_header(Header::from_bytes("content-type".as_bytes(), "image/png".as_bytes()).unwrap()));
                         }
 
-                        // // For callgrind
-                        // "/quit" | "/quit/" => {
-                        //     process::exit(0);
-                        // }
+                        "/$/quit" | "/$/quit/" => {
+                            process::exit(77);
+                        }
 
                         path => {
                             // Skip the initial "/$/"

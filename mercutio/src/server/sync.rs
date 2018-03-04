@@ -19,9 +19,12 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 use std::time::Instant;
-use crate::markdown::markdown_to_doc;
+use crate::markdown::{doc_to_markdown, markdown_to_doc};
 use rand::{thread_rng, Rng};
 use ron;
+use crossbeam_channel::unbounded;
+use crossbeam_channel::Sender as CCSender;
+use crossbeam_channel::Receiver as CCReceiver;
 use url::Url;
 
 use diesel;
@@ -270,7 +273,7 @@ pub fn create_post<'a>(conn: &SqliteConnection, id: &'a str, body: &'a str) -> u
         .expect("Error saving new post")
 }
 
-fn db_help() -> HashMap<String, String> {
+fn db_help() -> (SqliteConnection, HashMap<String, String>) {
     use super::schema::posts::dsl::*;
 
     let connection = db_connection();
@@ -279,17 +282,17 @@ fn db_help() -> HashMap<String, String> {
         .load::<Post>(&connection)
         .expect("Error loading posts");
     
-    create_post(&connection, "home", "# hello world");
+    // create_post(&connection, "home", "# hello world");
 
-    println!("Displaying {} posts", results.len());
+    // println!("Displaying {} posts", results.len());
     let mut ret = HashMap::new();
     for post in results {
         ret.insert(post.id.clone(), post.body.clone());
-        println!("{}", post.id);
-        println!("----------\n");
-        println!("{}", post.body);
+        // println!("{}", post.id);
+        // println!("----------\n");
+        // println!("{}", post.body);
     }
-    ret
+    (connection, ret)
 }
 
 const PAGE_TITLE_LEN: usize = 100;
@@ -325,6 +328,7 @@ impl ws::Handler for ClientHandler {
             &self.page_map, 
             self.page_id.as_ref().unwrap(),
             query == Some("helloworld"),
+            self.tx_db.clone(),
         ));
 
         // We will consume the out map.
@@ -395,9 +399,10 @@ struct ClientHandler {
     sync_state_mutex: Option<Arc<Mutex<SyncState>>>,
     out: Option<ws::Sender>,
     page_map: SharedPageMap,
+    tx_db: CCSender<(String, String)>,
 }
 
-fn allocate_page(page_map_mutex: &SharedPageMap, page_id: &str, helloworld: bool) -> Arc<Mutex<SyncState>> {
+fn allocate_page(page_map_mutex: &SharedPageMap, page_id: &str, helloworld: bool, tx_db: CCSender<(String, String)>) -> Arc<Mutex<SyncState>> {
     {
         let mut page_map = page_map_mutex.lock().unwrap();
 
@@ -413,7 +418,7 @@ fn allocate_page(page_map_mutex: &SharedPageMap, page_id: &str, helloworld: bool
     }
 
     // TODO period
-    spawn_server(page_map_mutex, 100, page_id);
+    spawn_server(page_map_mutex, 100, page_id, tx_db);
 
     {
         let page_map = page_map_mutex.lock().unwrap();
@@ -421,10 +426,11 @@ fn allocate_page(page_map_mutex: &SharedPageMap, page_id: &str, helloworld: bool
     }    
 }
 
-fn spawn_server(page_map: &SharedPageMap, period: u64, page_id: &str) {
+fn spawn_server(page_map: &SharedPageMap, period: u64, page_id: &str, tx_db: CCSender<(String, String)>) {
     let sync_state_mutex = page_map.lock().unwrap().get(page_id).clone().unwrap().clone();
     
     // Handle incoming packets.
+    let page_id = page_id.to_string();
     thread::Builder::new()
         .name("sync_thread_processor".into())
         .spawn(move || {
@@ -458,6 +464,10 @@ fn spawn_server(page_map: &SharedPageMap, period: u64, page_id: &str) {
 
                     log_sync!(Debug(format!("doc is now {:?}", sync_state.doc)));
 
+                    if let Ok(md) = doc_to_markdown(&sync_state.doc.0) {
+                        tx_db.try_send((page_id.to_string(), md));
+                    }
+
                     // Broadcast to all connected websockets.
                     let command = SyncClientCommand::Update(sync_state.doc.0.clone(), sync_state.version, client_id, op);
                     sync_state.client_bus.broadcast(command);
@@ -478,25 +488,39 @@ pub fn sync_socket_server(port: u16, period: usize) {
 
     println!("Listening sync_socket_server on 0.0.0.0:{}", port);
 
-    let original_pages = db_help();
+    let (conn, original_pages) = db_help();
+
+    let (tx_db, rx_db) = unbounded::<(String, String)>();
+    thread::spawn(move || {
+        while let Ok((id, body)) = rx_db.recv() {
+            // println!("(@) writing {:?}", id);
+            create_post(&conn, &id, &body);
+        }
+    });
 
     // When a page is started, we create a sync state mutex...
-    let page_map: SharedPageMap = Arc::new(Mutex::new(hashmap! {
-        "home".to_string() =>
-            Arc::new(Mutex::new(SyncState {
-                ops: VecDeque::new(),
-                version: 100,
-                history: hashmap![],
-                doc: default_doc(),
-                client_bus: Bus::new(255),
-            })),
+    let page_map: SharedPageMap = Arc::new(Mutex::new({
+        let mut hash = HashMap::new();
+        for (page_id, md) in original_pages {
+            println!("(@) Restoring {:?}", page_id);
+            if let Ok(doc) = markdown_to_doc(&md) {
+                hash.insert(page_id.to_string(), Arc::new(Mutex::new(SyncState {
+                    ops: VecDeque::new(),
+                    version: 100,
+                    history: hashmap![],
+                    doc: Doc(doc),
+                    client_bus: Bus::new(255),
+                })));
+            }
+        }
+        hash
     }));
 
-    spawn_server(&page_map, period as u64, "home");
+    spawn_server(&page_map, period as u64, "home", tx_db.clone());
 
     // Listen to incoming clients.
     ws::listen(url, {
-        take!(=page_map);
+        take!(=page_map, =tx_db);
         move |out| {
             // let sync_state_mutex = page_map.lock().unwrap().get("home").clone().unwrap().clone();
             
@@ -514,6 +538,7 @@ pub fn sync_socket_server(port: u16, period: usize) {
                 sync_state_mutex: None, //sync_state_mutex.clone(),
                 out: Some(out),
                 page_map: page_map.clone(),
+                tx_db: tx_db.clone(),
             }
         }
     });
