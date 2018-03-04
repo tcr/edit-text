@@ -125,7 +125,7 @@ else if (document.body.id == 'client') {
   }
 }
 else if (document.body.id == 'presentation') {
-  let url = 'ws://' + window.location.host.replace(/\:\d+/, ':8002') + '/$presenter';
+  let url = 'ws://' + window.location.host.replace(/\:\d+/, ':8002') + '/' + window.location.pathname.match(/^\/?([^\/]+)/)[1];
 
   let nativeSocket = new WebSocket(url);
 

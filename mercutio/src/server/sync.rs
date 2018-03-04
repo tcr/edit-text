@@ -278,7 +278,7 @@ fn db_help() -> (SqliteConnection, HashMap<String, String>) {
 
     let connection = db_connection();
     let results = posts
-        .limit(5)
+        // .limit(5)
         .load::<Post>(&connection)
         .expect("Error loading posts");
     

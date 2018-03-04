@@ -88,11 +88,6 @@ fn spawn_http_server(port: u16, client_proxy: bool) {
                             let _ = req.respond(Response::from_data(update_config_var(data))
                                 .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
                         }
-                        "/$/presentation" | "/$/presentation/" => {
-                            let data = template_dir.get(Path::new("presentation.html")).unwrap();
-                            let _ = req.respond(Response::from_data(update_config_var(data))
-                                .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
-                        }
                         // "/" | "/index.html" => {
                         //     let data = template_dir.get(Path::new("client.html")).unwrap();
                         //     let _ = req.respond(Response::from_data(update_config_var(data))
@@ -102,10 +97,6 @@ fn spawn_http_server(port: u16, client_proxy: bool) {
                             let data = template_dir.get(Path::new("favicon.png")).unwrap();
                             let _ = req.respond(Response::from_data(*data)
                                 .with_header(Header::from_bytes("content-type".as_bytes(), "image/png".as_bytes()).unwrap()));
-                        }
-
-                        "/$/quit" | "/$/quit/" => {
-                            process::exit(77);
                         }
 
                         path => {
@@ -120,9 +111,12 @@ fn spawn_http_server(port: u16, client_proxy: bool) {
                                 }
                             } else {
                                 // Possibly a page?
-                                let p = path.clone();
-                                println!("CHECK PAGE {:?}", p);
-                                if valid_page_id(&p[1..]) {
+                                let path_segs = (path[1..]).split('/').collect::<Vec<_>>();
+                                if valid_page_id(&path_segs[0]) && path_segs.len() == 2 && path_segs[1] == "presentation" {
+                                    let data = template_dir.get(Path::new("presentation.html")).unwrap();
+                                    let _ = req.respond(Response::from_data(update_config_var(data))
+                                        .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
+                                } else if valid_page_id(&path_segs[0]) && path_segs.len() == 1 {
                                     let data = template_dir.get(Path::new("client.html")).unwrap();
                                     let _ = req.respond(Response::from_data(update_config_var(data))
                                         .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
