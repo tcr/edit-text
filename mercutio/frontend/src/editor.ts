@@ -303,7 +303,8 @@ export default class Editor {
 
   nativeConnect() {
     let editor = this;
-    let url = 'ws://' + window.location.host.replace(/\:\d+/, ':8002') + '/' + editor.editorID;
+    let url = 'ws://' + window.location.host.replace(/\:\d+/, ':8002') + '/' + window.location.pathname.replace(/^\/+/, '') +
+      (window.location.hash == '#helloworld' ? '?helloworld' : '');
     this.nativeSocket = new WebSocket(url);
     this.nativeSocket.onopen = function (event) {
       console.log('Editor "%s" is connected.', editor.editorID);

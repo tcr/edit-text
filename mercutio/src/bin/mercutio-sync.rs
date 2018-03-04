@@ -28,6 +28,7 @@ use structopt::StructOpt;
 use std::process;
 use tiny_http::{Header, Response};
 use url::Url;
+use rand::{thread_rng, Rng};
 use std::panic;
 use std::path::Path;
 
@@ -72,13 +73,15 @@ fn spawn_http_server(port: u16, client_proxy: bool) {
                     };
 
                     match path.as_ref() {
-                        // "/" | "/index.html" => {
-                        //     // Redirect as random client
-                        //     let mut res = Response::empty(302);
-                        //     let mut h = Header::from_bytes(b"Location".to_vec(), "/client/".as_bytes()).unwrap();
-                        //     res.add_header(h);
-                        //     let _ = req.respond(res);
-                        // }
+                        "/" | "/index.html" => {
+                            // Redirect as random client
+                            let mut rng = thread_rng();
+                            let new_page_id = ::rand::seq::sample_iter(&mut rng, 0..26u8, 8).unwrap().into_iter().map(|x| (b'a' + x) as char).collect::<String>();
+                            let mut res = Response::empty(302);
+                            let mut h = Header::from_bytes(b"Location".to_vec(), format!("/{}#helloworld", new_page_id).as_bytes()).unwrap();
+                            res.add_header(h);
+                            let _ = req.respond(res);
+                        }
 
                         "/$/multi" | "/$/multi/" => {
                             let data = template_dir.get(Path::new("multi.html")).unwrap();
@@ -90,11 +93,11 @@ fn spawn_http_server(port: u16, client_proxy: bool) {
                             let _ = req.respond(Response::from_data(update_config_var(data))
                                 .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
                         }
-                        "/" | "index.html" => {
-                            let data = template_dir.get(Path::new("client.html")).unwrap();
-                            let _ = req.respond(Response::from_data(update_config_var(data))
-                                .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
-                        }
+                        // "/" | "/index.html" => {
+                        //     let data = template_dir.get(Path::new("client.html")).unwrap();
+                        //     let _ = req.respond(Response::from_data(update_config_var(data))
+                        //         .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
+                        // }
                         "/favicon.png" => {
                             let data = template_dir.get(Path::new("favicon.png")).unwrap();
                             let _ = req.respond(Response::from_data(*data)
@@ -108,12 +111,21 @@ fn spawn_http_server(port: u16, client_proxy: bool) {
 
                         path => {
                             // Skip the initial "/$/"
-                            if !path.starts_with("/$/") {
-                                let _ = req.respond(Response::from_string("404".to_owned()));
-                            } else {
+                            if path.starts_with("/$/") {
                                 let path = path.chars().skip(3).collect::<String>();
                                 if let Some(target) = dist_dir.get(Path::new(&path)) {
                                     let _ = req.respond(Response::from_data(*target)
+                                        .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
+                                } else {
+                                    let _ = req.respond(Response::from_string("404".to_owned()));
+                                }
+                            } else {
+                                // Possibly a page?
+                                let p = path.clone();
+                                println!("CHECK PAGE {:?}", p);
+                                if valid_page_id(&p[1..]) {
+                                    let data = template_dir.get(Path::new("client.html")).unwrap();
+                                    let _ = req.respond(Response::from_data(update_config_var(data))
                                         .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
                                 } else {
                                     // TODO real 404 error code

@@ -294,7 +294,7 @@ fn db_help() -> HashMap<String, String> {
 
 const PAGE_TITLE_LEN: usize = 100;
 
-fn valid_page_id(input: &str) -> bool {
+pub fn valid_page_id(input: &str) -> bool {
     if input.is_empty() || input.len() > PAGE_TITLE_LEN {
         return false;
     }
@@ -304,15 +304,16 @@ fn valid_page_id(input: &str) -> bool {
 
 impl ws::Handler for ClientHandler {
     fn on_open(&mut self, shake: ws::Handshake) -> ws::Result<()> {
-        let path = Url::parse("http://localhost/")
+        let url = Url::parse("http://localhost/")
             .unwrap()
             .join(shake.request.resource())
-            .unwrap()
-            .path()
-            .to_owned();
+            .unwrap();
+
+        let query = url.query();
+        let path = url.path().to_owned();
         
-        if valid_page_id(&path) {
-            self.page_id = Some(path);
+        if valid_page_id(&path[1..]) {
+            self.page_id = Some(path[1..].to_string());
         } else {
             // TODO actually bail out
             self.page_id = Some("home".to_string());
@@ -320,7 +321,11 @@ impl ws::Handler for ClientHandler {
 
         println!("(!) Client {:?} connected to {:?}", self.client_id, self.page_id);
 
-        self.sync_state_mutex = Some(allocate_page(&self.page_map, self.page_id.as_ref().unwrap()));
+        self.sync_state_mutex = Some(allocate_page(
+            &self.page_map, 
+            self.page_id.as_ref().unwrap(),
+            query == Some("helloworld"),
+        ));
 
         // We will consume the out map.
         let out = self.out.take().unwrap();
@@ -392,7 +397,7 @@ struct ClientHandler {
     page_map: SharedPageMap,
 }
 
-fn allocate_page(page_map_mutex: &SharedPageMap, page_id: &str) -> Arc<Mutex<SyncState>> {
+fn allocate_page(page_map_mutex: &SharedPageMap, page_id: &str, helloworld: bool) -> Arc<Mutex<SyncState>> {
     {
         let mut page_map = page_map_mutex.lock().unwrap();
 
@@ -401,7 +406,7 @@ fn allocate_page(page_map_mutex: &SharedPageMap, page_id: &str) -> Arc<Mutex<Syn
                 ops: VecDeque::new(),
                 version: 100,
                 history: hashmap![],
-                doc: default_doc(),
+                doc: if helloworld { default_doc() } else { default_new_doc(page_id) }, //default_doc(),
                 client_bus: Bus::new(255),
             })));
         }

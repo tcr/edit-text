@@ -25,7 +25,7 @@ macro_rules! clone_all {
     };
 }
 
-fn setup_client(name: &str, out: ws::Sender, ws_port: u16) -> (Arc<AtomicBool>, Arc<AtomicBool>, Sender<Task>) {
+fn setup_client(name: &str, page_id: &str, out: ws::Sender, ws_port: u16) -> (Arc<AtomicBool>, Arc<AtomicBool>, Sender<Task>) {
     let (tx_sync, rx) = unbounded();
 
     let monkey = Arc::new(AtomicBool::new(false));
@@ -62,10 +62,11 @@ fn setup_client(name: &str, out: ws::Sender, ws_port: u16) -> (Arc<AtomicBool>, 
     }
 
     // Connect to the sync server.
+    let page_id = page_id.to_owned();
     {
         clone_all!(tx_task);
         thread::spawn(move || {
-            ws::connect(format!("ws://127.0.0.1:{}", ws_port), move |out| {
+            ws::connect(format!("ws://127.0.0.1:{}/{}", ws_port, page_id), move |out| {
                 // While we receive packets from the client, send them to sync.
                 {
                     clone_all!(rx);
@@ -125,8 +126,8 @@ pub struct SocketHandler {
 
 impl ws::Handler for SocketHandler {
     fn on_open(&mut self, shake: ws::Handshake) -> Result<(), ws::Error> {
-        // let client_id = shake.request.resource()[1..].to_string();
-        let (alive, monkey, tx_task) = setup_client("$$$$$$", self.out.take().unwrap(), self.ws_port);
+        let page_id = shake.request.resource()[1..].to_string();
+        let (alive, monkey, tx_task) = setup_client("$$$$$$", &page_id, self.out.take().unwrap(), self.ws_port);
         self.alive = Some(alive);
         self.monkey = Some(monkey);
         self.tx_task = Some(tx_task);
