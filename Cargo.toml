@@ -1,5 +1,5 @@
 [workspace]
-members = ["oatie", "mercutio", "mercutio/mercutio-wasm", "cleanmark"]
+members = ["oatie", "mercutio", "mercutio/mercutio-wasm"]
 
 [profile.dev]
 debug = true

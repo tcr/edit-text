@@ -80,7 +80,10 @@ impl<'a> Iterator for DocToMarkdown<'a> {
                             let level = attrs["tag"][1..].parse::<i32>().unwrap_or(1);
                             Event::End(Tag::Header(level))
                         }
-                        "pre" => Event::End(Tag::CodeBlock("".into())),
+                        "pre" => {
+                            self.queue.push(Event::End(Tag::CodeBlock("".into())));
+                            Event::Text("\n".to_string().into())
+                        }
                         "bullet" => {
                             if let Some(DocGroup(ref post_attrs, _)) = self.doc_stepper.head() {
                                 if post_attrs["tag"] != "bullet" {

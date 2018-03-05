@@ -468,9 +468,11 @@ fn spawn_server(page_map: &SharedPageMap, period: u64, page_id: &str, tx_db: CCS
 
                     log_sync!(Debug(format!("doc is now {:?}", sync_state.doc)));
 
-                    if let Ok(md) = doc_to_markdown(&sync_state.doc.0) {
-                        tx_db.try_send((page_id.to_string(), md));
+                    // if let Ok(md) = doc_to_markdown(&sync_state.doc.0) {
+                    if let Ok(serialized) = ::ron::ser::to_string(&sync_state.doc.0) {
+                        tx_db.try_send((page_id.to_string(), serialized));
                     }
+                    // }
 
                     // Broadcast to all connected websockets.
                     let command = SyncClientCommand::Update(sync_state.doc.0.clone(), sync_state.version, client_id, op);
@@ -507,7 +509,7 @@ pub fn sync_socket_server(port: u16, period: usize) {
         let mut hash = HashMap::new();
         for (page_id, md) in original_pages {
             println!("(@) Restoring {:?}", page_id);
-            if let Ok(doc) = markdown_to_doc(&md) {
+            if let Ok(doc) = ::ron::de::from_str(&md) {
                 hash.insert(page_id.to_string(), Arc::new(Mutex::new(SyncState {
                     ops: VecDeque::new(),
                     version: 100,

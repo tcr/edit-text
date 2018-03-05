@@ -105,7 +105,7 @@ fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&mut Client) -> Result<(), Err
             false,
             true,
             Box::new(|client: &mut Client| {
-                client.client_op(|doc| add_char(doc, 13))
+                client.client_op(|doc| add_char(doc, 10))
             }),
         ),
     ]
