@@ -8,3 +8,4 @@ Vagrantfile
 node_modules
 dist/mercutio-sync
 *.sqlite3
+ubuntu*.log
