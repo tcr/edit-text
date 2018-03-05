@@ -91,9 +91,12 @@ else if (document.body.id == 'client') {
 
       setImmediate(() => {
         // Websocket port
+        let full_id =
+          window.location.pathname.replace(/^\/+/, '') +
+          (window.location.hash == '#helloworld' ? '?helloworld' : '');
         let url = window.location.host.match(/localhost/) ?
-          'ws://' + window.location.host.replace(/:\d+$|$/, ':8001') + '/' :
-          'ws://' + window.location.host + '/ws/';
+          'ws://' + window.location.host.replace(/:\d+$|$/, ':8001') + '/$/ws/' + full_id :
+          'ws://' + window.location.host + '/$/ws/' + full_id;
 
         let syncSocket = new WebSocket(url);
         editor.Module = Module; 

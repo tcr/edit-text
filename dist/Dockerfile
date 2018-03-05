@@ -19,5 +19,9 @@ EXPOSE 80
 
 RUN mkdir -p mercutio/log; mkdir -p log;
 
+RUN apt-get update
+
+RUN apt-get install sqlite3 libsqlite3-dev curl -y
+
 # Run app.py when the container launches
-CMD service nginx restart; while true; do RUST_BACKTRACE=1 MERCUTIO_SYNC_LOG=0 ./mercutio-sync; done
+CMD service nginx restart; RUST_BACKTRACE=1 MERCUTIO_SYNC_LOG=0 ./mercutio-sync

@@ -313,7 +313,11 @@ impl ws::Handler for ClientHandler {
             .unwrap();
 
         let query = url.query();
-        let path = url.path().to_owned();
+        let mut path = url.path().to_owned();
+
+        if path.starts_with("/$/ws/") {
+            path = path["/$/ws".len()..].to_string();
+        }
         
         if valid_page_id(&path[1..]) {
             self.page_id = Some(path[1..].to_string());
@@ -516,7 +520,7 @@ pub fn sync_socket_server(port: u16, period: usize) {
         hash
     }));
 
-    spawn_server(&page_map, period as u64, "home", tx_db.clone());
+    // spawn_server(&page_map, period as u64, "home", tx_db.clone());
 
     // Listen to incoming clients.
     ws::listen(url, {

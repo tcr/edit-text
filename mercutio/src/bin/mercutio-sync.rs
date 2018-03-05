@@ -12,7 +12,6 @@ extern crate serde_json;
 extern crate structopt;
 #[macro_use]
 extern crate taken;
-#[macro_use]
 extern crate structopt_derive;
 extern crate take_mut;
 extern crate tiny_http;
@@ -22,13 +21,13 @@ extern crate include_dir_macro;
 
 use include_dir_macro::include_dir;
 use mercutio::sync::*;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::thread;
 use structopt::StructOpt;
 use std::process;
 use tiny_http::{Header, Response};
 use url::Url;
-use rand::{thread_rng, Rng};
+use rand::thread_rng;
 use std::panic;
 use std::path::Path;
 

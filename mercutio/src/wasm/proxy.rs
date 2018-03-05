@@ -66,7 +66,7 @@ fn setup_client(name: &str, page_id: &str, out: ws::Sender, ws_port: u16) -> (Ar
     {
         clone_all!(tx_task);
         thread::spawn(move || {
-            ws::connect(format!("ws://127.0.0.1:{}/{}", ws_port, page_id), move |out| {
+            ws::connect(format!("ws://127.0.0.1:{}/$/ws/{}", ws_port, page_id), move |out| {
                 // While we receive packets from the client, send them to sync.
                 {
                     clone_all!(rx);
