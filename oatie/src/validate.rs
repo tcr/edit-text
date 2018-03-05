@@ -64,7 +64,7 @@ pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<()
                 }
             }
             DocChars(ref text) => {
-                ensure!(text.len() > 0, "Empty char string");
+                ensure!(!text.is_empty(), "Empty char string");
 
                 if let Some(block) = ctx.stack.last() {
                     ensure!(
