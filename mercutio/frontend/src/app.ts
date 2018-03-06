@@ -128,31 +128,107 @@ else if (document.body.id == 'client') {
   }
 }
 else if (document.body.id == 'presentation') {
-  let url = 'ws://' + window.location.host.replace(/\:\d+/, ':8002') + '/' + window.location.pathname.match(/^\/?([^\/]+)/)[1];
+  // Use cross-compiled WASM bundle.
+  let WASM = window['CONFIG'].wasm;
+  if (!WASM) {
+    let url = 'ws://' + window.location.host.replace(/\:\d+/, ':8002') + '/' +
+      window.location.pathname.match(/^\/?([^\/]+)/)[1];
 
-  let nativeSocket = new WebSocket(url);
+    let nativeSocket = new WebSocket(url);
 
-  let md = null;
-  nativeSocket.onmessage = function (event) {
-    let packet = JSON.parse(event.data);
-    if (packet.MarkdownUpdate) {
-      md = packet.MarkdownUpdate;
+    let md = null;
+    nativeSocket.onmessage = function (event) {
+      let packet = JSON.parse(event.data);
+      if (packet.MarkdownUpdate) {
+        md = packet.MarkdownUpdate;
 
-      (<any>window).remark.create({
-        source: md,
+        (<any>window).remark.create({
+          source: md,
+        });
+      }
+      // Module.wasm_command({
+      //   SyncClientCommand: JSON.parse(event.data),
+      // });
+    };
+
+    setInterval(() => {
+      if (md == null) {
+        nativeSocket.send(JSON.stringify({RequestMarkdown: null}));
+      }
+    }, 500);
+    nativeSocket.send(JSON.stringify({RequestMarkdown: null}));
+  } else {
+    let md;
+    let M;
+    interop.instantiate(function (data) {
+      // console.log('----> js_command:', data);
+
+      let json_data = JSON.parse(data);
+
+      // Make this async so we don't have deeply nested call stacks from Rust<->JS interop.
+      // setImmediate(() => {
+      //   editor.onNativeMessage({
+      //     data: data,
+      //   });
+      // });
+
+      console.log(json_data);
+
+      if (!md && json_data.MarkdownUpdate) {
+        md = json_data.MarkdownUpdate;
+
+        (<any>window).remark.create({
+          source: md,
+        });
+      }
+
+      if (json_data.Init) {
+        let id = setInterval(() => {
+          M.wasm_command({
+            NativeCommand: {
+              RequestMarkdown: null,
+            },
+          });
+
+          clearInterval(id);
+        }, 100);
+      }
+    })
+    .then(Module => {
+      M = Module;
+      Module.wasm_setup();
+
+      setImmediate(() => {
+        // Websocket port
+        let full_id =
+          window.location.pathname.match(/^\/?([^\/]+)/)[1];
+        let url = window.location.host.match(/localhost/) ?
+          'ws://' + window.location.host.replace(/:\d+$|$/, ':8001') + '/$/ws/' + full_id :
+          'ws://' + window.location.host + '/$/ws/' + full_id;
+
+        let syncSocket = new WebSocket(url);
+        // editor.Module = Module; 
+        // editor.syncSocket = syncSocket;
+        syncSocket.onopen = function (event) {
+          // console.log('Editor "%s" is connected.', '$presenter');
+        };
+
+        // Keepalive
+        // setInterval(() => {
+        //   syncSocket.send(JSON.stringify({
+        //     Keepalive: null,
+        //   }));
+        // }, 1000);
+
+        syncSocket.onmessage = function (event) {
+          // console.log('GOT SYNC SOCKET MESSAGE:', event.data);
+          Module.wasm_command({
+            SyncClientCommand: JSON.parse(event.data),
+          });
+        };
       });
-    }
-    // Module.wasm_command({
-    //   SyncClientCommand: JSON.parse(event.data),
-    // });
-  };
-
-  setInterval(() => {
-    if (md == null) {
-      nativeSocket.send(JSON.stringify({RequestMarkdown: null}));
-    }
-  }, 500);
-  nativeSocket.send(JSON.stringify({RequestMarkdown: null}));
+    })
+  }
 }
 else {
   document.body.innerHTML = '404';
