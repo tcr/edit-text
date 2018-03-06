@@ -430,6 +430,31 @@ fn allocate_page(page_map_mutex: &SharedPageMap, page_id: &str, helloworld: bool
     }    
 }
 
+fn correct_op_span(span: &DocSpan) -> Result<DocSpan, Error> {
+    let mut ret: DocSpan = vec![];
+
+    for elem in span {
+        match *elem {
+            DocGroup(ref attrs, ref span) => {
+                if attrs["tag"] != "caret" {
+                    let res = correct_op_span(span)?;
+                    ret.place(&DocGroup(attrs.clone(), res));
+                }
+            }
+            DocChars(ref text) => {
+                ret.place(&DocChars(text.clone()));
+            }
+        }
+    }
+    Ok(ret)
+}
+
+// Removes carets from docs
+// TODO rename this function
+pub fn correct_op(doc: &Doc) -> Result<Doc, Error> {
+    Ok(Doc(correct_op_span(&doc.0)?))
+}
+
 fn spawn_server(page_map: &SharedPageMap, period: u64, page_id: &str, tx_db: CCSender<(String, String)>) {
     let sync_state_mutex = page_map.lock().unwrap().get(page_id).clone().unwrap().clone();
     
@@ -469,7 +494,7 @@ fn spawn_server(page_map: &SharedPageMap, period: u64, page_id: &str, tx_db: CCS
                     log_sync!(Debug(format!("doc is now {:?}", sync_state.doc)));
 
                     // if let Ok(md) = doc_to_markdown(&sync_state.doc.0) {
-                    if let Ok(serialized) = ::ron::ser::to_string(&sync_state.doc.0) {
+                    if let Ok(serialized) = correct_op(&sync_state.doc).and_then(|x| Ok(::ron::ser::to_string(&x.0)?)) {
                         tx_db.try_send((page_id.to_string(), serialized));
                     }
                     // }
