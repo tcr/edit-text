@@ -17,6 +17,9 @@ body {
     border-bottom: 2px solid #aaa;
     padding: 5px 20px 8px;
     cursor: auto;
+    position: fixed;
+    width: 100%;
+    z-index: 100;
 }
 
 #logo {
@@ -91,7 +94,7 @@ kbd {
 // }
 
 .mote {
-    padding: 15px 30px 50px; // bottom padding for footer
+    padding: 60px 30px 50px; // bottom padding for footer
     margin: 0;
 }
 

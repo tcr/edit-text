@@ -61,7 +61,7 @@ impl<'a> Iterator for DocToMarkdown<'a> {
             }
             Some(DocChars(ref text)) => {
                 self.doc_stepper.next();
-                Some(Event::Text(text.to_string().into()))
+                Some(Event::Text(text.to_string().replace("\n", "  \n").into()))
             }
             None => {
                 if self.doc_stepper.is_done() {
