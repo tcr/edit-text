@@ -18,4 +18,6 @@ cp target/x86_64-unknown-linux-gnu/release/mercutio-sync dist
 
 cd dist
 
-tar c . | bzip2 | ssh root@sandbox.edit.io "bunzip2 | dokku tar:in edit-text"
+# Doing this in one command may cause dokku to hang, from experience
+tar c . | bzip2 | ssh root@sandbox.edit.io "bunzip2 > /tmp/mercutio.tar"
+ssh root@sandbox.edit.io "cat /tmp/mercutio.tar | dokku tar:in edit-text"

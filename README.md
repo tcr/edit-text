@@ -16,7 +16,7 @@ cargo install cargo-script
 To test out the text editor live, run the sync server in one terminal:
 
 ```
-./x.rs mercutio-sync
+./x.rs server
 ```
 
 Then go to <localhost:8000> and start editing.
@@ -26,13 +26,13 @@ Then go to <localhost:8000> and start editing.
 Set the sync server with this switch:
 
 ```
-./x.rs mercutio-sync --client-proxy
+./x.rs server --client-proxy
 ```
 
 In another terminal, run the client proxy:
 
 ```
-./x.rs wasm-proxy
+./x.rs client-proxy
 ```
 
 Then go to <localhost:8000> and start editing.
@@ -50,4 +50,4 @@ cat in/1 | cargo run --bin oatie-transform
 
 Apache-2.0
 
-Bear by Alexander Krasnov from the Noun Project
+Favicon bear by Alexander Krasnov from the Noun Project

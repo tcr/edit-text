@@ -1,32 +1,34 @@
 #!/usr/bin/env run-cargo-script
 //! ```cargo
 //! [dependencies]
-//! command-macros = "*"
+//! command-macro = "0.1.0"
 //! failure = "*"
 //! quicli = "*"
-//! clap = "*"
 //! ```
 
 #![deny(warnings)]
 
 #[macro_use]
-extern crate command_macros;
+extern crate command_macro;
 #[macro_use]
 extern crate quicli;
-extern crate clap;
 
 use quicli::prelude::*;
-// use clap::{App, SubCommand, Arg};
+use command_macro::*;
 
 // Add cool slogan for your app here, e.g.:
-/// Get first n lines of a file
+/// edit-text build scripts
 #[derive(StructOpt)]
-#[structopt(name = "edit-text", about = "Build scripts for mercutio and oatie")]
+#[structopt(
+    name = "edit-text",
+    about = "Build scripts for mercutio and oatie",
+    author = "",
+)]
 enum Cli {
-    #[structopt(name = "wasm")]
+    #[structopt(name = "wasm-build")]
     Wasm,
 
-    #[structopt(name = "wasm-proxy")]
+    #[structopt(name = "client-proxy")]
     WasmProxy {
         args: Vec<String>,
     },
@@ -36,19 +38,19 @@ enum Cli {
         args: Vec<String>,
     },
 
-    #[structopt(name = "mercutio-sync")]
+    #[structopt(name = "server")]
     MercutioSyncRun {
         #[structopt(long = "log", help = "Export a log")]
         log: bool,
         args: Vec<String>,
     },
 
-    #[structopt(name = "mercutio-sync-build")]
+    #[structopt(name = "server-build")]
     MercutioSyncBuild {
         args: Vec<String>,
     },
 
-    #[structopt(name = "mercutio-sync-callgrind")]
+    #[structopt(name = "server-callgrind")]
     MercutioSyncCallgrind {
         args: Vec<String>,
     },
@@ -63,29 +65,15 @@ enum Cli {
         args: Vec<String>,
     },
 
-    #[structopt(name = "js-build")]
+    #[structopt(name = "frontend-build")]
     JsBuild {
         args: Vec<String>,
     },
 
-    #[structopt(name = "js-watch")]
+    #[structopt(name = "frontend-watch")]
     JsWatch {
         args: Vec<String>,
     },
-}
-
-trait ExpectSuccess {
-    fn expect_success(&self) -> &Self;
-}
-
-impl ExpectSuccess for ::std::process::ExitStatus {
-    fn expect_success(&self) -> &Self {
-        if !self.success() {
-            ::std::process::exit(1);
-        }
-        // assert_eq!(self.success(), true, "Command was not successful.");
-        self
-    }
 }
 
 main!(|| {
@@ -102,136 +90,130 @@ main!(|| {
     match args {
         Cli::Wasm => {
             // wasm must always be --release
-            let release_flag = vec!["--release"];
+            let release_flag = Some("--release");
 
-            cmd!(
-                cargo check [release_flag] ("--lib") ("--target") ("wasm32-unknown-unknown")
-            )
-                .current_dir("mercutio/mercutio-wasm")
-                // .env("CARGO_INCREMENTAL", "1")
-                .status()?
-                .expect_success();
+            command!(
+                cd: "mercutio/mercutio-wasm",
+                "cargo check {release_flag} --lib --target wasm32-unknown-unknown",
+                release_flag=release_flag,
+            ).execute();
 
-            cmd!(
-                cargo build [release_flag] ("--lib") ("--target") ("wasm32-unknown-unknown")
-            )
-                .current_dir("mercutio/mercutio-wasm")
-                // .env("CARGO_INCREMENTAL", "1")
-                .status()?
-                .expect_success();
+            command!(
+                cd: "mercutio/mercutio-wasm",
+                "cargo build {release_flag} --lib --target wasm32-unknown-unknown",
+                release_flag=release_flag,
+            ).execute();
 
-            cmd!(
-                cp ("../../target/wasm32-unknown-unknown/release/mercutio.wasm") ("../frontend/dist")
-            )
-                .current_dir("mercutio/mercutio-wasm")
-                .status()?
-                .expect_success();
+            command!(
+                cd: "mercutio/mercutio-wasm",
+                "cp ../../target/wasm32-unknown-unknown/release/mercutio.wasm ../frontend/dist",
+            ).execute();
         }
 
         Cli::WasmProxy { args } => {
-            let release_flag = if release { vec!["--release"] } else { vec![] };
-            cmd!(
-                cargo run [release_flag] ("--bin") ("mercutio-wasm-proxy") ("--") [args]
-            )
-                .current_dir("mercutio")
-                .env("RUST_BACKTRACE", "1")
-                .env("CARGO_INCREMENTAL", "1")
-                .env("MERCUTIO_WASM_LOG", "0")
-                .status()?
-                .expect_success();
+            let release_flag = if release { Some("--release") } else { None };
+            
+            command!(
+                cd: "mercutio",
+                env: CARGO_INCREMENTAL=1,
+                env: MERCUTIO_WASM_LOG=0,
+                env: RUST_BACKTRACE=1,
+                "cargo run {release_flag} --bin mercutio-wasm-proxy -- {args}",
+                release_flag=release_flag,
+                args=args,
+            ).execute();
         }
 
         Cli::OatieBuild { args } => {
-            let release_flag = if release { vec!["--release"] } else { vec![] };
-            cmd!(
-                cargo build [release_flag] [args]
-            )
-                .current_dir("oatie")
-                .env("CARGO_INCREMENTAL", "1")
-                .status()?
-                .expect_success();
+            let release_flag = if release { Some("--release") } else { None };
+
+            command!(
+                cd: "oatie",
+                env: CARGO_INCREMENTAL=1,
+                "cargo build {release_flag} {args}",
+                release_flag=release_flag,
+                args=args,
+            ).execute();
         }
 
         Cli::MercutioSyncRun { log, args } => {
-            let release_flag = if release { vec!["--release"] } else { vec![] };
-            cmd!(
-                cargo run ("--bin") ("mercutio-sync") [release_flag] ("--") ("--period") ("100") [args]
-            )
-                .current_dir("mercutio")
-                .env("RUST_BACKTRACE", "1")
-                .env("CARGO_INCREMENTAL", "1")
-                .env("MERCUTIO_SYNC_LOG", if log { "1" } else { "0" })
-                .status()?
-                .expect_success();
+            let release_flag = if release { Some("--release") } else { None };
+
+            command!(
+                cd: "mercutio",
+                env: CARGO_INCREMENTAL=1,
+                env: MERCUTIO_WASM_LOG=if log { 1 } else { 0 },
+                env: RUST_BACKTRACE=1,
+                "cargo run {release_flag} --bin mercutio-sync -- --period 100 {args}",
+                release_flag=release_flag,
+                args=args,
+            ).execute();
         }
 
         Cli::MercutioSyncBuild { args } => {
-            let release_flag = if release { vec!["--release"] } else { vec![] };
-            cmd!(
-                cargo build [release_flag] ("--bin") ("mercutio-sync") ("--") ("--period") ("100") [args]
-            )
-                .current_dir("mercutio")
-                .env("RUST_BACKTRACE", "1")
-                .env("CARGO_INCREMENTAL", "1")
-                .status()?
-                .expect_success();
+            let release_flag = if release { Some("--release") } else { None };
+
+            command!(
+                cd: "mercutio",
+                env: CARGO_INCREMENTAL=1,
+                env: RUST_BACKTRACE=1,
+                "cargo build {release_flag} --bin mercutio-sync {args}",
+                release_flag=release_flag,
+                args=args,
+            ).execute();
         }
 
         Cli::MercutioSyncCallgrind { args } => {
-            cmd!(
-                cargo build ("--release") ("--bin") ("mercutio-sync")
-            )
-                .current_dir("mercutio")
-                .env("CARGO_INCREMENTAL", "1")
-                .status()?
-                .expect_success();
+            command!(
+                cd: "mercutio",
+                env: CARGO_INCREMENTAL=1,
+                "cargo build --release --bin mercutio-sync",
+            ).execute();
 
-            cmd!(
-                cargo profiler callgrind ("--bin") ("./target/release/mercutio-sync") ("--") ("--period") ("100") [args]
-            )
-                .env("RUST_BACKTRACE", "1")
-                .env("MERCUTIO_SYNC_LOG", "1")
-                .status()?
-                .expect_success();
+            command!(
+                cd: "mercutio",
+                env: MERCUTIO_SYNC_LOG=1,
+                env: RUST_BACKTRACE=1,
+                "cargo profiler callgrind --bin ./target/release/mercutio-sync -- --period 100 {args}",
+                args=args,
+            ).execute();
         }
 
         Cli::Replay { args } => {
-            let release_flag = if release { vec!["--release"] } else { vec![] };
-            cmd!(
-                cargo run [release_flag] ("--bin") ("mercutio-replay") ("--") [args]
-            )
-                .current_dir("mercutio")
-                .env("CARGO_INCREMENTAL", "1")
-                .env("RUST_BACKTRACE", "1")
-                .status()?
-                .expect_success();
+            let release_flag = if release { Some("--release") } else { None };
+
+            command!(
+                cd: "mercutio",
+                env: CARGO_INCREMENTAL=1,
+                env: RUST_BACKTRACE=1,
+                "cargo run {release_flag} --bin mercutio-replay -- {args}",
+                release_flag=release_flag,
+                args=args,
+            ).execute();
         }
 
         Cli::Test { args } => {
-            cmd!(
-                ("./transform-test.sh") [args]
-            )
-                .current_dir("oatie")
-                .status()?
-                .expect_success();
+            command!(
+                cd: "oatie",
+                "./transform-test.sh {args}",
+                args=args,
+            ).execute();
         }
 
         Cli::JsBuild { args } => {
-            cmd!(
-                npx webpack ("./src/app.ts") ("./dist/mercutio.js") [args]
-            )
-                .current_dir("mercutio/frontend")
-                .status()?
-                .expect_success();
+            command!(
+                cd: "mercutio/frontend",
+                "npx webpack ./src/app.ts ./dist/mercutio.js {args}",
+                args=args,
+            ).execute();
         }
 
         Cli::JsWatch { args } => {
-            cmd!(
-                npx webpack ("--watch") ("./src/app.ts") ("./dist/mercutio.js") [args]
-            )
-                .current_dir("mercutio/frontend")
-                .status()?
-                .expect_success();
+            command!(
+                cd: "mercutio/frontend",
+                "npx webpack --watch ./src/app.ts ./dist/mercutio.js {args}",
+                args=args,
+            ).execute();
         }
     }
 });
