@@ -6,7 +6,7 @@
 //! quicli = "*"
 //! ```
 
-#![deny(warnings)]
+// #![deny(warnings)]
 
 #[macro_use]
 extern crate command_macro;
