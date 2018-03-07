@@ -5,13 +5,10 @@
 use std::fs::File;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
-use std::io::prelude::*;
-use ron;
 use super::*;
 
 lazy_static! {
     static ref LOG_WASM_FILE: Arc<Mutex<File>> = {
-        use std::env::var;
         let path = Path::new("./log/client");
         Arc::new(Mutex::new(File::create(path).unwrap()))
     };

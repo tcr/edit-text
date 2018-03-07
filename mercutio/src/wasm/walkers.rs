@@ -253,7 +253,6 @@ impl Walker {
                 }
                 Some(CurWithGroup(..)) => {
                     match_cur.enter();
-                    println!("----- hm.... {:?}", match_doc.head());
                     match_doc.enter();
                 }
                 None => if match_cur.is_done() {
@@ -315,7 +314,7 @@ impl Walker {
                 if rstepper.next().is_none() {
                     break;
                 }
-                if let Some(DocGroup(attrs, _)) = rstepper.doc.head() {
+                if let Some(DocGroup(_, _)) = rstepper.doc.head() {
                     depth -= 1;
                 } else if let None = rstepper.doc.head() {
                     depth += 1;
@@ -388,7 +387,6 @@ impl Walker {
         let mut matched = false;
         take_mut::take(&mut self.stepper, |prev_stepper| {
             let mut stepper = prev_stepper.clone();
-            let target_pos = stepper.caret_pos + 1;
 
             // Iterate until we match the cursor.
             matched = loop {
@@ -438,7 +436,7 @@ impl Walker {
     }
 
     pub fn back_char(&mut self) -> &mut Walker {
-        let res = take_mut::take(&mut self.stepper, |prev_stepper| {
+        let _ = take_mut::take(&mut self.stepper, |prev_stepper| {
             let mut rstepper = prev_stepper.clone().rev();
 
             let target_pos = rstepper.caret_pos - 1;

@@ -1,32 +1,19 @@
 //! Connecting to wasm.
 
 extern crate mercutio; 
-#[macro_use]
 extern crate failure;
-#[macro_use]
 extern crate maplit;
 extern crate oatie;
 extern crate rand;
 extern crate serde;
-#[macro_use]
-extern crate serde_derive;
 extern crate serde_json;
 extern crate take_mut;
 #[macro_use]
 extern crate lazy_static;
 
-use mercutio::wasm::actions::*;
-use failure::Error;
-use rand::Rng;
-use std::{panic, process};
 use std::sync::{Arc, Mutex};
-use std::sync::atomic::{AtomicBool, AtomicUsize};
-use std::sync::atomic::Ordering;
-use std::thread;
-use std::time::Duration;
-use mercutio::*;
+use std::sync::atomic::AtomicBool;
 use mercutio::wasm::*;
-use oatie::doc::*;
 
 use std::mem;
 use std::ffi::CString;
@@ -46,10 +33,6 @@ pub extern "C" fn dealloc_str(ptr: *mut c_char) {
         let _ = CString::from_raw(ptr);
     }
 }
-
-use std::collections::HashMap;
-
-
 
 extern "C" {
     /// Send a command *to* the js client.

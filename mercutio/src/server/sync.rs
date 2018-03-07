@@ -2,29 +2,21 @@ use bus::Bus;
 use failure::Error;
 use oatie::OT;
 use oatie::doc::*;
-use oatie::parse::debug_pretty;
 use oatie::schema::RtfSchema;
-use oatie::transform::transform;
 use oatie::validate::validate_doc;
 use serde_json;
-use std::{panic, process};
-use std::collections::{HashSet, HashMap};
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 use crate::{SyncClientCommand, SyncServerCommand};
 use ws;
 use std::collections::VecDeque;
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::Path;
-use std::time::Instant;
-use crate::markdown::{doc_to_markdown, markdown_to_doc};
+use crate::markdown::markdown_to_doc;
 use rand::{thread_rng, Rng};
 use ron;
 use crossbeam_channel::unbounded;
 use crossbeam_channel::Sender as CCSender;
-use crossbeam_channel::Receiver as CCReceiver;
 use url::Url;
 
 use diesel;
@@ -340,7 +332,7 @@ impl ws::Handler for ClientHandler {
 
         // Forcibly set this new client's initial document state.
         {
-            let mut sync_state_mutex = self.sync_state_mutex.clone().unwrap();
+            let sync_state_mutex = self.sync_state_mutex.clone().unwrap();
             let mut sync_state = sync_state_mutex.lock().unwrap();
 
             let command = SyncClientCommand::Init(
@@ -348,15 +340,16 @@ impl ws::Handler for ClientHandler {
                 sync_state.doc.0.clone(),
                 sync_state.version
             );
-            out.send(serde_json::to_string(&command).unwrap());
+            out.send(serde_json::to_string(&command).unwrap())?;
 
             // Forward packets from sync bus to all clients.
-            let mut rx = { sync_state.client_bus.add_rx() };
-            thread::spawn(|| {
+            let rx = { sync_state.client_bus.add_rx() };
+            thread::spawn(|| -> Result<(), Error> {
                 take!(out, mut rx);
                 while let Ok(command) = rx.recv() {
-                    out.send(serde_json::to_string(&command).unwrap());
+                    out.send(serde_json::to_string(&command).unwrap())?;
                 }
+                Ok(())
             });
         }
 
@@ -460,14 +453,14 @@ fn spawn_server(page_map: &SharedPageMap, period: u64, page_id: &str, tx_db: CCS
     
     // Handle incoming packets.
     let page_id = page_id.to_string();
-    thread::Builder::new()
+    let _ = thread::Builder::new()
         .name("sync_thread_processor".into())
-        .spawn(move || {
+        .spawn(move || -> Result<(), Error> {
             loop {
                 // Wait a set duration between transforms.
                 thread::sleep(Duration::from_millis(period as u64));
 
-                let now = Instant::now();
+                // let now = Instant::now();
 
                 let mut sync_state = sync_state_mutex.lock().unwrap();
 
@@ -475,7 +468,7 @@ fn spawn_server(page_map: &SharedPageMap, period: u64, page_id: &str, tx_db: CCS
                 while let Some((client_id, input_version, op)) = sync_state.ops.pop_front() {
                     let target_version = sync_state.version;
 
-                    log_sync!(Debug(format!("client {:?} sent {:?}", client_id, op)));
+                    // log_sync!(Debug(format!("client {:?} sent {:?}", client_id, op)));
                     
                     // let res = action_sync(&doc, new_op, op_group).unwrap();
 
@@ -483,7 +476,7 @@ fn spawn_server(page_map: &SharedPageMap, period: u64, page_id: &str, tx_db: CCS
                     let op = update_operation(op, &sync_state.history, target_version, input_version);
                     sync_state.history.insert(target_version, op.clone());
 
-                    log_sync!(Debug(format!("updated op to {:?}", op)));
+                    // log_sync!(Debug(format!("updated op to {:?}", op)));
 
                     // Update the document with this operation.
                     sync_state.doc = Op::apply(&sync_state.doc, &op);
@@ -491,11 +484,11 @@ fn spawn_server(page_map: &SharedPageMap, period: u64, page_id: &str, tx_db: CCS
                     
                     validate_doc(&sync_state.doc).expect("Validation error");
 
-                    log_sync!(Debug(format!("doc is now {:?}", sync_state.doc)));
+                    // log_sync!(Debug(format!("doc is now {:?}", sync_state.doc)));
 
                     // if let Ok(md) = doc_to_markdown(&sync_state.doc.0) {
                     if let Ok(serialized) = correct_op(&sync_state.doc).and_then(|x| Ok(::ron::ser::to_string(&x.0)?)) {
-                        tx_db.try_send((page_id.to_string(), serialized));
+                        tx_db.try_send((page_id.to_string(), serialized))?;
                     }
                     // }
 
@@ -504,7 +497,7 @@ fn spawn_server(page_map: &SharedPageMap, period: u64, page_id: &str, tx_db: CCS
                     sync_state.client_bus.broadcast(command);
                 }
 
-                let elapsed = now.elapsed();
+                // let elapsed = now.elapsed();
                 // println!("sync duration: {}s, {}us", elapsed.as_secs(), elapsed.subsec_nanos()/1_000);
             }
         });
@@ -512,7 +505,8 @@ fn spawn_server(page_map: &SharedPageMap, period: u64, page_id: &str, tx_db: CCS
 
 type SharedPageMap = Arc<Mutex<HashMap<String, Arc<Mutex<SyncState>>>>>;
 
-pub fn sync_socket_server(port: u16, period: usize) {
+// TODO use _period
+pub fn sync_socket_server(port: u16, _period: usize) {
     log_sync!(Spawn);
 
     let url = format!("0.0.0.0:{}", port);
@@ -550,7 +544,7 @@ pub fn sync_socket_server(port: u16, period: usize) {
     // spawn_server(&page_map, period as u64, "home", tx_db.clone());
 
     // Listen to incoming clients.
-    ws::listen(url, {
+    let _ = ws::listen(url, {
         take!(=page_map, =tx_db);
         move |out| {
             // let sync_state_mutex = page_map.lock().unwrap().get("home").clone().unwrap().clone();

@@ -1,22 +1,13 @@
-use super::actions::*;
 use super::*;
-use super::super::{SyncClientCommand, SyncServerCommand};
+use super::super::SyncClientCommand;
 use crossbeam_channel::{unbounded, Sender};
 use failure::Error;
-use oatie::OT;
-use oatie::doc::*;
-use rand;
-use rand::Rng;
 use serde_json;
-use std::{panic, process};
-use std::sync::{Arc, Mutex};
-use std::sync::atomic::{AtomicBool, AtomicUsize};
+use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::thread;
-use std::time::Duration;
 use ws;
-use super::client::button_handlers;
-use super::monkey::*;
 use wasm::monkey::setup_monkey;
 
 macro_rules! clone_all {
@@ -32,12 +23,13 @@ fn setup_client(name: &str, page_id: &str, out: ws::Sender, ws_port: u16) -> (Ar
     let alive = Arc::new(AtomicBool::new(true));
 
     let (tx_client, rx_client) = unbounded();
-    thread::spawn(|| {
+    thread::spawn(|| -> Result<(), Error> {
         take!(rx_client, out);
         while let Ok(req) = rx_client.recv() {
             let json = serde_json::to_string(&req).unwrap();
-            out.send(json);
+            out.send(json)?;
         }
+        Ok(())
     });
 
     let mut client = Client {
@@ -92,7 +84,7 @@ fn setup_client(name: &str, page_id: &str, out: ws::Sender, ws_port: u16) -> (Ar
                                 println!("Packet error: {:?}", err);
                             }
                             Ok(value) => {
-                                tx_task.send(Task::SyncClientCommand(value));
+                                let _ = tx_task.send(Task::SyncClientCommand(value));
                             }
                         }
 
@@ -105,7 +97,8 @@ fn setup_client(name: &str, page_id: &str, out: ws::Sender, ws_port: u16) -> (Ar
     }
 
     // Operate on all incoming tasks.
-    thread::Builder::new().name(format!("client-{}-task", name))
+    let _ = thread::Builder::new()
+        .name(format!("client-{}-task", name))
         .spawn::<_, Result<(), Error>>(move || {
             while let Ok(task) = rx_task.recv() {
                 client.handle_task(task)?;
@@ -151,7 +144,7 @@ impl ws::Handler for SocketHandler {
         Ok(())
     }
 
-    fn on_error(&mut self, err: ws::Error) {
+    fn on_error(&mut self, _err: ws::Error) {
         println!("Killing after error");
         self.monkey.as_ref().unwrap().store(false, Ordering::Relaxed);
         self.alive.as_ref().unwrap().store(false, Ordering::Relaxed);

@@ -1,14 +1,7 @@
-
 use super::*;
 use failure::Error;
 use oatie::doc::*;
-use oatie::schema::RtfSchema;
-use rand;
-use rand::Rng;
-use serde_json;
-use std::{panic, process};
-use std::sync::{Arc, Mutex};
-use std::sync::atomic::{AtomicBool, AtomicUsize};
+use std::sync::atomic::{AtomicBool};
 use std::sync::atomic::Ordering;
 use oatie::validate::validate_doc;
 use crate::markdown;
@@ -16,14 +9,7 @@ use crate::markdown;
 #[cfg(not(target_arch="wasm32"))]
 use super::{SyncClientCommand, SyncServerCommand};
 #[cfg(not(target_arch="wasm32"))]
-use crossbeam_channel::{unbounded, Sender};
-#[cfg(not(target_arch="wasm32"))]
-use ws;
-#[macro_use]
-use lazy_static;
-
-#[cfg(not(target_arch="wasm32"))]
-use self::proxy::*;
+use crossbeam_channel::Sender;
 
 // Commands to send back to native.
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -168,7 +154,7 @@ impl Default for RandomCursorContext {
 pub fn collect_cursors_span(ctx: &mut RandomCursorContext, span: &DocSpan) -> Result<(), Error> {
     for elem in span {
         match *elem {
-            DocGroup(ref attrs, ref span) => {
+            DocGroup(_, ref span) => {
                 {
                     let mut c = ctx.cur.clone();
                     c.place(&CurElement::CurGroup);
@@ -233,7 +219,7 @@ fn native_command(client: &mut Client, req: NativeCommand) -> Result<(), Error> 
         }
         NativeCommand::RandomTarget(pos) => {
             let cursors = collect_cursors(&client.client_doc.doc)?;
-            let idx = ((pos * (cursors.len() as f64)) as usize);
+            let idx = (pos * (cursors.len() as f64)) as usize;
 
             client.client_op(|doc| cur_to_caret(doc, &cursors[idx]))?;
         }
@@ -241,12 +227,13 @@ fn native_command(client: &mut Client, req: NativeCommand) -> Result<(), Error> 
             client.client_op(|doc| cur_to_caret(doc, &cur))?;
         }
         NativeCommand::Monkey(setting) => {
+            println!("received monkey setting: {:?}", setting);
             client.monkey.store(setting, Ordering::Relaxed);
         }
         NativeCommand::RequestMarkdown => {
             let markdown = markdown::doc_to_markdown(&client.client_doc.doc.0)?;
             // TODO
-            client.send_client(&ClientCommand::MarkdownUpdate(markdown));
+            client.send_client(&ClientCommand::MarkdownUpdate(markdown))?;
         }
     }
     Ok(())
@@ -271,10 +258,10 @@ pub struct Client {
     pub tx_sync: Sender<SyncServerCommand>,
 }
 
-use std::cell::RefCell;
-thread_local! {
-    static BAR: RefCell<Vec<i64>> = RefCell::new(vec![]);
-}
+// use std::cell::RefCell;
+// thread_local! {
+//     static BAR: RefCell<Vec<i64>> = RefCell::new(vec![]);
+// }
 
 impl Client {
     // TODO this
@@ -390,9 +377,9 @@ impl Client {
             }
         }
 
-        fn average(numbers: &[i64]) -> f32 {
-            numbers.iter().sum::<i64>() as f32 / numbers.len() as f32
-        }
+        // fn average(numbers: &[i64]) -> f32 {
+        //     numbers.iter().sum::<i64>() as f32 / numbers.len() as f32
+        // }
 
         // BAR.with(|bar| {
         //     let mut b = bar.borrow_mut();

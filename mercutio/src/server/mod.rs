@@ -1,4 +1,3 @@
-#[macro_use] use serde;
 use crate::*;
 use std::path::Path;
 use std::sync::Arc;

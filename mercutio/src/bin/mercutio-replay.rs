@@ -1,4 +1,4 @@
-#![feature(crate_in_paths, use_nested_groups)]
+#![feature(crate_in_paths)]
 
 extern crate failure;
 extern crate ron;
@@ -9,7 +9,6 @@ extern crate maplit;
 extern crate colored;
 #[macro_use]
 extern crate quicli;
-#[macro_use]
 extern crate structopt;
 #[macro_use]
 extern crate structopt_derive;
@@ -58,7 +57,7 @@ struct Opt {
 
 main!(|opts: Opt| {
     let (tx_line, rx_line) = unbounded();
-    ::std::thread::spawn::<_, Result<(), Error>>(move || {
+    ::std::thread::spawn(move || -> Result<(), Error> {
         let f = ::std::fs::File::open("log/client")?;
         let file = ::std::io::BufReader::new(&f);
 
@@ -66,7 +65,7 @@ main!(|opts: Opt| {
             if let Ok(line) = line {
                 if line.trim().len() != 0 {
                     let hi: LogWasm = ron::de::from_str(&line)?;
-                    tx_line.try_send(hi);
+                    tx_line.try_send(hi)?;
                 }
             }
         }

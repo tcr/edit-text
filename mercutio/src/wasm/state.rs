@@ -1,19 +1,11 @@
 //! Document + versioning state that talks to a synchronization server.
 
-use self::actions::*;
-use failure::Error;
 use oatie::OT;
 use oatie::doc::*;
 use oatie::schema::RtfSchema;
-use rand;
-use rand::Rng;
-use std::{panic, process};
-use std::sync::{Arc, Mutex};
-use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::mem;
 use super::*;
 use oatie::validate::{validate_doc};
-use colored::Colorize;
 
 #[derive(Debug)]
 pub struct ClientDoc {
@@ -229,13 +221,14 @@ impl ClientDoc {
     pub fn apply_local_op(&mut self, op: &Op) {
         self.assert_compose_correctness();
 
+        #[allow(unused_variables)]
         {
-            let mut recreated_doc = OT::apply(&self.original_doc, self.pending_op.as_ref().unwrap_or(&Op::empty()));
-            let mut recreated_doc2 = OT::apply(&recreated_doc, &self.local_op);
+            let recreated_doc = OT::apply(&self.original_doc, self.pending_op.as_ref().unwrap_or(&Op::empty()));
+            let recreated_doc2 = OT::apply(&recreated_doc, &self.local_op);
             // println!("---->\n<apply_local_op>\nrec_doc2: {:?}\n\nlocal_op: {:?}\n\nincoming op:{:?}\n</apply_local_op>\n", recreated_doc2, self.local_op, op);
             assert_eq!(self.doc, recreated_doc2);
             // Op::apply(&self.doc, op);
-            let mut recreated_doc3 = OT::apply(&recreated_doc, &Op::compose(&self.local_op, op));
+            let recreated_doc3 = OT::apply(&recreated_doc, &Op::compose(&self.local_op, op));
             OT::apply(&recreated_doc2, op);
         }
 
