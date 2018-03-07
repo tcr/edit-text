@@ -1,9 +1,0 @@
-.vagrant
-.git
-target/
-mercutio/test.txt
-mercutio/log/
-mercutio/log2/
-mercutio/in/
-Vagrantfile
-node_modules

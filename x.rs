@@ -1,4 +1,4 @@
-#!/usr/bin/env run-cargo-script
+#!/usr/bin/env ./etc/run-cargo-script-header.sh
 //! ```cargo
 //! [dependencies]
 //! command-macro = "0.1.0"
@@ -16,7 +16,6 @@ extern crate quicli;
 use quicli::prelude::*;
 use command_macro::*;
 
-// Add cool slogan for your app here, e.g.:
 /// edit-text build scripts
 #[derive(StructOpt)]
 #[structopt(
