@@ -26,28 +26,6 @@ pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
                 writer.add.exit_all();
 
                 return Ok(writer.result());
-
-                // let op_1 = writer.result();
-
-                // assert!(parent_walker.parent());
-
-                // if let Some(DocGroup(ref attrs, ref span)) = parent_walker.doc().head() {
-                //     assert_eq!(attrs["tag"], "ul");
-
-                //     let mut writer = parent_walker.to_writer();
-
-                //     writer.del.group(&del_span![DelSkip(1)]);
-                //     writer.del.exit_all();
-
-                //     writer.add.exit_all();
-
-                //     let op_2 = writer.result();
-
-                //     return Ok(Operation::compose(&op_1, &op_2));
-
-                // } else {
-                //     unreachable!();
-                // }
             }
         }
     }

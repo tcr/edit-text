@@ -10,7 +10,7 @@ use std::thread;
 use std::panic;
 use std::process;
 use std::time::Duration;
-use mercutio::wasm::NativeCommand;
+use mercutio::wasm::{ClientCommand, NativeCommand};
 use mercutio::wasm::proxy::start_websocket_server;
 
 #[derive(StructOpt, Debug)]
@@ -59,21 +59,25 @@ fn virtual_monkeys() {
                 let url = format!(
                     "ws://127.0.0.1:{}/{}",
                     port,
-                    ('a' as u8 + key as u8) as char
+                    "monkey",
                 );
                 println!("Connecting to {:?}", url);
 
                 ws::connect(url.as_str(), move |out| {
                     thread::sleep(Duration::from_millis(1000 + ((key as u64) * 400)));
 
-                    // Start monkey
-                    let command = NativeCommand::Monkey(true);
-                    let json = serde_json::to_string(&command).unwrap();
-                    out.send(json.as_str()).unwrap();
-
                     // Ignore all incoming messages, as we have no client to update
-                    move |_msg: ws::Message| {
+                    move |msg: ws::Message| {
                         // println!("wasm got a packet from sync '{}'. ", msg);
+                        let req_parse: Result<ClientCommand, _> =
+                            serde_json::from_slice(&msg.into_data());
+
+                        if let Ok(ClientCommand::Init(..)) = req_parse {
+                            let command = NativeCommand::Monkey(true);
+                            let json = serde_json::to_string(&command).unwrap();
+                            out.send(json.as_str()).unwrap();
+                            // monkey_started.store(true, Ordering::Relaxed);
+                        }
 
                         Ok(())
                     }

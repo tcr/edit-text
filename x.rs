@@ -260,7 +260,7 @@ main!(|| {
                         rustup override set `cat ../rust-toolchain`
                         cargo build --release --target=x86_64-unknown-linux-gnu --bin mercutio-sync
                     "
-                "#
+                "#,
             )?;
             execute!(
                 "

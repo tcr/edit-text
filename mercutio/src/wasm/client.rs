@@ -286,6 +286,7 @@ pub trait ClientImpl {
             // Handle commands from Native.
             Task::NativeCommand(command) => {
                 if self.state().client_id == "$$$$$$" {
+                    println!("NATIVE COMMAND TOO EARLY");
                     return Ok(());
                 }
 

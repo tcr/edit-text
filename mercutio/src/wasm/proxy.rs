@@ -77,7 +77,7 @@ fn setup_client(name: &str, page_id: &str, out: ws::Sender, ws_port: u16) -> (Ar
                     clone_all!(tx_task);
                     move |msg: ws::Message| {
                         // Handle messages received on this connection
-                        println!("wasm got a packet from sync '{}'. ", msg);
+                        // println!("wasm got a packet from sync '{}'. ", msg);
 
                         let req_parse: Result<SyncClientCommand, _> =
                             serde_json::from_slice(&msg.into_data());
@@ -100,7 +100,7 @@ fn setup_client(name: &str, page_id: &str, out: ws::Sender, ws_port: u16) -> (Ar
 
     // Operate on all incoming tasks.
     let _ = thread::Builder::new()
-        .name(format!("client-{}-task", name))
+        .name(format!("setup_client({})", name))
         .spawn::<_, Result<(), Error>>(move || {
             while let Ok(task) = rx_task.recv() {
                 client.handle_task(task)?;
@@ -139,7 +139,10 @@ impl ws::Handler for SocketHandler {
                 println!("Packet error: {:?}", err);
             }
             Ok(value) => {
-                self.tx_task.as_mut().map(|x| x.send(Task::NativeCommand(value)));
+                self.tx_task.as_mut().map(|x| {
+                    println!("(tx_task) {:?}", value);
+                    x.send(Task::NativeCommand(value));
+                });
             }
         }
 
