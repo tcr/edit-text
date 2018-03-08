@@ -50,11 +50,11 @@ pub const MONKEY_CLICK: MonkeyParam = (400, 1000);
 // const MONKEY_ENTER: MonkeyParam = (0, 0, 1_000);
 
 #[allow(unused)]
-pub fn setup_monkey(alive: Arc<AtomicBool>, monkey: Arc<AtomicBool>, tx: Sender<Task>) {
+pub fn setup_monkey<C: ClientImpl + Sized>(alive: Arc<AtomicBool>, monkey: Arc<AtomicBool>, tx: Sender<Task>) {
 
     monkey_task!(alive, monkey, tx, MONKEY_BUTTON, {
         let mut rng = rand::thread_rng();
-        let index = rng.gen_range(0, button_handlers().len() as u32);
+        let index = rng.gen_range(0, button_handlers::<C>().len() as u32);
         NativeCommand::Button(index)
     });
 

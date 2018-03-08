@@ -41,91 +41,91 @@ pub enum ClientCommand {
     SyncServerCommand(SyncServerCommand),
 }
 
-fn key_handlers() -> Vec<(u32, bool, bool, Box<Fn(&mut Client) -> Result<(), Error>>)> {
+fn key_handlers<C: ClientImpl>()
+    -> Vec<(u32, bool, bool, Box<Fn(&mut C) -> Result<(), Error>>)> {
     vec![
         // backspace
         (
             8,
             false,
             false,
-            Box::new(|client: &mut Client| client.client_op(|doc| delete_char(doc))),
+            Box::new(|client| client.client_op(|doc| delete_char(doc))),
         ),
         // left
         (
             37,
             false,
             false,
-            Box::new(|client: &mut Client| client.client_op(|doc| caret_move(doc, false))),
+            Box::new(|client| client.client_op(|doc| caret_move(doc, false))),
         ),
         // right
         (
             39,
             false,
             false,
-            Box::new(|client: &mut Client| client.client_op(|doc| caret_move(doc, true))),
+            Box::new(|client| client.client_op(|doc| caret_move(doc, true))),
         ),
         // up
         (
             38,
             false,
             false,
-            Box::new(|client: &mut Client| client.client_op(|doc| caret_block_move(doc, false))),
+            Box::new(|client| client.client_op(|doc| caret_block_move(doc, false))),
         ),
         // down
         (
             40,
             false,
             false,
-            Box::new(|client: &mut Client| client.client_op(|doc| caret_block_move(doc, true))),
+            Box::new(|client| client.client_op(|doc| caret_block_move(doc, true))),
         ),
         // enter
         (
             13,
             false,
             false,
-            Box::new(|client: &mut Client| client.client_op(|doc| split_block(doc, false))),
+            Box::new(|client| client.client_op(|doc| split_block(doc, false))),
         ),
         // enter
         (
             13,
             false,
             true,
-            Box::new(|client: &mut Client| {
-                client.client_op(|doc| add_char(doc, 10))
-            }),
+            Box::new(|client| client.client_op(|doc| add_char(doc, 10))),
         ),
     ]
 }
 
-pub fn button_handlers() -> Vec<(&'static str, Box<Fn(&mut Client) -> Result<(), Error>>)> {
+pub fn button_handlers<C: ClientImpl>() ->
+    Vec<(&'static str, Box<Fn(&mut C) -> Result<(), Error>>)> {
     vec![
         (
             "Heading 1",
-            Box::new(|client: &mut Client| client.client_op(|doc| replace_block(doc, "h1"))),
+            Box::new(|client| client.client_op(|doc| replace_block(doc, "h1"))),
         ),
         (
             "Heading 2",
-            Box::new(|client: &mut Client| client.client_op(|doc| replace_block(doc, "h2"))),
+            Box::new(|client| client.client_op(|doc| replace_block(doc, "h2"))),
         ),
         (
             "Heading 3",
-            Box::new(|client: &mut Client| client.client_op(|doc| replace_block(doc, "h3"))),
+            Box::new(|client| client.client_op(|doc| replace_block(doc, "h3"))),
         ),
         (
             "Paragraph",
-            Box::new(|client: &mut Client| client.client_op(|doc| replace_block(doc, "p"))),
+            Box::new(|client| client.client_op(|doc| replace_block(doc, "p"))),
         ),
         (
             "Code",
-            Box::new(|client: &mut Client| client.client_op(|doc| replace_block(doc, "pre"))),
+            Box::new(|client| client.client_op(|doc| replace_block(doc, "pre"))),
         ),
         (
             "List",
-            Box::new(|client: &mut Client| client.client_op(|doc| toggle_list(doc))),
+            Box::new(|client| client.client_op(|doc| toggle_list(doc))),
         ),
         (
             "HR",
-            Box::new(|client: &mut Client| client.client_op(|doc| split_block(doc, true))),
+            Box::new(|client| client.client_op(|doc| split_block(doc, true))),
         ),
     ]
 }
@@ -191,8 +191,7 @@ pub fn collect_cursors(doc: &Doc) -> Result<Vec<CurSpan>, Error> {
     Ok(ctx.history)
 }
 
-
-fn native_command(client: &mut Client, req: NativeCommand) -> Result<(), Error> {
+fn native_command<C: ClientImpl>(client: &mut C, req: NativeCommand) -> Result<(), Error> {
     match req {
         NativeCommand::RenameGroup(tag, _) => {
             client.client_op(|doc| replace_block(doc, &tag))?;
@@ -218,7 +217,7 @@ fn native_command(client: &mut Client, req: NativeCommand) -> Result<(), Error> 
             client.client_op(|doc| add_char(doc, char_code))?;
         }
         NativeCommand::RandomTarget(pos) => {
-            let cursors = collect_cursors(&client.client_doc.doc)?;
+            let cursors = collect_cursors(&client.state().client_doc.doc)?;
             let idx = (pos * (cursors.len() as f64)) as usize;
 
             client.client_op(|doc| cur_to_caret(doc, &cursors[idx]))?;
@@ -228,10 +227,10 @@ fn native_command(client: &mut Client, req: NativeCommand) -> Result<(), Error> 
         }
         NativeCommand::Monkey(setting) => {
             println!("received monkey setting: {:?}", setting);
-            client.monkey.store(setting, Ordering::Relaxed);
+            client.state().monkey.store(setting, Ordering::Relaxed);
         }
         NativeCommand::RequestMarkdown => {
-            let markdown = markdown::doc_to_markdown(&client.client_doc.doc.0)?;
+            let markdown = markdown::doc_to_markdown(&client.state().client_doc.doc.0)?;
             // TODO
             client.send_client(&ClientCommand::MarkdownUpdate(markdown))?;
         }
@@ -251,11 +250,6 @@ pub struct Client {
 
     pub monkey: Arc<AtomicBool>,
     pub alive: Arc<AtomicBool>,
-
-    #[cfg(not(target_arch="wasm32"))]
-    pub tx_client: Sender<ClientCommand>,
-    #[cfg(not(target_arch="wasm32"))]
-    pub tx_sync: Sender<SyncServerCommand>,
 }
 
 // use std::cell::RefCell;
@@ -263,29 +257,19 @@ pub struct Client {
 //     static BAR: RefCell<Vec<i64>> = RefCell::new(vec![]);
 // }
 
-impl Client {
-    // TODO this
-    // pub fn new() -> (Client, Receiver, Receiver) {
-    //     Client {
-    //         client_id: "hello".to_string(),
-    //         client_doc: ClientDoc::new(),
+pub trait ClientImpl {
+    fn state(&mut self) -> &mut Client;
+    fn send_client(&self, req: &ClientCommand) -> Result<(), Error>;
+    fn send_sync(&self, req: SyncServerCommand) -> Result<(), Error>;
 
-    //         monkey: Arc::new(AtomicBool::new(false)),
-    //         alive: Arc::new(AtomicBool::new(true)),
-
-    //         tx_client,
-    //         tx_sync,
-    //     };
-    // }
-
-    pub fn setup(&self) {
+    fn setup(&self) where Self: Sized {
         self
             .send_client(&ClientCommand::Setup {
-                keys: key_handlers()
+                keys: key_handlers::<Self>()
                     .into_iter()
                     .map(|x| (x.0, x.1, x.2))
                     .collect(),
-                buttons: button_handlers()
+                buttons: button_handlers::<Self>()
                     .into_iter()
                     .enumerate()
                     .map(|(i, x)| (i, x.0.to_string()))
@@ -294,13 +278,14 @@ impl Client {
             .expect("Could not send initial state");
     }
 
-    pub fn handle_task(&mut self, value: Task) -> Result<(), Error> {
+    fn handle_task(&mut self, value: Task) -> Result<(), Error>
+        where Self: Sized {
         // let start = ::std::time::Instant::now();
 
         match value.clone() {
             // Handle commands from Native.
             Task::NativeCommand(command) => {
-                if self.client_id == "$$$$$$" {
+                if self.state().client_id == "$$$$$$" {
                     return Ok(());
                 }
 
@@ -311,13 +296,13 @@ impl Client {
             Task::SyncClientCommand(
                 SyncClientCommand::Init(new_client_id, doc_span, version)
             ) => {
-                self.client_id = new_client_id.clone();
-                self.client_doc.init(&Doc(doc_span), version);
+                self.state().client_id = new_client_id.clone();
+                self.state().client_doc.init(&Doc(doc_span), version);
 
                 // Announce.
                 println!("inital version is {:?}", version);
 
-                log_wasm!(Setup(self.client_id.clone()));
+                log_wasm!(Setup(self.state().client_id.clone()));
 
                 // If the caret doesn't exist or was deleted, reinitialize it.
                 if !self.with_action_context(|ctx| Ok(has_caret(ctx)))
@@ -332,7 +317,7 @@ impl Client {
                 self.send_client(&res).unwrap();
 
                 // Native drives client state.
-                let res = ClientCommand::Update(doc_as_html(&self.client_doc.doc.0), None);
+                let res = ClientCommand::Update(doc_as_html(&self.state().client_doc.doc.0), None);
                 self.send_client(&res).unwrap();
             }
 
@@ -340,7 +325,7 @@ impl Client {
             Task::SyncClientCommand(
                 SyncClientCommand::Update(doc_span, version, client_id, input_op)
             ) => {
-                if self.client_id == "$$$$$$" {
+                if self.state().client_id == "$$$$$$" {
                     return Ok(());
                 }
 
@@ -348,15 +333,15 @@ impl Client {
                 let doc = Doc(doc_span);
 
                 // If this operation is an acknowledgment...
-                if self.client_id == client_id {
-                    if let Some(local_op) = self.client_doc.sync_confirmed_pending_op(&doc, version) {
+                if self.state().client_id == client_id {
+                    if let Some(local_op) = self.state().client_doc.sync_confirmed_pending_op(&doc, version) {
                         // Send our next operation.
                         self.upload(local_op)?;
                     }
                 } else {
                     // Update with new version.
                     println!("---> sync sent new version");
-                    self.client_doc.sync_sent_new_version(&doc, version, &input_op);
+                    self.state().client_doc.sync_sent_new_version(&doc, version, &input_op);
                 }
 
                 // Announce.
@@ -372,7 +357,7 @@ impl Client {
                 }
 
                 // Native drives client state.
-                let res = ClientCommand::Update(doc_as_html(&self.client_doc.doc.0), None);
+                let res = ClientCommand::Update(doc_as_html(&self.state().client_doc.doc.0), None);
                 self.send_client(&res).unwrap();
             }
         }
@@ -389,17 +374,19 @@ impl Client {
         //     println!("{} ms per task.", average(b.as_slice()));
         // });
 
-        log_wasm!(Task(self.client_id.clone(), value.clone()));
+        log_wasm!(Task(self.state().client_id.clone(), value.clone()));
 
         Ok(())
     }
 
-    pub fn upload(&self, local_op: Op) -> Result<(), Error> {
+    fn upload(&mut self, local_op: Op) -> Result<(), Error> {
         log_wasm!(Debug("CLIENTOP".to_string()));
+        let client_id = self.state().client_id.clone();
+        let version = self.state().client_doc.version;
         Ok(self.send_sync(SyncServerCommand::Commit(
-            self.client_id.clone(),
+            client_id,
             local_op,
-            self.client_doc.version,
+            version,
         ))?)
     }
 
@@ -409,8 +396,8 @@ impl Client {
         C: Fn(ActionContext) -> Result<T, Error>,
     {
         callback(ActionContext {
-            doc: self.client_doc.doc.clone(),
-            client_id: self.client_id.clone(),
+            doc: self.state().client_doc.doc.clone(),
+            client_id: self.state().client_id.clone(),
         })
     }
 
@@ -422,7 +409,7 @@ impl Client {
         let op = self.with_action_context(callback)?;
 
         // Apply new operation.
-        self.client_doc.apply_local_op(&op);
+        self.state().client_doc.apply_local_op(&op);
 
         // Check that our operations can compose well.
         // if cfg!(not(target_arch = "wasm32")) {
@@ -443,39 +430,58 @@ impl Client {
         // }
 
         // Validate local changes.
-        validate_doc(&self.client_doc.doc).expect("Local op was malformed");
+        validate_doc(&self.state().client_doc.doc).expect("Local op was malformed");
 
         // Render the update.
-        let res = ClientCommand::Update(doc_as_html(&self.client_doc.doc.0), Some(op));
+        let res = ClientCommand::Update(doc_as_html(&self.state().client_doc.doc.0), Some(op));
         self.send_client(&res)?;
 
         // Send any queued payloads.
-        if let Some(local_op) = self.client_doc.next_payload() {
+        if let Some(local_op) = self.state().client_doc.next_payload() {
             self.upload(local_op)?;
         }
 
         Ok(())
     }
+}
 
-    // server
+#[cfg(not(target_arch="wasm32"))]
+pub struct ProxyClient {
+    pub state: Client,
+    pub tx_client: Sender<ClientCommand>,
+    pub tx_sync: Sender<SyncServerCommand>,
+}
 
-    #[cfg(not(target_arch="wasm32"))]
-    pub fn send_client(&self, req: &ClientCommand) -> Result<(), Error> {
+#[cfg(not(target_arch="wasm32"))]
+impl ClientImpl for ProxyClient {
+    fn state(&mut self) -> &mut Client {
+        &mut self.state
+    }
+
+    fn send_client(&self, req: &ClientCommand) -> Result<(), Error> {
         log_wasm!(SendClient(req.clone()));
         self.tx_client.send(req.clone())?;
         Ok(())
     }
 
-    #[cfg(not(target_arch="wasm32"))]
-    pub fn send_sync(&self, req: SyncServerCommand) -> Result<(), Error> {
+    fn send_sync(&self, req: SyncServerCommand) -> Result<(), Error> {
         log_wasm!(SendSync(req.clone()));
         self.tx_sync.send(req)?;
         Ok(())
     }
+}
 
-    // wasm
+#[cfg(target_arch="wasm32")]
+pub struct WasmClient {
+    pub state: Client,
+}
 
-    #[cfg(target_arch="wasm32")]
+#[cfg(target_arch="wasm32")]
+impl ClientImpl for WasmClient {
+    fn state(&mut self) -> &mut Client {
+        &mut self.state
+    }
+
     pub fn send_client(&self, req: &ClientCommand) -> Result<(), Error> {
         use std::mem;
         use std::ffi::CString;

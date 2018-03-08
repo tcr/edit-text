@@ -18,7 +18,7 @@ use quicli::prelude::*;
 
 /// edit-text build scripts
 #[derive(StructOpt)]
-#[structopt(name = "edit-text", about = "Build scripts for mercutio and oatie", author = "")]
+#[structopt(name = "edit-text build scripts", about = "Build scripts for mercutio and oatie", author = "")]
 enum Cli {
     #[structopt(name = "wasm-build")]
     Wasm,
@@ -268,13 +268,14 @@ main!(|| {
                 "
             )?;
 
-            // Shell out for the piping segment.
+            // Shell out for uploading the file to dokku.
+            // Doing this in one command may cause dokku to hang, from experience,
+            // so we first upload the tarball then pipe it in.
             shell!(
                 r#"
                     set -e
                     cd dist
 
-                    # Doing this in one command may cause dokku to hang, from experience
                     tar c . | bzip2 | ssh root@sandbox.edit.io "bunzip2 > /tmp/mercutio.tar"
                     ssh root@sandbox.edit.io "cat /tmp/mercutio.tar | dokku tar:in edit-text"
                 "#,

@@ -32,12 +32,14 @@ fn setup_client(name: &str, page_id: &str, out: ws::Sender, ws_port: u16) -> (Ar
         Ok(())
     });
 
-    let mut client = Client {
-        client_id: name.to_owned(),
-        client_doc: ClientDoc::new(),
+    let mut client = ProxyClient {
+        state: Client {
+            client_id: name.to_owned(),
+            client_doc: ClientDoc::new(),
 
-        monkey: monkey.clone(),
-        alive: alive.clone(),
+            monkey: monkey.clone(),
+            alive: alive.clone(),
+        },
 
         tx_client,
         tx_sync,
@@ -50,7 +52,7 @@ fn setup_client(name: &str, page_id: &str, out: ws::Sender, ws_port: u16) -> (Ar
 
     // Setup monkey tasks.
     {
-        setup_monkey(alive.clone(), monkey.clone(), tx_task.clone());
+        setup_monkey::<ProxyClient>(alive.clone(), monkey.clone(), tx_task.clone());
     }
 
     // Connect to the sync server.
