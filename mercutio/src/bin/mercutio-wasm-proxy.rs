@@ -44,45 +44,53 @@ pub fn main() {
     start_websocket_server(port);
 }
 
-fn virtual_monkeys() {
-    println!("(!) virtual monkeys enabled");
-
-    let opt = Opt::from_args();
-    let port = opt.port;
-    let monkies = opt.monkies.unwrap();
-
+fn spawn_virtual_monkey() -> JoinHandle<()> {
     thread::spawn(move || {
+        let url = format!(
+            "ws://127.0.0.1:{}/{}",
+            port,
+            "monkey",
+        );
+        println!("Connecting to {:?}", url);
+
+        ws::connect(url.as_str(), move |out| {
+            thread::sleep(Duration::from_millis(1000 + ((key as u64) * 400)));
+
+            // Ignore all incoming messages, as we have no client to update
+            move |msg: ws::Message| {
+                // println!("wasm got a packet from sync '{}'. ", msg);
+                let req_parse: Result<ClientCommand, _> =
+                    serde_json::from_slice(&msg.into_data());
+
+                if let Ok(ClientCommand::Init(..)) = req_parse {
+                    let command = NativeCommand::Monkey(true);
+                    let json = serde_json::to_string(&command).unwrap();
+                    out.send(json.as_str()).unwrap();
+                    // monkey_started.store(true, Ordering::Relaxed);
+                }
+
+                Ok(())
+            }
+        }).unwrap();
+    })
+}
+
+fn spawn_virtual_monkies() -> JoinHandle<()> {
+    thread::spawn(move || {
+        let opt = Opt::from_args();
+        let port = opt.port;
+        let monkies = opt.monkies.unwrap();
+        
         thread::sleep(Duration::from_millis(1000));
 
         for key in 0..monkies {
-            thread::spawn(move || {
-                let url = format!(
-                    "ws://127.0.0.1:{}/{}",
-                    port,
-                    "monkey",
-                );
-                println!("Connecting to {:?}", url);
-
-                ws::connect(url.as_str(), move |out| {
-                    thread::sleep(Duration::from_millis(1000 + ((key as u64) * 400)));
-
-                    // Ignore all incoming messages, as we have no client to update
-                    move |msg: ws::Message| {
-                        // println!("wasm got a packet from sync '{}'. ", msg);
-                        let req_parse: Result<ClientCommand, _> =
-                            serde_json::from_slice(&msg.into_data());
-
-                        if let Ok(ClientCommand::Init(..)) = req_parse {
-                            let command = NativeCommand::Monkey(true);
-                            let json = serde_json::to_string(&command).unwrap();
-                            out.send(json.as_str()).unwrap();
-                            // monkey_started.store(true, Ordering::Relaxed);
-                        }
-
-                        Ok(())
-                    }
-                }).unwrap();
-            });
+            spawn_virtual_monkey();
         }
-    });
+    })
+}
+
+fn virtual_monkeys() {
+    println!("(!) virtual monkeys enabled");
+
+    spawn_virtual_monkies();
 }

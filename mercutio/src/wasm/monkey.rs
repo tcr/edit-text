@@ -10,7 +10,7 @@ use std::thread;
 use std::time::Duration;
 use super::client::button_handlers;
 
-macro_rules! monkey_task {
+macro_rules! spawn_monkey_task {
     ( $alive:expr, $monkey:expr, $tx:expr, $wait_params:expr, $task:expr ) => {
         {
             let tx = $tx.clone();
@@ -52,13 +52,13 @@ pub const MONKEY_CLICK: MonkeyParam = (400, 1000);
 #[allow(unused)]
 pub fn setup_monkey<C: ClientImpl + Sized>(alive: Arc<AtomicBool>, monkey: Arc<AtomicBool>, tx: Sender<Task>) {
 
-    monkey_task!(alive, monkey, tx, MONKEY_BUTTON, {
+    spawn_monkey_task!(alive, monkey, tx, MONKEY_BUTTON, {
         let mut rng = rand::thread_rng();
         let index = rng.gen_range(0, button_handlers::<C>().len() as u32);
         NativeCommand::Button(index)
     });
 
-    monkey_task!(alive, monkey, tx, MONKEY_LETTER, {
+    spawn_monkey_task!(alive, monkey, tx, MONKEY_LETTER, {
         let mut rng = rand::thread_rng();
         let char_list = vec![
             rng.gen_range(b'A', b'Z'),
@@ -70,21 +70,21 @@ pub fn setup_monkey<C: ClientImpl + Sized>(alive: Arc<AtomicBool>, monkey: Arc<A
         NativeCommand::Character(c)
     });
 
-    monkey_task!(alive, monkey, tx, MONKEY_ARROW, {
+    spawn_monkey_task!(alive, monkey, tx, MONKEY_ARROW, {
         let mut rng = rand::thread_rng();
         let key = *rng.choose(&[37, 39, 37, 39, 37, 39, 38, 40]).unwrap();
         NativeCommand::Keypress(key, false, false)
     });
 
-    monkey_task!(alive, monkey, tx, MONKEY_BACKSPACE, {
+    spawn_monkey_task!(alive, monkey, tx, MONKEY_BACKSPACE, {
         NativeCommand::Keypress(8, false, false)
     });
 
-    monkey_task!(alive, monkey, tx, MONKEY_ENTER, {
+    spawn_monkey_task!(alive, monkey, tx, MONKEY_ENTER, {
         NativeCommand::Keypress(13, false, false)
     });
 
-    monkey_task!(alive, monkey, tx, MONKEY_CLICK, {
+    spawn_monkey_task!(alive, monkey, tx, MONKEY_CLICK, {
         let mut rng = rand::thread_rng();
         NativeCommand::RandomTarget(rng.gen::<f64>())
     });

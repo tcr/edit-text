@@ -1,4 +1,4 @@
-use bus::Bus;
+use bus::{Bus, BusReader};
 use failure::Error;
 use oatie::OT;
 use oatie::doc::*;
@@ -7,7 +7,7 @@ use oatie::validate::validate_doc;
 use serde_json;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::thread;
+use std::thread::{self, JoinHandle};
 use std::time::Duration;
 use crate::{SyncClientCommand, SyncServerCommand};
 use ws;
@@ -17,6 +17,7 @@ use rand::{thread_rng, Rng};
 use ron;
 use crossbeam_channel::unbounded;
 use crossbeam_channel::Sender as CCSender;
+use crossbeam_channel::Receiver as CCReceiver;
 use url::Url;
 
 use diesel;
@@ -297,6 +298,18 @@ pub fn valid_page_id(input: &str) -> bool {
 }
 
 
+fn spawn_bus_to_client(
+    out: ws::Sender,
+    mut rx: BusReader<SyncClientCommand>,
+) -> JoinHandle<Result<(), Error>> {
+    thread::spawn(move || -> Result<(), Error> {
+        while let Ok(command) = rx.recv() {
+            out.send(serde_json::to_string(&command).unwrap())?;
+        }
+        Ok(())
+    })
+}
+
 impl ws::Handler for ClientHandler {
     fn on_open(&mut self, shake: ws::Handshake) -> ws::Result<()> {
         let url = Url::parse("http://localhost/")
@@ -344,13 +357,7 @@ impl ws::Handler for ClientHandler {
 
             // Forward packets from sync bus to all clients.
             let rx = { sync_state.client_bus.add_rx() };
-            thread::spawn(|| -> Result<(), Error> {
-                take!(out, mut rx);
-                while let Ok(command) = rx.recv() {
-                    out.send(serde_json::to_string(&command).unwrap())?;
-                }
-                Ok(())
-            });
+            spawn_bus_to_client(out, rx);
         }
 
         Ok(())
@@ -505,6 +512,19 @@ fn spawn_server(page_map: &SharedPageMap, period: u64, page_id: &str, tx_db: CCS
 
 type SharedPageMap = Arc<Mutex<HashMap<String, Arc<Mutex<SyncState>>>>>;
 
+
+fn spawn_update_db(
+    conn: SqliteConnection,
+    rx_db: CCReceiver<(String, String)>,
+) -> JoinHandle<()> {
+    thread::spawn(move || {
+        while let Ok((id, body)) = rx_db.recv() {
+            // println!("(@) writing {:?}", id);
+            create_post(&conn, &id, &body);
+        }
+    })
+}
+
 // TODO use _period
 pub fn sync_socket_server(port: u16, _period: usize) {
     log_sync!(Spawn);
@@ -516,12 +536,7 @@ pub fn sync_socket_server(port: u16, _period: usize) {
     let (conn, original_pages) = db_help();
 
     let (tx_db, rx_db) = unbounded::<(String, String)>();
-    thread::spawn(move || {
-        while let Ok((id, body)) = rx_db.recv() {
-            // println!("(@) writing {:?}", id);
-            create_post(&conn, &id, &body);
-        }
-    });
+    spawn_update_db(conn, rx_db);
 
     // When a page is started, we create a sync state mutex...
     let page_map: SharedPageMap = Arc::new(Mutex::new({
