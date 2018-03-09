@@ -99,6 +99,7 @@ fn setup_client(name: &str, page_id: &str, out: ws::Sender, ws_port: u16) -> (Ar
     }
 
     // Operate on all incoming tasks.
+    //TODO possible to delay until init was handled?
     let _ = thread::Builder::new()
         .name(format!("setup_client({})", name))
         .spawn::<_, Result<(), Error>>(move || {
