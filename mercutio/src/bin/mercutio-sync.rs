@@ -10,8 +10,6 @@ extern crate rand;
 extern crate serde;
 extern crate serde_json;
 extern crate structopt;
-#[macro_use]
-extern crate taken;
 extern crate structopt_derive;
 extern crate take_mut;
 extern crate tiny_http;
@@ -30,7 +28,7 @@ use tiny_http::{Header, Response};
 use url::Url;
 use rand::thread_rng;
 use std::panic;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::collections::HashMap;
 
 fn spawn_server_thread(
@@ -70,20 +68,16 @@ fn spawn_server_thread(
                     let _ = req.respond(res);
                 }
 
-                "/$/multi" | "/$/multi/" => {
-                    let data = template_dir.get(Path::new("multi.html")).unwrap();
-                    let _ = req.respond(Response::from_data(update_config_var(data))
-                        .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
-                }
-                // "/" | "/index.html" => {
-                //     let data = template_dir.get(Path::new("client.html")).unwrap();
-                //     let _ = req.respond(Response::from_data(update_config_var(data))
-                //         .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
-                // }
                 "/favicon.png" => {
                     let data = template_dir.get(Path::new("favicon.png")).unwrap();
                     let _ = req.respond(Response::from_data(*data)
                         .with_header(Header::from_bytes("content-type".as_bytes(), "image/png".as_bytes()).unwrap()));
+                }
+
+                "/$/multi" | "/$/multi/" => {
+                    let data = template_dir.get(Path::new("multi.html")).unwrap();
+                    let _ = req.respond(Response::from_data(update_config_var(data))
+                        .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
                 }
 
                 path => {
@@ -118,8 +112,7 @@ fn spawn_server_thread(
     })
 }
 
-// TODO rename not starting with "spawn_"
-fn spawn_http_server(port: u16, client_proxy: bool) {
+fn start_http_server(port: u16, client_proxy: bool) {
     let server = tiny_http::Server::http(&format!("0.0.0.0:{}", port)).unwrap();
 
     let server = Arc::new(server);
@@ -142,89 +135,6 @@ fn spawn_http_server(port: u16, client_proxy: bool) {
             dist_dir.clone(),
             template_dir.clone(),
         );
-
-
-        // let guard = thread::spawn({
-        //     take!(=dist_dir, =template_dir);
-
-        //     move || {
-        //         loop {
-        //             let req = server.recv().unwrap();
-
-        //             // Extract just the path segment from this URL.
-        //             // The `url` crate needs an absolute base to create a Url.
-        //             let path = Url::parse("http://localhost/")
-        //                 .unwrap()
-        //                 .join(req.url())
-        //                 .unwrap()
-        //                 .path()
-        //                 .to_owned();
-                    
-        //             let update_config_var = |data: &[u8]| -> Vec<u8> {
-        //                 let input = String::from_utf8_lossy(data);
-        //                 let output = input.replace("CONFIG = {}",
-        //                     &format!("CONFIG = {{configured: true, wasm: {}}}", if client_proxy { "false" } else { "true"} ));
-        //                 output.into_bytes()
-        //             };
-
-        //             match path.as_ref() {
-        //                 "/" | "/index.html" => {
-        //                     // Redirect as random client
-        //                     let mut rng = thread_rng();
-        //                     let new_page_id = ::rand::seq::sample_iter(&mut rng, 0..26u8, 8).unwrap().into_iter().map(|x| (b'a' + x) as char).collect::<String>();
-        //                     let mut res = Response::empty(302);
-        //                     let mut h = Header::from_bytes(b"Location".to_vec(), format!("/{}#helloworld", new_page_id).as_bytes()).unwrap();
-        //                     res.add_header(h);
-        //                     let _ = req.respond(res);
-        //                 }
-
-        //                 "/$/multi" | "/$/multi/" => {
-        //                     let data = template_dir.get(Path::new("multi.html")).unwrap();
-        //                     let _ = req.respond(Response::from_data(update_config_var(data))
-        //                         .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
-        //                 }
-        //                 // "/" | "/index.html" => {
-        //                 //     let data = template_dir.get(Path::new("client.html")).unwrap();
-        //                 //     let _ = req.respond(Response::from_data(update_config_var(data))
-        //                 //         .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
-        //                 // }
-        //                 "/favicon.png" => {
-        //                     let data = template_dir.get(Path::new("favicon.png")).unwrap();
-        //                     let _ = req.respond(Response::from_data(*data)
-        //                         .with_header(Header::from_bytes("content-type".as_bytes(), "image/png".as_bytes()).unwrap()));
-        //                 }
-
-        //                 path => {
-        //                     // Skip the initial "/$/"
-        //                     if path.starts_with("/$/") {
-        //                         let path = path.chars().skip(3).collect::<String>();
-        //                         if let Some(target) = dist_dir.get(Path::new(&path)) {
-        //                             let _ = req.respond(Response::from_data(*target)
-        //                                 .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
-        //                         } else {
-        //                             let _ = req.respond(Response::from_string("404".to_owned()));
-        //                         }
-        //                     } else {
-        //                         // Possibly a page?
-        //                         let path_segs = (path[1..]).split('/').collect::<Vec<_>>();
-        //                         if valid_page_id(&path_segs[0]) && path_segs.len() == 2 && path_segs[1] == "presentation" {
-        //                             let data = template_dir.get(Path::new("presentation.html")).unwrap();
-        //                             let _ = req.respond(Response::from_data(update_config_var(data))
-        //                                 .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
-        //                         } else if valid_page_id(&path_segs[0]) && path_segs.len() == 1 {
-        //                             let data = template_dir.get(Path::new("client.html")).unwrap();
-        //                             let _ = req.respond(Response::from_data(update_config_var(data))
-        //                                 .with_header(Header::from_bytes("content-type".as_bytes(), "text/html".as_bytes()).unwrap()));
-        //                         } else {
-        //                             // TODO real 404 error code
-        //                             let _ = req.respond(Response::from_string("404".to_owned()));
-        //                         }
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //     }
-        // });
 
         guards.push(guard);
     }
@@ -271,7 +181,7 @@ fn main() {
 
     let _ = spawn_sync_socket_server();
 
-    spawn_http_server(opt.port, opt.client_proxy);
+    start_http_server(opt.port, opt.client_proxy);
 
     // // Loop forever
     // loop {

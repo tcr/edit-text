@@ -10,12 +10,6 @@ use std::thread::{self, JoinHandle};
 use ws;
 use wasm::monkey::setup_monkey;
 
-macro_rules! clone_all {
-    ( $( $x:ident ),* ) => {
-        $(let $x = $x.clone();)*
-    };
-}
-
 fn spawn_send_to_client(
     rx_client: Receiver<ClientCommand>,
     out: ws::Sender,
@@ -52,33 +46,29 @@ fn spawn_sync_connection(
     thread::spawn(move || {
         ws::connect(format!("ws://127.0.0.1:{}/$/ws/{}", ws_port, page_id), move |out| {
             // While we receive packets from the client, send them to sync.
-            {
-                spawn_client_to_sync(out, rx.clone());
-            }
+            spawn_client_to_sync(out, rx.clone());
 
             // Receive packets from sync and act on them.
-            {
-                clone_all!(tx_task);
-                move |msg: ws::Message| {
-                    // Handle messages received on this connection
-                    // println!("wasm got a packet from sync '{}'. ", msg);
+            let tx_task = tx_task.clone();
+            move |msg: ws::Message| {
+                // Handle messages received on this connection
+                // println!("wasm got a packet from sync '{}'. ", msg);
 
-                    let req_parse: Result<SyncClientCommand, _> =
-                        serde_json::from_slice(&msg.into_data());
-                    match req_parse {
-                        Err(err) => {
-                            println!("Packet error: {:?}", err);
-                        }
-                        Ok(value) => {
-                            let _ = tx_task.send(Task::SyncClientCommand(value));
-                        }
+                let req_parse: Result<SyncClientCommand, _> =
+                    serde_json::from_slice(&msg.into_data());
+                match req_parse {
+                    Err(err) => {
+                        println!("Packet error: {:?}", err);
                     }
-
-                    Ok(())
+                    Ok(value) => {
+                        let _ = tx_task.send(Task::SyncClientCommand(value));
+                    }
                 }
+
+                Ok(())
             }
         }).unwrap();
-        panic!("sync server socket disconnected.")
+        unreachable!("sync server socket disconnected.")
     })
 }
 
@@ -113,20 +103,15 @@ fn setup_client(name: &str, page_id: &str, out: ws::Sender, ws_port: u16) -> (Ar
     let (tx_task, rx_task) = unbounded();
 
     // Setup monkey tasks.
-    {
-        setup_monkey::<ProxyClient>(alive.clone(), monkey.clone(), tx_task.clone());
-    }
+    setup_monkey::<ProxyClient>(alive.clone(), monkey.clone(), tx_task.clone());
 
     // Connect to the sync server.
-    let page_id = page_id.to_owned();
-    {
-        spawn_sync_connection(
-            ws_port,
-            page_id,
-            tx_task.clone(),
-            rx,
-        );
-    }
+    spawn_sync_connection(
+        ws_port,
+        page_id.to_owned(),
+        tx_task.clone(),
+        rx,
+    );
 
     // Operate on all incoming tasks.
     //TODO possible to delay until init was handled?
