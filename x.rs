@@ -92,7 +92,7 @@ main!(|| {
 
             execute!(
                 r"
-                    cp target/wasm32-unknown-unknown/release/mercutio.wasm mercutio/frontend/dist
+                    cp target/wasm32-unknown-unknown/release/mercutio.wasm mercutio-frontend/dist
                 ",
             )?;
         }

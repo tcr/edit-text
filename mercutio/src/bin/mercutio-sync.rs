@@ -118,8 +118,8 @@ fn run_http_server(port: u16, client_proxy: bool) {
     let server = Arc::new(server);
     let mut guards = Vec::with_capacity(4);
 
-    let dist_dir = include_dir!("mercutio/frontend/dist");
-    let template_dir = include_dir!("mercutio/frontend/templates");
+    let dist_dir = include_dir!("mercutio-frontend/dist");
+    let template_dir = include_dir!("mercutio-frontend/templates");
     // Necessary files
     assert!(template_dir.contains_key(Path::new("multi.html")));
     assert!(template_dir.contains_key(Path::new("client.html")));
