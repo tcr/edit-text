@@ -6,7 +6,7 @@ extern crate structopt_derive;
 extern crate ws;
 
 use structopt::StructOpt;
-use std::thread;
+use std::thread::{self, JoinHandle};
 use std::panic;
 use std::process;
 use std::time::Duration;
@@ -44,7 +44,7 @@ pub fn main() {
     start_websocket_server(port);
 }
 
-fn spawn_virtual_monkey() -> JoinHandle<()> {
+fn spawn_virtual_monkey(port: u16, key: usize) -> JoinHandle<()> {
     thread::spawn(move || {
         let url = format!(
             "ws://127.0.0.1:{}/{}",
@@ -84,7 +84,7 @@ fn spawn_virtual_monkies() -> JoinHandle<()> {
         thread::sleep(Duration::from_millis(1000));
 
         for key in 0..monkies {
-            spawn_virtual_monkey();
+            spawn_virtual_monkey(port, key);
         }
     })
 }

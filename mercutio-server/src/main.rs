@@ -16,9 +16,10 @@ extern crate tiny_http;
 extern crate url;
 extern crate ws;
 extern crate include_dir_macro;
+extern crate mercutio_server;
 
 use include_dir_macro::include_dir;
-use mercutio::sync::*;
+use mercutio_server::sync::*;
 use std::sync::Arc;
 use std::thread;
 use std::thread::JoinHandle;

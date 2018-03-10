@@ -132,11 +132,11 @@ main!(|| {
 
             execute!(
                 r"
-                    cd mercutio
+                    cd mercutio-server
                     export CARGO_INCREMENTAL=1
                     export MERCUTIO_WASM_LOG={use_log}
                     export RUST_BACKTRACE=1
-                    cargo run {release_flag} --bin mercutio-sync -- --period 100 {args}
+                    cargo run {release_flag} --bin mercutio-server -- --period 100 {args}
                 ",
                 use_log = if log { 1 } else { 0 },
                 release_flag = release_flag,
@@ -149,10 +149,10 @@ main!(|| {
 
             execute!(
                 r"
-                    cd mercutio
+                    cd mercutio-server
                     export CARGO_INCREMENTAL=1
                     export RUST_BACKTRACE=1
-                    cargo build {release_flag} --bin mercutio-sync {args}
+                    cargo build {release_flag} --bin mercutio-server {args}
                 ",
                 release_flag = release_flag,
                 args = args,
@@ -162,18 +162,18 @@ main!(|| {
         Cli::MercutioSyncCallgrind { args } => {
             execute!(
                 r"
-                    cd mercutio
+                    cd mercutio-server
                     export CARGO_INCREMENTAL=1
-                    cargo build --release --bin mercutio-sync
+                    cargo build --release --bin mercutio-server
                 ",
             )?;
 
             execute!(
                 r"
-                    cd mercutio
+                    cd mercutio-server
                     export MERCUTIO_SYNC_LOG=1
                     export RUST_BACKTRACE=1
-                    cargo profiler callgrind --bin ./target/release/mercutio-sync -- --period 100 {args}
+                    cargo profiler callgrind --bin ./target/release/mercutio-server -- --period 100 {args}
                 ",
                 args = args,
             )?;

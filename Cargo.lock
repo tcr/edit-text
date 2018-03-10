@@ -558,6 +558,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "mercutio-server"
+version = "0.1.0"
+dependencies = [
+ "bus 1.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "colored 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "crossbeam-channel 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "diesel 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "dotenv 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "env_logger 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "include-dir-macro 0.1.0 (git+https://github.com/jcdyer/include-dir-macro)",
+ "lazy_static 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "maplit 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mercutio 0.1.0",
+ "oatie 0.2.0",
+ "pulldown-cmark 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pulldown-cmark-to-cmark 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quicli 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ron 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.27 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_derive 1.0.27 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_json 1.0.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "structopt 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "structopt-derive 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "take_mut 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "taken 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tiny_http 0.5.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "url 1.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "uuid 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ws 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "mercutio-wasm"
 version = "0.1.0"
 dependencies = [

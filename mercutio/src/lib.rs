@@ -34,15 +34,9 @@ extern crate dotenv;
 #[cfg(not(target_arch="wasm32"))]
 extern crate url;
 
-pub mod server;
 #[macro_use]
 pub mod wasm;
 pub mod markdown;
-
-
-#[cfg(not(target_arch="wasm32"))]
-pub use server::sync;
-
 
 use oatie::doc::*;
 
