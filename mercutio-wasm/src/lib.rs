@@ -40,7 +40,7 @@ extern "C" {
 }
 
 lazy_static! {
-    static ref WASM_CLIENT: Mutex<Option<Client>> = Mutex::new(None);
+    static ref WASM_CLIENT: Mutex<Option<WasmClient>> = Mutex::new(None);
 }
 
 #[no_mangle]
@@ -56,12 +56,14 @@ pub fn wasm_setup() -> u32 { //input_ptr: *mut c_char) -> u32 {
         let monkey = Arc::new(AtomicBool::new(false));
         let alive = Arc::new(AtomicBool::new(true));
 
-        let client = Client {
-            client_id: editor_id,
-            client_doc: ClientDoc::new(),
+        let client = WasmClient {
+            state: Client {
+                client_id: editor_id,
+                client_doc: ClientDoc::new(),
 
-            monkey: Arc::new(AtomicBool::new(false)),
-            alive: Arc::new(AtomicBool::new(false)),
+                monkey,
+                alive,
+            }
         };
 
         client.setup();
@@ -81,7 +83,7 @@ pub fn wasm_command(input_ptr: *mut c_char) -> u32 {
     let req_parse: Result<Task, _> = serde_json::from_slice(&input.into_bytes());
     
     let mut client_lock = WASM_CLIENT.lock().unwrap();
-    let mut client = client_lock.as_mut().unwrap();
+    let client = client_lock.as_mut().unwrap();
 
     match req_parse {
         Ok(task) => {

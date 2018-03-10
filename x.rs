@@ -76,7 +76,7 @@ main!(|| {
 
             execute!(
                 r"
-                    cd mercutio/mercutio-wasm
+                    cd mercutio-wasm
                     cargo check {release_flag} --lib --target wasm32-unknown-unknown
                 ",
                 release_flag = release_flag,
@@ -84,7 +84,7 @@ main!(|| {
 
             execute!(
                 r"
-                    cd mercutio/mercutio-wasm
+                    cd mercutio-wasm
                     cargo build {release_flag} --lib --target wasm32-unknown-unknown
                 ",
                 release_flag = release_flag,
@@ -92,8 +92,7 @@ main!(|| {
 
             execute!(
                 r"
-                    cd mercutio/mercutio-wasm
-                    cp ../../target/wasm32-unknown-unknown/release/mercutio.wasm ../frontend/dist
+                    cp target/wasm32-unknown-unknown/release/mercutio.wasm mercutio/frontend/dist
                 ",
             )?;
         }

@@ -131,66 +131,6 @@ pub fn button_handlers<C: ClientImpl>() ->
 }
 
 
-
-
-// TODO move the below to a random.rs ?
-
-use oatie::writer::CurWriter;
-
-pub struct RandomCursorContext {
-    cur: CurWriter,
-    history: Vec<CurSpan>,
-}
-
-impl Default for RandomCursorContext {
-    fn default() -> Self {
-        RandomCursorContext {
-            cur: CurWriter::new(),
-            history: vec![],
-        }
-    }
-}
-
-pub fn collect_cursors_span(ctx: &mut RandomCursorContext, span: &DocSpan) -> Result<(), Error> {
-    for elem in span {
-        match *elem {
-            DocGroup(_, ref span) => {
-                {
-                    let mut c = ctx.cur.clone();
-                    c.place(&CurElement::CurGroup);
-                    c.exit_all();
-                    ctx.history.push(c.result());
-                }
-
-                ctx.cur.begin();
-                collect_cursors_span(ctx, span)?;
-                ctx.cur.exit();
-            }
-            DocChars(ref text) => {
-                ensure!(text.chars().count() > 0, "Empty char string");
-
-                for _ in 0..text.chars().count() {
-                    // Push a cursor to this character.
-                    let mut c = ctx.cur.clone();
-                    c.place(&CurElement::CurChar);
-                    c.exit_all();
-                    ctx.history.push(c.result());
-
-                    // But also increment the base cursor to skip this char.
-                    ctx.cur.place(&CurElement::CurSkip(1));
-                }
-            }
-        }
-    }
-    Ok(())
-}
-
-pub fn collect_cursors(doc: &Doc) -> Result<Vec<CurSpan>, Error> {
-    let mut ctx = RandomCursorContext::default();
-    collect_cursors_span(&mut ctx, &doc.0)?;
-    Ok(ctx.history)
-}
-
 fn native_command<C: ClientImpl>(client: &mut C, req: NativeCommand) -> Result<(), Error> {
     match req {
         NativeCommand::RenameGroup(tag, _) => {
@@ -217,7 +157,7 @@ fn native_command<C: ClientImpl>(client: &mut C, req: NativeCommand) -> Result<(
             client.client_op(|doc| add_char(doc, char_code))?;
         }
         NativeCommand::RandomTarget(pos) => {
-            let cursors = collect_cursors(&client.state().client_doc.doc)?;
+            let cursors = random_cursor(&client.state().client_doc.doc)?;
             let idx = (pos * (cursors.len() as f64)) as usize;
 
             client.client_op(|doc| cur_to_caret(doc, &cursors[idx]))?;
@@ -483,10 +423,9 @@ impl ClientImpl for WasmClient {
         &mut self.state
     }
 
-    pub fn send_client(&self, req: &ClientCommand) -> Result<(), Error> {
-        use std::mem;
+    fn send_client(&self, req: &ClientCommand) -> Result<(), Error> {
         use std::ffi::CString;
-        use std::os::raw::{c_char, c_void};
+        use std::os::raw::c_char;
 
         extern "C" {
             /// Send a command *to* the js client.
@@ -504,7 +443,7 @@ impl ClientImpl for WasmClient {
     }
 
     #[cfg(target_arch="wasm32")]
-    pub fn send_sync(&self, req: SyncServerCommand) -> Result<(), Error> {
+    fn send_sync(&self, req: SyncServerCommand) -> Result<(), Error> {
         self.send_client(&ClientCommand::SyncServerCommand(req))
     }
 }

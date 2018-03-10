@@ -112,7 +112,7 @@ fn spawn_server_thread(
     })
 }
 
-fn start_http_server(port: u16, client_proxy: bool) {
+fn run_http_server(port: u16, client_proxy: bool) {
     let server = tiny_http::Server::http(&format!("0.0.0.0:{}", port)).unwrap();
 
     let server = Arc::new(server);
@@ -181,10 +181,5 @@ fn main() {
 
     let _ = spawn_sync_socket_server();
 
-    start_http_server(opt.port, opt.client_proxy);
-
-    // // Loop forever
-    // loop {
-    //     ::std::thread::sleep(::std::time::Duration::from_millis(1000));
-    // }
+    run_http_server(opt.port, opt.client_proxy)
 }

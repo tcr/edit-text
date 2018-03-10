@@ -55,8 +55,10 @@ pub mod state;
 pub mod client;
 #[cfg(not(target_arch="wasm32"))]
 pub mod monkey;
+pub mod random;
 
 pub use self::client::*;
 pub use self::state::*;
 pub use self::util::*;
 pub use self::actions::*;
+pub use self::random::*;

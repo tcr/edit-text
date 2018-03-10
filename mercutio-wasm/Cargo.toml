@@ -4,8 +4,8 @@ version = "0.1.0"
 authors = ["Tim Ryan <id@timryan.org>"]
 
 [dependencies]
-mercutio = { path = "../" }
-oatie = { path = "../../oatie" }
+mercutio = { path = "../mercutio" }
+oatie = { path = "../oatie" }
 env_logger = "0.4.3"
 failure = "0.1.1"
 lazy_static = "1.0.0"
