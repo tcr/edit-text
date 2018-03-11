@@ -6,6 +6,6 @@ mercutio/in
 Vagrantfile
 .vagrant
 node_modules
-dist/mercutio-sync
+dist/mercutio-server
 *.sqlite3
 ubuntu*.log

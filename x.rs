@@ -207,7 +207,7 @@ main!(|| {
         Cli::JsBuild { args } => {
             execute!(
                 r"
-                    cd mercutio/frontend
+                    cd mercutio-frontend
                     npx webpack ./src/app.ts ./dist/mercutio.js {args}
                 ",
                 args = args,
@@ -217,7 +217,7 @@ main!(|| {
         Cli::JsWatch { args } => {
             execute!(
                 r"
-                    cd mercutio/frontend
+                    cd mercutio-frontend
                     npx webpack --watch ./src/app.ts ./dist/mercutio.js {args}
                 ",
                 args = args,
@@ -255,15 +255,15 @@ main!(|| {
                 r#"
                     cd dist
                     vagrant ssh -c "
-                        cd /vagrant/mercutio
+                        cd /vagrant/mercutio-server
                         rustup override set `cat ../rust-toolchain`
-                        cargo build --release --target=x86_64-unknown-linux-gnu --bin mercutio-sync
+                        cargo build --release --target=x86_64-unknown-linux-gnu --bin mercutio-server
                     "
                 "#,
             )?;
             execute!(
                 "
-                    cp target/x86_64-unknown-linux-gnu/release/mercutio-sync dist
+                    cp target/x86_64-unknown-linux-gnu/release/mercutio-server dist
                 "
             )?;
 

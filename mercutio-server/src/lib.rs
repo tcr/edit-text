@@ -73,5 +73,6 @@ extern crate ws;
 // Macros can only be used after they are defined
 pub mod sync;
 pub mod schema;
+pub mod db;
 
 pub use mercutio::*;

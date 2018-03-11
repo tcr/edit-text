@@ -22,4 +22,4 @@ RUN mkdir -p mercutio/log; mkdir -p log;
 RUN apt-get update; apt-get install sqlite3 libsqlite3-dev -y
 
 # Run app.py when the container launches
-CMD service nginx restart; RUST_BACKTRACE=1 MERCUTIO_SYNC_LOG=0 ./mercutio-sync
+CMD service nginx restart; RUST_BACKTRACE=1 MERCUTIO_SYNC_LOG=0 ./mercutio-server

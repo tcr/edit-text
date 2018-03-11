@@ -3,6 +3,7 @@ use crate::{
     SyncClientCommand,
     SyncServerCommand,
     markdown::markdown_to_doc,
+    db::*,
 };
 use crossbeam_channel::{
     Receiver as CCReceiver,
@@ -10,11 +11,8 @@ use crossbeam_channel::{
     unbounded,
 };
 use diesel::{
-    self,
-    prelude::*,
     sqlite::SqliteConnection,
 };
-use dotenv::dotenv;
 use failure::Error;
 use oatie::{
     OT,
@@ -27,13 +25,14 @@ use ron;
 use serde_json;
 use std::{
     collections::{HashMap, VecDeque},
-    env,
     sync::{Arc, Mutex},
     thread::{self, JoinHandle},
     time::Duration,
 };
 use url::Url;
 use ws;
+
+const PAGE_TITLE_LEN: usize = 100;
 
 pub fn default_new_doc(id: &str) -> Doc {
     Doc(doc_span![
@@ -70,159 +69,6 @@ Type github.com/tcr/edit-text into your search bar for more information.
     let doc = Doc(markdown_to_doc(&INPUT).unwrap());
     validate_doc(&doc).expect("Initial Markdown document was malformed");
     doc
-
-    // Doc(doc_span![
-    //     DocGroup({"tag": "h1"}, [
-    //         // DocGroup({"tag": "caret", "client": "left"}, []),
-    //         // DocGroup({"tag": "caret", "client": "right"}, []),
-    //         DocChars("Hello world!"),
-    //     ]),
-    //     DocGroup({"tag": "p"}, [
-    //         // DocChars("What's "),
-    //         // DocGroup({"tag": "span", "class": "bold"}, [DocChars("new and great")]),
-    //         // DocChars(" with you?"),
-    //         DocChars("This is Mercutio, a rich text editor."),
-    //     ]),
-    //     // DocGroup({"tag": "ul"}, [
-    //     //     DocGroup({"tag": "li"}, [
-    //     //         DocGroup({"tag": "p"}, [
-    //     //             DocChars("Three adjectives strong."),
-    //     //         ]),
-    //     //         DocGroup({"tag": "p"}, [
-    //     //             DocChars("World!"),
-    //     //         ]),
-    //     //     ]),
-    //     // ])
-    // ])
-}
-
-// #[derive(Clone)]
-// pub struct MoteState {
-//     pub body: Arc<Mutex<Doc>>,
-// }
-
-// pub fn action_sync(doc: &Doc, ops_a: Vec<Op>, ops_b: Vec<Op>) -> Result<(Doc, Op), Error> {
-//     println!(" ---> input ops_a");
-//     println!("{:?}", ops_a);
-//     println!();
-
-//     // Flatten client A operations.
-//     let mut op_a = op_span!([], []);
-//     for op in &ops_a {
-//         op_a = OT::compose(&op_a, op);
-//     }
-
-//     println!(" ---> input ops_b");
-//     println!("{:?}", ops_b);
-//     println!();
-
-//     // Flatten client B operations.
-//     let mut op_b = op_span!([], []);
-//     for op in &ops_b {
-//         op_b = OT::compose(&op_b, op);
-//     }
-
-//     println!("OP A {:?}", op_a);
-//     println!("OP B {:?}", op_b);
-
-//     let test = format!(
-//         r#"
-// doc:   {}
-
-// a_del: {}
-// a_add: {}
-
-// b_del: {}
-// b_add: {}
-// "#,
-//         debug_pretty(&doc.0),
-//         debug_pretty(&op_a.0),
-//         debug_pretty(&op_a.1),
-//         debug_pretty(&op_b.0),
-//         debug_pretty(&op_b.1)
-//     );
-
-//     // TODO dump to document
-//     {
-//         use std::io::prelude::*;
-//         let mut f = ::std::fs::File::create("test.txt").unwrap();
-//         f.write_all(&test.as_bytes()).unwrap();
-//         f.sync_all().unwrap();
-//     }
-
-//     println!();
-//     println!("<test>");
-//     print!("{}", test);
-//     println!("</test>");
-//     println!();
-
-//     println!("(!) recreating initial client state...");
-//     println!();
-
-//     // TODO remove this validation code if we're performing the check client-side
-
-//     // let mut check_op_a = op_span!([], []);
-//     // for (i, op) in ops_a.iter().enumerate() {
-//     //     println!("  A: applying {:?}/{:?}", i + 1, ops_a.len());
-//     //     check_op_a = OT::compose(&check_op_a, &op);
-//     //     println!(" op: {}", debug_pretty(&check_op_a));
-//     //     let _ = OT::apply(&doc.clone(), &check_op_a);
-//     // }
-
-//     // println!();
-
-//     // let mut check_op_b = op_span!([], []);
-//     // for (i, op) in ops_b.iter().enumerate() {
-//     //     println!("  B: applying {:?}/{:?}", i + 1, ops_b.len());
-//     //     check_op_b = OT::compose(&check_op_b, &op);
-//     //     println!(" op: {}", debug_pretty(&check_op_b));
-//     //     let _ = OT::apply(&doc.clone(), &check_op_b);
-//     // }
-
-//     let doc_a = OT::apply(&doc.clone(), &op_a);
-//     let doc_b = OT::apply(&doc.clone(), &op_b);
-
-//     println!("ok");
-//     println!();
-
-//     println!("(!) applying transformed operations...");
-
-//     // Tranform
-//     let (a_, b_) = transform::<RtfSchema>(&op_a, &op_b);
-
-//     println!("");
-//     println!("DOC A {:?}", doc_a);
-//     println!("OP A' {:?}", a_);
-//     let a_res = OT::apply(&doc_a, &a_);
-
-//     println!("");
-//     println!("DOC B {:?}", doc_b);
-//     println!("OP B' {:?}", b_);
-//     let b_res = OT::apply(&doc_b, &b_);
-
-//     println!("");
-//     println!("a res {:?}", a_res);
-//     println!("b res {:?}", b_res);
-
-//     println!("equal? {:?}", a_res == b_res);
-
-//     let success = if a_res != b_res { false } else { true };
-
-//     // TODO return error when success is false
-
-//     let new_doc = Doc(a_res.0);
-//     validate_doc(&new_doc).expect("Validation error");
-
-//     Ok((new_doc, OT::compose(&op_a, &a_)))
-// }
-
-pub fn db_connection() -> SqliteConnection {
-    dotenv().ok();
-
-    let mut database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    database_url = format!("../{}", database_url);
-    SqliteConnection::establish(&database_url)
-        .expect(&format!("Error connecting to {}", database_url))
 }
 
 /// Transform an operation incrementally against each interim document operation.
@@ -247,56 +93,6 @@ pub fn update_operation(
     }
     op
 }
-
-#[derive(Queryable)]
-pub struct Post {
-    pub id: String,
-    pub body: String,
-}
-
-use super::schema::posts;
-
-#[derive(Insertable)]
-#[table_name = "posts"]
-pub struct NewPost<'a> {
-    pub id: &'a str,
-    pub body: &'a str,
-}
-
-pub fn create_post<'a>(conn: &SqliteConnection, id: &'a str, body: &'a str) -> usize {
-    use super::schema::posts;
-
-    let new_post = NewPost { id: id, body: body };
-
-    diesel::replace_into(posts::table)
-        .values(&new_post)
-        .execute(conn)
-        .expect("Error saving new post")
-}
-
-fn db_help() -> (SqliteConnection, HashMap<String, String>) {
-    use super::schema::posts::dsl::*;
-
-    let connection = db_connection();
-    let results = posts
-        // .limit(5)
-        .load::<Post>(&connection)
-        .expect("Error loading posts");
-
-    // create_post(&connection, "home", "# hello world");
-
-    // println!("Displaying {} posts", results.len());
-    let mut ret = HashMap::new();
-    for post in results {
-        ret.insert(post.id.clone(), post.body.clone());
-        // println!("{}", post.id);
-        // println!("----------\n");
-        // println!("{}", post.body);
-    }
-    (connection, ret)
-}
-
-const PAGE_TITLE_LEN: usize = 100;
 
 pub fn valid_page_id(input: &str) -> bool {
     if input.is_empty() || input.len() > PAGE_TITLE_LEN {
