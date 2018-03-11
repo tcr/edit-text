@@ -1,9 +1,9 @@
 #![feature(crate_in_paths)]
 
+use std::fs::File;
 use std::path::Path;
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::fs::File;
 
 lazy_static! {
     static ref LOG_SYNC_FILE: Arc<Mutex<File>> = {
@@ -42,33 +42,33 @@ macro_rules! log_sync {
 }
 
 extern crate bus;
+extern crate colored;
 extern crate crossbeam_channel;
+#[macro_use]
+extern crate diesel;
+extern crate dotenv;
 #[macro_use]
 extern crate failure;
 #[macro_use]
+extern crate lazy_static;
+#[macro_use]
 extern crate maplit;
+extern crate mercutio;
 #[macro_use]
 extern crate oatie;
+extern crate pulldown_cmark;
+extern crate pulldown_cmark_to_cmark;
 extern crate rand;
+extern crate ron;
 extern crate serde;
-#[macro_use]
-extern crate taken;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
 extern crate take_mut;
 #[macro_use]
-extern crate lazy_static;
-extern crate ron;
-extern crate ws;
-extern crate colored;
-extern crate pulldown_cmark;
-extern crate pulldown_cmark_to_cmark;
-#[macro_use]
-extern crate diesel;
-extern crate dotenv;
+extern crate taken;
 extern crate url;
-extern crate mercutio;
+extern crate ws;
 
 // Macros can only be used after they are defined
 pub mod sync;

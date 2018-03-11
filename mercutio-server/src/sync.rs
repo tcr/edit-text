@@ -1,30 +1,39 @@
 use bus::{Bus, BusReader};
+use crate::{
+    SyncClientCommand,
+    SyncServerCommand,
+    markdown::markdown_to_doc,
+};
+use crossbeam_channel::{
+    Receiver as CCReceiver,
+    Sender as CCSender,
+    unbounded,
+};
+use diesel::{
+    self,
+    prelude::*,
+    sqlite::SqliteConnection,
+};
+use dotenv::dotenv;
 use failure::Error;
-use oatie::OT;
-use oatie::doc::*;
-use oatie::schema::RtfSchema;
-use oatie::validate::validate_doc;
-use serde_json;
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
-use std::thread::{self, JoinHandle};
-use std::time::Duration;
-use crate::{SyncClientCommand, SyncServerCommand};
-use ws;
-use std::collections::VecDeque;
-use crate::markdown::markdown_to_doc;
+use oatie::{
+    OT,
+    doc::*,
+    schema::RtfSchema,
+    validate::validate_doc,
+};
 use rand::{thread_rng, Rng};
 use ron;
-use crossbeam_channel::unbounded;
-use crossbeam_channel::Sender as CCSender;
-use crossbeam_channel::Receiver as CCReceiver;
+use serde_json;
+use std::{
+    collections::{HashMap, VecDeque},
+    env,
+    sync::{Arc, Mutex},
+    thread::{self, JoinHandle},
+    time::Duration,
+};
 use url::Url;
-
-use diesel;
-use diesel::prelude::*;
-use diesel::sqlite::SqliteConnection;
-use dotenv::dotenv;
-use std::env;
+use ws;
 
 pub fn default_new_doc(id: &str) -> Doc {
     Doc(doc_span![
@@ -207,20 +216,22 @@ Type github.com/tcr/edit-text into your search bar for more information.
 //     Ok((new_doc, OT::compose(&op_a, &a_)))
 // }
 
-
-
 pub fn db_connection() -> SqliteConnection {
     dotenv().ok();
 
-    let mut database_url = env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set");
+    let mut database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     database_url = format!("../{}", database_url);
     SqliteConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url))
 }
 
 /// Transform an operation incrementally against each interim document operation.
-pub fn update_operation(mut op: Op, history: &HashMap<usize, Op>, target_version: usize, mut input_version: usize) -> Op {
+pub fn update_operation(
+    mut op: Op,
+    history: &HashMap<usize, Op>,
+    target_version: usize,
+    mut input_version: usize,
+) -> Op {
     // Transform against each interim operation.
     // TODO upgrade_operation_to_current or something
     while input_version < target_version {
@@ -234,7 +245,7 @@ pub fn update_operation(mut op: Op, history: &HashMap<usize, Op>, target_version
 
         input_version += 1;
     }
-    op  
+    op
 }
 
 #[derive(Queryable)]
@@ -246,7 +257,7 @@ pub struct Post {
 use super::schema::posts;
 
 #[derive(Insertable)]
-#[table_name="posts"]
+#[table_name = "posts"]
 pub struct NewPost<'a> {
     pub id: &'a str,
     pub body: &'a str,
@@ -255,10 +266,7 @@ pub struct NewPost<'a> {
 pub fn create_post<'a>(conn: &SqliteConnection, id: &'a str, body: &'a str) -> usize {
     use super::schema::posts;
 
-    let new_post = NewPost {
-        id: id,
-        body: body,
-    };
+    let new_post = NewPost { id: id, body: body };
 
     diesel::replace_into(posts::table)
         .values(&new_post)
@@ -274,7 +282,7 @@ fn db_help() -> (SqliteConnection, HashMap<String, String>) {
         // .limit(5)
         .load::<Post>(&connection)
         .expect("Error loading posts");
-    
+
     // create_post(&connection, "home", "# hello world");
 
     // println!("Displaying {} posts", results.len());
@@ -294,9 +302,10 @@ pub fn valid_page_id(input: &str) -> bool {
     if input.is_empty() || input.len() > PAGE_TITLE_LEN {
         return false;
     }
-    input.chars().all(|x| x.is_digit(10) || x.is_ascii_alphabetic() || x == '_')
+    input
+        .chars()
+        .all(|x| x.is_digit(10) || x.is_ascii_alphabetic() || x == '_')
 }
-
 
 fn spawn_bus_to_client(
     out: ws::Sender,
@@ -323,7 +332,7 @@ impl ws::Handler for ClientHandler {
         if path.starts_with("/$/ws/") {
             path = path["/$/ws".len()..].to_string();
         }
-        
+
         if valid_page_id(&path[1..]) {
             self.page_id = Some(path[1..].to_string());
         } else {
@@ -331,10 +340,13 @@ impl ws::Handler for ClientHandler {
             self.page_id = Some("home".to_string());
         }
 
-        println!("(!) Client {:?} connected to {:?}", self.client_id, self.page_id);
+        println!(
+            "(!) Client {:?} connected to {:?}",
+            self.client_id, self.page_id
+        );
 
         self.sync_state_mutex = Some(allocate_page(
-            &self.page_map, 
+            &self.page_map,
             self.page_id.as_ref().unwrap(),
             query == Some("helloworld"),
             self.tx_db.clone(),
@@ -351,7 +363,7 @@ impl ws::Handler for ClientHandler {
             let command = SyncClientCommand::Init(
                 self.client_id.clone(),
                 sync_state.doc.0.clone(),
-                sync_state.version
+                sync_state.version,
             );
             out.send(serde_json::to_string(&command).unwrap())?;
 
@@ -362,7 +374,7 @@ impl ws::Handler for ClientHandler {
 
         Ok(())
     }
-    
+
     fn on_message(&mut self, msg: ws::Message) -> ws::Result<()> {
         let req_parse: Result<SyncServerCommand, _> = serde_json::from_slice(&msg.into_data());
         match req_parse {
@@ -406,18 +418,30 @@ struct ClientHandler {
     tx_db: CCSender<(String, String)>,
 }
 
-fn allocate_page(page_map_mutex: &SharedPageMap, page_id: &str, helloworld: bool, tx_db: CCSender<(String, String)>) -> Arc<Mutex<SyncState>> {
+fn allocate_page(
+    page_map_mutex: &SharedPageMap,
+    page_id: &str,
+    helloworld: bool,
+    tx_db: CCSender<(String, String)>,
+) -> Arc<Mutex<SyncState>> {
     {
         let mut page_map = page_map_mutex.lock().unwrap();
 
         if page_map.get(page_id).is_none() {
-            page_map.insert(page_id.to_string(), Arc::new(Mutex::new(SyncState {
-                ops: VecDeque::new(),
-                version: 100,
-                history: hashmap![],
-                doc: if helloworld { default_doc() } else { default_new_doc(page_id) }, //default_doc(),
-                client_bus: Bus::new(255),
-            })));
+            page_map.insert(
+                page_id.to_string(),
+                Arc::new(Mutex::new(SyncState {
+                    ops: VecDeque::new(),
+                    version: 100,
+                    history: hashmap![],
+                    doc: if helloworld {
+                        default_doc()
+                    } else {
+                        default_new_doc(page_id)
+                    }, //default_doc(),
+                    client_bus: Bus::new(255),
+                })),
+            );
         }
     }
 
@@ -427,7 +451,7 @@ fn allocate_page(page_map_mutex: &SharedPageMap, page_id: &str, helloworld: bool
     {
         let page_map = page_map_mutex.lock().unwrap();
         page_map.get(page_id).clone().unwrap().clone()
-    }    
+    }
 }
 
 fn correct_op_span(span: &DocSpan) -> Result<DocSpan, Error> {
@@ -455,9 +479,20 @@ pub fn correct_op(doc: &Doc) -> Result<Doc, Error> {
     Ok(Doc(correct_op_span(&doc.0)?))
 }
 
-fn spawn_server(page_map: &SharedPageMap, period: u64, page_id: &str, tx_db: CCSender<(String, String)>) {
-    let sync_state_mutex = page_map.lock().unwrap().get(page_id).clone().unwrap().clone();
-    
+fn spawn_server(
+    page_map: &SharedPageMap,
+    period: u64,
+    page_id: &str,
+    tx_db: CCSender<(String, String)>,
+) {
+    let sync_state_mutex = page_map
+        .lock()
+        .unwrap()
+        .get(page_id)
+        .clone()
+        .unwrap()
+        .clone();
+
     // Handle incoming packets.
     let page_id = page_id.to_string();
     let _ = thread::Builder::new()
@@ -476,11 +511,12 @@ fn spawn_server(page_map: &SharedPageMap, period: u64, page_id: &str, tx_db: CCS
                     let target_version = sync_state.version;
 
                     // log_sync!(Debug(format!("client {:?} sent {:?}", client_id, op)));
-                    
+
                     // let res = action_sync(&doc, new_op, op_group).unwrap();
 
                     // Update the operation so we can apply it to the document.
-                    let op = update_operation(op, &sync_state.history, target_version, input_version);
+                    let op =
+                        update_operation(op, &sync_state.history, target_version, input_version);
                     sync_state.history.insert(target_version, op.clone());
 
                     // log_sync!(Debug(format!("updated op to {:?}", op)));
@@ -488,19 +524,26 @@ fn spawn_server(page_map: &SharedPageMap, period: u64, page_id: &str, tx_db: CCS
                     // Update the document with this operation.
                     sync_state.doc = Op::apply(&sync_state.doc, &op);
                     sync_state.version = target_version + 1;
-                    
+
                     validate_doc(&sync_state.doc).expect("Validation error");
 
                     // log_sync!(Debug(format!("doc is now {:?}", sync_state.doc)));
 
                     // if let Ok(md) = doc_to_markdown(&sync_state.doc.0) {
-                    if let Ok(serialized) = correct_op(&sync_state.doc).and_then(|x| Ok(::ron::ser::to_string(&x.0)?)) {
+                    if let Ok(serialized) =
+                        correct_op(&sync_state.doc).and_then(|x| Ok(::ron::ser::to_string(&x.0)?))
+                    {
                         tx_db.try_send((page_id.to_string(), serialized))?;
                     }
                     // }
 
                     // Broadcast to all connected websockets.
-                    let command = SyncClientCommand::Update(sync_state.doc.0.clone(), sync_state.version, client_id, op);
+                    let command = SyncClientCommand::Update(
+                        sync_state.doc.0.clone(),
+                        sync_state.version,
+                        client_id,
+                        op,
+                    );
                     sync_state.client_bus.broadcast(command);
                 }
 
@@ -512,11 +555,7 @@ fn spawn_server(page_map: &SharedPageMap, period: u64, page_id: &str, tx_db: CCS
 
 type SharedPageMap = Arc<Mutex<HashMap<String, Arc<Mutex<SyncState>>>>>;
 
-
-fn spawn_update_db(
-    conn: SqliteConnection,
-    rx_db: CCReceiver<(String, String)>,
-) -> JoinHandle<()> {
+fn spawn_update_db(conn: SqliteConnection, rx_db: CCReceiver<(String, String)>) -> JoinHandle<()> {
     thread::spawn(move || {
         while let Ok((id, body)) = rx_db.recv() {
             // println!("(@) writing {:?}", id);
@@ -544,26 +583,25 @@ pub fn sync_socket_server(port: u16, _period: usize) {
         for (page_id, md) in original_pages {
             println!("(@) Restoring {:?}", page_id);
             if let Ok(doc) = ::ron::de::from_str(&md) {
-                hash.insert(page_id.to_string(), Arc::new(Mutex::new(SyncState {
-                    ops: VecDeque::new(),
-                    version: 100,
-                    history: hashmap![],
-                    doc: Doc(doc),
-                    client_bus: Bus::new(255),
-                })));
+                hash.insert(
+                    page_id.to_string(),
+                    Arc::new(Mutex::new(SyncState {
+                        ops: VecDeque::new(),
+                        version: 100,
+                        history: hashmap![],
+                        doc: Doc(doc),
+                        client_bus: Bus::new(255),
+                    })),
+                );
             }
         }
         hash
     }));
 
-    // spawn_server(&page_map, period as u64, "home", tx_db.clone());
-
     // Listen to incoming clients.
     let _ = ws::listen(url, {
         take!(=page_map, =tx_db);
         move |out| {
-            // let sync_state_mutex = page_map.lock().unwrap().get("home").clone().unwrap().clone();
-            
             log_sync!(ClientConnect);
 
             println!("Client connected.");
