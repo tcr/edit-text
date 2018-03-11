@@ -1,6 +1,7 @@
 //! Connecting to wasm.
 
-extern crate mercutio; 
+extern crate mercutio;
+extern crate mercutio_client;
 extern crate failure;
 extern crate maplit;
 extern crate oatie;
@@ -13,8 +14,10 @@ extern crate lazy_static;
 
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicBool;
-use mercutio::wasm::*;
-
+use mercutio_client::client::*;
+use mercutio_client::state::*;
+use mercutio::*;
+use failure::Error;
 use std::mem;
 use std::ffi::CString;
 use std::os::raw::{c_char, c_void};
@@ -41,6 +44,40 @@ extern "C" {
 
 lazy_static! {
     static ref WASM_CLIENT: Mutex<Option<WasmClient>> = Mutex::new(None);
+}
+
+
+pub struct WasmClient {
+    pub state: Client,
+}
+
+impl ClientImpl for WasmClient {
+    fn state(&mut self) -> &mut Client {
+        &mut self.state
+    }
+
+    fn send_client(&self, req: &ClientCommand) -> Result<(), Error> {
+        use std::ffi::CString;
+        use std::os::raw::c_char;
+
+        extern "C" {
+            /// Send a command *to* the js client.
+            pub fn js_command(input_ptr: *mut c_char) -> u32;
+        }
+
+        let data = serde_json::to_string(&req)?;
+        let s = CString::new(data).unwrap().into_raw();
+
+        unsafe {
+            let _ = js_command(s);
+        }
+
+        Ok(())
+    }
+
+    fn send_sync(&self, req: SyncServerCommand) -> Result<(), Error> {
+        self.send_client(&ClientCommand::SyncServerCommand(req))
+    }
 }
 
 #[no_mangle]

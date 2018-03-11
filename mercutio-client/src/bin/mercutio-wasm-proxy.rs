@@ -1,4 +1,5 @@
 extern crate mercutio;
+extern crate mercutio_client;
 extern crate serde_json;
 extern crate structopt;
 #[macro_use]
@@ -10,11 +11,11 @@ use std::thread::{self, JoinHandle};
 use std::panic;
 use std::process;
 use std::time::Duration;
-use mercutio::wasm::{ClientCommand, NativeCommand};
-use mercutio::wasm::proxy::start_websocket_server;
+use mercutio_client::client::{ClientCommand, NativeCommand};
+use mercutio_client::proxy::start_websocket_server;
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "mercutio-wasm", about = "An example of StructOpt usage.")]
+#[structopt(name = "mercutio-client", about = "An example of StructOpt usage.")]
 struct Opt {
     #[structopt(long = "monkies", help = "Monkey count")]
     monkies: Option<usize>,

@@ -411,39 +411,3 @@ impl ClientImpl for ProxyClient {
         Ok(())
     }
 }
-
-#[cfg(target_arch="wasm32")]
-pub struct WasmClient {
-    pub state: Client,
-}
-
-#[cfg(target_arch="wasm32")]
-impl ClientImpl for WasmClient {
-    fn state(&mut self) -> &mut Client {
-        &mut self.state
-    }
-
-    fn send_client(&self, req: &ClientCommand) -> Result<(), Error> {
-        use std::ffi::CString;
-        use std::os::raw::c_char;
-
-        extern "C" {
-            /// Send a command *to* the js client.
-            pub fn js_command(input_ptr: *mut c_char) -> u32;
-        }
-
-        let data = serde_json::to_string(&req)?;
-        let s = CString::new(data).unwrap().into_raw();
-
-        unsafe {
-            let _ = js_command(s);
-        }
-
-        Ok(())
-    }
-
-    #[cfg(target_arch="wasm32")]
-    fn send_sync(&self, req: SyncServerCommand) -> Result<(), Error> {
-        self.send_client(&ClientCommand::SyncServerCommand(req))
-    }
-}

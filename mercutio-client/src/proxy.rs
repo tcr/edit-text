@@ -1,5 +1,5 @@
 use super::*;
-use super::super::SyncClientCommand;
+use mercutio::SyncClientCommand;
 use crossbeam_channel::{unbounded, Sender, Receiver};
 use failure::Error;
 use serde_json;
@@ -8,7 +8,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::thread::{self, JoinHandle};
 use ws;
-use wasm::monkey::setup_monkey;
+use monkey::setup_monkey;
 
 fn spawn_send_to_client(
     rx_client: Receiver<ClientCommand>,

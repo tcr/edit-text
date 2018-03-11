@@ -102,7 +102,7 @@ main!(|| {
 
             execute!(
                 r"
-                    cd mercutio
+                    cd mercutio-client
                     export CARGO_INCREMENTAL=1
                     export MERCUTIO_WASM_LOG=0
                     export RUST_BACKTRACE=1

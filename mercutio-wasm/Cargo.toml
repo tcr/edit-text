@@ -5,6 +5,7 @@ authors = ["Tim Ryan <id@timryan.org>"]
 
 [dependencies]
 mercutio = { path = "../mercutio" }
+mercutio-client = { path = "../mercutio-client" }
 oatie = { path = "../oatie" }
 env_logger = "0.4.3"
 failure = "0.1.1"

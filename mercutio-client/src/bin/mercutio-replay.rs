@@ -3,6 +3,7 @@
 extern crate failure;
 extern crate ron;
 extern crate mercutio;
+extern crate mercutio_client;
 extern crate crossbeam_channel;
 #[macro_use]
 extern crate maplit;
@@ -19,12 +20,14 @@ use failure::Error;
 use std::io::prelude::*;
 use mercutio::{
     SyncServerCommand,
-    wasm::{
-        Client,
-        LogWasm,
-        state::ClientDoc,
-        ClientCommand,
-    },
+};
+use mercutio_client::{
+    ProxyClient,
+    Client,
+    ClientImpl,
+    LogWasm,
+    state::ClientDoc,
+    ClientCommand,
 };
 use std::sync::{
     atomic::AtomicBool,
@@ -33,15 +36,17 @@ use std::sync::{
 use crossbeam_channel::{Receiver, unbounded};
 use structopt::StructOpt;
 
-fn init_new_client(client_id: &str) -> (Client, Receiver<ClientCommand>, Receiver<SyncServerCommand>) {
+fn init_new_client(client_id: &str) -> (ProxyClient, Receiver<ClientCommand>, Receiver<SyncServerCommand>) {
     let (tx_client, rx_client) = unbounded();
     let (tx_sync, rx_sync) = unbounded();
-    let client = Client {
-        client_id: client_id.to_owned(),
-        client_doc: ClientDoc::new(),
+    let client = ProxyClient {
+        state: Client {
+            client_id: client_id.to_owned(),
+            client_doc: ClientDoc::new(),
 
-        monkey: Arc::new(AtomicBool::new(false)),
-        alive: Arc::new(AtomicBool::new(true)),
+            monkey: Arc::new(AtomicBool::new(false)),
+            alive: Arc::new(AtomicBool::new(true)),
+        },
 
         tx_client,
         tx_sync,
