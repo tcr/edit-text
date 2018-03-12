@@ -103,7 +103,6 @@ main!(|| {
             execute!(
                 r"
                     cd mercutio-client
-                    export CARGO_INCREMENTAL=1
                     export MERCUTIO_WASM_LOG=0
                     export RUST_BACKTRACE=1
                     cargo run {release_flag} --bin mercutio-wasm-proxy -- {args}
@@ -119,7 +118,6 @@ main!(|| {
             execute!(
                 r"
                     cd oatie
-                    export CARGO_INCREMENTAL=1
                     cargo build {release_flag} {args}
                 ",
                 release_flag = release_flag,
@@ -133,7 +131,6 @@ main!(|| {
             execute!(
                 r"
                     cd mercutio-server
-                    export CARGO_INCREMENTAL=1
                     export MERCUTIO_WASM_LOG={use_log}
                     export RUST_BACKTRACE=1
                     cargo run {release_flag} --bin mercutio-server -- --period 100 {args}
@@ -150,7 +147,6 @@ main!(|| {
             execute!(
                 r"
                     cd mercutio-server
-                    export CARGO_INCREMENTAL=1
                     export RUST_BACKTRACE=1
                     cargo build {release_flag} --bin mercutio-server {args}
                 ",
@@ -163,7 +159,6 @@ main!(|| {
             execute!(
                 r"
                     cd mercutio-server
-                    export CARGO_INCREMENTAL=1
                     cargo build --release --bin mercutio-server
                 ",
             )?;
@@ -185,7 +180,6 @@ main!(|| {
             execute!(
                 r"
                     cd mercutio
-                    export CARGO_INCREMENTAL=1
                     export RUST_BACKTRACE=1
                     cargo run {release_flag} --bin mercutio-replay -- {args}
                 ",
