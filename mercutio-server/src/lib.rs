@@ -74,5 +74,6 @@ extern crate ws;
 pub mod sync;
 pub mod schema;
 pub mod db;
+pub mod util;
 
 pub use mercutio::*;

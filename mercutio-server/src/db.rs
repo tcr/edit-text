@@ -1,26 +1,12 @@
-use crossbeam_channel::{
-    Sender as CCSender,
-    unbounded,
-};
 use diesel::{
     self,
     prelude::*,
     sqlite::SqliteConnection,
 };
 use dotenv::dotenv;
-use oatie::{
-    OT,
-    doc::*,
-    schema::RtfSchema,
-    validate::validate_doc,
-};
-use rand::Rng;
 use std::{
-    collections::{HashMap, VecDeque},
+    collections::HashMap,
     env,
-    sync::{Arc, Mutex},
-    thread::{self, JoinHandle},
-    time::Duration,
 };
 
 pub fn db_connection() -> SqliteConnection {

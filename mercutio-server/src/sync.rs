@@ -4,6 +4,7 @@ use crate::{
     SyncServerCommand,
     markdown::markdown_to_doc,
     db::*,
+    util::*,
 };
 use crossbeam_channel::{
     Receiver as CCReceiver,
@@ -84,8 +85,6 @@ pub fn update_operation(
         // If the version exists (it should) transform against it.
         if let Some(ref version_op) = history.get(&input_version) {
             let (updated_op, _) = Op::transform::<RtfSchema>(version_op, &op);
-            // let correction = correct_op(&updated_op).unwrap();
-            // op = OT::compose(&updated_op, &correction);
             op = updated_op;
         }
 
@@ -103,6 +102,7 @@ pub fn valid_page_id(input: &str) -> bool {
         .all(|x| x.is_digit(10) || x.is_ascii_alphabetic() || x == '_')
 }
 
+/// Fanout messages from a bus to a websocket sender.
 fn spawn_bus_to_client(
     out: ws::Sender,
     mut rx: BusReader<SyncClientCommand>,
@@ -113,6 +113,23 @@ fn spawn_bus_to_client(
         }
         Ok(())
     })
+}
+
+pub struct SyncState {
+    ops: VecDeque<(String, usize, Op)>,
+    version: usize,
+    history: HashMap<usize, Op>,
+    doc: Doc,
+    client_bus: Bus<SyncClientCommand>,
+}
+
+struct ClientHandler {
+    client_id: String,
+    page_id: Option<String>,
+    sync_state_mutex: Option<Arc<Mutex<SyncState>>>,
+    out: Option<ws::Sender>,
+    page_map: SharedPageMap,
+    tx_db: CCSender<(String, String)>,
 }
 
 impl ws::Handler for ClientHandler {
@@ -197,23 +214,8 @@ impl ws::Handler for ClientHandler {
     }
 }
 
-pub struct SyncState {
-    ops: VecDeque<(String, usize, Op)>,
-    version: usize,
-    history: HashMap<usize, Op>,
-    doc: Doc,
-    client_bus: Bus<SyncClientCommand>,
-}
-
-struct ClientHandler {
-    client_id: String,
-    page_id: Option<String>,
-    sync_state_mutex: Option<Arc<Mutex<SyncState>>>,
-    out: Option<ws::Sender>,
-    page_map: SharedPageMap,
-    tx_db: CCSender<(String, String)>,
-}
-
+/// Creates a new page netry in the page map and spawns a sync
+/// thread to manage it.
 fn allocate_page(
     page_map_mutex: &SharedPageMap,
     page_id: &str,
@@ -241,8 +243,9 @@ fn allocate_page(
         }
     }
 
-    // TODO period
-    spawn_server(page_map_mutex, 100, page_id, tx_db);
+    // TODO pass in a real _period value
+    spawn_sync_server(page_map_mutex, page_id, 100, tx_db)
+        .expect("Failed to spawn sync server");
 
     {
         let page_map = page_map_mutex.lock().unwrap();
@@ -250,50 +253,27 @@ fn allocate_page(
     }
 }
 
-fn correct_op_span(span: &DocSpan) -> Result<DocSpan, Error> {
-    let mut ret: DocSpan = vec![];
-
-    for elem in span {
-        match *elem {
-            DocGroup(ref attrs, ref span) => {
-                if attrs["tag"] != "caret" {
-                    let res = correct_op_span(span)?;
-                    ret.place(&DocGroup(attrs.clone(), res));
-                }
-            }
-            DocChars(ref text) => {
-                ret.place(&DocChars(text.clone()));
-            }
-        }
-    }
-    Ok(ret)
-}
-
-// Removes carets from docs
-// TODO rename this function
-pub fn correct_op(doc: &Doc) -> Result<Doc, Error> {
-    Ok(Doc(correct_op_span(&doc.0)?))
-}
-
-fn spawn_server(
+/// Run a sync server thread for a given page ID.
+fn spawn_sync_server(
     page_map: &SharedPageMap,
-    period: u64,
     page_id: &str,
+    period: u64,
     tx_db: CCSender<(String, String)>,
-) {
-    let sync_state_mutex = page_map
-        .lock()
-        .unwrap()
-        .get(page_id)
-        .clone()
-        .unwrap()
-        .clone();
-
-    // Handle incoming packets.
+) -> Result<JoinHandle<Result<(), Error>>, ::std::io::Error> {
+    let page_map = page_map.clone();
     let page_id = page_id.to_string();
-    let _ = thread::Builder::new()
+    thread::Builder::new()
         .name("sync_thread_processor".into())
         .spawn(move || -> Result<(), Error> {
+            let sync_state_mutex = page_map
+                .lock()
+                .unwrap()
+                .get(&page_id)
+                .clone()
+                .unwrap()
+                .clone();
+                
+            // Handle incoming packets.
             loop {
                 // Wait a set duration between transforms.
                 thread::sleep(Duration::from_millis(period as u64));
@@ -327,7 +307,7 @@ fn spawn_server(
 
                     // if let Ok(md) = doc_to_markdown(&sync_state.doc.0) {
                     if let Ok(serialized) =
-                        correct_op(&sync_state.doc).and_then(|x| Ok(::ron::ser::to_string(&x.0)?))
+                        remove_carets(&sync_state.doc).and_then(|x| Ok(::ron::ser::to_string(&x.0)?))
                     {
                         tx_db.try_send((page_id.to_string(), serialized))?;
                     }
@@ -346,7 +326,7 @@ fn spawn_server(
                 // let elapsed = now.elapsed();
                 // println!("sync duration: {}s, {}us", elapsed.as_secs(), elapsed.subsec_nanos()/1_000);
             }
-        });
+        })
 }
 
 type SharedPageMap = Arc<Mutex<HashMap<String, Arc<Mutex<SyncState>>>>>;

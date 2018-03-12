@@ -96,5 +96,3 @@ pub use self::state::*;
 pub use self::util::*;
 pub use self::actions::*;
 pub use self::random::*;
-
-use oatie::doc::*;
