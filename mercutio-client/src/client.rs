@@ -120,6 +120,10 @@ pub fn button_handlers<C: ClientImpl>() ->
             Box::new(|client| client.client_op(|doc| replace_block(doc, "pre"))),
         ),
         (
+            "HTML",
+            Box::new(|client| client.client_op(|doc| replace_block(doc, "html"))),
+        ),
+        (
             "List",
             Box::new(|client| client.client_op(|doc| toggle_list(doc))),
         ),

@@ -140,7 +140,7 @@ impl Schema for RtfSchema {
     fn track_type_from_attrs(attrs: &Attrs) -> Option<Self::Track> {
         match &*attrs["tag"] {
             "bullet" => Some(RtfTrack::ListItems),
-            "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "pre" => Some(RtfTrack::Blocks),
+            "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "pre" | "html" => Some(RtfTrack::Blocks),
             "span" => Some(RtfTrack::Inlines),
             "caret" => Some(RtfTrack::InlineObjects),
             "hr" => Some(RtfTrack::BlockObjects),

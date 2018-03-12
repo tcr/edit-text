@@ -220,6 +220,14 @@ kbd {
         font-size: 0.9em;
         background: #eee;
     }
+    
+    div[data-tag="html"] {
+        font-family: monospace;
+        padding: 5px 8px;
+        font-size: 0.9em;
+        border: 1px solid #aa5;
+        background: #eea;
+    }
 
     div[data-tag="bullet"] {
         list-style: disc outside none;

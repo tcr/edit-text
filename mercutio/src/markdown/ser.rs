@@ -27,7 +27,7 @@ impl<'a> Iterator for DocToMarkdown<'a> {
         }
 
         match self.doc_stepper.head() {
-            Some(DocGroup(ref attrs, _)) => {
+            Some(DocGroup(ref attrs, ref body)) => {
                 let res = Some(match attrs["tag"].as_ref() {
                     "p" => Event::Start(Tag::Paragraph),
                     "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => {
@@ -35,6 +35,19 @@ impl<'a> Iterator for DocToMarkdown<'a> {
                         Event::Start(Tag::Header(level))
                     }
                     "pre" => Event::Start(Tag::CodeBlock("".into())),
+                    "html" => {
+                        let mut out = String::new();
+                        for child in body {
+                            match *child {
+                                DocChars(ref text) => {
+                                    out.push_str(text);
+                                }
+                                _ => {}
+                            }
+                        }
+                        self.doc_stepper.next(); 
+                        return Some(Event::Html(out.into()));
+                    }
                     "bullet" => {
                         if let Some(DocGroup(ref pre_attrs, _)) = self.doc_stepper.unhead() {
                             if pre_attrs["tag"] == "bullet" {
