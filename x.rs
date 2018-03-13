@@ -1,7 +1,7 @@
 #!/usr/bin/env run-cargo-script
 //! ```cargo
 //! [dependencies]
-//! commandspec = "0.3.0"
+//! commandspec = "0.5"
 //! failure = "0.1"
 //! quicli = "0.2"
 //! ```
@@ -269,11 +269,9 @@ main!(|| {
             // so we first upload the tarball then pipe it in.
             eprintln!();
             eprintln!("Uploading...");
-            shell!(
+            shell_sh!(
                 r#"
-                    set -e
                     cd dist/deploy
-
                     tar c . | bzip2 | ssh root@sandbox.edit.io "bunzip2 > /tmp/mercutio.tar"
                     ssh root@sandbox.edit.io "cat /tmp/mercutio.tar | dokku tar:in edit-text"
                 "#,

@@ -6,8 +6,8 @@ mercutio/in
 Vagrantfile
 .vagrant
 node_modules
-dist/mercutio-server
+dist/deploy/mercutio-server
 *.sqlite3
 ubuntu*.log
-mercutio.wasm
+mercutio-frontend/dist/mercutio.wasm
 mercutio.js.map
