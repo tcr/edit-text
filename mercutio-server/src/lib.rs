@@ -47,7 +47,6 @@ extern crate crossbeam_channel;
 #[macro_use]
 extern crate diesel;
 extern crate dotenv;
-#[macro_use]
 extern crate failure;
 #[macro_use]
 extern crate lazy_static;
