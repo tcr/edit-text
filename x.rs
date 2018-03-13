@@ -6,7 +6,7 @@
 //! quicli = "*"
 //! ```
 
-#![deny(warnings)]
+// #![deny(warnings)]
 
 #[macro_use]
 extern crate commandspec;
@@ -15,6 +15,7 @@ extern crate quicli;
 
 use commandspec::*;
 use quicli::prelude::*;
+use std::path::Path;
 
 /// edit-text build scripts
 #[derive(StructOpt)]
@@ -220,6 +221,7 @@ main!(|| {
 
         Cli::Deploy => {
             // Frontend JavaScript
+            eprintln!("Building frontend...");
             execute!(
                 r"
                     ./x.rs frontend-build
@@ -227,6 +229,8 @@ main!(|| {
             )?;
 
             // WASM client code
+            eprintln!();
+            eprintln!("Compiling WebAssembly...");
             execute!(
                 "
                     rustup target add wasm32-unknown-unknown
@@ -239,35 +243,36 @@ main!(|| {
             )?;
 
             // Linux binary
+            eprintln!();
+            eprintln!("Building Linux server binary...");
             execute!(
                 "
-                    cd dist
-                    vagrant up
+                    docker build -f dist/build/Dockerfile dist/build/ -t mercutio-build-server
                 "
             )?;
             execute!(
-                r#"
-                    cd dist
-                    vagrant ssh -c "
-                        cd /vagrant/mercutio-server
-                        rustup override set `cat ../rust-toolchain`
-                        cargo build --release --target=x86_64-unknown-linux-gnu --bin mercutio-server
-                    "
-                "#,
+                r"
+                    docker run --rm -v {dir_git}:/usr/local/cargo/git -v {dir_registry}:/usr/local/cargo/registry -v {dir_self}:/app -w /app/mercutio-server -t -i mercutio-build-server cargo build --release --target=x86_64-unknown-linux-gnu --bin mercutio-server
+                ",
+                dir_git = Path::new(".").canonicalize()?.join("dist/build/cargo-git-cache").to_string_lossy().into_owned(),
+                dir_registry = Path::new(".").canonicalize()?.join("dist/build/cargo-registry-cache").to_string_lossy().into_owned(),
+                dir_self = Path::new(".").canonicalize()?.to_string_lossy().into_owned(),
             )?;
             execute!(
                 "
-                    cp target/x86_64-unknown-linux-gnu/release/mercutio-server dist
+                    cp target/x86_64-unknown-linux-gnu/release/mercutio-server dist/deploy
                 "
             )?;
 
             // Shell out for uploading the file to dokku.
             // Doing this in one command may cause dokku to hang, from experience,
             // so we first upload the tarball then pipe it in.
+            eprintln!();
+            eprintln!("Uploading...");
             shell!(
                 r#"
                     set -e
-                    cd dist
+                    cd dist/deploy
 
                     tar c . | bzip2 | ssh root@sandbox.edit.io "bunzip2 > /tmp/mercutio.tar"
                     ssh root@sandbox.edit.io "cat /tmp/mercutio.tar | dokku tar:in edit-text"
