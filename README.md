@@ -4,6 +4,8 @@
 
 edit-text is a collaborative rich text editor, written in Rust with a frontend in WebAssembly.
 
+**This is very early software. 👶**
+
 ## Running
 
 You'll need `cargo-script` to run the build tool and `diesel-cli` for the Sqlite file:
