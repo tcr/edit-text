@@ -20,6 +20,7 @@
   "dependencies": {
     "@types/bootbox": "^4.4.35",
     "@types/bootstrap": "^3.3.36",
+    "@types/clipboard": "^2.0.0",
     "@types/jquery": "^3.2.16",
     "bootbox": "^4.4.0",
     "bootstrap": "^3.3.7",
