@@ -2,11 +2,11 @@
 //! ```cargo
 //! [dependencies]
 //! commandspec = "0.3.0"
-//! failure = "*"
-//! quicli = "*"
+//! failure = "0.1"
+//! quicli = "0.2"
 //! ```
 
-// #![deny(warnings)]
+#![deny(warnings)]
 
 #[macro_use]
 extern crate commandspec;
