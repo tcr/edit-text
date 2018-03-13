@@ -13,14 +13,13 @@ cargo install cargo-script
 cargo install diesel_cli --no-default-features --features sqlite
 ```
 
-Clone and set the Rust version:
+Install the WebAssembly target:
 
 ```
-rustup override set `cat rust-toolchain`
 rustup target add wasm32-unknown-unknown
 ```
 
-To test out the text editor live, compile our wasm bundle then run the server:
+To test out the text editor live, first setup the db and compile the wasm bundle, then you can run the server:
 
 ```
 diesel setup
@@ -28,11 +27,11 @@ diesel setup
 ./x.rs server
 ```
 
-Then go to <localhost:8000> and start editing.
+Navigate to <localhost:8000> and start editing!
 
 ## Local client proxy in Rust (no WASM)
 
-Set the sync server in one terminal with this switch:
+Start the sync server in one terminal with this switch:
 
 ```
 ./x.rs server --client-proxy
@@ -44,7 +43,18 @@ In another terminal, run the client proxy:
 ./x.rs client-proxy
 ```
 
-Then go to <localhost:8000> and start editing.
+You will see any failures appear in the client-proxy code that would appear in the browser console when in WASM mode.
+
+## Compiling the frontend
+
+The frontend (TypeScript) code is tracked using git, but you can also develop on it yourself. Make sure you have Node installed first, then:
+
+```
+npm i --prefix ./mercutio-frontend
+./x.rs frontend-watch
+```
+
+To watch and continuously build all frontend code. Note that the .wasm bundle isn't inlined into the bundle with webpack, but loaded asynchronously.
 
 ## License
 

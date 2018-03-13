@@ -203,7 +203,7 @@ main!(|| {
             execute!(
                 r"
                     cd mercutio-frontend
-                    npx webpack ./src/app.ts ./dist/mercutio.js {args}
+                    ./node_modules/.bin/webpack ./src/app.ts ./dist/mercutio.js {args}
                 ",
                 args = args,
             )?;
@@ -213,7 +213,7 @@ main!(|| {
             execute!(
                 r"
                     cd mercutio-frontend
-                    npx webpack --watch ./src/app.ts ./dist/mercutio.js {args}
+                    ./node_modules/.bin/webpack --watch ./src/app.ts ./dist/mercutio.js {args}
                 ",
                 args = args,
             )?;
