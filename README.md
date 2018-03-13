@@ -53,16 +53,25 @@ In another terminal, run the client proxy:
 
 You will see any failures appear in the client-proxy code that would appear in the browser console when in WASM mode.
 
-## Compiling the frontend
+## Directories
 
-The frontend (TypeScript) code is tracked using git, but you can also develop on it yourself. Make sure you have Node installed first, then:
+* `oatie` — The Operational Transform library.
+* `mercutio` — Common components for Mercutio, the edit-text frontend.
+* `mercutio-server` — Contains the synchronization websocket server + static file server.
+* `mercutio-client` — Contains agnostic client code, including the `client-proxy` binary.
+* `mercutio-wasm` — A thin wrapper around `mercutio-client`, targeting WebAssembly.
+* `mercutio-frontend` — TypeScript code bundled with webpack, and static HTML templates.
+
+### Compiling the frontend
+
+The bundled frontend code (written in TypeScript) is tracked in git, but you can also compile it yourself. Make sure you have Node installed first, then:
 
 ```
 npm i --prefix ./mercutio-frontend
 ./x.rs frontend-watch
 ```
 
-To watch and continuously build all frontend code. Note that the .wasm bundle isn't inlined into the bundle with webpack, but loaded asynchronously.
+This command watches the `mercutio-frontend` directory and continuously builds all frontend code. Note that the .wasm bundle isn't inlined into the bundle with webpack, but loaded asynchronously.
 
 ## License
 
