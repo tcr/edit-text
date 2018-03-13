@@ -21,41 +21,41 @@ use std::path::Path;
 #[derive(StructOpt)]
 #[structopt(name = "edit-text build scripts", about = "Build scripts for mercutio and oatie", author = "")]
 enum Cli {
-    #[structopt(name = "wasm-build")]
+    #[structopt(name = "wasm-build", about = "Compile the WebAssembly bundle.")]
     Wasm,
 
-    #[structopt(name = "client-proxy")]
+    #[structopt(name = "client-proxy", about = "Run client code in your terminal.")]
     WasmProxy { args: Vec<String> },
 
-    #[structopt(name = "oatie-build")]
+    #[structopt(name = "oatie-build", about = "Build the operational transform library.")]
     OatieBuild { args: Vec<String> },
 
-    #[structopt(name = "server")]
+    #[structopt(name = "server", about = "Run the edit-text server.")]
     MercutioSyncRun {
         #[structopt(long = "log", help = "Export a log")]
         log: bool,
         args: Vec<String>,
     },
 
-    #[structopt(name = "server-build")]
+    #[structopt(name = "server-build", about = "Build the edit-text server.")]
     MercutioSyncBuild { args: Vec<String> },
 
     #[structopt(name = "server-callgrind")]
     MercutioSyncCallgrind { args: Vec<String> },
 
-    #[structopt(name = "replay")]
+    #[structopt(name = "replay", about = "Replay an edit-text log.")]
     Replay { args: Vec<String> },
 
     #[structopt(name = "test")]
     Test { args: Vec<String> },
 
-    #[structopt(name = "frontend-build")]
+    #[structopt(name = "frontend-build", about = "Bundle the frontend JavaScript code.")]
     JsBuild { args: Vec<String> },
 
-    #[structopt(name = "frontend-watch")]
+    #[structopt(name = "frontend-watch", about = "Watch the frontend JavaScript code, building continuously.")]
     JsWatch { args: Vec<String> },
 
-    #[structopt(name = "deploy")]
+    #[structopt(name = "deploy", about = "Deploy to sandbox.edit.io.")]
     Deploy,
 }
 

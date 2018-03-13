@@ -37,6 +37,8 @@ You can run the server in release mode easily with the `--release` flag:
 ./x.rs server --release
 ```
 
+For more commands, run `./x.rs help`.
+
 ## Local client proxy in Rust (no WASM)
 
 Start the sync server in one terminal with this switch:
