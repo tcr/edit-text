@@ -16,50 +16,58 @@ pub type Op = (DelSpan, AddSpan);
 
 pub type CurSpan = Vec<CurElement>;
 
-/*
+
 /// TODO this isn't used yet, but is an abstraction
 /// that allows for better APIs and possible optimizations
 /// of the underlying data structure
 #[derive(Clone, Debug, PartialEq)]
-pub struct DocString(String);
+pub struct DocString(String, usize); // content, len
 
 impl DocString {
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
+    pub fn from_string(input: String) -> DocString {
+        let char_len = input.chars().count();
+        DocString(input, char_len)
+    }
+
     pub fn from_slice(input: &[char]) -> DocString {
-        DocString(input.iter().collect())
+        DocString(input.iter().collect(), input.len())
     }
 
     pub fn from_str(input: &str) -> DocString {
-        DocString(input.to_owned())
+        DocString(input.to_owned(), input.chars().count())
     }
 
     pub fn push_str(&mut self, input: &str) {
         self.0.push_str(input);
+        self.1 += input.chars().count();
     }
 
     pub fn push_doc_string(&mut self, input: &DocString) {
-        self.0.push_str(&input.0);
+        self.push_str(&input.0);
     }
 
     pub fn to_string(&self) -> String {
         self.0.clone()
     }
 
-    pub fn char_len(&self) -> usize {
-        self.0.len()
+    pub fn into_string(self) -> String {
+        self.0
     }
 
-    // pub fn truncate(mut self, count: usize) -> Self {
-    //     self.0 = self.0.split_off(count);
-    //     self
-    // }
+    pub fn char_len(&self) -> usize {
+        self.0.chars().count()
+    }
 
-    // pub fn clone_slice(&self, start: usize, len: usize) -> DocString {
-    //     DocString::from_slice(&self.0[start..start+len])
-    // }
+    pub fn split_at(&self, char_boundary: usize) -> (DocString, DocString) {
+        let left: String = self.0.chars().take(char_boundary).collect();
+        let right: String = self.0.chars().skip(char_boundary).collect();
+        let right_len = right.chars().count();
+        (DocString(left, char_boundary), DocString(right, right_len))
+    }
 
     pub fn chars(&self) -> ::std::str::Chars {
         self.0.chars()
@@ -80,10 +88,10 @@ impl<'de> Deserialize<'de> for DocString {
         D: Deserializer<'de>,
     {
         let string = <String as Deserialize>::deserialize(deserializer)?;
-        Ok(DocString(string))
+        let char_len = string.chars().count();
+        Ok(DocString(string, char_len))
     }
 }
-*/
 
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
