@@ -49,7 +49,7 @@ function curto(el: JQuery | null) {
   } else {
     var cur = [then];
   }
-  while (!el.is(p)) {
+  while (el.length != 0 && !el.is(p)) {
     if (el.prevAll().length > 0) {
       cur.unshift({
         "CurSkip": el.prevAll().length,
