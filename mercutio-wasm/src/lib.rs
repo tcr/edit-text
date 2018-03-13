@@ -122,27 +122,14 @@ pub fn wasm_command(input_ptr: *mut c_char) -> u32 {
     let mut client_lock = WASM_CLIENT.lock().unwrap();
     let client = client_lock.as_mut().unwrap();
 
-    match req_parse {
-        Ok(task) => {
-            client.handle_task(task);
-        }
+    match req_parse.map(|task| client.handle_task(task)) {
+        Ok(_) => {},
         Err(err) => {
             println!("{:?}", err);
             return 1;
         }
-        // _ => command_safe(NativeRequest::Invalid),
     }
 
     // Default status
     0
-
-    // Fetch lazy_static intitialized client.
-    // send it the payload.
-    // if it needs to callback, it just calls the client extern function.
-
-    // let res = "hi";
-
-    // let json = serde_json::to_string(&res).unwrap();
-    // let s = CString::new(json).unwrap();
-    // s.into_raw()
 }
