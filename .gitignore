@@ -10,4 +10,5 @@ dist/deploy/mercutio-server
 *.sqlite3
 ubuntu*.log
 mercutio-frontend/dist/mercutio.wasm
+mercutio-frontend/dist/mercutio.js.map
 mercutio.js.map
