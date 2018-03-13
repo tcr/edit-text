@@ -31,18 +31,24 @@ diesel setup
 
 Navigate to <localhost:8000> and start editing!
 
+You can run the server in release mode easily with the `--release` flag:
+
+```
+./x.rs server --release
+```
+
 ## Local client proxy in Rust (no WASM)
 
 Start the sync server in one terminal with this switch:
 
 ```
-./x.rs server --client-proxy
+./x.rs server --client-proxy --release
 ```
 
 In another terminal, run the client proxy:
 
 ```
-./x.rs client-proxy
+./x.rs client-proxy --release
 ```
 
 You will see any failures appear in the client-proxy code that would appear in the browser console when in WASM mode.
