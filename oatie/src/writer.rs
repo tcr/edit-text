@@ -36,13 +36,18 @@ impl DelWriter {
     pub fn exit(&mut self) {
         let past = self.past.clone();
         self.past = self.stack.pop().expect("Cannot exit(), as we aren't in a group");
-        self.past.push(DelWithGroup(past));
+        
+        if past.is_continuous_skip() {
+            self.past.place(&DelSkip(1));
+        } else {
+            self.past.place(&DelWithGroup(past));
+        }
     }
 
     pub fn close(&mut self) {
         let past = self.past.clone();
         self.past = self.stack.pop().expect("Cannot close(), as we aren't in a group");
-        self.past.push(DelGroup(past));
+        self.past.place(&DelGroup(past));
     }
 
     pub fn exit_all(&mut self) {
@@ -89,17 +94,23 @@ impl AddWriter {
         self.stack.push(past);
     }
 
+    // TODO should there be an exit_strict that doesn't check is_continuous_skip()?
     pub fn exit(&mut self) {
         let past = self.past.clone();
-        self.past = self.stack.pop().unwrap();
-        self.past.push(AddWithGroup(past));
+        self.past = self.stack.pop().expect("Cannot exit(), as we aren't in a group");
+
+        if past.is_continuous_skip() {
+            self.past.place(&AddSkip(1));
+        } else {
+            self.past.place(&AddWithGroup(past));
+        }
     }
 
     pub fn close(&mut self, attrs: Attrs) {
         let past = self.past.clone();
-        self.past = self.stack.pop().unwrap();
+        self.past = self.stack.pop().expect("Cannot close(), as we aren't in a group");
 
-        self.past.push(AddGroup(attrs, past));
+        self.past.place(&AddGroup(attrs, past));
     }
 
     pub fn exit_all(&mut self) {

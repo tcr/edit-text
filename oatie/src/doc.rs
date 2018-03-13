@@ -159,6 +159,10 @@ pub trait DelPlaceable {
     fn place(&mut self, value: &DelElement);
     fn skip_pre_len(&self) -> usize;
     fn skip_post_len(&self) -> usize;
+
+    /// Optimization for depth-first code to recursively return skips up
+    /// the walker.
+    fn is_continuous_skip(&self) -> bool;
 }
 
 impl DelPlaceable for DelSpan {
@@ -224,6 +228,22 @@ impl DelPlaceable for DelSpan {
         }
         ret
     }
+
+    fn is_continuous_skip(&self) -> bool {
+        if self.len() > 1 {
+            // Will never be a continuous skip
+            false
+        } else if self.is_empty() {
+            // is []
+            true
+        } else if let DelSkip(_) = self[0] {
+            // is [DelSkip(n)]
+            true
+        } else {
+            // is [DelSomething(n)]
+            false
+        }
+    }
 }
 
 
@@ -240,6 +260,7 @@ pub trait AddPlaceable {
     fn place(&mut self, value: &AddElement);
     fn skip_pre_len(&self) -> usize;
     fn skip_post_len(&self) -> usize;
+    fn is_continuous_skip(&self) -> bool;
 }
 
 impl AddPlaceable for AddSpan {
@@ -296,6 +317,22 @@ impl AddPlaceable for AddSpan {
             };
         }
         ret
+    }
+
+    fn is_continuous_skip(&self) -> bool {
+        if self.len() > 1 {
+            // Will never be a continuous skip
+            false
+        } else if self.is_empty() {
+            // is []
+            true
+        } else if let AddSkip(_) = self[0] {
+            // is [DelSkip(n)]
+            true
+        } else {
+            // is [DelSomething(n)]
+            false
+        }
     }
 }
 

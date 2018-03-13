@@ -1,3 +1,5 @@
+//! mercutio-server standalone binary for web deployment.
+
 #![feature(proc_macro)]
 
 extern crate bus;
@@ -196,7 +198,7 @@ struct Opt {
     #[structopt(long = "period", help = "Sync period", default_value = "100")]
     period: usize,
 
-    #[structopt(help = "Enable client proxy", long = "client-proxy")]
+    #[structopt(help = "Enable client proxy", long = "client-proxy", short = "c")]
     client_proxy: bool,
 }
 

@@ -206,7 +206,9 @@ impl Walker {
         }
     }
 
-    // TODO merge with above
+    // TODO Have this replace the above and take its name.
+    // Only difference is that above consumers
+    // haven't had an .unwrap() call added yet for this:
     pub fn to_caret_safe(doc: &Doc, client_id: &str) -> Option<Walker> {
         let mut stepper = CaretStepper::new(DocStepper::new(&doc.0));
 
@@ -502,6 +504,8 @@ impl Walker {
     }
 }
 
+// TODO: What the hell is this struct and what is it doing in this random file
+// Move to oatie/doc.rs ?
 pub struct OpWriter {
     pub del: DelWriter,
     pub add: AddWriter,
