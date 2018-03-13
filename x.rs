@@ -31,23 +31,20 @@ enum Cli {
     Wasm,
 
     #[structopt(name = "client-proxy", about = "Run client code in your terminal.")]
-    WasmProxy { args: Vec<String> },
+    ClientProxy { args: Vec<String> },
 
     #[structopt(name = "oatie-build", about = "Build the operational transform library.")]
     OatieBuild { args: Vec<String> },
 
     #[structopt(name = "server", about = "Run the edit-text server.")]
-    MercutioSyncRun {
+    MercutioServerRun {
         #[structopt(long = "log", help = "Export a log")]
         log: bool,
         args: Vec<String>,
     },
 
     #[structopt(name = "server-build", about = "Build the edit-text server.")]
-    MercutioSyncBuild { args: Vec<String> },
-
-    #[structopt(name = "server-callgrind")]
-    MercutioSyncCallgrind { args: Vec<String> },
+    MercutioServerBuild { args: Vec<String> },
 
     #[structopt(name = "replay", about = "Replay an edit-text log.")]
     Replay { args: Vec<String> },
@@ -56,10 +53,10 @@ enum Cli {
     Test { args: Vec<String> },
 
     #[structopt(name = "frontend-build", about = "Bundle the frontend JavaScript code.")]
-    JsBuild { args: Vec<String> },
+    FrontendBuild { args: Vec<String> },
 
     #[structopt(name = "frontend-watch", about = "Watch the frontend JavaScript code, building continuously.")]
-    JsWatch { args: Vec<String> },
+    FrontendWatch { args: Vec<String> },
 
     #[structopt(name = "deploy", about = "Deploy to sandbox.edit.io.")]
     Deploy,
@@ -116,7 +113,7 @@ main!(|| {
             )?;
         }
 
-        Cli::WasmProxy { args } => {
+        Cli::ClientProxy { args } => {
             let release_flag = if release { Some("--release") } else { None };
 
             execute!(
@@ -124,7 +121,7 @@ main!(|| {
                     cd mercutio-client
                     export MERCUTIO_WASM_LOG=0
                     export RUST_BACKTRACE=1
-                    cargo run {release_flag} --bin mercutio-wasm-proxy -- {args}
+                    cargo run {release_flag} --bin mercutio-client-proxy -- {args}
                 ",
                 release_flag = release_flag,
                 args = args,
@@ -144,7 +141,7 @@ main!(|| {
             )?;
         }
 
-        Cli::MercutioSyncRun { log, args } => {
+        Cli::MercutioServerRun { log, args } => {
             let release_flag = if release { Some("--release") } else { None };
 
             execute!(
@@ -161,7 +158,7 @@ main!(|| {
             )?;
         }
 
-        Cli::MercutioSyncBuild { args } => {
+        Cli::MercutioServerBuild { args } => {
             let release_flag = if release { Some("--release") } else { None };
 
             execute!(
@@ -171,26 +168,6 @@ main!(|| {
                     cargo build {release_flag} --bin mercutio-server {args}
                 ",
                 release_flag = release_flag,
-                args = args,
-            )?;
-        }
-
-        Cli::MercutioSyncCallgrind { args } => {
-            execute!(
-                r"
-                    cd mercutio-server
-                    cargo build --release --bin mercutio-server
-                ",
-            )?;
-
-            execute!(
-                r"
-                    cd mercutio-server
-                    export MERCUTIO_SYNC_LOG=1
-                    export RUST_BACKTRACE=1
-                    cargo profiler callgrind --bin ./target/release/mercutio-server -- \
-                        --period 100 {args}
-                ",
                 args = args,
             )?;
         }
@@ -219,7 +196,7 @@ main!(|| {
             )?;
         }
 
-        Cli::JsBuild { args } => {
+        Cli::FrontendBuild { args } => {
             execute!(
                 r"
                     cd mercutio-frontend
@@ -230,7 +207,7 @@ main!(|| {
             )?;
         }
 
-        Cli::JsWatch { args } => {
+        Cli::FrontendWatch { args } => {
             execute!(
                 r"
                     cd mercutio-frontend
