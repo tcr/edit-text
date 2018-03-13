@@ -242,12 +242,12 @@ impl<S> Transform<S> where S: Schema {
         self.b_add.place(&AddGroup(attrs.clone(), span.clone()));
     }
 
-    fn chars_a(&mut self, chars: &str) {
-        self.a_add.place(&AddChars(chars.to_owned()));
+    fn chars_a(&mut self, chars: DocString) {
+        self.a_add.place(&AddChars(chars));
     }
 
-    fn chars_b(&mut self, chars: &str) {
-        self.b_add.place(&AddChars(chars.to_owned()));
+    fn chars_b(&mut self, chars: DocString) {
+        self.b_add.place(&AddChars(chars));
     }
 
     fn current(&self) -> Option<TrackState<S>> {
@@ -587,9 +587,9 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                     t.with_group_a(span);
                     b.next();
                 }
-                Some(AddChars(ref b_chars)) => {
+                Some(AddChars(b_chars)) => {
+                    t.skip_b(b_chars.char_len());
                     t.chars_a(b_chars);
-                    t.skip_b(b_chars.len());
                     b.next();
                 }
                 Some(AddSkip(b_count)) => {
@@ -620,8 +620,8 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                     t.with_group_b(span);
                     a.next();
                 }
-                Some(AddChars(ref a_chars)) => {
-                    t.skip_a(a_chars.len());
+                Some(AddChars(a_chars)) => {
+                    t.skip_a(a_chars.char_len());
                     t.chars_b(a_chars);
                     a.next();
                 }
@@ -681,8 +681,8 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                 (None, compare) => {
                     let ok = if let Some(AddChars(ref b_chars)) = compare {
                         if t.supports_text() {
-                            t.chars_a(b_chars);
-                            t.skip_b(b_chars.chars().count());
+                            t.skip_b(b_chars.char_len());
+                            t.chars_a(b_chars.clone());
                             b.next();
                             true
                         } else {
@@ -829,8 +829,8 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                         if t.supports_text() {
                             t.regenerate();
 
-                            t.skip_a(a_chars.len());
-                            t.chars_b(&a_chars);
+                            t.skip_a(a_chars.char_len());
+                            t.chars_b(a_chars);
                             a.next();
                             true
                         } else {
@@ -961,17 +961,17 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                     t.skip_a(cmp::min(a_count, b_count));
                     t.skip_b(cmp::min(a_count, b_count));
                 }
-                (Some(AddSkip(a_count)), Some(AddChars(ref b_chars))) => {
+                (Some(AddSkip(a_count)), Some(AddChars(b_chars))) => {
                     t.regenerate();
 
                     b.next();
+                    t.skip_b(b_chars.char_len());
                     t.chars_a(b_chars);
-                    t.skip_b(b_chars.chars().count());
                 }
-                (Some(AddChars(ref a_chars)), _) => {
+                (Some(AddChars(a_chars)), _) => {
                     t.regenerate();
 
-                    t.skip_a(a_chars.chars().count());
+                    t.skip_a(a_chars.char_len());
                     t.chars_b(a_chars);
                     a.next();
                 }
@@ -1020,13 +1020,13 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                     }
                     b.next();
                 }
-                (Some(AddWithGroup(ref a_inner)), Some(AddChars(ref b_chars))) => {
+                (Some(AddWithGroup(a_inner)), Some(AddChars(b_chars))) => {
                     t.regenerate(); // caret-35
 
-                    t.chars_a(b_chars);
+                    t.b_del.place(&DelSkip(b_chars.char_len()));
+                    t.b_add.place(&AddSkip(b_chars.char_len()));
 
-                    t.b_del.place(&DelSkip(b_chars.chars().count()));
-                    t.b_add.place(&AddSkip(b_chars.chars().count()));
+                    t.chars_a(b_chars);
 
                     b.next();
                 }
@@ -1413,8 +1413,8 @@ pub fn transform_add_del_inner(
             DelChars(bcount) => {
                 match a.get_head() {
                     AddChars(avalue) => {
-                        addres.place(&AddChars(avalue.clone()));
-                        delres.place(&DelSkip(avalue.len()));
+                        delres.place(&DelSkip(avalue.char_len()));
+                        addres.place(&AddChars(avalue));
                         a.next();
                     }
                     AddSkip(acount) => {
@@ -1457,8 +1457,8 @@ pub fn transform_add_del_inner(
             DelSkip(bcount) => {
                 match a.get_head() {
                     AddChars(avalue) => {
-                        addres.place(&AddChars(avalue.clone()));
-                        delres.place(&DelSkip(avalue.len()));
+                        delres.place(&DelSkip(avalue.char_len()));
+                        addres.place(&AddChars(avalue));
                         a.next();
                     }
                     AddSkip(acount) => {
@@ -1507,7 +1507,7 @@ pub fn transform_add_del_inner(
             DelWithGroup(span) => {
                 match a.get_head() {
                     AddChars(avalue) => {
-                        delres.place(&DelSkip(avalue.chars().count()));
+                        delres.place(&DelSkip(avalue.char_len()));
                         addres.place(&a.next().unwrap());
                     }
                     AddSkip(acount) => {
@@ -1550,7 +1550,7 @@ pub fn transform_add_del_inner(
             DelGroup(span) => {
                 match a.get_head() {
                     AddChars(avalue) => {
-                        delres.place(&DelSkip(avalue.chars().count()));
+                        delres.place(&DelSkip(avalue.char_len()));
                         addres.place(&a.next().unwrap());
                     }
                     AddSkip(acount) => {
@@ -1576,7 +1576,7 @@ pub fn transform_add_del_inner(
                                 for elem in add {
                                     match elem {
                                         &AddChars(ref value) => {
-                                            del.place(&DelChars(value.chars().count()));
+                                            del.place(&DelChars(value.char_len()));
                                         }
                                         &AddSkip(value) => {
                                             del.place(&DelSkip(value));

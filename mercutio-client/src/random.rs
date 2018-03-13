@@ -32,9 +32,9 @@ pub fn random_cursor_span(ctx: &mut RandomCursorContext, span: &DocSpan) -> Resu
                 ctx.cur.exit();
             }
             DocChars(ref text) => {
-                ensure!(text.chars().count() > 0, "Empty char string");
+                ensure!(text.char_len() > 0, "Empty char string");
 
-                for _ in 0..text.chars().count() {
+                for _ in 0..text.char_len() {
                     // Push a cursor to this character.
                     let mut c = ctx.cur.clone();
                     c.place(&CurElement::CurChar);

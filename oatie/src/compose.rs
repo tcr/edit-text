@@ -195,14 +195,14 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddStepper, b: &mut AddStepp
             AddSkip(bcount) => {
                 match a.get_head() {
                     AddChars(value) => {
-                        let len = value.chars().count();
-                        if bcount < len {
-                            res.place(&AddChars(value.chars().take(bcount).collect()));
-                            a.head = Some(AddChars(value.chars().skip(bcount).collect()));
+                        if bcount < value.char_len() {
+                            let (a_left, a_right) = value.split_at(bcount);
+                            res.place(&AddChars(a_left));
+                            a.head = Some(AddChars(a_right));
                             b.next();
-                        } else if bcount > len {
+                        } else if bcount > value.char_len() {
                             res.place(&a.next().unwrap());
-                            b.head = Some(AddSkip(bcount - len));
+                            b.head = Some(AddSkip(bcount - value.char_len()));
                         } else {
                             res.place(&a.get_head());
                             a.next();
@@ -335,13 +335,13 @@ fn compose_add_del_inner(delres: &mut DelSpan, addres: &mut AddSpan, a: &mut Add
             DelChars(bcount) => {
                 match a.get_head() {
                     AddChars(avalue) => {
-                        let alen = avalue.chars().count();
-                        if bcount < alen {
-                            a.head = Some(AddChars(avalue.chars().skip(bcount).collect()));
+                        if bcount < avalue.char_len() {
+                            let (a_left, a_right) = avalue.split_at(bcount);
+                            a.head = Some(AddChars(a_right));
                             b.next();
-                        } else if bcount > alen {
+                        } else if bcount > avalue.char_len() {
                             a.next();
-                            b.head = Some(DelChars(bcount - alen));
+                            b.head = Some(DelChars(bcount - avalue.char_len()));
                         } else {
                             a.next();
                             b.next();
@@ -368,14 +368,14 @@ fn compose_add_del_inner(delres: &mut DelSpan, addres: &mut AddSpan, a: &mut Add
             DelSkip(bcount) => {
                 match a.get_head() {
                     AddChars(avalue) => {
-                        let alen = avalue.chars().count();
-                        if bcount < alen {
-                            addres.place(&AddChars(avalue.chars().take(bcount).collect()));
-                            a.head = Some(AddChars(avalue.chars().skip(bcount).collect()));
+                        if bcount < avalue.char_len() {
+                            let (a_left, a_right) = avalue.split_at(bcount);
+                            addres.place(&AddChars(a_left));
+                            a.head = Some(AddChars(a_right));
                             b.next();
-                        } else if bcount > alen {
+                        } else if bcount > avalue.char_len() {
                             addres.place(&a.next().unwrap());
-                            b.head = Some(DelSkip(bcount - alen));
+                            b.head = Some(DelSkip(bcount - avalue.char_len()));
                         } else {
                             addres.place(&a.get_head());
                             a.next();

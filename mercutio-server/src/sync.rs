@@ -38,7 +38,7 @@ const PAGE_TITLE_LEN: usize = 100;
 pub fn default_new_doc(id: &str) -> Doc {
     Doc(doc_span![
         DocGroup({"tag": "h1"}, [
-            DocChars(id.to_string())
+            DocChars(id),
         ])
     ])
 }

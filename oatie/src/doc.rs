@@ -1,6 +1,7 @@
 //! Document definitions.
 
 use std::collections::HashMap;
+use std::sync::atomic::AtomicUsize;
 use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
 pub use self::DocElement::*;
@@ -17,11 +18,10 @@ pub type Op = (DelSpan, AddSpan);
 pub type CurSpan = Vec<CurElement>;
 
 
-/// TODO this isn't used yet, but is an abstraction
-/// that allows for better APIs and possible optimizations
-/// of the underlying data structure
+/// Abstraction for String that allows a limited set of operations
+/// with good optimization. (Or that's the idea.)
 #[derive(Clone, Debug, PartialEq)]
-pub struct DocString(String, usize); // content, len
+pub struct DocString(String);
 
 impl DocString {
     pub fn is_empty(&self) -> bool {
@@ -29,25 +29,27 @@ impl DocString {
     }
 
     pub fn from_string(input: String) -> DocString {
-        let char_len = input.chars().count();
-        DocString(input, char_len)
+        DocString(input)
     }
 
     pub fn from_slice(input: &[char]) -> DocString {
-        DocString(input.iter().collect(), input.len())
+        DocString(input.iter().collect())
     }
 
     pub fn from_str(input: &str) -> DocString {
-        DocString(input.to_owned(), input.chars().count())
+        DocString(input.to_owned())
     }
 
     pub fn push_str(&mut self, input: &str) {
         self.0.push_str(input);
-        self.1 += input.chars().count();
     }
 
     pub fn push_doc_string(&mut self, input: &DocString) {
         self.push_str(&input.0);
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
     }
 
     pub fn to_string(&self) -> String {
@@ -65,12 +67,7 @@ impl DocString {
     pub fn split_at(&self, char_boundary: usize) -> (DocString, DocString) {
         let left: String = self.0.chars().take(char_boundary).collect();
         let right: String = self.0.chars().skip(char_boundary).collect();
-        let right_len = right.chars().count();
-        (DocString(left, char_boundary), DocString(right, right_len))
-    }
-
-    pub fn chars(&self) -> ::std::str::Chars {
-        self.0.chars()
+        (DocString(left), DocString(right))
     }
 }
 
@@ -88,15 +85,14 @@ impl<'de> Deserialize<'de> for DocString {
         D: Deserializer<'de>,
     {
         let string = <String as Deserialize>::deserialize(deserializer)?;
-        let char_len = string.chars().count();
-        Ok(DocString(string, char_len))
+        Ok(DocString(string))
     }
 }
 
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum DocElement {
-    DocChars(String),
+    DocChars(DocString),
     DocGroup(Attrs, DocSpan),
 }
 
@@ -119,9 +115,9 @@ impl DocPlaceable for DocSpan {
     fn place(&mut self, elem: &DocElement) {
         match *elem {
             DocChars(ref text) => {
-                assert!(text.chars().count() > 0);
+                assert!(text.char_len() > 0);
                 if let Some(&mut DocChars(ref mut value)) = self.last_mut() {
-                    value.push_str(text);
+                    value.push_doc_string(text);
                 } else {
                     self.push(DocChars(text.to_owned()));
                 }
@@ -136,7 +132,7 @@ impl DocPlaceable for DocSpan {
         let mut ret = 0;
         for item in self {
             ret += match *item {
-                DocChars(ref value) => value.chars().count(),
+                DocChars(ref value) => value.char_len(),
                 DocGroup(..) => 1,
             };
         }
@@ -235,7 +231,7 @@ impl DelPlaceable for DelSpan {
 pub enum AddElement {
     AddSkip(usize),
     AddWithGroup(AddSpan),
-    AddChars(String),
+    AddChars(DocString),
     AddGroup(Attrs, AddSpan),
 }
 
@@ -256,9 +252,9 @@ impl AddPlaceable for AddSpan {
     fn place(&mut self, elem: &AddElement) {
         match *elem {
             AddChars(ref text) => {
-                assert!(text.chars().count() > 0);
+                assert!(text.char_len() > 0);
                 if let Some(&mut AddChars(ref mut value)) = self.last_mut() {
-                    value.push_str(text);
+                    value.push_doc_string(text);
                 } else {
                     self.push(AddChars(text.to_owned()));
                 }
@@ -295,7 +291,7 @@ impl AddPlaceable for AddSpan {
         for item in self {
             ret += match *item {
                 AddSkip(len) => len,
-                AddChars(ref chars) => chars.chars().count(),
+                AddChars(ref chars) => chars.char_len(),
                 AddGroup(..) | AddWithGroup(..) => 1,
             };
         }

@@ -251,7 +251,7 @@ pub fn add_char(ctx: ActionContext, key: u32) -> Result<Op, Error> {
 
     // Insert new character.
     let c: char = from_u32(key).unwrap_or('?');
-    writer.add.place(&AddChars(format!("{}", c)));
+    writer.add.place(&AddChars(DocString::from_string(format!("{}", c))));
     writer.add.exit_all();
 
     Ok(writer.result())

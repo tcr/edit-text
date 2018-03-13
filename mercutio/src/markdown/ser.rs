@@ -40,7 +40,7 @@ impl<'a> Iterator for DocToMarkdown<'a> {
                         for child in body {
                             match *child {
                                 DocChars(ref text) => {
-                                    out.push_str(text);
+                                    out.push_str(text.as_str());
                                 }
                                 _ => {}
                             }
