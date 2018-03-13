@@ -24,6 +24,7 @@ extern crate failure;
 extern crate regex;
 extern crate either;
 extern crate ron;
+extern crate serde;
 
 /* logging */
 

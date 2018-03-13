@@ -1,6 +1,7 @@
 //! Document definitions.
 
 use std::collections::HashMap;
+use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
 pub use self::DocElement::*;
 pub use self::AddElement::*;
@@ -14,6 +15,75 @@ pub type AddSpan = Vec<AddElement>;
 pub type Op = (DelSpan, AddSpan);
 
 pub type CurSpan = Vec<CurElement>;
+
+/*
+/// TODO this isn't used yet, but is an abstraction
+/// that allows for better APIs and possible optimizations
+/// of the underlying data structure
+#[derive(Clone, Debug, PartialEq)]
+pub struct DocString(String);
+
+impl DocString {
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn from_slice(input: &[char]) -> DocString {
+        DocString(input.iter().collect())
+    }
+
+    pub fn from_str(input: &str) -> DocString {
+        DocString(input.to_owned())
+    }
+
+    pub fn push_str(&mut self, input: &str) {
+        self.0.push_str(input);
+    }
+
+    pub fn push_doc_string(&mut self, input: &DocString) {
+        self.0.push_str(&input.0);
+    }
+
+    pub fn to_string(&self) -> String {
+        self.0.clone()
+    }
+
+    pub fn char_len(&self) -> usize {
+        self.0.len()
+    }
+
+    // pub fn truncate(mut self, count: usize) -> Self {
+    //     self.0 = self.0.split_off(count);
+    //     self
+    // }
+
+    // pub fn clone_slice(&self, start: usize, len: usize) -> DocString {
+    //     DocString::from_slice(&self.0[start..start+len])
+    // }
+
+    pub fn chars(&self) -> ::std::str::Chars {
+        self.0.chars()
+    }
+}
+
+impl Serialize for DocString {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        serializer.serialize_str(&self.0)
+    }
+}
+
+impl<'de> Deserialize<'de> for DocString {
+    fn deserialize<D>(deserializer: D) -> Result<DocString, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let string = <String as Deserialize>::deserialize(deserializer)?;
+        Ok(DocString(string))
+    }
+}
+*/
 
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
