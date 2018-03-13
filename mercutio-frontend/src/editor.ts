@@ -304,7 +304,7 @@ export default class Editor {
   nativeConnect() {
     let editor = this;
     let url =
-      'ws://' +
+      (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
       window.location.host.replace(/\:\d+/, ':8002') +
       '/' +
       window.location.pathname.replace(/^\/+/, '') +

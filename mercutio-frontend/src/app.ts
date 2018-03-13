@@ -94,9 +94,10 @@ else if (document.body.id == 'client') {
         let full_id =
           window.location.pathname.replace(/^\/+/, '') +
           (window.location.hash == '#helloworld' ? '?helloworld' : '');
-        let url = window.location.host.match(/localhost/) ?
-          'ws://' + window.location.host.replace(/:\d+$|$/, ':8001') + '/$/ws/' + full_id :
-          'ws://' + window.location.host + '/$/ws/' + full_id;
+        let url = (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
+          (window.location.host.match(/localhost/) ?
+            window.location.host.replace(/:\d+$|$/, ':8001') + '/$/ws/' + full_id :
+            window.location.host + '/$/ws/' + full_id);
 
         let syncSocket = new WebSocket(url);
         editor.Module = Module; 
@@ -131,7 +132,8 @@ else if (document.body.id == 'presentation') {
   // Use cross-compiled WASM bundle.
   let WASM = window['CONFIG'].wasm;
   if (!WASM) {
-    let url = 'ws://' + window.location.host.replace(/\:\d+/, ':8002') + '/' +
+    let url = (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
+      window.location.host.replace(/\:\d+/, ':8002') + '/' +
       window.location.pathname.match(/^\/?([^\/]+)/)[1];
 
     let nativeSocket = new WebSocket(url);
@@ -202,9 +204,10 @@ else if (document.body.id == 'presentation') {
         // Websocket port
         let full_id =
           window.location.pathname.match(/^\/?([^\/]+)/)[1];
-        let url = window.location.host.match(/localhost/) ?
-          'ws://' + window.location.host.replace(/:\d+$|$/, ':8001') + '/$/ws/' + full_id :
-          'ws://' + window.location.host + '/$/ws/' + full_id;
+        let url = (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
+          (window.location.host.match(/localhost/) ?
+            window.location.host.replace(/:\d+$|$/, ':8001') + '/$/ws/' + full_id :
+            window.location.host + '/$/ws/' + full_id);
 
         let syncSocket = new WebSocket(url);
         // editor.Module = Module; 
