@@ -144,6 +144,8 @@ main!(|| {
         Cli::MercutioServerRun { log, args } => {
             let release_flag = if release { Some("--release") } else { None };
 
+            eprintln!("Starting edit-text server...");
+
             if !Path::new("mercutio.sqlite3").exists() {
                 eprintln!("Building database for first startup...");
                 execute!(
