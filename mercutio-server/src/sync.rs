@@ -50,7 +50,7 @@ pub fn default_doc() -> Doc {
 
 This is edit-text, a web-based rich text editor.
 
-* This is a very early preview. 👼
+* This is a very early preview.
 
 * Supports collaborative editing.
 
