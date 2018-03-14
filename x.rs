@@ -152,11 +152,10 @@ main!(|| {
                     ",
                 )?;
             } else {
-                println!("(Database present.)");
+                println!("Database: mercutio.sqlite3");
             }
 
             if !Path::new("mercutio-frontend/dist/mercutio.wasm").exists() {
-                eprintln!("Building wasm bundle for first startup (no --client-proxy present)...");
                 execute!(
                     r"
                         ./x.rs wasm-build
