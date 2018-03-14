@@ -11862,24 +11862,23 @@ class Editor {
             const target = getTarget();
             // console.log(e.clientX, e.clientY);
             // Test the caretPositionFromPoint method
-            if (isChar($(this))) {
-                let pos = document.caretPositionFromPoint(e.clientX, e.clientY);
-                let target;
-                if (pos.offsetNode.nodeType == 3) {
-                    // Text node
-                    target = pos.offsetNode.parentNode;
-                }
-                else {
-                    target = pos.offsetNode;
-                }
-                console.log();
-                console.log();
-                console.log(target == this);
-                console.log('----', this);
-                console.log('++++', target);
-                console.log();
-                console.log();
-            }
+            // if (isChar($(this))) {
+            //   let pos = (<any>document).caretPositionFromPoint(e.clientX, e.clientY);
+            //   let target;
+            //   if (pos.offsetNode.nodeType == 3) {
+            //     // Text node
+            //     target = pos.offsetNode.parentNode;
+            //   } else {
+            //     target = pos.offsetNode;
+            //   }
+            //   console.log();
+            //   console.log();
+            //   console.log(target == this);
+            //   console.log('----', this);
+            //   console.log('++++', target);
+            //   console.log();
+            //   console.log();
+            // }
             if (e.shiftKey) {
                 if (active && active.nextAll().add(active).is(this)) {
                     clearTarget();
