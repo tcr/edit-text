@@ -83,8 +83,8 @@ main!(|| {
     args = args.into_iter().filter(|x| *x != "--release").collect();
 
     // Run the subcommand.
-    let args = Cli::from_iter(args.into_iter());
-    match args {
+    let parsed_args = Cli::from_iter(args.iter());
+    match parsed_args {
         Cli::Wasm => {
             // wasm must always be --release
             let release_flag = Some("--release");
@@ -143,6 +143,30 @@ main!(|| {
 
         Cli::MercutioServerRun { log, args } => {
             let release_flag = if release { Some("--release") } else { None };
+
+            if !Path::new("mercutio.sqlite3").exists() {
+                eprintln!("Building database for first startup...");
+                execute!(
+                    r"
+                        diesel setup
+                    ",
+                )?;
+            } else {
+                println!("(Database present.)");
+            }
+
+            if !Path::new("mercutio-frontend/dist/mercutio.wasm").exists() {
+                eprintln!("Building wasm bundle for first startup (no --client-proxy present)...");
+                execute!(
+                    r"
+                        ./x.rs wasm-build
+                    ",
+                )?;
+            }
+            // Don't print anything if it existed, because we might not have
+            // launched in --client-proxy mode.
+            // TODO if we can reliably check for --client-proxy or -c, we should
+            // not build on first launch.
 
             execute!(
                 r"

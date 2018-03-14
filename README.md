@@ -21,11 +21,9 @@ Install the WebAssembly target:
 rustup target add wasm32-unknown-unknown
 ```
 
-To test out the text editor live, first setup the db and compile the wasm bundle, then you can run the server:
+To test out the text editor live, run the server using this command. On first startup, this will first compile the database and wasm bundle. After that, this command launches the HTTP and WebSocket servers:
 
 ```
-diesel setup
-./x.rs wasm-build
 ./x.rs server
 ```
 
