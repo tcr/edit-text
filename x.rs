@@ -260,7 +260,7 @@ main!(|| {
                         -v {dir_self}:/app \
                         -w /app/mercutio-server \
                         -t -i mercutio-build-server \
-                        cargo build --release --target=x86_64-unknown-linux-gnu --bin mercutio-server --features 'inline-files'
+                        cargo build --release --target=x86_64-unknown-linux-gnu --bin mercutio-server --features 'standalone'
                 ",
                 dir_git = abs_string_path("dist/build/cargo-git-cache")?,
                 dir_registry = abs_string_path("dist/build/cargo-registry-cache")?,

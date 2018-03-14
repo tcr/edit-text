@@ -210,7 +210,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
 
     let dist_dir: Box<Dir>;
     let template_dir: Box<Dir>;
-    if cfg!(feature = "inline-files") {
+    if cfg!(feature = "standalone") {
         dist_dir = Box::new(InlineDir(include_dir!("mercutio-frontend/dist")));
         template_dir = Box::new(InlineDir(include_dir!("mercutio-frontend/templates")));
     } else {

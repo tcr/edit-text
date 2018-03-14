@@ -37,4 +37,4 @@ git = "https://github.com/jcdyer/include-dir-macro"
 
 [features]
 
-inline-files = []
+standalone = []
