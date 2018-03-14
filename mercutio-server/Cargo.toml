@@ -34,3 +34,7 @@ mercutio = { path = "../mercutio" }
 
 [dependencies.include-dir-macro]
 git = "https://github.com/jcdyer/include-dir-macro"
+
+[features]
+
+inline-files = []
