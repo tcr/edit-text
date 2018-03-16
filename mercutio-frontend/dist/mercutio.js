@@ -11737,36 +11737,59 @@ function clearActive() {
 function clearTarget() {
     $(document).find('.target').removeClass('target');
 }
-function curto(el) {
+function curto(el, textOffset = null) {
     if (!el) {
         return null;
     }
-    let then = el.is('div') ? {
-        'CurGroup': null
-    } : {
-        'CurChar': null
-    };
-    var p = el.parents('.mote');
-    if (Array.isArray(then)) {
-        var cur = then;
+    let cur = [
+        el.nodeType == 1 ? {
+            'CurGroup': null
+        } : {
+            'CurChar': null
+        }
+    ];
+    if (textOffset !== null) {
+        console.log('help', textOffset);
+        cur.unshift({
+            "CurSkip": textOffset,
+        });
     }
-    else {
-        var cur = [then];
-    }
-    while (el.length != 0 && !el.is(p)) {
-        if (el.prevAll().length > 0) {
+    function place_skip(cur, value) {
+        if ('CurSkip' in cur[0]) {
+            cur[0].CurSkip += value;
+        }
+        else {
             cur.unshift({
-                "CurSkip": el.prevAll().length,
+                "CurSkip": value,
             });
         }
-        el = el.parent();
-        if (el.is(p)) {
-            break;
-        }
-        cur = [{
-                "CurWithGroup": cur,
-            }];
     }
+    // var p = el.parents('.mote');
+    // while (el.length != 0 && !el.is(p)) {
+    while (el !== null) {
+        if (el.previousSibling) {
+            if (el.previousSibling.nodeType == 3) {
+                place_skip(cur, el.previousSibling.data.length);
+            }
+            else {
+                place_skip(cur, 1);
+            }
+            el = el.previousSibling;
+        }
+        else {
+            el = el.parentNode;
+            if (el.nodeType == 1 && el.mozMatchesSelector('.mote')) {
+                break;
+            }
+            cur = [{
+                    "CurWithGroup": cur,
+                }];
+        }
+    }
+    if (!(el.nodeType == 1 && el.mozMatchesSelector('.mote'))) {
+        console.error('Invalid selection!!!');
+    }
+    console.log('cursor', JSON.stringify(cur));
     return cur;
 }
 // function serialize (parent) {
@@ -11877,44 +11900,58 @@ class Editor {
             const target = getTarget();
             // console.log(e.clientX, e.clientY);
             // Test the caretPositionFromPoint method
-            // if (isChar($(this))) {
-            //   let pos = (<any>document).caretPositionFromPoint(e.clientX, e.clientY);
-            //   let target;
-            //   if (pos.offsetNode.nodeType == 3) {
-            //     // Text node
-            //     target = pos.offsetNode.parentNode;
-            //   } else {
-            //     target = pos.offsetNode;
-            //   }
-            //   console.log();
-            //   console.log();
-            //   console.log(target == this);
-            //   console.log('----', this);
-            //   console.log('++++', target);
-            //   console.log();
-            //   console.log();
-            // }
-            if (e.shiftKey) {
-                if (active && active.nextAll().add(active).is(this)) {
-                    clearTarget();
-                    $(this).addClass('target');
-                    // TODO
-                    // send target destination curspan
-                }
-            }
-            else {
-                clearActive();
-                clearTarget();
-                $(this).addClass('active').addClass('target');
-                console.log('Cursor:', curto($(this)));
-                let last = $(this).children().last();
-                if (isBlock($(this))) {
-                    editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](curto(last)));
+            // if (isChar( {
+            {
+                let pos = document.caretPositionFromPoint(e.clientX, e.clientY);
+                let target;
+                if (pos.offsetNode.nodeType == 3) {
+                    // Text node
+                    target = pos.offsetNode.parentNode;
+                    console.log('hi', pos);
+                    if (pos.offset == 0) {
+                        if (pos.offsetNode.previousSibling === null) {
+                            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](curto(pos.offsetNode.parentNode)));
+                        }
+                        else if (pos.offsetNode.previousSibling.nodeType === 3) {
+                            editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](curto(pos.offsetNode.previousSibling, pos.offsetNode.previousSibling.data.length)));
+                        }
+                        else {
+                            // TODO get to the bottom of this
+                            console.log('recursive depth');
+                        }
+                        ;
+                    }
+                    else {
+                        editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](curto(pos.offsetNode, pos.offset)));
+                    }
+                    // pos.offsetNode.offset;
                 }
                 else {
-                    editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](curto($(this))));
+                    // Element (probably)
+                    target = pos.offsetNode;
+                    editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](curto(pos.offsetNode)));
                 }
+                // }
             }
+            // if (e.shiftKey) {
+            //   if (active && active.nextAll().add(active).is(this)) {
+            //     clearTarget();
+            //     $(this).addClass('target');
+            //     // TODO
+            //     // send target destination curspan
+            //   }
+            // } else {
+            //   clearActive();
+            //   clearTarget();
+            //   $(this).addClass('active').addClass('target');
+            //   console.log('Cursor:', curto($(this)));
+            //   let last = $(this).children().last();
+            //   if (isBlock($(this))) {
+            //     editor.nativeCommand(commands.TargetCommand(curto(last)));
+            //   } else {
+            //     editor.nativeCommand(commands.TargetCommand(curto($(this))));
+            //   }
+            // }
             // TODO this bubbles if i use preventDEfault?
             window.focus();
             return false;
@@ -11923,7 +11960,7 @@ class Editor {
         $('#client').on('click', function (e) {
             if (e.target == this) {
                 let last = $elem.find('*').last()[0];
-                editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](curto($(last))));
+                editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](curto(last)));
             }
         });
         $(document).on('keypress', (e) => {

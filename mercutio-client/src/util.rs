@@ -21,9 +21,9 @@ pub fn doc_as_html(doc: &DocSpan) -> String {
                 out.push_str(r"</div>");
             }
             &DocChars(ref text) => for c in text.as_str().chars() {
-                out.push_str(r"<span>");
+                // out.push_str(r"<span>");
                 out.push(c);
-                out.push_str(r"</span>");
+                // out.push_str(r"</span>");
             },
         }
     }
