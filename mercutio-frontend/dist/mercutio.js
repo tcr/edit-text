@@ -10954,6 +10954,21 @@ else if (document.body.id == 'presentation') {
                 window.remark.create({
                     source: md,
                 });
+                __WEBPACK_IMPORTED_MODULE_5_jquery___default()('<button>↕️</button>').on('click', function () {
+                    console.log('fullscreen attempt');
+                    let a = document.querySelector('.remark-slides-area');
+                    try {
+                        a.mozRequestFullScreen();
+                    }
+                    catch (e) {
+                        a.requestFullscreen();
+                    }
+                })
+                    .css('position', 'fixed')
+                    .css('top', 10)
+                    .css('left', 10)
+                    .css('z-index', 1000)
+                    .appendTo(__WEBPACK_IMPORTED_MODULE_5_jquery___default()('body'));
             }
             if (json_data.Init) {
                 let id = setInterval(() => {

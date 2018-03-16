@@ -182,6 +182,21 @@ else if (document.body.id == 'presentation') {
         (<any>window).remark.create({
           source: md,
         });
+
+        $('<button>↕️</button>').on('click', function () {
+          console.log('fullscreen attempt');
+          let a = document.querySelector('.remark-slides-area');
+          try {
+            (<any>a).mozRequestFullScreen();
+          } catch (e) {
+            (<any>a).requestFullscreen();
+          }
+        })
+          .css('position', 'fixed')
+          .css('top', 10)
+          .css('left', 10)
+          .css('z-index', 1000)
+          .appendTo($('body'));
       }
 
       if (json_data.Init) {

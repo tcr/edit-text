@@ -100,15 +100,15 @@ pub fn button_handlers<C: ClientImpl>() ->
     Vec<(&'static str, Box<Fn(&mut C) -> Result<(), Error>>)> {
     vec![
         (
-            "Heading 1",
+            "H1",
             Box::new(|client| client.client_op(|doc| replace_block(doc, "h1"))),
         ),
         (
-            "Heading 2",
+            "H2",
             Box::new(|client| client.client_op(|doc| replace_block(doc, "h2"))),
         ),
         (
-            "Heading 3",
+            "H3",
             Box::new(|client| client.client_op(|doc| replace_block(doc, "h3"))),
         ),
         (
@@ -120,16 +120,16 @@ pub fn button_handlers<C: ClientImpl>() ->
             Box::new(|client| client.client_op(|doc| replace_block(doc, "pre"))),
         ),
         (
-            "HTML",
-            Box::new(|client| client.client_op(|doc| replace_block(doc, "html"))),
-        ),
-        (
             "List",
             Box::new(|client| client.client_op(|doc| toggle_list(doc))),
         ),
         (
             "HR",
             Box::new(|client| client.client_op(|doc| split_block(doc, true))),
+        ),
+        (
+            "Raw HTML",
+            Box::new(|client| client.client_op(|doc| replace_block(doc, "html"))),
         ),
     ]
 }
