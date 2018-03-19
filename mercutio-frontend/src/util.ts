@@ -26,6 +26,13 @@ export function textNodeAtPoint(
   };
 }
 
+export function matchesSelector(
+  el: Node,
+  selector: String,
+): boolean {
+  return (<any>el).mozMatchesSelector(selector);
+}
+
 export function pageId(): string {
   return window.location.pathname.match(/^\/?([^\/]+)/)[1];
 }

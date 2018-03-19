@@ -2,6 +2,8 @@ import * as commands from './commands';
 import HashState from './hashstate';
 import Clipboard from 'clipboard';
 import * as util from './util';
+import * as interop from './interop';
+import {Network, ProxyNetwork, WasmNetwork} from './network';
 
 function curto(el: Node | null, textOffset: number | null = null) {
   if (!el) {
@@ -36,14 +38,14 @@ function curto(el: Node | null, textOffset: number | null = null) {
   while (el !== null) {
     if (el.previousSibling) {
       if (el.previousSibling.nodeType == 3) {
-        place_skip(cur, (<any>el.previousSibling).data.length);
+        place_skip(cur, (<Text>el.previousSibling).data.length);
       } else {
         place_skip(cur, 1);
       }
       el = el.previousSibling;
     } else {
       el = el.parentNode;
-      if (el.nodeType == 1 && (<any>el).mozMatchesSelector('.mote')) {
+      if (el.nodeType == 1 && util.matchesSelector(el, '.mote')) {
         break;
       }
       cur = [{
@@ -52,7 +54,7 @@ function curto(el: Node | null, textOffset: number | null = null) {
     }
   }
 
-  if (!(el.nodeType == 1 && (<any>el).mozMatchesSelector('.mote'))) {
+  if (!(el.nodeType == 1 && util.matchesSelector(el, '.mote'))) {
     console.error('Invalid selection!!!');
   }
 
@@ -61,24 +63,24 @@ function curto(el: Node | null, textOffset: number | null = null) {
 }
 
 // Initialize child editor.
-export default class Editor {
+export class Editor {
   $elem: any;
   editorID: string;
   ops: Array<any>;
-  nativeSocket: WebSocket;
-  syncSocket: WebSocket;
   KEY_WHITELIST: any;
   markdown: string;
 
-  // TODO remove this
-  Module: any;
+  state: Network;
 
-  constructor(elem: HTMLElement, editorID: string) {
+  constructor(elem: HTMLElement, editorID: string, network: Network) {
     this.$elem = $(elem);
     this.editorID = editorID;
     this.ops = [];
     this.KEY_WHITELIST = [];
     this.markdown = '';
+
+    this.state = network;
+    this.state.onNativeMessage = this.onNativeMessage.bind(this);
 
     let editor = this;
     let $elem = this.$elem;
@@ -92,11 +94,11 @@ export default class Editor {
 
       // Request markdown source.
       setInterval(() => {
-        editor.nativeCommand(commands.RequestMarkdown());
+        editor.state.nativeCommand(commands.RequestMarkdown());
       }, 2000);
       setTimeout(() => {
         // Early request
-        editor.nativeCommand(commands.RequestMarkdown());
+        editor.state.nativeCommand(commands.RequestMarkdown());
       }, 500);
     }
 
@@ -156,12 +158,12 @@ export default class Editor {
         if (pos.offset == 0) {
           if (pos.textNode.previousSibling === null) {
             // Text node is first in element, so select parent node.
-            this.nativeCommand(commands.TargetCommand(curto(
+            this.state.nativeCommand(commands.TargetCommand(curto(
               pos.textNode.parentNode,
             )));
           } else if (pos.textNode.previousSibling.nodeType === 3) {
             // Text node has a preceding text elemnt; move to end.
-            this.nativeCommand(commands.TargetCommand(curto(
+            this.state.nativeCommand(commands.TargetCommand(curto(
               pos.textNode.previousSibling,
               (<Text>pos.textNode.previousSibling).data.length,
             )))
@@ -172,7 +174,7 @@ export default class Editor {
           };
         } else {
           // Move to offset of this text node.
-          this.nativeCommand(commands.TargetCommand(curto(
+          this.state.nativeCommand(commands.TargetCommand(curto(
             pos.textNode,
             pos.offset - 1,
           )));
@@ -188,7 +190,7 @@ export default class Editor {
     $('#client').on('click', (e) => {
       if (e.target == $('#client')[0]) {
         let last = this.$elem.find('*').last()[0];
-        this.nativeCommand(commands.TargetCommand(curto(last)));
+        this.state.nativeCommand(commands.TargetCommand(curto(last)));
       }
     });
 
@@ -197,7 +199,7 @@ export default class Editor {
         return;
       }
 
-      this.nativeCommand(commands.CharacterCommand(e.charCode,));
+      this.state.nativeCommand(commands.CharacterCommand(e.charCode,));
 
       e.preventDefault();
     });
@@ -210,7 +212,7 @@ export default class Editor {
         return;
       }
 
-      this.nativeCommand(commands.KeypressCommand(
+      this.state.nativeCommand(commands.KeypressCommand(
         e.keyCode,
         e.metaKey,
         e.shiftKey,
@@ -232,42 +234,10 @@ export default class Editor {
     });
   }
 
-  nativeCommand(command: commands.Command) {
-    if (this.Module) {
-      this.Module.wasm_command({
-        NativeCommand: command,
-      });
-    } else {
-      this.nativeSocket.send(JSON.stringify(command));
-    }
-  }
-
-  nativeConnect() {
-    let editor = this;
-    this.nativeSocket = new WebSocket(
-      util.clientProxyUrl() + 
-      (window.location.hash == '#helloworld' ? '?helloworld' : '')
-    );
-    this.nativeSocket.onopen = function (event) {
-      console.log('Editor "%s" is connected.', editor.editorID);
-
-      // editor.nativeCommand(commands.ConnectCommand(editor.editorID));
-
-      // window.parent.postMessage({
-      //   "Live": editor.editorID,
-      // }, '*')
-    };
-    this.nativeSocket.onmessage = this.onNativeMessage.bind(this);
-    this.nativeSocket.onclose = function () {
-      $('body').css('background', 'red');
-    }
-  }
-
   // Received message on native socket
-  onNativeMessage(event) {
-    let editor = this;
-    let parse = JSON.parse(event.data);
-  
+  onNativeMessage(parse: any) {
+    const editor = this;
+
     if (parse.Init) {
       editor.setID(parse.Init);
     }
@@ -305,14 +275,10 @@ export default class Editor {
       $('#native-buttons').each((_, x) => {
         parse.Setup.buttons.forEach(btn => {
           $('<button>').text(btn[1]).appendTo(x).click(_ => {
-            editor.nativeCommand(commands.ButtonCommand(btn[0]));
+            editor.state.nativeCommand(commands.ButtonCommand(btn[0]));
           });
         })
       });
-    }
-
-    else if (parse.SyncServerCommand) {
-      editor.syncSocket.send(JSON.stringify(parse.SyncServerCommand));
     }
 
     else {
@@ -328,14 +294,11 @@ export default class Editor {
       if (typeof event.data != 'object') {
         return;
       }
+      let msg = event.data;
 
-      // if ('Sync' in event.data) {
-      //   // Push to native
-      //   editor.nativeCommand(commands.LoadCommand(event.data.Sync))
-      // }
-      if ('Monkey' in event.data) {
+      if ('Monkey' in msg) {
         // TODO reflect this in the app
-        editor.nativeCommand(commands.MonkeyCommand(event.data.Monkey));
+        editor.state.nativeCommand(commands.MonkeyCommand(msg.Monkey));
       }
     };
   }

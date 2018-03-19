@@ -226,7 +226,7 @@ main!(|| {
                 r"
                     cd mercutio-frontend
                     ./node_modules/.bin/webpack \
-                        ./src/app.ts ./dist/mercutio.js {args}
+                        ./src/index.ts ./dist/mercutio.js {args}
                 ",
                 args = args,
             )?;
@@ -237,7 +237,7 @@ main!(|| {
                 r"
                     cd mercutio-frontend
                     ./node_modules/.bin/webpack --watch \
-                        ./src/app.ts ./dist/mercutio.js {args}
+                        ./src/index.ts ./dist/mercutio.js {args}
                 ",
                 args = args,
             )?;

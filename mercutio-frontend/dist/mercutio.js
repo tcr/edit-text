@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 4);
+/******/ 	return __webpack_require__(__webpack_require__.s = 2);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -10325,6 +10325,678 @@ return jQuery;
 
 /***/ }),
 /* 1 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["d"] = textNodeAtPoint;
+/* harmony export (immutable) */ __webpack_exports__["b"] = matchesSelector;
+/* unused harmony export pageId */
+/* harmony export (immutable) */ __webpack_exports__["a"] = clientProxyUrl;
+/* harmony export (immutable) */ __webpack_exports__["c"] = syncUrl;
+function textNodeAtPoint(x, y) {
+    let textNode, offset;
+    if (document.caretPositionFromPoint) {
+        let range = document.caretPositionFromPoint(x, y);
+        textNode = range.offsetNode;
+        offset = range.offset;
+    }
+    else if (document.caretRangeFromPoint) {
+        let range = document.caretRangeFromPoint(x, y);
+        textNode = range.startContainer;
+        offset = range.startOffset;
+    }
+    else {
+        return null;
+    }
+    // TODO: can textNode ever be an element?
+    if (textNode.nodeType !== 3) {
+        return null;
+    }
+    return {
+        textNode,
+        offset,
+    };
+}
+function matchesSelector(el, selector) {
+    return el.mozMatchesSelector(selector);
+}
+function pageId() {
+    return window.location.pathname.match(/^\/?([^\/]+)/)[1];
+}
+function clientProxyUrl() {
+    return '' +
+        (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
+        window.location.host.replace(/\:\d+/, ':8002') +
+        '/' +
+        pageId();
+}
+function syncUrl() {
+    return '' +
+        (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
+        (window.location.host.match(/localhost/) ?
+            window.location.host.replace(/:\d+$|$/, ':8001') + '/$/ws/' + pageId() :
+            window.location.host + '/$/ws/' + pageId());
+}
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__styles_mote_scss__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__styles_mote_scss___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__styles_mote_scss__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__commands__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__editor__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__multi__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__network__ = __webpack_require__(27);
+// Global CSS
+
+
+
+
+
+// Check page configuration.
+if (!window['CONFIG'].configured) {
+    alert('The window.CONFIG variable was not configured by the server!');
+}
+// Entry.
+if (document.body.id == 'multi') {
+    document.body.innerHTML = `
+<h1>Multimonkey
+  <button id="action-monkey">🙈🙉🙊</button>
+  <span style="font-family: monospace; padding: 3px 5px;" id="timer"></span>
+</h1>
+
+<table id="clients">
+  <tr>
+    <td>
+      <iframe src="/monkey"></iframe>
+    </td>
+    <td>
+      <iframe src="/monkey"></iframe>
+    </td>
+    <td>
+      <iframe src="/monkey"></iframe>
+    </td>
+  </tr>
+</table>
+
+`;
+    new __WEBPACK_IMPORTED_MODULE_3__multi__["a" /* default */]();
+}
+else if (document.body.id == 'client') {
+    document.body.innerHTML = `
+<div id="footer"></div>
+<div id="toolbar">
+  <a href="https://github.com/tcr/edit-text" id="logo">edit-text</a>
+  <div id="native-buttons"></div>
+  <div id="local-buttons"></div>
+</div>
+<div class="mote" id="mote"></div>
+`;
+    // Utility classes for Multi
+    if (window.parent != window) {
+        // Blur/Focus classes.
+        $(window).on('focus', () => $(document.body).removeClass('blurred'));
+        $(window).on('blur', () => $(document.body).addClass('blurred'));
+        $(document.body).addClass('blurred');
+    }
+    // Connects to the network.
+    let network = window['CONFIG'].wasm ?
+        new __WEBPACK_IMPORTED_MODULE_4__network__["b" /* WasmNetwork */]() :
+        new __WEBPACK_IMPORTED_MODULE_4__network__["a" /* ProxyNetwork */]();
+    // Create the editor.
+    let editor = new __WEBPACK_IMPORTED_MODULE_2__editor__["a" /* Editor */](document.getElementById('mote'), '$$$$$$', network);
+    // Connect to parent window (if exists).
+    editor.multiConnect();
+    // Background colors.
+    network.onNativeClose = function () {
+        $('body').css('background', 'red');
+    };
+    network.onSyncClose = function () {
+        $('body').css('background', 'red');
+    };
+    // Connect to remote sockets.
+    network.nativeConnect()
+        .then(() => network.syncConnect())
+        .then(() => {
+        console.log('edit-text initialized.');
+    });
+}
+else if (document.body.id == 'presentation') {
+    // Connects to the network.
+    let network = window['CONFIG'].wasm ?
+        new __WEBPACK_IMPORTED_MODULE_4__network__["b" /* WasmNetwork */]() :
+        new __WEBPACK_IMPORTED_MODULE_4__network__["a" /* ProxyNetwork */]();
+    let md = null;
+    network.onNativeMessage = function (msg) {
+        console.log(msg);
+        if (!md && msg.MarkdownUpdate) {
+            md = msg.MarkdownUpdate;
+            // Start the remark.js presentation.
+            window.remark.create({
+                source: md,
+            });
+            // Adds fullscreen button after remark is created.
+            $('<button>↕️</button>').on('click', function () {
+                console.log('fullscreen attempt');
+                let a = document.querySelector('.remark-slides-area');
+                try {
+                    a.mozRequestFullScreen();
+                }
+                catch (e) {
+                    a.requestFullscreen();
+                }
+            })
+                .css('position', 'fixed')
+                .css('top', 10)
+                .css('left', 10)
+                .css('z-index', 1000)
+                .appendTo($('body'));
+        }
+    };
+    // Connect to remote sockets.
+    network.nativeConnect()
+        .then(() => network.syncConnect())
+        .then(() => {
+        console.log('edit-text initialized.');
+        // Request markdown source immediately.
+        let id = setInterval(function () {
+            if (md !== null) {
+                clearInterval(id);
+            }
+            else {
+                network.nativeCommand(__WEBPACK_IMPORTED_MODULE_1__commands__["e" /* RequestMarkdown */]());
+            }
+        }, 250);
+    });
+}
+else {
+    document.body.innerHTML = '<h1>404</h1>';
+}
+$('#footer').html(`
+⚠️ You are viewing a sandbox for <b><a href="https://github.com/tcr/edit-text">edit-text</a></b>.
+There is a high chance of data loss, so don't store anything important here.
+Thanks for trying it out!
+`);
+
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var apply = Function.prototype.apply;
+
+// DOM APIs, for completeness
+
+exports.setTimeout = function() {
+  return new Timeout(apply.call(setTimeout, window, arguments), clearTimeout);
+};
+exports.setInterval = function() {
+  return new Timeout(apply.call(setInterval, window, arguments), clearInterval);
+};
+exports.clearTimeout =
+exports.clearInterval = function(timeout) {
+  if (timeout) {
+    timeout.close();
+  }
+};
+
+function Timeout(id, clearFn) {
+  this._id = id;
+  this._clearFn = clearFn;
+}
+Timeout.prototype.unref = Timeout.prototype.ref = function() {};
+Timeout.prototype.close = function() {
+  this._clearFn.call(window, this._id);
+};
+
+// Does not start the time, just sets up the members needed.
+exports.enroll = function(item, msecs) {
+  clearTimeout(item._idleTimeoutId);
+  item._idleTimeout = msecs;
+};
+
+exports.unenroll = function(item) {
+  clearTimeout(item._idleTimeoutId);
+  item._idleTimeout = -1;
+};
+
+exports._unrefActive = exports.active = function(item) {
+  clearTimeout(item._idleTimeoutId);
+
+  var msecs = item._idleTimeout;
+  if (msecs >= 0) {
+    item._idleTimeoutId = setTimeout(function onTimeout() {
+      if (item._onTimeout)
+        item._onTimeout();
+    }, msecs);
+  }
+};
+
+// setimmediate attaches itself to the global object
+__webpack_require__(4);
+exports.setImmediate = setImmediate;
+exports.clearImmediate = clearImmediate;
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
+    "use strict";
+
+    if (global.setImmediate) {
+        return;
+    }
+
+    var nextHandle = 1; // Spec says greater than zero
+    var tasksByHandle = {};
+    var currentlyRunningATask = false;
+    var doc = global.document;
+    var registerImmediate;
+
+    function setImmediate(callback) {
+      // Callback can either be a function or a string
+      if (typeof callback !== "function") {
+        callback = new Function("" + callback);
+      }
+      // Copy function arguments
+      var args = new Array(arguments.length - 1);
+      for (var i = 0; i < args.length; i++) {
+          args[i] = arguments[i + 1];
+      }
+      // Store and register the task
+      var task = { callback: callback, args: args };
+      tasksByHandle[nextHandle] = task;
+      registerImmediate(nextHandle);
+      return nextHandle++;
+    }
+
+    function clearImmediate(handle) {
+        delete tasksByHandle[handle];
+    }
+
+    function run(task) {
+        var callback = task.callback;
+        var args = task.args;
+        switch (args.length) {
+        case 0:
+            callback();
+            break;
+        case 1:
+            callback(args[0]);
+            break;
+        case 2:
+            callback(args[0], args[1]);
+            break;
+        case 3:
+            callback(args[0], args[1], args[2]);
+            break;
+        default:
+            callback.apply(undefined, args);
+            break;
+        }
+    }
+
+    function runIfPresent(handle) {
+        // From the spec: "Wait until any invocations of this algorithm started before this one have completed."
+        // So if we're currently running a task, we'll need to delay this invocation.
+        if (currentlyRunningATask) {
+            // Delay by doing a setTimeout. setImmediate was tried instead, but in Firefox 7 it generated a
+            // "too much recursion" error.
+            setTimeout(runIfPresent, 0, handle);
+        } else {
+            var task = tasksByHandle[handle];
+            if (task) {
+                currentlyRunningATask = true;
+                try {
+                    run(task);
+                } finally {
+                    clearImmediate(handle);
+                    currentlyRunningATask = false;
+                }
+            }
+        }
+    }
+
+    function installNextTickImplementation() {
+        registerImmediate = function(handle) {
+            process.nextTick(function () { runIfPresent(handle); });
+        };
+    }
+
+    function canUsePostMessage() {
+        // The test against `importScripts` prevents this implementation from being installed inside a web worker,
+        // where `global.postMessage` means something completely different and can't be used for this purpose.
+        if (global.postMessage && !global.importScripts) {
+            var postMessageIsAsynchronous = true;
+            var oldOnMessage = global.onmessage;
+            global.onmessage = function() {
+                postMessageIsAsynchronous = false;
+            };
+            global.postMessage("", "*");
+            global.onmessage = oldOnMessage;
+            return postMessageIsAsynchronous;
+        }
+    }
+
+    function installPostMessageImplementation() {
+        // Installs an event handler on `global` for the `message` event: see
+        // * https://developer.mozilla.org/en/DOM/window.postMessage
+        // * http://www.whatwg.org/specs/web-apps/current-work/multipage/comms.html#crossDocumentMessages
+
+        var messagePrefix = "setImmediate$" + Math.random() + "$";
+        var onGlobalMessage = function(event) {
+            if (event.source === global &&
+                typeof event.data === "string" &&
+                event.data.indexOf(messagePrefix) === 0) {
+                runIfPresent(+event.data.slice(messagePrefix.length));
+            }
+        };
+
+        if (global.addEventListener) {
+            global.addEventListener("message", onGlobalMessage, false);
+        } else {
+            global.attachEvent("onmessage", onGlobalMessage);
+        }
+
+        registerImmediate = function(handle) {
+            global.postMessage(messagePrefix + handle, "*");
+        };
+    }
+
+    function installMessageChannelImplementation() {
+        var channel = new MessageChannel();
+        channel.port1.onmessage = function(event) {
+            var handle = event.data;
+            runIfPresent(handle);
+        };
+
+        registerImmediate = function(handle) {
+            channel.port2.postMessage(handle);
+        };
+    }
+
+    function installReadyStateChangeImplementation() {
+        var html = doc.documentElement;
+        registerImmediate = function(handle) {
+            // Create a <script> element; its readystatechange event will be fired asynchronously once it is inserted
+            // into the document. Do so, thus queuing up the task. Remember to clean up once it's been called.
+            var script = doc.createElement("script");
+            script.onreadystatechange = function () {
+                runIfPresent(handle);
+                script.onreadystatechange = null;
+                html.removeChild(script);
+                script = null;
+            };
+            html.appendChild(script);
+        };
+    }
+
+    function installSetTimeoutImplementation() {
+        registerImmediate = function(handle) {
+            setTimeout(runIfPresent, 0, handle);
+        };
+    }
+
+    // If supported, we should attach to the prototype of global, since that is where setTimeout et al. live.
+    var attachTo = Object.getPrototypeOf && Object.getPrototypeOf(global);
+    attachTo = attachTo && attachTo.setTimeout ? attachTo : global;
+
+    // Don't get fooled by e.g. browserify environments.
+    if ({}.toString.call(global.process) === "[object process]") {
+        // For Node.js before 0.9
+        installNextTickImplementation();
+
+    } else if (canUsePostMessage()) {
+        // For non-IE10 modern browsers
+        installPostMessageImplementation();
+
+    } else if (global.MessageChannel) {
+        // For web workers, where supported
+        installMessageChannelImplementation();
+
+    } else if (doc && "onreadystatechange" in doc.createElement("script")) {
+        // For IE 6–8
+        installReadyStateChangeImplementation();
+
+    } else {
+        // For older browsers
+        installSetTimeoutImplementation();
+    }
+
+    attachTo.setImmediate = setImmediate;
+    attachTo.clearImmediate = clearImmediate;
+}(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(5), __webpack_require__(6)))
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports) {
+
+// shim for using process in browser
+var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
+(function () {
+    try {
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
+    }
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+} ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = runTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    runClearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        runTimeout(drainQueue);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) { return [] }
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
+
+/***/ }),
+/* 7 */,
+/* 8 */,
+/* 9 */
 /***/ (function(module, exports) {
 
 /*
@@ -10406,8 +11078,7 @@ function toComment(sourceMap) {
 
 
 /***/ }),
-/* 2 */,
-/* 3 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -10463,7 +11134,7 @@ var singleton = null;
 var	singletonCounter = 0;
 var	stylesInsertedAtTop = [];
 
-var	fixUrls = __webpack_require__(15);
+var	fixUrls = __webpack_require__(11);
 
 module.exports = function(list, options) {
 	if (typeof DEBUG !== "undefined" && DEBUG) {
@@ -10779,693 +11450,7 @@ function updateLink (link, options, obj) {
 
 
 /***/ }),
-/* 4 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* WEBPACK VAR INJECTION */(function(setImmediate) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__mote_scss__ = __webpack_require__(16);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__mote_scss___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__mote_scss__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__editor__ = __webpack_require__(18);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__multi__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__interop__ = __webpack_require__(30);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__util__ = __webpack_require__(31);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_jquery__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_jquery__);
-
-
-
-
-
-
-// Entry.
-if (document.body.id == 'multi') {
-    document.body.innerHTML = `
-<h1>Multimonkey
-  <button id="action-monkey">🙈🙉🙊</button>
-  <span style="font-family: monospace; padding: 3px 5px;" id="timer"></span>
-</h1>
-
-<table id="clients">
-  <tr>
-    <td>
-      <iframe src="/monkey"></iframe>
-    </td>
-    <td>
-      <iframe src="/monkey"></iframe>
-    </td>
-    <td>
-      <iframe src="/monkey"></iframe>
-    </td>
-  </tr>
-</table>
-
-`;
-    new __WEBPACK_IMPORTED_MODULE_2__multi__["a" /* default */]();
-}
-else if (document.body.id == 'client') {
-    document.body.innerHTML = `
-<div id="footer"></div>
-<div id="toolbar">
-  <a href="https://github.com/tcr/edit-text" id="logo">edit-text</a>
-  <div id="native-buttons"></div>
-  <div id="local-buttons"></div>
-</div>
-<div class="mote" id="mote"></div>
-`;
-    // Utility classes for Multi
-    if (window.parent != window) {
-        // Blur/Focus classes.
-        __WEBPACK_IMPORTED_MODULE_5_jquery___default()(window).on('focus', () => __WEBPACK_IMPORTED_MODULE_5_jquery___default()(document.body).removeClass('blurred'));
-        __WEBPACK_IMPORTED_MODULE_5_jquery___default()(window).on('blur', () => __WEBPACK_IMPORTED_MODULE_5_jquery___default()(document.body).addClass('blurred'));
-        __WEBPACK_IMPORTED_MODULE_5_jquery___default()(document.body).addClass('blurred');
-    }
-    let editor = new __WEBPACK_IMPORTED_MODULE_1__editor__["a" /* default */](document.getElementById('mote'), '$$$$$$');
-    if (!window['CONFIG'].configured) {
-        alert('The window.CONFIG variable was not configured by the server!');
-    }
-    // Use cross-compiled WASM bundle.
-    let WASM = window['CONFIG'].wasm;
-    if (!WASM) {
-        editor.multiConnect();
-        editor.nativeConnect();
-    }
-    else {
-        __WEBPACK_IMPORTED_MODULE_3__interop__["a" /* instantiate */](function (data) {
-            // console.log('----> js_command:', data);
-            // Make this async so we don't have deeply nested call stacks from Rust<->JS interop.
-            setImmediate(() => {
-                editor.onNativeMessage({
-                    data: data,
-                });
-            });
-        })
-            .then(Module => {
-            Module.wasm_setup();
-            setImmediate(() => {
-                // Websocket port
-                let syncSocket = new WebSocket(__WEBPACK_IMPORTED_MODULE_4__util__["b" /* syncUrl */]() + (window.location.hash == '#helloworld' ? '?helloworld' : ''));
-                editor.Module = Module;
-                editor.syncSocket = syncSocket;
-                syncSocket.onopen = function (event) {
-                    console.log('Editor "%s" is connected.', editor.editorID);
-                };
-                // Keepalive
-                setInterval(() => {
-                    syncSocket.send(JSON.stringify({
-                        Keepalive: null,
-                    }));
-                }, 1000);
-                syncSocket.onmessage = function (event) {
-                    // console.log('GOT SYNC SOCKET MESSAGE:', event.data);
-                    Module.wasm_command({
-                        SyncClientCommand: JSON.parse(event.data),
-                    });
-                };
-                syncSocket.onclose = function () {
-                    // TODO use a class
-                    __WEBPACK_IMPORTED_MODULE_5_jquery___default()('html').css('background', '#f00');
-                    __WEBPACK_IMPORTED_MODULE_5_jquery___default()('body').css('opacity', '0.7');
-                };
-            });
-        });
-    }
-}
-else if (document.body.id == 'presentation') {
-    // Use cross-compiled WASM bundle.
-    let WASM = window['CONFIG'].wasm;
-    if (!WASM) {
-        let nativeSocket = new WebSocket(__WEBPACK_IMPORTED_MODULE_4__util__["a" /* clientProxyUrl */]());
-        let md = null;
-        nativeSocket.onmessage = function (event) {
-            let packet = JSON.parse(event.data);
-            if (packet.MarkdownUpdate) {
-                md = packet.MarkdownUpdate;
-                window.remark.create({
-                    source: md,
-                });
-            }
-            // Module.wasm_command({
-            //   SyncClientCommand: JSON.parse(event.data),
-            // });
-        };
-        setInterval(() => {
-            if (md == null) {
-                nativeSocket.send(JSON.stringify({ RequestMarkdown: null }));
-            }
-        }, 500);
-        nativeSocket.send(JSON.stringify({ RequestMarkdown: null }));
-    }
-    else {
-        let md;
-        let M;
-        __WEBPACK_IMPORTED_MODULE_3__interop__["a" /* instantiate */](function (data) {
-            // console.log('----> js_command:', data);
-            let json_data = JSON.parse(data);
-            // Make this async so we don't have deeply nested call stacks from Rust<->JS interop.
-            // setImmediate(() => {
-            //   editor.onNativeMessage({
-            //     data: data,
-            //   });
-            // });
-            console.log(json_data);
-            if (!md && json_data.MarkdownUpdate) {
-                md = json_data.MarkdownUpdate;
-                window.remark.create({
-                    source: md,
-                });
-                __WEBPACK_IMPORTED_MODULE_5_jquery___default()('<button>↕️</button>').on('click', function () {
-                    console.log('fullscreen attempt');
-                    let a = document.querySelector('.remark-slides-area');
-                    try {
-                        a.mozRequestFullScreen();
-                    }
-                    catch (e) {
-                        a.requestFullscreen();
-                    }
-                })
-                    .css('position', 'fixed')
-                    .css('top', 10)
-                    .css('left', 10)
-                    .css('z-index', 1000)
-                    .appendTo(__WEBPACK_IMPORTED_MODULE_5_jquery___default()('body'));
-            }
-            if (json_data.Init) {
-                let id = setInterval(() => {
-                    M.wasm_command({
-                        NativeCommand: {
-                            RequestMarkdown: null,
-                        },
-                    });
-                    clearInterval(id);
-                }, 100);
-            }
-        })
-            .then(Module => {
-            M = Module;
-            Module.wasm_setup();
-            setImmediate(() => {
-                let syncSocket = new WebSocket(__WEBPACK_IMPORTED_MODULE_4__util__["b" /* syncUrl */]());
-                syncSocket.onopen = function (event) {
-                    // console.log('Editor "%s" is connected.', '$presenter');
-                };
-                syncSocket.onmessage = function (event) {
-                    Module.wasm_command({
-                        SyncClientCommand: JSON.parse(event.data),
-                    });
-                };
-            });
-        });
-    }
-}
-else {
-    document.body.innerHTML = '<h1>404</h1>';
-}
-__WEBPACK_IMPORTED_MODULE_5_jquery___default()('#footer').html(`
-⚠️ You are viewing a sandbox for <b><a href="https://github.com/tcr/edit-text">edit-text</a></b>.
-There is a high chance of data loss, so don't store anything important here.
-Thanks for trying it out!
-`);
-
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(5).setImmediate))
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var apply = Function.prototype.apply;
-
-// DOM APIs, for completeness
-
-exports.setTimeout = function() {
-  return new Timeout(apply.call(setTimeout, window, arguments), clearTimeout);
-};
-exports.setInterval = function() {
-  return new Timeout(apply.call(setInterval, window, arguments), clearInterval);
-};
-exports.clearTimeout =
-exports.clearInterval = function(timeout) {
-  if (timeout) {
-    timeout.close();
-  }
-};
-
-function Timeout(id, clearFn) {
-  this._id = id;
-  this._clearFn = clearFn;
-}
-Timeout.prototype.unref = Timeout.prototype.ref = function() {};
-Timeout.prototype.close = function() {
-  this._clearFn.call(window, this._id);
-};
-
-// Does not start the time, just sets up the members needed.
-exports.enroll = function(item, msecs) {
-  clearTimeout(item._idleTimeoutId);
-  item._idleTimeout = msecs;
-};
-
-exports.unenroll = function(item) {
-  clearTimeout(item._idleTimeoutId);
-  item._idleTimeout = -1;
-};
-
-exports._unrefActive = exports.active = function(item) {
-  clearTimeout(item._idleTimeoutId);
-
-  var msecs = item._idleTimeout;
-  if (msecs >= 0) {
-    item._idleTimeoutId = setTimeout(function onTimeout() {
-      if (item._onTimeout)
-        item._onTimeout();
-    }, msecs);
-  }
-};
-
-// setimmediate attaches itself to the global object
-__webpack_require__(6);
-exports.setImmediate = setImmediate;
-exports.clearImmediate = clearImmediate;
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
-    "use strict";
-
-    if (global.setImmediate) {
-        return;
-    }
-
-    var nextHandle = 1; // Spec says greater than zero
-    var tasksByHandle = {};
-    var currentlyRunningATask = false;
-    var doc = global.document;
-    var registerImmediate;
-
-    function setImmediate(callback) {
-      // Callback can either be a function or a string
-      if (typeof callback !== "function") {
-        callback = new Function("" + callback);
-      }
-      // Copy function arguments
-      var args = new Array(arguments.length - 1);
-      for (var i = 0; i < args.length; i++) {
-          args[i] = arguments[i + 1];
-      }
-      // Store and register the task
-      var task = { callback: callback, args: args };
-      tasksByHandle[nextHandle] = task;
-      registerImmediate(nextHandle);
-      return nextHandle++;
-    }
-
-    function clearImmediate(handle) {
-        delete tasksByHandle[handle];
-    }
-
-    function run(task) {
-        var callback = task.callback;
-        var args = task.args;
-        switch (args.length) {
-        case 0:
-            callback();
-            break;
-        case 1:
-            callback(args[0]);
-            break;
-        case 2:
-            callback(args[0], args[1]);
-            break;
-        case 3:
-            callback(args[0], args[1], args[2]);
-            break;
-        default:
-            callback.apply(undefined, args);
-            break;
-        }
-    }
-
-    function runIfPresent(handle) {
-        // From the spec: "Wait until any invocations of this algorithm started before this one have completed."
-        // So if we're currently running a task, we'll need to delay this invocation.
-        if (currentlyRunningATask) {
-            // Delay by doing a setTimeout. setImmediate was tried instead, but in Firefox 7 it generated a
-            // "too much recursion" error.
-            setTimeout(runIfPresent, 0, handle);
-        } else {
-            var task = tasksByHandle[handle];
-            if (task) {
-                currentlyRunningATask = true;
-                try {
-                    run(task);
-                } finally {
-                    clearImmediate(handle);
-                    currentlyRunningATask = false;
-                }
-            }
-        }
-    }
-
-    function installNextTickImplementation() {
-        registerImmediate = function(handle) {
-            process.nextTick(function () { runIfPresent(handle); });
-        };
-    }
-
-    function canUsePostMessage() {
-        // The test against `importScripts` prevents this implementation from being installed inside a web worker,
-        // where `global.postMessage` means something completely different and can't be used for this purpose.
-        if (global.postMessage && !global.importScripts) {
-            var postMessageIsAsynchronous = true;
-            var oldOnMessage = global.onmessage;
-            global.onmessage = function() {
-                postMessageIsAsynchronous = false;
-            };
-            global.postMessage("", "*");
-            global.onmessage = oldOnMessage;
-            return postMessageIsAsynchronous;
-        }
-    }
-
-    function installPostMessageImplementation() {
-        // Installs an event handler on `global` for the `message` event: see
-        // * https://developer.mozilla.org/en/DOM/window.postMessage
-        // * http://www.whatwg.org/specs/web-apps/current-work/multipage/comms.html#crossDocumentMessages
-
-        var messagePrefix = "setImmediate$" + Math.random() + "$";
-        var onGlobalMessage = function(event) {
-            if (event.source === global &&
-                typeof event.data === "string" &&
-                event.data.indexOf(messagePrefix) === 0) {
-                runIfPresent(+event.data.slice(messagePrefix.length));
-            }
-        };
-
-        if (global.addEventListener) {
-            global.addEventListener("message", onGlobalMessage, false);
-        } else {
-            global.attachEvent("onmessage", onGlobalMessage);
-        }
-
-        registerImmediate = function(handle) {
-            global.postMessage(messagePrefix + handle, "*");
-        };
-    }
-
-    function installMessageChannelImplementation() {
-        var channel = new MessageChannel();
-        channel.port1.onmessage = function(event) {
-            var handle = event.data;
-            runIfPresent(handle);
-        };
-
-        registerImmediate = function(handle) {
-            channel.port2.postMessage(handle);
-        };
-    }
-
-    function installReadyStateChangeImplementation() {
-        var html = doc.documentElement;
-        registerImmediate = function(handle) {
-            // Create a <script> element; its readystatechange event will be fired asynchronously once it is inserted
-            // into the document. Do so, thus queuing up the task. Remember to clean up once it's been called.
-            var script = doc.createElement("script");
-            script.onreadystatechange = function () {
-                runIfPresent(handle);
-                script.onreadystatechange = null;
-                html.removeChild(script);
-                script = null;
-            };
-            html.appendChild(script);
-        };
-    }
-
-    function installSetTimeoutImplementation() {
-        registerImmediate = function(handle) {
-            setTimeout(runIfPresent, 0, handle);
-        };
-    }
-
-    // If supported, we should attach to the prototype of global, since that is where setTimeout et al. live.
-    var attachTo = Object.getPrototypeOf && Object.getPrototypeOf(global);
-    attachTo = attachTo && attachTo.setTimeout ? attachTo : global;
-
-    // Don't get fooled by e.g. browserify environments.
-    if ({}.toString.call(global.process) === "[object process]") {
-        // For Node.js before 0.9
-        installNextTickImplementation();
-
-    } else if (canUsePostMessage()) {
-        // For non-IE10 modern browsers
-        installPostMessageImplementation();
-
-    } else if (global.MessageChannel) {
-        // For web workers, where supported
-        installMessageChannelImplementation();
-
-    } else if (doc && "onreadystatechange" in doc.createElement("script")) {
-        // For IE 6–8
-        installReadyStateChangeImplementation();
-
-    } else {
-        // For older browsers
-        installSetTimeoutImplementation();
-    }
-
-    attachTo.setImmediate = setImmediate;
-    attachTo.clearImmediate = clearImmediate;
-}(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7), __webpack_require__(8)))
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports) {
-
-// shim for using process in browser
-var process = module.exports = {};
-
-// cached from whatever global is present so that test runners that stub it
-// don't break things.  But we need to wrap it in a try catch in case it is
-// wrapped in strict mode code which doesn't define any globals.  It's inside a
-// function because try/catches deoptimize in certain engines.
-
-var cachedSetTimeout;
-var cachedClearTimeout;
-
-function defaultSetTimout() {
-    throw new Error('setTimeout has not been defined');
-}
-function defaultClearTimeout () {
-    throw new Error('clearTimeout has not been defined');
-}
-(function () {
-    try {
-        if (typeof setTimeout === 'function') {
-            cachedSetTimeout = setTimeout;
-        } else {
-            cachedSetTimeout = defaultSetTimout;
-        }
-    } catch (e) {
-        cachedSetTimeout = defaultSetTimout;
-    }
-    try {
-        if (typeof clearTimeout === 'function') {
-            cachedClearTimeout = clearTimeout;
-        } else {
-            cachedClearTimeout = defaultClearTimeout;
-        }
-    } catch (e) {
-        cachedClearTimeout = defaultClearTimeout;
-    }
-} ())
-function runTimeout(fun) {
-    if (cachedSetTimeout === setTimeout) {
-        //normal enviroments in sane situations
-        return setTimeout(fun, 0);
-    }
-    // if setTimeout wasn't available but was latter defined
-    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
-        cachedSetTimeout = setTimeout;
-        return setTimeout(fun, 0);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedSetTimeout(fun, 0);
-    } catch(e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-            return cachedSetTimeout.call(null, fun, 0);
-        } catch(e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-            return cachedSetTimeout.call(this, fun, 0);
-        }
-    }
-
-
-}
-function runClearTimeout(marker) {
-    if (cachedClearTimeout === clearTimeout) {
-        //normal enviroments in sane situations
-        return clearTimeout(marker);
-    }
-    // if clearTimeout wasn't available but was latter defined
-    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
-        cachedClearTimeout = clearTimeout;
-        return clearTimeout(marker);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedClearTimeout(marker);
-    } catch (e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-            return cachedClearTimeout.call(null, marker);
-        } catch (e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-            return cachedClearTimeout.call(this, marker);
-        }
-    }
-
-
-
-}
-var queue = [];
-var draining = false;
-var currentQueue;
-var queueIndex = -1;
-
-function cleanUpNextTick() {
-    if (!draining || !currentQueue) {
-        return;
-    }
-    draining = false;
-    if (currentQueue.length) {
-        queue = currentQueue.concat(queue);
-    } else {
-        queueIndex = -1;
-    }
-    if (queue.length) {
-        drainQueue();
-    }
-}
-
-function drainQueue() {
-    if (draining) {
-        return;
-    }
-    var timeout = runTimeout(cleanUpNextTick);
-    draining = true;
-
-    var len = queue.length;
-    while(len) {
-        currentQueue = queue;
-        queue = [];
-        while (++queueIndex < len) {
-            if (currentQueue) {
-                currentQueue[queueIndex].run();
-            }
-        }
-        queueIndex = -1;
-        len = queue.length;
-    }
-    currentQueue = null;
-    draining = false;
-    runClearTimeout(timeout);
-}
-
-process.nextTick = function (fun) {
-    var args = new Array(arguments.length - 1);
-    if (arguments.length > 1) {
-        for (var i = 1; i < arguments.length; i++) {
-            args[i - 1] = arguments[i];
-        }
-    }
-    queue.push(new Item(fun, args));
-    if (queue.length === 1 && !draining) {
-        runTimeout(drainQueue);
-    }
-};
-
-// v8 likes predictible objects
-function Item(fun, array) {
-    this.fun = fun;
-    this.array = array;
-}
-Item.prototype.run = function () {
-    this.fun.apply(null, this.array);
-};
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-process.version = ''; // empty string to avoid regexp issues
-process.versions = {};
-
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-process.prependListener = noop;
-process.prependOnceListener = noop;
-
-process.listeners = function (name) { return [] }
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-};
-
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-process.umask = function() { return 0; };
-
-
-/***/ }),
-/* 9 */,
-/* 10 */,
-/* 11 */,
-/* 12 */,
-/* 13 */,
-/* 14 */,
-/* 15 */
+/* 11 */
 /***/ (function(module, exports) {
 
 
@@ -11560,60 +11545,15 @@ module.exports = function (css) {
 
 
 /***/ }),
-/* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// style-loader: Adds some css to the DOM by adding a <style> tag
-
-// load the styles
-var content = __webpack_require__(17);
-if(typeof content === 'string') content = [[module.i, content, '']];
-// Prepare cssTransformation
-var transform;
-
-var options = {"hmr":true}
-options.transform = transform
-// add the styles to the DOM
-var update = __webpack_require__(3)(content, options);
-if(content.locals) module.exports = content.locals;
-// Hot Module Replacement
-if(false) {
-	// When the styles change, update the <style> tags
-	if(!content.locals) {
-		module.hot.accept("!!../node_modules/css-loader/index.js!../node_modules/sass-loader/lib/loader.js!./mote.scss", function() {
-			var newContent = require("!!../node_modules/css-loader/index.js!../node_modules/sass-loader/lib/loader.js!./mote.scss");
-			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-			update(newContent);
-		});
-	}
-	// When the module is disposed, remove the <style> tags
-	module.hot.dispose(function() { update(); });
-}
-
-/***/ }),
-/* 17 */
-/***/ (function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(1)(undefined);
-// imports
-
-
-// module
-exports.push([module.i, "html, body {\n  display: block;\n  padding: 0;\n  margin: 0;\n  height: 100%;\n  width: 100%; }\n\nbody {\n  font-family: Helvetica,Arial,sans-serif;\n  font-size: 14px;\n  line-height: 1.42857143; }\n\n#toolbar {\n  display: flex;\n  flex-direction: row;\n  background: #ddd;\n  border-bottom: 2px solid #aaa;\n  padding: 5px 20px 8px;\n  cursor: auto;\n  position: fixed;\n  width: 100%;\n  z-index: 100;\n  max-height: 55px;\n  overflow: auto; }\n\n#logo {\n  content: \"edit-text\";\n  margin: 3px 20px 0 0;\n  font-family: Helvetica, Arial, sans-serif;\n  color: #444;\n  font-size: 20px;\n  height: 0;\n  overflow: visible;\n  vertical-align: middle;\n  display: inline-block;\n  text-decoration: none; }\n\n#logo:hover {\n  color: black;\n  text-decoration: underline; }\n\n#native-buttons {\n  flex: 1; }\n\nbutton {\n  font: inherit;\n  border: 1px solid #aaa;\n  background: #fff;\n  text-transform: uppercase;\n  box-shadow: #bbb 2px 2px;\n  margin-right: 8px;\n  padding: 6px 12px 3px;\n  font-weight: bold;\n  font-size: 0.9em; }\n\nkbd {\n  font-family: monospace !important; }\n\n#parent {\n  background: #eee; }\n\n#client {\n  background: white;\n  cursor: text; }\n\n#client.blurred {\n  background: #ddd; }\n\n#footer {\n  position: fixed;\n  bottom: 0;\n  width: 100%;\n  box-sizing: border-box;\n  border-top: 1px solid #ca4;\n  background: #fff3bb;\n  padding: 8px 10px;\n  opacity: 0.85;\n  z-index: 100; }\n\n.mote {\n  padding: 60px 30px 50px;\n  margin: 0; }\n\n.mote.theme-mock {\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  font-size: 16px;\n  cursor: text;\n  white-space: pre-wrap;\n  /**\n     * span styles\n     */ }\n  .mote.theme-mock div {\n    margin: 12px 0;\n    position: relative;\n    min-height: 14px; }\n  .mote.theme-mock * {\n    clear: both; }\n  .mote.theme-mock div[data-tag=\"caret\"] {\n    display: inline;\n    font-size: inherit;\n    vertical-align: bottom; }\n  .mote.theme-mock div[data-tag=\"caret\"]::before {\n    border-left: 1px #089 solid;\n    border-right: 1px #089 solid;\n    margin-right: -1px;\n    margin-left: -1px;\n    content: ''; }\n  .mote.theme-mock div[data-tag=\"caret\"][data-client=\"middle\"] {\n    border-right-color: #0f0; }\n  .mote.theme-mock div[data-tag=\"caret\"][data-client=\"right\"] {\n    border-right-color: blue; }\n  .mote.theme-mock div[data-tag=\"hr\"] {\n    margin: 16px 0;\n    height: 2px;\n    min-height: 0 !important;\n    border-bottom: 1px solid #eee;\n    background: #ccc; }\n  .mote.theme-mock div.bold {\n    font-weight: 900; }\n  .mote.theme-mock div.italic {\n    font-style: italic; }\n  .mote.theme-mock div[data-tag=\"h1\"] {\n    font-size: 2.0em;\n    font-weight: bold; }\n  .mote.theme-mock div[data-tag=\"h2\"] {\n    font-size: 1.7em;\n    font-weight: bold; }\n  .mote.theme-mock div[data-tag=\"h3\"] {\n    font-size: 1.4em;\n    font-weight: bold; }\n  .mote.theme-mock div[data-tag=\"pre\"] {\n    font-family: monospace;\n    padding: 5px 8px;\n    font-size: 0.9em;\n    background: #eee; }\n  .mote.theme-mock div[data-tag=\"html\"] {\n    font-family: monospace;\n    padding: 5px 8px;\n    font-size: 0.9em;\n    border: 1px solid #aa5;\n    background: #eea; }\n  .mote.theme-mock div[data-tag=\"bullet\"] {\n    list-style: disc outside none;\n    display: list-item;\n    margin-left: 25px; }\n  .mote.theme-mock div[data-tag=\"bullet\"] + div[data-tag=\"bullet\"] {\n    margin-top: -5px; }\n\n.mote.theme-block {\n  font-family: monospace;\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  /**\n     * targets\n     */\n  /**\n     * span styles\n     */ }\n  .mote.theme-block div {\n    /*border: 1px solid #444;*/\n    background: rgba(0, 0, 0, 0.15);\n    padding: 12px 12px 12px 16px;\n    margin: 8px 0;\n    position: relative;\n    min-height: 14px; }\n    .mote.theme-block div::before {\n      display: block;\n      content: attr(data-tag);\n      opacity: 0.5;\n      background: black;\n      color: white;\n      padding: 2px 4px;\n      width: -webkit-max-content;\n      margin-bottom: 6px;\n      text-align: center; }\n  .mote.theme-block * {\n    clear: both; }\n  .mote.theme-block span {\n    background: #7dc87d;\n    padding: 3px 5px;\n    /*border: 1px solid rgba(0, 0, 0, .3);*/\n    display: inline-block;\n    width: 20px;\n    height: 1.8em;\n    box-sizing: border-box;\n    margin-left: 1px;\n    margin-bottom: 2px;\n    cursor: pointer;\n    white-space: pre; }\n  .mote.theme-block span:hover {\n    filter: brightness(150%); }\n  .mote.theme-block .active {\n    background: #98e; }\n  .mote.theme-block span.active,\n  .mote.theme-block span.target {\n    border-right: 3px solid rgba(0, 0, 0, 0.3);\n    margin-right: -1px;\n    width: 21px; }\n  .mote.theme-block div.active,\n  .mote.theme-block div.target {\n    border-bottom: 3px solid rgba(0, 0, 0, 0.3);\n    padding-bottom: 9px; }\n  .mote.theme-block div.active > div {\n    background: #ccc; }\n  .mote.theme-block div[data-tag=\"span\"] {\n    display: inline-block;\n    margin-left: 1px;\n    padding: 4px 6px 1px;\n    margin-bottom: 3px;\n    background: rgba(255, 0, 0, 0.25); }\n    .mote.theme-block div[data-tag=\"span\"].active {\n      margin-bottom: 0;\n      background: #98e; }\n    .mote.theme-block div[data-tag=\"span\"]::before {\n      float: left;\n      margin-top: 2px;\n      margin-right: 2px;\n      display: none; }\n  .mote.theme-block .active ~ * {\n    background: red; }\n  .mote.theme-block .target ~ span {\n    background: #7dc87d; }\n  .mote.theme-block .target ~ div {\n    background: rgba(0, 0, 0, 0.15); }\n  .mote.theme-block .target ~ div[data-tag=\"span\"] {\n    background: rgba(255, 0, 0, 0.25); }\n  .mote.theme-block div.bold {\n    font-weight: 900; }\n  .mote.theme-block div.italic {\n    font-style: italic; }\n\nbody#multi {\n  width: 100%;\n  height: 100%;\n  padding: 0 !important;\n  display: flex;\n  flex-direction: column; }\n  body#multi iframe {\n    border: none;\n    width: 100%;\n    height: 100%;\n    display: block; }\n  body#multi #clients, body#multi #clients tbody, body#multi #clients tr, body#multi #clients td {\n    display: block; }\n  body#multi #clients, body#multi #clients tbody {\n    display: flex;\n    flex-direction: column;\n    flex: 1; }\n  body#multi #clients tr {\n    flex: 1;\n    display: flex;\n    flex-direction: row; }\n  body#multi #clients td {\n    border: 2px solid black;\n    box-sizing: border-box;\n    flex: 1; }\n", ""]);
-
-// exports
-
-
-/***/ }),
-/* 18 */
+/* 12 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__commands__ = __webpack_require__(19);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__hashstate__ = __webpack_require__(20);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_clipboard__ = __webpack_require__(21);
+/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__commands__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__hashstate__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_clipboard__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_clipboard___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_clipboard__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__util__ = __webpack_require__(31);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__util__ = __webpack_require__(1);
 
 
 
@@ -11657,7 +11597,7 @@ function curto(el, textOffset = null) {
         }
         else {
             el = el.parentNode;
-            if (el.nodeType == 1 && el.mozMatchesSelector('.mote')) {
+            if (el.nodeType == 1 && __WEBPACK_IMPORTED_MODULE_3__util__["b" /* matchesSelector */](el, '.mote')) {
                 break;
             }
             cur = [{
@@ -11665,7 +11605,7 @@ function curto(el, textOffset = null) {
                 }];
         }
     }
-    if (!(el.nodeType == 1 && el.mozMatchesSelector('.mote'))) {
+    if (!(el.nodeType == 1 && __WEBPACK_IMPORTED_MODULE_3__util__["b" /* matchesSelector */](el, '.mote'))) {
         console.error('Invalid selection!!!');
     }
     console.log('cursor', JSON.stringify(cur));
@@ -11673,12 +11613,14 @@ function curto(el, textOffset = null) {
 }
 // Initialize child editor.
 class Editor {
-    constructor(elem, editorID) {
+    constructor(elem, editorID, network) {
         this.$elem = $(elem);
         this.editorID = editorID;
         this.ops = [];
         this.KEY_WHITELIST = [];
         this.markdown = '';
+        this.state = network;
+        this.state.onNativeMessage = this.onNativeMessage.bind(this);
         let editor = this;
         let $elem = this.$elem;
         {
@@ -11689,11 +11631,11 @@ class Editor {
             });
             // Request markdown source.
             setInterval(() => {
-                editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["e" /* RequestMarkdown */]());
+                editor.state.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["e" /* RequestMarkdown */]());
             }, 2000);
             setTimeout(() => {
                 // Early request
-                editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["e" /* RequestMarkdown */]());
+                editor.state.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["e" /* RequestMarkdown */]());
             }, 500);
         }
         // Markdown
@@ -11739,7 +11681,7 @@ class Editor {
     }
     setupEditor() {
         this.$elem.on('mousedown', (e) => {
-            let pos = __WEBPACK_IMPORTED_MODULE_3__util__["c" /* textNodeAtPoint */](e.clientX, e.clientY);
+            let pos = __WEBPACK_IMPORTED_MODULE_3__util__["d" /* textNodeAtPoint */](e.clientX, e.clientY);
             // Only support text elements.
             if (pos !== null) {
                 // Text node
@@ -11747,11 +11689,11 @@ class Editor {
                 if (pos.offset == 0) {
                     if (pos.textNode.previousSibling === null) {
                         // Text node is first in element, so select parent node.
-                        this.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](curto(pos.textNode.parentNode)));
+                        this.state.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](curto(pos.textNode.parentNode)));
                     }
                     else if (pos.textNode.previousSibling.nodeType === 3) {
                         // Text node has a preceding text elemnt; move to end.
-                        this.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](curto(pos.textNode.previousSibling, pos.textNode.previousSibling.data.length)));
+                        this.state.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](curto(pos.textNode.previousSibling, pos.textNode.previousSibling.data.length)));
                     }
                     else {
                         // If it's an element...
@@ -11762,7 +11704,7 @@ class Editor {
                 }
                 else {
                     // Move to offset of this text node.
-                    this.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](curto(pos.textNode, pos.offset - 1)));
+                    this.state.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](curto(pos.textNode, pos.offset - 1)));
                 }
             }
             // TODO this bubbles if i use preventDEfault?
@@ -11773,14 +11715,14 @@ class Editor {
         $('#client').on('click', (e) => {
             if (e.target == $('#client')[0]) {
                 let last = this.$elem.find('*').last()[0];
-                this.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](curto(last)));
+                this.state.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](curto(last)));
             }
         });
         $(document).on('keypress', (e) => {
             if (e.metaKey) {
                 return;
             }
-            this.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["b" /* CharacterCommand */](e.charCode));
+            this.state.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["b" /* CharacterCommand */](e.charCode));
             e.preventDefault();
         });
         $(document).on('keydown', (e) => {
@@ -11789,7 +11731,7 @@ class Editor {
             if (!this.KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
                 return;
             }
-            this.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["c" /* KeypressCommand */](e.keyCode, e.metaKey, e.shiftKey));
+            this.state.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["c" /* KeypressCommand */](e.keyCode, e.metaKey, e.shiftKey));
             e.preventDefault();
         });
     }
@@ -11803,36 +11745,9 @@ class Editor {
             elem.innerHTML = data;
         });
     }
-    nativeCommand(command) {
-        if (this.Module) {
-            this.Module.wasm_command({
-                NativeCommand: command,
-            });
-        }
-        else {
-            this.nativeSocket.send(JSON.stringify(command));
-        }
-    }
-    nativeConnect() {
-        let editor = this;
-        this.nativeSocket = new WebSocket(__WEBPACK_IMPORTED_MODULE_3__util__["a" /* clientProxyUrl */]() +
-            (window.location.hash == '#helloworld' ? '?helloworld' : ''));
-        this.nativeSocket.onopen = function (event) {
-            console.log('Editor "%s" is connected.', editor.editorID);
-            // editor.nativeCommand(commands.ConnectCommand(editor.editorID));
-            // window.parent.postMessage({
-            //   "Live": editor.editorID,
-            // }, '*')
-        };
-        this.nativeSocket.onmessage = this.onNativeMessage.bind(this);
-        this.nativeSocket.onclose = function () {
-            $('body').css('background', 'red');
-        };
-    }
     // Received message on native socket
-    onNativeMessage(event) {
-        let editor = this;
-        let parse = JSON.parse(event.data);
+    onNativeMessage(parse) {
+        const editor = this;
         if (parse.Init) {
             editor.setID(parse.Init);
         }
@@ -11865,13 +11780,10 @@ class Editor {
             $('#native-buttons').each((_, x) => {
                 parse.Setup.buttons.forEach(btn => {
                     $('<button>').text(btn[1]).appendTo(x).click(_ => {
-                        editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["a" /* ButtonCommand */](btn[0]));
+                        editor.state.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["a" /* ButtonCommand */](btn[0]));
                     });
                 });
             });
-        }
-        else if (parse.SyncServerCommand) {
-            editor.syncSocket.send(JSON.stringify(parse.SyncServerCommand));
         }
         else {
             console.error('Unknown packet:', parse);
@@ -11884,13 +11796,10 @@ class Editor {
             if (typeof event.data != 'object') {
                 return;
             }
-            // if ('Sync' in event.data) {
-            //   // Push to native
-            //   editor.nativeCommand(commands.LoadCommand(event.data.Sync))
-            // }
-            if ('Monkey' in event.data) {
+            let msg = event.data;
+            if ('Monkey' in msg) {
                 // TODO reflect this in the app
-                editor.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["d" /* MonkeyCommand */](event.data.Monkey));
+                editor.state.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["d" /* MonkeyCommand */](msg.Monkey));
             }
         };
     }
@@ -11901,7 +11810,7 @@ class Editor {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
 
 /***/ }),
-/* 19 */
+/* 13 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -11962,7 +11871,7 @@ function RequestMarkdown() {
 
 
 /***/ }),
-/* 20 */
+/* 14 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -11984,12 +11893,12 @@ class HashState {
 
 
 /***/ }),
-/* 21 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
     if (true) {
-        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [module, __webpack_require__(22), __webpack_require__(24), __webpack_require__(25)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [module, __webpack_require__(16), __webpack_require__(18), __webpack_require__(19)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
 				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
 				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
@@ -12199,12 +12108,12 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 });
 
 /***/ }),
-/* 22 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
     if (true) {
-        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [module, __webpack_require__(23)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [module, __webpack_require__(17)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
 				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
 				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
@@ -12436,7 +12345,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 });
 
 /***/ }),
-/* 23 */
+/* 17 */
 /***/ (function(module, exports) {
 
 function select(element) {
@@ -12485,7 +12394,7 @@ module.exports = select;
 
 
 /***/ }),
-/* 24 */
+/* 18 */
 /***/ (function(module, exports) {
 
 function E () {
@@ -12557,11 +12466,11 @@ module.exports = E;
 
 
 /***/ }),
-/* 25 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var is = __webpack_require__(26);
-var delegate = __webpack_require__(27);
+var is = __webpack_require__(20);
+var delegate = __webpack_require__(21);
 
 /**
  * Validates all params and calls the right
@@ -12658,7 +12567,7 @@ module.exports = listen;
 
 
 /***/ }),
-/* 26 */
+/* 20 */
 /***/ (function(module, exports) {
 
 /**
@@ -12713,10 +12622,10 @@ exports.fn = function(value) {
 
 
 /***/ }),
-/* 27 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var closest = __webpack_require__(28);
+var closest = __webpack_require__(22);
 
 /**
  * Delegates event to a selector.
@@ -12797,7 +12706,7 @@ module.exports = delegate;
 
 
 /***/ }),
-/* 28 */
+/* 22 */
 /***/ (function(module, exports) {
 
 var DOCUMENT_NODE_TYPE = 9;
@@ -12836,7 +12745,7 @@ module.exports = closest;
 
 
 /***/ }),
-/* 29 */
+/* 23 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -12870,7 +12779,7 @@ module.exports = closest;
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
 
 /***/ }),
-/* 30 */
+/* 24 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -12958,56 +12867,148 @@ function instantiate(js_command_callback) {
 
 
 /***/ }),
-/* 31 */
+/* 25 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(26);
+if(typeof content === 'string') content = [[module.i, content, '']];
+// Prepare cssTransformation
+var transform;
+
+var options = {"hmr":true}
+options.transform = transform
+// add the styles to the DOM
+var update = __webpack_require__(10)(content, options);
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!../node_modules/css-loader/index.js!../node_modules/sass-loader/lib/loader.js!./mote.scss", function() {
+			var newContent = require("!!../node_modules/css-loader/index.js!../node_modules/sass-loader/lib/loader.js!./mote.scss");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 26 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(9)(undefined);
+// imports
+
+
+// module
+exports.push([module.i, "html, body {\n  display: block;\n  padding: 0;\n  margin: 0;\n  height: 100%;\n  width: 100%; }\n\nbody {\n  font-family: Helvetica,Arial,sans-serif;\n  font-size: 14px;\n  line-height: 1.42857143; }\n\n#toolbar {\n  display: flex;\n  flex-direction: row;\n  background: #ddd;\n  border-bottom: 2px solid #aaa;\n  padding: 5px 20px 8px;\n  cursor: auto;\n  position: fixed;\n  width: 100%;\n  z-index: 100;\n  max-height: 55px;\n  overflow: auto; }\n\n#logo {\n  content: \"edit-text\";\n  margin: 3px 20px 0 0;\n  font-family: Helvetica, Arial, sans-serif;\n  color: #444;\n  font-size: 20px;\n  height: 0;\n  overflow: visible;\n  vertical-align: middle;\n  display: inline-block;\n  text-decoration: none; }\n\n#logo:hover {\n  color: black;\n  text-decoration: underline; }\n\n#native-buttons {\n  flex: 1; }\n\nbutton {\n  font: inherit;\n  border: 1px solid #aaa;\n  background: #fff;\n  text-transform: uppercase;\n  box-shadow: #bbb 2px 2px;\n  margin-right: 8px;\n  padding: 6px 12px 3px;\n  font-weight: bold;\n  font-size: 0.9em; }\n\nkbd {\n  font-family: monospace !important; }\n\n#parent {\n  background: #eee; }\n\n#client {\n  background: white;\n  cursor: text; }\n\n#client.blurred {\n  background: #ddd; }\n\n#footer {\n  position: fixed;\n  bottom: 0;\n  width: 100%;\n  box-sizing: border-box;\n  border-top: 1px solid #ca4;\n  background: #fff3bb;\n  padding: 8px 10px;\n  opacity: 0.85;\n  z-index: 100; }\n\n.mote {\n  padding: 60px 30px 50px;\n  margin: 0; }\n\n.mote.theme-mock {\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  font-size: 16px;\n  cursor: text;\n  white-space: pre-wrap;\n  /**\n     * span styles\n     */ }\n  .mote.theme-mock div {\n    margin: 12px 0;\n    position: relative;\n    min-height: 14px; }\n  .mote.theme-mock * {\n    clear: both; }\n  .mote.theme-mock div[data-tag=\"caret\"] {\n    display: inline;\n    font-size: inherit;\n    vertical-align: bottom; }\n  .mote.theme-mock div[data-tag=\"caret\"]::before {\n    border-left: 1px #089 solid;\n    border-right: 1px #089 solid;\n    margin-right: -1px;\n    margin-left: -1px;\n    content: ''; }\n  .mote.theme-mock div[data-tag=\"caret\"][data-client=\"middle\"] {\n    border-right-color: #0f0; }\n  .mote.theme-mock div[data-tag=\"caret\"][data-client=\"right\"] {\n    border-right-color: blue; }\n  .mote.theme-mock div[data-tag=\"hr\"] {\n    margin: 16px 0;\n    height: 2px;\n    min-height: 0 !important;\n    border-bottom: 1px solid #eee;\n    background: #ccc; }\n  .mote.theme-mock div.bold {\n    font-weight: 900; }\n  .mote.theme-mock div.italic {\n    font-style: italic; }\n  .mote.theme-mock div[data-tag=\"h1\"] {\n    font-size: 2.0em;\n    font-weight: bold; }\n  .mote.theme-mock div[data-tag=\"h2\"] {\n    font-size: 1.7em;\n    font-weight: bold; }\n  .mote.theme-mock div[data-tag=\"h3\"] {\n    font-size: 1.4em;\n    font-weight: bold; }\n  .mote.theme-mock div[data-tag=\"pre\"] {\n    font-family: monospace;\n    padding: 5px 8px;\n    font-size: 0.9em;\n    background: #eee; }\n  .mote.theme-mock div[data-tag=\"html\"] {\n    font-family: monospace;\n    padding: 5px 8px;\n    font-size: 0.9em;\n    border: 1px solid #aa5;\n    background: #eea; }\n  .mote.theme-mock div[data-tag=\"bullet\"] {\n    list-style: disc outside none;\n    display: list-item;\n    margin-left: 25px; }\n  .mote.theme-mock div[data-tag=\"bullet\"] + div[data-tag=\"bullet\"] {\n    margin-top: -5px; }\n\n.mote.theme-block {\n  font-family: monospace;\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  /**\n     * targets\n     */\n  /**\n     * span styles\n     */ }\n  .mote.theme-block div {\n    /*border: 1px solid #444;*/\n    background: rgba(0, 0, 0, 0.15);\n    padding: 12px 12px 12px 16px;\n    margin: 8px 0;\n    position: relative;\n    min-height: 14px; }\n    .mote.theme-block div::before {\n      display: block;\n      content: attr(data-tag);\n      opacity: 0.5;\n      background: black;\n      color: white;\n      padding: 2px 4px;\n      width: -webkit-max-content;\n      margin-bottom: 6px;\n      text-align: center; }\n  .mote.theme-block * {\n    clear: both; }\n  .mote.theme-block span {\n    background: #7dc87d;\n    padding: 3px 5px;\n    /*border: 1px solid rgba(0, 0, 0, .3);*/\n    display: inline-block;\n    width: 20px;\n    height: 1.8em;\n    box-sizing: border-box;\n    margin-left: 1px;\n    margin-bottom: 2px;\n    cursor: pointer;\n    white-space: pre; }\n  .mote.theme-block span:hover {\n    filter: brightness(150%); }\n  .mote.theme-block .active {\n    background: #98e; }\n  .mote.theme-block span.active,\n  .mote.theme-block span.target {\n    border-right: 3px solid rgba(0, 0, 0, 0.3);\n    margin-right: -1px;\n    width: 21px; }\n  .mote.theme-block div.active,\n  .mote.theme-block div.target {\n    border-bottom: 3px solid rgba(0, 0, 0, 0.3);\n    padding-bottom: 9px; }\n  .mote.theme-block div.active > div {\n    background: #ccc; }\n  .mote.theme-block div[data-tag=\"span\"] {\n    display: inline-block;\n    margin-left: 1px;\n    padding: 4px 6px 1px;\n    margin-bottom: 3px;\n    background: rgba(255, 0, 0, 0.25); }\n    .mote.theme-block div[data-tag=\"span\"].active {\n      margin-bottom: 0;\n      background: #98e; }\n    .mote.theme-block div[data-tag=\"span\"]::before {\n      float: left;\n      margin-top: 2px;\n      margin-right: 2px;\n      display: none; }\n  .mote.theme-block .active ~ * {\n    background: red; }\n  .mote.theme-block .target ~ span {\n    background: #7dc87d; }\n  .mote.theme-block .target ~ div {\n    background: rgba(0, 0, 0, 0.15); }\n  .mote.theme-block .target ~ div[data-tag=\"span\"] {\n    background: rgba(255, 0, 0, 0.25); }\n  .mote.theme-block div.bold {\n    font-weight: 900; }\n  .mote.theme-block div.italic {\n    font-style: italic; }\n\nbody#multi {\n  width: 100%;\n  height: 100%;\n  padding: 0 !important;\n  display: flex;\n  flex-direction: column; }\n  body#multi iframe {\n    border: none;\n    width: 100%;\n    height: 100%;\n    display: block; }\n  body#multi #clients, body#multi #clients tbody, body#multi #clients tr, body#multi #clients td {\n    display: block; }\n  body#multi #clients, body#multi #clients tbody {\n    display: flex;\n    flex-direction: column;\n    flex: 1; }\n  body#multi #clients tr {\n    flex: 1;\n    display: flex;\n    flex-direction: row; }\n  body#multi #clients td {\n    border: 2px solid black;\n    box-sizing: border-box;\n    flex: 1; }\n", ""]);
+
+// exports
+
+
+/***/ }),
+/* 27 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["c"] = textNodeAtPoint;
-/* unused harmony export pageId */
-/* harmony export (immutable) */ __webpack_exports__["a"] = clientProxyUrl;
-/* harmony export (immutable) */ __webpack_exports__["b"] = syncUrl;
-function textNodeAtPoint(x, y) {
-    let textNode, offset;
-    if (document.caretPositionFromPoint) {
-        let range = document.caretPositionFromPoint(x, y);
-        textNode = range.offsetNode;
-        offset = range.offset;
-    }
-    else if (document.caretRangeFromPoint) {
-        let range = document.caretRangeFromPoint(x, y);
-        textNode = range.startContainer;
-        offset = range.startOffset;
-    }
-    else {
-        return null;
-    }
-    // TODO: can textNode ever be an element?
-    if (textNode.nodeType !== 3) {
-        return null;
-    }
-    return {
-        textNode,
-        offset,
-    };
-}
-function pageId() {
-    return window.location.pathname.match(/^\/?([^\/]+)/)[1];
-}
-function clientProxyUrl() {
-    return '' +
-        (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
-        window.location.host.replace(/\:\d+/, ':8002') +
-        '/' +
-        pageId();
-}
-function syncUrl() {
-    return '' +
-        (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
-        (window.location.host.match(/localhost/) ?
-            window.location.host.replace(/:\d+$|$/, ':8001') + '/$/ws/' + pageId() :
-            window.location.host + '/$/ws/' + pageId());
-}
+/* WEBPACK VAR INJECTION */(function(setImmediate) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__util__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__interop__ = __webpack_require__(24);
 
+
+class ProxyNetwork {
+    nativeCommand(command) {
+        this.nativeSocket.send(JSON.stringify(command));
+    }
+    nativeConnect() {
+        let network = this;
+        return Promise.resolve()
+            .then(() => {
+            this.nativeSocket = new WebSocket(__WEBPACK_IMPORTED_MODULE_0__util__["a" /* clientProxyUrl */]() +
+                (window.location.hash == '#helloworld' ? '?helloworld' : ''));
+            this.nativeSocket.onopen = function (event) {
+                console.log('Editor "%s" is connected.', network.editorID);
+            };
+            this.nativeSocket.onmessage = function (event) {
+                let parse = JSON.parse(event.data);
+                network.onNativeMessage(parse);
+            };
+            this.nativeSocket.onclose = network.onNativeClose;
+        });
+    }
+    // The native server (the client proxy) handles sync traffic directly
+    syncConnect() {
+        return Promise.resolve();
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = ProxyNetwork;
+
+class WasmNetwork {
+    nativeCommand(command) {
+        this.Module.wasm_command({
+            NativeCommand: command,
+        });
+    }
+    // Wasm connector.
+    nativeConnect() {
+        const network = this;
+        return new Promise((reject, resolve) => {
+            __WEBPACK_IMPORTED_MODULE_1__interop__["a" /* instantiate */](function (data) {
+                // console.log('----> js_command:', data);
+                // Make this async so we don't have deeply nested call stacks from Rust<->JS interop.
+                setImmediate(() => {
+                    // Parse the packet.
+                    let parse = JSON.parse(data);
+                    if (parse.SyncServerCommand) {
+                        network.syncSocket.send(JSON.stringify(parse.SyncServerCommand));
+                    }
+                    else {
+                        network.onNativeMessage(parse);
+                    }
+                });
+            })
+                .then(Module => {
+                Module.wasm_setup();
+                setImmediate(() => {
+                    // Websocket port
+                    network.Module = Module;
+                    resolve();
+                });
+            });
+        });
+    }
+    syncConnect() {
+        let network = this;
+        return Promise.resolve()
+            .then(() => {
+            let syncSocket = new WebSocket(__WEBPACK_IMPORTED_MODULE_0__util__["c" /* syncUrl */]() + (window.location.hash == '#helloworld' ? '?helloworld' : ''));
+            syncSocket.onopen = function (event) {
+                console.log('Editor "%s" is connected.', network.editorID);
+            };
+            // Keepalive
+            setInterval(() => {
+                syncSocket.send(JSON.stringify({
+                    Keepalive: null,
+                }));
+            }, 1000);
+            syncSocket.onmessage = function (event) {
+                // console.log('Got message from sync:', event.data);
+                network.Module.wasm_command({
+                    SyncClientCommand: JSON.parse(event.data),
+                });
+            };
+            syncSocket.onclose = network.onSyncClose;
+        });
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["b"] = WasmNetwork;
+
+
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3).setImmediate))
 
 /***/ })
 /******/ ]);
