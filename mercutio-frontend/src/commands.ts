@@ -1,5 +1,3 @@
-
-
 // Commands
 type RenameGroupCommand = {RenameGroup: any};
 

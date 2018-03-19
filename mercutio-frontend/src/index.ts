@@ -2,20 +2,25 @@
 import '../styles/mote.scss';
 
 import * as commands from './commands';
-import {Editor} from './editor';
-import Multi from './multi';
 import * as interop from './interop';
 import * as util from './util';
 import {ProxyNetwork, WasmNetwork} from './network';
+import * as editorFrame from './views/editor-frame';
+import * as multi from './views/multi';
+import * as presentation from './views/presentation';
+
+declare var remark: any;
+declare var CONFIG: any;
 
 // Check page configuration.
-if (!window['CONFIG'].configured) {
+if (!CONFIG.configured) {
   alert('The window.CONFIG variable was not configured by the server!')
 }
 
 // Entry.
 if (document.body.id == 'multi') {
   document.body.innerHTML = `
+
 <h1>Multimonkey
   <button id="action-monkey">🙈🙉🙊</button>
   <span style="font-family: monospace; padding: 3px 5px;" id="timer"></span>
@@ -37,17 +42,25 @@ if (document.body.id == 'multi') {
 
 `;
 
-  new Multi();
+  multi.start();
 }
 else if (document.body.id == 'client') {
   document.body.innerHTML = `
-<div id="footer"></div>
+
+<div id="footer">
+⚠️ You are viewing a sandbox for <b><a href="https://github.com/tcr/edit-text">edit-text</a></b>.
+There is a high chance of data loss, so don't store anything important here.
+Thanks for trying it out!
+</div>
+
 <div id="toolbar">
   <a href="https://github.com/tcr/edit-text" id="logo">edit-text</a>
   <div id="native-buttons"></div>
   <div id="local-buttons"></div>
 </div>
+
 <div class="mote" id="mote"></div>
+
 `;
 
   // Utility classes for Multi
@@ -59,88 +72,24 @@ else if (document.body.id == 'client') {
   }
 
   // Connects to the network.
-  let network = window['CONFIG'].wasm ?
+  let network = CONFIG.wasm ?
     new WasmNetwork() :
     new ProxyNetwork()
 
-  // Create the editor.
-  let editor = new Editor(document.getElementById('mote'), '$$$$$$', network);
-  // Connect to parent window (if exists).
-  editor.multiConnect();
-
-  // Background colors.
-  network.onNativeClose = function () {
-    $('body').css('background', 'red');
-  };
-  network.onSyncClose = function () {
-    $('body').css('background', 'red');
-  };
-
-  // Connect to remote sockets.
-  network.nativeConnect()
-  .then(() => network.syncConnect())
-  .then(() => {
-    console.log('edit-text initialized.');
-  });
+  editorFrame.start(network);
 }
 else if (document.body.id == 'presentation') {
   // Connects to the network.
-  let network = window['CONFIG'].wasm ?
+  let network = CONFIG.wasm ?
     new WasmNetwork() :
     new ProxyNetwork();
 
-  let md = null;
-  network.onNativeMessage = function (msg) {
-    console.log(msg);
-
-    if (!md && msg.MarkdownUpdate) {
-      md = msg.MarkdownUpdate;
-
-      // Start the remark.js presentation.
-      (<any>window).remark.create({
-        source: md,
-      });
-
-      // Adds fullscreen button after remark is created.
-      $('<button>↕️</button>').on('click', function () {
-        console.log('fullscreen attempt');
-        let a = document.querySelector('.remark-slides-area');
-        try {
-          (<any>a).mozRequestFullScreen();
-        } catch (e) {
-          (<any>a).requestFullscreen();
-        }
-      })
-        .css('position', 'fixed')
-        .css('top', 10)
-        .css('left', 10)
-        .css('z-index', 1000)
-        .appendTo($('body'));
-    }
-  }
-
-  // Connect to remote sockets.
-  network.nativeConnect()
-  .then(() => network.syncConnect())
-  .then(() => {
-    console.log('edit-text initialized.');
-
-    // Request markdown source immediately.
-    let id = setInterval(function () {
-      if (md !== null) {
-        clearInterval(id);
-      } else {
-        network.nativeCommand(commands.RequestMarkdown());
-      }
-    }, 250);
-  });
+  presentation.start(network);
 }
 else {
-  document.body.innerHTML = '<h1>404</h1>';
-}
+  document.body.innerHTML = `
 
-$('#footer').html(`
-⚠️ You are viewing a sandbox for <b><a href="https://github.com/tcr/edit-text">edit-text</a></b>.
-There is a high chance of data loss, so don't store anything important here.
-Thanks for trying it out!
-`);
+<h1>404</h1>
+
+`;
+}

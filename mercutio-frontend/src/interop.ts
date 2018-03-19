@@ -1,9 +1,7 @@
-
-
+// Browser-native definitions.
 declare var WebAssembly: any;
 declare var TextEncoder: any;
 declare var TextDecoder: any;
-
 
 export function fetchAndInstantiate(url, importObject) {
   return fetch(url).then(response =>
