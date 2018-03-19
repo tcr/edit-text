@@ -7,6 +7,8 @@ import * as interop from '../interop';
 import {editorSetup} from '../editor';
 import {Network, ProxyNetwork, WasmNetwork} from '../network';
 
+const ROOT_QUERY = '.edit-text';
+
 // Initialize child editor.
 export class EditorFrame {
   $elem: any;
@@ -29,6 +31,8 @@ export class EditorFrame {
 
     let editor = this;
     let $elem = this.$elem;
+
+    this.$elem.addClass('theme-mock');
 
     {
       new Clipboard('#save-markdown', {
@@ -170,8 +174,16 @@ export class EditorFrame {
 }
 
 export function start(network: Network) {
+  // Utility classes for Multi
+  if (window.parent != window) {
+    // Blur/Focus classes.
+    $(window).on('focus', () => $(document.body).removeClass('blurred'));
+    $(window).on('blur', () => $(document.body).addClass('blurred'));
+    $(document.body).addClass('blurred');
+  }
+
   // Create the editor frame.
-  let editor = new EditorFrame(document.getElementById('mote'), network);
+  let editor = new EditorFrame(document.querySelector(ROOT_QUERY), network);
   // Connect to parent window (if exists).
   editor.multiConnect();
 

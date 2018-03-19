@@ -60,6 +60,14 @@ button {
     font-size: 0.9em;
 }
 
+button:active {
+    box-shadow: #000 1px 1px;
+    position: relative;
+    top: 1px;
+    left: 1px;
+
+}
+
 kbd {
     font-family: monospace !important;
 }
@@ -89,12 +97,12 @@ kbd {
     z-index: 100;
 }
 
-.mote {
+.edit-text {
     padding: 60px 30px 50px; // bottom padding for footer
     margin: 0;
 }
 
-.mote.theme-mock {
+.edit-text.theme-mock {
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
@@ -213,7 +221,7 @@ kbd {
     }
 }
 
-.mote.theme-block {
+.edit-text.theme-block {
     font-family: monospace;
 
     -webkit-touch-callout: none;

@@ -1,5 +1,5 @@
 // Global CSS
-import '../styles/mote.scss';
+import '../styles/mercutio.scss';
 
 import * as commands from './commands';
 import * as interop from './interop';
@@ -59,17 +59,9 @@ Thanks for trying it out!
   <div id="local-buttons"></div>
 </div>
 
-<div class="mote" id="mote"></div>
+<div class="edit-text"></div>
 
 `;
-
-  // Utility classes for Multi
-  if (window.parent != window) {
-    // Blur/Focus classes.
-    $(window).on('focus', () => $(document.body).removeClass('blurred'));
-    $(window).on('blur', () => $(document.body).addClass('blurred'));
-    $(document.body).addClass('blurred');
-  }
 
   // Connects to the network.
   let network = CONFIG.wasm ?

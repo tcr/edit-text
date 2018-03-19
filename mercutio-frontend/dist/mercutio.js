@@ -60,11 +60,128 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = 3);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* unused harmony export RenameGroupCommand */
+/* harmony export (immutable) */ __webpack_exports__["c"] = KeypressCommand;
+/* harmony export (immutable) */ __webpack_exports__["b"] = CharacterCommand;
+/* harmony export (immutable) */ __webpack_exports__["f"] = TargetCommand;
+/* harmony export (immutable) */ __webpack_exports__["a"] = ButtonCommand;
+/* unused harmony export LoadCommand */
+/* harmony export (immutable) */ __webpack_exports__["d"] = MonkeyCommand;
+/* unused harmony export ConnectCommand */
+/* harmony export (immutable) */ __webpack_exports__["e"] = RequestMarkdown;
+function RenameGroupCommand(tag, curspan) {
+    return {
+        'RenameGroup': [tag, curspan],
+    };
+}
+function KeypressCommand(keyCode, metaKey, shiftKey) {
+    return {
+        'Keypress': [keyCode, metaKey, shiftKey],
+    };
+}
+function CharacterCommand(charCode) {
+    return {
+        'Character': charCode,
+    };
+}
+function TargetCommand(curspan) {
+    return {
+        'Target': curspan,
+    };
+}
+function ButtonCommand(button) {
+    return {
+        'Button': button,
+    };
+}
+function LoadCommand(load) {
+    return {
+        'Load': load,
+    };
+}
+function MonkeyCommand(enabled) {
+    return {
+        'Monkey': enabled,
+    };
+}
+function ConnectCommand(client) {
+    return {
+        'Connect': client,
+    };
+}
+function RequestMarkdown() {
+    return {
+        RequestMarkdown: null,
+    };
+}
+
+
+/***/ }),
+/* 1 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["d"] = textNodeAtPoint;
+/* harmony export (immutable) */ __webpack_exports__["b"] = matchesSelector;
+/* unused harmony export pageId */
+/* harmony export (immutable) */ __webpack_exports__["a"] = clientProxyUrl;
+/* harmony export (immutable) */ __webpack_exports__["c"] = syncUrl;
+function textNodeAtPoint(x, y) {
+    let textNode, offset;
+    if (document.caretPositionFromPoint) {
+        let range = document.caretPositionFromPoint(x, y);
+        textNode = range.offsetNode;
+        offset = range.offset;
+    }
+    else if (document.caretRangeFromPoint) {
+        let range = document.caretRangeFromPoint(x, y);
+        textNode = range.startContainer;
+        offset = range.startOffset;
+    }
+    else {
+        return null;
+    }
+    // TODO: can textNode ever be an element?
+    if (textNode.nodeType !== 3) {
+        return null;
+    }
+    return {
+        textNode,
+        offset,
+    };
+}
+function matchesSelector(el, selector) {
+    return el.mozMatchesSelector(selector);
+}
+function pageId() {
+    return window.location.pathname.match(/^\/?([^\/]+)/)[1];
+}
+function clientProxyUrl() {
+    return '' +
+        (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
+        window.location.host.replace(/\:\d+/, ':8002') +
+        '/' +
+        pageId();
+}
+function syncUrl() {
+    return '' +
+        (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
+        (window.location.host.match(/localhost/) ?
+            window.location.host.replace(/:\d+$|$/, ':8001') + '/$/ws/' + pageId() :
+            window.location.host + '/$/ws/' + pageId());
+}
+
+
+/***/ }),
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -10324,17 +10441,17 @@ return jQuery;
 
 
 /***/ }),
-/* 1 */
+/* 3 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__styles_mote_scss__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__styles_mote_scss___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__styles_mote_scss__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__network__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__views_editor_frame__ = __webpack_require__(14);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__views_multi__ = __webpack_require__(23);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__views_presentation__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__styles_mercutio_scss__ = __webpack_require__(27);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__styles_mercutio_scss___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__styles_mercutio_scss__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__network__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__views_editor_frame__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__views_multi__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__views_presentation__ = __webpack_require__(26);
 // Global CSS
 
 
@@ -10386,16 +10503,9 @@ Thanks for trying it out!
   <div id="local-buttons"></div>
 </div>
 
-<div class="mote" id="mote"></div>
+<div class="edit-text"></div>
 
 `;
-    // Utility classes for Multi
-    if (window.parent != window) {
-        // Blur/Focus classes.
-        $(window).on('focus', () => $(document.body).removeClass('blurred'));
-        $(window).on('blur', () => $(document.body).addClass('blurred'));
-        $(document.body).addClass('blurred');
-    }
     // Connects to the network.
     let network = CONFIG.wasm ?
         new __WEBPACK_IMPORTED_MODULE_1__network__["b" /* WasmNetwork */]() :
@@ -10417,55 +10527,11 @@ else {
 `;
 }
 
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
 
 /***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// style-loader: Adds some css to the DOM by adding a <style> tag
-
-// load the styles
-var content = __webpack_require__(3);
-if(typeof content === 'string') content = [[module.i, content, '']];
-// Prepare cssTransformation
-var transform;
-
-var options = {"hmr":true}
-options.transform = transform
-// add the styles to the DOM
-var update = __webpack_require__(5)(content, options);
-if(content.locals) module.exports = content.locals;
-// Hot Module Replacement
-if(false) {
-	// When the styles change, update the <style> tags
-	if(!content.locals) {
-		module.hot.accept("!!../node_modules/css-loader/index.js!../node_modules/sass-loader/lib/loader.js!./mote.scss", function() {
-			var newContent = require("!!../node_modules/css-loader/index.js!../node_modules/sass-loader/lib/loader.js!./mote.scss");
-			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-			update(newContent);
-		});
-	}
-	// When the module is disposed, remove the <style> tags
-	module.hot.dispose(function() { update(); });
-}
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(4)(undefined);
-// imports
-
-
-// module
-exports.push([module.i, "html, body {\n  display: block;\n  padding: 0;\n  margin: 0;\n  height: 100%;\n  width: 100%; }\n\nbody {\n  font-family: Helvetica,Arial,sans-serif;\n  font-size: 14px;\n  line-height: 1.42857143; }\n\n#toolbar {\n  display: flex;\n  flex-direction: row;\n  background: #ddd;\n  border-bottom: 2px solid #aaa;\n  padding: 5px 20px 8px;\n  cursor: auto;\n  position: fixed;\n  width: 100%;\n  z-index: 100;\n  max-height: 55px;\n  overflow: auto; }\n\n#logo {\n  content: \"edit-text\";\n  margin: 3px 20px 0 0;\n  font-family: Helvetica, Arial, sans-serif;\n  color: #444;\n  font-size: 20px;\n  height: 0;\n  overflow: visible;\n  vertical-align: middle;\n  display: inline-block;\n  text-decoration: none; }\n\n#logo:hover {\n  color: black;\n  text-decoration: underline; }\n\n#native-buttons {\n  flex: 1; }\n\nbutton {\n  font: inherit;\n  border: 1px solid #aaa;\n  background: #fff;\n  text-transform: uppercase;\n  box-shadow: #bbb 2px 2px;\n  margin-right: 8px;\n  padding: 6px 12px 3px;\n  font-weight: bold;\n  font-size: 0.9em; }\n\nkbd {\n  font-family: monospace !important; }\n\n#parent {\n  background: #eee; }\n\n#client {\n  background: white;\n  cursor: text; }\n\n#client.blurred {\n  background: #ddd; }\n\n#footer {\n  position: fixed;\n  bottom: 0;\n  width: 100%;\n  box-sizing: border-box;\n  border-top: 1px solid #ca4;\n  background: #fff3bb;\n  padding: 8px 10px;\n  opacity: 0.85;\n  z-index: 100; }\n\n.mote {\n  padding: 60px 30px 50px;\n  margin: 0; }\n\n.mote.theme-mock {\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  font-size: 16px;\n  cursor: text;\n  white-space: pre-wrap;\n  /**\n     * span styles\n     */ }\n  .mote.theme-mock div {\n    margin: 12px 0;\n    position: relative;\n    min-height: 14px; }\n  .mote.theme-mock * {\n    clear: both; }\n  .mote.theme-mock div[data-tag=\"caret\"] {\n    display: inline;\n    font-size: inherit;\n    vertical-align: bottom; }\n  .mote.theme-mock div[data-tag=\"caret\"]::before {\n    border-left: 1px #089 solid;\n    border-right: 1px #089 solid;\n    margin-right: -1px;\n    margin-left: -1px;\n    content: ''; }\n  .mote.theme-mock div[data-tag=\"caret\"][data-client=\"middle\"] {\n    border-right-color: #0f0; }\n  .mote.theme-mock div[data-tag=\"caret\"][data-client=\"right\"] {\n    border-right-color: blue; }\n  .mote.theme-mock div[data-tag=\"hr\"] {\n    margin: 16px 0;\n    height: 2px;\n    min-height: 0 !important;\n    border-bottom: 1px solid #eee;\n    background: #ccc; }\n  .mote.theme-mock div.bold {\n    font-weight: 900; }\n  .mote.theme-mock div.italic {\n    font-style: italic; }\n  .mote.theme-mock div[data-tag=\"h1\"] {\n    font-size: 2.0em;\n    font-weight: bold; }\n  .mote.theme-mock div[data-tag=\"h2\"] {\n    font-size: 1.7em;\n    font-weight: bold; }\n  .mote.theme-mock div[data-tag=\"h3\"] {\n    font-size: 1.4em;\n    font-weight: bold; }\n  .mote.theme-mock div[data-tag=\"pre\"] {\n    font-family: monospace;\n    padding: 5px 8px;\n    font-size: 0.9em;\n    background: #eee; }\n  .mote.theme-mock div[data-tag=\"html\"] {\n    font-family: monospace;\n    padding: 5px 8px;\n    font-size: 0.9em;\n    border: 1px solid #aa5;\n    background: #eea; }\n  .mote.theme-mock div[data-tag=\"bullet\"] {\n    list-style: disc outside none;\n    display: list-item;\n    margin-left: 25px; }\n  .mote.theme-mock div[data-tag=\"bullet\"] + div[data-tag=\"bullet\"] {\n    margin-top: -5px; }\n\n.mote.theme-block {\n  font-family: monospace;\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  /**\n     * targets\n     */\n  /**\n     * span styles\n     */ }\n  .mote.theme-block div {\n    /*border: 1px solid #444;*/\n    background: rgba(0, 0, 0, 0.15);\n    padding: 12px 12px 12px 16px;\n    margin: 8px 0;\n    position: relative;\n    min-height: 14px; }\n    .mote.theme-block div::before {\n      display: block;\n      content: attr(data-tag);\n      opacity: 0.5;\n      background: black;\n      color: white;\n      padding: 2px 4px;\n      width: -webkit-max-content;\n      margin-bottom: 6px;\n      text-align: center; }\n  .mote.theme-block * {\n    clear: both; }\n  .mote.theme-block span {\n    background: #7dc87d;\n    padding: 3px 5px;\n    /*border: 1px solid rgba(0, 0, 0, .3);*/\n    display: inline-block;\n    width: 20px;\n    height: 1.8em;\n    box-sizing: border-box;\n    margin-left: 1px;\n    margin-bottom: 2px;\n    cursor: pointer;\n    white-space: pre; }\n  .mote.theme-block span:hover {\n    filter: brightness(150%); }\n  .mote.theme-block .active {\n    background: #98e; }\n  .mote.theme-block span.active,\n  .mote.theme-block span.target {\n    border-right: 3px solid rgba(0, 0, 0, 0.3);\n    margin-right: -1px;\n    width: 21px; }\n  .mote.theme-block div.active,\n  .mote.theme-block div.target {\n    border-bottom: 3px solid rgba(0, 0, 0, 0.3);\n    padding-bottom: 9px; }\n  .mote.theme-block div.active > div {\n    background: #ccc; }\n  .mote.theme-block div[data-tag=\"span\"] {\n    display: inline-block;\n    margin-left: 1px;\n    padding: 4px 6px 1px;\n    margin-bottom: 3px;\n    background: rgba(255, 0, 0, 0.25); }\n    .mote.theme-block div[data-tag=\"span\"].active {\n      margin-bottom: 0;\n      background: #98e; }\n    .mote.theme-block div[data-tag=\"span\"]::before {\n      float: left;\n      margin-top: 2px;\n      margin-right: 2px;\n      display: none; }\n  .mote.theme-block .active ~ * {\n    background: red; }\n  .mote.theme-block .target ~ span {\n    background: #7dc87d; }\n  .mote.theme-block .target ~ div {\n    background: rgba(0, 0, 0, 0.15); }\n  .mote.theme-block .target ~ div[data-tag=\"span\"] {\n    background: rgba(255, 0, 0, 0.25); }\n  .mote.theme-block div.bold {\n    font-weight: 900; }\n  .mote.theme-block div.italic {\n    font-style: italic; }\n\nbody#multi {\n  width: 100%;\n  height: 100%;\n  padding: 0 !important;\n  display: flex;\n  flex-direction: column; }\n  body#multi iframe {\n    border: none;\n    width: 100%;\n    height: 100%;\n    display: block; }\n  body#multi #clients, body#multi #clients tbody, body#multi #clients tr, body#multi #clients td {\n    display: block; }\n  body#multi #clients, body#multi #clients tbody {\n    display: flex;\n    flex-direction: column;\n    flex: 1; }\n  body#multi #clients tr {\n    flex: 1;\n    display: flex;\n    flex-direction: row; }\n  body#multi #clients td {\n    border: 2px solid black;\n    box-sizing: border-box;\n    flex: 1; }\n", ""]);
-
-// exports
-
-
-/***/ }),
-/* 4 */
+/* 4 */,
+/* 5 */,
+/* 6 */
 /***/ (function(module, exports) {
 
 /*
@@ -10547,7 +10613,7 @@ function toComment(sourceMap) {
 
 
 /***/ }),
-/* 5 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -10603,7 +10669,7 @@ var singleton = null;
 var	singletonCounter = 0;
 var	stylesInsertedAtTop = [];
 
-var	fixUrls = __webpack_require__(6);
+var	fixUrls = __webpack_require__(8);
 
 module.exports = function(list, options) {
 	if (typeof DEBUG !== "undefined" && DEBUG) {
@@ -10919,7 +10985,7 @@ function updateLink (link, options, obj) {
 
 
 /***/ }),
-/* 6 */
+/* 8 */
 /***/ (function(module, exports) {
 
 
@@ -11014,12 +11080,12 @@ module.exports = function (css) {
 
 
 /***/ }),
-/* 7 */
+/* 9 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(setImmediate) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__util__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__interop__ = __webpack_require__(13);
+/* WEBPACK VAR INJECTION */(function(setImmediate) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__util__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__interop__ = __webpack_require__(14);
 
 
 class ProxyNetwork {
@@ -11110,10 +11176,10 @@ class WasmNetwork {
 /* harmony export (immutable) */ __webpack_exports__["b"] = WasmNetwork;
 
 
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(8).setImmediate))
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(10).setImmediate))
 
 /***/ }),
-/* 8 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var apply = Function.prototype.apply;
@@ -11166,13 +11232,13 @@ exports._unrefActive = exports.active = function(item) {
 };
 
 // setimmediate attaches itself to the global object
-__webpack_require__(9);
+__webpack_require__(11);
 exports.setImmediate = setImmediate;
 exports.clearImmediate = clearImmediate;
 
 
 /***/ }),
-/* 9 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
@@ -11362,10 +11428,10 @@ exports.clearImmediate = clearImmediate;
     attachTo.clearImmediate = clearImmediate;
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(10), __webpack_require__(11)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(12), __webpack_require__(13)))
 
 /***/ }),
-/* 10 */
+/* 12 */
 /***/ (function(module, exports) {
 
 var g;
@@ -11392,7 +11458,7 @@ module.exports = g;
 
 
 /***/ }),
-/* 11 */
+/* 13 */
 /***/ (function(module, exports) {
 
 // shim for using process in browser
@@ -11582,63 +11648,7 @@ process.umask = function() { return 0; };
 
 
 /***/ }),
-/* 12 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["d"] = textNodeAtPoint;
-/* harmony export (immutable) */ __webpack_exports__["b"] = matchesSelector;
-/* unused harmony export pageId */
-/* harmony export (immutable) */ __webpack_exports__["a"] = clientProxyUrl;
-/* harmony export (immutable) */ __webpack_exports__["c"] = syncUrl;
-function textNodeAtPoint(x, y) {
-    let textNode, offset;
-    if (document.caretPositionFromPoint) {
-        let range = document.caretPositionFromPoint(x, y);
-        textNode = range.offsetNode;
-        offset = range.offset;
-    }
-    else if (document.caretRangeFromPoint) {
-        let range = document.caretRangeFromPoint(x, y);
-        textNode = range.startContainer;
-        offset = range.startOffset;
-    }
-    else {
-        return null;
-    }
-    // TODO: can textNode ever be an element?
-    if (textNode.nodeType !== 3) {
-        return null;
-    }
-    return {
-        textNode,
-        offset,
-    };
-}
-function matchesSelector(el, selector) {
-    return el.mozMatchesSelector(selector);
-}
-function pageId() {
-    return window.location.pathname.match(/^\/?([^\/]+)/)[1];
-}
-function clientProxyUrl() {
-    return '' +
-        (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
-        window.location.host.replace(/\:\d+/, ':8002') +
-        '/' +
-        pageId();
-}
-function syncUrl() {
-    return '' +
-        (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
-        (window.location.host.match(/localhost/) ?
-            window.location.host.replace(/:\d+$|$/, ':8001') + '/$/ws/' + pageId() :
-            window.location.host + '/$/ws/' + pageId());
-}
-
-
-/***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -11726,18 +11736,19 @@ function instantiate(js_command_callback) {
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function($) {/* harmony export (immutable) */ __webpack_exports__["a"] = start;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_clipboard__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_clipboard__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_clipboard___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_clipboard__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__commands__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__editor__ = __webpack_require__(26);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__commands__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__editor__ = __webpack_require__(24);
 
 
 
+const ROOT_QUERY = '.edit-text';
 // Initialize child editor.
 class EditorFrame {
     constructor(elem, network) {
@@ -11750,6 +11761,7 @@ class EditorFrame {
         this.network.onNativeMessage = this.onNativeMessage.bind(this);
         let editor = this;
         let $elem = this.$elem;
+        this.$elem.addClass('theme-mock');
         {
             new __WEBPACK_IMPORTED_MODULE_0_clipboard___default.a('#save-markdown', {
                 text: function (trigger) {
@@ -11873,8 +11885,15 @@ class EditorFrame {
 /* unused harmony export EditorFrame */
 
 function start(network) {
+    // Utility classes for Multi
+    if (window.parent != window) {
+        // Blur/Focus classes.
+        $(window).on('focus', () => $(document.body).removeClass('blurred'));
+        $(window).on('blur', () => $(document.body).addClass('blurred'));
+        $(document.body).addClass('blurred');
+    }
     // Create the editor frame.
-    let editor = new EditorFrame(document.getElementById('mote'), network);
+    let editor = new EditorFrame(document.querySelector(ROOT_QUERY), network);
     // Connect to parent window (if exists).
     editor.multiConnect();
     // Background colors.
@@ -11893,15 +11912,15 @@ function start(network) {
 }
 ;
 
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(2)))
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
     if (true) {
-        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [module, __webpack_require__(16), __webpack_require__(18), __webpack_require__(19)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [module, __webpack_require__(17), __webpack_require__(19), __webpack_require__(20)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
 				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
 				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
@@ -12111,12 +12130,12 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 });
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
     if (true) {
-        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [module, __webpack_require__(17)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [module, __webpack_require__(18)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
 				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
 				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
@@ -12348,7 +12367,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 });
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports) {
 
 function select(element) {
@@ -12397,7 +12416,7 @@ module.exports = select;
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports) {
 
 function E () {
@@ -12469,11 +12488,11 @@ module.exports = E;
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var is = __webpack_require__(20);
-var delegate = __webpack_require__(21);
+var is = __webpack_require__(21);
+var delegate = __webpack_require__(22);
 
 /**
  * Validates all params and calls the right
@@ -12570,7 +12589,7 @@ module.exports = listen;
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports) {
 
 /**
@@ -12625,10 +12644,10 @@ exports.fn = function(value) {
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var closest = __webpack_require__(22);
+var closest = __webpack_require__(23);
 
 /**
  * Delegates event to a selector.
@@ -12709,7 +12728,7 @@ module.exports = delegate;
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports) {
 
 var DOCUMENT_NODE_TYPE = 9;
@@ -12748,173 +12767,16 @@ module.exports = closest;
 
 
 /***/ }),
-/* 23 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function($) {/* harmony export (immutable) */ __webpack_exports__["a"] = start;
-function start() {
-    // Timer component.
-    let counter = Date.now();
-    setInterval(() => {
-        requestAnimationFrame(() => {
-            $('#timer').each(function () {
-                $(this).text((((Date.now() - counter) / 1000) | 0) + 's');
-            });
-        });
-    }, 1000);
-    // Monkey global click button.
-    let monkey = false;
-    $('#action-monkey').on('click', () => {
-        monkey = !monkey;
-        for (let i = 0; i < window.frames.length; i++) {
-            window.frames[i].postMessage({
-                'Monkey': monkey,
-            }, '*');
-        }
-        $('#action-monkey').css('background', monkey ? '#0f0' : 'transparent');
-    });
-}
-
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
-
-/***/ }),
 /* 24 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = start;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__commands__ = __webpack_require__(25);
-
-function start(network) {
-    let md = null;
-    network.onNativeMessage = function (msg) {
-        console.log(msg);
-        if (!md && msg.MarkdownUpdate) {
-            md = msg.MarkdownUpdate;
-            // Start the remark.js presentation.
-            remark.create({
-                source: md,
-            });
-            // Adds fullscreen button after remark is instantiated.
-            let fullscreen = document.createElement('button');
-            fullscreen.innerText = '↕️';
-            fullscreen.onclick = function (e) {
-                console.log('fullscreen attempt');
-                let a = document.querySelector('.remark-slides-area');
-                try {
-                    a.mozRequestFullScreen();
-                }
-                catch (e) {
-                    a.requestFullscreen();
-                }
-            };
-            fullscreen.style.cssText = `
-        position: fixed;
-        top: 10px;
-        left: 10px;
-        z-index: 1000;
-      `;
-            document.body.appendChild(fullscreen);
-        }
-    };
-    // Connect to remote sockets.
-    network.nativeConnect()
-        .then(() => network.syncConnect())
-        .then(() => {
-        console.log('edit-text initialized.');
-        // Request markdown source immediately.
-        let id = setInterval(function () {
-            if (md !== null) {
-                clearInterval(id);
-            }
-            else {
-                try {
-                    network.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["e" /* RequestMarkdown */]());
-                }
-                catch (e) {
-                    // Socket may not be ready yet
-                }
-            }
-        }, 250);
-    });
-}
-;
-
-
-/***/ }),
-/* 25 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* unused harmony export RenameGroupCommand */
-/* harmony export (immutable) */ __webpack_exports__["c"] = KeypressCommand;
-/* harmony export (immutable) */ __webpack_exports__["b"] = CharacterCommand;
-/* harmony export (immutable) */ __webpack_exports__["f"] = TargetCommand;
-/* harmony export (immutable) */ __webpack_exports__["a"] = ButtonCommand;
-/* unused harmony export LoadCommand */
-/* harmony export (immutable) */ __webpack_exports__["d"] = MonkeyCommand;
-/* unused harmony export ConnectCommand */
-/* harmony export (immutable) */ __webpack_exports__["e"] = RequestMarkdown;
-function RenameGroupCommand(tag, curspan) {
-    return {
-        'RenameGroup': [tag, curspan],
-    };
-}
-function KeypressCommand(keyCode, metaKey, shiftKey) {
-    return {
-        'Keypress': [keyCode, metaKey, shiftKey],
-    };
-}
-function CharacterCommand(charCode) {
-    return {
-        'Character': charCode,
-    };
-}
-function TargetCommand(curspan) {
-    return {
-        'Target': curspan,
-    };
-}
-function ButtonCommand(button) {
-    return {
-        'Button': button,
-    };
-}
-function LoadCommand(load) {
-    return {
-        'Load': load,
-    };
-}
-function MonkeyCommand(enabled) {
-    return {
-        'Monkey': enabled,
-    };
-}
-function ConnectCommand(client) {
-    return {
-        'Connect': client,
-    };
-}
-function RequestMarkdown() {
-    return {
-        RequestMarkdown: null,
-    };
-}
-
-
-/***/ }),
-/* 26 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = editorSetup;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__commands__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__util__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__commands__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__util__ = __webpack_require__(1);
 
 
-// TODO rename this from .mote
-const ROOT_SELECTOR = '.mote';
+const ROOT_SELECTOR = '.edit-text';
 function curto(el, textOffset = null) {
     if (!el) {
         return null;
@@ -13027,6 +12889,146 @@ function editorSetup(element, network, KEY_WHITELIST) {
         e.preventDefault();
     });
 }
+
+
+/***/ }),
+/* 25 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function($) {/* harmony export (immutable) */ __webpack_exports__["a"] = start;
+function start() {
+    // Timer component.
+    let counter = Date.now();
+    setInterval(() => {
+        requestAnimationFrame(() => {
+            $('#timer').each(function () {
+                $(this).text((((Date.now() - counter) / 1000) | 0) + 's');
+            });
+        });
+    }, 1000);
+    // Monkey global click button.
+    let monkey = false;
+    $('#action-monkey').on('click', () => {
+        monkey = !monkey;
+        for (let i = 0; i < window.frames.length; i++) {
+            window.frames[i].postMessage({
+                'Monkey': monkey,
+            }, '*');
+        }
+        $('#action-monkey').css('background', monkey ? '#0f0' : 'transparent');
+    });
+}
+
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(2)))
+
+/***/ }),
+/* 26 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = start;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__commands__ = __webpack_require__(0);
+
+function start(network) {
+    let md = null;
+    network.onNativeMessage = function (msg) {
+        console.log(msg);
+        if (!md && msg.MarkdownUpdate) {
+            md = msg.MarkdownUpdate;
+            // Start the remark.js presentation.
+            remark.create({
+                source: md,
+            });
+            // Adds fullscreen button after remark is instantiated.
+            let fullscreen = document.createElement('button');
+            fullscreen.innerText = '↕️';
+            fullscreen.onclick = function (e) {
+                console.log('fullscreen attempt');
+                let a = document.querySelector('.remark-slides-area');
+                try {
+                    a.mozRequestFullScreen();
+                }
+                catch (e) {
+                    a.requestFullscreen();
+                }
+            };
+            fullscreen.style.cssText = `
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 1000;
+      `;
+            document.body.appendChild(fullscreen);
+        }
+    };
+    // Connect to remote sockets.
+    network.nativeConnect()
+        .then(() => network.syncConnect())
+        .then(() => {
+        console.log('edit-text initialized.');
+        // Request markdown source immediately.
+        let id = setInterval(function () {
+            if (md !== null) {
+                clearInterval(id);
+            }
+            else {
+                try {
+                    network.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["e" /* RequestMarkdown */]());
+                }
+                catch (e) {
+                    // Socket may not be ready yet
+                }
+            }
+        }, 250);
+    });
+}
+;
+
+
+/***/ }),
+/* 27 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(28);
+if(typeof content === 'string') content = [[module.i, content, '']];
+// Prepare cssTransformation
+var transform;
+
+var options = {"hmr":true}
+options.transform = transform
+// add the styles to the DOM
+var update = __webpack_require__(7)(content, options);
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!../node_modules/css-loader/index.js!../node_modules/sass-loader/lib/loader.js!./mercutio.scss", function() {
+			var newContent = require("!!../node_modules/css-loader/index.js!../node_modules/sass-loader/lib/loader.js!./mercutio.scss");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 28 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(6)(undefined);
+// imports
+
+
+// module
+exports.push([module.i, "html, body {\n  display: block;\n  padding: 0;\n  margin: 0;\n  height: 100%;\n  width: 100%; }\n\nbody {\n  font-family: Helvetica,Arial,sans-serif;\n  font-size: 14px;\n  line-height: 1.42857143; }\n\n#toolbar {\n  display: flex;\n  flex-direction: row;\n  background: #ddd;\n  border-bottom: 2px solid #aaa;\n  padding: 5px 20px 8px;\n  cursor: auto;\n  position: fixed;\n  width: 100%;\n  z-index: 100;\n  max-height: 55px;\n  overflow: auto; }\n\n#logo {\n  content: \"edit-text\";\n  margin: 3px 20px 0 0;\n  font-family: Helvetica, Arial, sans-serif;\n  color: #444;\n  font-size: 20px;\n  height: 0;\n  overflow: visible;\n  vertical-align: middle;\n  display: inline-block;\n  text-decoration: none; }\n\n#logo:hover {\n  color: black;\n  text-decoration: underline; }\n\n#native-buttons {\n  flex: 1; }\n\nbutton {\n  font: inherit;\n  border: 1px solid #aaa;\n  background: #fff;\n  text-transform: uppercase;\n  box-shadow: #bbb 2px 2px;\n  margin-right: 8px;\n  padding: 6px 12px 3px;\n  font-weight: bold;\n  font-size: 0.9em; }\n\nbutton:active {\n  box-shadow: #000 1px 1px;\n  position: relative;\n  top: 1px;\n  left: 1px; }\n\nkbd {\n  font-family: monospace !important; }\n\n#parent {\n  background: #eee; }\n\n#client {\n  background: white;\n  cursor: text; }\n\n#client.blurred {\n  background: #ddd; }\n\n#footer {\n  position: fixed;\n  bottom: 0;\n  width: 100%;\n  box-sizing: border-box;\n  border-top: 1px solid #ca4;\n  background: #fff3bb;\n  padding: 8px 10px;\n  opacity: 0.85;\n  z-index: 100; }\n\n.edit-text {\n  padding: 60px 30px 50px;\n  margin: 0; }\n\n.edit-text.theme-mock {\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  font-size: 16px;\n  cursor: text;\n  white-space: pre-wrap;\n  /**\n     * span styles\n     */ }\n  .edit-text.theme-mock div {\n    margin: 12px 0;\n    position: relative;\n    min-height: 14px; }\n  .edit-text.theme-mock * {\n    clear: both; }\n  .edit-text.theme-mock div[data-tag=\"caret\"] {\n    display: inline;\n    font-size: inherit;\n    vertical-align: bottom; }\n  .edit-text.theme-mock div[data-tag=\"caret\"]::before {\n    border-left: 1px #089 solid;\n    border-right: 1px #089 solid;\n    margin-right: -1px;\n    margin-left: -1px;\n    content: ''; }\n  .edit-text.theme-mock div[data-tag=\"caret\"][data-client=\"middle\"] {\n    border-right-color: #0f0; }\n  .edit-text.theme-mock div[data-tag=\"caret\"][data-client=\"right\"] {\n    border-right-color: blue; }\n  .edit-text.theme-mock div[data-tag=\"hr\"] {\n    margin: 16px 0;\n    height: 2px;\n    min-height: 0 !important;\n    border-bottom: 1px solid #eee;\n    background: #ccc; }\n  .edit-text.theme-mock div.bold {\n    font-weight: 900; }\n  .edit-text.theme-mock div.italic {\n    font-style: italic; }\n  .edit-text.theme-mock div[data-tag=\"h1\"] {\n    font-size: 2.0em;\n    font-weight: bold; }\n  .edit-text.theme-mock div[data-tag=\"h2\"] {\n    font-size: 1.7em;\n    font-weight: bold; }\n  .edit-text.theme-mock div[data-tag=\"h3\"] {\n    font-size: 1.4em;\n    font-weight: bold; }\n  .edit-text.theme-mock div[data-tag=\"pre\"] {\n    font-family: monospace;\n    padding: 5px 8px;\n    font-size: 0.9em;\n    background: #eee; }\n  .edit-text.theme-mock div[data-tag=\"html\"] {\n    font-family: monospace;\n    padding: 5px 8px;\n    font-size: 0.9em;\n    border: 1px solid #aa5;\n    background: #eea; }\n  .edit-text.theme-mock div[data-tag=\"bullet\"] {\n    list-style: disc outside none;\n    display: list-item;\n    margin-left: 25px; }\n  .edit-text.theme-mock div[data-tag=\"bullet\"] + div[data-tag=\"bullet\"] {\n    margin-top: -5px; }\n\n.edit-text.theme-block {\n  font-family: monospace;\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  /**\n     * targets\n     */\n  /**\n     * span styles\n     */ }\n  .edit-text.theme-block div {\n    /*border: 1px solid #444;*/\n    background: rgba(0, 0, 0, 0.15);\n    padding: 12px 12px 12px 16px;\n    margin: 8px 0;\n    position: relative;\n    min-height: 14px; }\n    .edit-text.theme-block div::before {\n      display: block;\n      content: attr(data-tag);\n      opacity: 0.5;\n      background: black;\n      color: white;\n      padding: 2px 4px;\n      width: -webkit-max-content;\n      margin-bottom: 6px;\n      text-align: center; }\n  .edit-text.theme-block * {\n    clear: both; }\n  .edit-text.theme-block span {\n    background: #7dc87d;\n    padding: 3px 5px;\n    /*border: 1px solid rgba(0, 0, 0, .3);*/\n    display: inline-block;\n    width: 20px;\n    height: 1.8em;\n    box-sizing: border-box;\n    margin-left: 1px;\n    margin-bottom: 2px;\n    cursor: pointer;\n    white-space: pre; }\n  .edit-text.theme-block span:hover {\n    filter: brightness(150%); }\n  .edit-text.theme-block .active {\n    background: #98e; }\n  .edit-text.theme-block span.active,\n  .edit-text.theme-block span.target {\n    border-right: 3px solid rgba(0, 0, 0, 0.3);\n    margin-right: -1px;\n    width: 21px; }\n  .edit-text.theme-block div.active,\n  .edit-text.theme-block div.target {\n    border-bottom: 3px solid rgba(0, 0, 0, 0.3);\n    padding-bottom: 9px; }\n  .edit-text.theme-block div.active > div {\n    background: #ccc; }\n  .edit-text.theme-block div[data-tag=\"span\"] {\n    display: inline-block;\n    margin-left: 1px;\n    padding: 4px 6px 1px;\n    margin-bottom: 3px;\n    background: rgba(255, 0, 0, 0.25); }\n    .edit-text.theme-block div[data-tag=\"span\"].active {\n      margin-bottom: 0;\n      background: #98e; }\n    .edit-text.theme-block div[data-tag=\"span\"]::before {\n      float: left;\n      margin-top: 2px;\n      margin-right: 2px;\n      display: none; }\n  .edit-text.theme-block .active ~ * {\n    background: red; }\n  .edit-text.theme-block .target ~ span {\n    background: #7dc87d; }\n  .edit-text.theme-block .target ~ div {\n    background: rgba(0, 0, 0, 0.15); }\n  .edit-text.theme-block .target ~ div[data-tag=\"span\"] {\n    background: rgba(255, 0, 0, 0.25); }\n  .edit-text.theme-block div.bold {\n    font-weight: 900; }\n  .edit-text.theme-block div.italic {\n    font-style: italic; }\n\nbody#multi {\n  width: 100%;\n  height: 100%;\n  padding: 0 !important;\n  display: flex;\n  flex-direction: column; }\n  body#multi iframe {\n    border: none;\n    width: 100%;\n    height: 100%;\n    display: block; }\n  body#multi #clients, body#multi #clients tbody, body#multi #clients tr, body#multi #clients td {\n    display: block; }\n  body#multi #clients, body#multi #clients tbody {\n    display: flex;\n    flex-direction: column;\n    flex: 1; }\n  body#multi #clients tr {\n    flex: 1;\n    display: flex;\n    flex-direction: row; }\n  body#multi #clients td {\n    border: 2px solid black;\n    box-sizing: border-box;\n    flex: 1; }\n", ""]);
+
+// exports
 
 
 /***/ })

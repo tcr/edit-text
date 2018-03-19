@@ -5,8 +5,7 @@ import * as util from './util';
 import * as interop from './interop';
 import {Network, ProxyNetwork, WasmNetwork} from './network';
 
-// TODO rename this from .mote
-const ROOT_SELECTOR = '.mote';
+const ROOT_SELECTOR = '.edit-text';
 
 function curto(el: Node | null, textOffset: number | null = null) {
   if (!el) {
