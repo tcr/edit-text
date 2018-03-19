@@ -1,36 +1,7 @@
 import * as commands from './commands';
 import HashState from './hashstate';
 import Clipboard from 'clipboard';
-
-function getActive() {
-  var a = $('.active')
-  return a[0] ? a : null;
-}
-
-function getTarget() {
-  var a = $('.active')
-  return a[0] ? a : null;
-}
-
-function isBlock ($active: JQuery) {
-  return $active && $active[0].tagName == 'DIV';
-}
-
-function isChar ($active: JQuery) {
-  return $active && $active[0].tagName == 'SPAN';
-}
-
-function isInline ($active) {
-  return $active && $active.data('tag') == 'span';
-}
-
-function clearActive () {
-  $(document).find('.active').removeClass('active');
-}
-
-function clearTarget () {
-  $(document).find('.target').removeClass('target');
-}
+import * as util from './util';
 
 function curto(el: Node | null, textOffset: number | null = null) {
   if (!el) {
@@ -62,8 +33,6 @@ function curto(el: Node | null, textOffset: number | null = null) {
     }
   }
 
-  // var p = el.parents('.mote');
-  // while (el.length != 0 && !el.is(p)) {
   while (el !== null) {
     if (el.previousSibling) {
       if (el.previousSibling.nodeType == 3) {
@@ -91,39 +60,6 @@ function curto(el: Node | null, textOffset: number | null = null) {
   return cur;
 }
 
-// function serialize (parent) {
-//   var out = []
-//   $(parent).children().each(function () {
-//     if ($(this).is('div')) {
-//       out.push({
-//         "DocGroup": [
-//           serializeAttrs($(this)),
-//           serialize(this),
-//         ],
-//       });
-//     } else {
-//       var txt = this.innerText
-//       if (Object.keys(out[out.length - 1] || {})[0] == 'DocChars') {
-//         txt = out.pop().DocChars + txt;
-//       }
-//       out.push({
-//         "DocChars": txt
-//       });
-//     }
-//   })
-//   return out;
-// }
-
-function promptString(title, value, callback) {
-  bootbox.prompt({
-    title,
-    value,
-    callback,
-  }).on("shown.bs.modal", function() {
-    $(this).find('input').select();
-  });
-}
-
 // Initialize child editor.
 export default class Editor {
   $elem: any;
@@ -142,24 +78,29 @@ export default class Editor {
     this.editorID = editorID;
     this.ops = [];
     this.KEY_WHITELIST = [];
+    this.markdown = '';
 
     let editor = this;
     let $elem = this.$elem;
 
-    // monkey button
-    // let monkey = false;
-    // $('<button>Monkey</button>')
-    //   .appendTo($('#local-buttons'))
-    //   .on('click', function () {
-    //     monkey = !monkey;
-    //     editor.nativeCommand(commands.MonkeyCommand(monkey));
-    //     $(this).css('font-weight') == '700'
-    //       ? $(this).css('font-weight', 'normal')
-    //       : $(this).css('font-weight', 'bold');
-    //   });
+    {
+      new Clipboard('#save-markdown', {
+        text: function(trigger) {
+          return editor.markdown;
+        }
+      });
 
-    // MArkdown
-    this.markdown = '';
+      // Request markdown source.
+      setInterval(() => {
+        editor.nativeCommand(commands.RequestMarkdown());
+      }, 2000);
+      setTimeout(() => {
+        // Early request
+        editor.nativeCommand(commands.RequestMarkdown());
+      }, 500);
+    }
+
+    // Markdown
     $('<button id="save-markdown">Save Markdown</button>')
       .appendTo($('#local-buttons'))
       .on('click', function () {
@@ -174,21 +115,7 @@ export default class Editor {
         }, 2000);
       });
 
-    new (Clipboard as any)('#save-markdown', {
-      text: function(trigger) {
-        return editor.markdown;
-      }
-    });
-
-    setInterval(() => {
-      editor.nativeCommand(commands.RequestMarkdown());
-    }, 2000);
-    setTimeout(() => {
-      // Early request
-      editor.nativeCommand(commands.RequestMarkdown());
-    }, 500);
-
-    // switching button
+    // CSS switch button
     $('<button>X-Ray</button>')
       .appendTo($('#local-buttons'))
       .on('click', function () {
@@ -215,113 +142,71 @@ export default class Editor {
       $elem.addClass('theme-mock');
     }
 
-    $elem.on('mousedown', 'span, div', function (e) {
-      const active = getActive();
-      const target = getTarget();
+    this.setupEditor();
+  }
 
-      // console.log(e.clientX, e.clientY);
-      // Test the caretPositionFromPoint method
-      // if (isChar( {
-      {
-        let pos = (<any>document).caretPositionFromPoint(e.clientX, e.clientY);
-        let target;
-        if (pos.offsetNode.nodeType == 3) {
-          // Text node
-          target = pos.offsetNode.parentNode;
-          console.log('hi', pos);
-          if (pos.offset == 0) {
-            if (pos.offsetNode.previousSibling === null) {
-              editor.nativeCommand(commands.TargetCommand(curto(pos.offsetNode.parentNode)));
-            } else if (pos.offsetNode.previousSibling.nodeType === 3) {
-              editor.nativeCommand(commands.TargetCommand(curto(pos.offsetNode.previousSibling, pos.offsetNode.previousSibling.data.length)))
-            } else {
-              // TODO get to the bottom of this
-              console.log('recursive depth');
-            };
+  setupEditor() {
+    this.$elem.on('mousedown', (e) => {
+      let pos = util.textNodeAtPoint(e.clientX, e.clientY);
+
+      // Only support text elements.
+      if (pos !== null) {
+        // Text node
+        let target = pos.textNode.parentNode;
+        if (pos.offset == 0) {
+          if (pos.textNode.previousSibling === null) {
+            // Text node is first in element, so select parent node.
+            this.nativeCommand(commands.TargetCommand(curto(
+              pos.textNode.parentNode,
+            )));
+          } else if (pos.textNode.previousSibling.nodeType === 3) {
+            // Text node has a preceding text elemnt; move to end.
+            this.nativeCommand(commands.TargetCommand(curto(
+              pos.textNode.previousSibling,
+              (<Text>pos.textNode.previousSibling).data.length,
+            )))
           } else {
-            editor.nativeCommand(commands.TargetCommand(curto(pos.offsetNode, pos.offset)));
-          }
-          // pos.offsetNode.offset;
+            // If it's an element...
+            //TODO do something here
+            console.log('recursive depth');
+          };
         } else {
-          // Element (probably)
-          target = pos.offsetNode;
-          editor.nativeCommand(commands.TargetCommand(curto(pos.offsetNode)));
+          // Move to offset of this text node.
+          this.nativeCommand(commands.TargetCommand(curto(
+            pos.textNode,
+            pos.offset - 1,
+          )));
         }
-      // }
       }
-
-      // if (e.shiftKey) {
-      //   if (active && active.nextAll().add(active).is(this)) {
-      //     clearTarget();
-      //     $(this).addClass('target');
-
-      //     // TODO
-      //     // send target destination curspan
-      //   }
-      // } else {
-      //   clearActive();
-      //   clearTarget();
-      //   $(this).addClass('active').addClass('target');
-
-      //   console.log('Cursor:', curto($(this)));
-      //   let last = $(this).children().last();
-      //   if (isBlock($(this))) {
-      //     editor.nativeCommand(commands.TargetCommand(curto(last)));
-      //   } else {
-      //     editor.nativeCommand(commands.TargetCommand(curto($(this))));
-      //   }
-      // }
 
       // TODO this bubbles if i use preventDEfault?
       window.focus();
       return false;
-    })
+    });
 
     // Click outside the document area.
-    $('#client').on('click', function (e) {
-      if (e.target == this) {
-        let last = $elem.find('*').last()[0];
-        editor.nativeCommand(commands.TargetCommand(curto(last)));
+    $('#client').on('click', (e) => {
+      if (e.target == $('#client')[0]) {
+        let last = this.$elem.find('*').last()[0];
+        this.nativeCommand(commands.TargetCommand(curto(last)));
       }
     });
 
     $(document).on('keypress', (e) => {
-      if ($(e.target).closest('.modal').length) {
-        return;
-      }
-
-      const active = getActive();
-      const target = getTarget();
-
-      if (active && !active.parents('.mote').is($elem)) {
-        return
-      }
-
       if (e.metaKey) {
         return;
       }
 
-      editor.nativeCommand(commands.CharacterCommand(e.charCode,));
+      this.nativeCommand(commands.CharacterCommand(e.charCode,));
 
       e.preventDefault();
     });
 
     $(document).on('keydown', (e) => {
-      if ($(e.target).closest('.modal').length) {
-        return;
-      }
-
-      const active = getActive();
-      const target = getTarget();
-
-      if (active && !active.parents('.mote').is($elem)) {
-        return
-      }
-
       console.log('KEYDOWN:', e.keyCode);
 
       // Match against whitelisted key entries.
-      if (!editor.KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
+      if (!this.KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
         return;
       }
 
@@ -359,13 +244,10 @@ export default class Editor {
 
   nativeConnect() {
     let editor = this;
-    let url =
-      (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
-      window.location.host.replace(/\:\d+/, ':8002') +
-      '/' +
-      window.location.pathname.replace(/^\/+/, '') +
-      (window.location.hash == '#helloworld' ? '?helloworld' : '');
-    this.nativeSocket = new WebSocket(url);
+    this.nativeSocket = new WebSocket(
+      util.clientProxyUrl() + 
+      (window.location.hash == '#helloworld' ? '?helloworld' : '')
+    );
     this.nativeSocket.onopen = function (event) {
       console.log('Editor "%s" is connected.', editor.editorID);
 
@@ -412,15 +294,6 @@ export default class Editor {
       editor.markdown = parse.MarkdownUpdate;
     }
     
-    else if (parse.PromptString) {
-      promptString(parse.PromptString[0], parse.PromptString[1], (value) => {
-        // Lookup actual key
-        let key = Object.keys(parse.PromptString[2])[0];
-        parse.PromptString[2][key][0] = value;
-        editor.nativeCommand(parse.PromptString[2]);
-      });
-    }
-    
     else if (parse.Setup) {
       console.log('SETUP', parse.Setup);
       editor.KEY_WHITELIST = parse.Setup.keys.map(x => ({
@@ -447,24 +320,23 @@ export default class Editor {
     }
   }
 
-  syncConnect() {
-    window.onmessage = this.onSyncMessage.bind(this);
-  }
-  
-  onSyncMessage(event) {
-    let editor = this;
+  multiConnect() {
+    window.onmessage = (event) => {
+      let editor = this;
 
-    if (typeof event.data != 'object') {
-      return;
-    }
+      // Sanity check.
+      if (typeof event.data != 'object') {
+        return;
+      }
 
-    // if ('Sync' in event.data) {
-    //   // Push to native
-    //   editor.nativeCommand(commands.LoadCommand(event.data.Sync))
-    // }
-    if ('Monkey' in event.data) {
-      // TODO reflect this in the app
-      editor.nativeCommand(commands.MonkeyCommand(event.data.Monkey));
-    }
+      // if ('Sync' in event.data) {
+      //   // Push to native
+      //   editor.nativeCommand(commands.LoadCommand(event.data.Sync))
+      // }
+      if ('Monkey' in event.data) {
+        // TODO reflect this in the app
+        editor.nativeCommand(commands.MonkeyCommand(event.data.Monkey));
+      }
+    };
   }
 }

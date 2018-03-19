@@ -1,17 +1,11 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
 import './mote.scss';
 import * as commands from './commands';
 import Editor from './editor';
 import Multi from './multi';
 import * as interop from './interop';
+import * as util from './util';
 
 import $ from 'jquery';
-import bootstrap from 'bootstrap';
-import bootbox from 'bootbox';
-
-// Consume bootstrap so bootbox works.
-bootstrap;
-
 
 declare var WebAssembly: any;
 declare var TextEncoder: any;
@@ -55,6 +49,7 @@ else if (document.body.id == 'client') {
 `;
 
 
+  // Utility classes for Multi
   if (window.parent != window) {
     // Blur/Focus classes.
     $(window).on('focus', () => $(document.body).removeClass('blurred'));
@@ -64,8 +59,6 @@ else if (document.body.id == 'client') {
 
   let editor = new Editor(document.getElementById('mote'), '$$$$$$');
 
-  console.log('start');
-
   if (!window['CONFIG'].configured) {
     alert('The window.CONFIG variable was not configured by the server!')
   }
@@ -73,7 +66,7 @@ else if (document.body.id == 'client') {
   // Use cross-compiled WASM bundle.
   let WASM = window['CONFIG'].wasm;
   if (!WASM) {
-    editor.syncConnect();
+    editor.multiConnect();
     editor.nativeConnect();
   } else {
     interop.instantiate(function (data) {
@@ -91,15 +84,9 @@ else if (document.body.id == 'client') {
 
       setImmediate(() => {
         // Websocket port
-        let full_id =
-          window.location.pathname.replace(/^\/+/, '') +
-          (window.location.hash == '#helloworld' ? '?helloworld' : '');
-        let url = (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
-          (window.location.host.match(/localhost/) ?
-            window.location.host.replace(/:\d+$|$/, ':8001') + '/$/ws/' + full_id :
-            window.location.host + '/$/ws/' + full_id);
-
-        let syncSocket = new WebSocket(url);
+        let syncSocket = new WebSocket(
+          util.syncUrl() + (window.location.hash == '#helloworld' ? '?helloworld' : '')
+        );
         editor.Module = Module; 
         editor.syncSocket = syncSocket;
         syncSocket.onopen = function (event) {
@@ -132,11 +119,7 @@ else if (document.body.id == 'presentation') {
   // Use cross-compiled WASM bundle.
   let WASM = window['CONFIG'].wasm;
   if (!WASM) {
-    let url = (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
-      window.location.host.replace(/\:\d+/, ':8002') + '/' +
-      window.location.pathname.match(/^\/?([^\/]+)/)[1];
-
-    let nativeSocket = new WebSocket(url);
+    let nativeSocket = new WebSocket(util.clientProxyUrl());
 
     let md = null;
     nativeSocket.onmessage = function (event) {
@@ -216,30 +199,13 @@ else if (document.body.id == 'presentation') {
       Module.wasm_setup();
 
       setImmediate(() => {
-        // Websocket port
-        let full_id =
-          window.location.pathname.match(/^\/?([^\/]+)/)[1];
-        let url = (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
-          (window.location.host.match(/localhost/) ?
-            window.location.host.replace(/:\d+$|$/, ':8001') + '/$/ws/' + full_id :
-            window.location.host + '/$/ws/' + full_id);
+        let syncSocket = new WebSocket(util.syncUrl());
 
-        let syncSocket = new WebSocket(url);
-        // editor.Module = Module; 
-        // editor.syncSocket = syncSocket;
         syncSocket.onopen = function (event) {
           // console.log('Editor "%s" is connected.', '$presenter');
         };
 
-        // Keepalive
-        // setInterval(() => {
-        //   syncSocket.send(JSON.stringify({
-        //     Keepalive: null,
-        //   }));
-        // }, 1000);
-
         syncSocket.onmessage = function (event) {
-          // console.log('GOT SYNC SOCKET MESSAGE:', event.data);
           Module.wasm_command({
             SyncClientCommand: JSON.parse(event.data),
           });
@@ -249,7 +215,7 @@ else if (document.body.id == 'presentation') {
   }
 }
 else {
-  document.body.innerHTML = '404';
+  document.body.innerHTML = '<h1>404</h1>';
 }
 
 $('#footer').html(`

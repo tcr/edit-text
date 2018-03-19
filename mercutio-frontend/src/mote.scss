@@ -7,7 +7,9 @@ html, body {
 }
 
 body {
-    font-family: Helvetica;
+    font-family: Helvetica,Arial,sans-serif;
+    font-size: 14px;
+    line-height: 1.42857143;
 }
 
 #toolbar {
@@ -21,6 +23,7 @@ body {
     width: 100%;
     z-index: 100;
     max-height: 55px; // TODO need a proper fixed height
+    overflow: auto;
 }
 
 #logo {
@@ -110,8 +113,9 @@ kbd {
     font-size: 16px;
     cursor: text;
 
+    white-space: pre-wrap;
+
     div {
-        /*border: 1px solid #444;*/
         margin: 12px 0;
         position: relative;
         min-height: 14px;
@@ -119,29 +123,6 @@ kbd {
 
     * {
         clear: both;
-    }
-
-    span {
-        // background: rgb(220, 255, 220);
-        /*border: 1px solid rgba(0, 0, 0, .3);*/
-        display: inline;
-        white-space: pre-wrap;
-        z-index: 10;
-    }
-
-    span:hover {
-        filter: brightness(150%);
-    }
-
-    div[data-tag="span"] {
-        display: inline;
-    }
-
-    div[data-tag="span"]:empty::before {
-        display: inline;
-        content: "!";
-        padding: 0 5px;
-        border: 2px solid red;
     }
     
     div[data-tag="caret"] {
