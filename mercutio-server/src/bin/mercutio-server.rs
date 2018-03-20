@@ -19,6 +19,7 @@ extern crate structopt;
 extern crate structopt_derive;
 extern crate take_mut;
 extern crate url;
+extern crate ron;
 extern crate ws;
 extern crate mime_guess;
 extern crate md5;
@@ -31,12 +32,14 @@ use std::panic;
 use std::path::{Path, PathBuf};
 use std::process;
 use std::thread;
+use oatie::doc::DocSpan;
 use std::fs::File;
 use std::io::prelude::*;
 use rouille::Response;
 use std::thread::JoinHandle;
 use structopt::StructOpt;
 use mime_guess::guess_mime_type;
+use mercutio_server::db::{db_connection, get_single_page};
 
 trait Dir: Sync + Send {
     fn get(&self, &Path) -> Option<Vec<u8>>;
@@ -82,6 +85,39 @@ impl Dir for LocalDir {
     }
 }
 
+// TODO move this to a common area
+/// Converts a DocSpan to an HTML string.
+pub fn doc_as_html(doc: &DocSpan) -> String {
+    use oatie::doc::*;
+
+    let mut out = String::new();
+    for elem in doc {
+        match elem {
+            &DocGroup(ref attrs, ref span) => {
+                out.push_str(&format!(
+                    r#"<div
+                        data-tag={}
+                        data-client={}
+                        class={}
+                    >"#,
+                    serde_json::to_string(attrs.get("tag").unwrap_or(&"".to_string())).unwrap(),
+                    serde_json::to_string(attrs.get("client").unwrap_or(&"".to_string())).unwrap(),
+                    serde_json::to_string(attrs.get("class").unwrap_or(&"".to_string())).unwrap(),
+                ));
+                out.push_str(&doc_as_html(span));
+                out.push_str(r"</div>");
+            }
+            &DocChars(ref text) => for c in text.as_str().chars() {
+                // out.push_str(r"<span>");
+                out.push(c);
+                // out.push_str(r"</span>");
+            },
+        }
+    }
+    out
+}
+
+
 fn run_http_server(port: u16, client_proxy: bool) {
     let dist_dir: Box<Dir>;
     let template_dir: Box<Dir>;
@@ -104,6 +140,8 @@ fn run_http_server(port: u16, client_proxy: bool) {
     #[allow(unused)]
     #[allow(unreachable_code)]
     rouille::start_server(format!("0.0.0.0:{}", port), move |request| {
+        let db = db_connection();
+                
         let update_config_var = |data: &[u8]| -> Vec<u8> {
             let input = String::from_utf8_lossy(data);
             let output = input.replace(
@@ -184,11 +222,22 @@ fn run_http_server(port: u16, client_proxy: bool) {
             },
 
             (GET) ["/{id}", id: String] => {
+                let mut data = String::from_utf8_lossy(&update_config_var(
+                    &template_dir.get(Path::new("client.html")).unwrap(),
+                )).to_owned().to_string();
+
+                // Preload content into the file using the db connection.
+                let content: String = get_single_page(&db, &id)
+                    .map(|x| {
+                        let d = ron::de::from_str::<DocSpan>(&x.body).unwrap_or(vec![]);
+                        doc_as_html(&d)
+                    })
+                    .unwrap_or("".to_string());
+                data = data.replace("{{body}}", &content);
+
                 return Response::from_data(
                     "text/html",
-                    update_config_var(
-                        &template_dir.get(Path::new("client.html")).unwrap(),
-                    ),
+                    data.into_bytes(),
                 );
             },
             (GET) ["/{id}/", id: String] => {

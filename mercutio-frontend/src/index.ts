@@ -45,24 +45,6 @@ if (document.body.id == 'multi') {
   multi.start();
 }
 else if (document.body.id == 'client') {
-  document.body.innerHTML = `
-
-<div id="footer">
-⚠️ You are viewing a sandbox for <b><a href="https://github.com/tcr/edit-text">edit-text</a></b>.
-There is a high chance of data loss, so don't store anything important here.
-Thanks for trying it out!
-</div>
-
-<div id="toolbar">
-  <a href="https://github.com/tcr/edit-text" id="logo">edit-text</a>
-  <div id="native-buttons"></div>
-  <div id="local-buttons"></div>
-</div>
-
-<div class="edit-text"></div>
-
-`;
-
   // Connects to the network.
   let network = CONFIG.wasm ?
     new WasmNetwork() :

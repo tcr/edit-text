@@ -18,7 +18,7 @@ pub fn db_connection() -> SqliteConnection {
         .expect(&format!("Error connecting to {}", database_url))
 }
 
-#[derive(Queryable)]
+#[derive(Queryable, Debug)]
 pub struct Post {
     pub id: String,
     pub body: String,
@@ -65,3 +65,13 @@ pub fn db_help() -> (SqliteConnection, HashMap<String, String>) {
     }
     (connection, ret)
 }
+
+pub fn get_single_page(db: &SqliteConnection, input_id: &str) -> Option<Post> {
+    use super::schema::posts::dsl::*;
+
+    return posts
+        .filter(id.eq(input_id))
+        .first::<Post>(db)
+        .ok();
+}
+
