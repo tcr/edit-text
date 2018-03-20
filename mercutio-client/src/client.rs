@@ -5,6 +5,7 @@ use std::sync::atomic::{AtomicBool};
 use std::sync::atomic::Ordering;
 use oatie::validate::validate_doc;
 use crate::markdown;
+use mercutio::doc_as_html;
 
 #[cfg(not(target_arch="wasm32"))]
 use super::{SyncClientCommand, SyncServerCommand};

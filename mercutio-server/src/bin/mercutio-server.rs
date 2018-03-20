@@ -31,6 +31,7 @@ use std::collections::HashMap;
 use std::panic;
 use std::path::{Path, PathBuf};
 use std::process;
+use mercutio::doc_as_html;
 use std::thread;
 use oatie::doc::DocSpan;
 use std::fs::File;
@@ -84,39 +85,6 @@ impl Dir for LocalDir {
         Box::new(LocalDir(self.0.clone()))
     }
 }
-
-// TODO move this to a common area
-/// Converts a DocSpan to an HTML string.
-pub fn doc_as_html(doc: &DocSpan) -> String {
-    use oatie::doc::*;
-
-    let mut out = String::new();
-    for elem in doc {
-        match elem {
-            &DocGroup(ref attrs, ref span) => {
-                out.push_str(&format!(
-                    r#"<div
-                        data-tag={}
-                        data-client={}
-                        class={}
-                    >"#,
-                    serde_json::to_string(attrs.get("tag").unwrap_or(&"".to_string())).unwrap(),
-                    serde_json::to_string(attrs.get("client").unwrap_or(&"".to_string())).unwrap(),
-                    serde_json::to_string(attrs.get("class").unwrap_or(&"".to_string())).unwrap(),
-                ));
-                out.push_str(&doc_as_html(span));
-                out.push_str(r"</div>");
-            }
-            &DocChars(ref text) => for c in text.as_str().chars() {
-                // out.push_str(r"<span>");
-                out.push(c);
-                // out.push_str(r"</span>");
-            },
-        }
-    }
-    out
-}
-
 
 fn run_http_server(port: u16, client_proxy: bool) {
     let dist_dir: Box<Dir>;

@@ -2,6 +2,9 @@
 
 FROM nginx
 
+RUN rm /etc/nginx/conf.d/default.conf
+RUN rm /etc/nginx/conf.d/examplessl.conf
+
 RUN apt-get update; apt-get install sqlite3 libsqlite3-dev -y
 
 ADD nginx.conf /etc/nginx/nginx.conf
