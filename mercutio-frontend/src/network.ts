@@ -73,7 +73,7 @@ export class WasmNetwork implements Network {
   // Wasm connector.
   nativeConnect(): Promise<void> {
     const network = this;
-    return new Promise((reject, resolve) => {
+    return new Promise((resolve, reject) => {
       interop.instantiate(function (data) {
         // console.log('----> js_command:', data);
 

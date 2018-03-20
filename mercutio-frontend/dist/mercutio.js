@@ -10446,7 +10446,7 @@ return jQuery;
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__styles_mercutio_scss__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__styles_mercutio_scss__ = __webpack_require__(27);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__styles_mercutio_scss___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__styles_mercutio_scss__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__network__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__views_editor_frame__ = __webpack_require__(15);
@@ -10529,51 +10529,8 @@ else {
 
 
 /***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// style-loader: Adds some css to the DOM by adding a <style> tag
-
-// load the styles
-var content = __webpack_require__(5);
-if(typeof content === 'string') content = [[module.i, content, '']];
-// Prepare cssTransformation
-var transform;
-
-var options = {"hmr":true}
-options.transform = transform
-// add the styles to the DOM
-var update = __webpack_require__(7)(content, options);
-if(content.locals) module.exports = content.locals;
-// Hot Module Replacement
-if(false) {
-	// When the styles change, update the <style> tags
-	if(!content.locals) {
-		module.hot.accept("!!../node_modules/css-loader/index.js!../node_modules/sass-loader/lib/loader.js!./mercutio.scss", function() {
-			var newContent = require("!!../node_modules/css-loader/index.js!../node_modules/sass-loader/lib/loader.js!./mercutio.scss");
-			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-			update(newContent);
-		});
-	}
-	// When the module is disposed, remove the <style> tags
-	module.hot.dispose(function() { update(); });
-}
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(6)(undefined);
-// imports
-
-
-// module
-exports.push([module.i, "html, body {\n  display: block;\n  padding: 0;\n  margin: 0;\n  height: 100%;\n  width: 100%; }\n\nbody {\n  font-family: Helvetica,Arial,sans-serif;\n  font-size: 14px;\n  line-height: 1.42857143; }\n\n#toolbar {\n  display: flex;\n  flex-direction: row;\n  background: #ddd;\n  border-bottom: 2px solid #aaa;\n  padding: 5px 20px 8px;\n  cursor: auto;\n  position: fixed;\n  width: 100%;\n  z-index: 100;\n  max-height: 55px;\n  overflow: auto; }\n\n#logo {\n  content: \"edit-text\";\n  margin: 3px 20px 0 0;\n  font-family: Helvetica, Arial, sans-serif;\n  color: #444;\n  font-size: 20px;\n  height: 0;\n  overflow: visible;\n  vertical-align: middle;\n  display: inline-block;\n  text-decoration: none; }\n\n#logo:hover {\n  color: black;\n  text-decoration: underline; }\n\n#native-buttons {\n  flex: 1; }\n\nbutton {\n  font: inherit;\n  border: 1px solid #aaa;\n  background: #fff;\n  text-transform: uppercase;\n  box-shadow: #bbb 2px 2px;\n  margin-right: 8px;\n  padding: 6px 12px 3px;\n  font-weight: bold;\n  font-size: 0.9em; }\n\nbutton:active {\n  box-shadow: #000 1px 1px;\n  position: relative;\n  top: 1px;\n  left: 1px; }\n\nkbd {\n  font-family: monospace !important; }\n\n#parent {\n  background: #eee; }\n\n#client {\n  background: white;\n  cursor: text; }\n\n#client.blurred {\n  background: #ddd; }\n\n#footer {\n  position: fixed;\n  bottom: 0;\n  width: 100%;\n  box-sizing: border-box;\n  border-top: 1px solid #ca4;\n  background: #fff3bb;\n  padding: 8px 10px;\n  opacity: 0.85;\n  z-index: 100; }\n\n.edit-text {\n  padding: 60px 30px 50px;\n  margin: 0; }\n\n.edit-text.theme-mock {\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  font-size: 16px;\n  cursor: text;\n  white-space: pre-wrap;\n  /**\n     * span styles\n     */ }\n  .edit-text.theme-mock div {\n    margin: 12px 0;\n    position: relative;\n    min-height: 14px; }\n  .edit-text.theme-mock * {\n    clear: both; }\n  .edit-text.theme-mock div[data-tag=\"caret\"] {\n    display: inline;\n    font-size: inherit;\n    vertical-align: bottom; }\n  .edit-text.theme-mock div[data-tag=\"caret\"]::before {\n    border-left: 1px #089 solid;\n    border-right: 1px #089 solid;\n    margin-right: -1px;\n    margin-left: -1px;\n    content: ''; }\n  .edit-text.theme-mock div[data-tag=\"caret\"][data-client=\"middle\"] {\n    border-right-color: #0f0; }\n  .edit-text.theme-mock div[data-tag=\"caret\"][data-client=\"right\"] {\n    border-right-color: blue; }\n  .edit-text.theme-mock div[data-tag=\"hr\"] {\n    margin: 16px 0;\n    height: 2px;\n    min-height: 0 !important;\n    border-bottom: 1px solid #eee;\n    background: #ccc; }\n  .edit-text.theme-mock div.bold {\n    font-weight: 900; }\n  .edit-text.theme-mock div.italic {\n    font-style: italic; }\n  .edit-text.theme-mock div[data-tag=\"h1\"] {\n    font-size: 2.0em;\n    font-weight: bold; }\n  .edit-text.theme-mock div[data-tag=\"h2\"] {\n    font-size: 1.7em;\n    font-weight: bold; }\n  .edit-text.theme-mock div[data-tag=\"h3\"] {\n    font-size: 1.4em;\n    font-weight: bold; }\n  .edit-text.theme-mock div[data-tag=\"pre\"] {\n    font-family: monospace;\n    padding: 5px 8px;\n    font-size: 0.9em;\n    background: #eee; }\n  .edit-text.theme-mock div[data-tag=\"html\"] {\n    font-family: monospace;\n    padding: 5px 8px;\n    font-size: 0.9em;\n    border: 1px solid #aa5;\n    background: #eea; }\n  .edit-text.theme-mock div[data-tag=\"bullet\"] {\n    list-style: disc outside none;\n    display: list-item;\n    margin-left: 25px; }\n  .edit-text.theme-mock div[data-tag=\"bullet\"] + div[data-tag=\"bullet\"] {\n    margin-top: -5px; }\n\n.edit-text.theme-block {\n  font-family: monospace;\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  /**\n     * targets\n     */\n  /**\n     * span styles\n     */ }\n  .edit-text.theme-block div {\n    /*border: 1px solid #444;*/\n    background: rgba(0, 0, 0, 0.15);\n    padding: 12px 12px 12px 16px;\n    margin: 8px 0;\n    position: relative;\n    min-height: 14px; }\n    .edit-text.theme-block div::before {\n      display: block;\n      content: attr(data-tag);\n      opacity: 0.5;\n      background: black;\n      color: white;\n      padding: 2px 4px;\n      width: -webkit-max-content;\n      margin-bottom: 6px;\n      text-align: center; }\n  .edit-text.theme-block * {\n    clear: both; }\n  .edit-text.theme-block span {\n    background: #7dc87d;\n    padding: 3px 5px;\n    /*border: 1px solid rgba(0, 0, 0, .3);*/\n    display: inline-block;\n    width: 20px;\n    height: 1.8em;\n    box-sizing: border-box;\n    margin-left: 1px;\n    margin-bottom: 2px;\n    cursor: pointer;\n    white-space: pre; }\n  .edit-text.theme-block span:hover {\n    filter: brightness(150%); }\n  .edit-text.theme-block .active {\n    background: #98e; }\n  .edit-text.theme-block span.active,\n  .edit-text.theme-block span.target {\n    border-right: 3px solid rgba(0, 0, 0, 0.3);\n    margin-right: -1px;\n    width: 21px; }\n  .edit-text.theme-block div.active,\n  .edit-text.theme-block div.target {\n    border-bottom: 3px solid rgba(0, 0, 0, 0.3);\n    padding-bottom: 9px; }\n  .edit-text.theme-block div.active > div {\n    background: #ccc; }\n  .edit-text.theme-block div[data-tag=\"span\"] {\n    display: inline-block;\n    margin-left: 1px;\n    padding: 4px 6px 1px;\n    margin-bottom: 3px;\n    background: rgba(255, 0, 0, 0.25); }\n    .edit-text.theme-block div[data-tag=\"span\"].active {\n      margin-bottom: 0;\n      background: #98e; }\n    .edit-text.theme-block div[data-tag=\"span\"]::before {\n      float: left;\n      margin-top: 2px;\n      margin-right: 2px;\n      display: none; }\n  .edit-text.theme-block .active ~ * {\n    background: red; }\n  .edit-text.theme-block .target ~ span {\n    background: #7dc87d; }\n  .edit-text.theme-block .target ~ div {\n    background: rgba(0, 0, 0, 0.15); }\n  .edit-text.theme-block .target ~ div[data-tag=\"span\"] {\n    background: rgba(255, 0, 0, 0.25); }\n  .edit-text.theme-block div.bold {\n    font-weight: 900; }\n  .edit-text.theme-block div.italic {\n    font-style: italic; }\n\nbody#multi {\n  width: 100%;\n  height: 100%;\n  padding: 0 !important;\n  display: flex;\n  flex-direction: column; }\n  body#multi iframe {\n    border: none;\n    width: 100%;\n    height: 100%;\n    display: block; }\n  body#multi #clients, body#multi #clients tbody, body#multi #clients tr, body#multi #clients td {\n    display: block; }\n  body#multi #clients, body#multi #clients tbody {\n    display: flex;\n    flex-direction: column;\n    flex: 1; }\n  body#multi #clients tr {\n    flex: 1;\n    display: flex;\n    flex-direction: row; }\n  body#multi #clients td {\n    border: 2px solid black;\n    box-sizing: border-box;\n    flex: 1; }\n", ""]);
-
-// exports
-
-
-/***/ }),
+/* 4 */,
+/* 5 */,
 /* 6 */
 /***/ (function(module, exports) {
 
@@ -11167,7 +11124,7 @@ class WasmNetwork {
     // Wasm connector.
     nativeConnect() {
         const network = this;
-        return new Promise((reject, resolve) => {
+        return new Promise((resolve, reject) => {
             __WEBPACK_IMPORTED_MODULE_1__interop__["a" /* instantiate */](function (data) {
                 // console.log('----> js_command:', data);
                 // Make this async so we don't have deeply nested call stacks from Rust<->JS interop.
@@ -13027,6 +12984,51 @@ function start(network) {
     });
 }
 ;
+
+
+/***/ }),
+/* 27 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(28);
+if(typeof content === 'string') content = [[module.i, content, '']];
+// Prepare cssTransformation
+var transform;
+
+var options = {"hmr":true}
+options.transform = transform
+// add the styles to the DOM
+var update = __webpack_require__(7)(content, options);
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!../node_modules/css-loader/index.js!../node_modules/sass-loader/lib/loader.js!./mercutio.scss", function() {
+			var newContent = require("!!../node_modules/css-loader/index.js!../node_modules/sass-loader/lib/loader.js!./mercutio.scss");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 28 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(6)(undefined);
+// imports
+
+
+// module
+exports.push([module.i, "html, body {\n  display: block;\n  padding: 0;\n  margin: 0;\n  height: 100%;\n  width: 100%; }\n\nbody {\n  font-family: Helvetica,Arial,sans-serif;\n  font-size: 14px;\n  line-height: 1.42857143; }\n\n#toolbar {\n  display: flex;\n  flex-direction: row;\n  background: #ddd;\n  border-bottom: 2px solid #aaa;\n  padding: 5px 20px 8px;\n  cursor: auto;\n  position: fixed;\n  width: 100%;\n  z-index: 100;\n  max-height: 55px;\n  overflow: auto; }\n\n#logo {\n  content: \"edit-text\";\n  margin: 3px 20px 0 0;\n  font-family: Helvetica, Arial, sans-serif;\n  color: #444;\n  font-size: 20px;\n  height: 0;\n  overflow: visible;\n  vertical-align: middle;\n  display: inline-block;\n  text-decoration: none; }\n\n#logo:hover {\n  color: black;\n  text-decoration: underline; }\n\n#native-buttons {\n  flex: 1; }\n\nbutton {\n  font: inherit;\n  border: 1px solid #aaa;\n  background: #fff;\n  text-transform: uppercase;\n  box-shadow: #bbb 2px 2px;\n  margin-right: 8px;\n  padding: 6px 12px 3px;\n  font-weight: bold;\n  font-size: 0.9em; }\n\nbutton:active {\n  box-shadow: #000 1px 1px;\n  position: relative;\n  top: 1px;\n  left: 1px; }\n\nkbd {\n  font-family: monospace !important; }\n\n#parent {\n  background: #eee; }\n\n#client {\n  background: white;\n  cursor: text; }\n\n#client.blurred {\n  background: #ddd; }\n\n#footer {\n  position: fixed;\n  bottom: 0;\n  width: 100%;\n  box-sizing: border-box;\n  border-top: 1px solid #ca4;\n  background: #fff3bb;\n  padding: 8px 10px;\n  opacity: 0.85;\n  z-index: 100; }\n\n.edit-text {\n  padding: 60px 30px 50px;\n  margin: 0; }\n\n.edit-text.theme-mock {\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  font-size: 16px;\n  cursor: text;\n  white-space: pre-wrap;\n  /**\n     * span styles\n     */ }\n  .edit-text.theme-mock div {\n    margin: 12px 0;\n    position: relative;\n    min-height: 14px; }\n  .edit-text.theme-mock * {\n    clear: both; }\n  .edit-text.theme-mock div[data-tag=\"caret\"] {\n    display: inline;\n    font-size: inherit;\n    vertical-align: bottom; }\n  .edit-text.theme-mock div[data-tag=\"caret\"]::before {\n    border-left: 1px #089 solid;\n    border-right: 1px #089 solid;\n    margin-right: -1px;\n    margin-left: -1px;\n    content: ''; }\n  .edit-text.theme-mock div[data-tag=\"caret\"][data-client=\"middle\"] {\n    border-right-color: #0f0; }\n  .edit-text.theme-mock div[data-tag=\"caret\"][data-client=\"right\"] {\n    border-right-color: blue; }\n  .edit-text.theme-mock div[data-tag=\"hr\"] {\n    margin: 16px 0;\n    height: 2px;\n    min-height: 0 !important;\n    border-bottom: 1px solid #eee;\n    background: #ccc; }\n  .edit-text.theme-mock div.bold {\n    font-weight: 900; }\n  .edit-text.theme-mock div.italic {\n    font-style: italic; }\n  .edit-text.theme-mock div[data-tag=\"h1\"] {\n    font-size: 2.0em;\n    font-weight: bold; }\n  .edit-text.theme-mock div[data-tag=\"h2\"] {\n    font-size: 1.7em;\n    font-weight: bold; }\n  .edit-text.theme-mock div[data-tag=\"h3\"] {\n    font-size: 1.4em;\n    font-weight: bold; }\n  .edit-text.theme-mock div[data-tag=\"pre\"] {\n    font-family: monospace;\n    padding: 5px 8px;\n    font-size: 0.9em;\n    background: #eee; }\n  .edit-text.theme-mock div[data-tag=\"html\"] {\n    font-family: monospace;\n    padding: 5px 8px;\n    font-size: 0.9em;\n    border: 1px solid #aa5;\n    background: #eea; }\n  .edit-text.theme-mock div[data-tag=\"bullet\"] {\n    list-style: disc outside none;\n    display: list-item;\n    margin-left: 25px; }\n  .edit-text.theme-mock div[data-tag=\"bullet\"] + div[data-tag=\"bullet\"] {\n    margin-top: -5px; }\n\n.edit-text.theme-block {\n  font-family: monospace;\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  /**\n     * targets\n     */\n  /**\n     * span styles\n     */ }\n  .edit-text.theme-block div {\n    /*border: 1px solid #444;*/\n    background: rgba(0, 0, 0, 0.15);\n    padding: 12px 12px 12px 16px;\n    margin: 8px 0;\n    position: relative;\n    min-height: 14px; }\n    .edit-text.theme-block div::before {\n      display: block;\n      content: attr(data-tag);\n      opacity: 0.5;\n      background: black;\n      color: white;\n      padding: 2px 4px;\n      width: -webkit-max-content;\n      margin-bottom: 6px;\n      text-align: center; }\n  .edit-text.theme-block * {\n    clear: both; }\n  .edit-text.theme-block span {\n    background: #7dc87d;\n    padding: 3px 5px;\n    /*border: 1px solid rgba(0, 0, 0, .3);*/\n    display: inline-block;\n    width: 20px;\n    height: 1.8em;\n    box-sizing: border-box;\n    margin-left: 1px;\n    margin-bottom: 2px;\n    cursor: pointer;\n    white-space: pre; }\n  .edit-text.theme-block span:hover {\n    filter: brightness(150%); }\n  .edit-text.theme-block .active {\n    background: #98e; }\n  .edit-text.theme-block span.active,\n  .edit-text.theme-block span.target {\n    border-right: 3px solid rgba(0, 0, 0, 0.3);\n    margin-right: -1px;\n    width: 21px; }\n  .edit-text.theme-block div.active,\n  .edit-text.theme-block div.target {\n    border-bottom: 3px solid rgba(0, 0, 0, 0.3);\n    padding-bottom: 9px; }\n  .edit-text.theme-block div.active > div {\n    background: #ccc; }\n  .edit-text.theme-block div[data-tag=\"span\"] {\n    display: inline-block;\n    margin-left: 1px;\n    padding: 4px 6px 1px;\n    margin-bottom: 3px;\n    background: rgba(255, 0, 0, 0.25); }\n    .edit-text.theme-block div[data-tag=\"span\"].active {\n      margin-bottom: 0;\n      background: #98e; }\n    .edit-text.theme-block div[data-tag=\"span\"]::before {\n      float: left;\n      margin-top: 2px;\n      margin-right: 2px;\n      display: none; }\n  .edit-text.theme-block .active ~ * {\n    background: red; }\n  .edit-text.theme-block .target ~ span {\n    background: #7dc87d; }\n  .edit-text.theme-block .target ~ div {\n    background: rgba(0, 0, 0, 0.15); }\n  .edit-text.theme-block .target ~ div[data-tag=\"span\"] {\n    background: rgba(255, 0, 0, 0.25); }\n  .edit-text.theme-block div.bold {\n    font-weight: 900; }\n  .edit-text.theme-block div.italic {\n    font-style: italic; }\n\nbody#multi {\n  width: 100%;\n  height: 100%;\n  padding: 0 !important;\n  display: flex;\n  flex-direction: column; }\n  body#multi iframe {\n    border: none;\n    width: 100%;\n    height: 100%;\n    display: block; }\n  body#multi #clients, body#multi #clients tbody, body#multi #clients tr, body#multi #clients td {\n    display: block; }\n  body#multi #clients, body#multi #clients tbody {\n    display: flex;\n    flex-direction: column;\n    flex: 1; }\n  body#multi #clients tr {\n    flex: 1;\n    display: flex;\n    flex-direction: row; }\n  body#multi #clients td {\n    border: 2px solid black;\n    box-sizing: border-box;\n    flex: 1; }\n", ""]);
+
+// exports
 
 
 /***/ })
