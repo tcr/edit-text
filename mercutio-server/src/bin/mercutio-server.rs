@@ -18,10 +18,10 @@ extern crate serde_json;
 extern crate structopt;
 extern crate structopt_derive;
 extern crate take_mut;
-extern crate tiny_http;
 extern crate url;
 extern crate ws;
 extern crate mime_guess;
+extern crate md5;
 
 use include_dir_macro::include_dir;
 use mercutio_server::sync::*;
@@ -152,6 +152,10 @@ fn run_http_server(port: u16, client_proxy: bool) {
                     update_config_var(
                         &template_dir.get(Path::new("multi.html")).unwrap(),
                     ),
+                ).with_etag(request,
+                    format!("{:x}", md5::compute(
+                        template_dir.get(Path::new("multi.html")).unwrap()
+                    )),
                 );
             },
             (GET) ["/$/multi/"] => {
@@ -162,7 +166,9 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 if let Some(data) = dist_dir.get(Path::new(&target)) {
                     return Response::from_data(
                         guess_mime_type(&target).to_string(),
-                        data,
+                        data.clone(),
+                    ).with_etag(request,
+                        format!("{:x}", md5::compute(data)),
                     );
                 } else {
                     return Response::empty_404();
@@ -175,6 +181,10 @@ fn run_http_server(port: u16, client_proxy: bool) {
                     update_config_var(
                         &template_dir.get(Path::new("presentation.html")).unwrap(),
                     ),
+                ).with_etag(request,
+                    format!("{:x}", md5::compute(
+                        template_dir.get(Path::new("presentation.html")).unwrap()
+                    )),
                 );
             },
             (GET) ["/{id}/presentation/", id: String] => {
@@ -187,6 +197,10 @@ fn run_http_server(port: u16, client_proxy: bool) {
                     update_config_var(
                         &template_dir.get(Path::new("client.html")).unwrap(),
                     ),
+                ).with_etag(request,
+                    format!("{:x}", md5::compute(
+                        template_dir.get(Path::new("client.html")).unwrap()
+                    )),
                 );
             },
             (GET) ["/{id}/", id: String] => {
@@ -196,6 +210,14 @@ fn run_http_server(port: u16, client_proxy: bool) {
             _ => Response::empty_404()
         )
     });
+}
+
+fn spawn_sync_socket_server() -> JoinHandle<()> {
+    // port + 1
+    thread::spawn(|| {
+        let opt = Opt::from_args();
+        sync_socket_server(opt.port + 1, opt.period);
+    })
 }
 
 #[derive(StructOpt, Debug)]
@@ -209,14 +231,6 @@ struct Opt {
 
     #[structopt(help = "Enable client proxy", long = "client-proxy", short = "c")]
     client_proxy: bool,
-}
-
-fn spawn_sync_socket_server() -> JoinHandle<()> {
-    // port + 1
-    thread::spawn(|| {
-        let opt = Opt::from_args();
-        sync_socket_server(opt.port + 1, opt.period);
-    })
 }
 
 fn main() {
