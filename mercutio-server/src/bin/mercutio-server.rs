@@ -152,10 +152,6 @@ fn run_http_server(port: u16, client_proxy: bool) {
                     update_config_var(
                         &template_dir.get(Path::new("multi.html")).unwrap(),
                     ),
-                ).with_etag(request,
-                    format!("{:x}", md5::compute(
-                        template_dir.get(Path::new("multi.html")).unwrap()
-                    )),
                 );
             },
             (GET) ["/$/multi/"] => {
@@ -181,10 +177,6 @@ fn run_http_server(port: u16, client_proxy: bool) {
                     update_config_var(
                         &template_dir.get(Path::new("presentation.html")).unwrap(),
                     ),
-                ).with_etag(request,
-                    format!("{:x}", md5::compute(
-                        template_dir.get(Path::new("presentation.html")).unwrap()
-                    )),
                 );
             },
             (GET) ["/{id}/presentation/", id: String] => {
@@ -197,10 +189,6 @@ fn run_http_server(port: u16, client_proxy: bool) {
                     update_config_var(
                         &template_dir.get(Path::new("client.html")).unwrap(),
                     ),
-                ).with_etag(request,
-                    format!("{:x}", md5::compute(
-                        template_dir.get(Path::new("client.html")).unwrap()
-                    )),
                 );
             },
             (GET) ["/{id}/", id: String] => {
