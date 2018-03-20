@@ -19,6 +19,7 @@ extern crate take_mut;
 extern crate tiny_http;
 extern crate url;
 extern crate ws;
+extern crate mime_guess;
 
 use include_dir_macro::include_dir;
 use mercutio_server::sync::*;
@@ -35,6 +36,7 @@ use std::thread::JoinHandle;
 use structopt::StructOpt;
 use tiny_http::{Header, Response};
 use url::Url;
+use mime_guess::guess_mime_type;
 
 trait Dir: Sync + Send {
     fn get(&self, &Path) -> Option<Vec<u8>>;
@@ -159,7 +161,7 @@ fn spawn_server_thread(
                                 Response::from_data(target).with_header(
                                     Header::from_bytes(
                                         "content-type".as_bytes(),
-                                        "text/html".as_bytes(),
+                                        guess_mime_type(&path).to_string().as_bytes(),
                                     ).unwrap(),
                                 ),
                             );
