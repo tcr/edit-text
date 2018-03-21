@@ -30,8 +30,7 @@ export class ProxyNetwork implements Network {
     return Promise.resolve()
     .then(() => {
       this.nativeSocket = new WebSocket(
-        app.clientProxyUrl() + 
-        (window.location.hash == '#helloworld' ? '?helloworld' : '')
+        app.clientProxyUrl()
       );
       this.nativeSocket.onopen = function (event) {
         console.log('Editor "%s" is connected.', network.editorID);
@@ -120,7 +119,7 @@ export class WasmNetwork implements Network {
     return Promise.resolve()
     .then(() => {
       let syncSocket = new WebSocket(
-        app.syncUrl() + (window.location.hash == '#helloworld' ? '?helloworld' : '')
+        app.syncUrl()
       );
       syncSocket.onopen = function (event) {
         console.log('Editor "%s" is connected.', network.editorID);

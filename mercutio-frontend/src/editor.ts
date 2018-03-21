@@ -1,5 +1,4 @@
 import * as commands from './commands';
-import HashState from './hashstate';
 import Clipboard from 'clipboard';
 import * as util from './util';
 import * as interop from './interop';

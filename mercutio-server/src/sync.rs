@@ -2,7 +2,6 @@ use bus::{Bus, BusReader};
 use crate::{
     SyncClientCommand,
     SyncServerCommand,
-    markdown::markdown_to_doc,
     db::*,
     util::*,
 };
@@ -41,33 +40,6 @@ pub fn default_new_doc(id: &str) -> Doc {
             DocChars(id),
         ])
     ])
-}
-
-pub fn default_doc() -> Doc {
-    const INPUT: &'static str = r#"
-
-# Hello world!
-
-This is edit-text, a web-based rich text editor.
-
-* This is a very early preview.
-
-* Supports collaborative editing.
-
-* Written in Rust in the backend, cross-compiled to WebAssembly on the frontend.
-
-* Supports Markdown export.
-
-This app might be easy to break! That's okay though. We'll notice and fix it, and it'll break less in the future.
-
-Type github.com/tcr/edit-text into your search bar for more information.
-
-"#;
-
-    // Should be no errors
-    let doc = Doc(markdown_to_doc(&INPUT).unwrap());
-    validate_doc(&doc).expect("Initial Markdown document was malformed");
-    doc
 }
 
 /// Transform an operation incrementally against each interim document operation.
@@ -137,7 +109,6 @@ impl ws::Handler for ClientHandler {
             .join(shake.request.resource())
             .unwrap();
 
-        let query = url.query();
         let mut path = url.path().to_owned();
 
         if path.starts_with("/$/ws/") {
@@ -159,7 +130,6 @@ impl ws::Handler for ClientHandler {
         self.sync_state_mutex = Some(allocate_page(
             &self.page_map,
             self.page_id.as_ref().unwrap(),
-            query == Some("helloworld"),
             self.tx_db.clone(),
         ));
 
@@ -217,24 +187,26 @@ impl ws::Handler for ClientHandler {
 fn allocate_page(
     page_map_mutex: &SharedPageMap,
     page_id: &str,
-    helloworld: bool,
     tx_db: CCSender<(String, String)>,
 ) -> Arc<Mutex<SyncState>> {
     {
+        // TODO pass in db
+        let db = db_connection();
+
         let mut page_map = page_map_mutex.lock().unwrap();
 
         if page_map.get(page_id).is_none() {
+            let inner_doc = get_single_page(&db, page_id)
+                .map(|x| Doc(::ron::de::from_str::<DocSpan>(&x.body).unwrap()))
+                .unwrap_or_else(|| default_new_doc(page_id));
+
             page_map.insert(
                 page_id.to_string(),
                 Arc::new(Mutex::new(SyncState {
                     ops: VecDeque::new(),
                     version: 100,
                     history: hashmap![],
-                    doc: if helloworld {
-                        default_doc()
-                    } else {
-                        default_new_doc(page_id)
-                    }, //default_doc(),
+                    doc: inner_doc,
                     client_bus: Bus::new(255),
                 })),
             );

@@ -1,7 +1,6 @@
 import Clipboard from 'clipboard';
 
 import * as commands from '../commands';
-import HashState from '../hashstate';
 import * as util from '../util';
 import * as interop from '../interop';
 import {editorSetup} from '../editor';

@@ -63,8 +63,8 @@ body {
   left: 1px; }
 
 #toolbar button.active {
-  padding: 5px 11px 2px;
-  border: 2px solid #ffb58a; }
+  padding: 6px 12px 1px;
+  border-bottom: 3px solid #ffa845; }
 
 kbd {
   font-family: monospace !important; }

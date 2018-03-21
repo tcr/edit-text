@@ -185,6 +185,20 @@ function textNodeAtPoint(x, y) {
 function matchesSelector(el, selector) {
     return el.mozMatchesSelector(selector);
 }
+class HashState {
+    static get() {
+        return new Set((location.hash || '')
+            .replace(/^#/, '')
+            .split(',')
+            .map(x => x.replace(/^\s+|\s+$/g, ''))
+            .filter(x => x.length));
+    }
+    static set(input) {
+        location.hash = Array.from(input).join(',');
+    }
+}
+/* unused harmony export HashState */
+
 
 
 /***/ }),
@@ -10515,8 +10529,7 @@ class ProxyNetwork {
         let network = this;
         return Promise.resolve()
             .then(() => {
-            this.nativeSocket = new WebSocket(__WEBPACK_IMPORTED_MODULE_0__app__["a" /* clientProxyUrl */]() +
-                (window.location.hash == '#helloworld' ? '?helloworld' : ''));
+            this.nativeSocket = new WebSocket(__WEBPACK_IMPORTED_MODULE_0__app__["a" /* clientProxyUrl */]());
             this.nativeSocket.onopen = function (event) {
                 console.log('Editor "%s" is connected.', network.editorID);
             };
@@ -10579,7 +10592,7 @@ class WasmNetwork {
         let network = this;
         return Promise.resolve()
             .then(() => {
-            let syncSocket = new WebSocket(__WEBPACK_IMPORTED_MODULE_0__app__["b" /* syncUrl */]() + (window.location.hash == '#helloworld' ? '?helloworld' : ''));
+            let syncSocket = new WebSocket(__WEBPACK_IMPORTED_MODULE_0__app__["b" /* syncUrl */]());
             syncSocket.onopen = function (event) {
                 console.log('Editor "%s" is connected.', network.editorID);
             };

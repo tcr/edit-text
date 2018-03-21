@@ -9,6 +9,7 @@ extern crate include_dir_macro;
 extern crate maplit;
 extern crate mercutio_common;
 extern crate mercutio_server;
+#[macro_use]
 extern crate oatie;
 extern crate rand;
 #[macro_use]
@@ -25,22 +26,24 @@ extern crate mime_guess;
 extern crate md5;
 
 use include_dir_macro::include_dir;
+use mercutio_common::doc_as_html;
+use mercutio_server::db::{db_connection, get_single_page, create_post};
 use mercutio_server::sync::*;
+use mercutio_server::markdown::markdown_to_doc;
+use mime_guess::guess_mime_type;
+use oatie::doc::*;
+use oatie::validate::validate_doc;
 use rand::thread_rng;
+use rouille::Response;
 use std::collections::HashMap;
+use std::fs::File;
+use std::io::prelude::*;
 use std::panic;
 use std::path::{Path, PathBuf};
 use std::process;
-use mercutio_common::doc_as_html;
 use std::thread;
-use oatie::doc::DocSpan;
-use std::fs::File;
-use std::io::prelude::*;
-use rouille::Response;
 use std::thread::JoinHandle;
 use structopt::StructOpt;
-use mime_guess::guess_mime_type;
-use mercutio_server::db::{db_connection, get_single_page};
 
 trait Dir: Sync + Send {
     fn get(&self, &Path) -> Option<Vec<u8>>;
@@ -84,6 +87,34 @@ impl Dir for LocalDir {
     fn clone(&self) -> Box<Dir> {
         Box::new(LocalDir(self.0.clone()))
     }
+}
+
+
+pub fn default_doc() -> Doc {
+    const INPUT: &'static str = r#"
+
+# Hello world!
+
+This is edit-text, a web-based rich text editor.
+
+* This is a very early preview.
+
+* Supports collaborative editing.
+
+* Written in Rust in the backend, cross-compiled to WebAssembly on the frontend.
+
+* Supports Markdown export.
+
+This app might be easy to break! That's okay though. We'll notice and fix it, and it'll break less in the future.
+
+Type github.com/tcr/edit-text into your search bar for more information.
+
+"#;
+
+    // Should be no errors
+    let doc = Doc(markdown_to_doc(&INPUT).unwrap());
+    validate_doc(&doc).expect("Initial Markdown document was malformed");
+    doc
 }
 
 fn run_http_server(port: u16, client_proxy: bool) {
@@ -135,14 +166,16 @@ fn run_http_server(port: u16, client_proxy: bool) {
 
             // Redirect root page to random page ID
             (GET) ["/"] => {
-                return Response::redirect_302(
-                    format!("/{}#helloworld", random_id()),
-                );
+                let id = random_id();
+
+                // Initialize the "hello world" post.
+                eprintln!("creating helloworld post for {:?}", id);
+                create_post(&db, &id, &::ron::ser::to_string(&default_doc().0).unwrap());
+
+                return Response::redirect_302(format!("/{}", id));
             },
-            (GET) ["/index.html"] => {
-                return Response::redirect_302(
-                    format!("/{}#helloworld", random_id()),
-                );
+            (GET) ["/"] => {
+                return Response::redirect_302("/");
             },
 
             (GET) ["/favicon.png"] => {
@@ -204,7 +237,12 @@ fn run_http_server(port: u16, client_proxy: bool) {
                         let d = ron::de::from_str::<DocSpan>(&x.body).unwrap_or(vec![]);
                         doc_as_html(&d, None)
                     })
-                    .unwrap_or("".to_string());
+                    .unwrap_or_else(|| {
+                        let doc = doc_span![DocGroup({"tag": "h1"}, [DocChars(&id)])];
+                        let data = ::ron::ser::to_string(&data).unwrap(); // TODO don't unwrap
+                        create_post(&db, &id, &data);
+                        doc_as_html(&doc, None)
+                    });
                 data = data.replace("{{body}}", &content);
                 data = data.replace("{{stylesheet}}", &stylesheet);
 
