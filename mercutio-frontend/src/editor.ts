@@ -7,7 +7,10 @@ import {Network, ProxyNetwork, WasmNetwork} from './network';
 
 const ROOT_SELECTOR = '.edit-text';
 
-function curto(el: Node | null, textOffset: number | null = null) {
+function curto(
+  el: Node | null,
+  textOffset: number | null = null,
+) {
   if (!el) {
     return null;
   }

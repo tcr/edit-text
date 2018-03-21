@@ -57,12 +57,23 @@ export class WasmNetwork implements Network {
   nativeSocket: WebSocket;
   syncSocket: WebSocket;
 
+  // Create a deferred object for the sync socket
+  // because we may receive SyncServerCommand payloads earlier
+  deferSync: Promise<WebSocket>;
+  deferSyncResolve: Function;
+
   // TODO remove this
   Module: any;
 
   onNativeMessage: (any) => void;
   onNativeClose: () => void; // unused
   onSyncClose: () => void;
+
+  constructor() {
+    this.deferSync = new Promise(function(resolve, reject){
+      this.deferSyncResolve = resolve;
+    }.bind(this));
+  }
 
   nativeCommand(command: commands.Command) {
     this.Module.wasm_command({
@@ -83,7 +94,9 @@ export class WasmNetwork implements Network {
           let parse = JSON.parse(data);
 
           if (parse.SyncServerCommand) {
-            network.syncSocket.send(JSON.stringify(parse.SyncServerCommand));
+            network.deferSync.then(syncSocket => {
+              syncSocket.send(JSON.stringify(parse.SyncServerCommand));
+            });
           } else {
             network.onNativeMessage(parse);
           }
@@ -128,6 +141,8 @@ export class WasmNetwork implements Network {
       };
 
       syncSocket.onclose = network.onSyncClose;
+
+      this.deferSyncResolve(syncSocket);
     });
   }
 }

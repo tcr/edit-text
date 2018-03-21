@@ -32,8 +32,6 @@ export class EditorFrame {
     let editor = this;
     let $elem = this.$elem;
 
-    this.$elem.addClass('theme-mock');
-
     {
       new Clipboard('#save-markdown', {
         text: function(trigger) {
