@@ -54,7 +54,7 @@ pub fn setup_monkey<C: ClientImpl + Sized>(alive: Arc<AtomicBool>, monkey: Arc<A
 
     spawn_monkey_task!(alive, monkey, tx, MONKEY_BUTTON, {
         let mut rng = rand::thread_rng();
-        let index = rng.gen_range(0, button_handlers::<C>().len() as u32);
+        let index = rng.gen_range(0, button_handlers::<C>(None).len() as u32);
         NativeCommand::Button(index)
     });
 

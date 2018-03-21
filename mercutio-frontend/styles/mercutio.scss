@@ -53,24 +53,29 @@ body {
     flex: 1;
 }
 
-button {
-    font: inherit;
-    border: 1px solid #aaa;
-    background: #fff;
-    text-transform: uppercase;
-    box-shadow: #bbb 2px 2px;
-    margin-right: 8px;
-    padding: 6px 12px 3px;
-    font-weight: bold;
-    font-size: 0.9em;
-}
+#toolbar {
+    button {
+        font: inherit;
+        border: 1px solid #aaa;
+        background: #fff;
+        text-transform: uppercase;
+        box-shadow: #bbb 2px 2px;
+        margin-right: 8px;
+        padding: 6px 12px 3px;
+        font-size: 0.9em;
+    }
 
-button:active {
-    box-shadow: #000 1px 1px;
-    position: relative;
-    top: 1px;
-    left: 1px;
+    button:active {
+        box-shadow: #444 1px 1px;
+        position: relative;
+        top: 1px;
+        left: 1px;
+    }
 
+    button.active {
+        padding: 5px 11px 2px;
+        border: 2px solid rgb(255, 181, 138);
+    }
 }
 
 kbd {

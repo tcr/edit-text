@@ -694,6 +694,7 @@ dependencies = [
  "include-dir-macro 0.1.0 (git+https://github.com/jcdyer/include-dir-macro)",
  "lazy_static 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "maplit 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "matches 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "mercutio 0.1.0",
  "oatie 0.2.0",
  "pulldown-cmark 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",

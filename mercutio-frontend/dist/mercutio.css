@@ -45,7 +45,7 @@ body {
 #native-buttons {
   flex: 1; }
 
-button {
+#toolbar button {
   font: inherit;
   border: 1px solid #aaa;
   background: #fff;
@@ -53,14 +53,17 @@ button {
   box-shadow: #bbb 2px 2px;
   margin-right: 8px;
   padding: 6px 12px 3px;
-  font-weight: bold;
   font-size: 0.9em; }
 
-button:active {
-  box-shadow: #000 1px 1px;
+#toolbar button:active {
+  box-shadow: #444 1px 1px;
   position: relative;
   top: 1px;
   left: 1px; }
+
+#toolbar button.active {
+  padding: 5px 11px 2px;
+  border: 2px solid #ffb58a; }
 
 kbd {
   font-family: monospace !important; }

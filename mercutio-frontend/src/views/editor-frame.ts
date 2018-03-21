@@ -113,13 +113,6 @@ export class EditorFrame {
       if (parse.Update[1] == null) {
         console.log('Sync Update');
         editor.ops.splice(0, this.ops.length);
-
-        requestAnimationFrame(() => {
-          $(this.$elem).addClass('load-ping');
-          requestAnimationFrame(() => {
-            $(this.$elem).removeClass('load-ping');
-          })
-        });
       } else {
         editor.ops.push(parse.Update[1]);
       }
@@ -129,19 +122,26 @@ export class EditorFrame {
       editor.markdown = parse.MarkdownUpdate;
     }
     
-    else if (parse.Setup) {
-      console.log('SETUP', parse.Setup);
+    else if (parse.Controls) {
+      console.log('SETUP CONTROLS', parse.Controls);
+      
+      // Update the key list in-place.
       editor.KEY_WHITELIST.splice.apply(editor.KEY_WHITELIST,
-        [0, 0].concat(parse.Setup.keys.map(x => ({
+        [0, 0].concat(parse.Controls.keys.map(x => ({
           keyCode: x[0],
           metaKey: x[1],
           shiftKey: x[2],
         })))
       );
   
+      // Update the native buttons item in-place.
       $('#native-buttons').each((_, x) => {
-        parse.Setup.buttons.forEach(btn => {
-          $('<button>').text(btn[1]).appendTo(x).click(_ => {
+        x.innerHTML = '';
+        parse.Controls.buttons.forEach(btn => {
+          $('<button>')
+          .text(btn[1])
+          .toggleClass('active', btn[2])
+          .appendTo(x).click(_ => {
             editor.network.nativeCommand(commands.ButtonCommand(btn[0]));
           });
         })

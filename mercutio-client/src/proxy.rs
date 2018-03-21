@@ -97,8 +97,8 @@ fn setup_client(name: &str, page_id: &str, out: ws::Sender, ws_port: u16) -> (Ar
         tx_sync,
     };
 
-    // Send initial setup packet.
-    client.setup();
+    // Send initial controls.
+    client.setup_controls(None);
 
     let (tx_task, rx_task) = unbounded();
 

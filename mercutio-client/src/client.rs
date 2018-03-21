@@ -31,9 +31,9 @@ pub enum NativeCommand {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum ClientCommand {
     Init(String),
-    Setup {
+    Controls {
         keys: Vec<(u32, bool, bool)>,
-        buttons: Vec<(usize, String)>,
+        buttons: Vec<(usize, String, bool)>,
     },
     PromptString(String, String, NativeCommand),
     Update(String, Option<Op>),
@@ -97,40 +97,54 @@ fn key_handlers<C: ClientImpl>()
     ]
 }
 
-pub fn button_handlers<C: ClientImpl>() ->
-    Vec<(&'static str, Box<Fn(&mut C) -> Result<(), Error>>)> {
+pub fn button_handlers<C: ClientImpl>(
+    state: Option<(String, bool)>
+) -> Vec<(
+    &'static str,
+    Box<Fn(&mut C) -> Result<(), Error>>,
+    bool,
+)> {
     vec![
         (
             "H1",
             Box::new(|client| client.client_op(|doc| replace_block(doc, "h1"))),
+            // TODO i wish we could match on strings, use matches! here
+            state.as_ref().map(|x| x.0 == "h1").unwrap_or(false),
         ),
         (
             "H2",
             Box::new(|client| client.client_op(|doc| replace_block(doc, "h2"))),
+            state.as_ref().map(|x| x.0 == "h2").unwrap_or(false),
         ),
         (
             "H3",
             Box::new(|client| client.client_op(|doc| replace_block(doc, "h3"))),
+            state.as_ref().map(|x| x.0 == "h3").unwrap_or(false),
         ),
         (
             "Paragraph",
             Box::new(|client| client.client_op(|doc| replace_block(doc, "p"))),
+            state.as_ref().map(|x| x.0 == "p").unwrap_or(false),
         ),
         (
             "Code",
             Box::new(|client| client.client_op(|doc| replace_block(doc, "pre"))),
+            state.as_ref().map(|x| x.0 == "pre").unwrap_or(false),
         ),
         (
             "List",
             Box::new(|client| client.client_op(|doc| toggle_list(doc))),
+            state.as_ref().map(|x| x.1).unwrap_or(false),
         ),
         (
             "HR",
             Box::new(|client| client.client_op(|doc| split_block(doc, true))),
+            false,
         ),
         (
             "Raw HTML",
             Box::new(|client| client.client_op(|doc| replace_block(doc, "html"))),
+            state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
         ),
     ]
 }
@@ -143,7 +157,7 @@ fn native_command<C: ClientImpl>(client: &mut C, req: NativeCommand) -> Result<(
         }
         NativeCommand::Button(index) => {
             // Find which button handler to respond to this command.
-            button_handlers()
+            button_handlers(None)
                 .get(index as usize)
                 .map(|handler| handler.1(client));
         }
@@ -197,27 +211,24 @@ pub struct Client {
     pub alive: Arc<AtomicBool>,
 }
 
-// use std::cell::RefCell;
-// thread_local! {
-//     static BAR: RefCell<Vec<i64>> = RefCell::new(vec![]);
-// }
-
+/// Trait shared by the "wasm" and "client proxy" implementations.
+/// Most methods are implemented on the trait, not its implementors.
 pub trait ClientImpl {
     fn state(&mut self) -> &mut Client;
     fn send_client(&self, req: &ClientCommand) -> Result<(), Error>;
     fn send_sync(&self, req: SyncServerCommand) -> Result<(), Error>;
 
-    fn setup(&self) where Self: Sized {
+    fn setup_controls(&self, state: Option<(String, bool)>) where Self: Sized {
         self
-            .send_client(&ClientCommand::Setup {
+            .send_client(&ClientCommand::Controls {
                 keys: key_handlers::<Self>()
                     .into_iter()
                     .map(|x| (x.0, x.1, x.2))
                     .collect(),
-                buttons: button_handlers::<Self>()
+                buttons: button_handlers::<Self>(state)
                     .into_iter()
                     .enumerate()
-                    .map(|(i, x)| (i, x.0.to_string()))
+                    .map(|(i, x)| (i, x.0.to_string(), x.2))
                     .collect(),
             })
             .expect("Could not send initial state");
@@ -350,6 +361,7 @@ pub trait ClientImpl {
     fn client_op<C>(&mut self, callback: C) -> Result<(), Error>
     where
         C: Fn(ActionContext) -> Result<Op, Error>,
+        Self: Sized,
     {
         // Apply operation.
         let op = self.with_action_context(callback)?;
@@ -386,6 +398,13 @@ pub trait ClientImpl {
         if let Some(local_op) = self.state().client_doc.next_payload() {
             self.upload(local_op)?;
         }
+
+        // Update the controls state.
+        // TODO should optimize this to not always send this out.
+        let (cur_block, in_list) = self.with_action_context(|doc| identify_block(doc))?;
+        println!("current block: {:?}", cur_block);
+        println!("in list: {:?}", in_list);
+        self.setup_controls(Some((cur_block, in_list)));
 
         Ok(())
     }

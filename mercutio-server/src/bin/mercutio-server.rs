@@ -105,9 +105,6 @@ fn run_http_server(port: u16, client_proxy: bool) {
 
     println!("Listening on http://localhost:{}/", port);
 
-    let stylesheet = dist_dir.get(Path::new("mercutio.css")).unwrap();
-    let stylesheet = String::from_utf8_lossy(&stylesheet).to_string();
-
     #[allow(unused)]
     #[allow(unreachable_code)]
     rouille::start_server(format!("0.0.0.0:{}", port), move |request| {
@@ -193,6 +190,10 @@ fn run_http_server(port: u16, client_proxy: bool) {
             },
 
             (GET) ["/{id}", id: String] => {
+                // Inline the stylesheet.
+                let stylesheet = dist_dir.get(Path::new("mercutio.css")).unwrap();
+                let stylesheet = String::from_utf8_lossy(&stylesheet).to_string();
+                
                 let mut data = String::from_utf8_lossy(&update_config_var(
                     &template_dir.get(Path::new("client.html")).unwrap(),
                 )).to_owned().to_string();

@@ -43,6 +43,23 @@ pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
     Ok(writer.result())
 }
 
+pub fn identify_block(ctx: ActionContext) -> Result<(String, bool), Error> {
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
+    assert!(walker.back_block());
+    if let Some(DocGroup(ref attrs, _)) = walker.doc().head() {
+        let tag = attrs["tag"].clone();
+        let mut in_list = false;
+        if walker.parent() {
+            if let Some(DocGroup(ref attrs_2, _)) = walker.doc().head() {
+                in_list = attrs_2["tag"] == "bullet";
+            }
+        }
+        Ok((tag, in_list))
+    } else {
+        bail!("Expected a DocGroup from back_block");
+    }
+}
+
 pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
     let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
     assert!(walker.back_block());
