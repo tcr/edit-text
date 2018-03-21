@@ -3,7 +3,7 @@
 //! [dependencies]
 //! commandspec = "0.6.1"
 //! failure = "0.1"
-//! quicli = "0.2"
+//! structopt = "0.2"
 //! ```
 
 // Don't add additional noise to cargo-script.
@@ -12,16 +12,29 @@
 #[macro_use]
 extern crate commandspec;
 #[macro_use]
-extern crate quicli;
+extern crate structopt;
 extern crate failure;
 
 use commandspec::*;
-use quicli::prelude::*;
 use std::path::Path;
 use failure::Error;
+use structopt::StructOpt;
 
-// https://github.com/killercup/quicli/issues/66
-use std::result::Result;
+fn abs_string_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
+    Ok(Path::new(".")
+        .canonicalize()?
+        .join(path)
+        .to_string_lossy()
+        .into_owned())
+}
+
+// Thin wrapper around run()
+fn main() {
+    if let Err(err) = run() {
+        eprintln!("Error: {}", err);
+        ::std::process::exit(1);
+    }
+}
 
 /// edit-text build scripts
 #[derive(StructOpt)]
@@ -62,15 +75,8 @@ enum Cli {
     Deploy,
 }
 
-fn abs_string_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
-    Ok(Path::new(".")
-        .canonicalize()?
-        .join(path)
-        .to_string_lossy()
-        .into_owned())
-}
 
-main!(|| {
+fn run() -> Result<(), Error> {
     // Pass arguments directly to subcommands: don't capture -h, -v, or verification
     // Do this by adding "--" into the args flag after the subcommand.
     let mut args = ::std::env::args().collect::<Vec<_>>();
@@ -142,19 +148,21 @@ main!(|| {
         }
 
         Cli::MercutioServerRun { log, args } => {
-            let release_flag = if release { Some("--release") } else { None };
-
-            eprintln!("Starting edit-text server...");
+            if release {
+                eprintln!("Building and running edit-text server (release mode)...");
+            } else {
+                eprintln!("Building and running edit-text server (debug mode)...");
+            }
 
             if !Path::new("mercutio.sqlite3").exists() {
-                eprintln!("Building database for first startup...");
+                eprintln!("Building database on first startup...");
                 execute!(
                     r"
                         diesel setup
                     ",
                 )?;
             } else {
-                println!("Database: mercutio.sqlite3");
+                println!("Database path: mercutio.sqlite3");
             }
 
             if !Path::new("mercutio-frontend/dist/mercutio.wasm").exists() {
@@ -178,7 +186,7 @@ main!(|| {
                         --period 100 {args}
                 ",
                 use_log = if log { 1 } else { 0 },
-                release_flag = release_flag,
+                release_flag = if release { Some("--release") } else { None },
                 args = args,
             )?;
         }
@@ -313,4 +321,6 @@ main!(|| {
             )?;
         }
     }
-});
+
+    Ok(())
+}
