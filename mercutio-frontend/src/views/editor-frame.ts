@@ -87,6 +87,8 @@ export class EditorFrame {
   }
 
   setID(id: string) {
+    this.editorID = id;
+
     // Update the client identifier
     $('kbd').text(id);
   }
@@ -95,6 +97,13 @@ export class EditorFrame {
     let elem = this.$elem[0];
     requestAnimationFrame(() => {
       elem.innerHTML = data;
+
+      // Highlight our caret.
+      document.querySelectorAll(
+        `div[data-tag="caret"][data-client=${JSON.stringify(this.editorID)}]`,
+      ).forEach(caret => {
+        caret.classList.add("current");
+      });
     });
   }
 

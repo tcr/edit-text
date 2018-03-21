@@ -235,13 +235,13 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 let content: String = get_single_page(&db, &id)
                     .map(|x| {
                         let d = ron::de::from_str::<DocSpan>(&x.body).unwrap_or(vec![]);
-                        doc_as_html(&d, None)
+                        doc_as_html(&d)
                     })
                     .unwrap_or_else(|| {
                         let doc = doc_span![DocGroup({"tag": "h1"}, [DocChars(&id)])];
                         let data = ::ron::ser::to_string(&data).unwrap(); // TODO don't unwrap
                         create_post(&db, &id, &data);
-                        doc_as_html(&doc, None)
+                        doc_as_html(&doc)
                     });
                 data = data.replace("{{body}}", &content);
                 data = data.replace("{{stylesheet}}", &stylesheet);

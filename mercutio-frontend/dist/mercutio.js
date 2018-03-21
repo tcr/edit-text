@@ -11234,6 +11234,7 @@ class EditorFrame {
         Object(__WEBPACK_IMPORTED_MODULE_2__editor__["a" /* editorSetup */])(this.$elem[0], this.network, this.KEY_WHITELIST);
     }
     setID(id) {
+        this.editorID = id;
         // Update the client identifier
         $('kbd').text(id);
     }
@@ -11241,6 +11242,10 @@ class EditorFrame {
         let elem = this.$elem[0];
         requestAnimationFrame(() => {
             elem.innerHTML = data;
+            // Highlight our caret.
+            document.querySelectorAll(`div[data-tag="caret"][data-client=${JSON.stringify(this.editorID)}]`).forEach(caret => {
+                caret.classList.add("current");
+            });
         });
     }
     // Received message on native socket

@@ -282,7 +282,7 @@ pub trait ClientImpl {
 
                 // Native drives client state.
                 let state = self.state();
-                let res = ClientCommand::Update(doc_as_html(&state.client_doc.doc.0, Some(&state.client_id)), None);
+                let res = ClientCommand::Update(doc_as_html(&state.client_doc.doc.0), None);
                 self.send_client(&res).unwrap();
             }
 
@@ -323,7 +323,7 @@ pub trait ClientImpl {
 
                 // Native drives client state.
                 let state = self.state();
-                let res = ClientCommand::Update(doc_as_html(&state.client_doc.doc.0, Some(&state.client_id)), None);
+                let res = ClientCommand::Update(doc_as_html(&state.client_doc.doc.0), None);
                 self.send_client(&res).unwrap();
             }
         }
@@ -401,7 +401,7 @@ pub trait ClientImpl {
 
         // Render the update.
         let state = self.state();
-        let res = ClientCommand::Update(doc_as_html(&state.client_doc.doc.0, Some(&state.client_id)), Some(op));
+        let res = ClientCommand::Update(doc_as_html(&state.client_doc.doc.0), Some(op));
         self.send_client(&res)?;
 
         // Send any queued payloads.
