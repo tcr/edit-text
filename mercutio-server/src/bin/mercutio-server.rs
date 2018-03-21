@@ -7,7 +7,7 @@ extern crate crossbeam_channel;
 extern crate failure;
 extern crate include_dir_macro;
 extern crate maplit;
-extern crate mercutio;
+extern crate mercutio_common;
 extern crate mercutio_server;
 extern crate oatie;
 extern crate rand;
@@ -31,7 +31,7 @@ use std::collections::HashMap;
 use std::panic;
 use std::path::{Path, PathBuf};
 use std::process;
-use mercutio::doc_as_html;
+use mercutio_common::doc_as_html;
 use std::thread;
 use oatie::doc::DocSpan;
 use std::fs::File;
@@ -202,7 +202,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 let content: String = get_single_page(&db, &id)
                     .map(|x| {
                         let d = ron::de::from_str::<DocSpan>(&x.body).unwrap_or(vec![]);
-                        doc_as_html(&d)
+                        doc_as_html(&d, None)
                     })
                     .unwrap_or("".to_string());
                 data = data.replace("{{body}}", &content);

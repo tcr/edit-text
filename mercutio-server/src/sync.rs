@@ -346,10 +346,11 @@ pub fn sync_socket_server(port: u16, _period: usize) {
 
     println!("Listening sync_socket_server on 0.0.0.0:{}", port);
 
-    let (conn, original_pages) = db_help();
+    let db = db_connection();
+    let original_pages = all_posts(&db);
 
     let (tx_db, rx_db) = unbounded::<(String, String)>();
-    spawn_update_db(conn, rx_db);
+    spawn_update_db(db, rx_db);
 
     // When a page is started, we create a sync state mutex...
     let page_map: SharedPageMap = Arc::new(Mutex::new({

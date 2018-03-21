@@ -1,5 +1,5 @@
 import * as commands from './commands';
-import * as util from './util';
+import * as app from './app';
 import * as interop from './interop';
 
 export interface Network {
@@ -30,7 +30,7 @@ export class ProxyNetwork implements Network {
     return Promise.resolve()
     .then(() => {
       this.nativeSocket = new WebSocket(
-        util.clientProxyUrl() + 
+        app.clientProxyUrl() + 
         (window.location.hash == '#helloworld' ? '?helloworld' : '')
       );
       this.nativeSocket.onopen = function (event) {
@@ -120,7 +120,7 @@ export class WasmNetwork implements Network {
     return Promise.resolve()
     .then(() => {
       let syncSocket = new WebSocket(
-        util.syncUrl() + (window.location.hash == '#helloworld' ? '?helloworld' : '')
+        app.syncUrl() + (window.location.hash == '#helloworld' ? '?helloworld' : '')
       );
       syncSocket.onopen = function (event) {
         console.log('Editor "%s" is connected.', network.editorID);

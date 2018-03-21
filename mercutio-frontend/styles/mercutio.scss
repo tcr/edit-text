@@ -63,6 +63,7 @@ body {
         margin-right: 8px;
         padding: 6px 12px 3px;
         font-size: 0.9em;
+        animation: fadein 0.3s;
     }
 
     button:active {
@@ -108,7 +109,7 @@ kbd {
 }
 
 .edit-text {
-    padding: 60px 30px 50px; // bottom padding for footer
+    padding: 54px 30px 50px; // bottom padding for footer
     margin: 0;
 }
 
@@ -141,23 +142,32 @@ kbd {
         vertical-align: bottom;
     }
 
+    @keyframes fadein {
+        from { opacity: 1; } //TODO 0
+        to   { opacity: 1; }
+    }
+
     div[data-tag="caret"]::before {
-        border-left: 1px #089 solid;
-        border-right: 1px #089 solid;
+        $color: #089;
+        border-left: 1px $color solid;
+        border-right: 1px $color solid;
         margin-right: -1px;
         margin-left: -1px;
         content: '';
-        // animation: caret step-end 1.4s infinite;
+        animation: fadein 0.3s;
     }
 
-    div[data-tag="caret"][data-client="middle"] {
-        border-right-color: #0f0;
+    div[data-tag="caret"].current::before {
+        $color: rgb(233, 15, 124);
+        border-left: 1px $color solid;
+        border-right: 1px $color solid;
+        margin-right: -1px;
+        margin-left: -1px;
+        content: '';
+        z-index: 1000;
+        position: relative;
     }
 
-    div[data-tag="caret"][data-client="right"] {
-        border-right-color: blue;
-    }
-    
     div[data-tag="hr"] {
         margin: 16px 0;
         height: 2px;
@@ -191,17 +201,19 @@ kbd {
     }
 
     div[data-tag="h1"] {
+        margin-top: 20px;
         font-size: 2.0em;
         font-weight: bold;
     }
 
     div[data-tag="h2"] {
-        font-size: 1.7em;
+        margin-top: 16px;
+        font-size: 1.5em;
         font-weight: bold;
     }
     
     div[data-tag="h3"] {
-        font-size: 1.4em;
+        font-size: 1.2em;
         font-weight: bold;
     }
     

@@ -44,26 +44,18 @@ pub fn create_post<'a>(conn: &SqliteConnection, id: &'a str, body: &'a str) -> u
         .expect("Error saving new post")
 }
 
-pub fn db_help() -> (SqliteConnection, HashMap<String, String>) {
+pub fn all_posts(db: &SqliteConnection) -> HashMap<String, String> {
     use super::schema::posts::dsl::*;
 
-    let connection = db_connection();
     let results = posts
-        // .limit(5)
-        .load::<Post>(&connection)
+        .load::<Post>(db)
         .expect("Error loading posts");
 
-    // create_post(&connection, "home", "# hello world");
-
-    // println!("Displaying {} posts", results.len());
     let mut ret = HashMap::new();
     for post in results {
         ret.insert(post.id.clone(), post.body.clone());
-        // println!("{}", post.id);
-        // println!("----------\n");
-        // println!("{}", post.body);
     }
-    (connection, ret)
+    ret
 }
 
 pub fn get_single_page(db: &SqliteConnection, input_id: &str) -> Option<Post> {

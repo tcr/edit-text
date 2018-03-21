@@ -36,8 +36,8 @@ version = "1.1.1"
 [dependencies.include-dir-macro]
 git = "https://github.com/jcdyer/include-dir-macro"
 
-[dependencies.mercutio]
-path = "../mercutio"
+[dependencies.mercutio-common]
+path = "../mercutio-common"
 
 [dependencies.oatie]
 path = "../oatie"

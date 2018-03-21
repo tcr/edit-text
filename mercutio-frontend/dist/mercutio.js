@@ -156,11 +156,8 @@ module.exports = g;
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["d"] = textNodeAtPoint;
-/* harmony export (immutable) */ __webpack_exports__["b"] = matchesSelector;
-/* unused harmony export pageId */
-/* harmony export (immutable) */ __webpack_exports__["a"] = clientProxyUrl;
-/* harmony export (immutable) */ __webpack_exports__["c"] = syncUrl;
+/* harmony export (immutable) */ __webpack_exports__["b"] = textNodeAtPoint;
+/* harmony export (immutable) */ __webpack_exports__["a"] = matchesSelector;
 function textNodeAtPoint(x, y) {
     let textNode, offset;
     if (document.caretPositionFromPoint) {
@@ -187,23 +184,6 @@ function textNodeAtPoint(x, y) {
 }
 function matchesSelector(el, selector) {
     return el.mozMatchesSelector(selector);
-}
-function pageId() {
-    return window.location.pathname.match(/^\/?([^\/]+)/)[1];
-}
-function clientProxyUrl() {
-    return '' +
-        (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
-        window.location.host.replace(/\:\d+/, ':8002') +
-        '/' +
-        pageId();
-}
-function syncUrl() {
-    return '' +
-        (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
-        (window.location.host.match(/localhost/) ?
-            window.location.host.replace(/:\d+$|$/, ':8001') + '/$/ws/' + pageId() :
-            window.location.host + '/$/ws/' + pageId());
 }
 
 
@@ -10490,51 +10470,25 @@ if (!CONFIG.configured) {
     alert('The window.CONFIG variable was not configured by the server!');
 }
 // Entry.
-if (document.body.id == 'multi') {
-    document.body.innerHTML = `
-
-<h1>Multimonkey
-  <button id="action-monkey">🙈🙉🙊</button>
-  <span style="font-family: monospace; padding: 3px 5px;" id="timer"></span>
-</h1>
-
-<table id="clients">
-  <tr>
-    <td>
-      <iframe src="/monkey"></iframe>
-    </td>
-    <td>
-      <iframe src="/monkey"></iframe>
-    </td>
-    <td>
-      <iframe src="/monkey"></iframe>
-    </td>
-  </tr>
-</table>
-
-`;
-    __WEBPACK_IMPORTED_MODULE_3__views_multi__["a" /* start */]();
-}
-else if (document.body.id == 'client') {
-    // Connects to the network.
-    let network = CONFIG.wasm ?
-        new __WEBPACK_IMPORTED_MODULE_1__network__["b" /* WasmNetwork */]() :
-        new __WEBPACK_IMPORTED_MODULE_1__network__["a" /* ProxyNetwork */]();
-    __WEBPACK_IMPORTED_MODULE_2__views_editor_frame__["a" /* start */](network);
-}
-else if (document.body.id == 'presentation') {
-    // Connects to the network.
-    let network = CONFIG.wasm ?
-        new __WEBPACK_IMPORTED_MODULE_1__network__["b" /* WasmNetwork */]() :
-        new __WEBPACK_IMPORTED_MODULE_1__network__["a" /* ProxyNetwork */]();
-    __WEBPACK_IMPORTED_MODULE_4__views_presentation__["a" /* start */](network);
-}
-else {
-    document.body.innerHTML = `
-
-<h1>404</h1>
-
-`;
+switch (document.body.id) {
+    case 'multi': {
+        __WEBPACK_IMPORTED_MODULE_3__views_multi__["a" /* start */]();
+        break;
+    }
+    case 'client': {
+        let network = CONFIG.wasm ? new __WEBPACK_IMPORTED_MODULE_1__network__["b" /* WasmNetwork */]() : new __WEBPACK_IMPORTED_MODULE_1__network__["a" /* ProxyNetwork */]();
+        __WEBPACK_IMPORTED_MODULE_2__views_editor_frame__["a" /* start */](network);
+        break;
+    }
+    case 'presentation': {
+        let network = CONFIG.wasm ? new __WEBPACK_IMPORTED_MODULE_1__network__["b" /* WasmNetwork */]() : new __WEBPACK_IMPORTED_MODULE_1__network__["a" /* ProxyNetwork */]();
+        __WEBPACK_IMPORTED_MODULE_4__views_presentation__["a" /* start */](network);
+        break;
+    }
+    default: {
+        document.body.innerHTML = `<h1>404</h1>`;
+        break;
+    }
 }
 
 
@@ -10549,7 +10503,7 @@ else {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(setImmediate) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__util__ = __webpack_require__(2);
+/* WEBPACK VAR INJECTION */(function(setImmediate) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__app__ = __webpack_require__(27);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__interop__ = __webpack_require__(10);
 
 
@@ -10561,7 +10515,7 @@ class ProxyNetwork {
         let network = this;
         return Promise.resolve()
             .then(() => {
-            this.nativeSocket = new WebSocket(__WEBPACK_IMPORTED_MODULE_0__util__["a" /* clientProxyUrl */]() +
+            this.nativeSocket = new WebSocket(__WEBPACK_IMPORTED_MODULE_0__app__["a" /* clientProxyUrl */]() +
                 (window.location.hash == '#helloworld' ? '?helloworld' : ''));
             this.nativeSocket.onopen = function (event) {
                 console.log('Editor "%s" is connected.', network.editorID);
@@ -10625,7 +10579,7 @@ class WasmNetwork {
         let network = this;
         return Promise.resolve()
             .then(() => {
-            let syncSocket = new WebSocket(__WEBPACK_IMPORTED_MODULE_0__util__["c" /* syncUrl */]() + (window.location.hash == '#helloworld' ? '?helloworld' : ''));
+            let syncSocket = new WebSocket(__WEBPACK_IMPORTED_MODULE_0__app__["b" /* syncUrl */]() + (window.location.hash == '#helloworld' ? '?helloworld' : ''));
             syncSocket.onopen = function (event) {
                 console.log('Editor "%s" is connected.', network.editorID);
             };
@@ -12269,7 +12223,7 @@ function curto(el, textOffset = null) {
         }
         else {
             el = el.parentNode;
-            if (el.nodeType == 1 && __WEBPACK_IMPORTED_MODULE_1__util__["b" /* matchesSelector */](el, ROOT_SELECTOR)) {
+            if (el.nodeType == 1 && __WEBPACK_IMPORTED_MODULE_1__util__["a" /* matchesSelector */](el, ROOT_SELECTOR)) {
                 break;
             }
             cur = [{
@@ -12277,7 +12231,7 @@ function curto(el, textOffset = null) {
                 }];
         }
     }
-    if (!(el.nodeType == 1 && __WEBPACK_IMPORTED_MODULE_1__util__["b" /* matchesSelector */](el, ROOT_SELECTOR))) {
+    if (!(el.nodeType == 1 && __WEBPACK_IMPORTED_MODULE_1__util__["a" /* matchesSelector */](el, ROOT_SELECTOR))) {
         console.error('Invalid selection!!!');
     }
     console.log('cursor', JSON.stringify(cur));
@@ -12285,7 +12239,7 @@ function curto(el, textOffset = null) {
 }
 function editorSetup(element, network, KEY_WHITELIST) {
     element.addEventListener('mousedown', (e) => {
-        let pos = __WEBPACK_IMPORTED_MODULE_1__util__["d" /* textNodeAtPoint */](e.clientX, e.clientY);
+        let pos = __WEBPACK_IMPORTED_MODULE_1__util__["b" /* textNodeAtPoint */](e.clientX, e.clientY);
         // Only support text elements.
         if (pos !== null) {
             // Text node
@@ -12437,6 +12391,37 @@ function start(network) {
     });
 }
 ;
+
+
+/***/ }),
+/* 23 */,
+/* 24 */,
+/* 25 */,
+/* 26 */,
+/* 27 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* unused harmony export pageId */
+/* harmony export (immutable) */ __webpack_exports__["a"] = clientProxyUrl;
+/* harmony export (immutable) */ __webpack_exports__["b"] = syncUrl;
+function pageId() {
+    return window.location.pathname.match(/^\/?([^\/]+)/)[1];
+}
+function clientProxyUrl() {
+    return '' +
+        (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
+        window.location.host.replace(/\:\d+/, ':8002') +
+        '/' +
+        pageId();
+}
+function syncUrl() {
+    return '' +
+        (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
+        (window.location.host.match(/localhost/) ?
+            window.location.host.replace(/:\d+$|$/, ':8001') + '/$/ws/' + pageId() :
+            window.location.host + '/$/ws/' + pageId());
+}
 
 
 /***/ })

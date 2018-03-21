@@ -648,20 +648,20 @@ version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
-name = "mercutio"
+name = "mercutio-client"
 version = "0.1.0"
 dependencies = [
  "bus 1.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "colored 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "crossbeam-channel 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "diesel 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "dotenv 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "htmlescape 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "include-dir-macro 0.1.0 (git+https://github.com/jcdyer/include-dir-macro)",
  "lazy_static 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "maplit 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "matches 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mercutio-common 0.1.0",
  "oatie 0.2.0",
  "pulldown-cmark 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "pulldown-cmark-to-cmark 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -682,20 +682,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "mercutio-client"
+name = "mercutio-common"
 version = "0.1.0"
 dependencies = [
  "bus 1.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "colored 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "crossbeam-channel 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "diesel 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "dotenv 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "htmlescape 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "include-dir-macro 0.1.0 (git+https://github.com/jcdyer/include-dir-macro)",
  "lazy_static 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "maplit 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "matches 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "mercutio 0.1.0",
  "oatie 0.2.0",
  "pulldown-cmark 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "pulldown-cmark-to-cmark 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -730,7 +730,7 @@ dependencies = [
  "lazy_static 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "maplit 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "md5 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "mercutio 0.1.0",
+ "mercutio-common 0.1.0",
  "mime_guess 1.8.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "oatie 0.2.0",
  "pulldown-cmark 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -759,8 +759,8 @@ dependencies = [
  "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "maplit 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "mercutio 0.1.0",
  "mercutio-client 0.1.0",
+ "mercutio-common 0.1.0",
  "oatie 0.2.0",
  "rand 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.27 (registry+https://github.com/rust-lang/crates.io-index)",

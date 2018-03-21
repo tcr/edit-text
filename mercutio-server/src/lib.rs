@@ -52,7 +52,7 @@ extern crate failure;
 extern crate lazy_static;
 #[macro_use]
 extern crate maplit;
-extern crate mercutio;
+extern crate mercutio_common;
 #[macro_use]
 extern crate oatie;
 extern crate pulldown_cmark;
@@ -75,4 +75,4 @@ pub mod schema;
 pub mod db;
 pub mod util;
 
-pub use mercutio::*;
+pub use mercutio_common::*;

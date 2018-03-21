@@ -1,4 +1,4 @@
-extern crate mercutio;
+extern crate mercutio_common;
 extern crate mercutio_client;
 extern crate serde_json;
 extern crate structopt;

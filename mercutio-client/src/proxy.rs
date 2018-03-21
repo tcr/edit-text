@@ -1,5 +1,5 @@
 use super::*;
-use mercutio::SyncClientCommand;
+use mercutio_common::SyncClientCommand;
 use crossbeam_channel::{unbounded, Sender, Receiver};
 use failure::Error;
 use serde_json;

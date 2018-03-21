@@ -1,5 +1,5 @@
 [workspace]
-members = ["oatie", "mercutio", "mercutio-wasm", "mercutio-server", "mercutio-client"]
+members = ["oatie", "mercutio-common", "mercutio-wasm", "mercutio-server", "mercutio-client"]
 
 [profile.dev]
 debug = true

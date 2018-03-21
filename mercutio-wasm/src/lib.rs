@@ -103,7 +103,7 @@ pub fn wasm_setup() -> u32 { //input_ptr: *mut c_char) -> u32 {
             }
         };
 
-        client.setup();
+        client.setup_controls(None);
 
         *client_lock = Some(client);
     }

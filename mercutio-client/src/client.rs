@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicBool};
 use std::sync::atomic::Ordering;
 use oatie::validate::validate_doc;
 use crate::markdown;
-use mercutio::doc_as_html;
+use mercutio_common::doc_as_html;
 
 #[cfg(not(target_arch="wasm32"))]
 use super::{SyncClientCommand, SyncServerCommand};
@@ -93,6 +93,13 @@ fn key_handlers<C: ClientImpl>()
             false,
             true,
             Box::new(|client| client.client_op(|doc| add_char(doc, 10))),
+        ),
+        // tab
+        (
+            9,
+            false,
+            false,
+            Box::new(|client| client.client_op(|doc| toggle_list(doc))),
         ),
     ]
 }
@@ -274,7 +281,8 @@ pub trait ClientImpl {
                 self.send_client(&res).unwrap();
 
                 // Native drives client state.
-                let res = ClientCommand::Update(doc_as_html(&self.state().client_doc.doc.0), None);
+                let state = self.state();
+                let res = ClientCommand::Update(doc_as_html(&state.client_doc.doc.0, Some(&state.client_id)), None);
                 self.send_client(&res).unwrap();
             }
 
@@ -314,7 +322,8 @@ pub trait ClientImpl {
                 }
 
                 // Native drives client state.
-                let res = ClientCommand::Update(doc_as_html(&self.state().client_doc.doc.0), None);
+                let state = self.state();
+                let res = ClientCommand::Update(doc_as_html(&state.client_doc.doc.0, Some(&state.client_id)), None);
                 self.send_client(&res).unwrap();
             }
         }
@@ -391,7 +400,8 @@ pub trait ClientImpl {
         validate_doc(&self.state().client_doc.doc).expect("Local op was malformed");
 
         // Render the update.
-        let res = ClientCommand::Update(doc_as_html(&self.state().client_doc.doc.0), Some(op));
+        let state = self.state();
+        let res = ClientCommand::Update(doc_as_html(&state.client_doc.doc.0, Some(&state.client_id)), Some(op));
         self.send_client(&res)?;
 
         // Send any queued payloads.

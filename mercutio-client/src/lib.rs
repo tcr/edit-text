@@ -1,4 +1,4 @@
-#![feature(crate_in_paths)]
+#![feature(crate_in_paths, nll)]
 
 #[cfg(not(target_arch="wasm32"))]
 extern crate bus;
@@ -30,7 +30,7 @@ extern crate pulldown_cmark_to_cmark;
 extern crate dotenv;
 #[cfg(not(target_arch="wasm32"))]
 extern crate url;
-extern crate mercutio;
+extern crate mercutio_common;
 
 /* logging */
 
@@ -39,7 +39,7 @@ extern crate mercutio;
 use std::fs::File;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
-use mercutio::*;
+use mercutio_common::*;
 
 lazy_static! {
     static ref LOG_WASM_FILE: Arc<Mutex<File>> = {

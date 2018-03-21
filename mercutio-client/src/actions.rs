@@ -43,6 +43,7 @@ pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
     Ok(writer.result())
 }
 
+// Return a "caret state"
 pub fn identify_block(ctx: ActionContext) -> Result<(String, bool), Error> {
     let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
     assert!(walker.back_block());

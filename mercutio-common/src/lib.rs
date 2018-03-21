@@ -43,15 +43,23 @@ pub enum SyncClientCommand {
 }
 
 
-// TODO move this to a different area
+// TODO move this to a different module
 /// Converts a DocSpan to an HTML string.
-pub fn doc_as_html(doc: &DocSpan) -> String {
+pub fn doc_as_html(doc: &DocSpan, current_client_id: Option<&str>) -> String {
     use oatie::doc::*;
 
     let mut out = String::new();
     for elem in doc {
         match elem {
             &DocGroup(ref attrs, ref span) => {
+                let attr_client = attrs.get("client").unwrap_or(&"".to_string()).to_owned();
+                let mut attr_class = attrs.get("class").unwrap_or(&"".to_string()).to_owned();
+
+                if attr_client == current_client_id.unwrap_or("") {
+                    // TODO: the client should be doing all the work to identify its own client by CSS
+                    attr_class += " current";
+                }
+
                 out.push_str(&format!(
                     r#"<div
                         data-tag={}
@@ -59,10 +67,10 @@ pub fn doc_as_html(doc: &DocSpan) -> String {
                         class={}
                     >"#,
                     serde_json::to_string(attrs.get("tag").unwrap_or(&"".to_string())).unwrap(),
-                    serde_json::to_string(attrs.get("client").unwrap_or(&"".to_string())).unwrap(),
-                    serde_json::to_string(attrs.get("class").unwrap_or(&"".to_string())).unwrap(),
+                    serde_json::to_string(&attr_client).unwrap(),
+                    serde_json::to_string(&attr_class).unwrap(),
                 ));
-                out.push_str(&doc_as_html(span));
+                out.push_str(&doc_as_html(span, current_client_id));
                 out.push_str(r"</div>");
             }
             &DocChars(ref text) => {

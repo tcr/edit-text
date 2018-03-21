@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Tim Ryan <id@timryan.org>"]
 
 [dependencies]
-mercutio = { path = "../mercutio" }
+mercutio-common = { path = "../mercutio-common" }
 mercutio-client = { path = "../mercutio-client" }
 oatie = { path = "../oatie" }
 env_logger = "0.4.3"

@@ -1,6 +1,6 @@
 [package]
 authors = ["Tim Ryan <id@timryan.org>"]
-name = "mercutio"
+name = "mercutio-common"
 version = "0.1.0"
 [dependencies]
 colored = "1.6.0"

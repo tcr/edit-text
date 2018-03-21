@@ -53,7 +53,8 @@ body {
   box-shadow: #bbb 2px 2px;
   margin-right: 8px;
   padding: 6px 12px 3px;
-  font-size: 0.9em; }
+  font-size: 0.9em;
+  animation: fadein 0.3s; }
 
 #toolbar button:active {
   box-shadow: #444 1px 1px;
@@ -90,7 +91,7 @@ kbd {
   z-index: 100; }
 
 .edit-text {
-  padding: 60px 30px 50px;
+  padding: 54px 30px 50px;
   margin: 0; }
 
 .edit-text.theme-mock {
@@ -116,16 +117,27 @@ kbd {
     display: inline;
     font-size: inherit;
     vertical-align: bottom; }
+
+@keyframes fadein {
+  from {
+    opacity: 1; }
+  to {
+    opacity: 1; } }
   .edit-text.theme-mock div[data-tag="caret"]::before {
     border-left: 1px #089 solid;
     border-right: 1px #089 solid;
     margin-right: -1px;
     margin-left: -1px;
-    content: ''; }
-  .edit-text.theme-mock div[data-tag="caret"][data-client="middle"] {
-    border-right-color: #0f0; }
-  .edit-text.theme-mock div[data-tag="caret"][data-client="right"] {
-    border-right-color: blue; }
+    content: '';
+    animation: fadein 0.3s; }
+  .edit-text.theme-mock div[data-tag="caret"].current::before {
+    border-left: 1px #e90f7c solid;
+    border-right: 1px #e90f7c solid;
+    margin-right: -1px;
+    margin-left: -1px;
+    content: '';
+    z-index: 1000;
+    position: relative; }
   .edit-text.theme-mock div[data-tag="hr"] {
     margin: 16px 0;
     height: 2px;
@@ -137,13 +149,15 @@ kbd {
   .edit-text.theme-mock div.italic {
     font-style: italic; }
   .edit-text.theme-mock div[data-tag="h1"] {
+    margin-top: 20px;
     font-size: 2.0em;
     font-weight: bold; }
   .edit-text.theme-mock div[data-tag="h2"] {
-    font-size: 1.7em;
+    margin-top: 16px;
+    font-size: 1.5em;
     font-weight: bold; }
   .edit-text.theme-mock div[data-tag="h3"] {
-    font-size: 1.4em;
+    font-size: 1.2em;
     font-weight: bold; }
   .edit-text.theme-mock div[data-tag="pre"] {
     font-family: monospace;
