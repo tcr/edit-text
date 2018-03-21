@@ -12,7 +12,7 @@ html, body {
 }
 
 body {
-    font-family: Helvetica,Arial,sans-serif;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 14px;
     line-height: 1.42857143;
 }
@@ -61,9 +61,11 @@ body {
         text-transform: uppercase;
         box-shadow: #bbb 2px 2px;
         margin-right: 8px;
-        padding: 6px 12px 3px;
+        padding: 5px 12px 4px;
         font-size: 0.9em;
         animation: fadein 0.3s;
+        font-weight: 500;
+        color: #555;
     }
 
     button:active {
@@ -74,8 +76,9 @@ body {
     }
 
     button.active {
-        padding: 6px 12px 1px;
+        padding-bottom: 2px;
         border-bottom: 3px solid rgb(255, 168, 69);
+        color: #000;
     }
 }
 

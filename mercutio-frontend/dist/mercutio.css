@@ -9,7 +9,7 @@ html, body {
   width: 100%; }
 
 body {
-  font-family: Helvetica,Arial,sans-serif;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 14px;
   line-height: 1.42857143; }
 
@@ -52,9 +52,11 @@ body {
   text-transform: uppercase;
   box-shadow: #bbb 2px 2px;
   margin-right: 8px;
-  padding: 6px 12px 3px;
+  padding: 5px 12px 4px;
   font-size: 0.9em;
-  animation: fadein 0.3s; }
+  animation: fadein 0.3s;
+  font-weight: 500;
+  color: #555; }
 
 #toolbar button:active {
   box-shadow: #444 1px 1px;
@@ -63,8 +65,9 @@ body {
   left: 1px; }
 
 #toolbar button.active {
-  padding: 6px 12px 1px;
-  border-bottom: 3px solid #ffa845; }
+  padding-bottom: 2px;
+  border-bottom: 3px solid #ffa845;
+  color: #000; }
 
 kbd {
   font-family: monospace !important; }
