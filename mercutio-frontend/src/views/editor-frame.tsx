@@ -3,10 +3,71 @@ import Clipboard from 'clipboard';
 import * as commands from '../commands';
 import * as util from '../util';
 import * as interop from '../interop';
-import {editorSetup} from '../editor';
-import {Network, ProxyNetwork, WasmNetwork} from '../network';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
+import { editorSetup } from '../editor';
+import { Network, ProxyNetwork, WasmNetwork } from '../network';
 
 const ROOT_QUERY = '.edit-text';
+
+function NativeButtons(props) {
+  return props.buttons.map(btn =>
+    <button
+      onClick={
+        () => props.editor.network.nativeCommand(commands.ButtonCommand(btn[0]))
+      }
+      className={btn[2] ? 'active' : ''}
+    >{btn[1]}</button>
+  );
+}
+
+class LocalButtons extends React.Component {
+  props: {
+    editor: EditorFrame,
+  };
+
+  state = {
+    width: 'auto',
+    copying: false,
+  };
+
+  onSaveMarkdown() {
+    this.setState({
+      ...this.state,
+      copying: true,
+    });
+    setTimeout((() => {
+      this.setState({
+        ...this.state,
+        copying: false,
+      });
+    }).bind(this), 2000);
+  }
+
+  onXray() {
+    this.props.editor.$elem.toggleClass('theme-mock');
+    this.props.editor.$elem.toggleClass('theme-block');
+  }
+
+  render(): React.ReactNode {
+    return (
+      <div>
+        <button
+          id="save-markdown"
+          onClick={() => this.onSaveMarkdown()}
+          style={{ width: this.state.copying ? this.state.width : 'auto', }}
+          ref={(el) => { el && (this.state.width = el.offsetWidth + 'px'); }}
+        >
+          {this.state.copying ? `Copied!` : `Save Markdown`}
+        </button>
+
+        <button id="xray" onClick={() => this.onXray()}>X-Ray</button>
+
+        <b>Client: <kbd>{this.props.editor.editorID}</kbd></b>
+      </div>
+    );
+  }
+}
 
 // Initialize child editor.
 export class EditorFrame {
@@ -18,7 +79,7 @@ export class EditorFrame {
 
   network: Network;
 
-  constructor(elem: HTMLElement, network: Network) {
+  constructor(elem: Element, network: Network) {
     this.$elem = $(elem);
     this.editorID = '$$$$$$'; // TODO should this autopopulate
     this.ops = [];
@@ -33,7 +94,7 @@ export class EditorFrame {
 
     {
       new Clipboard('#save-markdown', {
-        text: function(trigger) {
+        text: function (trigger) {
           return editor.markdown;
         }
       });
@@ -56,32 +117,10 @@ export class EditorFrame {
       }, 500);
     }
 
-    // Markdown
-    $('<button id="save-markdown">Save Markdown</button>')
-      .appendTo($('#local-buttons'))
-      .on('click', function () {
-        let self = $(this);
-        self.css('width', self.outerWidth());
-        self.text('Copied!');
-        setTimeout(() => {
-          requestAnimationFrame(() => {
-            self.text('Save Markdown');
-            self.css('width', '');
-          })
-        }, 2000);
-      });
-
-    // CSS switch button
-    $('<button>X-Ray</button>')
-      .appendTo($('#local-buttons'))
-      .on('click', function () {
-        $elem.toggleClass('theme-mock');
-        $elem.toggleClass('theme-block');
-      });
-
-    // Client Id.
-    $('<b>Client: <kbd>' + this.editorID + '</kbd></b>')
-      .appendTo($('#local-buttons'));
+    ReactDOM.render(
+      <LocalButtons editor={editor} />,
+      document.querySelector("#local-buttons"),
+    );
 
     editorSetup(this.$elem[0], this.network, this.KEY_WHITELIST);
   }
@@ -117,7 +156,7 @@ export class EditorFrame {
 
     else if (parse.Update) {
       editor.load(parse.Update[0]);
-  
+
       if (parse.Update[1] == null) {
         console.log('Sync Update');
         editor.ops.splice(0, this.ops.length);
@@ -129,10 +168,10 @@ export class EditorFrame {
     else if (parse.MarkdownUpdate) {
       editor.markdown = parse.MarkdownUpdate;
     }
-    
+
     else if (parse.Controls) {
       console.log('SETUP CONTROLS', parse.Controls);
-      
+
       // Update the key list in-place.
       editor.KEY_WHITELIST.splice.apply(editor.KEY_WHITELIST,
         [0, 0].concat(parse.Controls.keys.map(x => ({
@@ -141,19 +180,11 @@ export class EditorFrame {
           shiftKey: x[2],
         })))
       );
-  
-      // Update the native buttons item in-place.
-      $('#native-buttons').each((_, x) => {
-        x.innerHTML = '';
-        parse.Controls.buttons.forEach(btn => {
-          $('<button>')
-          .text(btn[1])
-          .toggleClass('active', btn[2])
-          .appendTo(x).click(_ => {
-            editor.network.nativeCommand(commands.ButtonCommand(btn[0]));
-          });
-        })
-      });
+
+      ReactDOM.render(
+        <NativeButtons buttons={parse.Controls.buttons} editor={editor} />,
+        document.querySelector("#native-buttons"),
+      );
     }
 
     else {
@@ -189,7 +220,7 @@ export function start(network: Network) {
   }
 
   // Create the editor frame.
-  let editor = new EditorFrame(document.querySelector(ROOT_QUERY), network);
+  let editor = new EditorFrame(document.querySelector(ROOT_QUERY)!, network);
   // Connect to parent window (if exists).
   editor.multiConnect();
 
@@ -203,8 +234,8 @@ export function start(network: Network) {
 
   // Connect to remote sockets.
   network.nativeConnect()
-  .then(() => network.syncConnect())
-  .then(() => {
-    console.log('edit-text initialized.');
-  });
+    .then(() => network.syncConnect())
+    .then(() => {
+      console.log('edit-text initialized.');
+    });
 };

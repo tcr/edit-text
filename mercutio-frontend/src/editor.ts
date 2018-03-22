@@ -49,6 +49,9 @@ function curto(
       el = el.previousSibling;
     } else {
       el = el.parentNode;
+      if (el === null) {
+        throw new Error('Unexpectedly reached root');
+      }
       if (el.nodeType == 1 && util.matchesSelector(el, ROOT_SELECTOR)) {
         break;
       }
@@ -57,6 +60,7 @@ function curto(
       }];
     }
   }
+  el = el!;
 
   if (!(el.nodeType == 1 && util.matchesSelector(el, ROOT_SELECTOR))) {
     console.error('Invalid selection!!!');

@@ -1,7 +1,7 @@
 export function textNodeAtPoint(
   x: number,
   y: number,
-): {textNode: Text, offset: number} {
+): {textNode: Text, offset: number} | null {
   let textNode, offset;
   if ((<any>document).caretPositionFromPoint) {
     let range = (<any>document).caretPositionFromPoint(x, y);

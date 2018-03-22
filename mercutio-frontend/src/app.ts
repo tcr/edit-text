@@ -1,5 +1,5 @@
 export function pageId(): string {
-  return window.location.pathname.match(/^\/?([^\/]+)/)[1];
+  return window.location.pathname.match(/^\/?([^\/]+)/)![1] || '';
 }
 
 export function clientProxyUrl(): string {

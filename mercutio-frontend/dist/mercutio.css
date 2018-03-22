@@ -56,7 +56,8 @@ body {
   font-size: 0.9em;
   animation: fadein 0.3s;
   font-weight: 500;
-  color: #555; }
+  color: #555;
+  cursor: pointer; }
 
 #toolbar button:active {
   box-shadow: #444 1px 1px;
