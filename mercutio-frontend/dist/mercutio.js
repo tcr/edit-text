@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 17);
+/******/ 	return __webpack_require__(__webpack_require__.s = 18);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -485,9 +485,9 @@ function RequestMarkdown() {
 /* WEBPACK VAR INJECTION */(function(process) {
 
 if (process.env.NODE_ENV === 'production') {
-  module.exports = __webpack_require__(33);
+  module.exports = __webpack_require__(29);
 } else {
-  module.exports = __webpack_require__(34);
+  module.exports = __webpack_require__(30);
 }
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
@@ -623,33 +623,6 @@ module.exports = warning;
 
 /***/ }),
 /* 8 */
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-
-/***/ }),
-/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -10909,7 +10882,7 @@ return jQuery;
 
 
 /***/ }),
-/* 10 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10925,7 +10898,7 @@ return jQuery;
 if (process.env.NODE_ENV !== 'production') {
   var invariant = __webpack_require__(6);
   var warning = __webpack_require__(7);
-  var ReactPropTypesSecret = __webpack_require__(35);
+  var ReactPropTypesSecret = __webpack_require__(31);
   var loggedTypeFailures = {};
 }
 
@@ -10976,7 +10949,7 @@ module.exports = checkPropTypes;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 11 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11015,7 +10988,7 @@ var ExecutionEnvironment = {
 module.exports = ExecutionEnvironment;
 
 /***/ }),
-/* 12 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11096,7 +11069,7 @@ module.exports = EventListener;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 13 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11138,7 +11111,7 @@ function getActiveElement(doc) /*?DOMElement*/{
 module.exports = getActiveElement;
 
 /***/ }),
-/* 14 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11209,7 +11182,7 @@ function shallowEqual(objA, objB) {
 module.exports = shallowEqual;
 
 /***/ }),
-/* 15 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11224,7 +11197,7 @@ module.exports = shallowEqual;
  * 
  */
 
-var isTextNode = __webpack_require__(38);
+var isTextNode = __webpack_require__(34);
 
 /*eslint-disable no-bitwise */
 
@@ -11252,7 +11225,7 @@ function containsNode(outerNode, innerNode) {
 module.exports = containsNode;
 
 /***/ }),
-/* 16 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11282,63 +11255,12 @@ function focusNode(node) {
 module.exports = focusNode;
 
 /***/ }),
-/* 17 */
+/* 16 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__styles_mercutio_scss__ = __webpack_require__(18);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__styles_mercutio_scss___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__styles_mercutio_scss__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__network__ = __webpack_require__(19);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__views_editor_frame__ = __webpack_require__(24);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__views_multi__ = __webpack_require__(47);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__views_presentation__ = __webpack_require__(48);
-// Global CSS
-
-
-
-
-
-// Check page configuration.
-if (!CONFIG.configured) {
-    alert('The window.CONFIG variable was not configured by the server!');
-}
-// Entry.
-switch (document.body.id) {
-    case 'multi': {
-        __WEBPACK_IMPORTED_MODULE_3__views_multi__["a" /* start */]();
-        break;
-    }
-    case 'client': {
-        let network = CONFIG.wasm ? new __WEBPACK_IMPORTED_MODULE_1__network__["b" /* WasmNetwork */]() : new __WEBPACK_IMPORTED_MODULE_1__network__["a" /* ProxyNetwork */]();
-        __WEBPACK_IMPORTED_MODULE_2__views_editor_frame__["a" /* start */](network);
-        break;
-    }
-    case 'presentation': {
-        let network = CONFIG.wasm ? new __WEBPACK_IMPORTED_MODULE_1__network__["b" /* WasmNetwork */]() : new __WEBPACK_IMPORTED_MODULE_1__network__["a" /* ProxyNetwork */]();
-        __WEBPACK_IMPORTED_MODULE_4__views_presentation__["a" /* start */](network);
-        break;
-    }
-    default: {
-        document.body.innerHTML = `<h1>404</h1>`;
-        break;
-    }
-}
-
-
-/***/ }),
-/* 18 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 19 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(setImmediate) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__app__ = __webpack_require__(22);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__interop__ = __webpack_require__(23);
+/* WEBPACK VAR INJECTION */(function(setImmediate) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__app__ = __webpack_require__(45);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__interop__ = __webpack_require__(46);
 
 
 class ProxyNetwork {
@@ -11436,397 +11358,98 @@ class WasmNetwork {
 /* harmony export (immutable) */ __webpack_exports__["b"] = WasmNetwork;
 
 
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(20).setImmediate))
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(43).setImmediate))
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+
+/***/ }),
+/* 18 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__styles_mercutio_scss__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__styles_mercutio_scss___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__styles_mercutio_scss__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__views_editor_frame__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__views_multi__ = __webpack_require__(47);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__views_presentation__ = __webpack_require__(48);
+// Global CSS
+
+
+
+
+// Check page configuration.
+if (!CONFIG.configured) {
+    alert('The window.CONFIG variable was not configured by the server!');
+}
+// Entry.
+switch (document.body.id) {
+    case 'multi': {
+        __WEBPACK_IMPORTED_MODULE_2__views_multi__["a" /* start */]();
+        break;
+    }
+    case 'client': {
+        __WEBPACK_IMPORTED_MODULE_1__views_editor_frame__["a" /* start */]();
+        break;
+    }
+    case 'presentation': {
+        __WEBPACK_IMPORTED_MODULE_3__views_presentation__["a" /* start */]();
+        break;
+    }
+    default: {
+        document.body.innerHTML = `<h1>404</h1>`;
+        break;
+    }
+}
+
+
+/***/ }),
+/* 19 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
 
 /***/ }),
 /* 20 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(global) {var apply = Function.prototype.apply;
-
-// DOM APIs, for completeness
-
-exports.setTimeout = function() {
-  return new Timeout(apply.call(setTimeout, window, arguments), clearTimeout);
-};
-exports.setInterval = function() {
-  return new Timeout(apply.call(setInterval, window, arguments), clearInterval);
-};
-exports.clearTimeout =
-exports.clearInterval = function(timeout) {
-  if (timeout) {
-    timeout.close();
-  }
-};
-
-function Timeout(id, clearFn) {
-  this._id = id;
-  this._clearFn = clearFn;
-}
-Timeout.prototype.unref = Timeout.prototype.ref = function() {};
-Timeout.prototype.close = function() {
-  this._clearFn.call(window, this._id);
-};
-
-// Does not start the time, just sets up the members needed.
-exports.enroll = function(item, msecs) {
-  clearTimeout(item._idleTimeoutId);
-  item._idleTimeout = msecs;
-};
-
-exports.unenroll = function(item) {
-  clearTimeout(item._idleTimeoutId);
-  item._idleTimeout = -1;
-};
-
-exports._unrefActive = exports.active = function(item) {
-  clearTimeout(item._idleTimeoutId);
-
-  var msecs = item._idleTimeout;
-  if (msecs >= 0) {
-    item._idleTimeoutId = setTimeout(function onTimeout() {
-      if (item._onTimeout)
-        item._onTimeout();
-    }, msecs);
-  }
-};
-
-// setimmediate attaches itself to the global object
-__webpack_require__(21);
-// On some exotic environments, it's not clear which object `setimmeidate` was
-// able to install onto.  Search each possibility in the same order as the
-// `setimmediate` library.
-exports.setImmediate = (typeof self !== "undefined" && self.setImmediate) ||
-                       (typeof global !== "undefined" && global.setImmediate) ||
-                       (this && this.setImmediate);
-exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
-                         (typeof global !== "undefined" && global.clearImmediate) ||
-                         (this && this.clearImmediate);
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8)))
-
-/***/ }),
-/* 21 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
-    "use strict";
-
-    if (global.setImmediate) {
-        return;
-    }
-
-    var nextHandle = 1; // Spec says greater than zero
-    var tasksByHandle = {};
-    var currentlyRunningATask = false;
-    var doc = global.document;
-    var registerImmediate;
-
-    function setImmediate(callback) {
-      // Callback can either be a function or a string
-      if (typeof callback !== "function") {
-        callback = new Function("" + callback);
-      }
-      // Copy function arguments
-      var args = new Array(arguments.length - 1);
-      for (var i = 0; i < args.length; i++) {
-          args[i] = arguments[i + 1];
-      }
-      // Store and register the task
-      var task = { callback: callback, args: args };
-      tasksByHandle[nextHandle] = task;
-      registerImmediate(nextHandle);
-      return nextHandle++;
-    }
-
-    function clearImmediate(handle) {
-        delete tasksByHandle[handle];
-    }
-
-    function run(task) {
-        var callback = task.callback;
-        var args = task.args;
-        switch (args.length) {
-        case 0:
-            callback();
-            break;
-        case 1:
-            callback(args[0]);
-            break;
-        case 2:
-            callback(args[0], args[1]);
-            break;
-        case 3:
-            callback(args[0], args[1], args[2]);
-            break;
-        default:
-            callback.apply(undefined, args);
-            break;
-        }
-    }
-
-    function runIfPresent(handle) {
-        // From the spec: "Wait until any invocations of this algorithm started before this one have completed."
-        // So if we're currently running a task, we'll need to delay this invocation.
-        if (currentlyRunningATask) {
-            // Delay by doing a setTimeout. setImmediate was tried instead, but in Firefox 7 it generated a
-            // "too much recursion" error.
-            setTimeout(runIfPresent, 0, handle);
-        } else {
-            var task = tasksByHandle[handle];
-            if (task) {
-                currentlyRunningATask = true;
-                try {
-                    run(task);
-                } finally {
-                    clearImmediate(handle);
-                    currentlyRunningATask = false;
-                }
-            }
-        }
-    }
-
-    function installNextTickImplementation() {
-        registerImmediate = function(handle) {
-            process.nextTick(function () { runIfPresent(handle); });
-        };
-    }
-
-    function canUsePostMessage() {
-        // The test against `importScripts` prevents this implementation from being installed inside a web worker,
-        // where `global.postMessage` means something completely different and can't be used for this purpose.
-        if (global.postMessage && !global.importScripts) {
-            var postMessageIsAsynchronous = true;
-            var oldOnMessage = global.onmessage;
-            global.onmessage = function() {
-                postMessageIsAsynchronous = false;
-            };
-            global.postMessage("", "*");
-            global.onmessage = oldOnMessage;
-            return postMessageIsAsynchronous;
-        }
-    }
-
-    function installPostMessageImplementation() {
-        // Installs an event handler on `global` for the `message` event: see
-        // * https://developer.mozilla.org/en/DOM/window.postMessage
-        // * http://www.whatwg.org/specs/web-apps/current-work/multipage/comms.html#crossDocumentMessages
-
-        var messagePrefix = "setImmediate$" + Math.random() + "$";
-        var onGlobalMessage = function(event) {
-            if (event.source === global &&
-                typeof event.data === "string" &&
-                event.data.indexOf(messagePrefix) === 0) {
-                runIfPresent(+event.data.slice(messagePrefix.length));
-            }
-        };
-
-        if (global.addEventListener) {
-            global.addEventListener("message", onGlobalMessage, false);
-        } else {
-            global.attachEvent("onmessage", onGlobalMessage);
-        }
-
-        registerImmediate = function(handle) {
-            global.postMessage(messagePrefix + handle, "*");
-        };
-    }
-
-    function installMessageChannelImplementation() {
-        var channel = new MessageChannel();
-        channel.port1.onmessage = function(event) {
-            var handle = event.data;
-            runIfPresent(handle);
-        };
-
-        registerImmediate = function(handle) {
-            channel.port2.postMessage(handle);
-        };
-    }
-
-    function installReadyStateChangeImplementation() {
-        var html = doc.documentElement;
-        registerImmediate = function(handle) {
-            // Create a <script> element; its readystatechange event will be fired asynchronously once it is inserted
-            // into the document. Do so, thus queuing up the task. Remember to clean up once it's been called.
-            var script = doc.createElement("script");
-            script.onreadystatechange = function () {
-                runIfPresent(handle);
-                script.onreadystatechange = null;
-                html.removeChild(script);
-                script = null;
-            };
-            html.appendChild(script);
-        };
-    }
-
-    function installSetTimeoutImplementation() {
-        registerImmediate = function(handle) {
-            setTimeout(runIfPresent, 0, handle);
-        };
-    }
-
-    // If supported, we should attach to the prototype of global, since that is where setTimeout et al. live.
-    var attachTo = Object.getPrototypeOf && Object.getPrototypeOf(global);
-    attachTo = attachTo && attachTo.setTimeout ? attachTo : global;
-
-    // Don't get fooled by e.g. browserify environments.
-    if ({}.toString.call(global.process) === "[object process]") {
-        // For Node.js before 0.9
-        installNextTickImplementation();
-
-    } else if (canUsePostMessage()) {
-        // For non-IE10 modern browsers
-        installPostMessageImplementation();
-
-    } else if (global.MessageChannel) {
-        // For web workers, where supported
-        installMessageChannelImplementation();
-
-    } else if (doc && "onreadystatechange" in doc.createElement("script")) {
-        // For IE 6–8
-        installReadyStateChangeImplementation();
-
-    } else {
-        // For older browsers
-        installSetTimeoutImplementation();
-    }
-
-    attachTo.setImmediate = setImmediate;
-    attachTo.clearImmediate = clearImmediate;
-}(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8), __webpack_require__(0)))
-
-/***/ }),
-/* 22 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* unused harmony export pageId */
-/* harmony export (immutable) */ __webpack_exports__["a"] = clientProxyUrl;
-/* harmony export (immutable) */ __webpack_exports__["b"] = syncUrl;
-function pageId() {
-    return window.location.pathname.match(/^\/?([^\/]+)/)[1] || '';
-}
-function clientProxyUrl() {
-    return '' +
-        (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
-        window.location.host.replace(/\:\d+/, ':8002') +
-        '/' +
-        pageId();
-}
-function syncUrl() {
-    return '' +
-        (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
-        (window.location.host.match(/localhost/) ?
-            window.location.host.replace(/:\d+$|$/, ':8001') + '/$/ws/' + pageId() :
-            window.location.host + '/$/ws/' + pageId());
-}
-
-
-/***/ }),
-/* 23 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* unused harmony export fetchAndInstantiate */
-/* unused harmony export copyCStr */
-/* unused harmony export getStr */
-/* unused harmony export newString */
-/* harmony export (immutable) */ __webpack_exports__["a"] = instantiate;
-function fetchAndInstantiate(url, importObject) {
-    return fetch(url).then(response => response.arrayBuffer()).then(bytes => WebAssembly.instantiate(bytes, importObject)).then(results => results.instance);
-}
-function copyCStr(module, ptr) {
-    let orig_ptr = ptr;
-    const collectCString = function* () {
-        let memory = new Uint8Array(module.memory.buffer);
-        while (memory[ptr] !== 0) {
-            if (memory[ptr] === undefined) {
-                throw new Error("Tried to read undef mem");
-            }
-            yield memory[ptr];
-            ptr += 1;
-        }
-    };
-    const buffer_as_u8 = new Uint8Array(collectCString());
-    const utf8Decoder = new TextDecoder("UTF-8");
-    const buffer_as_utf8 = utf8Decoder.decode(buffer_as_u8);
-    module.dealloc_str(orig_ptr);
-    return buffer_as_utf8;
-}
-function getStr(module, ptr, len) {
-    const getData = function* (ptr, len) {
-        let memory = new Uint8Array(module.memory.buffer);
-        for (let index = 0; index < len; index++) {
-            if (memory[ptr] === undefined) {
-                throw new Error(`Tried to read undef mem at ${ptr}`);
-            }
-            yield memory[ptr + index];
-        }
-    };
-    const buffer_as_u8 = new Uint8Array(getData(ptr / 8, len / 8));
-    const utf8Decoder = new TextDecoder("UTF-8");
-    const buffer_as_utf8 = utf8Decoder.decode(buffer_as_u8);
-    return buffer_as_utf8;
-}
-function newString(module, str) {
-    const utf8Encoder = new TextEncoder("UTF-8");
-    let string_buffer = utf8Encoder.encode(str);
-    let len = string_buffer.length;
-    let ptr = module.alloc(len + 1);
-    let memory = new Uint8Array(module.memory.buffer);
-    for (let i = 0; i < len; i++) {
-        memory[ptr + i] = string_buffer[i];
-    }
-    memory[ptr + len] = 0;
-    return ptr;
-}
-// TODO better strategy for having a js command callback
-function instantiate(js_command_callback) {
-    let Module = {};
-    return fetchAndInstantiate("/$/mercutio.wasm", {
-        env: {
-            js_command: function (inptr) {
-                let data = copyCStr(Module, inptr);
-                js_command_callback(data);
-            }
-        }
-    })
-        .then(mod => {
-        Module.alloc = mod.exports.alloc;
-        Module.dealloc_str = mod.exports.dealloc_str;
-        Module.memory = mod.exports.memory;
-        Module.wasm_command = function (req) {
-            let json = JSON.stringify(req);
-            let out = mod.exports.wasm_command(newString(Module, json));
-            console.log('----- from wasm_command>', out);
-            // let result = copyCStr(Module, outptr);
-            // return JSON.parse(result);
-        };
-        Module.wasm_setup = function (editorID) {
-            mod.exports.wasm_setup(newString(Module, editorID));
-        };
-        return Module;
-    });
-}
-
-
-/***/ }),
-/* 24 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function($) {/* harmony export (immutable) */ __webpack_exports__["a"] = start;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_clipboard__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_clipboard__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_clipboard___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_clipboard__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__commands__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react__ = __webpack_require__(5);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react_dom__ = __webpack_require__(36);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react_dom__ = __webpack_require__(32);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react_dom___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_react_dom__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__editor__ = __webpack_require__(45);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__editor__ = __webpack_require__(41);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__network__ = __webpack_require__(16);
+
 
 
 
@@ -11968,7 +11591,8 @@ class EditorFrame {
 }
 /* unused harmony export EditorFrame */
 
-function start(network) {
+function start() {
+    let network = CONFIG.wasm ? new __WEBPACK_IMPORTED_MODULE_5__network__["b" /* WasmNetwork */]() : new __WEBPACK_IMPORTED_MODULE_5__network__["a" /* ProxyNetwork */]();
     // Utility classes for Multi
     if (window.parent != window) {
         // Blur/Focus classes.
@@ -11996,15 +11620,15 @@ function start(network) {
 }
 ;
 
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(9)))
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(8)))
 
 /***/ }),
-/* 25 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
     if (true) {
-        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [module, __webpack_require__(26), __webpack_require__(28), __webpack_require__(29)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [module, __webpack_require__(22), __webpack_require__(24), __webpack_require__(25)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
 				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
 				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
@@ -12214,12 +11838,12 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 });
 
 /***/ }),
-/* 26 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
     if (true) {
-        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [module, __webpack_require__(27)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [module, __webpack_require__(23)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
 				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
 				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
@@ -12451,7 +12075,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 });
 
 /***/ }),
-/* 27 */
+/* 23 */
 /***/ (function(module, exports) {
 
 function select(element) {
@@ -12500,7 +12124,7 @@ module.exports = select;
 
 
 /***/ }),
-/* 28 */
+/* 24 */
 /***/ (function(module, exports) {
 
 function E () {
@@ -12572,11 +12196,11 @@ module.exports = E;
 
 
 /***/ }),
-/* 29 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var is = __webpack_require__(30);
-var delegate = __webpack_require__(31);
+var is = __webpack_require__(26);
+var delegate = __webpack_require__(27);
 
 /**
  * Validates all params and calls the right
@@ -12673,7 +12297,7 @@ module.exports = listen;
 
 
 /***/ }),
-/* 30 */
+/* 26 */
 /***/ (function(module, exports) {
 
 /**
@@ -12728,10 +12352,10 @@ exports.fn = function(value) {
 
 
 /***/ }),
-/* 31 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var closest = __webpack_require__(32);
+var closest = __webpack_require__(28);
 
 /**
  * Delegates event to a selector.
@@ -12812,7 +12436,7 @@ module.exports = delegate;
 
 
 /***/ }),
-/* 32 */
+/* 28 */
 /***/ (function(module, exports) {
 
 var DOCUMENT_NODE_TYPE = 9;
@@ -12851,7 +12475,7 @@ module.exports = closest;
 
 
 /***/ }),
-/* 33 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12879,7 +12503,7 @@ isValidElement:K,version:"16.2.0",__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_F
 
 
 /***/ }),
-/* 34 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12905,7 +12529,7 @@ var emptyObject = __webpack_require__(3);
 var invariant = __webpack_require__(6);
 var warning = __webpack_require__(7);
 var emptyFunction = __webpack_require__(1);
-var checkPropTypes = __webpack_require__(10);
+var checkPropTypes = __webpack_require__(9);
 
 // TODO: this is special because it gets imported during build.
 
@@ -14244,7 +13868,7 @@ module.exports = react;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 35 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14263,7 +13887,7 @@ module.exports = ReactPropTypesSecret;
 
 
 /***/ }),
-/* 36 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14301,15 +13925,15 @@ if (process.env.NODE_ENV === 'production') {
   // DCE check should happen before ReactDOM bundle executes so that
   // DevTools can report bad minification during injection.
   checkDCE();
-  module.exports = __webpack_require__(37);
+  module.exports = __webpack_require__(33);
 } else {
-  module.exports = __webpack_require__(40);
+  module.exports = __webpack_require__(36);
 }
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 37 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14325,7 +13949,7 @@ if (process.env.NODE_ENV === 'production') {
 /*
  Modernizr 3.0.0pre (Custom Build) | MIT
 */
-var aa=__webpack_require__(5),l=__webpack_require__(11),B=__webpack_require__(2),C=__webpack_require__(1),ba=__webpack_require__(12),da=__webpack_require__(13),ea=__webpack_require__(14),fa=__webpack_require__(15),ia=__webpack_require__(16),D=__webpack_require__(3);
+var aa=__webpack_require__(5),l=__webpack_require__(10),B=__webpack_require__(2),C=__webpack_require__(1),ba=__webpack_require__(11),da=__webpack_require__(12),ea=__webpack_require__(13),fa=__webpack_require__(14),ia=__webpack_require__(15),D=__webpack_require__(3);
 function E(a){for(var b=arguments.length-1,c="Minified React error #"+a+"; visit http://facebook.github.io/react/docs/error-decoder.html?invariant\x3d"+a,d=0;d<b;d++)c+="\x26args[]\x3d"+encodeURIComponent(arguments[d+1]);b=Error(c+" for the full message or use the non-minified dev environment for full errors and additional helpful warnings.");b.name="Invariant Violation";b.framesToPop=1;throw b;}aa?void 0:E("227");
 var oa={children:!0,dangerouslySetInnerHTML:!0,defaultValue:!0,defaultChecked:!0,innerHTML:!0,suppressContentEditableWarning:!0,suppressHydrationWarning:!0,style:!0};function pa(a,b){return(a&b)===b}
 var ta={MUST_USE_PROPERTY:1,HAS_BOOLEAN_VALUE:4,HAS_NUMERIC_VALUE:8,HAS_POSITIVE_NUMERIC_VALUE:24,HAS_OVERLOADED_BOOLEAN_VALUE:32,HAS_STRING_BOOLEAN_VALUE:64,injectDOMPropertyConfig:function(a){var b=ta,c=a.Properties||{},d=a.DOMAttributeNamespaces||{},e=a.DOMAttributeNames||{};a=a.DOMMutationMethods||{};for(var f in c){ua.hasOwnProperty(f)?E("48",f):void 0;var g=f.toLowerCase(),h=c[f];g={attributeName:g,attributeNamespace:null,propertyName:f,mutationMethod:null,mustUseProperty:pa(h,b.MUST_USE_PROPERTY),
@@ -14545,7 +14169,7 @@ Z.injectIntoDevTools({findFiberByHostInstance:pb,bundleType:0,version:"16.2.0",r
 
 
 /***/ }),
-/* 38 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14560,7 +14184,7 @@ Z.injectIntoDevTools({findFiberByHostInstance:pb,bundleType:0,version:"16.2.0",r
  * @typechecks
  */
 
-var isNode = __webpack_require__(39);
+var isNode = __webpack_require__(35);
 
 /**
  * @param {*} object The object to check.
@@ -14573,7 +14197,7 @@ function isTextNode(object) {
 module.exports = isTextNode;
 
 /***/ }),
-/* 39 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14601,7 +14225,7 @@ function isNode(object) {
 module.exports = isNode;
 
 /***/ }),
-/* 40 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14625,18 +14249,18 @@ if (process.env.NODE_ENV !== "production") {
 var React = __webpack_require__(5);
 var invariant = __webpack_require__(6);
 var warning = __webpack_require__(7);
-var ExecutionEnvironment = __webpack_require__(11);
+var ExecutionEnvironment = __webpack_require__(10);
 var _assign = __webpack_require__(2);
 var emptyFunction = __webpack_require__(1);
-var EventListener = __webpack_require__(12);
-var getActiveElement = __webpack_require__(13);
-var shallowEqual = __webpack_require__(14);
-var containsNode = __webpack_require__(15);
-var focusNode = __webpack_require__(16);
+var EventListener = __webpack_require__(11);
+var getActiveElement = __webpack_require__(12);
+var shallowEqual = __webpack_require__(13);
+var containsNode = __webpack_require__(14);
+var focusNode = __webpack_require__(15);
 var emptyObject = __webpack_require__(3);
-var checkPropTypes = __webpack_require__(10);
-var hyphenateStyleName = __webpack_require__(41);
-var camelizeStyleName = __webpack_require__(43);
+var checkPropTypes = __webpack_require__(9);
+var hyphenateStyleName = __webpack_require__(37);
+var camelizeStyleName = __webpack_require__(39);
 
 /**
  * WARNING: DO NOT manually require this module.
@@ -30003,7 +29627,7 @@ module.exports = reactDom;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 41 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30018,7 +29642,7 @@ module.exports = reactDom;
 
 
 
-var hyphenate = __webpack_require__(42);
+var hyphenate = __webpack_require__(38);
 
 var msPattern = /^ms-/;
 
@@ -30045,7 +29669,7 @@ function hyphenateStyleName(string) {
 module.exports = hyphenateStyleName;
 
 /***/ }),
-/* 42 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30081,7 +29705,7 @@ function hyphenate(string) {
 module.exports = hyphenate;
 
 /***/ }),
-/* 43 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30096,7 +29720,7 @@ module.exports = hyphenate;
 
 
 
-var camelize = __webpack_require__(44);
+var camelize = __webpack_require__(40);
 
 var msPattern = /^-ms-/;
 
@@ -30124,7 +29748,7 @@ function camelizeStyleName(string) {
 module.exports = camelizeStyleName;
 
 /***/ }),
-/* 44 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30159,13 +29783,13 @@ function camelize(string) {
 module.exports = camelize;
 
 /***/ }),
-/* 45 */
+/* 41 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = editorSetup;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__commands__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__util__ = __webpack_require__(46);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__util__ = __webpack_require__(42);
 
 
 const ROOT_SELECTOR = '.edit-text';
@@ -30226,39 +29850,32 @@ function curto(el, textOffset = null) {
     console.log('cursor', JSON.stringify(cur));
     return cur;
 }
-function editorSetup(element, network, KEY_WHITELIST) {
-    element.addEventListener('mousedown', (e) => {
-        let pos = __WEBPACK_IMPORTED_MODULE_1__util__["b" /* textNodeAtPoint */](e.clientX, e.clientY);
-        // Only support text elements.
-        if (pos !== null) {
-            // Text node
-            let target = pos.textNode.parentNode;
-            if (pos.offset == 0) {
-                if (pos.textNode.previousSibling === null) {
-                    // Text node is first in element, so select parent node.
-                    network.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](curto(pos.textNode.parentNode)));
-                }
-                else if (pos.textNode.previousSibling.nodeType === 3) {
-                    // Text node has a preceding text elemnt; move to end.
-                    network.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](curto(pos.textNode.previousSibling, pos.textNode.previousSibling.data.length)));
-                }
-                else {
-                    // If it's an element...
-                    //TODO do something here
-                    console.log('recursive depth');
-                }
-                ;
-            }
-            else {
-                // Move to offset of this text node.
-                network.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](curto(pos.textNode, pos.offset - 1)));
-            }
+function resolveCursorFromPosition(textNode, offset) {
+    if (offset == 0) {
+        if (textNode.previousSibling === null) {
+            // Text node is first in element, so select parent node.
+            return curto(textNode.parentNode);
         }
-        // TODO Why do we call window.focus?
-        window.focus();
-        // TODO Why do we call e.preventDefault() ?
-        e.preventDefault();
-    });
+        else if (textNode.previousSibling.nodeType === 3) {
+            // Text node has a preceding text elemnt; move to end.
+            return curto(textNode.previousSibling, textNode.previousSibling.data.length);
+        }
+        else {
+            // If it's an element...
+            //TODO do something here,
+            return curto(
+            // This is literally just a random node
+            // TODO replace this
+            textNode.parentNode);
+        }
+        ;
+    }
+    else {
+        // Move to offset of this text node.
+        return curto(textNode, offset - 1);
+    }
+}
+function editorSetup(element, network, KEY_WHITELIST) {
     // Click outside the document area.
     // $('#client').on('click', (e) => {
     //   if (e.target == $('#client')[0]) {
@@ -30266,8 +29883,19 @@ function editorSetup(element, network, KEY_WHITELIST) {
     //     network.nativeCommand(commands.TargetCommand(curto(last)));
     //   }
     // });
+    element.addEventListener('mousedown', (e) => {
+        let pos = __WEBPACK_IMPORTED_MODULE_1__util__["b" /* textNodeAtPoint */](e.clientX, e.clientY);
+        // Only support text elements.
+        if (pos !== null) {
+            network.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](resolveCursorFromPosition(pos.textNode, pos.offset)));
+        }
+        // Focus the window despite us cancelling the event.
+        window.focus();
+        // Cancel the event; prevent text selection.
+        e.preventDefault();
+    });
     document.addEventListener('keypress', (e) => {
-        // Don't accept keypresses when a modifier key is pressed, except shift.
+        // Don't accept keypresses when a modifier key is pressed w/keypress, except shift.
         if (e.metaKey) {
             return;
         }
@@ -30275,8 +29903,7 @@ function editorSetup(element, network, KEY_WHITELIST) {
         e.preventDefault();
     });
     document.addEventListener('keydown', (e) => {
-        console.log('KEYDOWN:', e.keyCode);
-        // Match against whitelisted key entries.
+        // Check if this event exists in the list of whitelisted key combinations.
         if (!KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
             return;
         }
@@ -30288,7 +29915,7 @@ function editorSetup(element, network, KEY_WHITELIST) {
 
 
 /***/ }),
-/* 46 */
+/* 42 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -30338,6 +29965,381 @@ class HashState {
 
 
 /***/ }),
+/* 43 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(global) {var apply = Function.prototype.apply;
+
+// DOM APIs, for completeness
+
+exports.setTimeout = function() {
+  return new Timeout(apply.call(setTimeout, window, arguments), clearTimeout);
+};
+exports.setInterval = function() {
+  return new Timeout(apply.call(setInterval, window, arguments), clearInterval);
+};
+exports.clearTimeout =
+exports.clearInterval = function(timeout) {
+  if (timeout) {
+    timeout.close();
+  }
+};
+
+function Timeout(id, clearFn) {
+  this._id = id;
+  this._clearFn = clearFn;
+}
+Timeout.prototype.unref = Timeout.prototype.ref = function() {};
+Timeout.prototype.close = function() {
+  this._clearFn.call(window, this._id);
+};
+
+// Does not start the time, just sets up the members needed.
+exports.enroll = function(item, msecs) {
+  clearTimeout(item._idleTimeoutId);
+  item._idleTimeout = msecs;
+};
+
+exports.unenroll = function(item) {
+  clearTimeout(item._idleTimeoutId);
+  item._idleTimeout = -1;
+};
+
+exports._unrefActive = exports.active = function(item) {
+  clearTimeout(item._idleTimeoutId);
+
+  var msecs = item._idleTimeout;
+  if (msecs >= 0) {
+    item._idleTimeoutId = setTimeout(function onTimeout() {
+      if (item._onTimeout)
+        item._onTimeout();
+    }, msecs);
+  }
+};
+
+// setimmediate attaches itself to the global object
+__webpack_require__(44);
+// On some exotic environments, it's not clear which object `setimmeidate` was
+// able to install onto.  Search each possibility in the same order as the
+// `setimmediate` library.
+exports.setImmediate = (typeof self !== "undefined" && self.setImmediate) ||
+                       (typeof global !== "undefined" && global.setImmediate) ||
+                       (this && this.setImmediate);
+exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
+                         (typeof global !== "undefined" && global.clearImmediate) ||
+                         (this && this.clearImmediate);
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(17)))
+
+/***/ }),
+/* 44 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
+    "use strict";
+
+    if (global.setImmediate) {
+        return;
+    }
+
+    var nextHandle = 1; // Spec says greater than zero
+    var tasksByHandle = {};
+    var currentlyRunningATask = false;
+    var doc = global.document;
+    var registerImmediate;
+
+    function setImmediate(callback) {
+      // Callback can either be a function or a string
+      if (typeof callback !== "function") {
+        callback = new Function("" + callback);
+      }
+      // Copy function arguments
+      var args = new Array(arguments.length - 1);
+      for (var i = 0; i < args.length; i++) {
+          args[i] = arguments[i + 1];
+      }
+      // Store and register the task
+      var task = { callback: callback, args: args };
+      tasksByHandle[nextHandle] = task;
+      registerImmediate(nextHandle);
+      return nextHandle++;
+    }
+
+    function clearImmediate(handle) {
+        delete tasksByHandle[handle];
+    }
+
+    function run(task) {
+        var callback = task.callback;
+        var args = task.args;
+        switch (args.length) {
+        case 0:
+            callback();
+            break;
+        case 1:
+            callback(args[0]);
+            break;
+        case 2:
+            callback(args[0], args[1]);
+            break;
+        case 3:
+            callback(args[0], args[1], args[2]);
+            break;
+        default:
+            callback.apply(undefined, args);
+            break;
+        }
+    }
+
+    function runIfPresent(handle) {
+        // From the spec: "Wait until any invocations of this algorithm started before this one have completed."
+        // So if we're currently running a task, we'll need to delay this invocation.
+        if (currentlyRunningATask) {
+            // Delay by doing a setTimeout. setImmediate was tried instead, but in Firefox 7 it generated a
+            // "too much recursion" error.
+            setTimeout(runIfPresent, 0, handle);
+        } else {
+            var task = tasksByHandle[handle];
+            if (task) {
+                currentlyRunningATask = true;
+                try {
+                    run(task);
+                } finally {
+                    clearImmediate(handle);
+                    currentlyRunningATask = false;
+                }
+            }
+        }
+    }
+
+    function installNextTickImplementation() {
+        registerImmediate = function(handle) {
+            process.nextTick(function () { runIfPresent(handle); });
+        };
+    }
+
+    function canUsePostMessage() {
+        // The test against `importScripts` prevents this implementation from being installed inside a web worker,
+        // where `global.postMessage` means something completely different and can't be used for this purpose.
+        if (global.postMessage && !global.importScripts) {
+            var postMessageIsAsynchronous = true;
+            var oldOnMessage = global.onmessage;
+            global.onmessage = function() {
+                postMessageIsAsynchronous = false;
+            };
+            global.postMessage("", "*");
+            global.onmessage = oldOnMessage;
+            return postMessageIsAsynchronous;
+        }
+    }
+
+    function installPostMessageImplementation() {
+        // Installs an event handler on `global` for the `message` event: see
+        // * https://developer.mozilla.org/en/DOM/window.postMessage
+        // * http://www.whatwg.org/specs/web-apps/current-work/multipage/comms.html#crossDocumentMessages
+
+        var messagePrefix = "setImmediate$" + Math.random() + "$";
+        var onGlobalMessage = function(event) {
+            if (event.source === global &&
+                typeof event.data === "string" &&
+                event.data.indexOf(messagePrefix) === 0) {
+                runIfPresent(+event.data.slice(messagePrefix.length));
+            }
+        };
+
+        if (global.addEventListener) {
+            global.addEventListener("message", onGlobalMessage, false);
+        } else {
+            global.attachEvent("onmessage", onGlobalMessage);
+        }
+
+        registerImmediate = function(handle) {
+            global.postMessage(messagePrefix + handle, "*");
+        };
+    }
+
+    function installMessageChannelImplementation() {
+        var channel = new MessageChannel();
+        channel.port1.onmessage = function(event) {
+            var handle = event.data;
+            runIfPresent(handle);
+        };
+
+        registerImmediate = function(handle) {
+            channel.port2.postMessage(handle);
+        };
+    }
+
+    function installReadyStateChangeImplementation() {
+        var html = doc.documentElement;
+        registerImmediate = function(handle) {
+            // Create a <script> element; its readystatechange event will be fired asynchronously once it is inserted
+            // into the document. Do so, thus queuing up the task. Remember to clean up once it's been called.
+            var script = doc.createElement("script");
+            script.onreadystatechange = function () {
+                runIfPresent(handle);
+                script.onreadystatechange = null;
+                html.removeChild(script);
+                script = null;
+            };
+            html.appendChild(script);
+        };
+    }
+
+    function installSetTimeoutImplementation() {
+        registerImmediate = function(handle) {
+            setTimeout(runIfPresent, 0, handle);
+        };
+    }
+
+    // If supported, we should attach to the prototype of global, since that is where setTimeout et al. live.
+    var attachTo = Object.getPrototypeOf && Object.getPrototypeOf(global);
+    attachTo = attachTo && attachTo.setTimeout ? attachTo : global;
+
+    // Don't get fooled by e.g. browserify environments.
+    if ({}.toString.call(global.process) === "[object process]") {
+        // For Node.js before 0.9
+        installNextTickImplementation();
+
+    } else if (canUsePostMessage()) {
+        // For non-IE10 modern browsers
+        installPostMessageImplementation();
+
+    } else if (global.MessageChannel) {
+        // For web workers, where supported
+        installMessageChannelImplementation();
+
+    } else if (doc && "onreadystatechange" in doc.createElement("script")) {
+        // For IE 6–8
+        installReadyStateChangeImplementation();
+
+    } else {
+        // For older browsers
+        installSetTimeoutImplementation();
+    }
+
+    attachTo.setImmediate = setImmediate;
+    attachTo.clearImmediate = clearImmediate;
+}(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(17), __webpack_require__(0)))
+
+/***/ }),
+/* 45 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* unused harmony export pageId */
+/* harmony export (immutable) */ __webpack_exports__["a"] = clientProxyUrl;
+/* harmony export (immutable) */ __webpack_exports__["b"] = syncUrl;
+function pageId() {
+    return window.location.pathname.match(/^\/?([^\/]+)/)[1] || '';
+}
+function clientProxyUrl() {
+    return '' +
+        (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
+        window.location.host.replace(/\:\d+/, ':8002') +
+        '/' +
+        pageId();
+}
+function syncUrl() {
+    return '' +
+        (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
+        (window.location.host.match(/localhost/) ?
+            window.location.host.replace(/:\d+$|$/, ':8001') + '/$/ws/' + pageId() :
+            window.location.host + '/$/ws/' + pageId());
+}
+
+
+/***/ }),
+/* 46 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* unused harmony export fetchAndInstantiate */
+/* unused harmony export copyCStr */
+/* unused harmony export getStr */
+/* unused harmony export newString */
+/* harmony export (immutable) */ __webpack_exports__["a"] = instantiate;
+function fetchAndInstantiate(url, importObject) {
+    return fetch(url).then(response => response.arrayBuffer()).then(bytes => WebAssembly.instantiate(bytes, importObject)).then(results => results.instance);
+}
+function copyCStr(module, ptr) {
+    let orig_ptr = ptr;
+    const collectCString = function* () {
+        let memory = new Uint8Array(module.memory.buffer);
+        while (memory[ptr] !== 0) {
+            if (memory[ptr] === undefined) {
+                throw new Error("Tried to read undef mem");
+            }
+            yield memory[ptr];
+            ptr += 1;
+        }
+    };
+    const buffer_as_u8 = new Uint8Array(collectCString());
+    const utf8Decoder = new TextDecoder("UTF-8");
+    const buffer_as_utf8 = utf8Decoder.decode(buffer_as_u8);
+    module.dealloc_str(orig_ptr);
+    return buffer_as_utf8;
+}
+function getStr(module, ptr, len) {
+    const getData = function* (ptr, len) {
+        let memory = new Uint8Array(module.memory.buffer);
+        for (let index = 0; index < len; index++) {
+            if (memory[ptr] === undefined) {
+                throw new Error(`Tried to read undef mem at ${ptr}`);
+            }
+            yield memory[ptr + index];
+        }
+    };
+    const buffer_as_u8 = new Uint8Array(getData(ptr / 8, len / 8));
+    const utf8Decoder = new TextDecoder("UTF-8");
+    const buffer_as_utf8 = utf8Decoder.decode(buffer_as_u8);
+    return buffer_as_utf8;
+}
+function newString(module, str) {
+    const utf8Encoder = new TextEncoder("UTF-8");
+    let string_buffer = utf8Encoder.encode(str);
+    let len = string_buffer.length;
+    let ptr = module.alloc(len + 1);
+    let memory = new Uint8Array(module.memory.buffer);
+    for (let i = 0; i < len; i++) {
+        memory[ptr + i] = string_buffer[i];
+    }
+    memory[ptr + len] = 0;
+    return ptr;
+}
+// TODO better strategy for having a js command callback
+function instantiate(js_command_callback) {
+    let Module = {};
+    return fetchAndInstantiate("/$/mercutio.wasm", {
+        env: {
+            js_command: function (inptr) {
+                let data = copyCStr(Module, inptr);
+                js_command_callback(data);
+            }
+        }
+    })
+        .then(mod => {
+        Module.alloc = mod.exports.alloc;
+        Module.dealloc_str = mod.exports.dealloc_str;
+        Module.memory = mod.exports.memory;
+        Module.wasm_command = function (req) {
+            let json = JSON.stringify(req);
+            let out = mod.exports.wasm_command(newString(Module, json));
+            console.log('----- from wasm_command>', out);
+            // let result = copyCStr(Module, outptr);
+            // return JSON.parse(result);
+        };
+        Module.wasm_setup = function (editorID) {
+            mod.exports.wasm_setup(newString(Module, editorID));
+        };
+        return Module;
+    });
+}
+
+
+/***/ }),
 /* 47 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -30366,7 +30368,7 @@ function start() {
     });
 }
 
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(9)))
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(8)))
 
 /***/ }),
 /* 48 */
@@ -30375,8 +30377,11 @@ function start() {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = start;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__commands__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__network__ = __webpack_require__(16);
 
-function start(network) {
+
+function start() {
+    let network = CONFIG.wasm ? new __WEBPACK_IMPORTED_MODULE_1__network__["b" /* WasmNetwork */]() : new __WEBPACK_IMPORTED_MODULE_1__network__["a" /* ProxyNetwork */]();
     let md = null;
     network.onNativeMessage = function (msg) {
         console.log(msg);

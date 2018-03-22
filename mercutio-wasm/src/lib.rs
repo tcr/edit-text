@@ -1,6 +1,6 @@
 //! Connecting to wasm.
 
-extern crate mercutio;
+extern crate mercutio_common;
 extern crate mercutio_client;
 extern crate failure;
 extern crate maplit;
@@ -16,7 +16,7 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicBool;
 use mercutio_client::client::*;
 use mercutio_client::state::*;
-use mercutio::*;
+use mercutio_common::*;
 use failure::Error;
 use std::mem;
 use std::ffi::CString;

@@ -8,6 +8,8 @@ import * as ReactDOM from 'react-dom';
 import { editorSetup } from '../editor';
 import { Network, ProxyNetwork, WasmNetwork } from '../network';
 
+declare var CONFIG: any;
+
 const ROOT_QUERY = '.edit-text';
 
 function NativeButtons(props) {
@@ -210,7 +212,9 @@ export class EditorFrame {
   }
 }
 
-export function start(network: Network) {
+export function start() {
+  let network = CONFIG.wasm ? new WasmNetwork() : new ProxyNetwork();
+
   // Utility classes for Multi
   if (window.parent != window) {
     // Blur/Focus classes.

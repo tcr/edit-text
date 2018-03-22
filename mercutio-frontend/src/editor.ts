@@ -6,10 +6,13 @@ import {Network, ProxyNetwork, WasmNetwork} from './network';
 
 const ROOT_SELECTOR = '.edit-text';
 
+// TODO define this better
+type Cursor = any;
+
 function curto(
   el: Node | null,
   textOffset: number | null = null,
-) {
+): Cursor {
   if (!el) {
     return null;
   }
@@ -70,50 +73,43 @@ function curto(
   return cur;
 }
 
+function resolveCursorFromPosition(
+  textNode: Text,
+  offset: number,
+): Cursor {
+  if (offset == 0) {
+    if (textNode.previousSibling === null) {
+      // Text node is first in element, so select parent node.
+      return curto(textNode.parentNode);
+    } else if (textNode.previousSibling.nodeType === 3) {
+      // Text node has a preceding text elemnt; move to end.
+      return curto(
+        textNode.previousSibling,
+        (<Text>textNode.previousSibling).data.length,
+      );
+    } else {
+      // If it's an element...
+      //TODO do something here,
+      return curto(
+        // This is literally just a random node
+        // TODO replace this
+        textNode.parentNode,
+      );
+    };
+  } else {
+    // Move to offset of this text node.
+    return curto(
+      textNode,
+      offset - 1,
+    );
+  }
+}
+
 export function editorSetup(
   element: Element,
   network: Network,
   KEY_WHITELIST: any,
 ) {
-  element.addEventListener('mousedown', (e: MouseEvent) => {
-    let pos = util.textNodeAtPoint(e.clientX, e.clientY);
-
-    // Only support text elements.
-    if (pos !== null) {
-      // Text node
-      let target = pos.textNode.parentNode;
-      if (pos.offset == 0) {
-        if (pos.textNode.previousSibling === null) {
-          // Text node is first in element, so select parent node.
-          network.nativeCommand(commands.TargetCommand(curto(
-            pos.textNode.parentNode,
-          )));
-        } else if (pos.textNode.previousSibling.nodeType === 3) {
-          // Text node has a preceding text elemnt; move to end.
-          network.nativeCommand(commands.TargetCommand(curto(
-            pos.textNode.previousSibling,
-            (<Text>pos.textNode.previousSibling).data.length,
-          )))
-        } else {
-          // If it's an element...
-          //TODO do something here
-          console.log('recursive depth');
-        };
-      } else {
-        // Move to offset of this text node.
-        network.nativeCommand(commands.TargetCommand(curto(
-          pos.textNode,
-          pos.offset - 1,
-        )));
-      }
-    }
-
-    // TODO Why do we call window.focus?
-    window.focus();
-    // TODO Why do we call e.preventDefault() ?
-    e.preventDefault();
-  });
-
   // Click outside the document area.
   // $('#client').on('click', (e) => {
   //   if (e.target == $('#client')[0]) {
@@ -122,8 +118,24 @@ export function editorSetup(
   //   }
   // });
 
+  element.addEventListener('mousedown', (e: MouseEvent) => {
+    let pos = util.textNodeAtPoint(e.clientX, e.clientY);
+
+    // Only support text elements.
+    if (pos !== null) {
+      network.nativeCommand(commands.TargetCommand(
+        resolveCursorFromPosition(pos.textNode, pos.offset),
+      ));
+    }
+
+    // Focus the window despite us cancelling the event.
+    window.focus();
+    // Cancel the event; prevent text selection.
+    e.preventDefault();
+  });
+
   document.addEventListener('keypress', (e: KeyboardEvent) => {
-    // Don't accept keypresses when a modifier key is pressed, except shift.
+    // Don't accept keypresses when a modifier key is pressed w/keypress, except shift.
     if (e.metaKey) {
       return;
     }
@@ -134,9 +146,7 @@ export function editorSetup(
   });
 
   document.addEventListener('keydown', (e) => {
-    console.log('KEYDOWN:', e.keyCode);
-
-    // Match against whitelisted key entries.
+    // Check if this event exists in the list of whitelisted key combinations.
     if (!KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
       return;
     }

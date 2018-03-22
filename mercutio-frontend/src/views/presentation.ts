@@ -1,9 +1,12 @@
 import * as commands from '../commands';
-import {Network} from '../network';
+import {Network, WasmNetwork, ProxyNetwork} from '../network';
 
+declare var CONFIG: any;
 declare var remark: any;
 
-export function start(network: Network) {
+export function start() {
+  let network = CONFIG.wasm ? new WasmNetwork() : new ProxyNetwork();
+
   let md = null;
   network.onNativeMessage = function (msg) {
     console.log(msg);

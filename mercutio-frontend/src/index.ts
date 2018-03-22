@@ -6,7 +6,6 @@ import * as editorFrame from './views/editor-frame';
 import * as multi from './views/multi';
 import * as presentation from './views/presentation';
 
-declare var remark: any;
 declare var CONFIG: any;
 
 // Check page configuration.
@@ -20,19 +19,14 @@ switch (document.body.id) {
     multi.start();
     break;
   }
-  
   case 'client': {
-    let network = CONFIG.wasm ? new WasmNetwork() : new ProxyNetwork();
-    editorFrame.start(network);
+    editorFrame.start();
     break;
   }
-
   case 'presentation': {
-    let network = CONFIG.wasm ? new WasmNetwork() : new ProxyNetwork();
-    presentation.start(network);
+    presentation.start();
     break;
   }
-  
   default: {
     document.body.innerHTML = `<h1>404</h1>`;
     break;
