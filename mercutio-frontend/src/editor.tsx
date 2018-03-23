@@ -111,7 +111,10 @@ export class Editor extends React.Component {
     content: string,
     network: Network,
     KEY_WHITELIST: any,
+    editorID: string,
   };
+
+  el: HTMLElement;
 
   onMouseDown(e: MouseEvent) {
     let pos = util.textNodeAtPoint(e.clientX, e.clientY);
@@ -131,9 +134,20 @@ export class Editor extends React.Component {
   }
 
   onMount(el: HTMLElement) {
-    if (this.props.content) {
-      el.innerHTML = this.props.content;
-    }
+    this.el = el;
+    this.el.innerHTML = this.props.content;
+  }
+  
+  componentDidUpdate() {
+    console.log('UPDATED');
+    this.el.innerHTML = this.props.content;
+
+    // Highlight our caret.
+    document.querySelectorAll(
+      `div[data-tag="caret"][data-client=${JSON.stringify(this.props.editorID)}]`,
+    ).forEach(caret => {
+      caret.classList.add("current");
+    });
   }
 
   componentDidMount() {
@@ -168,6 +182,7 @@ export class Editor extends React.Component {
   render() {
     return (
       <div
+        className="edit-text theme-mock"
         ref={(el) => el && this.onMount(el)}
         onMouseDown={this.onMouseDown.bind(this)}
       />

@@ -13,19 +13,23 @@ declare var CONFIG: any;
 const ROOT_QUERY = '.edit-text';
 
 function NativeButtons(props) {
-  return props.buttons.map(btn =>
-    <button
-      onClick={
-        () => props.editor.network.nativeCommand(commands.ButtonCommand(btn[0]))
-      }
-      className={btn[2] ? 'active' : ''}
-    >{btn[1]}</button>
+  return (
+    <div id="native-buttons">{
+      props.buttons.map(btn =>
+        <button
+          onClick={
+            () => props.editor.network.nativeCommand(commands.ButtonCommand(btn[0]))
+          }
+          className={btn[2] ? 'active' : ''}
+        >{btn[1]}</button>
+      )
+    }</div>
   );
 }
 
 class LocalButtons extends React.Component {
   props: {
-    editor: EditorFrame,
+    editorID: string,
   };
 
   state = {
@@ -47,8 +51,9 @@ class LocalButtons extends React.Component {
   }
 
   onXray() {
-    this.props.editor.$elem.toggleClass('theme-mock');
-    this.props.editor.$elem.toggleClass('theme-block');
+    // TODO
+    // this.props.editor.$elem.toggleClass('theme-mock');
+    // this.props.editor.$elem.toggleClass('theme-block');
   }
 
   render(): React.ReactNode {
@@ -65,38 +70,52 @@ class LocalButtons extends React.Component {
 
         <button id="xray" onClick={() => this.onXray()}>X-Ray</button>
 
-        <b>Client: <kbd>{this.props.editor.editorID}</kbd></b>
+        <b>Client: <kbd>{this.props.editorID}</kbd></b>
       </div>
     );
   }
 }
 
 // Initialize child editor.
-export class EditorFrame {
-  $elem: any;
-  editorID: string;
+export class EditorFrame extends React.Component {
+  props: {
+    network: Network,
+    body: string,
+  };
+
+  state: {
+    body: string,
+    buttons: any,
+    editorID: string,
+  };
+
   ops: Array<any>;
   KEY_WHITELIST: any;
   markdown: string;
-
   network: Network;
 
   constructor(
-    elem: Element,
-    network: Network,
-    body: string,
+    props,
   ) {
-    this.$elem = $(elem);
-    this.editorID = '$$$$$$'; // TODO should this autopopulate
+    super(props);
+
     this.ops = [];
     this.KEY_WHITELIST = [];
     this.markdown = '';
 
-    this.network = network;
+    this.network = props.network;
     this.network.onNativeMessage = this.onNativeMessage.bind(this);
 
     let editor = this;
-    let $elem = this.$elem;
+
+    // Background colors.
+    // TODO make these actionable on this object right?
+    this.network.onNativeClose = function () {
+      $('body').css('background', 'red');
+    };
+    this.network.onSyncClose = function () {
+      $('body').css('background', 'red');
+    };
 
     {
       new Clipboard('#save-markdown', {
@@ -123,42 +142,41 @@ export class EditorFrame {
       }, 500);
     }
 
-    ReactDOM.render(
-      <LocalButtons editor={editor} />,
-      document.querySelector("#local-buttons"),
-    );
-
-    this.$elem[0].innerHTML = '';
-
-    ReactDOM.render(
-      <Editor 
-        network={this.network} 
-        KEY_WHITELIST={this.KEY_WHITELIST}
-        content={body}
-      />,
-      this.$elem[0],
-    );
+    this.state = {
+      body: this.props.body,
+      buttons: [],
+      editorID: '$$$$$$',
+    };
   }
 
-  setID(id: string) {
-    this.editorID = id;
+  render() {
+    return (
+      <div>
+        <div id="toolbar">
+          <a href="https://github.com/tcr/edit-text" id="logo">edit-text</a>
+          <NativeButtons 
+            buttons={this.state.buttons}
+            editor={this} 
+          />,
+          <LocalButtons
+            editorID={this.state.editorID}
+          />
+        </div>
 
-    // Update the client identifier
-    $('kbd').text(id);
+        <Editor 
+          network={this.props.network} 
+          KEY_WHITELIST={this.KEY_WHITELIST}
+          content={this.state.body}
+          editorID={this.state.editorID}
+        />,
+      </div>
+    );
   }
 
   load(data: string) {
-    // let elem = this.$elem[0];
-    // requestAnimationFrame(() => {
-    //   elem.innerHTML = data;
-
-    //   // Highlight our caret.
-    //   document.querySelectorAll(
-    //     `div[data-tag="caret"][data-client=${JSON.stringify(this.editorID)}]`,
-    //   ).forEach(caret => {
-    //     caret.classList.add("current");
-    //   });
-    // });
+    this.setState({
+      body: data,
+    });
   }
 
   // Received message on native socket
@@ -166,7 +184,9 @@ export class EditorFrame {
     const editor = this;
 
     if (parse.Init) {
-      editor.setID(parse.Init);
+      this.setState({
+        editorID: parse.Init,
+      })
     }
 
     else if (parse.Update) {
@@ -196,62 +216,57 @@ export class EditorFrame {
         })))
       );
 
-      ReactDOM.render(
-        <NativeButtons buttons={parse.Controls.buttons} editor={editor} />,
-        document.querySelector("#native-buttons"),
-      );
+      this.setState({
+        buttons: parse.Controls.buttons,
+      });
     }
 
     else {
       console.error('Unknown packet:', parse);
     }
   }
+}
 
-  multiConnect() {
-    window.onmessage = (event) => {
-      let editor = this;
 
-      // Sanity check.
-      if (typeof event.data != 'object') {
-        return;
-      }
-      let msg = event.data;
+function multiConnect(network: Network) {
+  // Blur/Focus classes.
+  $(window).on('focus', () => $(document.body).removeClass('blurred'));
+  $(window).on('blur', () => $(document.body).addClass('blurred'));
+  $(document.body).addClass('blurred');
 
-      if ('Monkey' in msg) {
-        // TODO reflect this in the app
-        editor.network.nativeCommand(commands.MonkeyCommand(msg.Monkey));
-      }
-    };
-  }
+  // Forward Monkey events.
+  window.onmessage = (event) => {
+    let editor = this;
+
+    // Sanity check.
+    if (typeof event.data != 'object') {
+      return;
+    }
+    let msg = event.data;
+
+    if ('Monkey' in msg) {
+      // TODO reflect this in the app
+      network.nativeCommand(commands.MonkeyCommand(msg.Monkey));
+    }
+  };
 }
 
 export function start() {
   let network = CONFIG.wasm ? new WasmNetwork() : new ProxyNetwork();
 
-  // Utility classes for Multi
+  // Connect to parent window (if exists).
   if (window.parent != window) {
-    // Blur/Focus classes.
-    $(window).on('focus', () => $(document.body).removeClass('blurred'));
-    $(window).on('blur', () => $(document.body).addClass('blurred'));
-    $(document.body).addClass('blurred');
+    multiConnect(network);
   }
 
   // Create the editor frame.
-  let editor = new EditorFrame(
-    document.querySelector(ROOT_QUERY)!,
-    network,
-    document.querySelector('.edit-text')!.innerHTML,
-  );
-  // Connect to parent window (if exists).
-  editor.multiConnect();
-
-  // Background colors.
-  network.onNativeClose = function () {
-    $('body').css('background', 'red');
-  };
-  network.onSyncClose = function () {
-    $('body').css('background', 'red');
-  };
+  ReactDOM.render(
+    <EditorFrame
+      network={network}
+      body={document.querySelector('.edit-text')!.innerHTML}
+    />,
+    document.querySelector('body')!,
+  )
 
   // Connect to remote sockets.
   network.nativeConnect()

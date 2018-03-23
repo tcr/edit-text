@@ -11457,7 +11457,7 @@ switch (document.body.id) {
 
 const ROOT_QUERY = '.edit-text';
 function NativeButtons(props) {
-    return props.buttons.map(btn => __WEBPACK_IMPORTED_MODULE_2_react__["createElement"]("button", { onClick: () => props.editor.network.nativeCommand(__WEBPACK_IMPORTED_MODULE_1__commands__["a" /* ButtonCommand */](btn[0])), className: btn[2] ? 'active' : '' }, btn[1]));
+    return (__WEBPACK_IMPORTED_MODULE_2_react__["createElement"]("div", { id: "native-buttons" }, props.buttons.map(btn => __WEBPACK_IMPORTED_MODULE_2_react__["createElement"]("button", { onClick: () => props.editor.network.nativeCommand(__WEBPACK_IMPORTED_MODULE_1__commands__["a" /* ButtonCommand */](btn[0])), className: btn[2] ? 'active' : '' }, btn[1]))));
 }
 class LocalButtons extends __WEBPACK_IMPORTED_MODULE_2_react__["Component"] {
     constructor() {
@@ -11474,8 +11474,9 @@ class LocalButtons extends __WEBPACK_IMPORTED_MODULE_2_react__["Component"] {
         }).bind(this), 2000);
     }
     onXray() {
-        this.props.editor.$elem.toggleClass('theme-mock');
-        this.props.editor.$elem.toggleClass('theme-block');
+        // TODO
+        // this.props.editor.$elem.toggleClass('theme-mock');
+        // this.props.editor.$elem.toggleClass('theme-block');
     }
     render() {
         return (__WEBPACK_IMPORTED_MODULE_2_react__["createElement"]("div", null,
@@ -11483,21 +11484,27 @@ class LocalButtons extends __WEBPACK_IMPORTED_MODULE_2_react__["Component"] {
             __WEBPACK_IMPORTED_MODULE_2_react__["createElement"]("button", { id: "xray", onClick: () => this.onXray() }, "X-Ray"),
             __WEBPACK_IMPORTED_MODULE_2_react__["createElement"]("b", null,
                 "Client: ",
-                __WEBPACK_IMPORTED_MODULE_2_react__["createElement"]("kbd", null, this.props.editor.editorID))));
+                __WEBPACK_IMPORTED_MODULE_2_react__["createElement"]("kbd", null, this.props.editorID))));
     }
 }
 // Initialize child editor.
-class EditorFrame {
-    constructor(elem, network, body) {
-        this.$elem = $(elem);
-        this.editorID = '$$$$$$'; // TODO should this autopopulate
+class EditorFrame extends __WEBPACK_IMPORTED_MODULE_2_react__["Component"] {
+    constructor(props) {
+        super(props);
         this.ops = [];
         this.KEY_WHITELIST = [];
         this.markdown = '';
-        this.network = network;
+        this.network = props.network;
         this.network.onNativeMessage = this.onNativeMessage.bind(this);
         let editor = this;
-        let $elem = this.$elem;
+        // Background colors.
+        // TODO make these actionable on this object right?
+        this.network.onNativeClose = function () {
+            $('body').css('background', 'red');
+        };
+        this.network.onSyncClose = function () {
+            $('body').css('background', 'red');
+        };
         {
             new __WEBPACK_IMPORTED_MODULE_0_clipboard___default.a('#save-markdown', {
                 text: function (trigger) {
@@ -11523,32 +11530,34 @@ class EditorFrame {
                 }
             }, 500);
         }
-        __WEBPACK_IMPORTED_MODULE_3_react_dom__["render"](__WEBPACK_IMPORTED_MODULE_2_react__["createElement"](LocalButtons, { editor: editor }), document.querySelector("#local-buttons"));
-        this.$elem[0].innerHTML = '';
-        __WEBPACK_IMPORTED_MODULE_3_react_dom__["render"](__WEBPACK_IMPORTED_MODULE_2_react__["createElement"](__WEBPACK_IMPORTED_MODULE_4__editor__["a" /* Editor */], { network: this.network, KEY_WHITELIST: this.KEY_WHITELIST, content: body }), this.$elem[0]);
+        this.state = {
+            body: this.props.body,
+            buttons: [],
+            editorID: '$$$$$$',
+        };
     }
-    setID(id) {
-        this.editorID = id;
-        // Update the client identifier
-        $('kbd').text(id);
+    render() {
+        return (__WEBPACK_IMPORTED_MODULE_2_react__["createElement"]("div", null,
+            __WEBPACK_IMPORTED_MODULE_2_react__["createElement"]("div", { id: "toolbar" },
+                __WEBPACK_IMPORTED_MODULE_2_react__["createElement"]("a", { href: "https://github.com/tcr/edit-text", id: "logo" }, "edit-text"),
+                __WEBPACK_IMPORTED_MODULE_2_react__["createElement"](NativeButtons, { buttons: this.state.buttons, editor: this }),
+                ",",
+                __WEBPACK_IMPORTED_MODULE_2_react__["createElement"](LocalButtons, { editorID: this.state.editorID })),
+            __WEBPACK_IMPORTED_MODULE_2_react__["createElement"](__WEBPACK_IMPORTED_MODULE_4__editor__["a" /* Editor */], { network: this.props.network, KEY_WHITELIST: this.KEY_WHITELIST, content: this.state.body, editorID: this.state.editorID }),
+            ","));
     }
     load(data) {
-        // let elem = this.$elem[0];
-        // requestAnimationFrame(() => {
-        //   elem.innerHTML = data;
-        //   // Highlight our caret.
-        //   document.querySelectorAll(
-        //     `div[data-tag="caret"][data-client=${JSON.stringify(this.editorID)}]`,
-        //   ).forEach(caret => {
-        //     caret.classList.add("current");
-        //   });
-        // });
+        this.setState({
+            body: data,
+        });
     }
     // Received message on native socket
     onNativeMessage(parse) {
         const editor = this;
         if (parse.Init) {
-            editor.setID(parse.Init);
+            this.setState({
+                editorID: parse.Init,
+            });
         }
         else if (parse.Update) {
             editor.load(parse.Update[0]);
@@ -11571,49 +11580,44 @@ class EditorFrame {
                 metaKey: x[1],
                 shiftKey: x[2],
             }))));
-            __WEBPACK_IMPORTED_MODULE_3_react_dom__["render"](__WEBPACK_IMPORTED_MODULE_2_react__["createElement"](NativeButtons, { buttons: parse.Controls.buttons, editor: editor }), document.querySelector("#native-buttons"));
+            this.setState({
+                buttons: parse.Controls.buttons,
+            });
         }
         else {
             console.error('Unknown packet:', parse);
         }
     }
-    multiConnect() {
-        window.onmessage = (event) => {
-            let editor = this;
-            // Sanity check.
-            if (typeof event.data != 'object') {
-                return;
-            }
-            let msg = event.data;
-            if ('Monkey' in msg) {
-                // TODO reflect this in the app
-                editor.network.nativeCommand(__WEBPACK_IMPORTED_MODULE_1__commands__["d" /* MonkeyCommand */](msg.Monkey));
-            }
-        };
-    }
 }
 /* unused harmony export EditorFrame */
 
+function multiConnect(network) {
+    // Blur/Focus classes.
+    $(window).on('focus', () => $(document.body).removeClass('blurred'));
+    $(window).on('blur', () => $(document.body).addClass('blurred'));
+    $(document.body).addClass('blurred');
+    // Forward Monkey events.
+    window.onmessage = (event) => {
+        let editor = this;
+        // Sanity check.
+        if (typeof event.data != 'object') {
+            return;
+        }
+        let msg = event.data;
+        if ('Monkey' in msg) {
+            // TODO reflect this in the app
+            network.nativeCommand(__WEBPACK_IMPORTED_MODULE_1__commands__["d" /* MonkeyCommand */](msg.Monkey));
+        }
+    };
+}
 function start() {
     let network = CONFIG.wasm ? new __WEBPACK_IMPORTED_MODULE_5__network__["b" /* WasmNetwork */]() : new __WEBPACK_IMPORTED_MODULE_5__network__["a" /* ProxyNetwork */]();
-    // Utility classes for Multi
+    // Connect to parent window (if exists).
     if (window.parent != window) {
-        // Blur/Focus classes.
-        $(window).on('focus', () => $(document.body).removeClass('blurred'));
-        $(window).on('blur', () => $(document.body).addClass('blurred'));
-        $(document.body).addClass('blurred');
+        multiConnect(network);
     }
     // Create the editor frame.
-    let editor = new EditorFrame(document.querySelector(ROOT_QUERY), network, document.querySelector('.edit-text').innerHTML);
-    // Connect to parent window (if exists).
-    editor.multiConnect();
-    // Background colors.
-    network.onNativeClose = function () {
-        $('body').css('background', 'red');
-    };
-    network.onSyncClose = function () {
-        $('body').css('background', 'red');
-    };
+    __WEBPACK_IMPORTED_MODULE_3_react_dom__["render"](__WEBPACK_IMPORTED_MODULE_2_react__["createElement"](EditorFrame, { network: network, body: document.querySelector('.edit-text').innerHTML }), document.querySelector('body'));
     // Connect to remote sockets.
     network.nativeConnect()
         .then(() => network.syncConnect())
@@ -29893,9 +29897,16 @@ class Editor extends __WEBPACK_IMPORTED_MODULE_2_react__["Component"] {
         e.preventDefault();
     }
     onMount(el) {
-        if (this.props.content) {
-            el.innerHTML = this.props.content;
-        }
+        this.el = el;
+        this.el.innerHTML = this.props.content;
+    }
+    componentDidUpdate() {
+        console.log('UPDATED');
+        this.el.innerHTML = this.props.content;
+        // Highlight our caret.
+        document.querySelectorAll(`div[data-tag="caret"][data-client=${JSON.stringify(this.props.editorID)}]`).forEach(caret => {
+            caret.classList.add("current");
+        });
     }
     componentDidMount() {
         document.addEventListener('keypress', (e) => {
@@ -29917,7 +29928,7 @@ class Editor extends __WEBPACK_IMPORTED_MODULE_2_react__["Component"] {
         });
     }
     render() {
-        return (__WEBPACK_IMPORTED_MODULE_2_react__["createElement"]("div", { ref: (el) => el && this.onMount(el), onMouseDown: this.onMouseDown.bind(this) }));
+        return (__WEBPACK_IMPORTED_MODULE_2_react__["createElement"]("div", { className: "edit-text theme-mock", ref: (el) => el && this.onMount(el), onMouseDown: this.onMouseDown.bind(this) }));
     }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = Editor;
