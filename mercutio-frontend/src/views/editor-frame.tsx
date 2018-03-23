@@ -5,7 +5,7 @@ import * as util from '../util';
 import * as interop from '../interop';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { editorSetup } from '../editor';
+import { Editor } from '../editor';
 import { Network, ProxyNetwork, WasmNetwork } from '../network';
 
 declare var CONFIG: any;
@@ -81,7 +81,11 @@ export class EditorFrame {
 
   network: Network;
 
-  constructor(elem: Element, network: Network) {
+  constructor(
+    elem: Element,
+    network: Network,
+    body: string,
+  ) {
     this.$elem = $(elem);
     this.editorID = '$$$$$$'; // TODO should this autopopulate
     this.ops = [];
@@ -124,7 +128,16 @@ export class EditorFrame {
       document.querySelector("#local-buttons"),
     );
 
-    editorSetup(this.$elem[0], this.network, this.KEY_WHITELIST);
+    this.$elem[0].innerHTML = '';
+
+    ReactDOM.render(
+      <Editor 
+        network={this.network} 
+        KEY_WHITELIST={this.KEY_WHITELIST}
+        content={body}
+      />,
+      this.$elem[0],
+    );
   }
 
   setID(id: string) {
@@ -135,17 +148,17 @@ export class EditorFrame {
   }
 
   load(data: string) {
-    let elem = this.$elem[0];
-    requestAnimationFrame(() => {
-      elem.innerHTML = data;
+    // let elem = this.$elem[0];
+    // requestAnimationFrame(() => {
+    //   elem.innerHTML = data;
 
-      // Highlight our caret.
-      document.querySelectorAll(
-        `div[data-tag="caret"][data-client=${JSON.stringify(this.editorID)}]`,
-      ).forEach(caret => {
-        caret.classList.add("current");
-      });
-    });
+    //   // Highlight our caret.
+    //   document.querySelectorAll(
+    //     `div[data-tag="caret"][data-client=${JSON.stringify(this.editorID)}]`,
+    //   ).forEach(caret => {
+    //     caret.classList.add("current");
+    //   });
+    // });
   }
 
   // Received message on native socket
@@ -224,7 +237,11 @@ export function start() {
   }
 
   // Create the editor frame.
-  let editor = new EditorFrame(document.querySelector(ROOT_QUERY)!, network);
+  let editor = new EditorFrame(
+    document.querySelector(ROOT_QUERY)!,
+    network,
+    document.querySelector('.edit-text')!.innerHTML,
+  );
   // Connect to parent window (if exists).
   editor.multiConnect();
 

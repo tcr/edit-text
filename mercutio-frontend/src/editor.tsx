@@ -3,6 +3,7 @@ import Clipboard from 'clipboard';
 import * as util from './util';
 import * as interop from './interop';
 import {Network, ProxyNetwork, WasmNetwork} from './network';
+import * as React from 'react';
 
 const ROOT_SELECTOR = '.edit-text';
 
@@ -45,7 +46,7 @@ function curto(
   while (el !== null) {
     if (el.previousSibling) {
       if (el.previousSibling.nodeType == 3) {
-        place_skip(cur, (<Text>el.previousSibling).data.length);
+        place_skip(cur, (el.previousSibling as Text).data.length);
       } else {
         place_skip(cur, 1);
       }
@@ -85,7 +86,7 @@ function resolveCursorFromPosition(
       // Text node has a preceding text elemnt; move to end.
       return curto(
         textNode.previousSibling,
-        (<Text>textNode.previousSibling).data.length,
+        (textNode.previousSibling as Text).data.length,
       );
     } else {
       // If it's an element...
@@ -105,25 +106,19 @@ function resolveCursorFromPosition(
   }
 }
 
-export function editorSetup(
-  element: Element,
-  network: Network,
-  KEY_WHITELIST: any,
-) {
-  // Click outside the document area.
-  // $('#client').on('click', (e) => {
-  //   if (e.target == $('#client')[0]) {
-  //     let last = this.$elem.find('*').last()[0];
-  //     network.nativeCommand(commands.TargetCommand(curto(last)));
-  //   }
-  // });
+export class Editor extends React.Component {
+  props: {
+    content: string,
+    network: Network,
+    KEY_WHITELIST: any,
+  };
 
-  element.addEventListener('mousedown', (e: MouseEvent) => {
+  onMouseDown(e: MouseEvent) {
     let pos = util.textNodeAtPoint(e.clientX, e.clientY);
 
     // Only support text elements.
     if (pos !== null) {
-      network.nativeCommand(commands.TargetCommand(
+      this.props.network.nativeCommand(commands.TargetCommand(
         resolveCursorFromPosition(pos.textNode, pos.offset),
       ));
     }
@@ -132,32 +127,50 @@ export function editorSetup(
     window.focus();
     // Cancel the event; prevent text selection.
     e.preventDefault();
-  });
 
-  document.addEventListener('keypress', (e: KeyboardEvent) => {
-    // Don't accept keypresses when a modifier key is pressed w/keypress, except shift.
-    if (e.metaKey) {
-      return;
+  }
+
+  onMount(el: HTMLElement) {
+    if (this.props.content) {
+      el.innerHTML = this.props.content;
     }
+  }
 
-    network.nativeCommand(commands.CharacterCommand(e.charCode));
+  componentDidMount() {
+    document.addEventListener('keypress', (e: KeyboardEvent) => {
+      // Don't accept keypresses when a modifier key is pressed w/keypress, except shift.
+      if (e.metaKey) {
+        return;
+      }
+  
+      this.props.network.nativeCommand(commands.CharacterCommand(e.charCode));
+  
+      e.preventDefault();
+    });
+  
+    document.addEventListener('keydown', (e) => {
+      // Check if this event exists in the list of whitelisted key combinations.
+      if (!this.props.KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
+        return;
+      }
+  
+      // Forward the keypress to native.
+      this.props.network.nativeCommand(commands.KeypressCommand(
+        e.keyCode,
+        e.metaKey,
+        e.shiftKey,
+      ));
+      
+      e.preventDefault();
+    });
+  }
 
-    e.preventDefault();
-  });
-
-  document.addEventListener('keydown', (e) => {
-    // Check if this event exists in the list of whitelisted key combinations.
-    if (!KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
-      return;
-    }
-
-    // Forward the keypress to native.
-    network.nativeCommand(commands.KeypressCommand(
-      e.keyCode,
-      e.metaKey,
-      e.shiftKey,
-    ));
-    
-    e.preventDefault();
-  });
+  render() {
+    return (
+      <div
+        ref={(el) => el && this.onMount(el)}
+        onMouseDown={this.onMouseDown.bind(this)}
+      />
+    );
+  }
 }

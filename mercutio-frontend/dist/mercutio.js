@@ -300,6 +300,21 @@ module.exports = emptyFunction;
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
+/* WEBPACK VAR INJECTION */(function(process) {
+
+if (process.env.NODE_ENV === 'production') {
+  module.exports = __webpack_require__(29);
+} else {
+  module.exports = __webpack_require__(30);
+}
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
 /*
 object-assign
 (c) Sindre Sorhus
@@ -393,7 +408,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -417,7 +432,7 @@ module.exports = emptyObject;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -476,21 +491,6 @@ function RequestMarkdown() {
     };
 }
 
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(process) {
-
-if (process.env.NODE_ENV === 'production') {
-  module.exports = __webpack_require__(29);
-} else {
-  module.exports = __webpack_require__(30);
-}
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 6 */
@@ -11442,8 +11442,8 @@ switch (document.body.id) {
 /* WEBPACK VAR INJECTION */(function($) {/* harmony export (immutable) */ __webpack_exports__["a"] = start;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_clipboard__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_clipboard___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_clipboard__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__commands__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__commands__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_react__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react_dom__ = __webpack_require__(32);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react_dom___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_react_dom__);
@@ -11488,7 +11488,7 @@ class LocalButtons extends __WEBPACK_IMPORTED_MODULE_2_react__["Component"] {
 }
 // Initialize child editor.
 class EditorFrame {
-    constructor(elem, network) {
+    constructor(elem, network, body) {
         this.$elem = $(elem);
         this.editorID = '$$$$$$'; // TODO should this autopopulate
         this.ops = [];
@@ -11524,7 +11524,8 @@ class EditorFrame {
             }, 500);
         }
         __WEBPACK_IMPORTED_MODULE_3_react_dom__["render"](__WEBPACK_IMPORTED_MODULE_2_react__["createElement"](LocalButtons, { editor: editor }), document.querySelector("#local-buttons"));
-        Object(__WEBPACK_IMPORTED_MODULE_4__editor__["a" /* editorSetup */])(this.$elem[0], this.network, this.KEY_WHITELIST);
+        this.$elem[0].innerHTML = '';
+        __WEBPACK_IMPORTED_MODULE_3_react_dom__["render"](__WEBPACK_IMPORTED_MODULE_2_react__["createElement"](__WEBPACK_IMPORTED_MODULE_4__editor__["a" /* Editor */], { network: this.network, KEY_WHITELIST: this.KEY_WHITELIST, content: body }), this.$elem[0]);
     }
     setID(id) {
         this.editorID = id;
@@ -11532,14 +11533,16 @@ class EditorFrame {
         $('kbd').text(id);
     }
     load(data) {
-        let elem = this.$elem[0];
-        requestAnimationFrame(() => {
-            elem.innerHTML = data;
-            // Highlight our caret.
-            document.querySelectorAll(`div[data-tag="caret"][data-client=${JSON.stringify(this.editorID)}]`).forEach(caret => {
-                caret.classList.add("current");
-            });
-        });
+        // let elem = this.$elem[0];
+        // requestAnimationFrame(() => {
+        //   elem.innerHTML = data;
+        //   // Highlight our caret.
+        //   document.querySelectorAll(
+        //     `div[data-tag="caret"][data-client=${JSON.stringify(this.editorID)}]`,
+        //   ).forEach(caret => {
+        //     caret.classList.add("current");
+        //   });
+        // });
     }
     // Received message on native socket
     onNativeMessage(parse) {
@@ -11601,7 +11604,7 @@ function start() {
         $(document.body).addClass('blurred');
     }
     // Create the editor frame.
-    let editor = new EditorFrame(document.querySelector(ROOT_QUERY), network);
+    let editor = new EditorFrame(document.querySelector(ROOT_QUERY), network, document.querySelector('.edit-text').innerHTML);
     // Connect to parent window (if exists).
     editor.multiConnect();
     // Background colors.
@@ -12488,7 +12491,7 @@ module.exports = closest;
  * LICENSE file in the root directory of this source tree.
  */
 
-var m=__webpack_require__(2),n=__webpack_require__(3),p=__webpack_require__(1),q="function"===typeof Symbol&&Symbol["for"],r=q?Symbol["for"]("react.element"):60103,t=q?Symbol["for"]("react.call"):60104,u=q?Symbol["for"]("react.return"):60105,v=q?Symbol["for"]("react.portal"):60106,w=q?Symbol["for"]("react.fragment"):60107,x="function"===typeof Symbol&&Symbol.iterator;
+var m=__webpack_require__(3),n=__webpack_require__(4),p=__webpack_require__(1),q="function"===typeof Symbol&&Symbol["for"],r=q?Symbol["for"]("react.element"):60103,t=q?Symbol["for"]("react.call"):60104,u=q?Symbol["for"]("react.return"):60105,v=q?Symbol["for"]("react.portal"):60106,w=q?Symbol["for"]("react.fragment"):60107,x="function"===typeof Symbol&&Symbol.iterator;
 function y(a){for(var b=arguments.length-1,e="Minified React error #"+a+"; visit http://facebook.github.io/react/docs/error-decoder.html?invariant\x3d"+a,c=0;c<b;c++)e+="\x26args[]\x3d"+encodeURIComponent(arguments[c+1]);b=Error(e+" for the full message or use the non-minified dev environment for full errors and additional helpful warnings.");b.name="Invariant Violation";b.framesToPop=1;throw b;}
 var z={isMounted:function(){return!1},enqueueForceUpdate:function(){},enqueueReplaceState:function(){},enqueueSetState:function(){}};function A(a,b,e){this.props=a;this.context=b;this.refs=n;this.updater=e||z}A.prototype.isReactComponent={};A.prototype.setState=function(a,b){"object"!==typeof a&&"function"!==typeof a&&null!=a?y("85"):void 0;this.updater.enqueueSetState(this,a,b,"setState")};A.prototype.forceUpdate=function(a){this.updater.enqueueForceUpdate(this,a,"forceUpdate")};
 function B(a,b,e){this.props=a;this.context=b;this.refs=n;this.updater=e||z}function C(){}C.prototype=A.prototype;var D=B.prototype=new C;D.constructor=B;m(D,A.prototype);D.isPureReactComponent=!0;function E(a,b,e){this.props=a;this.context=b;this.refs=n;this.updater=e||z}var F=E.prototype=new C;F.constructor=E;m(F,A.prototype);F.unstable_isAsyncReactComponent=!0;F.render=function(){return this.props.children};var G={current:null},H=Object.prototype.hasOwnProperty,I={key:!0,ref:!0,__self:!0,__source:!0};
@@ -12524,8 +12527,8 @@ if (process.env.NODE_ENV !== "production") {
   (function() {
 'use strict';
 
-var _assign = __webpack_require__(2);
-var emptyObject = __webpack_require__(3);
+var _assign = __webpack_require__(3);
+var emptyObject = __webpack_require__(4);
 var invariant = __webpack_require__(6);
 var warning = __webpack_require__(7);
 var emptyFunction = __webpack_require__(1);
@@ -13949,7 +13952,7 @@ if (process.env.NODE_ENV === 'production') {
 /*
  Modernizr 3.0.0pre (Custom Build) | MIT
 */
-var aa=__webpack_require__(5),l=__webpack_require__(10),B=__webpack_require__(2),C=__webpack_require__(1),ba=__webpack_require__(11),da=__webpack_require__(12),ea=__webpack_require__(13),fa=__webpack_require__(14),ia=__webpack_require__(15),D=__webpack_require__(3);
+var aa=__webpack_require__(2),l=__webpack_require__(10),B=__webpack_require__(3),C=__webpack_require__(1),ba=__webpack_require__(11),da=__webpack_require__(12),ea=__webpack_require__(13),fa=__webpack_require__(14),ia=__webpack_require__(15),D=__webpack_require__(4);
 function E(a){for(var b=arguments.length-1,c="Minified React error #"+a+"; visit http://facebook.github.io/react/docs/error-decoder.html?invariant\x3d"+a,d=0;d<b;d++)c+="\x26args[]\x3d"+encodeURIComponent(arguments[d+1]);b=Error(c+" for the full message or use the non-minified dev environment for full errors and additional helpful warnings.");b.name="Invariant Violation";b.framesToPop=1;throw b;}aa?void 0:E("227");
 var oa={children:!0,dangerouslySetInnerHTML:!0,defaultValue:!0,defaultChecked:!0,innerHTML:!0,suppressContentEditableWarning:!0,suppressHydrationWarning:!0,style:!0};function pa(a,b){return(a&b)===b}
 var ta={MUST_USE_PROPERTY:1,HAS_BOOLEAN_VALUE:4,HAS_NUMERIC_VALUE:8,HAS_POSITIVE_NUMERIC_VALUE:24,HAS_OVERLOADED_BOOLEAN_VALUE:32,HAS_STRING_BOOLEAN_VALUE:64,injectDOMPropertyConfig:function(a){var b=ta,c=a.Properties||{},d=a.DOMAttributeNamespaces||{},e=a.DOMAttributeNames||{};a=a.DOMMutationMethods||{};for(var f in c){ua.hasOwnProperty(f)?E("48",f):void 0;var g=f.toLowerCase(),h=c[f];g={attributeName:g,attributeNamespace:null,propertyName:f,mutationMethod:null,mustUseProperty:pa(h,b.MUST_USE_PROPERTY),
@@ -14246,18 +14249,18 @@ if (process.env.NODE_ENV !== "production") {
   (function() {
 'use strict';
 
-var React = __webpack_require__(5);
+var React = __webpack_require__(2);
 var invariant = __webpack_require__(6);
 var warning = __webpack_require__(7);
 var ExecutionEnvironment = __webpack_require__(10);
-var _assign = __webpack_require__(2);
+var _assign = __webpack_require__(3);
 var emptyFunction = __webpack_require__(1);
 var EventListener = __webpack_require__(11);
 var getActiveElement = __webpack_require__(12);
 var shallowEqual = __webpack_require__(13);
 var containsNode = __webpack_require__(14);
 var focusNode = __webpack_require__(15);
-var emptyObject = __webpack_require__(3);
+var emptyObject = __webpack_require__(4);
 var checkPropTypes = __webpack_require__(9);
 var hyphenateStyleName = __webpack_require__(37);
 var camelizeStyleName = __webpack_require__(39);
@@ -29787,9 +29790,11 @@ module.exports = camelize;
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = editorSetup;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__commands__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__commands__ = __webpack_require__(5);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__util__ = __webpack_require__(42);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_react__);
+
 
 
 const ROOT_SELECTOR = '.edit-text';
@@ -29875,43 +29880,48 @@ function resolveCursorFromPosition(textNode, offset) {
         return curto(textNode, offset - 1);
     }
 }
-function editorSetup(element, network, KEY_WHITELIST) {
-    // Click outside the document area.
-    // $('#client').on('click', (e) => {
-    //   if (e.target == $('#client')[0]) {
-    //     let last = this.$elem.find('*').last()[0];
-    //     network.nativeCommand(commands.TargetCommand(curto(last)));
-    //   }
-    // });
-    element.addEventListener('mousedown', (e) => {
+class Editor extends __WEBPACK_IMPORTED_MODULE_2_react__["Component"] {
+    onMouseDown(e) {
         let pos = __WEBPACK_IMPORTED_MODULE_1__util__["b" /* textNodeAtPoint */](e.clientX, e.clientY);
         // Only support text elements.
         if (pos !== null) {
-            network.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](resolveCursorFromPosition(pos.textNode, pos.offset)));
+            this.props.network.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["f" /* TargetCommand */](resolveCursorFromPosition(pos.textNode, pos.offset)));
         }
         // Focus the window despite us cancelling the event.
         window.focus();
         // Cancel the event; prevent text selection.
         e.preventDefault();
-    });
-    document.addEventListener('keypress', (e) => {
-        // Don't accept keypresses when a modifier key is pressed w/keypress, except shift.
-        if (e.metaKey) {
-            return;
+    }
+    onMount(el) {
+        if (this.props.content) {
+            el.innerHTML = this.props.content;
         }
-        network.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["b" /* CharacterCommand */](e.charCode));
-        e.preventDefault();
-    });
-    document.addEventListener('keydown', (e) => {
-        // Check if this event exists in the list of whitelisted key combinations.
-        if (!KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
-            return;
-        }
-        // Forward the keypress to native.
-        network.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["c" /* KeypressCommand */](e.keyCode, e.metaKey, e.shiftKey));
-        e.preventDefault();
-    });
+    }
+    componentDidMount() {
+        document.addEventListener('keypress', (e) => {
+            // Don't accept keypresses when a modifier key is pressed w/keypress, except shift.
+            if (e.metaKey) {
+                return;
+            }
+            this.props.network.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["b" /* CharacterCommand */](e.charCode));
+            e.preventDefault();
+        });
+        document.addEventListener('keydown', (e) => {
+            // Check if this event exists in the list of whitelisted key combinations.
+            if (!this.props.KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
+                return;
+            }
+            // Forward the keypress to native.
+            this.props.network.nativeCommand(__WEBPACK_IMPORTED_MODULE_0__commands__["c" /* KeypressCommand */](e.keyCode, e.metaKey, e.shiftKey));
+            e.preventDefault();
+        });
+    }
+    render() {
+        return (__WEBPACK_IMPORTED_MODULE_2_react__["createElement"]("div", { ref: (el) => el && this.onMount(el), onMouseDown: this.onMouseDown.bind(this) }));
+    }
 }
+/* harmony export (immutable) */ __webpack_exports__["a"] = Editor;
+
 
 
 /***/ }),
@@ -30376,7 +30386,7 @@ function start() {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = start;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__commands__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__commands__ = __webpack_require__(5);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__network__ = __webpack_require__(16);
 
 
