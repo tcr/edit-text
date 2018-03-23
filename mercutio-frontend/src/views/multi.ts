@@ -3,21 +3,23 @@ export function start() {
   let counter = Date.now();
   setInterval(() => {
     requestAnimationFrame(() => {
-      $('#timer').each(function () {
-        $(this).text((((Date.now() - counter)/1000)|0) + 's');
-      })
+      let timer = document.querySelector('#timer');
+      if (timer !== null) {
+        (timer as any).innerText = ((((Date.now() - counter)/1000)|0) + 's');
+      }
     });
   }, 1000);
 
   // Monkey global click button.
   let monkey = false;
-  $('#action-monkey').on('click', () => {
+  document.querySelector('#action-monkey')!
+  .addEventListener('click', () => {
     monkey = !monkey;
     for (let i = 0; i < window.frames.length; i++) {
       window.frames[i].postMessage({
         'Monkey': monkey,
       }, '*');
     }
-    $('#action-monkey').css('background', monkey ? '#0f0' : 'transparent');
+    (document.querySelector('#action-monkey') as HTMLElement).style.background = monkey ? '#0f0' : 'transparent';
   })
 }

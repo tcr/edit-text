@@ -139,7 +139,6 @@ export class Editor extends React.Component {
   }
   
   componentDidUpdate() {
-    console.log('UPDATED');
     this.el.innerHTML = this.props.content;
 
     // Highlight our caret.

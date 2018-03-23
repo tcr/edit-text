@@ -12,7 +12,9 @@ declare var CONFIG: any;
 
 const ROOT_QUERY = '.edit-text';
 
-function NativeButtons(props) {
+function NativeButtons(
+  props
+) {
   return (
     <div id="native-buttons">{
       props.buttons.map(btn =>
@@ -76,6 +78,25 @@ class LocalButtons extends React.Component {
   }
 }
 
+function pollMarkdown(network: Network) {
+  // Request markdown source.
+  setInterval(() => {
+    try {
+      network.nativeCommand(commands.RequestMarkdown());
+    } catch (e) {
+      // Socket may not be ready yet
+    }
+  }, 2000);
+  setTimeout(() => {
+    // Early request
+    try {
+      network.nativeCommand(commands.RequestMarkdown());
+    } catch (e) {
+      // Socket may not be ready yet
+    }
+  }, 500);
+}
+
 // Initialize child editor.
 export class EditorFrame extends React.Component {
   props: {
@@ -89,7 +110,6 @@ export class EditorFrame extends React.Component {
     editorID: string,
   };
 
-  ops: Array<any>;
   KEY_WHITELIST: any;
   markdown: string;
   network: Network;
@@ -99,47 +119,29 @@ export class EditorFrame extends React.Component {
   ) {
     super(props);
 
-    this.ops = [];
     this.KEY_WHITELIST = [];
     this.markdown = '';
 
     this.network = props.network;
     this.network.onNativeMessage = this.onNativeMessage.bind(this);
 
-    let editor = this;
-
     // Background colors.
     // TODO make these actionable on this object right?
     this.network.onNativeClose = function () {
-      $('body').css('background', 'red');
+      document.body.style.background = 'red';
     };
     this.network.onSyncClose = function () {
-      $('body').css('background', 'red');
+      document.body.style.background = 'red';
     };
 
     {
       new Clipboard('#save-markdown', {
-        text: function (trigger) {
-          return editor.markdown;
+        text: (trigger) => {
+          return this.markdown;
         }
       });
 
-      // Request markdown source.
-      setInterval(() => {
-        try {
-          editor.network.nativeCommand(commands.RequestMarkdown());
-        } catch (e) {
-          // Socket may not be ready yet
-        }
-      }, 2000);
-      setTimeout(() => {
-        // Early request
-        try {
-          editor.network.nativeCommand(commands.RequestMarkdown());
-        } catch (e) {
-          // Socket may not be ready yet
-        }
-      }, 500);
+      pollMarkdown(this.network);
     }
 
     this.state = {
@@ -149,7 +151,7 @@ export class EditorFrame extends React.Component {
     };
   }
 
-  render() {
+  render(): React.ReactNode {
     return (
       <div>
         <div id="toolbar">
@@ -173,12 +175,6 @@ export class EditorFrame extends React.Component {
     );
   }
 
-  load(data: string) {
-    this.setState({
-      body: data,
-    });
-  }
-
   // Received message on native socket
   onNativeMessage(parse: any) {
     const editor = this;
@@ -190,14 +186,10 @@ export class EditorFrame extends React.Component {
     }
 
     else if (parse.Update) {
-      editor.load(parse.Update[0]);
-
-      if (parse.Update[1] == null) {
-        console.log('Sync Update');
-        editor.ops.splice(0, this.ops.length);
-      } else {
-        editor.ops.push(parse.Update[1]);
-      }
+      // Update page content
+      this.setState({
+        body: parse.Update[0],
+      });
     }
 
     else if (parse.MarkdownUpdate) {
@@ -216,6 +208,7 @@ export class EditorFrame extends React.Component {
         })))
       );
 
+      // Update buttons view
       this.setState({
         buttons: parse.Controls.buttons,
       });
@@ -230,9 +223,13 @@ export class EditorFrame extends React.Component {
 
 function multiConnect(network: Network) {
   // Blur/Focus classes.
-  $(window).on('focus', () => $(document.body).removeClass('blurred'));
-  $(window).on('blur', () => $(document.body).addClass('blurred'));
-  $(document.body).addClass('blurred');
+  window.addEventListener('focus', () => {
+    document.body.classList.remove('blurred');
+  });
+  window.addEventListener('blue', () => {
+    document.body.classList.add('blurred');
+  });
+  document.body.classList.add('blurred');
 
   // Forward Monkey events.
   window.onmessage = (event) => {

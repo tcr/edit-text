@@ -2,7 +2,7 @@
 import '../styles/mercutio.scss';
 
 import {ProxyNetwork, WasmNetwork} from './network';
-import * as editorFrame from './views/editor-frame';
+import * as page from './views/page';
 import * as multi from './views/multi';
 import * as presentation from './views/presentation';
 
@@ -20,7 +20,7 @@ switch (document.body.id) {
     break;
   }
   case 'client': {
-    editorFrame.start();
+    page.start();
     break;
   }
   case 'presentation': {

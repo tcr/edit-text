@@ -26,9 +26,9 @@ export function start() {
         console.log('fullscreen attempt');
         let a = document.querySelector('.remark-slides-area');
         try {
-          (<any>a).mozRequestFullScreen();
+          (a as any).mozRequestFullScreen();
         } catch (e) {
-          (<any>a).requestFullscreen();
+          (a as any).requestFullscreen();
         }
       };
       fullscreen.style.cssText = `
