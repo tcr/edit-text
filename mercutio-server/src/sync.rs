@@ -96,10 +96,10 @@ pub struct SyncState {
 struct ClientHandler {
     client_id: String,
     page_id: Option<String>,
-    sync_state_mutex: Option<Arc<Mutex<SyncState>>>,
+    sync_state_mutex: Option<SharedSyncState>,
     out: Option<ws::Sender>,
     page_map: SharedPageMap,
-    tx_db: CCSender<(String, String)>,
+    tx_db: CCSender<DbMessage>,
 }
 
 impl ws::Handler for ClientHandler {
@@ -127,11 +127,21 @@ impl ws::Handler for ClientHandler {
             self.client_id, self.page_id
         );
 
-        self.sync_state_mutex = Some(allocate_page(
-            &self.page_map,
-            self.page_id.as_ref().unwrap(),
-            self.tx_db.clone(),
-        ));
+        // HERE we want to synchronize state to something
+        // on first startup
+
+        let (tx_client, rx_client) = unbounded();
+        self.tx_db.send(DbMessage::Initialize {
+            id: self.page_id.clone().unwrap(),
+            client: self.client_id.clone(),
+            receiver: tx_client,
+        });
+
+        if let Ok(sync_state_mutex) = rx_client.recv() {
+            self.sync_state_mutex = Some(sync_state_mutex);
+        } else {
+            panic!("Expected a sync state bundle.");
+        }
 
         // We will consume the out map.
         let out = self.out.take().unwrap();
@@ -182,20 +192,19 @@ impl ws::Handler for ClientHandler {
     }
 }
 
-/// Creates a new page netry in the page map and spawns a sync
+/// Creates a new page entry in the page map and spawns a sync
 /// thread to manage it.
 fn allocate_page(
+    db: &SqliteConnection,
     page_map_mutex: &SharedPageMap,
     page_id: &str,
-    tx_db: CCSender<(String, String)>,
-) -> Arc<Mutex<SyncState>> {
+    tx_db: CCSender<DbMessage>,
+) -> SharedSyncState {
     {
-        // TODO pass in db
-        let db = db_connection();
-
         let mut page_map = page_map_mutex.lock().unwrap();
 
         if page_map.get(page_id).is_none() {
+            println!("(%) writing new page for {:?}", page_id);
             let inner_doc = get_single_page(&db, page_id)
                 .map(|x| Doc(::ron::de::from_str::<DocSpan>(&x.body).unwrap()))
                 .unwrap_or_else(|| default_new_doc(page_id));
@@ -210,6 +219,8 @@ fn allocate_page(
                     client_bus: Bus::new(255),
                 })),
             );
+        } else {
+            println!("(%) launching {:?}", page_id);
         }
     }
 
@@ -228,7 +239,7 @@ fn spawn_sync_server(
     page_map: &SharedPageMap,
     page_id: &str,
     period: u64,
-    tx_db: CCSender<(String, String)>,
+    tx_db: CCSender<DbMessage>,
 ) -> Result<JoinHandle<Result<(), Error>>, ::std::io::Error> {
     let page_map = page_map.clone();
     let page_id = page_id.to_string();
@@ -279,7 +290,10 @@ fn spawn_sync_server(
                     if let Ok(serialized) =
                         remove_carets(&sync_state.doc).and_then(|x| Ok(::ron::ser::to_string(&x.0)?))
                     {
-                        tx_db.try_send((page_id.to_string(), serialized))?;
+                        tx_db.try_send(DbMessage::Update {
+                            id: page_id.to_string(),
+                            body: serialized,
+                        })?;
                     }
                     // }
 
@@ -299,13 +313,56 @@ fn spawn_sync_server(
         })
 }
 
-type SharedPageMap = Arc<Mutex<HashMap<String, Arc<Mutex<SyncState>>>>>;
+type SharedSyncState = Arc<Mutex<SyncState>>;
+type SharedPageMap = Arc<Mutex<HashMap<String, SharedSyncState>>>;
 
-fn spawn_update_db(conn: SqliteConnection, rx_db: CCReceiver<(String, String)>) -> JoinHandle<()> {
+enum DbMessage {
+    // Updated the document
+    Update {
+        id: String,
+        body: String,
+    },
+
+    // Intiialize a client.
+    Initialize {
+        id: String,
+        client: String,
+        receiver: CCSender<SharedSyncState>,
+    },
+}
+
+fn spawn_update_db(
+    conn: SqliteConnection,
+    page_map_mutex: SharedPageMap,
+    tx_db: CCSender<DbMessage>,
+    rx_db: CCReceiver<DbMessage>,
+) -> JoinHandle<()> {
     thread::spawn(move || {
-        while let Ok((id, body)) = rx_db.recv() {
+        while let Ok(message) = rx_db.recv() {
             // println!("(@) writing {:?}", id);
-            create_post(&conn, &id, &body);
+            match message {
+                DbMessage::Update { id, body } => {
+                    create_post(&conn, &id, &body);
+                }
+                DbMessage::Initialize { id, client, receiver } => {
+                    let page_map = page_map_mutex.lock().unwrap().get(&id).map(|x| x.clone());
+
+                    let shared_sync_state =
+                        if let Some(value) = page_map {
+                            println!("(%) reloading {:?}", id);
+                            value.clone()
+                        } else {
+                            allocate_page(
+                                &conn,
+                                &page_map_mutex.clone(),
+                                &id,
+                                tx_db.clone(),
+                            )
+                        };
+
+                    receiver.send(shared_sync_state);
+                }
+            }
         }
     })
 }
@@ -321,29 +378,11 @@ pub fn sync_socket_server(port: u16, _period: usize) {
     let db = db_connection();
     let original_pages = all_posts(&db);
 
-    let (tx_db, rx_db) = unbounded::<(String, String)>();
-    spawn_update_db(db, rx_db);
-
     // When a page is started, we create a sync state mutex...
-    let page_map: SharedPageMap = Arc::new(Mutex::new({
-        let mut hash = HashMap::new();
-        for (page_id, md) in original_pages {
-            println!("(@) Restoring {:?}", page_id);
-            if let Ok(doc) = ::ron::de::from_str(&md) {
-                hash.insert(
-                    page_id.to_string(),
-                    Arc::new(Mutex::new(SyncState {
-                        ops: VecDeque::new(),
-                        version: 100,
-                        history: hashmap![],
-                        doc: Doc(doc),
-                        client_bus: Bus::new(255),
-                    })),
-                );
-            }
-        }
-        hash
-    }));
+    let page_map: SharedPageMap = Arc::new(Mutex::new(HashMap::new()));
+
+    let (tx_db, rx_db) = unbounded::<DbMessage>();
+    spawn_update_db(db, page_map.clone(), tx_db.clone(), rx_db);
 
     // Listen to incoming clients.
     let _ = ws::listen(url, {
@@ -354,7 +393,10 @@ pub fn sync_socket_server(port: u16, _period: usize) {
             println!("Client connected.");
 
             // TODO how to select from unused client IDs?
-            let new_client_id = thread_rng().gen_ascii_chars().take(6).collect::<String>();
+            let new_client_id: String = thread_rng()
+                .gen_ascii_chars()
+                .take(6)
+                .collect();
 
             // Listen to commands from the clients and submit to sync server.
             ClientHandler {
