@@ -125,13 +125,6 @@ export class WasmNetwork implements Network {
         console.log('Editor "%s" is connected.', network.editorID);
       };
 
-      // Keepalive
-      setInterval(() => {
-        syncSocket.send(JSON.stringify({
-          Keepalive: null,
-        }));
-      }, 1000);
-
       syncSocket.onmessage = function (event) {
         // console.log('Got message from sync:', event.data);
         network.Module.wasm_command({

@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use bus::{Bus, BusReader};
 use crate::{
     SyncClientCommand,
@@ -31,6 +33,8 @@ use std::{
 };
 use url::Url;
 use ws;
+use ws::util::{Token, Timeout};
+use ws::{CloseCode, Frame};
 
 const PAGE_TITLE_LEN: usize = 100;
 
@@ -43,20 +47,21 @@ pub fn default_new_doc(id: &str) -> Doc {
 }
 
 /// Transform an operation incrementally against each interim document operation.
+// TODO upgrade_operation_to_current or something
 pub fn update_operation(
+    client_id: &str,
     mut op: Op,
     history: &HashMap<usize, Op>,
     target_version: usize,
     mut input_version: usize,
 ) -> Op {
     // Transform against each interim operation.
-    // TODO upgrade_operation_to_current or something
     while input_version < target_version {
         // If the version exists (it should) transform against it.
-        if let Some(ref version_op) = history.get(&input_version) {
-            let (updated_op, _) = Op::transform::<RtfSchema>(version_op, &op);
-            op = updated_op;
-        }
+        let version_op = history.get(&input_version)
+            .expect("Version missing from history");
+        let (updated_op, _) = Op::transform::<RtfSchema>(version_op, &op);
+        op = updated_op;
 
         input_version += 1;
     }
@@ -74,12 +79,12 @@ pub fn valid_page_id(input: &str) -> bool {
 
 /// Fanout messages from a bus to a websocket sender.
 fn spawn_bus_to_client(
-    out: ws::Sender,
+    out: Arc<Mutex<ws::Sender>>,
     mut rx: BusReader<SyncClientCommand>,
 ) -> JoinHandle<Result<(), Error>> {
     thread::spawn(move || -> Result<(), Error> {
         while let Ok(command) = rx.recv() {
-            out.send(serde_json::to_string(&command).unwrap())?;
+            out.lock().unwrap().send(serde_json::to_string(&command).unwrap())?;
         }
         Ok(())
     })
@@ -88,18 +93,121 @@ fn spawn_bus_to_client(
 pub struct SyncState {
     ops: VecDeque<(String, usize, Op)>,
     version: usize,
+    clients: HashMap<String, usize>, // client_id -> version
     history: HashMap<usize, Op>,
     doc: Doc,
     client_bus: Bus<SyncClientCommand>,
+}
+
+impl SyncState {
+    fn prune_history(&mut self) {
+        if let Some(min_version) = self.clients.iter().map(|(_, &v)| v).min() {
+            for k in self.history.keys().cloned().collect::<Vec<usize>>() {
+                if k < min_version {
+                    // eprintln!("(^) evicted document version {}", k);
+                    self.history.remove(&k);
+                }
+            }
+        }
+    }
 }
 
 struct ClientHandler {
     client_id: String,
     page_id: Option<String>,
     sync_state_mutex: Option<SharedSyncState>,
-    out: Option<ws::Sender>,
-    page_map: SharedPageMap,
+    out: Arc<Mutex<ws::Sender>>,
     tx_db: CCSender<DbMessage>,
+    timeout: Option<Timeout>,
+    closed: bool,
+}
+
+const PING: Token = Token(1);
+const EXPIRE: Token = Token(2);
+
+const PING_INTERVAL: u64 = 5_000;
+const TIMEOUT_INTERVAL: u64 = 30_000;
+
+impl Drop for ClientHandler {
+    fn drop(&mut self) {
+        assert!(self.closed);
+    }
+}
+
+impl ClientHandler {
+    fn initialize(&mut self) -> ws::Result<()> {
+        println!(
+            "(!) Client {:?} connected to {:?}",
+            self.client_id, self.page_id
+        );
+
+        let (tx_client, rx_client) = unbounded();
+        self.tx_db.send(DbMessage::Initialize {
+            id: self.page_id.clone().unwrap(),
+            client: self.client_id.clone(),
+            receiver: tx_client,
+        });
+
+        if let Ok(sync_state_mutex) = rx_client.recv() {
+            self.sync_state_mutex = Some(sync_state_mutex);
+        } else {
+            panic!("Expected a sync state bundle.");
+        }
+
+        // Forcibly set this new client's initial document state.
+        {
+            let out = self.out.clone();
+            let sync_state_mutex = self.sync_state_mutex.clone().unwrap();
+            let mut sync_state = sync_state_mutex.lock().unwrap();
+            let version = sync_state.version;
+
+            // Initialize server with client
+            let command = SyncClientCommand::Init(
+                self.client_id.clone(),
+                sync_state.doc.0.clone(),
+                version,
+            );
+            out.lock().unwrap().send(serde_json::to_string(&command).unwrap())?;
+
+            // Add to clients list.
+            sync_state.clients.insert(self.client_id.clone(), version);
+
+            // Forward packets from sync bus to all clients.
+            let rx = { sync_state.client_bus.add_rx() };
+            spawn_bus_to_client(out, rx);
+        }
+
+        Ok(())
+    }
+
+    fn cleanup(&mut self) -> Result<(), Error> {
+        assert!(!self.closed);
+
+        let sync_state_mutex = self.sync_state_mutex.clone().unwrap();
+        let mut sync_state = sync_state_mutex.lock().unwrap();
+
+        let op = remove_carets_op(&sync_state.doc, vec![self.client_id.clone()])?;
+        let version = sync_state.version;
+        sync_state.ops.push_back((self.client_id.clone(), version, op));
+
+        sync_state.clients.remove(&self.client_id);
+
+        self.closed = true;
+
+        Ok(())
+    }
+
+    fn handle_message(&mut self, message: SyncServerCommand) {
+        log_sync!(ClientPacket(message.clone()));
+
+        match message {
+            SyncServerCommand::Commit(client_id, op, version) => {
+                let mut sync_state_mutex = self.sync_state_mutex.clone().unwrap();
+                let mut sync_state = sync_state_mutex.lock().unwrap();
+                sync_state.ops.push_back((client_id.clone(), version, op.clone()));
+            }
+        }
+    }
 }
 
 impl ws::Handler for ClientHandler {
@@ -118,70 +226,27 @@ impl ws::Handler for ClientHandler {
         if valid_page_id(&path[1..]) {
             self.page_id = Some(path[1..].to_string());
         } else {
-            // TODO actually bail out
+            // TODO actually bail out, how?
             self.page_id = Some("home".to_string());
         }
 
-        println!(
-            "(!) Client {:?} connected to {:?}",
-            self.client_id, self.page_id
-        );
-
-        // HERE we want to synchronize state to something
-        // on first startup
-
-        let (tx_client, rx_client) = unbounded();
-        self.tx_db.send(DbMessage::Initialize {
-            id: self.page_id.clone().unwrap(),
-            client: self.client_id.clone(),
-            receiver: tx_client,
-        });
-
-        if let Ok(sync_state_mutex) = rx_client.recv() {
-            self.sync_state_mutex = Some(sync_state_mutex);
-        } else {
-            panic!("Expected a sync state bundle.");
-        }
-
-        // We will consume the out map.
-        let out = self.out.take().unwrap();
-
-        // Forcibly set this new client's initial document state.
         {
-            let sync_state_mutex = self.sync_state_mutex.clone().unwrap();
-            let mut sync_state = sync_state_mutex.lock().unwrap();
+            let out = self.out.lock().unwrap();
 
-            let command = SyncClientCommand::Init(
-                self.client_id.clone(),
-                sync_state.doc.0.clone(),
-                sync_state.version,
-            );
-            out.send(serde_json::to_string(&command).unwrap())?;
-
-            // Forward packets from sync bus to all clients.
-            let rx = { sync_state.client_bus.add_rx() };
-            spawn_bus_to_client(out, rx);
+            // schedule a timeout to send a ping every 5 seconds
+            try!(out.timeout(PING_INTERVAL, PING));
+            // schedule a timeout to close the connection if there is no activity for 30 seconds
+            try!(out.timeout(TIMEOUT_INTERVAL, EXPIRE));
         }
 
-        Ok(())
+        self.initialize()
     }
 
     fn on_message(&mut self, msg: ws::Message) -> ws::Result<()> {
         let req_parse: Result<SyncServerCommand, _> = serde_json::from_slice(&msg.into_data());
         match req_parse {
             Ok(value) => {
-                log_sync!(ClientPacket(value.clone()));
-
-                match value {
-                    SyncServerCommand::Keepalive => {
-                        // noop
-                    }
-                    SyncServerCommand::Commit(client_id, op, version) => {
-                        let mut sync_state_mutex = self.sync_state_mutex.clone().unwrap();
-                        let mut sync_state = sync_state_mutex.lock().unwrap();
-                        sync_state.ops.push_back((client_id, version, op));
-                    }
-                }
+                self.handle_message(value);
             }
             Err(err) => {
                 println!("Packet error: {:?}", err);
@@ -190,70 +255,105 @@ impl ws::Handler for ClientHandler {
 
         Ok(())
     }
+
+    fn on_shutdown(&mut self) {
+        eprintln!("-----> SHUTDOWN");
+        self.cleanup();
+    }
+
+    fn on_close(&mut self, _code: ws::CloseCode, reason: &str) {
+        eprintln!("-----> CLOSE");
+        self.cleanup();
+    }
+
+    fn on_error(&mut self, err: ws::Error) {
+        eprintln!("-----> ERROR");
+        self.cleanup();
+    }
+
+    fn on_timeout(&mut self, event: Token) -> ws::Result<()> {
+        match event {
+            PING => {
+                let out = self.out.lock().unwrap();
+                out.ping(vec![])?;
+                out.timeout(PING_INTERVAL, PING)
+            }
+            EXPIRE => {
+                println!("----> Socket Expired");
+                self.out.lock().unwrap().close(CloseCode::Away)
+            }
+            _ => Err(ws::Error::new(ws::ErrorKind::Internal, "Invalid timeout token encountered!")),
+        }
+    }
+
+    fn on_new_timeout(&mut self, event: Token, timeout: Timeout) -> ws::Result<()> {
+        if event == EXPIRE {
+            if let Some(t) = self.timeout.take() {
+                try!(self.out.lock().unwrap().cancel(t))
+            }
+            self.timeout = Some(timeout)
+        }
+        Ok(())
+    }
+
+    fn on_frame(&mut self, frame: Frame) -> ws::Result<Option<Frame>> {
+        // some activity has occurred, let's reset the expiration
+        try!(self.out.lock().unwrap().timeout(TIMEOUT_INTERVAL, EXPIRE));
+        Ok(Some(frame))
+    }
 }
 
 /// Creates a new page entry in the page map and spawns a sync
 /// thread to manage it.
 fn allocate_page(
     db: &SqliteConnection,
-    page_map_mutex: &SharedPageMap,
+    page_map: &mut PageMap,
     page_id: &str,
     tx_db: CCSender<DbMessage>,
 ) -> SharedSyncState {
-    {
-        let mut page_map = page_map_mutex.lock().unwrap();
+    if page_map.get(page_id).is_none() {
+        println!("(%) writing new page for {:?}", page_id);
+        
+        // Retrieve from database, or use a default generic document.
+        let inner_doc = get_single_page(&db, page_id)
+            .map(|x| Doc(::ron::de::from_str::<DocSpan>(&x.body).unwrap()))
+            .unwrap_or_else(|| default_new_doc(page_id));
 
-        if page_map.get(page_id).is_none() {
-            println!("(%) writing new page for {:?}", page_id);
-            let inner_doc = get_single_page(&db, page_id)
-                .map(|x| Doc(::ron::de::from_str::<DocSpan>(&x.body).unwrap()))
-                .unwrap_or_else(|| default_new_doc(page_id));
-
-            page_map.insert(
-                page_id.to_string(),
-                Arc::new(Mutex::new(SyncState {
-                    ops: VecDeque::new(),
-                    version: 100,
-                    history: hashmap![],
-                    doc: inner_doc,
-                    client_bus: Bus::new(255),
-                })),
-            );
-        } else {
-            println!("(%) launching {:?}", page_id);
-        }
+        page_map.insert(
+            page_id.to_string(),
+            Arc::new(Mutex::new(SyncState {
+                ops: VecDeque::new(),
+                version: 100,
+                clients: hashmap![],
+                history: hashmap![],
+                doc: inner_doc,
+                client_bus: Bus::new(255),
+            })),
+        );
+    } else {
+        println!("(%) launching {:?}", page_id);
     }
+
+    let shared_sync_state = page_map.get(page_id).clone().unwrap().clone();
 
     // TODO pass in a real _period value
-    spawn_sync_server(page_map_mutex, page_id, 100, tx_db)
+    spawn_sync_server(shared_sync_state.clone(), page_id, 100, tx_db)
         .expect("Failed to spawn sync server");
 
-    {
-        let page_map = page_map_mutex.lock().unwrap();
-        page_map.get(page_id).clone().unwrap().clone()
-    }
+    shared_sync_state
 }
 
 /// Run a sync server thread for a given page ID.
 fn spawn_sync_server(
-    page_map: &SharedPageMap,
+    sync_state_mutex: SharedSyncState,
     page_id: &str,
     period: u64,
     tx_db: CCSender<DbMessage>,
 ) -> Result<JoinHandle<Result<(), Error>>, ::std::io::Error> {
-    let page_map = page_map.clone();
     let page_id = page_id.to_string();
     thread::Builder::new()
         .name("sync_thread_processor".into())
         .spawn(move || -> Result<(), Error> {
-            let sync_state_mutex = page_map
-                .lock()
-                .unwrap()
-                .get(&page_id)
-                .clone()
-                .unwrap()
-                .clone();
-                
             // Handle incoming packets.
             loop {
                 // Wait a set duration between transforms.
@@ -272,8 +372,23 @@ fn spawn_sync_server(
                     // let res = action_sync(&doc, new_op, op_group).unwrap();
 
                     // Update the operation so we can apply it to the document.
-                    let op =
-                        update_operation(op, &sync_state.history, target_version, input_version);
+                    let op = update_operation(
+                        &client_id,
+                        op,
+                        &sync_state.history,
+                        target_version,
+                        input_version
+                    );
+
+                    if let Some(version) = sync_state.clients.get_mut(&client_id) {
+                        *version = target_version;
+                    } else {
+                        // TODO what circumstances would it be missing? Client closed
+                        // and removed itself from list but operation used later?
+                    }
+
+                    // Prune history entries.
+                    sync_state.prune_history();
                     sync_state.history.insert(target_version, op.clone());
 
                     // log_sync!(Debug(format!("updated op to {:?}", op)));
@@ -288,7 +403,8 @@ fn spawn_sync_server(
 
                     // if let Ok(md) = doc_to_markdown(&sync_state.doc.0) {
                     if let Ok(serialized) =
-                        remove_carets(&sync_state.doc).and_then(|x| Ok(::ron::ser::to_string(&x.0)?))
+                        remove_carets(&sync_state.doc)
+                            .and_then(|x| Ok(::ron::ser::to_string(&x.0)?))
                     {
                         tx_db.try_send(DbMessage::Update {
                             id: page_id.to_string(),
@@ -314,7 +430,7 @@ fn spawn_sync_server(
 }
 
 type SharedSyncState = Arc<Mutex<SyncState>>;
-type SharedPageMap = Arc<Mutex<HashMap<String, SharedSyncState>>>;
+type PageMap = HashMap<String, SharedSyncState>;
 
 enum DbMessage {
     // Updated the document
@@ -333,11 +449,12 @@ enum DbMessage {
 
 fn spawn_update_db(
     conn: SqliteConnection,
-    page_map_mutex: SharedPageMap,
     tx_db: CCSender<DbMessage>,
     rx_db: CCReceiver<DbMessage>,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
+        let mut page_map: PageMap = HashMap::new();
+
         while let Ok(message) = rx_db.recv() {
             // println!("(@) writing {:?}", id);
             match message {
@@ -345,16 +462,14 @@ fn spawn_update_db(
                     create_post(&conn, &id, &body);
                 }
                 DbMessage::Initialize { id, client, receiver } => {
-                    let page_map = page_map_mutex.lock().unwrap().get(&id).map(|x| x.clone());
-
                     let shared_sync_state =
-                        if let Some(value) = page_map {
+                        if let Some(value) = page_map.get(&id) {
                             println!("(%) reloading {:?}", id);
                             value.clone()
                         } else {
                             allocate_page(
                                 &conn,
-                                &page_map_mutex.clone(),
+                                &mut page_map,
                                 &id,
                                 tx_db.clone(),
                             )
@@ -376,17 +491,13 @@ pub fn sync_socket_server(port: u16, _period: usize) {
     println!("Listening sync_socket_server on 0.0.0.0:{}", port);
 
     let db = db_connection();
-    let original_pages = all_posts(&db);
-
-    // When a page is started, we create a sync state mutex...
-    let page_map: SharedPageMap = Arc::new(Mutex::new(HashMap::new()));
 
     let (tx_db, rx_db) = unbounded::<DbMessage>();
-    spawn_update_db(db, page_map.clone(), tx_db.clone(), rx_db);
+    spawn_update_db(db, tx_db.clone(), rx_db);
 
     // Listen to incoming clients.
     let _ = ws::listen(url, {
-        take!(=page_map, =tx_db);
+        take!(=tx_db);
         move |out| {
             log_sync!(ClientConnect);
 
@@ -403,9 +514,10 @@ pub fn sync_socket_server(port: u16, _period: usize) {
                 client_id: new_client_id,
                 page_id: None,
                 sync_state_mutex: None, //sync_state_mutex.clone(),
-                out: Some(out),
-                page_map: page_map.clone(),
+                out: Arc::new(Mutex::new(out)),
                 tx_db: tx_db.clone(),
+                timeout: None,
+                closed: false,
             }
         }
     });

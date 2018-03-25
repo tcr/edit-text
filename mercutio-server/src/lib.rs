@@ -1,4 +1,4 @@
-#![feature(crate_in_paths)]
+#![feature(crate_in_paths, nll)]
 
 use std::fs::File;
 use std::path::Path;
