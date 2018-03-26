@@ -8,6 +8,8 @@ use std::{
     collections::HashMap,
     env,
 };
+use failure::Error;
+use oatie::doc::*;
 
 pub fn db_connection() -> SqliteConnection {
     dotenv().ok();
@@ -33,10 +35,12 @@ pub struct NewPost<'a> {
     pub body: &'a str,
 }
 
-pub fn create_post<'a>(conn: &SqliteConnection, id: &'a str, body: &'a str) -> usize {
+pub fn create_post<'a>(conn: &SqliteConnection, id: &'a str, doc: &Doc) -> usize {
     use super::schema::posts;
 
-    let new_post = NewPost { id: id, body: body };
+    let body = ::ron::ser::to_string(&doc.0).unwrap();
+
+    let new_post = NewPost { id: id, body: &body };
 
     diesel::replace_into(posts::table)
         .values(&new_post)
@@ -58,12 +62,15 @@ pub fn all_posts(db: &SqliteConnection) -> HashMap<String, String> {
     ret
 }
 
-pub fn get_single_page(db: &SqliteConnection, input_id: &str) -> Option<Post> {
+pub fn get_single_page(db: &SqliteConnection, input_id: &str) -> Option<Doc> {
     use super::schema::posts::dsl::*;
 
     return posts
         .filter(id.eq(input_id))
         .first::<Post>(db)
-        .ok();
+        .map_err::<Error, _>(|x| x.into())
+        .and_then(|x| Ok(::ron::de::from_str::<DocSpan>(&x.body)?))
+        .map(|d| Doc(d))
+        .ok()
 }
 

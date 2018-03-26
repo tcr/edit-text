@@ -237,7 +237,6 @@ fn allocate_page(
         
         // Retrieve from database, or use a default generic document.
         let inner_doc = get_single_page(&db, page_id)
-            .map(|x| Doc(::ron::de::from_str::<DocSpan>(&x.body).unwrap()))
             .unwrap_or_else(|| default_new_doc(page_id));
 
         page_map.insert(
@@ -323,13 +322,12 @@ fn spawn_sync_server(
                     // log_sync!(Debug(format!("doc is now {:?}", sync_state.doc)));
 
                     // if let Ok(md) = doc_to_markdown(&sync_state.doc.0) {
-                    if let Ok(serialized) =
+                    if let Ok(doc) =
                         remove_carets(&sync_state.doc)
-                            .and_then(|x| Ok(::ron::ser::to_string(&x.0)?))
                     {
                         tx_db.try_send(DbMessage::Update {
                             id: page_id.to_string(),
-                            body: serialized,
+                            body: doc,
                         })?;
                     }
                     // }
@@ -357,7 +355,7 @@ enum DbMessage {
     // Updated the document
     Update {
         id: String,
-        body: String,
+        body: Doc,
     },
 
     // Intiialize a client.

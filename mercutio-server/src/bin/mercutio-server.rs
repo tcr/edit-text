@@ -170,7 +170,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
 
                 // Initialize the "hello world" post.
                 eprintln!("creating helloworld post for {:?}", id);
-                create_post(&db, &id, &::ron::ser::to_string(&default_doc().0).unwrap());
+                create_post(&db, &id, &default_doc());
 
                 return Response::redirect_302(format!("/{}", id));
             },
@@ -233,14 +233,10 @@ fn run_http_server(port: u16, client_proxy: bool) {
 
                 // Preload content into the file using the db connection.
                 let content: String = get_single_page(&db, &id)
-                    .map(|x| {
-                        let d = ron::de::from_str::<DocSpan>(&x.body).unwrap_or(vec![]);
-                        doc_as_html(&d)
-                    })
+                    .map(|d| doc_as_html(&d.0))
                     .unwrap_or_else(|| {
                         let doc = doc_span![DocGroup({"tag": "h1"}, [DocChars(&id)])];
-                        let data = ::ron::ser::to_string(&data).unwrap(); // TODO don't unwrap
-                        create_post(&db, &id, &data);
+                        create_post(&db, &id, &Doc(doc.clone()));
                         doc_as_html(&doc)
                     });
                 data = data.replace("{{body}}", &content);
