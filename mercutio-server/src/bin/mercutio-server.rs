@@ -15,7 +15,6 @@ extern crate rand;
 #[macro_use]
 extern crate rouille;
 extern crate serde;
-extern crate serde_json;
 extern crate structopt;
 extern crate structopt_derive;
 extern crate take_mut;
@@ -23,7 +22,10 @@ extern crate url;
 extern crate ron;
 extern crate ws;
 extern crate mime_guess;
+extern crate handlebars;
 extern crate md5;
+#[macro_use]
+extern crate serde_json;
 
 use include_dir_macro::include_dir;
 use mercutio_common::doc_as_html;
@@ -44,6 +46,7 @@ use std::process;
 use std::thread;
 use std::thread::JoinHandle;
 use structopt::StructOpt;
+use handlebars::Handlebars;
 
 trait Dir: Sync + Send {
     fn get(&self, &Path) -> Option<Vec<u8>>;
@@ -130,11 +133,13 @@ fn run_http_server(port: u16, client_proxy: bool) {
 
     // Necessary files
     assert!(template_dir.exists(Path::new("multi.html")));
-    assert!(template_dir.exists(Path::new("client.html")));
+    assert!(template_dir.exists(Path::new("client.hbs")));
     assert!(template_dir.exists(Path::new("presentation.html")));
     assert!(template_dir.exists(Path::new("favicon.png")));
 
     println!("Listening on http://localhost:{}/", port);
+
+    let mut reg = Handlebars::new();
 
     #[allow(unused)]
     #[allow(unreachable_code)]
@@ -227,24 +232,27 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 let stylesheet = dist_dir.get(Path::new("mercutio.css")).unwrap();
                 let stylesheet = String::from_utf8_lossy(&stylesheet).to_string();
                 
-                let mut data = String::from_utf8_lossy(&update_config_var(
-                    &template_dir.get(Path::new("client.html")).unwrap(),
+                let mut template = String::from_utf8_lossy(&update_config_var(
+                    &template_dir.get(Path::new("client.hbs")).unwrap(),
                 )).to_owned().to_string();
 
                 // Preload content into the file using the db connection.
-                let content: String = get_single_page(&db, &id)
+                let body: String = get_single_page(&db, &id)
                     .map(|d| doc_as_html(&d.0))
                     .unwrap_or_else(|| {
                         let doc = doc_span![DocGroup({"tag": "h1"}, [DocChars(&id)])];
                         create_post(&db, &id, &Doc(doc.clone()));
                         doc_as_html(&doc)
                     });
-                data = data.replace("{{body}}", &content);
-                data = data.replace("{{stylesheet}}", &stylesheet);
+                
+                let payload = reg.render_template(&template, &json!({
+                    "body": &body,
+                    "stylesheet": &stylesheet,
+                })).unwrap();
 
                 return Response::from_data(
                     "text/html",
-                    data.into_bytes(),
+                    payload.into_bytes(),
                 );
             },
             (GET) ["/{id}/", id: String] => {
