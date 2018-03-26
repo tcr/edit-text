@@ -31,7 +31,7 @@ use include_dir_macro::include_dir;
 use mercutio_common::doc_as_html;
 use mercutio_server::db::{db_connection, get_single_page, create_post};
 use mercutio_server::sync::*;
-use mercutio_server::markdown::markdown_to_doc;
+use mercutio_server::markdown::{markdown_to_doc, doc_to_markdown};
 use mime_guess::guess_mime_type;
 use oatie::doc::*;
 use oatie::validate::validate_doc;
@@ -134,12 +134,12 @@ fn run_http_server(port: u16, client_proxy: bool) {
     // Necessary files
     assert!(template_dir.exists(Path::new("multi.html")));
     assert!(template_dir.exists(Path::new("client.hbs")));
-    assert!(template_dir.exists(Path::new("presentation.html")));
+    assert!(template_dir.exists(Path::new("presentation.hbs")));
     assert!(template_dir.exists(Path::new("favicon.png")));
 
     println!("Listening on http://localhost:{}/", port);
 
-    let mut reg = Handlebars::new();
+    let reg = Handlebars::new();
 
     #[allow(unused)]
     #[allow(unreachable_code)]
@@ -216,11 +216,26 @@ fn run_http_server(port: u16, client_proxy: bool) {
             },
 
             (GET) ["/{id}/presentation", id: String] => {
+                let mut template = String::from_utf8_lossy(&update_config_var(
+                    &template_dir.get(Path::new("presentation.hbs")).unwrap(),
+                )).to_owned().to_string();
+
+                // Preload content into the file using the db connection.
+                let body: String = get_single_page(&db, &id)
+                    .map(|d| doc_to_markdown(&d.0).unwrap())
+                    .unwrap_or_else(|| {
+                        let doc = doc_span![DocGroup({"tag": "h1"}, [DocChars(&id)])];
+                        create_post(&db, &id, &Doc(doc.clone()));
+                        doc_to_markdown(&doc).unwrap()
+                    });
+                
+                let payload = reg.render_template(&template, &json!({
+                    "body": &body,
+                })).unwrap();
+
                 return Response::from_data(
                     "text/html",
-                    update_config_var(
-                        &template_dir.get(Path::new("presentation.html")).unwrap(),
-                    ),
+                    payload.into_bytes(),
                 );
             },
             (GET) ["/{id}/presentation/", id: String] => {

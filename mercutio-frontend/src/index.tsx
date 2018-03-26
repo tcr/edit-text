@@ -1,14 +1,21 @@
-import Clipboard from 'clipboard';
+// Global CSS
+import '../styles/mercutio.scss';
 
-import * as commands from '../commands';
-import * as util from '../util';
-import * as interop from '../interop';
+import Clipboard from 'clipboard';
+import * as commands from './commands';
+import * as util from './util';
+import * as interop from './interop';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { Editor } from '../editor';
-import { Network, ProxyNetwork, WasmNetwork } from '../network';
+import { Editor } from './editor';
+import { Network, ProxyNetwork, WasmNetwork } from './network';
 
 declare var CONFIG: any;
+
+// Check page configuration.
+if (!CONFIG.configured) {
+  alert('The window.CONFIG variable was not configured by the server!')
+}
 
 const ROOT_QUERY = '.edit-text';
 
@@ -248,7 +255,7 @@ function multiConnect(network: Network) {
   };
 }
 
-export function start() {
+function start() {
   let network = CONFIG.wasm ? new WasmNetwork() : new ProxyNetwork();
 
   // Connect to parent window (if exists).
@@ -271,4 +278,6 @@ export function start() {
     .then(() => {
       console.log('edit-text initialized.');
     });
-};
+}
+
+start();

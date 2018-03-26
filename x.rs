@@ -234,7 +234,7 @@ fn run() -> Result<(), Error> {
                 r"
                     cd mercutio-frontend
                     ./node_modules/.bin/webpack \
-                        ./src/index.ts ./dist/mercutio.js {args}
+                        ./src/index.tsx ./dist/mercutio.js {args}
                 ",
                 args = args,
             )?;
@@ -245,7 +245,7 @@ fn run() -> Result<(), Error> {
                 r"
                     cd mercutio-frontend
                     ./node_modules/.bin/webpack --watch \
-                        ./src/index.ts ./dist/mercutio.js {args}
+                        ./src/index.tsx ./dist/mercutio.js {args}
                 ",
                 args = args,
             )?;
