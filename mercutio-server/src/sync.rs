@@ -22,6 +22,7 @@ use oatie::{
     schema::RtfSchema,
     validate::validate_doc,
 };
+use mercutio_common::socket::*;
 use rand::{thread_rng, Rng};
 use ron;
 use serde_json;
@@ -112,79 +113,106 @@ impl SyncState {
     }
 }
 
-struct ClientHandler {
+struct ClientSocket {
     client_id: String,
-    page_id: Option<String>,
-    sync_state_mutex: Option<SharedSyncState>,
-    out: Arc<Mutex<ws::Sender>>,
+    page_id: String,
+    sync_state_mutex: SharedSyncState,
     tx_db: CCSender<DbMessage>,
-    timeout: Option<Timeout>,
-    closed: bool,
 }
 
-const PING: Token = Token(1);
-const EXPIRE: Token = Token(2);
+impl SimpleSocket for ClientSocket {
+    type Args = (String, CCSender<DbMessage>);
 
-const PING_INTERVAL: u64 = 5_000;
-const TIMEOUT_INTERVAL: u64 = 30_000;
+    fn initialize(
+        (client_id, tx_db): Self::Args,
+        url: &str,
+        out: Arc<Mutex<ws::Sender>>,
+    ) -> Result<ClientSocket, Error> {
+        let url = Url::parse("http://localhost/")
+            .unwrap()
+            .join(url)
+            .unwrap();
+        let mut path = url.path().to_owned();
 
-impl Drop for ClientHandler {
-    fn drop(&mut self) {
-        assert!(self.closed);
-    }
-}
+        if path.starts_with("/$/ws/") {
+            path = path["/$/ws".len()..].to_string();
+        }
 
-impl ClientHandler {
-    fn initialize(&mut self) -> ws::Result<()> {
+        let page_id = if valid_page_id(&path[1..]) {
+            path[1..].to_string()
+        } else {
+            // TODO actually bail out, how?
+            "home".to_string()
+        };
+
         println!(
             "(!) Client {:?} connected to {:?}",
-            self.client_id, self.page_id
+            client_id, page_id
         );
 
         let (tx_client, rx_client) = unbounded();
-        self.tx_db.send(DbMessage::Initialize {
-            id: self.page_id.clone().unwrap(),
-            client: self.client_id.clone(),
+        tx_db.send(DbMessage::Initialize {
+            id: page_id.clone(),
+            client: client_id.clone(),
             receiver: tx_client,
         });
 
-        if let Ok(sync_state_mutex) = rx_client.recv() {
-            self.sync_state_mutex = Some(sync_state_mutex);
+        let sync_state_mutex = if let Ok(sync_state_mutex) = rx_client.recv() {
+            sync_state_mutex
         } else {
             panic!("Expected a sync state bundle.");
-        }
+        };
 
         // Forcibly set this new client's initial document state.
         {
-            let out = self.out.clone();
-            let sync_state_mutex = self.sync_state_mutex.clone().unwrap();
+            let out = out.clone();
             let mut sync_state = sync_state_mutex.lock().unwrap();
             let version = sync_state.version;
 
             // Initialize server with client
             let command = SyncClientCommand::Init(
-                self.client_id.clone(),
+                client_id.clone(),
                 sync_state.doc.0.clone(),
                 version,
             );
             out.lock().unwrap().send(serde_json::to_string(&command).unwrap())?;
 
             // Add to clients list.
-            sync_state.clients.insert(self.client_id.clone(), version);
+            sync_state.clients.insert(client_id.clone(), version);
 
             // Forward packets from sync bus to all clients.
             let rx = { sync_state.client_bus.add_rx() };
             spawn_bus_to_client(out, rx);
         }
 
+        Ok(ClientSocket {
+            client_id,
+            page_id,
+            sync_state_mutex,
+            tx_db,
+        })
+    }
+
+    fn handle_message(&mut self, data: &[u8]) -> Result<(), Error> {
+        let msg: SyncServerCommand = serde_json::from_slice(&data)?;
+
+        log_sync!(ClientPacket(msg.clone()));
+
+        match msg {
+            SyncServerCommand::Commit(client_id, op, version) => {
+                let mut sync_state = self.sync_state_mutex.lock().unwrap();
+                sync_state.ops.push_back((client_id.clone(), version, op.clone()));
+            }
+            SyncServerCommand::TerminateProxy => {
+                // ignore this, only for proxy
+            }
+        }
+
         Ok(())
     }
 
     fn cleanup(&mut self) -> Result<(), Error> {
-        assert!(!self.closed);
-
-        let sync_state_mutex = self.sync_state_mutex.clone().unwrap();
-        let mut sync_state = sync_state_mutex.lock().unwrap();
+        let mut sync_state = self.sync_state_mutex.lock().unwrap();
 
         let op = remove_carets_op(&sync_state.doc, vec![self.client_id.clone()])?;
         let version = sync_state.version;
@@ -192,114 +220,7 @@ impl ClientHandler {
 
         sync_state.clients.remove(&self.client_id);
 
-        self.closed = true;
-
         Ok(())
-    }
-
-    fn handle_message(&mut self, message: SyncServerCommand) {
-        log_sync!(ClientPacket(message.clone()));
-
-        match message {
-            SyncServerCommand::Commit(client_id, op, version) => {
-                let mut sync_state_mutex = self.sync_state_mutex.clone().unwrap();
-                let mut sync_state = sync_state_mutex.lock().unwrap();
-                sync_state.ops.push_back((client_id.clone(), version, op.clone()));
-            }
-        }
-    }
-}
-
-impl ws::Handler for ClientHandler {
-    fn on_open(&mut self, shake: ws::Handshake) -> ws::Result<()> {
-        let url = Url::parse("http://localhost/")
-            .unwrap()
-            .join(shake.request.resource())
-            .unwrap();
-
-        let mut path = url.path().to_owned();
-
-        if path.starts_with("/$/ws/") {
-            path = path["/$/ws".len()..].to_string();
-        }
-
-        if valid_page_id(&path[1..]) {
-            self.page_id = Some(path[1..].to_string());
-        } else {
-            // TODO actually bail out, how?
-            self.page_id = Some("home".to_string());
-        }
-
-        {
-            let out = self.out.lock().unwrap();
-
-            // schedule a timeout to send a ping every 5 seconds
-            try!(out.timeout(PING_INTERVAL, PING));
-            // schedule a timeout to close the connection if there is no activity for 30 seconds
-            try!(out.timeout(TIMEOUT_INTERVAL, EXPIRE));
-        }
-
-        self.initialize()
-    }
-
-    fn on_message(&mut self, msg: ws::Message) -> ws::Result<()> {
-        let req_parse: Result<SyncServerCommand, _> = serde_json::from_slice(&msg.into_data());
-        match req_parse {
-            Ok(value) => {
-                self.handle_message(value);
-            }
-            Err(err) => {
-                println!("Packet error: {:?}", err);
-            }
-        }
-
-        Ok(())
-    }
-
-    fn on_shutdown(&mut self) {
-        eprintln!("-----> SHUTDOWN");
-        self.cleanup();
-    }
-
-    fn on_close(&mut self, _code: ws::CloseCode, reason: &str) {
-        eprintln!("-----> CLOSE");
-        self.cleanup();
-    }
-
-    fn on_error(&mut self, err: ws::Error) {
-        eprintln!("-----> ERROR");
-        self.cleanup();
-    }
-
-    fn on_timeout(&mut self, event: Token) -> ws::Result<()> {
-        match event {
-            PING => {
-                let out = self.out.lock().unwrap();
-                out.ping(vec![])?;
-                out.timeout(PING_INTERVAL, PING)
-            }
-            EXPIRE => {
-                println!("----> Socket Expired");
-                self.out.lock().unwrap().close(CloseCode::Away)
-            }
-            _ => Err(ws::Error::new(ws::ErrorKind::Internal, "Invalid timeout token encountered!")),
-        }
-    }
-
-    fn on_new_timeout(&mut self, event: Token, timeout: Timeout) -> ws::Result<()> {
-        if event == EXPIRE {
-            if let Some(t) = self.timeout.take() {
-                try!(self.out.lock().unwrap().cancel(t))
-            }
-            self.timeout = Some(timeout)
-        }
-        Ok(())
-    }
-
-    fn on_frame(&mut self, frame: Frame) -> ws::Result<Option<Frame>> {
-        // some activity has occurred, let's reset the expiration
-        try!(self.out.lock().unwrap().timeout(TIMEOUT_INTERVAL, EXPIRE));
-        Ok(Some(frame))
     }
 }
 
@@ -509,16 +430,8 @@ pub fn sync_socket_server(port: u16, _period: usize) {
                 .take(6)
                 .collect();
 
-            // Listen to commands from the clients and submit to sync server.
-            ClientHandler {
-                client_id: new_client_id,
-                page_id: None,
-                sync_state_mutex: None, //sync_state_mutex.clone(),
-                out: Arc::new(Mutex::new(out)),
-                tx_db: tx_db.clone(),
-                timeout: None,
-                closed: false,
-            }
+            // Listen to commands from the clients and submit to sync server.            
+            SocketHandler::<ClientSocket>::new((new_client_id, tx_db.clone()), out)
         }
     });
 }

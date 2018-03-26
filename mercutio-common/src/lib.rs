@@ -18,7 +18,15 @@ extern crate htmlescape;
 extern crate pulldown_cmark;
 extern crate pulldown_cmark_to_cmark;
 
+#[cfg(not(target = "wasm32-unknown-unknown"))]
+extern crate ws;
+#[cfg(not(target = "wasm32-unknown-unknown"))]
+extern crate crossbeam_channel;
+
 pub mod markdown;
+#[cfg(not(target = "wasm32-unknown-unknown"))]
+
+pub mod socket;
 
 use htmlescape::encode_minimal;
 use oatie::doc::*;
@@ -30,6 +38,7 @@ use oatie::doc::*;
 pub enum SyncServerCommand {
     // Connect(String),
     Commit(String, Op, usize),
+    TerminateProxy,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

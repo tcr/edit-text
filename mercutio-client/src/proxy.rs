@@ -1,42 +1,53 @@
 use super::*;
 use mercutio_common::SyncClientCommand;
+use mercutio_common::socket::*;
 use crossbeam_channel::{unbounded, Sender, Receiver};
 use failure::Error;
 use serde_json;
-use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
+use serde;
+use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::sync::atomic::Ordering;
 use std::thread::{self, JoinHandle};
 use ws;
+use ws::util::{Token, Timeout};
+use ws::{CloseCode, Frame};
 use monkey::setup_monkey;
 
 fn spawn_send_to_client(
     rx_client: Receiver<ClientCommand>,
-    out: ws::Sender,
+    out: Arc<Mutex<ws::Sender>>,
 ) -> JoinHandle<Result<(), Error>> {
     thread::spawn(|| -> Result<(), Error> {
         take!(rx_client, out);
         while let Ok(req) = rx_client.recv() {
             let json = serde_json::to_string(&req).unwrap();
-            out.send(json)?;
+            out.lock().unwrap().send(json)?;
         }
         Ok(())
     })
 }
 
-
+// #[spawn]
 fn spawn_client_to_sync(
     out: ws::Sender,
     rx: Receiver<SyncServerCommand>,
+    sentinel: Arc<AtomicBool>,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
         while let Ok(command) = rx.recv() {
-            log_wasm!(Debug("HI TIM HAVE PACKET TO SEND TO SERVER".to_string()));
-            out.send(serde_json::to_string(&command).unwrap()).unwrap();
+            if let SyncServerCommand::TerminateProxy = command {
+                out.close(CloseCode::Away);
+                sentinel.store(false, Ordering::SeqCst);
+                break;
+            } else {
+                out.send(serde_json::to_string(&command).unwrap()).unwrap();
+            }
         }
     })
 }
 
+// #[spawn]
 fn spawn_sync_connection(
     ws_port: u16,
     page_id: String,
@@ -44,36 +55,52 @@ fn spawn_sync_connection(
     rx: Receiver<SyncServerCommand>,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
-        ws::connect(format!("ws://127.0.0.1:{}/$/ws/{}", ws_port, page_id), move |out| {
-            // While we receive packets from the client, send them to sync.
-            spawn_client_to_sync(out, rx.clone());
+        let sentinel = Arc::new(AtomicBool::new(true));
+        ws::connect(format!("ws://127.0.0.1:{}/$/ws/{}", ws_port, page_id), {
+            let sentinel = sentinel.clone();
 
-            // Receive packets from sync and act on them.
-            let tx_task = tx_task.clone();
-            move |msg: ws::Message| {
-                // Handle messages received on this connection
-                // println!("wasm got a packet from sync '{}'. ", msg);
+            move |out| {
+                // While we receive packets from the client, send them to sync.
+                spawn_client_to_sync(out, rx.clone(), sentinel.clone());
 
-                let req_parse: Result<SyncClientCommand, _> =
-                    serde_json::from_slice(&msg.into_data());
-                match req_parse {
-                    Err(err) => {
-                        println!("Packet error: {:?}", err);
+                // Receive packets from sync and act on them.
+                let tx_task = tx_task.clone();
+                move |msg: ws::Message| {
+                    // Handle messages received on this connection
+                    // println!("wasm got a packet from sync '{}'. ", msg);
+
+                    let req_parse: Result<SyncClientCommand, _> =
+                        serde_json::from_slice(&msg.into_data());
+                    match req_parse {
+                        Err(err) => {
+                            println!("Packet error: {:?}", err);
+                        }
+                        Ok(value) => {
+                            let _ = tx_task.send(Task::SyncClientCommand(value));
+                        }
                     }
-                    Ok(value) => {
-                        let _ = tx_task.send(Task::SyncClientCommand(value));
-                    }
+
+                    Ok(())
                 }
-
-                Ok(())
             }
         }).unwrap();
-        unreachable!("sync server socket disconnected.")
+
+        // Client socket may have disconnected, and we closed
+        // this connection via SyncServerCommand::TerminateProxy
+        if sentinel.load(Ordering::SeqCst) == true {
+            // Child client didn't disconnect us, invalid
+            unreachable!("Server connection cut");
+        }
     })
 }
 
-fn setup_client(name: &str, page_id: &str, out: ws::Sender, ws_port: u16) -> (Arc<AtomicBool>, Arc<AtomicBool>, Sender<Task>) {
-    let (tx_sync, rx) = unbounded();
+fn setup_client(
+    name: &str,
+    page_id: &str,
+    out: Arc<Mutex<ws::Sender>>,
+    ws_port: u16,
+) -> (Arc<AtomicBool>, Arc<AtomicBool>, Sender<Task>, Sender<SyncServerCommand>) {
+    let (tx_sync, rx_sync) = unbounded();
 
     let monkey = Arc::new(AtomicBool::new(false));
     let alive = Arc::new(AtomicBool::new(true));
@@ -94,7 +121,7 @@ fn setup_client(name: &str, page_id: &str, out: ws::Sender, ws_port: u16) -> (Ar
         },
 
         tx_client,
-        tx_sync,
+        tx_sync: tx_sync.clone(),
     };
 
     // Send initial controls.
@@ -110,7 +137,7 @@ fn setup_client(name: &str, page_id: &str, out: ws::Sender, ws_port: u16) -> (Ar
         ws_port,
         page_id.to_owned(),
         tx_task.clone(),
-        rx,
+        rx_sync,
     );
 
     // Operate on all incoming tasks.
@@ -124,69 +151,59 @@ fn setup_client(name: &str, page_id: &str, out: ws::Sender, ws_port: u16) -> (Ar
             Ok(())
         });
 
-    (alive, monkey, tx_task)
+    (alive, monkey, tx_task, tx_sync)
 }
 
-pub struct SocketHandler {
-    ws_port: u16,
-    out: Option<ws::Sender>,
-    alive: Option<Arc<AtomicBool>>,
-    monkey: Option<Arc<AtomicBool>>,
-    tx_task: Option<Sender<Task>>,
+pub struct ProxySocket {
+    out: Arc<Mutex<ws::Sender>>,
+    alive: Arc<AtomicBool>,
+    monkey: Arc<AtomicBool>,
+    tx_task: Sender<Task>,
+    tx_sync: Sender<SyncServerCommand>,
 }
 
-impl ws::Handler for SocketHandler {
-    fn on_open(&mut self, shake: ws::Handshake) -> Result<(), ws::Error> {
-        let page_id = shake.request.resource()[1..].to_string();
-        let (alive, monkey, tx_task) = setup_client("$$$$$$", &page_id, self.out.take().unwrap(), self.ws_port);
-        self.alive = Some(alive);
-        self.monkey = Some(monkey);
-        self.tx_task = Some(tx_task);
+impl SimpleSocket for ProxySocket {
+    type Args = u16;
+
+    fn initialize(ws_port: u16, url: &str, out: Arc<Mutex<ws::Sender>>) -> Result<ProxySocket, Error> {
+        let page_id = url[1..].to_string();
+        let (alive, monkey, tx_task, tx_sync) = setup_client(
+            "$$$$$$",
+            &page_id,
+            out.clone(),
+            ws_port,
+        );
+
+        Ok(ProxySocket {
+            out,
+            alive,
+            monkey,
+            tx_task,
+            tx_sync,
+        })
+    }
+
+    fn handle_message(&mut self, data: &[u8]) -> Result<(), Error> {
+        let msg = serde_json::from_slice(&data)?;
+        Ok(self.tx_task.send(Task::NativeCommand(msg))?)
+    }
+
+    fn cleanup(&mut self) -> Result<(), Error> {
+        self.monkey.store(false, Ordering::Relaxed);
+        self.alive.store(false, Ordering::Relaxed);
+
+        self.tx_sync.send(SyncServerCommand::TerminateProxy)?;
+
         Ok(())
-    }
-
-    fn on_message(&mut self, msg: ws::Message) -> Result<(), ws::Error> {
-        // Handle messages received on this connection
-        // println!("client command: '{}'. ", msg);
-
-        let req_parse: Result<NativeCommand, _> = serde_json::from_slice(&msg.into_data());
-        match req_parse {
-            Err(err) => {
-                println!("Packet error: {:?}", err);
-            }
-            Ok(value) => {
-                self.tx_task.as_mut().map(|x| {
-                    x.send(Task::NativeCommand(value)).expect("Could not handle native command.");
-                });
-            }
-        }
-
-        Ok(())
-    }
-
-    fn on_error(&mut self, _err: ws::Error) {
-        println!("Killing after error");
-        self.monkey.as_ref().unwrap().store(false, Ordering::Relaxed);
-        self.alive.as_ref().unwrap().store(false, Ordering::Relaxed);
-    }
-
-    fn on_close(&mut self, _code: ws::CloseCode, _reason: &str) {
-        println!("Killing after close");
-        self.monkey.as_ref().unwrap().store(false, Ordering::Relaxed);
-        self.alive.as_ref().unwrap().store(false, Ordering::Relaxed);
     }
 }
 
 pub fn server(url: &str, ws_port: u16) {
+    let token_counter = AtomicUsize::new(1);
+
     ws::listen(url, |out| {
         // Websocket message handler.
-        SocketHandler {
-            ws_port,
-            out: Some(out),
-            alive: None,
-            monkey: None,
-            tx_task: None,
-        }
+        SocketHandler::<ProxySocket>::new(ws_port, out)
     }).unwrap();
 }
 
