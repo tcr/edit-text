@@ -1,100 +1,93 @@
 // Commands
-type RenameGroupCommand = {RenameGroup: any};
 
-export function RenameGroupCommand(tag: string, curspan): RenameGroupCommand {
+export function RenameGroupCommand(tag: string, curspan) {
   return {
+    tag: 'RenameGroupCommand' as 'RenameGroupCommand',
     'RenameGroup': [tag, curspan],
   }
 }
-
-type KeypressCommand = {Keypress: [number, boolean, boolean]};
 
 export function KeypressCommand(
   keyCode: number,
   metaKey: boolean,
   shiftKey: boolean,
-): KeypressCommand {
+) {
   return {
+    tag: 'KeypressCommand' as 'KeypressCommand',
     'Keypress': [keyCode, metaKey, shiftKey],
   }
 }
 
-type CharacterCommand = {Character: number};
-
 export function CharacterCommand(
   charCode: number,
-): CharacterCommand {
+) {
   return {
+    tag: 'CharacterCommand' as 'CharacterCommand',
     'Character': charCode,
   }
 }
 
-type TargetCommand = {Target: [any]};
-
 export function TargetCommand(
-  curspan,
-): TargetCommand {
+  curspan: [any],
+) {
   return {
+    tag: 'TargetCommand' as 'TargetCommand',
     'Target': curspan,
   }
 }
 
-type ButtonCommand = {Button: number};
-
 export function ButtonCommand(
   button: number,
-): ButtonCommand {
+) {
   return {
+    tag: 'ButtonCommand' as 'ButtonCommand',
     'Button': button,
   }
 }
 
-type LoadCommand = {Load: any};
-
 export function LoadCommand(
   load: any,
-): LoadCommand {
+) {
   return {
+    tag: 'LoadCommand' as 'LoadCommand',
     'Load': load,
   }
 }
 
-type MonkeyCommand = {Monkey: boolean};
-
 export function MonkeyCommand(
   enabled: boolean,
-): MonkeyCommand {
+) {
   return {
+    tag: 'MonkeyCommand' as 'MonkeyCommand',
     'Monkey': enabled,
   };
 }
 
-type ConnectCommand = {Connect: string};
-
 export function ConnectCommand(
   client: string,
-): ConnectCommand {
+) {
   return {
+    tag: 'ConnectCommand' as 'ConnectCommand',
     'Connect': client,
   };
 }
 
-type RequestMarkdown = {RequestMarkdown: null};
-
 export function RequestMarkdown(
-): RequestMarkdown {
+) {
   return {
+    tag: 'RequestMarkdown' as 'RequestMarkdown',
     RequestMarkdown: null,
   };
 }
 
 export type Command
-  = MonkeyCommand
-  | RenameGroupCommand
-  | KeypressCommand
-  | CharacterCommand
-  | TargetCommand
-  | ButtonCommand
-  | LoadCommand
-  | ConnectCommand
-  | RequestMarkdown;
+  = ReturnType<typeof MonkeyCommand>
+  | ReturnType<typeof RenameGroupCommand>
+  | ReturnType<typeof KeypressCommand>
+  | ReturnType<typeof CharacterCommand>
+  | ReturnType<typeof TargetCommand>
+  | ReturnType<typeof ButtonCommand>
+  | ReturnType<typeof LoadCommand>
+  | ReturnType<typeof ConnectCommand>
+  | ReturnType<typeof RequestMarkdown>
+  ;

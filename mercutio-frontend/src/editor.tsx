@@ -1,7 +1,5 @@
 import * as commands from './commands';
-import Clipboard from 'clipboard';
 import * as util from './util';
-import * as interop from './interop';
 import {Network, ProxyNetwork, WasmNetwork} from './network';
 import * as React from 'react';
 

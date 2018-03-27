@@ -2,6 +2,9 @@ const webpack = require('webpack');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
 
 module.exports = {
+  output: {
+    publicPath: '/$/',
+  },
   devtool: 'source-map',
   plugins: [
     // new webpack.ProvidePlugin({
@@ -12,7 +15,7 @@ module.exports = {
     new ExtractTextPlugin("mercutio.css"),
   ],
   resolve: {
-    extensions: ['.ts', '.tsx', '.js', '.jsx']
+    extensions: ['.ts', '.tsx', '.js', '.jsx', '.wasm']
   },
   module: {
     rules: [

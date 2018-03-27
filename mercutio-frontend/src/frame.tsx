@@ -1,10 +1,9 @@
 // Global CSS
 import '../styles/mercutio.scss';
 
-import Clipboard from 'clipboard';
+import * as Clipboard from 'clipboard';
 import * as commands from './commands';
 import * as util from './util';
-import * as interop from './interop';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Editor } from './editor';
@@ -255,7 +254,7 @@ function multiConnect(network: Network) {
   };
 }
 
-function start() {
+export function start() {
   let network = CONFIG.wasm ? new WasmNetwork() : new ProxyNetwork();
 
   // Connect to parent window (if exists).
@@ -279,5 +278,3 @@ function start() {
       console.log('edit-text initialized.');
     });
 }
-
-start();

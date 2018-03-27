@@ -113,8 +113,9 @@ fn run() -> Result<(), Error> {
 
             execute!(
                 r"
-                    cp target/wasm32-unknown-unknown/release/mercutio.wasm \
-                        mercutio-frontend/dist
+                    wasm-bindgen ./target/wasm32-unknown-unknown/release/mercutio.wasm \
+                        --out-dir ./mercutio-frontend/src/bindgen \
+                        --typescript --nodejs
                 ",
             )?;
         }
@@ -165,13 +166,18 @@ fn run() -> Result<(), Error> {
                 println!("Database path: mercutio.sqlite3");
             }
 
-            if !Path::new("mercutio-frontend/dist/mercutio.wasm").exists() {
-                execute!(
-                    r"
-                        ./x.rs wasm-build
-                    ",
-                )?;
-            }
+            // if !Path::new("mercutio-frontend/dist/mercutio.wasm").exists() {
+                // execute!(
+                //     r"
+                //         ./x.rs wasm-build
+                //     "
+                // )?;
+                // execute!(
+                //     r"
+                //         ./x.rs frontend-build
+                //     ",
+                // )?;
+            // }
             // Don't print anything if it existed, because we might not have
             // launched in --client-proxy mode.
             // TODO if we can reliably check for --client-proxy or -c, we should
@@ -234,7 +240,7 @@ fn run() -> Result<(), Error> {
                 r"
                     cd mercutio-frontend
                     ./node_modules/.bin/webpack \
-                        ./src/index.tsx ./dist/mercutio.js {args}
+                        ./src/index.js --mode development --output-filename='mercutio.js' {args}
                 ",
                 args = args,
             )?;
@@ -245,21 +251,13 @@ fn run() -> Result<(), Error> {
                 r"
                     cd mercutio-frontend
                     ./node_modules/.bin/webpack --watch \
-                        ./src/index.tsx ./dist/mercutio.js {args}
+                        ./src/index.js --mode development --output-filename='mercutio.js' {args}
                 ",
                 args = args,
             )?;
         }
 
         Cli::Deploy => {
-            // Frontend JavaScript
-            eprintln!("Building frontend...");
-            execute!(
-                r"
-                    ./x.rs frontend-build
-                "
-            )?;
-
             // WASM client code
             eprintln!();
             eprintln!("Compiling WebAssembly...");
@@ -271,6 +269,14 @@ fn run() -> Result<(), Error> {
             execute!(
                 "
                     ./x.rs wasm-build
+                "
+            )?;
+
+            // Frontend JavaScript
+            eprintln!("Building frontend...");
+            execute!(
+                r"
+                    ./x.rs frontend-build
                 "
             )?;
 

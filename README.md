@@ -24,6 +24,8 @@ rustup target add wasm32-unknown-unknown
 To test out the text editor live, run the server using this command. On first startup, this will first compile the database and wasm bundle. After that, this command launches the HTTP and WebSocket servers:
 
 ```
+./x.rs wasm-build
+./x.rs frontend-build
 ./x.rs server
 ```
 

@@ -1,6 +1,6 @@
 import * as commands from './commands';
 import * as app from './app';
-import * as interop from './interop';
+import * as index from './index';
 
 export interface Network {
   onNativeMessage: (any) => void;
@@ -22,6 +22,7 @@ export class ProxyNetwork implements Network {
   onSyncClose: () => void; // unused
 
   nativeCommand(command: commands.Command) {
+    delete command.tag;
     this.nativeSocket.send(JSON.stringify(command));
   }
 
@@ -50,6 +51,12 @@ export class ProxyNetwork implements Network {
 }
 
 
+let sendCommandToJSList: Array<(any) => void> = [];
+
+export function sendCommandToJS(msg) {
+  sendCommandToJSList.forEach(handler => handler(msg));
+}
+
 export class WasmNetwork implements Network {
   editorID: string;
 
@@ -75,16 +82,18 @@ export class WasmNetwork implements Network {
   }
 
   nativeCommand(command: commands.Command) {
-    this.Module.wasm_command({
+    delete command.tag;
+    this.Module.wasm_command(JSON.stringify({
       NativeCommand: command,
-    });
+    }));
   }
 
   // Wasm connector.
   nativeConnect(): Promise<void> {
     const network = this;
     return new Promise((resolve, reject) => {
-      interop.instantiate(function (data) {
+      sendCommandToJSList.push((data) => {
+        
         // console.log('----> js_command:', data);
 
         // Make this async so we don't have deeply nested call stacks from Rust<->JS interop.
@@ -100,16 +109,18 @@ export class WasmNetwork implements Network {
             network.onNativeMessage(parse);
           }
         });
-      })
+      });
+
+      index.getWasmModule()
       .then(Module => {
         Module.wasm_setup();
-
+  
         setImmediate(() => {
           // Websocket port
           network.Module = Module;
           resolve();
         });
-      })
+      });
     });
   }
 
@@ -127,9 +138,9 @@ export class WasmNetwork implements Network {
 
       syncSocket.onmessage = function (event) {
         // console.log('Got message from sync:', event.data);
-        network.Module.wasm_command({
+        network.Module.wasm_command(JSON.stringify({
           SyncClientCommand: JSON.parse(event.data),
-        });
+        }));
       };
 
       syncSocket.onclose = network.onSyncClose;

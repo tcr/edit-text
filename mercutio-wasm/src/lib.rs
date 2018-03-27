@@ -1,5 +1,7 @@
 //! Connecting to wasm.
 
+#![feature(proc_macro, wasm_custom_section, wasm_import_module)]
+
 extern crate mercutio_common;
 extern crate mercutio_client;
 extern crate failure;
@@ -11,6 +13,8 @@ extern crate serde_json;
 extern crate take_mut;
 #[macro_use]
 extern crate lazy_static;
+#[macro_use]
+extern crate wasm_bindgen;
 
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicBool;
@@ -18,28 +22,12 @@ use mercutio_client::client::*;
 use mercutio_client::state::*;
 use mercutio_common::*;
 use failure::Error;
-use std::mem;
-use std::ffi::CString;
-use std::os::raw::{c_char, c_void};
+use wasm_bindgen::prelude::*;
 
-#[no_mangle]
-pub extern "C" fn alloc(size: usize) -> *mut c_void {
-    let mut buf = Vec::with_capacity(size);
-    let ptr = buf.as_mut_ptr();
-    mem::forget(buf);
-    return ptr as *mut c_void;
-}
-
-#[no_mangle]
-pub extern "C" fn dealloc_str(ptr: *mut c_char) {
-    unsafe {
-        let _ = CString::from_raw(ptr);
-    }
-}
-
+#[wasm_bindgen(module = "../network")]
 extern "C" {
     /// Send a command *to* the js client.
-    pub fn js_command(input_ptr: *mut c_char) -> u32;
+    pub fn sendCommandToJS(input: &str) -> u32;
 }
 
 lazy_static! {
@@ -57,20 +45,8 @@ impl ClientImpl for WasmClient {
     }
 
     fn send_client(&self, req: &ClientCommand) -> Result<(), Error> {
-        use std::ffi::CString;
-        use std::os::raw::c_char;
-
-        extern "C" {
-            /// Send a command *to* the js client.
-            pub fn js_command(input_ptr: *mut c_char) -> u32;
-        }
-
         let data = serde_json::to_string(&req)?;
-        let s = CString::new(data).unwrap().into_raw();
-
-        unsafe {
-            let _ = js_command(s);
-        }
+        let _ = sendCommandToJS(&data);
 
         Ok(())
     }
@@ -80,11 +56,9 @@ impl ClientImpl for WasmClient {
     }
 }
 
-#[no_mangle]
+#[wasm_bindgen]
 pub fn wasm_setup() -> u32 { //input_ptr: *mut c_char) -> u32 {
-    // let input = unsafe {
-    //     CString::from_raw(input_ptr)
-    // };
+
     let editor_id = "$$$$$$".to_string();
 
     {
@@ -112,12 +86,9 @@ pub fn wasm_setup() -> u32 { //input_ptr: *mut c_char) -> u32 {
 }
 
 /// Send a command *to* the wasm client.
-#[no_mangle]
-pub fn wasm_command(input_ptr: *mut c_char) -> u32 {
-    let input = unsafe {
-        CString::from_raw(input_ptr)
-    };
-    let req_parse: Result<Task, _> = serde_json::from_slice(&input.into_bytes());
+#[wasm_bindgen]
+pub fn wasm_command(input: &str) -> u32 {
+    let req_parse: Result<Task, _> = serde_json::from_slice(&input.as_bytes());
     
     let mut client_lock = WASM_CLIENT.lock().unwrap();
     let client = client_lock.as_mut().unwrap();
