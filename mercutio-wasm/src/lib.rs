@@ -13,6 +13,7 @@ extern crate serde_json;
 extern crate take_mut;
 #[macro_use]
 extern crate lazy_static;
+#[allow(unused)]
 #[macro_use]
 extern crate wasm_bindgen;
 

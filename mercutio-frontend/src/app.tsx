@@ -23,10 +23,11 @@ function NativeButtons(
 ) {
   return (
     <div id="native-buttons">{
-      props.buttons.map(btn =>
+      props.buttons.map((btn, i) =>
         <button
+          key={i}
           onClick={
-            () => props.editor.network.nativeCommand(commands.ButtonCommand(btn[0]))
+            () => props.editor.network.nativeCommand(commands.Button(btn[0]))
           }
           className={btn[2] ? 'active' : ''}
         >{btn[1]}</button>
@@ -249,7 +250,7 @@ function multiConnect(network: Network) {
 
     if ('Monkey' in msg) {
       // TODO reflect this in the app
-      network.nativeCommand(commands.MonkeyCommand(msg.Monkey));
+      network.nativeCommand(commands.Monkey(msg.Monkey));
     }
   };
 }
@@ -268,7 +269,7 @@ export function start() {
       network={network}
       body={document.querySelector('.edit-text')!.innerHTML}
     />,
-    document.querySelector('body')!,
+    document.querySelector('#content')!,
   )
 
   // Connect to remote sockets.

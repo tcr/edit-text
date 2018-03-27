@@ -34,8 +34,6 @@ use std::{
 };
 use url::Url;
 use ws;
-use ws::util::{Token, Timeout};
-use ws::{CloseCode, Frame};
 
 const PAGE_TITLE_LEN: usize = 100;
 
@@ -50,7 +48,6 @@ pub fn default_new_doc(id: &str) -> Doc {
 /// Transform an operation incrementally against each interim document operation.
 // TODO upgrade_operation_to_current or something
 pub fn update_operation(
-    client_id: &str,
     mut op: Op,
     history: &HashMap<usize, Op>,
     target_version: usize,
@@ -115,9 +112,7 @@ impl SyncState {
 
 struct ClientSocket {
     client_id: String,
-    page_id: String,
     sync_state_mutex: SharedSyncState,
-    tx_db: CCSender<DbMessage>,
 }
 
 impl SimpleSocket for ClientSocket {
@@ -153,7 +148,6 @@ impl SimpleSocket for ClientSocket {
         let (tx_client, rx_client) = unbounded();
         tx_db.send(DbMessage::Initialize {
             id: page_id.clone(),
-            client: client_id.clone(),
             receiver: tx_client,
         });
 
@@ -187,9 +181,7 @@ impl SimpleSocket for ClientSocket {
 
         Ok(ClientSocket {
             client_id,
-            page_id,
             sync_state_mutex,
-            tx_db,
         })
     }
 
@@ -293,7 +285,6 @@ fn spawn_sync_server(
 
                     // Update the operation so we can apply it to the document.
                     let op = update_operation(
-                        &client_id,
                         op,
                         &sync_state.history,
                         target_version,
@@ -358,10 +349,9 @@ enum DbMessage {
         body: Doc,
     },
 
-    // Intiialize a client.
+    // Intiialize a client with a page ID.
     Initialize {
         id: String,
-        client: String,
         receiver: CCSender<SharedSyncState>,
     },
 }
@@ -380,7 +370,7 @@ fn spawn_update_db(
                 DbMessage::Update { id, body } => {
                     create_post(&conn, &id, &body);
                 }
-                DbMessage::Initialize { id, client, receiver } => {
+                DbMessage::Initialize { id, receiver } => {
                     let shared_sync_state =
                         if let Some(value) = page_map.get(&id) {
                             println!("(%) reloading {:?}", id);

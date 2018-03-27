@@ -7,5 +7,5 @@ export function getWasmModule() {
 }
 
 // Launch the application.
-import * as frame from './frame';
-frame.start();
+import * as app from './app';
+app.start();

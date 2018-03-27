@@ -130,7 +130,7 @@
 /******/
 /******/ 			// a Promise means "currently loading" or "already loaded".
 /******/ 			promises.push(installedWasmModuleData ||
-/******/ 				(installedWasmModules[wasmModuleId] = fetch(__webpack_require__.p + "" + {"./src/bindgen/mercutio_bg.wasm":"57b05b6fc22e5ff581a4"}[wasmModuleId] + ".module.wasm").then(function(response) {
+/******/ 				(installedWasmModules[wasmModuleId] = fetch(__webpack_require__.p + "" + {"./src/bindgen/mercutio_bg.wasm":"5d85833bae3fe171569a"}[wasmModuleId] + ".module.wasm").then(function(response) {
 /******/ 					if(WebAssembly.compileStreaming) {
 /******/ 						return WebAssembly.compileStreaming(response);
 /******/ 					} else {
@@ -19394,269 +19394,10 @@ module.exports = g;
 
 /***/ }),
 
-/***/ "./src/app.ts":
-/*!********************!*\
-  !*** ./src/app.ts ***!
-  \********************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function pageId() {
-    return window.location.pathname.match(/^\/?([^\/]+)/)[1] || '';
-}
-exports.pageId = pageId;
-function clientProxyUrl() {
-    return '' +
-        (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
-        window.location.host.replace(/\:\d+/, ':8002') +
-        '/' +
-        pageId();
-}
-exports.clientProxyUrl = clientProxyUrl;
-function syncUrl() {
-    return '' +
-        (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
-        (window.location.host.match(/localhost/) ?
-            window.location.host.replace(/:\d+$|$/, ':8001') + '/$/ws/' + pageId() :
-            window.location.host + '/$/ws/' + pageId());
-}
-exports.syncUrl = syncUrl;
-
-
-/***/ }),
-
-/***/ "./src/commands.ts":
-/*!*************************!*\
-  !*** ./src/commands.ts ***!
-  \*************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-// Commands
-Object.defineProperty(exports, "__esModule", { value: true });
-function RenameGroupCommand(tag, curspan) {
-    return {
-        tag: 'RenameGroupCommand',
-        'RenameGroup': [tag, curspan],
-    };
-}
-exports.RenameGroupCommand = RenameGroupCommand;
-function KeypressCommand(keyCode, metaKey, shiftKey) {
-    return {
-        tag: 'KeypressCommand',
-        'Keypress': [keyCode, metaKey, shiftKey],
-    };
-}
-exports.KeypressCommand = KeypressCommand;
-function CharacterCommand(charCode) {
-    return {
-        tag: 'CharacterCommand',
-        'Character': charCode,
-    };
-}
-exports.CharacterCommand = CharacterCommand;
-function TargetCommand(curspan) {
-    return {
-        tag: 'TargetCommand',
-        'Target': curspan,
-    };
-}
-exports.TargetCommand = TargetCommand;
-function ButtonCommand(button) {
-    return {
-        tag: 'ButtonCommand',
-        'Button': button,
-    };
-}
-exports.ButtonCommand = ButtonCommand;
-function LoadCommand(load) {
-    return {
-        tag: 'LoadCommand',
-        'Load': load,
-    };
-}
-exports.LoadCommand = LoadCommand;
-function MonkeyCommand(enabled) {
-    return {
-        tag: 'MonkeyCommand',
-        'Monkey': enabled,
-    };
-}
-exports.MonkeyCommand = MonkeyCommand;
-function ConnectCommand(client) {
-    return {
-        tag: 'ConnectCommand',
-        'Connect': client,
-    };
-}
-exports.ConnectCommand = ConnectCommand;
-function RequestMarkdown() {
-    return {
-        tag: 'RequestMarkdown',
-        RequestMarkdown: null,
-    };
-}
-exports.RequestMarkdown = RequestMarkdown;
-
-
-/***/ }),
-
-/***/ "./src/editor.tsx":
-/*!************************!*\
-  !*** ./src/editor.tsx ***!
-  \************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const commands = __webpack_require__(/*! ./commands */ "./src/commands.ts");
-const util = __webpack_require__(/*! ./util */ "./src/util.ts");
-const React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
-const ROOT_SELECTOR = '.edit-text';
-function curto(el, textOffset = null) {
-    if (!el) {
-        return null;
-    }
-    let cur = [
-        el.nodeType == 1 ? {
-            'CurGroup': null
-        } : {
-            'CurChar': null
-        }
-    ];
-    if (textOffset !== null) {
-        console.log('help', textOffset);
-        cur.unshift({
-            "CurSkip": textOffset,
-        });
-    }
-    function place_skip(cur, value) {
-        if ('CurSkip' in cur[0]) {
-            cur[0].CurSkip += value;
-        }
-        else {
-            cur.unshift({
-                "CurSkip": value,
-            });
-        }
-    }
-    while (el !== null) {
-        if (el.previousSibling) {
-            if (el.previousSibling.nodeType == 3) {
-                place_skip(cur, el.previousSibling.data.length);
-            }
-            else {
-                place_skip(cur, 1);
-            }
-            el = el.previousSibling;
-        }
-        else {
-            el = el.parentNode;
-            if (el === null) {
-                throw new Error('Unexpectedly reached root');
-            }
-            if (el.nodeType == 1 && util.matchesSelector(el, ROOT_SELECTOR)) {
-                break;
-            }
-            cur = [{
-                    "CurWithGroup": cur,
-                }];
-        }
-    }
-    el = el;
-    if (!(el.nodeType == 1 && util.matchesSelector(el, ROOT_SELECTOR))) {
-        console.error('Invalid selection!!!');
-    }
-    console.log('cursor', JSON.stringify(cur));
-    return cur;
-}
-function resolveCursorFromPosition(textNode, offset) {
-    if (offset == 0) {
-        if (textNode.previousSibling === null) {
-            // Text node is first in element, so select parent node.
-            return curto(textNode.parentNode);
-        }
-        else if (textNode.previousSibling.nodeType === 3) {
-            // Text node has a preceding text elemnt; move to end.
-            return curto(textNode.previousSibling, textNode.previousSibling.data.length);
-        }
-        else {
-            // If it's an element...
-            //TODO do something here,
-            return curto(
-            // This is literally just a random node
-            // TODO replace this
-            textNode.parentNode);
-        }
-        ;
-    }
-    else {
-        // Move to offset of this text node.
-        return curto(textNode, offset - 1);
-    }
-}
-class Editor extends React.Component {
-    onMouseDown(e) {
-        let pos = util.textNodeAtPoint(e.clientX, e.clientY);
-        // Only support text elements.
-        if (pos !== null) {
-            this.props.network.nativeCommand(commands.TargetCommand(resolveCursorFromPosition(pos.textNode, pos.offset)));
-        }
-        // Focus the window despite us cancelling the event.
-        window.focus();
-        // Cancel the event; prevent text selection.
-        e.preventDefault();
-    }
-    onMount(el) {
-        this.el = el;
-        this.el.innerHTML = this.props.content;
-    }
-    componentDidUpdate() {
-        this.el.innerHTML = this.props.content;
-        // Highlight our caret.
-        document.querySelectorAll(`div[data-tag="caret"][data-client=${JSON.stringify(this.props.editorID)}]`).forEach(caret => {
-            caret.classList.add("current");
-        });
-    }
-    componentDidMount() {
-        document.addEventListener('keypress', (e) => {
-            // Don't accept keypresses when a modifier key is pressed w/keypress, except shift.
-            if (e.metaKey) {
-                return;
-            }
-            this.props.network.nativeCommand(commands.CharacterCommand(e.charCode));
-            e.preventDefault();
-        });
-        document.addEventListener('keydown', (e) => {
-            // Check if this event exists in the list of whitelisted key combinations.
-            if (!this.props.KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
-                return;
-            }
-            // Forward the keypress to native.
-            this.props.network.nativeCommand(commands.KeypressCommand(e.keyCode, e.metaKey, e.shiftKey));
-            e.preventDefault();
-        });
-    }
-    render() {
-        return (React.createElement("div", { className: "edit-text theme-mock", ref: (el) => el && this.onMount(el), onMouseDown: this.onMouseDown.bind(this) }));
-    }
-}
-exports.Editor = Editor;
-
-
-/***/ }),
-
-/***/ "./src/frame.tsx":
-/*!***********************!*\
-  !*** ./src/frame.tsx ***!
-  \***********************/
+/***/ "./src/app.tsx":
+/*!*********************!*\
+  !*** ./src/app.tsx ***!
+  \*********************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -19677,7 +19418,7 @@ if (!CONFIG.configured) {
 }
 const ROOT_QUERY = '.edit-text';
 function NativeButtons(props) {
-    return (React.createElement("div", { id: "native-buttons" }, props.buttons.map(btn => React.createElement("button", { onClick: () => props.editor.network.nativeCommand(commands.ButtonCommand(btn[0])), className: btn[2] ? 'active' : '' }, btn[1]))));
+    return (React.createElement("div", { id: "native-buttons" }, props.buttons.map((btn, i) => React.createElement("button", { key: i, onClick: () => props.editor.network.nativeCommand(commands.Button(btn[0])), className: btn[2] ? 'active' : '' }, btn[1]))));
 }
 class LocalButtons extends React.Component {
     constructor() {
@@ -19822,7 +19563,7 @@ function multiConnect(network) {
         let msg = event.data;
         if ('Monkey' in msg) {
             // TODO reflect this in the app
-            network.nativeCommand(commands.MonkeyCommand(msg.Monkey));
+            network.nativeCommand(commands.Monkey(msg.Monkey));
         }
     };
 }
@@ -19833,7 +19574,7 @@ function start() {
         multiConnect(network);
     }
     // Create the editor frame.
-    ReactDOM.render(React.createElement(EditorFrame, { network: network, body: document.querySelector('.edit-text').innerHTML }), document.querySelector('body'));
+    ReactDOM.render(React.createElement(EditorFrame, { network: network, body: document.querySelector('.edit-text').innerHTML }), document.querySelector('#content'));
     // Connect to remote sockets.
     network.nativeConnect()
         .then(() => network.syncConnect())
@@ -19842,6 +19583,231 @@ function start() {
     });
 }
 exports.start = start;
+
+
+/***/ }),
+
+/***/ "./src/commands.ts":
+/*!*************************!*\
+  !*** ./src/commands.ts ***!
+  \*************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+// Commands
+Object.defineProperty(exports, "__esModule", { value: true });
+function RenameGroup(tag, curspan) {
+    return {
+        tag: 'RenameGroup',
+        'RenameGroup': [tag, curspan],
+    };
+}
+exports.RenameGroup = RenameGroup;
+function Keypress(keyCode, metaKey, shiftKey) {
+    return {
+        tag: 'Keypress',
+        'Keypress': [keyCode, metaKey, shiftKey],
+    };
+}
+exports.Keypress = Keypress;
+function Character(charCode) {
+    return {
+        tag: 'Character',
+        'Character': charCode,
+    };
+}
+exports.Character = Character;
+function Target(curspan) {
+    return {
+        tag: 'Target',
+        'Target': curspan,
+    };
+}
+exports.Target = Target;
+function Button(button) {
+    return {
+        tag: 'Button',
+        'Button': button,
+    };
+}
+exports.Button = Button;
+function Load(load) {
+    return {
+        tag: 'Load',
+        'Load': load,
+    };
+}
+exports.Load = Load;
+function Monkey(enabled) {
+    return {
+        tag: 'Monkey',
+        'Monkey': enabled,
+    };
+}
+exports.Monkey = Monkey;
+function Connect(client) {
+    return {
+        tag: 'Connect',
+        'Connect': client,
+    };
+}
+exports.Connect = Connect;
+function RequestMarkdown() {
+    return {
+        tag: 'RequestMarkdown',
+        RequestMarkdown: null,
+    };
+}
+exports.RequestMarkdown = RequestMarkdown;
+
+
+/***/ }),
+
+/***/ "./src/editor.tsx":
+/*!************************!*\
+  !*** ./src/editor.tsx ***!
+  \************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const commands = __webpack_require__(/*! ./commands */ "./src/commands.ts");
+const util = __webpack_require__(/*! ./util */ "./src/util.ts");
+const React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+const ROOT_SELECTOR = '.edit-text';
+function curto(el, textOffset = null) {
+    if (!el) {
+        return null;
+    }
+    let cur = [
+        el.nodeType == 1 ? {
+            'CurGroup': null
+        } : {
+            'CurChar': null
+        }
+    ];
+    if (textOffset !== null) {
+        console.log('help', textOffset);
+        cur.unshift({
+            "CurSkip": textOffset,
+        });
+    }
+    function place_skip(cur, value) {
+        if ('CurSkip' in cur[0]) {
+            cur[0].CurSkip += value;
+        }
+        else {
+            cur.unshift({
+                "CurSkip": value,
+            });
+        }
+    }
+    while (el !== null) {
+        if (el.previousSibling) {
+            if (el.previousSibling.nodeType == 3) {
+                place_skip(cur, el.previousSibling.data.length);
+            }
+            else {
+                place_skip(cur, 1);
+            }
+            el = el.previousSibling;
+        }
+        else {
+            el = el.parentNode;
+            if (el === null) {
+                throw new Error('Unexpectedly reached root');
+            }
+            if (el.nodeType == 1 && util.matchesSelector(el, ROOT_SELECTOR)) {
+                break;
+            }
+            cur = [{
+                    "CurWithGroup": cur,
+                }];
+        }
+    }
+    el = el;
+    if (!(el.nodeType == 1 && util.matchesSelector(el, ROOT_SELECTOR))) {
+        console.error('Invalid selection!!!');
+    }
+    console.log('cursor', JSON.stringify(cur));
+    return cur;
+}
+function resolveCursorFromPosition(textNode, offset) {
+    if (offset == 0) {
+        if (textNode.previousSibling === null) {
+            // Text node is first in element, so select parent node.
+            return curto(textNode.parentNode);
+        }
+        else if (textNode.previousSibling.nodeType === 3) {
+            // Text node has a preceding text elemnt; move to end.
+            return curto(textNode.previousSibling, textNode.previousSibling.data.length);
+        }
+        else {
+            // If it's an element...
+            //TODO do something here,
+            return curto(
+            // This is literally just a random node
+            // TODO replace this
+            textNode.parentNode);
+        }
+        ;
+    }
+    else {
+        // Move to offset of this text node.
+        return curto(textNode, offset - 1);
+    }
+}
+class Editor extends React.Component {
+    onMouseDown(e) {
+        let pos = util.textNodeAtPoint(e.clientX, e.clientY);
+        // Only support text elements.
+        if (pos !== null) {
+            this.props.network.nativeCommand(commands.Target(resolveCursorFromPosition(pos.textNode, pos.offset)));
+        }
+        // Focus the window despite us cancelling the event.
+        window.focus();
+        // Cancel the event; prevent text selection.
+        e.preventDefault();
+    }
+    onMount(el) {
+        this.el = el;
+        this.el.innerHTML = this.props.content;
+    }
+    componentDidUpdate() {
+        this.el.innerHTML = this.props.content;
+        // Highlight our caret.
+        document.querySelectorAll(`div[data-tag="caret"][data-client=${JSON.stringify(this.props.editorID)}]`).forEach(caret => {
+            caret.classList.add("current");
+        });
+    }
+    componentDidMount() {
+        document.addEventListener('keypress', (e) => {
+            // Don't accept keypresses when a modifier key is pressed w/keypress, except shift.
+            if (e.metaKey) {
+                return;
+            }
+            this.props.network.nativeCommand(commands.Character(e.charCode));
+            e.preventDefault();
+        });
+        document.addEventListener('keydown', (e) => {
+            // Check if this event exists in the list of whitelisted key combinations.
+            if (!this.props.KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
+                return;
+            }
+            // Forward the keypress to native.
+            this.props.network.nativeCommand(commands.Keypress(e.keyCode, e.metaKey, e.shiftKey));
+            e.preventDefault();
+        });
+    }
+    render() {
+        return (React.createElement("div", { className: "edit-text theme-mock", ref: (el) => el && this.onMount(el), onMouseDown: this.onMouseDown.bind(this) }));
+    }
+}
+exports.Editor = Editor;
 
 
 /***/ }),
@@ -19858,8 +19824,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getWasmModule", function() { return getWasmModule; });
 /* harmony import */ var _styles_mercutio_scss__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../styles/mercutio.scss */ "./styles/mercutio.scss");
 /* harmony import */ var _styles_mercutio_scss__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_styles_mercutio_scss__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _frame__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./frame */ "./src/frame.tsx");
-/* harmony import */ var _frame__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_frame__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _app__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./app */ "./src/app.tsx");
+/* harmony import */ var _app__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_app__WEBPACK_IMPORTED_MODULE_1__);
 // Global CSS
 
 
@@ -19870,7 +19836,7 @@ function getWasmModule() {
 
 // Launch the application.
 
-_frame__WEBPACK_IMPORTED_MODULE_1__["start"]();
+_app__WEBPACK_IMPORTED_MODULE_1__["start"]();
 
 
 /***/ }),
@@ -19885,7 +19851,7 @@ _frame__WEBPACK_IMPORTED_MODULE_1__["start"]();
 "use strict";
 /* WEBPACK VAR INJECTION */(function(setImmediate) {
 Object.defineProperty(exports, "__esModule", { value: true });
-const app = __webpack_require__(/*! ./app */ "./src/app.ts");
+const route = __webpack_require__(/*! ./route */ "./src/route.ts");
 const index = __webpack_require__(/*! ./index */ "./src/index.js");
 class ProxyNetwork {
     nativeCommand(command) {
@@ -19896,7 +19862,7 @@ class ProxyNetwork {
         let network = this;
         return Promise.resolve()
             .then(() => {
-            this.nativeSocket = new WebSocket(app.clientProxyUrl());
+            this.nativeSocket = new WebSocket(route.clientProxyUrl());
             this.nativeSocket.onopen = function (event) {
                 console.log('Editor "%s" is connected.', network.editorID);
             };
@@ -19965,7 +19931,7 @@ class WasmNetwork {
         let network = this;
         return Promise.resolve()
             .then(() => {
-            let syncSocket = new WebSocket(app.syncUrl());
+            let syncSocket = new WebSocket(route.syncUrl());
             syncSocket.onopen = function (event) {
                 console.log('Editor "%s" is connected.', network.editorID);
             };
@@ -19983,6 +19949,40 @@ class WasmNetwork {
 exports.WasmNetwork = WasmNetwork;
 
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../node_modules/timers-browserify/main.js */ "./node_modules/timers-browserify/main.js").setImmediate))
+
+/***/ }),
+
+/***/ "./src/route.ts":
+/*!**********************!*\
+  !*** ./src/route.ts ***!
+  \**********************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+function pageId() {
+    return window.location.pathname.match(/^\/?([^\/]+)/)[1] || '';
+}
+exports.pageId = pageId;
+function clientProxyUrl() {
+    return '' +
+        (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
+        window.location.host.replace(/\:\d+/, ':8002') +
+        '/' +
+        pageId();
+}
+exports.clientProxyUrl = clientProxyUrl;
+function syncUrl() {
+    return '' +
+        (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
+        (window.location.host.match(/localhost/) ?
+            window.location.host.replace(/:\d+$|$/, ':8001') + '/$/ws/' + pageId() :
+            window.location.host + '/$/ws/' + pageId());
+}
+exports.syncUrl = syncUrl;
+
 
 /***/ }),
 

@@ -1,5 +1,5 @@
 import * as commands from './commands';
-import * as app from './app';
+import * as route from './route';
 import * as index from './index';
 
 export interface Network {
@@ -31,7 +31,7 @@ export class ProxyNetwork implements Network {
     return Promise.resolve()
     .then(() => {
       this.nativeSocket = new WebSocket(
-        app.clientProxyUrl()
+        route.clientProxyUrl()
       );
       this.nativeSocket.onopen = function (event) {
         console.log('Editor "%s" is connected.', network.editorID);
@@ -130,7 +130,7 @@ export class WasmNetwork implements Network {
     return Promise.resolve()
     .then(() => {
       let syncSocket = new WebSocket(
-        app.syncUrl()
+        route.syncUrl()
       );
       syncSocket.onopen = function (event) {
         console.log('Editor "%s" is connected.', network.editorID);

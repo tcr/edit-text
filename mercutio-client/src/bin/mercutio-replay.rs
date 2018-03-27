@@ -2,7 +2,7 @@
 
 extern crate failure;
 extern crate ron;
-extern crate mercutio;
+extern crate mercutio_common;
 extern crate mercutio_client;
 extern crate crossbeam_channel;
 #[macro_use]
@@ -18,13 +18,12 @@ extern crate structopt_derive;
 use colored::Colorize;
 use failure::Error;
 use std::io::prelude::*;
-use mercutio::{
+use mercutio_common::{
     SyncServerCommand,
 };
 use mercutio_client::{
     ProxyClient,
     Client,
-    ClientImpl,
     LogWasm,
     state::ClientDoc,
     ClientCommand,

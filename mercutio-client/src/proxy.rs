@@ -4,14 +4,12 @@ use mercutio_common::socket::*;
 use crossbeam_channel::{unbounded, Sender, Receiver};
 use failure::Error;
 use serde_json;
-use serde;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::sync::atomic::Ordering;
 use std::thread::{self, JoinHandle};
 use ws;
-use ws::util::{Token, Timeout};
-use ws::{CloseCode, Frame};
+use ws::CloseCode;
 use monkey::setup_monkey;
 
 fn spawn_send_to_client(
@@ -155,7 +153,6 @@ fn setup_client(
 }
 
 pub struct ProxySocket {
-    out: Arc<Mutex<ws::Sender>>,
     alive: Arc<AtomicBool>,
     monkey: Arc<AtomicBool>,
     tx_task: Sender<Task>,
@@ -175,7 +172,6 @@ impl SimpleSocket for ProxySocket {
         );
 
         Ok(ProxySocket {
-            out,
             alive,
             monkey,
             tx_task,
@@ -199,8 +195,6 @@ impl SimpleSocket for ProxySocket {
 }
 
 pub fn server(url: &str, ws_port: u16) {
-    let token_counter = AtomicUsize::new(1);
-
     ws::listen(url, |out| {
         // Websocket message handler.
         SocketHandler::<ProxySocket>::new(ws_port, out)

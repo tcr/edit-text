@@ -1,4 +1,4 @@
-#!/usr/bin/env run-cargo-script
+#!/usr/bin/env run-cargo-script script
 //! ```cargo
 //! [dependencies]
 //! commandspec = "0.6.1"

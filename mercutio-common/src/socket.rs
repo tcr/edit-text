@@ -1,12 +1,7 @@
-use super::*;
-use crossbeam_channel::{unbounded, Sender, Receiver};
 use failure::Error;
-use serde_json;
-use serde;
 use std::sync::{Arc, Mutex};
-use std::sync::atomic::{AtomicBool, AtomicUsize};
+use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
-use std::thread::{self, JoinHandle};
 use ws;
 use ws::util::{Token, Timeout};
 use ws::{CloseCode, Frame};

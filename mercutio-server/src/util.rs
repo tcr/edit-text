@@ -29,8 +29,6 @@ pub fn remove_carets(doc: &Doc) -> Result<Doc, Error> {
 
 
 fn remove_carets_op_span(writer: &mut DelWriter, span: &DocSpan, filter: &[String]) -> Result<(), Error> {
-    let mut ret: DocSpan = vec![];
-
     for elem in span {
         match *elem {
             DocGroup(ref attrs, ref span) => {

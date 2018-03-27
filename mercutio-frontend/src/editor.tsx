@@ -119,7 +119,7 @@ export class Editor extends React.Component {
 
     // Only support text elements.
     if (pos !== null) {
-      this.props.network.nativeCommand(commands.TargetCommand(
+      this.props.network.nativeCommand(commands.Target(
         resolveCursorFromPosition(pos.textNode, pos.offset),
       ));
     }
@@ -154,7 +154,7 @@ export class Editor extends React.Component {
         return;
       }
   
-      this.props.network.nativeCommand(commands.CharacterCommand(e.charCode));
+      this.props.network.nativeCommand(commands.Character(e.charCode));
   
       e.preventDefault();
     });
@@ -166,7 +166,7 @@ export class Editor extends React.Component {
       }
   
       // Forward the keypress to native.
-      this.props.network.nativeCommand(commands.KeypressCommand(
+      this.props.network.nativeCommand(commands.Keypress(
         e.keyCode,
         e.metaKey,
         e.shiftKey,

@@ -1,73 +1,73 @@
 // Commands
 
-export function RenameGroupCommand(tag: string, curspan) {
+export function RenameGroup(tag: string, curspan) {
   return {
-    tag: 'RenameGroupCommand' as 'RenameGroupCommand',
+    tag: 'RenameGroup' as 'RenameGroup',
     'RenameGroup': [tag, curspan],
   }
 }
 
-export function KeypressCommand(
+export function Keypress(
   keyCode: number,
   metaKey: boolean,
   shiftKey: boolean,
 ) {
   return {
-    tag: 'KeypressCommand' as 'KeypressCommand',
+    tag: 'Keypress' as 'Keypress',
     'Keypress': [keyCode, metaKey, shiftKey],
   }
 }
 
-export function CharacterCommand(
+export function Character(
   charCode: number,
 ) {
   return {
-    tag: 'CharacterCommand' as 'CharacterCommand',
+    tag: 'Character' as 'Character',
     'Character': charCode,
   }
 }
 
-export function TargetCommand(
+export function Target(
   curspan: [any],
 ) {
   return {
-    tag: 'TargetCommand' as 'TargetCommand',
+    tag: 'Target' as 'Target',
     'Target': curspan,
   }
 }
 
-export function ButtonCommand(
+export function Button(
   button: number,
 ) {
   return {
-    tag: 'ButtonCommand' as 'ButtonCommand',
+    tag: 'Button' as 'Button',
     'Button': button,
   }
 }
 
-export function LoadCommand(
+export function Load(
   load: any,
 ) {
   return {
-    tag: 'LoadCommand' as 'LoadCommand',
+    tag: 'Load' as 'Load',
     'Load': load,
   }
 }
 
-export function MonkeyCommand(
+export function Monkey(
   enabled: boolean,
 ) {
   return {
-    tag: 'MonkeyCommand' as 'MonkeyCommand',
+    tag: 'Monkey' as 'Monkey',
     'Monkey': enabled,
   };
 }
 
-export function ConnectCommand(
+export function Connect(
   client: string,
 ) {
   return {
-    tag: 'ConnectCommand' as 'ConnectCommand',
+    tag: 'Connect' as 'Connect',
     'Connect': client,
   };
 }
@@ -81,13 +81,13 @@ export function RequestMarkdown(
 }
 
 export type Command
-  = ReturnType<typeof MonkeyCommand>
-  | ReturnType<typeof RenameGroupCommand>
-  | ReturnType<typeof KeypressCommand>
-  | ReturnType<typeof CharacterCommand>
-  | ReturnType<typeof TargetCommand>
-  | ReturnType<typeof ButtonCommand>
-  | ReturnType<typeof LoadCommand>
-  | ReturnType<typeof ConnectCommand>
+  = ReturnType<typeof Monkey>
+  | ReturnType<typeof RenameGroup>
+  | ReturnType<typeof Keypress>
+  | ReturnType<typeof Character>
+  | ReturnType<typeof Target>
+  | ReturnType<typeof Button>
+  | ReturnType<typeof Load>
+  | ReturnType<typeof Connect>
   | ReturnType<typeof RequestMarkdown>
   ;
