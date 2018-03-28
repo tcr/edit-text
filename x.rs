@@ -17,6 +17,7 @@ extern crate failure;
 
 use commandspec::*;
 use std::path::Path;
+use std::env;
 use failure::Error;
 use structopt::StructOpt;
 
@@ -258,6 +259,9 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::Deploy => {
+            let dokku_url = env::var("EDIT_DEPLOY_URL").unwrap_or("sandbox.edit.io".to_string());
+            let dokku_name = env::var("EDIT_DOKKU_NAME").unwrap_or("edit-text".to_string());
+
             // WASM client code
             eprintln!();
             eprintln!("Compiling WebAssembly...");
@@ -321,9 +325,11 @@ fn run() -> Result<(), Error> {
 
                     # Doing these two commands as one pipe may cause dokku to hang
                     # (from experience) so first, upload the tarball, then load it.
-                    tar c . | bzip2 | ssh root@sandbox.edit.io "bunzip2 > /tmp/mercutio.tar"
-                    ssh root@sandbox.edit.io "cat /tmp/mercutio.tar | dokku tar:in edit-text"
+                    tar c . | bzip2 | ssh root@{dokku_url} "bunzip2 > /tmp/mercutio.tar"
+                    ssh root@{dokku_url} 'cat /tmp/mercutio.tar | dokku tar:in {dokku_name}'
                 "#,
+                dokku_url = dokku_url,
+                dokku_name = dokku_name,
             )?;
         }
     }

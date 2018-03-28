@@ -151,10 +151,12 @@ kbd {
         to   { opacity: 1; }
     }
 
+    $color_curcaret: rgb(233, 15, 124);
+    $color_caret: #089;
+
     div[data-tag="caret"]::before {
-        $color: #089;
-        border-left: 1px $color solid;
-        border-right: 1px $color solid;
+        border-left: 1px $color_caret solid;
+        border-right: 1px $color_caret solid;
         margin-right: -1px;
         margin-left: -1px;
         content: '';
@@ -162,15 +164,30 @@ kbd {
     }
 
     div[data-tag="caret"].current::before {
-        $color: rgb(233, 15, 124);
-        border-left: 1px $color solid;
-        border-right: 1px $color solid;
+        border-left: 1px $color_curcaret solid;
+        border-right: 1px $color_curcaret solid;
         margin-right: -1px;
         margin-left: -1px;
         content: '';
         z-index: 1000;
         position: relative;
     }
+
+    div[data-tag="caret"] +
+    div[data-tag="caret"].current::before {
+        border-left: 1px $color_curcaret dashed !important;
+        border-right: 1px $color_curcaret dashed !important;
+    }
+
+    div[data-tag="caret"].current +
+    div[data-tag="caret"]::before {
+        border-left: 1px $color_caret dashed !important;
+        border-right: 1px $color_caret dashed !important;
+        z-index: 1001;
+        position: relative;
+    }
+
+
 
     div[data-tag="hr"] {
         margin: 16px 0;

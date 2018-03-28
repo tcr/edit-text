@@ -142,6 +142,16 @@ kbd {
     content: '';
     z-index: 1000;
     position: relative; }
+  .edit-text.theme-mock div[data-tag="caret"] +
+div[data-tag="caret"].current::before {
+    border-left: 1px #e90f7c dashed !important;
+    border-right: 1px #e90f7c dashed !important; }
+  .edit-text.theme-mock div[data-tag="caret"].current +
+div[data-tag="caret"]::before {
+    border-left: 1px #089 dashed !important;
+    border-right: 1px #089 dashed !important;
+    z-index: 1001;
+    position: relative; }
   .edit-text.theme-mock div[data-tag="hr"] {
     margin: 16px 0;
     height: 2px;

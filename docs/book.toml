@@ -1,0 +1,5 @@
+[book]
+authors = ["Tim Ryan"]
+multilingual = false
+src = "."
+title = "edit-text internals"
