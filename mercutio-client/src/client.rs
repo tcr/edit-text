@@ -16,7 +16,7 @@ use crossbeam_channel::Sender;
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum NativeCommand {
     // Connect(String),
-    Keypress(u32, bool, bool),
+    Keypress(u32, bool, bool, bool), // code, meta, shift, alt
     Button(u32),
     Character(u32),
     RenameGroup(String, CurSpan),
@@ -42,113 +42,163 @@ pub enum ClientCommand {
     SyncServerCommand(SyncServerCommand),
 }
 
-fn key_handlers<C: ClientImpl>()
-    -> Vec<(u32, bool, bool, Box<Fn(&mut C) -> Result<(), Error>>)> {
+// Shorthandler
+// code, meta, shift, alt, callback
+struct KeyHandler<C: ClientImpl>(
+    u32, bool, bool, bool, Box<Fn(&mut C) -> Result<(), Error>>
+);
+
+impl<C: ClientImpl> KeyHandler<C> {
+    fn matches(&self, code: u32, meta_key: bool, shift_key: bool, alt_key: bool) -> bool {
+        self.0 == code && self.1 == meta_key && self.2 == shift_key && self.3 == alt_key
+    }
+
+    fn invoke(&self, client: &mut C) -> Result<(), Error> {
+        self.4(client)
+    }
+}
+
+// label, callback, selected
+pub struct ButtonHandler<C: ClientImpl>(
+    &'static str, Box<Fn(&mut C) -> Result<(), Error>>, bool,
+);
+
+
+fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
     vec![
         // backspace
-        (
+        KeyHandler(
             8,
+            false,
             false,
             false,
             Box::new(|client| client.client_op(|doc| delete_char(doc))),
         ),
         // left
-        (
+        KeyHandler(
             37,
+            false,
+            false,
+            false,
+            Box::new(|client| client.client_op(|doc| caret_move(doc, false))),
+        ),
+        // left
+        KeyHandler(
+            37,
+            false,
             false,
             false,
             Box::new(|client| client.client_op(|doc| caret_move(doc, false))),
         ),
         // right
-        (
+        KeyHandler(
             39,
+            false,
             false,
             false,
             Box::new(|client| client.client_op(|doc| caret_move(doc, true))),
         ),
         // up
-        (
+        KeyHandler(
             38,
+            false,
             false,
             false,
             Box::new(|client| client.client_op(|doc| caret_block_move(doc, false))),
         ),
         // down
-        (
+        KeyHandler(
             40,
+            false,
             false,
             false,
             Box::new(|client| client.client_op(|doc| caret_block_move(doc, true))),
         ),
         // enter
-        (
+        KeyHandler(
             13,
+            false,
             false,
             false,
             Box::new(|client| client.client_op(|doc| split_block(doc, false))),
         ),
         // enter
-        (
+        KeyHandler(
             13,
             false,
             true,
+            false,
             Box::new(|client| client.client_op(|doc| add_char(doc, 10))),
         ),
         // tab
-        (
+        KeyHandler(
             9,
             false,
             false,
+            false,
             Box::new(|client| client.client_op(|doc| toggle_list(doc))),
+        ),
+
+        // OPT-left
+        KeyHandler(
+            37,
+            false,
+            false,
+            true,
+            Box::new(|client| client.client_op(|doc| caret_word_move(doc, false))),
+        ),
+        // OPT-left
+        KeyHandler(
+            39,
+            false,
+            false,
+            true,
+            Box::new(|client| client.client_op(|doc| caret_word_move(doc, true))),
         ),
     ]
 }
 
 pub fn button_handlers<C: ClientImpl>(
     state: Option<(String, bool)>
-) -> Vec<(
-    &'static str,
-    Box<Fn(&mut C) -> Result<(), Error>>,
-    bool,
-)> {
+) -> Vec<ButtonHandler<C>> {
     vec![
-        (
+        ButtonHandler(
             "H1",
             Box::new(|client| client.client_op(|doc| replace_block(doc, "h1"))),
             // TODO i wish we could match on strings, use matches! here
             state.as_ref().map(|x| x.0 == "h1").unwrap_or(false),
         ),
-        (
+        ButtonHandler(
             "H2",
             Box::new(|client| client.client_op(|doc| replace_block(doc, "h2"))),
             state.as_ref().map(|x| x.0 == "h2").unwrap_or(false),
         ),
-        (
+        ButtonHandler(
             "H3",
             Box::new(|client| client.client_op(|doc| replace_block(doc, "h3"))),
             state.as_ref().map(|x| x.0 == "h3").unwrap_or(false),
         ),
-        (
+        ButtonHandler(
             "Paragraph",
             Box::new(|client| client.client_op(|doc| replace_block(doc, "p"))),
             state.as_ref().map(|x| x.0 == "p").unwrap_or(false),
         ),
-        (
+        ButtonHandler(
             "Code",
             Box::new(|client| client.client_op(|doc| replace_block(doc, "pre"))),
             state.as_ref().map(|x| x.0 == "pre").unwrap_or(false),
         ),
-        (
+        ButtonHandler(
             "List",
             Box::new(|client| client.client_op(|doc| toggle_list(doc))),
             state.as_ref().map(|x| x.1).unwrap_or(false),
         ),
-        (
+        ButtonHandler(
             "HR",
             Box::new(|client| client.client_op(|doc| split_block(doc, true))),
             false,
         ),
-        (
+        ButtonHandler(
             "Raw HTML",
             Box::new(|client| client.client_op(|doc| replace_block(doc, "html"))),
             state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
@@ -156,8 +206,10 @@ pub fn button_handlers<C: ClientImpl>(
     ]
 }
 
-
-fn native_command<C: ClientImpl>(client: &mut C, req: NativeCommand) -> Result<(), Error> {
+fn native_command<C: ClientImpl>(
+    client: &mut C,
+    req: NativeCommand,
+) -> Result<(), Error> {
     match req {
         NativeCommand::RenameGroup(tag, _) => {
             client.client_op(|doc| replace_block(doc, &tag))?;
@@ -168,13 +220,13 @@ fn native_command<C: ClientImpl>(client: &mut C, req: NativeCommand) -> Result<(
                 .get(index as usize)
                 .map(|handler| handler.1(client));
         }
-        NativeCommand::Keypress(key_code, meta_key, shift_key) => {
-            println!("key: {:?} {:?} {:?}", key_code, meta_key, shift_key);
+        NativeCommand::Keypress(key_code, meta_key, shift_key, alt_key) => {
+            println!("key: {:?} {:?} {:?} {:?}", key_code, meta_key, shift_key, alt_key);
 
             // Find which key handler to process this command.
             for command in key_handlers() {
-                if command.0 == key_code && command.1 == meta_key && command.2 == shift_key {
-                    command.3(client)?;
+                if command.matches(key_code, meta_key, shift_key, alt_key) {
+                    command.invoke(client)?;
                     break;
                 }
             }

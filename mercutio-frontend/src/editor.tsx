@@ -170,6 +170,7 @@ export class Editor extends React.Component {
         e.keyCode,
         e.metaKey,
         e.shiftKey,
+        e.altKey,
       ));
       
       e.preventDefault();

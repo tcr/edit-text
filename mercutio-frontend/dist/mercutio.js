@@ -19605,10 +19605,10 @@ function RenameGroup(tag, curspan) {
     };
 }
 exports.RenameGroup = RenameGroup;
-function Keypress(keyCode, metaKey, shiftKey) {
+function Keypress(keyCode, metaKey, shiftKey, altKey) {
     return {
         tag: 'Keypress',
-        'Keypress': [keyCode, metaKey, shiftKey],
+        'Keypress': [keyCode, metaKey, shiftKey, altKey],
     };
 }
 exports.Keypress = Keypress;
@@ -19799,7 +19799,7 @@ class Editor extends React.Component {
                 return;
             }
             // Forward the keypress to native.
-            this.props.network.nativeCommand(commands.Keypress(e.keyCode, e.metaKey, e.shiftKey));
+            this.props.network.nativeCommand(commands.Keypress(e.keyCode, e.metaKey, e.shiftKey, e.altKey));
             e.preventDefault();
         });
     }
@@ -20022,7 +20022,17 @@ function textNodeAtPoint(x, y) {
 }
 exports.textNodeAtPoint = textNodeAtPoint;
 function matchesSelector(el, selector) {
-    return el.mozMatchesSelector(selector);
+    let matches = Element.prototype.matchesSelector ||
+        Element.prototype.mozMatchesSelector ||
+        Element.prototype.msMatchesSelector ||
+        Element.prototype.oMatchesSelector ||
+        Element.prototype.webkitMatchesSelector ||
+        function (s) {
+            var matches = (this.document || this.ownerDocument).querySelectorAll(s), i = matches.length;
+            while (--i >= 0 && matches.item(i) !== this) { }
+            return i > -1;
+        };
+    return matches.call(el, selector);
 }
 exports.matchesSelector = matchesSelector;
 class HashState {

@@ -11,10 +11,11 @@ export function Keypress(
   keyCode: number,
   metaKey: boolean,
   shiftKey: boolean,
+  altKey: boolean,
 ) {
   return {
     tag: 'Keypress' as 'Keypress',
-    'Keypress': [keyCode, metaKey, shiftKey],
+    'Keypress': [keyCode, metaKey, shiftKey, altKey],
   }
 }
 

@@ -30,7 +30,20 @@ export function matchesSelector(
   el: Node,
   selector: String,
 ): boolean {
-  return (<any>el).mozMatchesSelector(selector);
+  let matches = 
+    (<any>Element.prototype).matchesSelector || 
+    (<any>Element.prototype).mozMatchesSelector ||
+    (<any>Element.prototype).msMatchesSelector || 
+    (<any>Element.prototype).oMatchesSelector || 
+    (<any>Element.prototype).webkitMatchesSelector ||
+    function(s) {
+        var matches = (this.document || this.ownerDocument).querySelectorAll(s),
+            i = matches.length;
+        while (--i >= 0 && matches.item(i) !== this) {}
+        return i > -1;            
+    };
+
+  return matches.call(el, selector);
 }
 
 export class HashState {

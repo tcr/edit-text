@@ -73,15 +73,15 @@ pub fn setup_monkey<C: ClientImpl + Sized>(alive: Arc<AtomicBool>, monkey: Arc<A
     spawn_monkey_task!(alive, monkey, tx, MONKEY_ARROW, {
         let mut rng = rand::thread_rng();
         let key = *rng.choose(&[37, 39, 37, 39, 37, 39, 38, 40]).unwrap();
-        NativeCommand::Keypress(key, false, false)
+        NativeCommand::Keypress(key, false, false, false)
     });
 
     spawn_monkey_task!(alive, monkey, tx, MONKEY_BACKSPACE, {
-        NativeCommand::Keypress(8, false, false)
+        NativeCommand::Keypress(8, false, false, false)
     });
 
     spawn_monkey_task!(alive, monkey, tx, MONKEY_ENTER, {
-        NativeCommand::Keypress(13, false, false)
+        NativeCommand::Keypress(13, false, false, false)
     });
 
     spawn_monkey_task!(alive, monkey, tx, MONKEY_CLICK, {

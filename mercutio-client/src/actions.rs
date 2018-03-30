@@ -4,6 +4,10 @@ use failure::Error;
 use std::char::from_u32;
 use super::walkers::*;
 
+fn is_boundary_char(c: char) -> bool {
+    c.is_whitespace() || c == '-' || c == '_'
+}
+
 pub struct ActionContext {
     pub doc: Doc,
     pub client_id: String,
@@ -360,6 +364,92 @@ pub fn caret_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
         walker.next_char();
     } else {
         walker.back_char();
+    }
+
+    let mut writer = walker.to_writer();
+
+    writer.del.exit_all();
+
+    writer.add.begin();
+    writer.add.close(hashmap! {
+        "tag".to_string() => "caret".to_string(),
+        "client".to_string() => ctx.client_id.clone(),
+    });
+    writer.add.exit_all();
+
+    let op_2 = writer.result();
+
+    // Return composed operations. Select proper order or otherwise composition
+    // will be invalid.
+    if increase {
+        Ok(OT::compose(&op_2, &op_1))
+    } else {
+        Ok(OT::compose(&op_1, &op_2))
+    }
+}
+
+pub fn caret_word_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
+
+    // First operation removes the caret.
+    let mut writer = walker.to_writer();
+
+    writer.del.begin();
+    writer.del.close();
+    writer.del.exit_all();
+
+    writer.add.exit_all();
+
+    let op_1 = writer.result();
+
+    // Second operation inserts the new caret.
+    if increase {
+        walker.next_char();
+        loop {
+            match walker.doc().head() {
+                Some(DocChars(ref text)) => {
+                    if is_boundary_char(text.as_str().chars().next().unwrap()) {
+                        break;
+                    } else {
+                        walker.next_char();
+                    }
+                }
+                Some(DocGroup(ref attrs, _)) => {
+                    if attrs["tag"] == "caret" {
+                        // guess we'll stop
+                        break;
+                    }
+                }
+                None => {
+                    // guess we'll stop
+                    break;
+                }
+            }
+        }
+    } else {
+        println!("skipping WORD");
+        walker.back_char();
+        loop {
+            match walker.doc().unhead() {
+                Some(DocChars(ref text)) => {
+                    if is_boundary_char(text.as_str().chars().rev().next().unwrap()) {
+                        break;
+                    } else {
+                        walker.back_char();
+                    }
+                }
+                Some(DocGroup(ref attrs, _)) => {
+                    if attrs["tag"] == "caret" {
+                        // guess we'll stop
+                        break;
+                    }
+                }
+                None => {
+                    // guess we'll stop
+                    break;
+                }
+            }
+        }
     }
 
     let mut writer = walker.to_writer();
