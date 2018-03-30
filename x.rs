@@ -344,7 +344,7 @@ fn run() -> Result<(), Error> {
                 ",
             )?;
 
-            // TODO why can't execute! be use dhere?
+            // Need to support globs in execute...
             shell_sh!(
                 r"
                     cd docs/src

@@ -84,7 +84,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="introduction.html" class="active"><strong aria-hidden="true">1.</strong> Introduction</a></li></ol>
+            <ol class="chapter"><li><a href="introduction.html" class="active"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="oatie.html"><strong aria-hidden="true">2.</strong> Working with Documents</a></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -173,102 +173,6 @@
 <p>Building the WebAssembly bundle:</p>
 <pre><code>./x.rs wasm-build
 </code></pre>
-<a class="header" href="introduction.html#guide-to-documents" id="guide-to-documents"><h2>Guide to Documents</h2></a>
-<p>The basic structure that Oatie operates on is a Document:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-type DocSpan = Vec&lt;DocElement&gt;;
-
-struct Doc(DocSpan);
-
-// Documents are made up of chars and groups.
-enum DocElement {
-    DocChars(DocString),
-    DocGroup(Attrs, DocSpan),
-}
-
-// Convenience wrapper for opaquely operating on Strings.
-struct DocString(String);
-// Convenience wrapper for group &quot;attributes&quot; like HTML attrs.
-type Attrs = HashMap&lt;String, String&gt;;
-#}</code></pre></pre>
-<a class="header" href="introduction.html#operations" id="operations"><h3>Operations</h3></a>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-type DelSpan = Vec&lt;DelElement&gt;;
-
-enum DelElement {
-    DelSkip(usize),
-    DelWithGroup(DelSpan),
-    DelChars(usize),
-    DelGroup(DelSpan),
-}
-#}</code></pre></pre>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-type AddSpan = Vec&lt;AddElement&gt;;
-
-enum AddElement {
-    AddSkip(usize),
-    AddWithGroup(AddSpan),
-    AddChars(DocString),
-    AddGroup(Attrs, AddSpan),
-}
-#}</code></pre></pre>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-type Op = (DelSpan, AddSpan);
-#}</code></pre></pre>
-<a class="header" href="introduction.html#macros" id="macros"><h2>Macros</h2></a>
-<p>When importing oatie, there are several convenience macros which make writing the above easier:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-#[macro_use]
-extern crate oatie;
-
-let doc = doc_span![
-    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [
-        DocChars(&quot;Hello world!&quot;)
-    ]),
-];
-
-let op = op_span!([
-    DelGroup([DelSkip(12)]),
-    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddSkip(12)]),
-]);
-#}</code></pre></pre>
-<p>This is roughly equivalent to Rust code without needing to type <code>vec!</code> or use explicit <code>HashMap::new()</code> and <code>DocString(...)</code> invocations.</p>
-<a class="header" href="introduction.html#using-operations" id="using-operations"><h2>Using Operations</h2></a>
-<p>An operation can be applied to a document.</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-#[macro_use]
-extern crate oatie;
-
-use oatie::doc::*;
-use oatie::OT;
-
-let doc = doc_span![
-    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Hello world!&quot;)]),
-];
-
-let op = op_span!([
-    DelGroup([DelSkip(12)]),
-    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddSkip(12)]),
-]);
-
-let doc2 = Op::apply(&amp;doc, $op);
-
-println!(&quot;{:?}&quot;, doc2);
-
-// DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [DocChars(&quot;Hello world!&quot;)])
-#}</code></pre></pre>
 
                     </main>
 
@@ -276,6 +180,10 @@ println!(&quot;{:?}&quot;, doc2);
                         <!-- Mobile navigation buttons -->
                         
 
+                        
+                            <a rel="next" href="oatie.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
                         
 
                         <div style="clear: both"></div>
@@ -286,6 +194,10 @@ println!(&quot;{:?}&quot;, doc2);
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
 
+                
+                    <a href="oatie.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
                 
             </nav>
 

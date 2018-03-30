@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Introduction - edit-text internals</title>
+        <title>Working with Documents - edit-text internals</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -85,7 +85,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="introduction.html" class="active"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="oatie.html"><strong aria-hidden="true">2.</strong> Working with Documents</a></li></ol>
+            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="oatie.html" class="active"><strong aria-hidden="true">2.</strong> Working with Documents</a></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -147,44 +147,113 @@
 
                 <div id="content" class="content">
                     <main>
-                        <a class="header" href="introduction.html#edit-text" id="edit-text"><h1>edit-text</h1></a>
-<p>edit-text is a collaborative text editor, written in Rust.</p>
-<ul>
-<li>oatie, an operational transform library</li>
-<li>mercutio, the frontend and backend to edit-text</li>
-</ul>
-<p>The frontend is broken out into several crates:</p>
-<ul>
-<li>mercutio-common</li>
-<li>mercutio-client</li>
-<li>mercutio-server</li>
-<li>mercutio-frontend</li>
-</ul>
-<a class="header" href="introduction.html#usage" id="usage"><h2>Usage</h2></a>
-<p>Invoking the server:</p>
-<pre><code>./x.rs server [--release] [--client-proxy]
-</code></pre>
-<p>Invoking the client proxy:</p>
-<pre><code>./x.rs client-proxy [--release]
-</code></pre>
-<p>Building the frontend (TypeScript):</p>
-<pre><code>./x.rs frontend-build
-./x.rs frontend-watch # watches builds and rebuilds as you edit
-</code></pre>
-<p>Building the WebAssembly bundle:</p>
-<pre><code>./x.rs wasm-build
-</code></pre>
+                        <a class="header" href="oatie.html#working-with-documents" id="working-with-documents"><h1>Working with Documents</h1></a>
+<p>The basic structure that Oatie operates on is a Document:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+type DocSpan = Vec&lt;DocElement&gt;;
+
+struct Doc(DocSpan);
+
+// Documents are made up of chars and groups.
+enum DocElement {
+    DocChars(DocString),
+    DocGroup(Attrs, DocSpan),
+}
+
+// Convenience wrapper for opaquely operating on Strings.
+struct DocString(String);
+// Convenience wrapper for group &quot;attributes&quot; like HTML attrs.
+type Attrs = HashMap&lt;String, String&gt;;
+#}</code></pre></pre>
+<a class="header" href="oatie.html#operations" id="operations"><h3>Operations</h3></a>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+type DelSpan = Vec&lt;DelElement&gt;;
+
+enum DelElement {
+    DelSkip(usize),
+    DelWithGroup(DelSpan),
+    DelChars(usize),
+    DelGroup(DelSpan),
+}
+#}</code></pre></pre>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+type AddSpan = Vec&lt;AddElement&gt;;
+
+enum AddElement {
+    AddSkip(usize),
+    AddWithGroup(AddSpan),
+    AddChars(DocString),
+    AddGroup(Attrs, AddSpan),
+}
+#}</code></pre></pre>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+type Op = (DelSpan, AddSpan);
+#}</code></pre></pre>
+<a class="header" href="oatie.html#macros" id="macros"><h2>Macros</h2></a>
+<p>When importing oatie, there are several convenience macros which make writing the above easier:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[macro_use]
+extern crate oatie;
+
+let doc = doc_span![
+    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [
+        DocChars(&quot;Hello world!&quot;)
+    ]),
+];
+
+let op = op_span!([
+    DelGroup([DelSkip(12)]),
+    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddSkip(12)]),
+]);
+#}</code></pre></pre>
+<p>This is roughly equivalent to Rust code without needing to type <code>vec!</code> or use explicit <code>HashMap::new()</code> and <code>DocString(...)</code> invocations.</p>
+<a class="header" href="oatie.html#using-operations" id="using-operations"><h2>Using Operations</h2></a>
+<p>An operation can be applied to a document.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[macro_use]
+extern crate oatie;
+
+use oatie::doc::*;
+use oatie::OT;
+
+let doc = doc_span![
+    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Hello world!&quot;)]),
+];
+
+let op = op_span!([
+    DelGroup([DelSkip(12)]),
+    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddSkip(12)]),
+]);
+
+let doc2 = Op::apply(&amp;doc, $op);
+
+println!(&quot;{:?}&quot;, doc2);
+
+// DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [DocChars(&quot;Hello world!&quot;)])
+#}</code></pre></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-
-                        
-                            <a rel="next" href="oatie.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
+                            <a rel="prev" href="introduction.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
                             </a>
+                        
+
                         
 
                         <div style="clear: both"></div>
@@ -194,11 +263,11 @@
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-
-                
-                    <a href="oatie.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
+                    <a href="introduction.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
                     </a>
+                
+
                 
             </nav>
 
