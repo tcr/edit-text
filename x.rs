@@ -74,6 +74,9 @@ enum Cli {
 
     #[structopt(name = "deploy", about = "Deploy to sandbox.edit.io.")]
     Deploy,
+
+    #[structopt(name = "book-build", about = "Builds the book.")]
+    BookBuild,
 }
 
 
@@ -330,6 +333,23 @@ fn run() -> Result<(), Error> {
                 "#,
                 dokku_url = dokku_url,
                 dokku_name = dokku_name,
+            )?;
+        }
+
+        Cli::BookBuild => {
+            execute!(
+                r"
+                    cd docs/src
+                    mdbook build
+                ",
+            )?;
+
+            // TODO why can't execute! be use dhere?
+            shell_sh!(
+                r"
+                    cd docs/src
+                    cp -rf book/* ..
+                ",
             )?;
         }
     }
