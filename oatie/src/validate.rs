@@ -1,3 +1,5 @@
+//! Validates a document matches a given Schema.
+
 use super::compose;
 use super::doc::*;
 use super::normalize;

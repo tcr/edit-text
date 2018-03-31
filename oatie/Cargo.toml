@@ -1,13 +1,17 @@
 [package]
 authors = ["Tim Cameron Ryan <id@timryan.org>"]
+description = "Operational transform library."
+homepage = "https://github.com/tcr/edit-text"
+license = "MIT OR Apache-2.0"
 name = "oatie"
-version = "0.2.0"
+repository = "https://github.com/tcr/edit-text"
+version = "0.3.0"
 [dependencies]
 either = "1.4.0"
 failure = "0.1.1"
 log = "0.3.1"
 maplit = "1.0.0"
-regex = "*"
+regex = "0.2.10"
 ron = "0.2.0"
 serde = "1.0"
 serde_derive = "1.0"

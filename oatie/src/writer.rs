@@ -1,3 +1,5 @@
+//! Classes for generating operation steps (add / del).
+
 use std::collections::HashMap;
 use std::borrow::ToOwned;
 use std::cmp;

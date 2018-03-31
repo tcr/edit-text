@@ -12,6 +12,7 @@ use ws;
 use ws::CloseCode;
 use monkey::setup_monkey;
 
+// #[spawn]
 fn spawn_send_to_client(
     rx_client: Receiver<ClientCommand>,
     out: Arc<Mutex<ws::Sender>>,

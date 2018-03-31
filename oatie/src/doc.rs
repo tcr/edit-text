@@ -1,4 +1,4 @@
-//! Document definitions.
+//! Defines document types, operation types, and cursor types.
 
 use std::collections::HashMap;
 use std::sync::atomic::AtomicUsize;

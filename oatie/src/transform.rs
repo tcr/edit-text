@@ -1,4 +1,4 @@
-//! Performs operational transform.
+//! Performs operational transform on a Doc.
 
 use std::collections::HashMap;
 use std::borrow::ToOwned;

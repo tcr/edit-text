@@ -1,3 +1,5 @@
+//! Helper methods for performing transform tests.
+
 extern crate ron;
 
 use std::io;

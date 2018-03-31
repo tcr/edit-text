@@ -1,3 +1,5 @@
+//! Methods to apply an operation to a document.
+
 use super::doc::*;
 use std::collections::HashMap;
 
@@ -321,25 +323,6 @@ pub fn apply_operation(spanvec: &DocSpan, op: &Op) -> DocSpan {
     // println!("------> @3 {:?}", postdel);
     // println!("------> @4 {:?}", addvec);
     apply_add(&postdel, addvec)
-}
-
-fn normalize_del(mut del: DelSpan) -> DelSpan {
-    // let mut tail = true;
-    // del.into_iter().rev().map(|x| {
-    //     //TODO
-    //     x
-    // }).filter(move |x| {
-    //     match x {
-    //         &DelSkip(_) => {
-    //             false
-    //         },
-    //         _ => true
-    //     }
-    // }).rev().collect()
-    if let Some(&DelSkip(..)) = del.last() {
-        del.pop();
-    }
-    del
 }
 
 fn normalize_add_element(elem: AddElement) -> AddElement {

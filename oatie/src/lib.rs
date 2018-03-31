@@ -1,4 +1,6 @@
-//! Defines utility functions and operation application.
+//! Defines types for using operational tranform to modify HTML-like documents.
+//! 
+//! See the book for more details: http://tcr.github.io/edit-text/
 
 #![feature(nll)]
 
@@ -55,10 +57,10 @@ pub mod writer;
 pub mod transform_test;
 pub mod macros;
 pub mod apply;
-pub mod parse;
+mod parse;
 pub mod validate;
 
-pub use apply::*;
+use apply::*;
 use doc::*;
 use compose::*;
 use std::collections::HashMap;
@@ -66,14 +68,32 @@ use std::fmt::Debug;
 pub use transform::{Schema, Track};
 use transform::transform;
 
+/// A type that can have operational transform applied to it.
+/// The `OT` trait is implemented on an operation object, and its 
+/// associated type `Doc` is what the operation should operate on.
 pub trait OT where Self: Sized {
     type Doc;
     
+    /// Applies an operation to a `Self::Doc`, returning the modified `Self::Doc`.
     fn apply(&Self::Doc, &Self) -> Self::Doc;
+
+    /// Returns an empty operation.
     fn empty() -> Self;
+
+    /// Composes two operations, returning a single operation encapsulating them
+    /// both.
     fn compose(&Self, &Self) -> Self;
+
+    /// Composes an iterator of operations into a single operation.
+    /// If no operations are returned from the iterator, the OT::empty() should be
+    /// returned.
     fn compose_iter<'a, I>(iter: I) -> Self where I: Iterator<Item=&'a Self>, Self: 'a;
+
+    /// Transform a document given the corresponding Schema trait.
     fn transform<S: Schema>(&Self, &Self) -> (Self, Self);
+
+    /// Utility function to transform an operation against a competing one,
+    /// returning the results of composing them both.
     fn transform_advance<S: Schema>(a: &Self, b: &Self) -> Self;
 }
 

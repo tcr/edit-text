@@ -1,3 +1,4 @@
+//! Macros for more easily creating operations and documents in code.
 
 #[macro_export]
 macro_rules! doc_span {

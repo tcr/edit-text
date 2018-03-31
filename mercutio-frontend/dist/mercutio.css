@@ -108,6 +108,8 @@ kbd {
   font-size: 16px;
   cursor: text;
   white-space: pre-wrap;
+  max-width: 60em;
+  margin: 0 auto;
   /**
      * span styles
      */ }
