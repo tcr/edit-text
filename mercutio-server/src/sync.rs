@@ -22,7 +22,7 @@ use oatie::{
     schema::RtfSchema,
     validate::validate_doc,
 };
-use mercutio_common::socket::*;
+use simple_ws::*;
 use rand::{thread_rng, Rng};
 use ron;
 use serde_json;

@@ -1,0 +1,8 @@
+[package]
+name = "simple-ws"
+version = "0.1.0"
+authors = ["Tim Ryan <id@timryan.org>"]
+
+[dependencies]
+ws = "0.7.3"
+failure = "0.1.1"

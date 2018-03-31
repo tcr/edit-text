@@ -1,8 +1,12 @@
+#![allow(deprecated)]
+
+extern crate ws;
+extern crate failure;
+
 use failure::Error;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
-use ws;
 use ws::util::{Token, Timeout};
 use ws::{CloseCode, Frame};
 

@@ -7,11 +7,6 @@ use oatie::validate::validate_doc;
 use crate::markdown;
 use mercutio_common::doc_as_html;
 
-#[cfg(not(target_arch="wasm32"))]
-use super::{SyncClientCommand, SyncServerCommand};
-#[cfg(not(target_arch="wasm32"))]
-use crossbeam_channel::Sender;
-
 // Commands to send back to native.
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum NativeCommand {
@@ -468,32 +463,6 @@ pub trait ClientImpl {
         println!("in list: {:?}", in_list);
         self.setup_controls(Some((cur_block, in_list)));
 
-        Ok(())
-    }
-}
-
-#[cfg(not(target_arch="wasm32"))]
-pub struct ProxyClient {
-    pub state: Client,
-    pub tx_client: Sender<ClientCommand>,
-    pub tx_sync: Sender<SyncServerCommand>,
-}
-
-#[cfg(not(target_arch="wasm32"))]
-impl ClientImpl for ProxyClient {
-    fn state(&mut self) -> &mut Client {
-        &mut self.state
-    }
-
-    fn send_client(&self, req: &ClientCommand) -> Result<(), Error> {
-        log_wasm!(SendClient(req.clone()));
-        self.tx_client.send(req.clone())?;
-        Ok(())
-    }
-
-    fn send_sync(&self, req: SyncServerCommand) -> Result<(), Error> {
-        log_wasm!(SendSync(req.clone()));
-        self.tx_sync.send(req)?;
         Ok(())
     }
 }

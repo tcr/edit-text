@@ -627,6 +627,7 @@ dependencies = [
  "serde 1.0.36 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.36 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "simple-ws 0.1.0",
  "structopt 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "structopt-derive 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "take_mut 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -641,10 +642,7 @@ dependencies = [
 name = "mercutio-common"
 version = "0.1.0"
 dependencies = [
- "bus 1.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "colored 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "crossbeam-channel 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "diesel 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "dotenv 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -655,20 +653,13 @@ dependencies = [
  "oatie 0.3.0",
  "pulldown-cmark 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "pulldown-cmark-to-cmark 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "quicli 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "ron 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.36 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.36 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.13 (registry+https://github.com/rust-lang/crates.io-index)",
- "structopt 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "structopt-derive 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "take_mut 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "taken 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "tiny_http 0.5.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "url 1.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "uuid 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "ws 0.7.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -699,6 +690,7 @@ dependencies = [
  "serde 1.0.36 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.36 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "simple-ws 0.1.0",
  "structopt 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "structopt-derive 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "take_mut 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1210,6 +1202,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "sha1"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "simple-ws"
+version = "0.1.0"
+dependencies = [
+ "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ws 0.7.6 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "siphasher"

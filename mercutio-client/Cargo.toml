@@ -37,6 +37,7 @@ structopt-derive = "0.2.3"
 tiny_http = "0.5.8"
 url = "1.6.0"
 ws = "0.7.3"
+simple-ws = { path = "../simple-ws" }
 
 [target."cfg(not(target_arch=\"wasm32\"))".dependencies.uuid]
 features = ["v4"]

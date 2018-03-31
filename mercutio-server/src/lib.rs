@@ -63,6 +63,7 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
+extern crate simple_ws;
 extern crate take_mut;
 #[macro_use]
 extern crate taken;
