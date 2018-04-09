@@ -304,4 +304,11 @@ body#multi {
     box-sizing: border-box;
     flex: 1; }
 
+            /* tslint:disable */
+            var wasm;
+            
+
+            
+            wasm = __webpack_require__(/*! ./mercutio_bg */ "./src/bindgen/mercutio_bg.js");
+        
 /*# sourceMappingURL=mercutio.css.map*/
