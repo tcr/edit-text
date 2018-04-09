@@ -115,13 +115,28 @@ fn run() -> Result<(), Error> {
                 release_flag = release_flag,
             )?;
 
-            // execute!(
-            //     r"
-            //         wasm-bindgen ./target/wasm32-unknown-unknown/release/mercutio.wasm \
-            //             --out-dir ./mercutio-frontend/src/bindgen \
-            //             --typescript --nodejs
-            //     ",
-            // )?;
+            execute!(
+                r"
+                    wasm-bindgen ./target/wasm32-unknown-unknown/release/mercutio.wasm \
+                        --out-dir ./mercutio-frontend/src/bindgen \
+                        --typescript
+                ",
+            )?;
+
+            execute!(
+                r"
+                    cd ./mercutio-frontend/src/bindgen
+                    wasm2es6js \
+                        --base64 -o mercutio_bg.js mercutio_bg.wasm
+                ",
+            )?;
+
+            execute!(
+                r"
+                    cd ./mercutio-frontend/src/bindgen
+                    rm mercutio_bg.wasm
+                ",
+            )?;
         }
 
         Cli::ClientProxy { args } => {
