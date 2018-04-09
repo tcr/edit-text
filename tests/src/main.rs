@@ -65,9 +65,11 @@ fn random_id() -> String {
 fn run(test_id: &str) -> Result<bool, Error> {
     // TODO accept port ID and alternative drivers.
     let port = DRIVER_PORT_COUNTER.fetch_add(1, Ordering::Relaxed);
-    let child = command!("geckodriver")?
-        .arg("-p")
-        .arg(port.to_string())
+    let child = command!("chromedriver")?
+        .arg(format!("--port={}", port))
+    // let child = command!("geckodriver")?
+        // .arg("-p")
+        // .arg(port.to_string())
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn()?;
