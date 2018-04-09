@@ -130,7 +130,7 @@
 /******/
 /******/ 			// a Promise means "currently loading" or "already loaded".
 /******/ 			promises.push(installedWasmModuleData ||
-/******/ 				(installedWasmModules[wasmModuleId] = fetch(__webpack_require__.p + "" + {"./src/bindgen/mercutio_bg.wasm":"5d85833bae3fe171569a"}[wasmModuleId] + ".module.wasm").then(function(response) {
+/******/ 				(installedWasmModules[wasmModuleId] = fetch(__webpack_require__.p + "" + {"./src/bindgen/mercutio_bg.wasm":"9ec177413cfdfe665bc8"}[wasmModuleId] + ".module.wasm").then(function(response) {
 /******/ 					if(WebAssembly.compileStreaming) {
 /******/ 						return WebAssembly.compileStreaming(response);
 /******/ 					} else {

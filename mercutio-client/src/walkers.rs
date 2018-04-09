@@ -503,16 +503,3 @@ impl Walker {
         &self.stepper.doc
     }
 }
-
-// TODO: What the hell is this struct and what is it doing in this random file
-// Move to oatie/doc.rs ?
-pub struct OpWriter {
-    pub del: DelWriter,
-    pub add: AddWriter,
-}
-
-impl OpWriter {
-    pub fn result(self) -> Op {
-        (self.del.result(), self.add.result())
-    }
-}

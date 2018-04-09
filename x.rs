@@ -1,4 +1,4 @@
-#!/usr/bin/env run-cargo-script script
+#!/usr/bin/env run-cargo-script
 //! ```cargo
 //! [dependencies]
 //! commandspec = "0.6.1"
@@ -230,13 +230,26 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::Test { args } => {
+            eprintln!("running ./x.rs server...");
+            let mut spawn_handle = command!(
+                r"
+                    ./x.rs server {args}
+                ",
+                args = args,
+            )?.spawn().unwrap();
+
+            ::std::thread::sleep(::std::time::Duration::from_millis(3000));
+
+            eprintln!("running tests...");
             execute!(
                 r"
-                    cd oatie
-                    ./transform-test.sh {args}
+                    cd tests
+                    cargo run {args}
                 ",
                 args = args,
             )?;
+
+            spawn_handle.kill()?;
         }
 
         Cli::FrontendBuild { args } => {

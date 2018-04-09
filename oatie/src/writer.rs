@@ -138,6 +138,17 @@ impl AddWriter {
     }
 }
 
+pub struct OpWriter {
+    pub del: DelWriter,
+    pub add: AddWriter,
+}
+
+impl OpWriter {
+    pub fn result(self) -> Op {
+        (self.del.result(), self.add.result())
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct CurWriter {
     pub past: Vec<CurElement>,

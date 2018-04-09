@@ -1,39 +1,42 @@
 #![allow(deprecated)]
 
-use bus::{Bus, BusReader};
 use crate::{
     SyncClientCommand,
     SyncServerCommand,
     db::*,
     util::*,
 };
-use crossbeam_channel::{
-    Receiver as CCReceiver,
-    Sender as CCSender,
-    unbounded,
+
+use extern::{
+    bus::{Bus, BusReader},
+    crossbeam_channel::{
+        Receiver as CCReceiver,
+        Sender as CCSender,
+        unbounded,
+    },
+    diesel::{
+        sqlite::SqliteConnection,
+    },
+    failure::Error,
+    oatie::{
+        OT,
+        doc::*,
+        schema::RtfSchema,
+        validate::validate_doc,
+    },
+    simple_ws::*,
+    rand::{thread_rng, Rng},
+    ron,
+    serde_json,
+    std::{
+        collections::{HashMap, VecDeque},
+        sync::{Arc, Mutex},
+        thread::{self, JoinHandle},
+        time::Duration,
+    },
+    url::Url,
+    ws,
 };
-use diesel::{
-    sqlite::SqliteConnection,
-};
-use failure::Error;
-use oatie::{
-    OT,
-    doc::*,
-    schema::RtfSchema,
-    validate::validate_doc,
-};
-use simple_ws::*;
-use rand::{thread_rng, Rng};
-use ron;
-use serde_json;
-use std::{
-    collections::{HashMap, VecDeque},
-    sync::{Arc, Mutex},
-    thread::{self, JoinHandle},
-    time::Duration,
-};
-use url::Url;
-use ws;
 
 const PAGE_TITLE_LEN: usize = 100;
 
