@@ -85,7 +85,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="oatie.html"><strong aria-hidden="true">2.</strong> Working with Documents</a></li><li><a href="ot.html"><strong aria-hidden="true">3.</strong> Operational Transform</a></li><li><a href="system.html"><strong aria-hidden="true">4.</strong> System Diagram</a></li></ol>
+            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="oatie.html"><strong aria-hidden="true">2.</strong> Working with Documents</a></li><li><a href="ot.html"><strong aria-hidden="true">3.</strong> Operational Transform</a></li><li><a href="system.html"><strong aria-hidden="true">4.</strong> System Diagram</a></li><li><a href="diaries.html"><strong aria-hidden="true">5.</strong> Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">5.1.</strong> Documents and Markdown</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -336,6 +336,62 @@ new doc:   edit
 <p>TODO</p>
 <a class="header" href="print.html#system-diagram" id="system-diagram"><h1>System Diagram</h1></a>
 <pre><code>Mercutio Server -&gt; Mercutio Client -&gt; Mercutio Frontend -&gt; Mercutio Wasm
+</code></pre>
+<a class="header" href="print.html#diaries" id="diaries"><h1>Diaries</h1></a>
+<a class="header" href="print.html#diary-documents-and-markdown" id="diary-documents-and-markdown"><h1>Diary: Documents and Markdown</h1></a>
+<p><strong>Updated 2018-04-22</strong></p>
+<p>A document in Mercutio is built with <em>groups</em> and <em>characters</em>. The document model that Mercutio uses is similar to HTML. We can trivially define a mapping from Mercutio's document model to HTML:</p>
+<pre><code>&lt;ul&gt;
+  &lt;li&gt;&lt;p&gt;Item 1&lt;/p&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;p&gt;Item 2&lt;/p&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;p&gt;Item 3...&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</code></pre>
+<p>Becomes when converted to Mercutio's document structure (expressed in RON):</p>
+<pre><code>DocGroup({&quot;tag&quot;: &quot;bullet&quot;, [
+    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 1&quot;)]),
+]})
+DocGroup({&quot;tag&quot;: &quot;bullet&quot;, [
+    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 2&quot;)]),
+]})
+DocGroup({&quot;tag&quot;: &quot;bullet&quot;, [
+    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 3...&quot;)]),
+]})
+</code></pre>
+<p>(Conversion from a doc group to HTML can be done with <code>doc_as_html</code> in <code>mercutio-common/lib.rs</code>. There's no inverse method.)</p>
+<p>Some conversions are straightforward: aside from all non-significant whitespace, all text nodes are converted into the DocChars(...) struct. To simplify other logic, there are some invariants that should be true about DocChars: DocChars(...) must not be empty, and there must not be two successive DocChars(...) components. This isn't validated anywhere (yet) but is expected to be true in all operations.</p>
+<p>For groups, the first argument is a hashmap of <code>String</code> =&gt; <code>String</code> containing the &quot;attributes&quot;. These are similar to HTML attributes and can contain any data. The one attribute required by all groups is the &quot;tag&quot; attribute, which usually maps to the name of its HTML equivalent.</p>
+<p><strong>O/T:</strong> The use of &quot;tag&quot; or even any HTML semantics are not required by the operational transform library, Oatie. References to the &quot;tag&quot; attribute are almost entirely contained in <code>schema.rs</code>. In theory, every document/transform schema could use its own way of distinguishing between group kinds.</p>
+<p>Of interest in the above conversion is that quasi-<code>&lt;bullet&gt;</code> tag has different semantics than its HTML counterpart, <code>&lt;ul&gt;&lt;li&gt;...&lt;/li&gt;&lt;/ul&gt;</code>. This is a deliberate simplification for operational transform (that I should detail elsewhere), but essentially our goal is to better represent Markdown's semantics, not HTML's. Take the following example:</p>
+<pre><code class="language-md">* Item 1
+* Item 2
+
+Interstitial paragraph
+
+* Item 3...
+</code></pre>
+<p>And the middle paragraph, <code>Interstitial paragraph</code> is deleted. The document then becomes:</p>
+<pre><code class="language-md">* Item 1
+* Item 2
+* Item 3...
+</code></pre>
+<p>Because Mercutio converts directly from its document representation into Markdown, we can bypass the logic of joining common <code>&lt;ul&gt;</code> parents in this case and also lean more heavily on Markdown-to-html conversion to perform this for us.</p>
+<a class="header" href="print.html#markdown-serialization--deserialization" id="markdown-serialization--deserialization"><h2>Markdown serialization + deserialization</h2></a>
+<p>The module that controls markdown lives at <code>mercutio-common/src/markdown</code>.</p>
+<ul>
+<li><a href="https://github.com/tcr/edit-text/blob/master/mercutio-common/src/markdown/ser.rs">ser.rs</a></li>
+<li><a href="https://github.com/tcr/edit-text/blob/master/mercutio-common/src/markdown/de.rs">de.rs</a></li>
+</ul>
+<p>Mercutio's document schema should allow conversion losslessly into Markdown, while the deserialization code takes into account (or should) that Markdown's possible output is a superset of what Mercutio supports, and thus all non-supported content should be stripped out.</p>
+<a class="header" href="print.html#document-elements" id="document-elements"><h2>Document Elements</h2></a>
+<p>This are the current elements supported by Mercutio:</p>
+<pre><code>bullet =&gt; Bulleted item
+p =&gt; Paragraph
+h1/h2/h3/h4/h5/h6 =&gt; Header
+pre =&gt; Code block
+html =&gt; Inline HTML content (a raw string, as it would appear in Markdown)
+caret =&gt; Caret position
+hr =&gt; Horizontal rule
 </code></pre>
 
                     </main>

@@ -3,3 +3,7 @@ authors = ["Tim Ryan"]
 multilingual = false
 src = "."
 title = "edit-text internals"
+
+[build]
+build-dir = "../docs"
+create-missing = true

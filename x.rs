@@ -77,6 +77,9 @@ enum Cli {
 
     #[structopt(name = "book-build", about = "Builds the book.")]
     BookBuild,
+
+    #[structopt(name = "book-watch", about = "Watches and rebuilds the book.")]
+    BookWatch,
 }
 
 
@@ -367,16 +370,17 @@ fn run() -> Result<(), Error> {
         Cli::BookBuild => {
             execute!(
                 r"
-                    cd docs/src
+                    cd docs-src
                     mdbook build
                 ",
             )?;
+        }
 
-            // Need to support globs in execute...
-            shell_sh!(
+        Cli::BookWatch => {
+            execute!(
                 r"
-                    cd docs/src
-                    cp -rf book/* ..
+                    cd docs-src
+                    mdbook serve
                 ",
             )?;
         }
