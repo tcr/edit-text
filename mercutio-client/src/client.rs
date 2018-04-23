@@ -174,6 +174,21 @@ pub fn button_handlers<C: ClientImpl>(
             state.as_ref().map(|x| x.0 == "h3").unwrap_or(false),
         ),
         ButtonHandler(
+            "H4",
+            Box::new(|client| client.client_op(|doc| replace_block(doc, "h4"))),
+            state.as_ref().map(|x| x.0 == "h4").unwrap_or(false),
+        ),
+        ButtonHandler(
+            "H5",
+            Box::new(|client| client.client_op(|doc| replace_block(doc, "h5"))),
+            state.as_ref().map(|x| x.0 == "h5").unwrap_or(false),
+        ),
+        ButtonHandler(
+            "H6",
+            Box::new(|client| client.client_op(|doc| replace_block(doc, "h6"))),
+            state.as_ref().map(|x| x.0 == "h6").unwrap_or(false),
+        ),
+        ButtonHandler(
             "Paragraph",
             Box::new(|client| client.client_op(|doc| replace_block(doc, "p"))),
             state.as_ref().map(|x| x.0 == "p").unwrap_or(false),
