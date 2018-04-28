@@ -4,9 +4,10 @@ Basic system diagram:
 
 ```
 
-     v-> User <-> Frontend
-Sync <-> User <-> Frontend
-     ^-> User <-> Frontend
+       /-> User <-> Frontend
+Sync <-+-> User <-> Frontend
+       |-> User <-> Frontend
+       \-> ...
 ```
 
 ## Sync
@@ -22,16 +23,24 @@ It also has a GraphQL endpoint to (TODO: fill this out) make modifications outsi
 
 The User represents a consumer of the document. They can make changes to the document and apply modifications. This is performed over the WebSocket API.
 
+## Frontend
+
+The frontend is the UX that interfaces with the editor. This is split out from the User node for two reasons:
+
+1. Rust components intended to run in the browser have a mode in which they can run in the command line as a "proxy".
+2. It should be possible for a frontend to be written for any environment, not just the web. For example, GTK+ or Qt could be a frontend instead of HTML is that were desirable.
+
+# API
+
+The API between two layers is defined in several enums representing payloads across RPC boundaries.
 
 ## Interop Sync <-> User
 
-```
-pub enum SyncServerCommand {
-    // Connect(String),
-    Commit(String, Op, usize),
-    TerminateProxy,
-}
+Defined in `mercutio-client/src/client.rs`.
 
+From Sync -> User:
+
+```
 pub enum SyncClientCommand {
     // Client id assignment, initial doc, initial version
     Init(String, DocSpan, usize),
@@ -41,12 +50,15 @@ pub enum SyncClientCommand {
 }
 ```
 
+And from User -> Sync:
 
-## Frontend
-
-The frontend is the UX that interfaces with the editor.
-
-...
+```
+pub enum SyncServerCommand {
+    // Connect(String),
+    Commit(String, Op, usize),
+    TerminateProxy,
+}
+```
 
 ## Intop: User <-> Frontend
 

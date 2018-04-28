@@ -137,7 +137,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
     assert!(template_dir.exists(Path::new("presentation.hbs")));
     assert!(template_dir.exists(Path::new("favicon.png")));
 
-    println!("Listening on http://localhost:{}/", port);
+    println!("Listening on http://0.0.0.0:{}/", port);
 
     let reg = Handlebars::new();
 
