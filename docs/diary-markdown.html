@@ -85,7 +85,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="oatie.html"><strong aria-hidden="true">2.</strong> Working with Documents</a></li><li><a href="ot.html"><strong aria-hidden="true">3.</strong> Operational Transform</a></li><li><a href="system.html"><strong aria-hidden="true">4.</strong> System Diagram</a></li><li><a href="diaries.html"><strong aria-hidden="true">5.</strong> Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html" class="active"><strong aria-hidden="true">5.1.</strong> Documents and Markdown</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="oatie.html"><strong aria-hidden="true">2.</strong> Working with Documents</a></li><li><a href="ot.html"><strong aria-hidden="true">3.</strong> Operational Transform</a></li><li><a href="system.html"><strong aria-hidden="true">4.</strong> System Diagram</a></li><li><a href="diaries.html"><strong aria-hidden="true">5.</strong> Development Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html" class="active"><strong aria-hidden="true">5.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">5.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">5.3.</strong> Carets and You</a></li><li><a href="diary-testing.html"><strong aria-hidden="true">5.4.</strong> Testing</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -148,7 +148,7 @@
                 <div id="content" class="content">
                     <main>
                         <a class="header" href="diary-markdown.html#diary-documents-and-markdown" id="diary-documents-and-markdown"><h1>Diary: Documents and Markdown</h1></a>
-<p><strong>Updated 2018-04-22</strong></p>
+<p><strong>As of April 2018.</strong></p>
 <p>A document in Mercutio is built with <em>groups</em> and <em>characters</em>. The document model that Mercutio uses is similar to HTML. We can trivially define a mapping from Mercutio's document model to HTML:</p>
 <pre><code>&lt;ul&gt;
   &lt;li&gt;&lt;p&gt;Item 1&lt;/p&gt;&lt;/li&gt;
@@ -202,6 +202,9 @@ html =&gt; Inline HTML content (a raw string, as it would appear in Markdown)
 caret =&gt; Caret position
 hr =&gt; Horizontal rule
 </code></pre>
+<a class="header" href="diary-markdown.html#splitting-image" id="splitting-image"><h1>Splitting Image</h1></a>
+<p>The entire document editing process is built on splitting a single origin block element into a series of sub-elements.</p>
+<p>All editing steps you can take in the frontend editor preserve this quality.</p>
 
                     </main>
 
@@ -213,6 +216,10 @@ hr =&gt; Horizontal rule
                             </a>
                         
 
+                        
+                            <a rel="next" href="diary-delall.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
                         
 
                         <div style="clear: both"></div>
@@ -227,6 +234,10 @@ hr =&gt; Horizontal rule
                     </a>
                 
 
+                
+                    <a href="diary-delall.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
                 
             </nav>
 
@@ -244,6 +255,21 @@ hr =&gt; Horizontal rule
             }
         </script>
 
+        
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:3001");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
         
 
         

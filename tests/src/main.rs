@@ -9,8 +9,8 @@ extern crate rand;
 extern crate failure;
 
 use fantoccini::{Client, Locator};
-use futures::prelude::*;
-use futures::future::{self, Future, ok, loop_fn, Loop, FutureResult};
+// use futures::prelude::*;
+use futures::future::{Future, ok};
 use failure::Error;
 use commandspec::*;
 use std::process::Stdio;
@@ -20,6 +20,8 @@ use std::sync::atomic::{AtomicU16, Ordering};
 static DRIVER_PORT_COUNTER: AtomicU16 = AtomicU16::new(4445);
 
 fn main() {
+    commandspec::forward_ctrlc();
+
     let test_id = format!("test{}", random_id());
     
     let test_id2 = test_id.clone();
@@ -41,18 +43,6 @@ fn main() {
     eprintln!("test successful.");
 }
 
-fn cleanup() -> Result<(), Error> {
-    shell_sh!(
-        r#"
-
-killall geckodriver
-ps aux | grep "marionette" | awk '{{print $2}}' | xargs -I{{}} kill -9 {{}}
-
-        "#
-    );
-    Ok(())
-}
-
 fn random_id() -> String {
     let mut rng = thread_rng();
     return ::rand::seq::sample_iter(&mut rng, 0..26u8, 8)
@@ -62,17 +52,38 @@ fn random_id() -> String {
         .collect::<String>();
 }
 
+enum Driver {
+    Chrome,
+    Gecko,
+}
+
 fn run(test_id: &str) -> Result<bool, Error> {
     // TODO accept port ID and alternative drivers.
     let port = DRIVER_PORT_COUNTER.fetch_add(1, Ordering::Relaxed);
-    let child = command!("chromedriver")?
-        .arg(format!("--port={}", port))
-    // let child = command!("geckodriver")?
-        // .arg("-p")
-        // .arg(port.to_string())
+    let driver = Driver::Chrome;
+
+    let mut cmd = match driver {
+        Driver::Chrome => {
+            let mut cmd = command!("chromedriver")?;
+            cmd
+                .arg(format!("--port={}", port))
+                .arg(port.to_string());
+            cmd
+        }
+        Driver::Gecko => {
+            let mut cmd = command!("geckodriver")?;
+            cmd
+                .arg("-p")
+                .arg(port.to_string());
+            cmd
+        }
+    };
+
+    // Launch child.
+    let child = cmd
         .stdout(Stdio::null())
         .stderr(Stdio::null())
-        .spawn()?;
+        .spawn_guard()?;
     
     // Wait for startup.
     ::std::thread::sleep(::std::time::Duration::from_millis(1000));
@@ -139,7 +150,7 @@ document.dispatchEvent(evt);
             })
             .and_then(|_| {
                 // Enough time for both clients to sync up.
-                ok(::std::thread::sleep(::std::time::Duration::from_millis(8000)))
+                ok(::std::thread::sleep(::std::time::Duration::from_millis(4000)))
             })
             .and_then(|_| {
                 println!("3");
@@ -176,6 +187,8 @@ return h1.innerText;
 
     let h1_string = ret_value.as_string().unwrap();
     eprintln!("done: {:?}", h1_string);
+
+    drop(child);
 
     Ok(h1_string.ends_with("👻👻"))
 }
