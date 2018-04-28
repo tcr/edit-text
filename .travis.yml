@@ -1,0 +1,26 @@
+language: rust
+cache: cargo
+rust:
+  - nightly
+addons:
+  firefox: "latest"
+
+before_install:
+  # Install geckodriver
+  - wget https://github.com/mozilla/geckodriver/releases/download/v0.18.0/geckodriver-v0.18.0-linux64.tar.gz
+  - mkdir geckodriver
+  - tar -xzf geckodriver-*.tar.gz -C geckodriver
+  - export PATH=$PATH:$PWD/geckodriver
+
+  # Install commands
+  - cargo install cargo-script -f
+  - cargo install diesel_cli --no-default-features --features sqlite -f
+
+script:
+  # Prepare X service
+  - export DISPLAY=:99.0
+  - sh -e /etc/init.d/xvfb start
+  - sleep 3 # wait to start
+
+  # Run test
+  - ./x.rs test

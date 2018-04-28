@@ -85,7 +85,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="oatie.html"><strong aria-hidden="true">2.</strong> Working with Documents</a></li><li><a href="ot.html"><strong aria-hidden="true">3.</strong> Operational Transform</a></li><li><a href="system.html"><strong aria-hidden="true">4.</strong> System Diagram</a></li><li><a href="diaries.html"><strong aria-hidden="true">5.</strong> Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">5.1.</strong> Documents and Markdown</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="oatie.html"><strong aria-hidden="true">2.</strong> Working with Documents</a></li><li><a href="ot.html"><strong aria-hidden="true">3.</strong> Operational Transform</a></li><li><a href="system.html"><strong aria-hidden="true">4.</strong> System Diagram</a></li><li><a href="diaries.html"><strong aria-hidden="true">5.</strong> Development Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">5.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">5.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">5.3.</strong> Carets and You</a></li><li><a href="diary-testing.html"><strong aria-hidden="true">5.4.</strong> Testing</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -335,11 +335,70 @@ new doc:   edit
 <p>We need both a deletion and an addition to perform some atomic operations, for example, making sure there are only <code>&lt;li&gt;</code> elements inside of a <code>&lt;ul&gt;</code> element for all document versions.</p>
 <p>TODO</p>
 <a class="header" href="print.html#system-diagram" id="system-diagram"><h1>System Diagram</h1></a>
-<pre><code>Mercutio Server -&gt; Mercutio Client -&gt; Mercutio Frontend -&gt; Mercutio Wasm
+<p>Basic system diagram:</p>
+<pre><code>
+     v-&gt; User &lt;-&gt; Frontend
+Sync &lt;-&gt; User &lt;-&gt; Frontend
+     ^-&gt; User &lt;-&gt; Frontend
 </code></pre>
-<a class="header" href="print.html#diaries" id="diaries"><h1>Diaries</h1></a>
+<a class="header" href="print.html#sync" id="sync"><h2>Sync</h2></a>
+<p>The Sync server performs document synchronization. It is the &quot;server&quot; component that orchestrates simultaneous document modifications which happen on several Users.</p>
+<p>It has a websocket component for clients to orchestrate simultaneous document modifications.</p>
+<p>It also has a GraphQL endpoint to (TODO: fill this out) make modifications outside the client API.</p>
+<a class="header" href="print.html#user" id="user"><h2>User</h2></a>
+<p>The User represents a consumer of the document. They can make changes to the document and apply modifications. This is performed over the WebSocket API.</p>
+<a class="header" href="print.html#interop-sync---user" id="interop-sync---user"><h2>Interop Sync &lt;-&gt; User</h2></a>
+<pre><code>pub enum SyncServerCommand {
+    // Connect(String),
+    Commit(String, Op, usize),
+    TerminateProxy,
+}
+
+pub enum SyncClientCommand {
+    // Client id assignment, initial doc, initial version
+    Init(String, DocSpan, usize),
+
+    // New document, version, client-id, operation
+    Update(DocSpan, usize, String, Op),
+}
+</code></pre>
+<a class="header" href="print.html#frontend" id="frontend"><h2>Frontend</h2></a>
+<p>The frontend is the UX that interfaces with the editor.</p>
+<p>...</p>
+<a class="header" href="print.html#intop-user---frontend" id="intop-user---frontend"><h2>Intop: User &lt;-&gt; Frontend</h2></a>
+<p>Defined in <code>mercutio-client/src/client.rs</code>.</p>
+<p>From User -&gt; Frontend:</p>
+<pre><code>pub enum ClientCommand {
+    Init(String),
+    Controls {
+        keys: Vec&lt;(u32, bool, bool)&gt;,
+        buttons: Vec&lt;(usize, String, bool)&gt;,
+    },
+    PromptString(String, String, NativeCommand),
+    Update(String, Option&lt;Op&gt;),
+    MarkdownUpdate(String),
+    Error(String),
+    SyncServerCommand(SyncServerCommand),
+}
+</code></pre>
+<p>And from Frontend -&gt; User:</p>
+<pre><code>pub enum NativeCommand {
+    // Connect(String),
+    Keypress(u32, bool, bool, bool), // code, meta, shift, alt
+    Button(u32),
+    Character(u32),
+    RenameGroup(String, CurSpan),
+    // Load(DocSpan),
+    Target(CurSpan),
+    RandomTarget(f64),
+    Monkey(bool),
+    RequestMarkdown,
+}
+</code></pre>
+<a class="header" href="print.html#development-diaries" id="development-diaries"><h1>Development Diaries</h1></a>
+<p>This section contains development diaries which are not as structured as the rest of the book, but may cover topics relevant to working inside <code>edit-text</code>. In the future, most of these diaries should have their content moved to relevant sections in the book.</p>
 <a class="header" href="print.html#diary-documents-and-markdown" id="diary-documents-and-markdown"><h1>Diary: Documents and Markdown</h1></a>
-<p><strong>Updated 2018-04-22</strong></p>
+<p><strong>As of April 2018.</strong></p>
 <p>A document in Mercutio is built with <em>groups</em> and <em>characters</em>. The document model that Mercutio uses is similar to HTML. We can trivially define a mapping from Mercutio's document model to HTML:</p>
 <pre><code>&lt;ul&gt;
   &lt;li&gt;&lt;p&gt;Item 1&lt;/p&gt;&lt;/li&gt;
@@ -393,6 +452,187 @@ html =&gt; Inline HTML content (a raw string, as it would appear in Markdown)
 caret =&gt; Caret position
 hr =&gt; Horizontal rule
 </code></pre>
+<a class="header" href="print.html#splitting-image" id="splitting-image"><h1>Splitting Image</h1></a>
+<p>The entire document editing process is built on splitting a single origin block element into a series of sub-elements.</p>
+<p>All editing steps you can take in the frontend editor preserve this quality.</p>
+<a class="header" href="print.html#development-diary-delall-hack" id="development-diary-delall-hack"><h1>Development Diary: Delall Hack</h1></a>
+<p><strong>As of April 2018.</strong></p>
+<p>Grepping the codebase for &quot;Delall&quot; turns up this comment in <code>transform.rs</code>:</p>
+<pre><code>// &quot;Delall&quot; transform hack to avoid fully deleted elements that
+// leave their content unwrapped. Because one side deletes the
+// group, we can't recreate it (because we have no knowledge of
+// the document). Instead, we just delete all the newly added
+// content of the group.
+</code></pre>
+<p>Let me expand on some of these ideas here.</p>
+<a class="header" href="print.html#operations-only-know-the-document-structure-implied-by-the-operation" id="operations-only-know-the-document-structure-implied-by-the-operation"><h2>Operations only know the document structure implied by the operation</h2></a>
+<p>You do a DelGroup on a Group, but when transformed against any of these elements, we can respond consistently even without knowing the other type of document.</p>
+<p>TODO: This section</p>
+<ul>
+<li>DelGroup x DelChars</li>
+<li>DelGroup x DelWithGroup</li>
+<li>DelGroup x DelGroup</li>
+</ul>
+<p>...</p>
+<a class="header" href="print.html#example-transform" id="example-transform"><h2>Example Transform</h2></a>
+<p><strong>NOTE:</strong> This is a long, but realistic, example. Imagine every client connected that has a ton of lag, accuring operations until it waits for a server response.</p>
+<p>When transforming two operations, oatie (so far) does not need to know anything about the document the operation will eventually operate on in order to compose or transform two operations. In order to maintain this property, some pedantic cases arise where we need to think carefully what the result of a transform will be.</p>
+<p>Say two clients have the following document:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+&lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/h1&gt;
+&lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world!&lt;/p&gt;
+#}</code></pre></pre>
+<a class="header" href="print.html#the-journey-of-client-a" id="the-journey-of-client-a"><h3>The journey of Client A</h3></a>
+<p>Client A hits backspace, which will collapse the two block-level elements (<code>h1</code> and <code>p</code>) into one. The document there will now look like this:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// This operation:
+Op([
+    DelGroup([DelSkip(7)]), DelGroup([DelSkip(8)]),
+], [
+    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddSkip(15)]),
+])
+
+// New Document
+&lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;caret client=&quot;A&quot; /&gt; world!&lt;/p&gt;
+#}</code></pre></pre>
+<p>Next, Client A forward-deletes everything that existed in the second paragraph (<code>&quot; world!&quot;</code>). So the document now looks like this:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// This operation:
+Op([
+    DelWithGroup([DelSkip(8), DelChars(7)]),
+], [
+])
+
+// Composed operations:
+Op([
+    DelGroup([DelSkip(7)]), DelGroup([DelSkip(1), DelChars(7)]),
+], [
+    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddSkip(15)]),
+])
+
+// New document
+&lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;caret client=&quot;A&quot; /&gt;&lt;/p&gt;
+#}</code></pre></pre>
+<p>Lastly (for good measure) Client A clicks at the beginning of the first paragraph to move its caret:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// This operation:
+Op([
+    DelWithGroup([DelSkip(7), DelGroup([])]),
+], [
+    AddWithGroup([AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;A&quot;})])
+])
+
+// Composed operations:
+Op([
+    DelGroup([DelSkip(7)]), DelGroup([DelGroup([]), DelChars(7)]),
+], [
+    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;A&quot;}), AddSkip(14)]),
+])
+
+// New document
+&lt;h1&gt;&lt;caret client=&quot;A&quot; /&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/p&gt;
+#}</code></pre></pre>
+<a class="header" href="print.html#the-journey-of-client-b" id="the-journey-of-client-b"><h3>The journey of Client B</h3></a>
+<p>Client B is less active, has less lag, or just less to contribute. It simply moves its cursor to the second block...:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// This operation:
+Op([
+    DelGroup([DelGroup([]), DelSkip(7)]),
+], [
+    AddSkip(1), AddWithGroup([AddSkip(8), AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;B&quot;}, [])]),
+])
+
+// New Document
+&lt;h1&gt;Hello &lt;/h1&gt;
+&lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world!&lt;caret client=B&quot; /&gt;&lt;/p&gt;
+#}</code></pre></pre>
+<p>Then Client B hits backspace:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// This operation:
+Op([
+    DelSkip(1), DelWithGroup([DelSkip(7), DelChars(1)]),
+], [
+])
+
+// Cumulative operation:
+Op([
+    DelGroup([DelGroup([]), DelSkip(7)]), DelWithGroup([DelSkip(7), DelChars(1)]),
+], [
+    AddSkip(1), AddWithGroup([AddSkip(8), AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;B&quot;}, [])]),
+])
+
+// New Document
+&lt;h1&gt;Hello &lt;/h1&gt;
+&lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world&lt;caret client=B&quot; /&gt;&lt;/p&gt;
+#}</code></pre></pre>
+<a class="header" href="print.html#transform" id="transform"><h3>Transform</h3></a>
+<p>In the end of this hypothetical, we are now transforming these two operations:</p>
+<pre><code>// Client A
+Op([
+    DelGroup([DelSkip(7)]), DelGroup([DelGroup([]), DelChars(7)]),
+], [
+    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;A&quot;}), AddSkip(14)]),
+])
+
+// Client B
+Op([
+    DelGroup([DelGroup([]), DelSkip(7)]), DelWithGroup([DelSkip(7), DelChars(1)]),
+], [
+    AddSkip(1), AddWithGroup([AddSkip(8), AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;B&quot;}, [])]),
+])
+</code></pre>
+<p>And we know exactly what each result is generated from applying each operation to our original document (first shown at the beginning of this document):</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// Original document
+&lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/h1&gt;
+&lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world!&lt;/p&gt;
+
+
+// Client A
+&lt;h1&gt;&lt;caret client=&quot;A&quot; /&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/p&gt;
+
+// Client B
+&lt;h1&gt;Hello &lt;/h1&gt;
+&lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world&lt;caret client=B&quot; /&gt;&lt;/p&gt;
+#}</code></pre></pre>
+<p>But when transforming, by design, we avoid needing knowledge of what the document looks like. So let's evaluate these operations as though we didn't know what the result was going to look like.</p>
+<p>In particular, we want to look at how the paragraph, <code>&quot; world!&quot;</code>, is modified. Client A has deleted it entirely, whereas Client B deleted a character and inserted its caret:</p>
+<pre><code>Op([DelGroup([DelGroup([]), DelChars(7)])], [])
+Op([DelWithGroup([DelSkip(7), DelChars(1)])], [AddWithGroup([AddSkip(8), AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;B&quot;}, [])])])
+</code></pre>
+<p>We can take the union of the deletions and since there is only one addition component, select it. When we transform the two, our result looks like this:</p>
+<pre><code>Op([DelGroup([DelGroup([]), DelChars(7)])], [AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;B&quot;}, [])])
+</code></pre>
+<p>If you imagine a document consisting of only this element, and we see that one client has deleted the entire element, we accidentally wind up with a client's caret being in the root element (instead of block element). See [Splitting image](./diary-markdown.md].</p>
+<p>To avoid this problem, the Delall hack delets alls newly inserted elements from an insertion that is transformed against a deletion that delets all content. We can verify any arbitrary <code>DelGroup</code> delets all of its inner contents using a recursive check.</p>
+<a class="header" href="print.html#carets-and-you" id="carets-and-you"><h1>Carets and You</h1></a>
+<a class="header" href="print.html#diary-testing" id="diary-testing"><h1>Diary: Testing</h1></a>
+<a class="header" href="print.html#oatie-testing" id="oatie-testing"><h2>Oatie testing</h2></a>
+<ul>
+<li>Unit tests</li>
+<li>Virtual monkey (N/A)</li>
+</ul>
+<a class="header" href="print.html#mercutio-testing" id="mercutio-testing"><h2>Mercutio testing</h2></a>
+<ul>
+<li>Unit tests (N/A)</li>
+<li>Virtual Monkey</li>
+<li>Multimonkey</li>
+<li><code>geckodriver</code> integrated test</li>
+</ul>
 
                     </main>
 
@@ -427,6 +667,21 @@ hr =&gt; Horizontal rule
             }
         </script>
 
+        
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:3001");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
         
 
         

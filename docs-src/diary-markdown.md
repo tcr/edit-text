@@ -1,6 +1,6 @@
 # Diary: Documents and Markdown
 
-**Updated 2018-04-22**
+**As of April 2018.**
 
 A document in Mercutio is built with *groups* and *characters*. The document model that Mercutio uses is similar to HTML. We can trivially define a mapping from Mercutio's document model to HTML:
 
@@ -77,3 +77,9 @@ html => Inline HTML content (a raw string, as it would appear in Markdown)
 caret => Caret position
 hr => Horizontal rule
 ```
+
+# Splitting Image
+
+The entire document editing process is built on splitting a single origin block element into a series of sub-elements.
+
+All editing steps you can take in the frontend editor preserve this quality.

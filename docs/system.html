@@ -85,7 +85,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="oatie.html"><strong aria-hidden="true">2.</strong> Working with Documents</a></li><li><a href="ot.html"><strong aria-hidden="true">3.</strong> Operational Transform</a></li><li><a href="system.html" class="active"><strong aria-hidden="true">4.</strong> System Diagram</a></li><li><a href="diaries.html"><strong aria-hidden="true">5.</strong> Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">5.1.</strong> Documents and Markdown</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="oatie.html"><strong aria-hidden="true">2.</strong> Working with Documents</a></li><li><a href="ot.html"><strong aria-hidden="true">3.</strong> Operational Transform</a></li><li><a href="system.html" class="active"><strong aria-hidden="true">4.</strong> System Diagram</a></li><li><a href="diaries.html"><strong aria-hidden="true">5.</strong> Development Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">5.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">5.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">5.3.</strong> Carets and You</a></li><li><a href="diary-testing.html"><strong aria-hidden="true">5.4.</strong> Testing</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -148,7 +148,65 @@
                 <div id="content" class="content">
                     <main>
                         <a class="header" href="system.html#system-diagram" id="system-diagram"><h1>System Diagram</h1></a>
-<pre><code>Mercutio Server -&gt; Mercutio Client -&gt; Mercutio Frontend -&gt; Mercutio Wasm
+<p>Basic system diagram:</p>
+<pre><code>
+     v-&gt; User &lt;-&gt; Frontend
+Sync &lt;-&gt; User &lt;-&gt; Frontend
+     ^-&gt; User &lt;-&gt; Frontend
+</code></pre>
+<a class="header" href="system.html#sync" id="sync"><h2>Sync</h2></a>
+<p>The Sync server performs document synchronization. It is the &quot;server&quot; component that orchestrates simultaneous document modifications which happen on several Users.</p>
+<p>It has a websocket component for clients to orchestrate simultaneous document modifications.</p>
+<p>It also has a GraphQL endpoint to (TODO: fill this out) make modifications outside the client API.</p>
+<a class="header" href="system.html#user" id="user"><h2>User</h2></a>
+<p>The User represents a consumer of the document. They can make changes to the document and apply modifications. This is performed over the WebSocket API.</p>
+<a class="header" href="system.html#interop-sync---user" id="interop-sync---user"><h2>Interop Sync &lt;-&gt; User</h2></a>
+<pre><code>pub enum SyncServerCommand {
+    // Connect(String),
+    Commit(String, Op, usize),
+    TerminateProxy,
+}
+
+pub enum SyncClientCommand {
+    // Client id assignment, initial doc, initial version
+    Init(String, DocSpan, usize),
+
+    // New document, version, client-id, operation
+    Update(DocSpan, usize, String, Op),
+}
+</code></pre>
+<a class="header" href="system.html#frontend" id="frontend"><h2>Frontend</h2></a>
+<p>The frontend is the UX that interfaces with the editor.</p>
+<p>...</p>
+<a class="header" href="system.html#intop-user---frontend" id="intop-user---frontend"><h2>Intop: User &lt;-&gt; Frontend</h2></a>
+<p>Defined in <code>mercutio-client/src/client.rs</code>.</p>
+<p>From User -&gt; Frontend:</p>
+<pre><code>pub enum ClientCommand {
+    Init(String),
+    Controls {
+        keys: Vec&lt;(u32, bool, bool)&gt;,
+        buttons: Vec&lt;(usize, String, bool)&gt;,
+    },
+    PromptString(String, String, NativeCommand),
+    Update(String, Option&lt;Op&gt;),
+    MarkdownUpdate(String),
+    Error(String),
+    SyncServerCommand(SyncServerCommand),
+}
+</code></pre>
+<p>And from Frontend -&gt; User:</p>
+<pre><code>pub enum NativeCommand {
+    // Connect(String),
+    Keypress(u32, bool, bool, bool), // code, meta, shift, alt
+    Button(u32),
+    Character(u32),
+    RenameGroup(String, CurSpan),
+    // Load(DocSpan),
+    Target(CurSpan),
+    RandomTarget(f64),
+    Monkey(bool),
+    RequestMarkdown,
+}
 </code></pre>
 
                     </main>
@@ -200,6 +258,21 @@
             }
         </script>
 
+        
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:3001");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
         
 
         

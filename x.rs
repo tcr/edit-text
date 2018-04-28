@@ -1,13 +1,13 @@
 #!/usr/bin/env run-cargo-script
 //! ```cargo
 //! [dependencies]
-//! commandspec = "0.6.1"
+//! commandspec = "0.7"
 //! failure = "0.1"
 //! structopt = "0.2"
 //! ```
 
 // Don't add additional noise to cargo-script.
-#![deny(warnings)]
+// #![deny(warnings)]
 
 #[macro_use]
 extern crate commandspec;
@@ -31,9 +31,14 @@ fn abs_string_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
 
 // Thin wrapper around run()
 fn main() {
-    if let Err(err) = run() {
-        eprintln!("Error: {}", err);
-        ::std::process::exit(1);
+    commandspec::forward_ctrlc();
+
+    match run() {
+        Ok(_) => {},
+        Err(ref err) => {
+            eprintln!("Error: {}", err);
+            ::std::process::exit(1);
+        }
     }
 }
 
@@ -205,6 +210,8 @@ fn run() -> Result<(), Error> {
             // TODO if we can reliably check for --client-proxy or -c, we should
             // not build on first launch.
 
+            eprintln!("STARTING SERVER");
+
             execute!(
                 r"
                     cd mercutio-server
@@ -217,6 +224,16 @@ fn run() -> Result<(), Error> {
                 release_flag = if release { Some("--release") } else { None },
                 args = args,
             )?;
+
+            eprintln!("DONE WITH SERVER");
+
+
+            // TODO figure out why ctrl+c here doesn't kill YES
+            // execute!(
+            //     r"
+            //         yes
+            //     ",
+            // )?;
         }
 
         Cli::MercutioServerBuild { args } => {
@@ -249,12 +266,12 @@ fn run() -> Result<(), Error> {
 
         Cli::Test { args } => {
             eprintln!("running ./x.rs server...");
-            let mut spawn_handle = command!(
+            let _server_guard = command!(
                 r"
-                    ./x.rs server {args}
+                    cargo script ./x.rs -- server {args}
                 ",
                 args = args,
-            )?.spawn().unwrap();
+            )?.spawn_guard().unwrap();
 
             ::std::thread::sleep(::std::time::Duration::from_millis(3000));
 
@@ -266,8 +283,6 @@ fn run() -> Result<(), Error> {
                 ",
                 args = args,
             )?;
-
-            spawn_handle.kill()?;
         }
 
         Cli::FrontendBuild { args } => {
