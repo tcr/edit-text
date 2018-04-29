@@ -8,6 +8,7 @@ Vagrantfile
 node_modules
 dist/deploy/mercutio-server
 *.sqlite3
+*.sqlite3-journal
 ubuntu*.log
 mercutio-frontend/dist/mercutio.wasm
 mercutio-frontend/dist/mercutio.js.map

@@ -190,6 +190,13 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 );
             },
 
+            (GET) ["/favicon.ico"] => {
+                return Response::from_data(
+                    "image/x-icon",
+                    template_dir.get(Path::new("favicon.ico")).unwrap(),
+                );
+            },
+
             (GET) ["/$/multi"] => {
                 return Response::from_data(
                     "text/html",
