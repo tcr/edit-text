@@ -4,11 +4,13 @@
 
 edit-text is a collaborative rich text editor, written in Rust with a frontend in WebAssembly.
 
-**This is very early software. 👶**
+👶 This is very early software.
+
+📚 Read more in the [**Book on edit-text Internals**](http://tcr.github.io/edit-text/).
+
+✏️ Or [**try out the edit-text sandbox**](http://sandbox.edit.io/).
 
 ## Getting Started
-
-[**You can also read a very early book about edit-text internals.**](http://tcr.github.io/edit-text/)
 
 You'll need `cargo-script` to run the build tool and `diesel-cli` for the Sqlite file:
 

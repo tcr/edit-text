@@ -13,8 +13,8 @@ before_install:
   - export PATH=$PATH:$PWD/geckodriver
 
   # Install commands
-  - cargo install cargo-script -f
-  - cargo install diesel_cli --no-default-features --features sqlite -f
+  - command -v cargo-script || cargo install cargo-script
+  - command -v diesel || cargo install diesel_cli --no-default-features --features sqlite
 
 script:
   # Prepare X service
