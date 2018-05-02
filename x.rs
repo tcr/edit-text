@@ -1,13 +1,13 @@
 #!/usr/bin/env run-cargo-script
 //! ```cargo
 //! [dependencies]
-//! commandspec = "0.7"
+//! commandspec = "0.8"
 //! failure = "0.1"
 //! structopt = "0.2"
 //! ```
 
 // Don't add additional noise to cargo-script.
-// #![deny(warnings)]
+#![deny(warnings)]
 
 #[macro_use]
 extern crate commandspec;
@@ -31,7 +31,7 @@ fn abs_string_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
 
 // Thin wrapper around run()
 fn main() {
-    commandspec::forward_ctrlc();
+    commandspec::cleanup_on_ctrlc();
 
     match run() {
         Ok(_) => {},
@@ -271,7 +271,7 @@ fn run() -> Result<(), Error> {
                     cargo script ./x.rs -- server {args}
                 ",
                 args = args,
-            )?.spawn_guard().unwrap();
+            )?.scoped_spawn().unwrap();
 
             ::std::thread::sleep(::std::time::Duration::from_millis(3000));
 
@@ -343,6 +343,8 @@ fn run() -> Result<(), Error> {
                         -t mercutio-build-server
                 "
             )?;
+            eprintln!();
+            eprintln!("Running local cargo build...");
             execute!(
                 r"
                     docker run --rm \
@@ -351,7 +353,7 @@ fn run() -> Result<(), Error> {
                         -v {dir_rustup}:/usr/local/rustup/toolchains \
                         -v {dir_self}:/app \
                         -w /app/mercutio-server \
-                        -t -i mercutio-build-server \
+                        -t mercutio-build-server \
                         cargo build --release --target=x86_64-unknown-linux-gnu --bin mercutio-server --features 'standalone'
                 ",
                 dir_git = abs_string_path("dist/build/cargo-git-cache")?,
@@ -359,6 +361,8 @@ fn run() -> Result<(), Error> {
                 dir_rustup = abs_string_path("dist/build/rustup-toolchain-cache")?,
                 dir_self = abs_string_path(".")?,
             )?;
+            eprintln!();
+            eprintln!("Copying directories...");
             execute!(
                 "
                     cp target/x86_64-unknown-linux-gnu/release/mercutio-server dist/deploy
