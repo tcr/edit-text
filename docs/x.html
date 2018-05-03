@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Operational Transform - edit-text internals</title>
+        <title>Build System ./x.rs - edit-text internals</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -85,7 +85,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="x.html"><strong aria-hidden="true">1.1.</strong> Build System ./x.rs</a></li><li><a href="oatie.html"><strong aria-hidden="true">1.2.</strong> Working with Documents</a></li><li><a href="ot.html" class="active"><strong aria-hidden="true">1.3.</strong> Operational Transform</a></li><li><a href="system.html"><strong aria-hidden="true">1.4.</strong> System Diagram</a></li></ol></li><li><a href="diaries.html"><strong aria-hidden="true">2.</strong> Development Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">2.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.3.</strong> Carets and You</a></li><li><a href="diary-testing.html"><strong aria-hidden="true">2.4.</strong> Testing</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="x.html" class="active"><strong aria-hidden="true">1.1.</strong> Build System ./x.rs</a></li><li><a href="oatie.html"><strong aria-hidden="true">1.2.</strong> Working with Documents</a></li><li><a href="ot.html"><strong aria-hidden="true">1.3.</strong> Operational Transform</a></li><li><a href="system.html"><strong aria-hidden="true">1.4.</strong> System Diagram</a></li></ol></li><li><a href="diaries.html"><strong aria-hidden="true">2.</strong> Development Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">2.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.3.</strong> Carets and You</a></li><li><a href="diary-testing.html"><strong aria-hidden="true">2.4.</strong> Testing</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -147,83 +147,46 @@
 
                 <div id="content" class="content">
                     <main>
-                        <a class="header" href="ot.html#operational-transform" id="operational-transform"><h1>Operational Transform</h1></a>
-<p>When two clients A and B make an operation concurrently, one way to get them back in sync is to determine what would operation B look like if operation A had happened first, and vice versa. If we can guarantee that this result is commutative, meaning:</p>
-<pre><code>operation A + (operation B if A had happened already) == operation B + (operation A if B had happened already)
+                        <a class="header" href="x.html#build-tool-xrs" id="build-tool-xrs"><h1>Build Tool ./x.rs</h1></a>
+<p>The build tool.</p>
+<pre><code>edit-text build scripts 0.1.0
+Build scripts for mercutio and oatie
+
+USAGE:
+    x &lt;SUBCOMMAND&gt;
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+SUBCOMMANDS:
+    book-build        Builds the book.
+    book-watch        Watches and rebuilds the book.
+    client-proxy      Run client code in your terminal.
+    deploy            Deploy to sandbox.edit.io.
+    frontend-build    Bundle the frontend JavaScript code.
+    frontend-watch    Watch the frontend JavaScript code, building continuously.
+    help              Prints this message or the help of the given subcommand(s)
+    oatie-build       Build the operational transform library.
+    replay            Replay an edit-text log.
+    server            Run the edit-text server.
+    server-build      Build the edit-text server.
+    test              
+    wasm-build        Compile the WebAssembly bundle.
 </code></pre>
-<p>Then we can keep both clients, which had different operations occur to their documents, can get back in sync. The algorithm used by <code>oatie</code> guarantees this operation will be commutative, which is makes other properties of this system simpler.</p>
-<p>Let's look at a race condition. Client A sends an operation to the server,</p>
-<p>Next, we need to work around the undesirable constraint each operation made by a client has to be transformed against another client's. We actually can generalize up to more than two clients—by transforming the results of the operation A x B with the results of B' &amp;mul; C, etc. But in practice, we are not going to have each operation have a corresponding and concurrent operation on each client at the same instant. Instead, we version the document, and use this to tell what operations an incoming operation should be transformed against. For instance, if operations A and B happen simultaneously, the server can do the following:</p>
-<ol>
-<li>Start with doc version 100.</li>
-<li>Apply operation A. The doc version is now 101.</li>
-<li>See that operation B says its version was set to 100. We need to bring it up to date. We store a history of all previous operations, and so we transform operation B &amp;mul; the operation to transition from version 100 → 101. The result is oepration B as though it operated on version 101, which we can directly apply to our document and send out to all clients to perform.</li>
-</ol>
-<p>Client A becomes in sync easily:</p>
-<ol>
-<li>Start with doc version 100.</li>
-<li>Apply operation A. Also send operation A to the server.</li>
-<li>Receive an ACK from the server, and learn our version is now 101.</li>
-<li>Receive operation B, which transitions from version 101 → 102; our document is now at version 102.</li>
-</ol>
-<p>For client B, this is somewhat tricker; we already applied our operation! So we perform a transform locally against <em>our</em> history.</p>
-<ol>
-<li>Start with doc verison 100.</li>
-<li>Apply operation B. Also send operation B to the server. The network queue is synchronous; it only sends one operation at a time, waiting until an ACK to send the next.</li>
-<li>Receive operation A, which transitions from version 100 → 101; we didn't expect this. So we transform this incoming operation A &amp;mul; operation B, for which an ACK from the server is outstanding. We result in A' (operation A if operation B had happened already) which we apply to the document. We also result in B', which we transform against to operations which have accumulated behind operation B in the network queue.</li>
-<li>Receive an ACK from the server, and learn our version is now 102. Note that at this point the server state and the state of our local client are equivalent (A &amp;mul; A' == B &amp;mul; B').</li>
-<li>Because we received an ACK, we can send the next operation in our network queue (if any).</li>
-</ol>
-<p>Note that the strategies for server and client code to bring operations &quot;up to date&quot; differ in that the client only needs to transform against one operation, while the server needs to transform against all intervening operations in its history. The server only needs to store the history up to the client that is the most out of date, however, and can always boot off clients which are off too old a version.</p>
-<a class="header" href="ot.html#rules-for-transform" id="rules-for-transform"><h2>Rules for Transform</h2></a>
-<p>As a reminder, operational transform is commutative, which is to say that a result of transforming A &amp;mul; B should result in A' and B', and the property A composed with A' == B composed with B'. Or put another way, the transform function when given two operations will return two subsequent operations to bring both clients into an identical document state.</p>
-<p>Starting with a simple example, what happens when two documents type the same character simultaneously:</p>
-<pre><code>doc:       ed
-
-          bed
-client A: ^
-
-          red
-client B: ^
-</code></pre>
-<p>We can determine a hueristic, say, that when transforming we always know client A goes first and B second, and come up with the transformed operations:</p>
-<pre><code>           bred
-client A':  ^
-
-           bred
-client B': ^
-</code></pre>
-<p>Now both clients are synchronized again, and we can repeat this at any time as long as we use a stable client ordering. If we look at deleting characters, we actually discover we don't even need an order:</p>
-<pre><code>doc:      creditor
-
-            editor
-client A: XX
-
-          credit
-client B:       XX
-
-new doc:   edit
-</code></pre>
-<p>Deletions, as we'll call them, are commutative, and the result of transforming them should update both clients to have deleted their union. This holds true in even more complex scenarios.</p>
-<p>A harder consideration is when we introduce groups, which are similar to HTML elements. <code>oatie</code> doesn't operate on HTML tags, but acts more like the DOM: groups are strictly nested and can only contain text or other groups. Each group has a &quot;tag&quot; (like an HTML tag), but also can contain other attributes (for example, each user's cursor contains the attribute of its originating client).</p>
-<p>Transforming two operations which operate on groups in distinct ways offers some difficulty.</p>
-<p>TODO</p>
-<a class="header" href="ot.html#operations" id="operations"><h2>Operations</h2></a>
-<p>We need both a deletion and an addition to perform some atomic operations, for example, making sure there are only <code>&lt;li&gt;</code> elements inside of a <code>&lt;ul&gt;</code> element for all document versions.</p>
-<p>TODO</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-                            <a rel="prev" href="oatie.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="introduction.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         
 
                         
-                            <a rel="next" href="system.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="oatie.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -235,13 +198,13 @@ new doc:   edit
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-                    <a href="oatie.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a href="introduction.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 
 
                 
-                    <a href="system.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a href="oatie.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 

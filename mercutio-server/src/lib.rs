@@ -69,6 +69,10 @@ extern crate take_mut;
 extern crate taken;
 extern crate url;
 extern crate ws;
+#[macro_use] extern crate rouille;
+#[macro_use] extern crate juniper;
+extern crate r2d2;
+extern crate r2d2_diesel;
 
 // Macros can only be used after they are defined
 pub mod sync;
