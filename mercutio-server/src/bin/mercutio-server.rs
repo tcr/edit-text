@@ -20,6 +20,7 @@ extern crate structopt_derive;
 extern crate take_mut;
 extern crate url;
 extern crate ron;
+extern crate reqwest;
 extern crate ws;
 extern crate mime_guess;
 extern crate handlebars;
@@ -118,6 +119,35 @@ Type github.com/tcr/edit-text into your search bar for more information.
     let doc = Doc(markdown_to_doc(&INPUT).unwrap());
     validate_doc(&doc).expect("Initial Markdown document was malformed");
     doc
+}
+
+pub fn get_single_page_graphql(input_id: &str) -> Option<Doc> {
+    let client = reqwest::Client::new();
+    let text = client.post("http://127.0.0.1:8003/graphql/")
+        .json(&json!({
+            "query": r#"
+
+query ($id: String!) {
+    page(id: $id) {
+        doc
+    }
+}
+
+"#,
+            "variables": {
+                "id": input_id,
+            },
+        }))
+        .send()
+        .ok()?
+        .text()
+        .ok()?;
+    
+    let ret: ::serde_json::Value = serde_json::from_str(&text).ok()?;
+    let node = ret.pointer("/data/page/doc")?;
+    let ron = node.as_str()?.to_string();
+    let body = ::ron::de::from_str(&ron).ok()?;
+    Some(Doc(body))
 }
 
 fn run_http_server(port: u16, client_proxy: bool) {
@@ -259,7 +289,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 )).to_owned().to_string();
 
                 // Preload content into the file using the db connection.
-                let body: String = get_single_page(&db, &id)
+                let body: String = get_single_page_graphql(&id)
                     .map(|d| doc_as_html(&d.0))
                     .unwrap_or_else(|| {
                         let doc = doc_span![DocGroup({"tag": "h1"}, [DocChars(&id)])];

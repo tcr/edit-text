@@ -75,9 +75,10 @@ extern crate r2d2;
 extern crate r2d2_diesel;
 
 // Macros can only be used after they are defined
-pub mod sync;
-pub mod schema;
 pub mod db;
+pub mod graphql;
+pub mod schema;
+pub mod sync;
 pub mod util;
 
 pub use mercutio_common::*;
