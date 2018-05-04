@@ -1,9 +1,10 @@
 # Summary
 
 - [Introduction](./introduction.md)
-- [Working with Documents](./oatie.md)
-- [Operational Transform](./ot.md)
-- [System Diagram](./system.md)
+  - [Build System ./x.rs](./x.md)
+  - [Working with Documents](./oatie.md)
+  - [Operational Transform](./ot.md)
+  - [System Diagram](./system.md)
 - [Development Diaries](./diaries.md)
   - [Documents and Markdown](./diary-markdown.md)
   - [Delall Hack](./diary-delall.md)

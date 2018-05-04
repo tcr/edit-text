@@ -238,6 +238,24 @@ kbd {
         font-weight: bold;
     }
     
+    div[data-tag="h4"] {
+        font-size: 1.1em;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    
+    div[data-tag="h5"] {
+        font-size: 1.0em;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    div[data-tag="h6"] {
+        font-size: 0.9em;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    
     div[data-tag="pre"] {
         font-family: monospace;
         padding: 5px 8px;

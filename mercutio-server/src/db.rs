@@ -10,12 +10,27 @@ use std::{
 };
 use failure::Error;
 use oatie::doc::*;
+use r2d2_diesel::ConnectionManager;
+use r2d2;
+
+pub fn db_pool_create() -> r2d2::Pool<ConnectionManager<SqliteConnection>> {
+    dotenv().ok();
+
+    let mut database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    database_url = format!("../{}", database_url);
+    
+    let manager = ConnectionManager::<SqliteConnection>::new(database_url.clone());
+    r2d2::Pool::builder()
+        .build(manager)
+        .expect(&format!("Error connecting to {}", database_url))
+}
 
 pub fn db_connection() -> SqliteConnection {
     dotenv().ok();
 
     let mut database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     database_url = format!("../{}", database_url);
+
     SqliteConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url))
 }
@@ -71,6 +86,15 @@ pub fn get_single_page(db: &SqliteConnection, input_id: &str) -> Option<Doc> {
         .map_err::<Error, _>(|x| x.into())
         .and_then(|x| Ok(::ron::de::from_str::<DocSpan>(&x.body)?))
         .map(|d| Doc(d))
+        .ok()
+}
+
+pub fn get_single_page_raw(db: &SqliteConnection, input_id: &str) -> Option<Post> {
+    use super::schema::posts::dsl::*;
+
+    return posts
+        .filter(id.eq(input_id))
+        .first::<Post>(db)
         .ok()
 }
 
