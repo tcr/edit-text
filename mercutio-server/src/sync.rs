@@ -377,7 +377,7 @@ fn spawn_update_db(
             match message {
                 DbMessage::Update { id, body } => {
                     let conn = db_pool.get().unwrap();
-                    create_post(&conn, &id, &body);
+                    create_page(&conn, &id, &body);
                 }
                 DbMessage::Initialize { id, receiver } => {
                     let shared_sync_state =

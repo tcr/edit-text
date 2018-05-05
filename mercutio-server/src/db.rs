@@ -50,7 +50,8 @@ pub struct NewPost<'a> {
     pub body: &'a str,
 }
 
-pub fn create_post<'a>(conn: &SqliteConnection, id: &'a str, doc: &Doc) -> usize {
+// TODO usize is not useful.
+pub fn create_page<'a>(conn: &SqliteConnection, id: &'a str, doc: &Doc) -> usize {
     use super::schema::posts;
 
     let body = ::ron::ser::to_string(&doc.0).unwrap();

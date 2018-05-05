@@ -1,50 +1,42 @@
 // TODO clean up these imports!
 
 use crate::{
-    SyncClientCommand,
-    SyncServerCommand,
+    // SyncClientCommand,
+    // SyncServerCommand,
     db::*,
-    util::*,
+    // util::*,
 };
 
 use extern::{
-    bus::{Bus, BusReader},
-    crossbeam_channel::{
-        Receiver as CCReceiver,
-        Sender as CCSender,
-        unbounded,
-    },
+    // bus::{Bus, BusReader},
+    // crossbeam_channel::{
+    //     Receiver as CCReceiver,
+    //     Sender as CCSender,
+    //     unbounded,
+    // },
     diesel::{
         sqlite::SqliteConnection,
     },
-    failure::Error,
+    // failure::Error,
     juniper,
     oatie::{
-        OT,
+        // OT,
         doc::*,
-        schema::RtfSchema,
-        validate::validate_doc,
+        // schema::RtfSchema,
+        // validate::validate_doc,
     },
-    simple_ws::*,
-    rand::{thread_rng, Rng},
+    // simple_ws::*,
+    // rand::{thread_rng, Rng},
     r2d2,
     r2d2_diesel::ConnectionManager,
-    ron,
+    // ron,
     rouille,
     serde_json,
-    std::{
-        collections::{HashMap, VecDeque},
-        sync::{Arc, Mutex},
-        thread::{self, JoinHandle},
-        time::Duration,
-    },
-    url::Url,
-    ws,
 };
 
 use std::io::prelude::*;
 use juniper::http::{GraphQLRequest};
-use juniper::{FieldResult, EmptyMutation};
+use juniper::{FieldResult};
 
 
 #[derive(GraphQLObject)]
@@ -66,12 +58,44 @@ graphql_object!(Query: Ctx |&self| {
     }
 });
 
+struct Mutations;
+
+graphql_object!(Mutations: Ctx |&self| {
+    field createPage(&executor, id: String, doc: String) -> FieldResult<Page> {
+        let conn = executor.context().0.get().unwrap();
+
+        let doc = Doc(::ron::de::from_str(&doc).unwrap());
+        create_page(&conn, &id, &doc);
+        let page = get_single_page_raw(&conn, &id);
+
+        Ok(page.map(|x| Page {
+            doc: x.body
+        }).unwrap())
+    }
+
+    field getOrCreatePage(&executor, id: String, default: String) -> FieldResult<Page> {
+        let conn = executor.context().0.get().unwrap();
+
+        let doc = get_single_page_raw(&conn, &id)
+            .map(|x| x.body)
+            .unwrap_or_else(move || {
+                let doc = Doc(::ron::de::from_str(&default).unwrap());
+                create_page(&conn, &id, &doc);
+                default
+            });
+
+        Ok(Page {
+            doc
+        })
+    }
+});
+
 // Arbitrary context data.
 struct Ctx(r2d2::Pool<ConnectionManager<SqliteConnection>>);
 
 // A root schema consists of a query and a mutation.
 // Request queries can be executed against a RootNode.
-type Schema = juniper::RootNode<'static, Query, EmptyMutation<Ctx>>;
+type Schema = juniper::RootNode<'static, Query, Mutations>;
 
 pub fn sync_graphql_server(
     db_pool: r2d2::Pool<ConnectionManager<SqliteConnection>>,
@@ -98,7 +122,7 @@ pub fn sync_graphql_server(
 
                 // Run the executor.
                 let res = req.execute(
-                    &Schema::new(Query, EmptyMutation::new()),
+                    &Schema::new(Query, Mutations),
                     &ctx,
                 );
                 rouille::Response::json(&res)

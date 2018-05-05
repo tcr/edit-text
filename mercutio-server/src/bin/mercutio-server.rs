@@ -4,7 +4,7 @@
 
 extern crate bus;
 extern crate crossbeam_channel;
-extern crate failure;
+#[macro_use] extern crate failure;
 extern crate include_dir_macro;
 extern crate maplit;
 extern crate mercutio_common;
@@ -28,9 +28,9 @@ extern crate md5;
 #[macro_use]
 extern crate serde_json;
 
+use failure::Error;
 use include_dir_macro::include_dir;
 use mercutio_common::doc_as_html;
-use mercutio_server::db::{db_connection, get_single_page, create_post};
 use mercutio_server::sync::*;
 use mercutio_server::markdown::{markdown_to_doc, doc_to_markdown};
 use mime_guess::guess_mime_type;
@@ -150,6 +150,79 @@ query ($id: String!) {
     Some(Doc(body))
 }
 
+pub fn graphql_request(
+    query: &str,
+    variables: &serde_json::Value,
+) -> Result<serde_json::Value, Error> {
+    let client = reqwest::Client::new();
+    let text = client.post("http://127.0.0.1:8003/graphql/")
+        .json(&json!({
+            "query": query,
+            "variables": variables,
+        }))
+        .send()?
+        .text()?;
+    
+    // TODO handle /errors[...]
+    Ok(serde_json::from_str(&text)?)
+}
+
+pub fn get_or_create_page_graphql(input_id: &str, doc: &Doc) -> Result<Doc, Error> {
+    let ret = graphql_request(
+        r#"
+
+mutation ($id: String!, $default: String!) {
+    getOrCreatePage(id: $id, default: $default) {
+        doc
+    }
+}
+
+"#,
+        &json!({
+            "id": input_id,
+            "default": ::ron::ser::to_string(&doc.0).unwrap(),
+        }),
+    )?;
+
+    // Extract the doc field.
+    let doc_string = ret.pointer("/data/getOrCreatePage/doc")
+        .ok_or(format_err!("unexpected json structure"))?
+        .as_str().unwrap()
+        .to_string();
+
+    Ok(Doc(::ron::de::from_str(&doc_string)?))
+}
+
+pub fn create_page_graphql(input_id: &str, doc: &Doc) -> Option<Doc> {
+    let client = reqwest::Client::new();
+    let text = client.post("http://127.0.0.1:8003/graphql/")
+        .json(&json!({
+            "query": r#"
+
+mutation ($id: String!, $doc: String!) {
+    createPage(id: $id, doc: $doc) {
+        doc
+    }
+}
+
+"#,
+            "variables": {
+                "id": input_id,
+                "doc": ::ron::ser::to_string(&doc.0).unwrap(),
+            },
+        }))
+        .send()
+        .ok()?
+        .text()
+        .ok()?;
+    
+    let ret: ::serde_json::Value = serde_json::from_str(&text).ok()?;
+    let node = ret.pointer("/data/createPage/doc")?;
+    let ron = node.as_str()?.to_string();
+    let body = ::ron::de::from_str(&ron).ok()?;
+    Some(Doc(body))
+}
+
 fn run_http_server(port: u16, client_proxy: bool) {
     let dist_dir: Box<Dir>;
     let template_dir: Box<Dir>;
@@ -174,8 +247,6 @@ fn run_http_server(port: u16, client_proxy: bool) {
     #[allow(unused)]
     #[allow(unreachable_code)]
     rouille::start_server(format!("0.0.0.0:{}", port), move |request| {
-        let db = db_connection();
-                
         let update_config_var = |data: &[u8]| -> Vec<u8> {
             let input = String::from_utf8_lossy(data);
             let output = input.replace(
@@ -205,7 +276,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
 
                 // Initialize the "hello world" post.
                 eprintln!("creating helloworld post for {:?}", id);
-                create_post(&db, &id, &default_doc());
+                create_page_graphql(&id, &default_doc());
 
                 return Response::redirect_302(format!("/{}", id));
             },
@@ -258,13 +329,12 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 )).to_owned().to_string();
 
                 // Preload content into the file using the db connection.
-                let body: String = get_single_page(&db, &id)
-                    .map(|d| doc_to_markdown(&d.0).unwrap())
-                    .unwrap_or_else(|| {
-                        let doc = doc_span![DocGroup({"tag": "h1"}, [DocChars(&id)])];
-                        create_post(&db, &id, &Doc(doc.clone()));
-                        doc_to_markdown(&doc).unwrap()
-                    });
+                let body: String = doc_to_markdown(
+                    &get_or_create_page_graphql(
+                        &id,
+                        &Doc(doc_span![DocGroup({"tag": "h1"}, [DocChars(&id)])]),
+                    ).unwrap().0
+                ).unwrap();
                 
                 let payload = reg.render_template(&template, &json!({
                     "body": &body,
@@ -289,13 +359,12 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 )).to_owned().to_string();
 
                 // Preload content into the file using the db connection.
-                let body: String = get_single_page_graphql(&id)
-                    .map(|d| doc_as_html(&d.0))
-                    .unwrap_or_else(|| {
-                        let doc = doc_span![DocGroup({"tag": "h1"}, [DocChars(&id)])];
-                        create_post(&db, &id, &Doc(doc.clone()));
-                        doc_as_html(&doc)
-                    });
+                let body: String = doc_as_html(
+                    &get_or_create_page_graphql(
+                        &id,
+                        &Doc(doc_span![DocGroup({"tag": "h1"}, [DocChars(&id)])]),
+                    ).unwrap().0
+                );
                 
                 let payload = reg.render_template(&template, &json!({
                     "body": &body,

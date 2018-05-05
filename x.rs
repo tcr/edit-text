@@ -100,6 +100,10 @@ fn run() -> Result<(), Error> {
     let release = args.iter().find(|x| *x == "--release").is_some();
     args = args.into_iter().filter(|x| *x != "--release").collect();
 
+    // Respect the CLICOLOR env variable.
+    let force_color = ::std::env::var("CLICOLOR").map(|x| x == "1").unwrap_or(false);
+    let force_color_flag = if force_color { Some("--color=always") } else { None };
+
     // Run the subcommand.
     let parsed_args = Cli::from_iter(args.iter());
     match parsed_args {
@@ -243,9 +247,11 @@ fn run() -> Result<(), Error> {
                 r"
                     cd mercutio-server
                     export RUST_BACKTRACE=1
-                    cargo build {release_flag} --bin mercutio-server {args}
+                    cargo build {force_color_flag} {release_flag} \
+                        --bin mercutio-server {args}
                 ",
                 release_flag = release_flag,
+                force_color_flag = force_color_flag,
                 args = args,
             )?;
         }
