@@ -5,7 +5,6 @@ use std::path::Path;
 use std::sync::Arc;
 use std::sync::Mutex;
 use mercutio_common::{
-    SyncClientCommand,
     SyncServerCommand,
 };
 
@@ -51,6 +50,7 @@ extern crate crossbeam_channel;
 #[macro_use]
 extern crate diesel;
 extern crate dotenv;
+#[macro_use]
 extern crate failure;
 #[macro_use]
 extern crate lazy_static;
@@ -83,4 +83,5 @@ pub mod db;
 pub mod graphql;
 pub mod schema;
 pub mod sync;
+pub mod sync_state;
 pub mod util;

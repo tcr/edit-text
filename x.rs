@@ -235,7 +235,7 @@ fn run() -> Result<(), Error> {
             // TODO if we can reliably check for --client-proxy or -c, we should
             // not build on first launch.
 
-            eprintln!("STARTING SERVER");
+            eprintln!("Starting server...");
 
             execute!(
                 r"
@@ -250,15 +250,7 @@ fn run() -> Result<(), Error> {
                 args = args,
             )?;
 
-            eprintln!("DONE WITH SERVER");
-
-
-            // TODO figure out why ctrl+c here doesn't kill YES
-            // execute!(
-            //     r"
-            //         yes
-            //     ",
-            // )?;
+            eprintln!("Server exited.");
         }
 
         Cli::MercutioServerBuild { args } => {

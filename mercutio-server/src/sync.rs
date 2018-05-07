@@ -4,6 +4,7 @@ use crate::{
     db::*,
     util::*,
     graphql::sync_graphql_server,
+    sync_state::*,
 };
 
 use extern::{
@@ -17,23 +18,18 @@ use extern::{
         sqlite::SqliteConnection,
     },
     failure::Error,
-    juniper,
     mercutio_common::{
         SyncClientCommand,
         SyncServerCommand,
     },
     oatie::{
-        OT,
         doc::*,
-        schema::RtfSchema,
-        validate::validate_doc,
     },
     simple_ws::*,
     rand::{thread_rng, Rng},
     r2d2,
     r2d2_diesel::ConnectionManager,
     ron,
-    rouille,
     serde_json,
     std::{
         collections::{HashMap, VecDeque},
@@ -45,7 +41,7 @@ use extern::{
     ws,
 };
 
-type DbPool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
+pub type DbPool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
 
 const PAGE_TITLE_LEN: usize = 100;
 
@@ -55,26 +51,6 @@ pub fn default_new_doc(id: &str) -> Doc {
             DocChars(id),
         ])
     ])
-}
-
-/// Transform an operation incrementally against each interim document operation.
-pub fn update_operation_to_current(
-    mut op: Op,
-    history: &HashMap<usize, Op>,
-    target_version: usize,
-    mut input_version: usize,
-) -> Op {
-    // Transform against each interim operation.
-    while input_version < target_version {
-        // If the version exists (it should) transform against it.
-        let version_op = history.get(&input_version)
-            .expect("Version missing from history");
-        let (updated_op, _) = Op::transform::<RtfSchema>(version_op, &op);
-        op = updated_op;
-
-        input_version += 1;
-    }
-    op
 }
 
 pub fn valid_page_id(input: &str) -> bool {
@@ -99,31 +75,34 @@ fn spawn_bus_to_client(
     })
 }
 
-pub struct SyncState {
-    ops: VecDeque<(String, usize, Op)>,
-    version: usize,
-    clients: HashMap<String, usize>, // client_id -> version
-    history: HashMap<usize, Op>,
-    doc: Doc,
-    client_bus: Bus<SyncClientCommand>,
-}
-
-impl SyncState {
-    fn prune_history(&mut self) {
-        if let Some(min_version) = self.clients.iter().map(|(_, &v)| v).min() {
-            for k in self.history.keys().cloned().collect::<Vec<usize>>() {
-                if k < min_version {
-                    // eprintln!("(^) evicted document version {}", k);
-                    self.history.remove(&k);
-                }
-            }
-        }
-    }
-}
-
 struct ClientSocket {
     client_id: String,
     sync_state_mutex: SharedSyncState,
+}
+
+impl ClientSocket {
+    fn initialize(&self, out: Arc<Mutex<ws::Sender>>) -> Result<(), Error> {
+        let mut sync_state = self.sync_state_mutex.lock().unwrap();
+        let version = sync_state.version;
+
+        // Initialize client state on outgoing websocket.
+        let command = SyncClientCommand::Init(
+            self.client_id.clone(),
+            sync_state.doc.0.clone(),
+            version,
+        );
+        out.lock().unwrap()
+            .send(serde_json::to_string(&command).unwrap())?;
+
+        // Register with clients list.
+        sync_state.clients.insert(self.client_id.clone(), version);
+
+        // Forward packets from sync bus to all clients.
+        let rx = { sync_state.client_bus.add_rx() };
+        spawn_bus_to_client(out, rx);
+
+        Ok(())
+    }
 }
 
 impl SimpleSocket for ClientSocket {
@@ -156,44 +135,24 @@ impl SimpleSocket for ClientSocket {
             client_id, page_id
         );
 
+        // Create the client sockets.
         let (tx_client, rx_client) = unbounded();
-        tx_db.send(DbMessage::Initialize {
+
+        // Ask the db to initialize us with the sync state bundle.
+        let _ = tx_db.send(DbMessage::Initialize {
             id: page_id.clone(),
             receiver: tx_client,
         });
+        let sync_state_mutex = rx_client.recv().expect("Expected a sync state bundle.");
 
-        let sync_state_mutex = if let Ok(sync_state_mutex) = rx_client.recv() {
-            sync_state_mutex
-        } else {
-            panic!("Expected a sync state bundle.");
-        };
-
-        // Forcibly set this new client's initial document state.
-        {
-            let out = out.clone();
-            let mut sync_state = sync_state_mutex.lock().unwrap();
-            let version = sync_state.version;
-
-            // Initialize server with client
-            let command = SyncClientCommand::Init(
-                client_id.clone(),
-                sync_state.doc.0.clone(),
-                version,
-            );
-            out.lock().unwrap().send(serde_json::to_string(&command).unwrap())?;
-
-            // Add to clients list.
-            sync_state.clients.insert(client_id.clone(), version);
-
-            // Forward packets from sync bus to all clients.
-            let rx = { sync_state.client_bus.add_rx() };
-            spawn_bus_to_client(out, rx);
-        }
-
-        Ok(ClientSocket {
+        // Initialize this client.
+        let client = ClientSocket {
             client_id,
             sync_state_mutex,
-        })
+        };
+        client.initialize(out)?;
+
+        Ok(client)
     }
 
     fn handle_message(&mut self, data: &[u8]) -> Result<(), Error> {
@@ -225,6 +184,24 @@ impl SimpleSocket for ClientSocket {
 
         Ok(())
     }
+}
+
+
+type SharedSyncState = Arc<Mutex<SyncState>>;
+type PageMap = HashMap<String, SharedSyncState>;
+
+enum DbMessage {
+    // Updated the document
+    Update {
+        id: String,
+        body: Doc,
+    },
+
+    // Intiialize a client with a page ID.
+    Initialize {
+        id: String,
+        receiver: CCSender<SharedSyncState>,
+    },
 }
 
 /// Creates a new page entry in the page map and spawns a sync
@@ -290,39 +267,12 @@ fn spawn_sync_server(
 
                 // Go through the deque and update our operations.
                 while let Some((client_id, input_version, op)) = sync_state.ops.pop_front() {
-                    // TODO move this into sync_state!
-                    let op = {
-                        let target_version = sync_state.version;
-
-                        // Update the operation so we can apply it to the document.
-                        let op = update_operation_to_current(
-                            op,
-                            &sync_state.history,
-                            target_version,
-                            input_version
-                        );
-
-                        if let Some(version) = sync_state.clients.get_mut(&client_id) {
-                            *version = target_version;
-                        } else {
-                            // TODO what circumstances would it be missing? Client closed
-                            // and removed itself from list but operation used later?
-                        }
-
-                        // Prune history entries.
-                        sync_state.prune_history();
-                        sync_state.history.insert(target_version, op.clone());
-
-                        // Update the document with this operation.
-                        sync_state.doc = Op::apply(&sync_state.doc, &op);
-                        sync_state.version = target_version + 1;
-
-                        // Gut check.
-                        // TODO we can evict the client if this happens instead of aborting.
-                        validate_doc(&sync_state.doc).expect("Validation error");
-
-                        op
-                    };
+                    // TODO we should evict the client if this fails.
+                    let op = sync_state.commit(
+                        &client_id,
+                        op,
+                        input_version,
+                    ).expect("Could not commit client operation.");
 
                     if let Ok(doc) =
                         remove_carets(&sync_state.doc)
@@ -349,25 +299,8 @@ fn spawn_sync_server(
         })
 }
 
-type SharedSyncState = Arc<Mutex<SyncState>>;
-type PageMap = HashMap<String, SharedSyncState>;
-
-enum DbMessage {
-    // Updated the document
-    Update {
-        id: String,
-        body: Doc,
-    },
-
-    // Intiialize a client with a page ID.
-    Initialize {
-        id: String,
-        receiver: CCSender<SharedSyncState>,
-    },
-}
-
 fn spawn_update_db(
-    db_pool: r2d2::Pool<ConnectionManager<SqliteConnection>>,
+    db_pool: DbPool,
     tx_db: CCSender<DbMessage>,
     rx_db: CCReceiver<DbMessage>,
 ) -> JoinHandle<()> {
@@ -396,7 +329,7 @@ fn spawn_update_db(
                             )
                         };
 
-                    receiver.send(shared_sync_state);
+                    let _ = receiver.send(shared_sync_state);
                 }
             }
         }
@@ -416,6 +349,7 @@ pub fn sync_socket_server(port: u16, _period: usize) {
     let (tx_db, rx_db) = unbounded::<DbMessage>();
     spawn_update_db(db_pool.clone(), tx_db.clone(), rx_db);
 
+    // Start the sync GraphQL server.
     ::std::thread::spawn({
         take!(=db_pool);
         move || {
@@ -423,7 +357,7 @@ pub fn sync_socket_server(port: u16, _period: usize) {
         }
     });
 
-    // Listen to incoming clients.
+    // Start the sync WebSocket server.
     let _ = ws::listen(url, {
         take!(=tx_db);
         move |out| {
