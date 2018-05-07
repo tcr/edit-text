@@ -234,7 +234,6 @@ impl ClientDoc {
         use ::oatie::validate::*;
         validate_doc(&self.doc).expect("Validation error BEFORE op application");
 
-
         // Apply the new operation.
         self.doc = Op::apply(&self.doc, op);
 

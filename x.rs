@@ -284,6 +284,13 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::Test { args } => {
+            eprintln!("building ./x.rs server...");
+            execute!(
+                r"
+                    ./x.rs server-build
+                ",
+            )?;
+
             eprintln!("running ./x.rs server...");
             let _server_guard = command!(
                 r"

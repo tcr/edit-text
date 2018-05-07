@@ -19,10 +19,11 @@ use extern::{
 
 pub struct SyncState {
     pub version: usize,
-    pub clients: HashMap<String, usize>, // client_id -> version
+    pub clients: HashMap<String, usize>, // client_id -> client_version
     pub history: HashMap<usize, Op>,
     pub doc: Doc,
 
+    // TODO move these out of SyncState
     pub ops: VecDeque<(String, usize, Op)>,
     pub client_bus: Bus<SyncToUserCommand>,
 }
@@ -46,7 +47,7 @@ impl SyncState {
         mut input_version: usize,
         target_version: usize,
     ) -> Result<Op, Error> {
-        // Transform against each interim operation.
+        // Transform against all more recent operations.
         while input_version < target_version {
             // If the version exists (it should) transform against it.
             let version_op = self.history.get(&input_version)
