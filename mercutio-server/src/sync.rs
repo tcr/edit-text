@@ -4,7 +4,7 @@ use crate::{
     db::*,
     util::*,
     graphql::sync_graphql_server,
-    sync_state::*,
+    state::*,
 };
 
 use extern::{
@@ -19,8 +19,8 @@ use extern::{
     },
     failure::Error,
     mercutio_common::{
-        SyncClientCommand,
-        SyncServerCommand,
+        SyncToUserCommand,
+        UserToSyncCommand,
     },
     oatie::{
         doc::*,
@@ -62,19 +62,6 @@ pub fn valid_page_id(input: &str) -> bool {
         .all(|x| x.is_digit(10) || x.is_ascii_alphabetic() || x == '_')
 }
 
-/// Fanout messages from a bus to a websocket sender.
-fn spawn_bus_to_client(
-    out: Arc<Mutex<ws::Sender>>,
-    mut rx: BusReader<SyncClientCommand>,
-) -> JoinHandle<Result<(), Error>> {
-    thread::spawn(move || -> Result<(), Error> {
-        while let Ok(command) = rx.recv() {
-            out.lock().unwrap().send(serde_json::to_string(&command).unwrap())?;
-        }
-        Ok(())
-    })
-}
-
 struct ClientSocket {
     client_id: String,
     sync_state_mutex: SharedSyncState,
@@ -86,7 +73,7 @@ impl ClientSocket {
         let version = sync_state.version;
 
         // Initialize client state on outgoing websocket.
-        let command = SyncClientCommand::Init(
+        let command = SyncToUserCommand::Init(
             self.client_id.clone(),
             sync_state.doc.0.clone(),
             version,
@@ -99,9 +86,22 @@ impl ClientSocket {
 
         // Forward packets from sync bus to all clients.
         let rx = { sync_state.client_bus.add_rx() };
-        spawn_bus_to_client(out, rx);
+        ClientSocket::spawn_bus_to_client(out, rx);
 
         Ok(())
+    }
+
+    /// Fanout messages from a bus to a websocket sender.
+    fn spawn_bus_to_client(
+        out: Arc<Mutex<ws::Sender>>,
+        mut rx: BusReader<SyncToUserCommand>,
+    ) -> JoinHandle<Result<(), Error>> {
+        thread::spawn(move || -> Result<(), Error> {
+            while let Ok(command) = rx.recv() {
+                out.lock().unwrap().send(serde_json::to_string(&command).unwrap())?;
+            }
+            Ok(())
+        })
     }
 }
 
@@ -156,16 +156,16 @@ impl SimpleSocket for ClientSocket {
     }
 
     fn handle_message(&mut self, data: &[u8]) -> Result<(), Error> {
-        let msg: SyncServerCommand = serde_json::from_slice(&data)?;
+        let msg: UserToSyncCommand = serde_json::from_slice(&data)?;
 
         log_sync!(ClientPacket(msg.clone()));
 
         match msg {
-            SyncServerCommand::Commit(client_id, op, version) => {
+            UserToSyncCommand::Commit(client_id, op, version) => {
                 let mut sync_state = self.sync_state_mutex.lock().unwrap();
                 sync_state.ops.push_back((client_id.clone(), version, op.clone()));
             }
-            SyncServerCommand::TerminateProxy => {
+            UserToSyncCommand::TerminateProxy => {
                 // ignore this, only for proxy
             }
         }
@@ -284,7 +284,7 @@ fn spawn_sync_server(
                     }
 
                     // Broadcast to all connected websockets.
-                    let command = SyncClientCommand::Update(
+                    let command = SyncToUserCommand::Update(
                         sync_state.doc.0.clone(),
                         sync_state.version,
                         client_id,

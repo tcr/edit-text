@@ -5,7 +5,7 @@ use std::path::Path;
 use std::sync::Arc;
 use std::sync::Mutex;
 use mercutio_common::{
-    SyncServerCommand,
+    UserToSyncCommand,
 };
 
 lazy_static! {
@@ -20,7 +20,7 @@ pub enum LogSync {
     Launch,
     ServerSpawn,
     ClientConnect,
-    ClientPacket(SyncServerCommand),
+    ClientPacket(UserToSyncCommand),
     Debug(String),
     Spawn,
 }
@@ -83,5 +83,5 @@ pub mod db;
 pub mod graphql;
 pub mod schema;
 pub mod sync;
-pub mod sync_state;
+pub mod state;
 pub mod util;

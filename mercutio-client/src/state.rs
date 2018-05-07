@@ -4,7 +4,6 @@ use oatie::OT;
 use oatie::doc::*;
 use oatie::schema::RtfSchema;
 use std::mem;
-use super::*;
 use oatie::validate::{validate_doc};
 
 #[derive(Debug)]

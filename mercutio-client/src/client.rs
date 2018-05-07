@@ -7,9 +7,9 @@ use oatie::validate::validate_doc;
 use crate::markdown;
 use mercutio_common::doc_as_html;
 
-// Commands to send back to native.
+// Commands received from frontend.
 #[derive(Clone, Serialize, Deserialize, Debug)]
-pub enum NativeCommand {
+pub enum FrontendToUserCommand {
     // Connect(String),
     Keypress(u32, bool, bool, bool), // code, meta, shift, alt
     Button(u32),
@@ -22,19 +22,19 @@ pub enum NativeCommand {
     RequestMarkdown,
 }
 
-// Commands to send to JavaScript.
+// Commands to send to Frontend.
 #[derive(Clone, Serialize, Deserialize, Debug)]
-pub enum ClientCommand {
+pub enum UserToFrontendCommand {
     Init(String),
     Controls {
         keys: Vec<(u32, bool, bool)>,
         buttons: Vec<(usize, String, bool)>,
     },
-    PromptString(String, String, NativeCommand),
+    PromptString(String, String, FrontendToUserCommand),
     Update(String, Option<Op>),
     MarkdownUpdate(String),
     Error(String),
-    SyncServerCommand(SyncServerCommand),
+    UserToSyncCommand(UserToSyncCommand),
 }
 
 // Shorthandler
@@ -218,19 +218,19 @@ pub fn button_handlers<C: ClientImpl>(
 
 fn native_command<C: ClientImpl>(
     client: &mut C,
-    req: NativeCommand,
+    req: FrontendToUserCommand,
 ) -> Result<(), Error> {
     match req {
-        NativeCommand::RenameGroup(tag, _) => {
+        FrontendToUserCommand::RenameGroup(tag, _) => {
             client.client_op(|doc| replace_block(doc, &tag))?;
         }
-        NativeCommand::Button(index) => {
+        FrontendToUserCommand::Button(index) => {
             // Find which button handler to respond to this command.
             button_handlers(None)
                 .get(index as usize)
                 .map(|handler| handler.1(client));
         }
-        NativeCommand::Keypress(key_code, meta_key, shift_key, alt_key) => {
+        FrontendToUserCommand::Keypress(key_code, meta_key, shift_key, alt_key) => {
             println!("key: {:?} {:?} {:?} {:?}", key_code, meta_key, shift_key, alt_key);
 
             // Find which key handler to process this command.
@@ -241,26 +241,26 @@ fn native_command<C: ClientImpl>(
                 }
             }
         }
-        NativeCommand::Character(char_code) => {
+        FrontendToUserCommand::Character(char_code) => {
             client.client_op(|doc| add_char(doc, char_code))?;
         }
-        NativeCommand::RandomTarget(pos) => {
+        FrontendToUserCommand::RandomTarget(pos) => {
             let cursors = random_cursor(&client.state().client_doc.doc)?;
             let idx = (pos * (cursors.len() as f64)) as usize;
 
             client.client_op(|doc| cur_to_caret(doc, &cursors[idx]))?;
         }
-        NativeCommand::Target(cur) => {
+        FrontendToUserCommand::Target(cur) => {
             client.client_op(|doc| cur_to_caret(doc, &cur))?;
         }
-        NativeCommand::Monkey(setting) => {
+        FrontendToUserCommand::Monkey(setting) => {
             println!("received monkey setting: {:?}", setting);
             client.state().monkey.store(setting, Ordering::Relaxed);
         }
-        NativeCommand::RequestMarkdown => {
+        FrontendToUserCommand::RequestMarkdown => {
             let markdown = markdown::doc_to_markdown(&client.state().client_doc.doc.0)?;
             // TODO
-            client.send_client(&ClientCommand::MarkdownUpdate(markdown))?;
+            client.send_client(&UserToFrontendCommand::MarkdownUpdate(markdown))?;
         }
     }
     Ok(())
@@ -268,8 +268,8 @@ fn native_command<C: ClientImpl>(
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Task {
-    SyncClientCommand(SyncClientCommand),
-    NativeCommand(NativeCommand),
+    SyncToUserCommand(SyncToUserCommand),
+    FrontendToUserCommand(FrontendToUserCommand),
 }
 
 pub struct Client {
@@ -284,12 +284,12 @@ pub struct Client {
 /// Most methods are implemented on the trait, not its implementors.
 pub trait ClientImpl {
     fn state(&mut self) -> &mut Client;
-    fn send_client(&self, req: &ClientCommand) -> Result<(), Error>;
-    fn send_sync(&self, req: SyncServerCommand) -> Result<(), Error>;
+    fn send_client(&self, req: &UserToFrontendCommand) -> Result<(), Error>;
+    fn send_sync(&self, req: UserToSyncCommand) -> Result<(), Error>;
 
     fn setup_controls(&self, state: Option<(String, bool)>) where Self: Sized {
         self
-            .send_client(&ClientCommand::Controls {
+            .send_client(&UserToFrontendCommand::Controls {
                 keys: key_handlers::<Self>()
                     .into_iter()
                     .map(|x| (x.0, x.1, x.2))
@@ -309,7 +309,7 @@ pub trait ClientImpl {
 
         match value.clone() {
             // Handle commands from Native.
-            Task::NativeCommand(command) => {
+            Task::FrontendToUserCommand(command) => {
                 if self.state().client_id == "$$$$$$" {
                     println!("NATIVE COMMAND TOO EARLY");
                     return Ok(());
@@ -319,8 +319,8 @@ pub trait ClientImpl {
             }
 
             // Sync sent us an Update command with a new document version.
-            Task::SyncClientCommand(
-                SyncClientCommand::Init(new_client_id, doc_span, version)
+            Task::SyncToUserCommand(
+                SyncToUserCommand::Init(new_client_id, doc_span, version)
             ) => {
                 self.state().client_id = new_client_id.clone();
                 self.state().client_doc.init(&Doc(doc_span), version);
@@ -339,18 +339,18 @@ pub trait ClientImpl {
                     self.client_op(|doc| init_caret(doc)).unwrap();
                 }
                 
-                let res = ClientCommand::Init(new_client_id);
+                let res = UserToFrontendCommand::Init(new_client_id);
                 self.send_client(&res).unwrap();
 
                 // Native drives client state.
                 let state = self.state();
-                let res = ClientCommand::Update(doc_as_html(&state.client_doc.doc.0), None);
+                let res = UserToFrontendCommand::Update(doc_as_html(&state.client_doc.doc.0), None);
                 self.send_client(&res).unwrap();
             }
 
             // Sync sent us an Update command with a new document version.
-            Task::SyncClientCommand(
-                SyncClientCommand::Update(doc_span, version, client_id, input_op)
+            Task::SyncToUserCommand(
+                SyncToUserCommand::Update(doc_span, version, client_id, input_op)
             ) => {
                 if self.state().client_id == "$$$$$$" {
                     return Ok(());
@@ -385,7 +385,7 @@ pub trait ClientImpl {
 
                 // Native drives client state.
                 let state = self.state();
-                let res = ClientCommand::Update(doc_as_html(&state.client_doc.doc.0), None);
+                let res = UserToFrontendCommand::Update(doc_as_html(&state.client_doc.doc.0), None);
                 self.send_client(&res).unwrap();
             }
         }
@@ -411,7 +411,7 @@ pub trait ClientImpl {
         log_wasm!(Debug("CLIENTOP".to_string()));
         let client_id = self.state().client_id.clone();
         let version = self.state().client_doc.version;
-        Ok(self.send_sync(SyncServerCommand::Commit(
+        Ok(self.send_sync(UserToSyncCommand::Commit(
             client_id,
             local_op,
             version,
@@ -463,7 +463,7 @@ pub trait ClientImpl {
 
         // Render the update.
         let state = self.state();
-        let res = ClientCommand::Update(doc_as_html(&state.client_doc.doc.0), Some(op));
+        let res = UserToFrontendCommand::Update(doc_as_html(&state.client_doc.doc.0), Some(op));
         self.send_client(&res)?;
 
         // Send any queued payloads.

@@ -4,7 +4,7 @@ use extern::{
     bus::{Bus},
     failure::Error,
     mercutio_common::{
-        SyncClientCommand,
+        SyncToUserCommand,
     },
     oatie::{
         OT,
@@ -24,7 +24,7 @@ pub struct SyncState {
     pub doc: Doc,
 
     pub ops: VecDeque<(String, usize, Op)>,
-    pub client_bus: Bus<SyncClientCommand>,
+    pub client_bus: Bus<SyncToUserCommand>,
 }
 
 impl SyncState {
