@@ -85,7 +85,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="x.html" class="active"><strong aria-hidden="true">1.1.</strong> Build System ./x.rs</a></li><li><a href="oatie.html"><strong aria-hidden="true">1.2.</strong> Working with Documents</a></li><li><a href="ot.html"><strong aria-hidden="true">1.3.</strong> Operational Transform</a></li><li><a href="system.html"><strong aria-hidden="true">1.4.</strong> System Diagram</a></li></ol></li><li><a href="diaries.html"><strong aria-hidden="true">2.</strong> Development Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">2.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.3.</strong> Carets and You</a></li><li><a href="diary-testing.html"><strong aria-hidden="true">2.4.</strong> Testing</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="x.html" class="active"><strong aria-hidden="true">1.1.</strong> Build System ./x.rs</a></li><li><a href="system.html"><strong aria-hidden="true">1.2.</strong> System Diagram</a></li><li><a href="oatie.html"><strong aria-hidden="true">1.3.</strong> Working with Documents</a></li><li><a href="ot.html"><strong aria-hidden="true">1.4.</strong> Operational Transform</a></li></ol></li><li><a href="diaries.html"><strong aria-hidden="true">2.</strong> Development Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">2.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.3.</strong> Carets and You</a></li><li><a href="diary-testing.html"><strong aria-hidden="true">2.4.</strong> Testing</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -148,7 +148,59 @@
                 <div id="content" class="content">
                     <main>
                         <a class="header" href="x.html#build-tool-xrs" id="build-tool-xrs"><h1>Build Tool ./x.rs</h1></a>
-<p>The build tool.</p>
+<p><code>./x.rs</code> is the build tool. In order to run it, you'll need to install <a href="https://github.com/DanielKeep/cargo-script"><code>cargo-script</code></a>:</p>
+<pre><code>cargo install cargo-script
+</code></pre>
+<p>Then while you're in the root of the <code>edit-text/</code> respository, from your command line you can run:</p>
+<pre><code class="language-sh">./x.rs help
+</code></pre>
+<a class="header" href="x.html#server-building" id="server-building"><h2>Server building</h2></a>
+<p>To launch the edit-text server:</p>
+<pre><code class="language-sh">./x.rs server-build
+</code></pre>
+<p>To run it on port <code>8000</code>:</p>
+<pre><code class="language-sh">./x.rs server
+</code></pre>
+<a class="header" href="x.html#frontend-build" id="frontend-build"><h2>Frontend build</h2></a>
+<p>The frontend is all the JavaScript code that runs in the browser, and optionally including the WASM build system. To build this, you should run <code>npm install</code> in the <code>mercutio-frontend/</code> directory:</p>
+<pre><code class="language-sh">cd mercutio-frontend
+npm install
+</code></pre>
+<p>This will locally install Webpack, Typescript, and all JavaScript dependencies required by the frontend. To then build the frontend, run this from the root directory:</p>
+<pre><code class="language-sh">./x.rs frontend-build
+</code></pre>
+<p>If you want to launch a long-lived script to build the frontend and rebuild each time a relevant file changes:</p>
+<pre><code class="language-sh">./x.rs frontend-watch
+</code></pre>
+<p>Building the frontend component may also require that you use build the WASM bundle from <code>mercutio-client</code>, which can be generated with this command:</p>
+<pre><code class="language-sh">./x.rs wasm-build
+</code></pre>
+<p>This will compile the wasm bundle and save it to <code>mercutio-frontend/src/bindgen</code>, which will be linked with the frontend code bundle (generated using <code>frontend-build</code> or <code>frontend-watch</code>).</p>
+<a class="header" href="x.html#testing" id="testing"><h2>Testing</h2></a>
+<p>This command will run comprehensive end-to-end tests. It's used by CI to test all new pull requests:</p>
+<pre><code class="language-sh">./x.rs test
+</code></pre>
+<a class="header" href="x.html#client-proxy" id="client-proxy"><h2>Client Proxy</h2></a>
+<p>If you are testing changes to the <code>mercutio-client</code> library, you have the option of choosing between running client code in the browser (via WebAssembly) or running it in a local Rust process, having all commands proxied through websockets.</p>
+<pre><code class="language-sh">./x.rs client-proxy
+</code></pre>
+<a class="header" href="x.html#building-the-book" id="building-the-book"><h2>Building the book</h2></a>
+<p>You can build the book with the book-build command:</p>
+<pre><code class="language-sh">./x.rs book-build
+</code></pre>
+<p>Or watch for all changes as they are being made with book-watch.</p>
+<pre><code class="language-sh">./x.rs book-watch
+</code></pre>
+<p>By navigating to <a href="http://localhost:3000/">http://localhost:3000/</a>, you'll see the page refresh automatically as you edit markdown files under <code>docs-src/</code>.</p>
+<a class="header" href="x.html#deploy" id="deploy"><h2>Deploy</h2></a>
+<p>You can deploy edit-text to a Dokku server using <code>./x.rs deploy</code>.</p>
+<ul>
+<li>This first cross-compiles the mercutio-server binary using a local Docker image.</li>
+<li>It then uploads the binary using the <code>dokku tar:in</code> command on a remote server (not the Git endpoint).</li>
+<li>You can configure the dokku URL using the <code>EDIT_DEPLOY_URL</code> environment variable.</li>
+<li>You can configure the dokku application name using the <code>EDIT_DOKKU_NAME</code> environment variable.</li>
+</ul>
+<a class="header" href="x.html#help" id="help"><h2>Help</h2></a>
 <pre><code>edit-text build scripts 0.1.0
 Build scripts for mercutio and oatie
 
@@ -186,7 +238,7 @@ SUBCOMMANDS:
                         
 
                         
-                            <a rel="next" href="oatie.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="system.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -204,7 +256,7 @@ SUBCOMMANDS:
                 
 
                 
-                    <a href="oatie.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a href="system.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 
@@ -224,21 +276,6 @@ SUBCOMMANDS:
             }
         </script>
 
-        
-        <!-- Livereload script (if served using the cli tool) -->
-        <script type="text/javascript">
-            var socket = new WebSocket("ws://localhost:3001");
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload(true); // force reload from server (not from cache)
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
         
 
         

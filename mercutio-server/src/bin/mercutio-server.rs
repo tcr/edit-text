@@ -30,9 +30,14 @@ extern crate serde_json;
 
 use failure::Error;
 use include_dir_macro::include_dir;
-use mercutio_common::doc_as_html;
+use mercutio_common::{
+    doc_as_html,
+    markdown::{
+        markdown_to_doc,
+        doc_to_markdown,
+    },
+};
 use mercutio_server::sync::*;
-use mercutio_server::markdown::{markdown_to_doc, doc_to_markdown};
 use mime_guess::guess_mime_type;
 use oatie::doc::*;
 use oatie::validate::validate_doc;

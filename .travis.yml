@@ -23,4 +23,5 @@ script:
   - sleep 3 # wait to start
 
   # Run test
+  - ./x.rs test-build
   - ./x.rs test

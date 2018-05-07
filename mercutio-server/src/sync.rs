@@ -1,8 +1,6 @@
 #![allow(deprecated)]
 
 use crate::{
-    SyncClientCommand,
-    SyncServerCommand,
     db::*,
     util::*,
     graphql::sync_graphql_server,
@@ -20,6 +18,10 @@ use extern::{
     },
     failure::Error,
     juniper,
+    mercutio_common::{
+        SyncClientCommand,
+        SyncServerCommand,
+    },
     oatie::{
         OT,
         doc::*,

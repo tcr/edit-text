@@ -52,6 +52,9 @@ enum Cli {
     #[structopt(name = "client-proxy", about = "Run client code in your terminal.")]
     ClientProxy { args: Vec<String> },
 
+    #[structopt(name = "client-proxy-build", about = "Build the client proxy.")]
+    ClientProxyBuild { args: Vec<String> },
+
     #[structopt(name = "oatie-build", about = "Build the operational transform library.")]
     OatieBuild { args: Vec<String> },
 
@@ -70,6 +73,9 @@ enum Cli {
 
     #[structopt(name = "test")]
     Test { args: Vec<String> },
+
+    #[structopt(name = "test-build")]
+    TestBuild { args: Vec<String> },
 
     #[structopt(name = "frontend-build", about = "Bundle the frontend JavaScript code.")]
     FrontendBuild { args: Vec<String> },
@@ -160,6 +166,21 @@ fn run() -> Result<(), Error> {
                     export MERCUTIO_WASM_LOG=0
                     export RUST_BACKTRACE=1
                     cargo run {release_flag} --bin mercutio-client-proxy -- {args}
+                ",
+                release_flag = release_flag,
+                args = args,
+            )?;
+        }
+
+        Cli::ClientProxyBuild { args } => {
+            let release_flag = if release { Some("--release") } else { None };
+
+            execute!(
+                r"
+                    cd mercutio-client
+                    export MERCUTIO_WASM_LOG=0
+                    export RUST_BACKTRACE=1
+                    cargo build {release_flag} --bin mercutio-client-proxy -- {args}
                 ",
                 release_flag = release_flag,
                 args = args,
@@ -274,7 +295,7 @@ fn run() -> Result<(), Error> {
             eprintln!("running ./x.rs server...");
             let _server_guard = command!(
                 r"
-                    cargo script ./x.rs -- server {args}
+                    ./x.rs server {args}
                 ",
                 args = args,
             )?.scoped_spawn().unwrap();
@@ -286,6 +307,43 @@ fn run() -> Result<(), Error> {
                 r"
                     cd tests
                     cargo run {args}
+                ",
+                args = args,
+            )?;
+        }
+
+        Cli::TestBuild { args } => {
+            execute!(
+                r"
+                    ./x.rs server-build {args}
+                ",
+                args = args,
+            )?;
+
+            execute!(
+                r"
+                    ./x.rs wasm-build {args}
+                ",
+                args = args,
+            )?;
+
+            execute!(
+                r"
+                    ./x.rs frontend-build {args}
+                ",
+                args = args,
+            )?;
+
+            execute!(
+                r"
+                    ./x.rs client-proxy-build {args}
+                ",
+                args = args,
+            )?;
+
+            execute!(
+                r"
+                    ./x.rs book-build {args}
                 ",
                 args = args,
             )?;

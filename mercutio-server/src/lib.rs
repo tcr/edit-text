@@ -4,6 +4,10 @@ use std::fs::File;
 use std::path::Path;
 use std::sync::Arc;
 use std::sync::Mutex;
+use mercutio_common::{
+    SyncClientCommand,
+    SyncServerCommand,
+};
 
 lazy_static! {
     static ref LOG_SYNC_FILE: Arc<Mutex<File>> = {
@@ -80,5 +84,3 @@ pub mod graphql;
 pub mod schema;
 pub mod sync;
 pub mod util;
-
-pub use mercutio_common::*;
