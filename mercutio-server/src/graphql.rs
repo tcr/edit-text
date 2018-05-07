@@ -1,43 +1,27 @@
-// TODO clean up these imports!
+//! GraphQL server.
 
 use crate::{
-    // SyncClientCommand,
-    // SyncServerCommand,
     db::*,
-    // util::*,
 };
 
 use extern::{
-    // bus::{Bus, BusReader},
-    // crossbeam_channel::{
-    //     Receiver as CCReceiver,
-    //     Sender as CCSender,
-    //     unbounded,
-    // },
     diesel::{
         sqlite::SqliteConnection,
     },
-    // failure::Error,
-    juniper,
-    oatie::{
-        // OT,
-        doc::*,
-        // schema::RtfSchema,
-        // validate::validate_doc,
+    juniper::{
+        self,
+        http::{GraphQLRequest},
+        FieldResult,
     },
-    // simple_ws::*,
-    // rand::{thread_rng, Rng},
+    oatie::{
+        doc::*,
+    },
     r2d2,
     r2d2_diesel::ConnectionManager,
-    // ron,
     rouille,
     serde_json,
+    std::io::prelude::*,
 };
-
-use std::io::prelude::*;
-use juniper::http::{GraphQLRequest};
-use juniper::{FieldResult};
-
 
 #[derive(GraphQLObject)]
 struct Page {

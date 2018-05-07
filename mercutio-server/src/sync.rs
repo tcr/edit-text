@@ -45,6 +45,8 @@ use extern::{
     ws,
 };
 
+type DbPool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
+
 const PAGE_TITLE_LEN: usize = 100;
 
 pub fn default_new_doc(id: &str) -> Doc {
@@ -56,8 +58,7 @@ pub fn default_new_doc(id: &str) -> Doc {
 }
 
 /// Transform an operation incrementally against each interim document operation.
-// TODO upgrade_operation_to_current or something
-pub fn update_operation(
+pub fn update_operation_to_current(
     mut op: Op,
     history: &HashMap<usize, Op>,
     target_version: usize,
@@ -279,6 +280,8 @@ fn spawn_sync_server(
             // Handle incoming packets.
             loop {
                 // Wait a set duration between transforms.
+                // Note that this is for artifically forcing a client-side queue of operations.
+                // It's not needed for operation.
                 thread::sleep(Duration::from_millis(period as u64));
 
                 // let now = Instant::now();
@@ -287,42 +290,40 @@ fn spawn_sync_server(
 
                 // Go through the deque and update our operations.
                 while let Some((client_id, input_version, op)) = sync_state.ops.pop_front() {
-                    let target_version = sync_state.version;
+                    // TODO move this into sync_state!
+                    let op = {
+                        let target_version = sync_state.version;
 
-                    // log_sync!(Debug(format!("client {:?} sent {:?}", client_id, op)));
+                        // Update the operation so we can apply it to the document.
+                        let op = update_operation_to_current(
+                            op,
+                            &sync_state.history,
+                            target_version,
+                            input_version
+                        );
 
-                    // let res = action_sync(&doc, new_op, op_group).unwrap();
+                        if let Some(version) = sync_state.clients.get_mut(&client_id) {
+                            *version = target_version;
+                        } else {
+                            // TODO what circumstances would it be missing? Client closed
+                            // and removed itself from list but operation used later?
+                        }
 
-                    // Update the operation so we can apply it to the document.
-                    let op = update_operation(
-                        op,
-                        &sync_state.history,
-                        target_version,
-                        input_version
-                    );
+                        // Prune history entries.
+                        sync_state.prune_history();
+                        sync_state.history.insert(target_version, op.clone());
 
-                    if let Some(version) = sync_state.clients.get_mut(&client_id) {
-                        *version = target_version;
-                    } else {
-                        // TODO what circumstances would it be missing? Client closed
-                        // and removed itself from list but operation used later?
-                    }
+                        // Update the document with this operation.
+                        sync_state.doc = Op::apply(&sync_state.doc, &op);
+                        sync_state.version = target_version + 1;
 
-                    // Prune history entries.
-                    sync_state.prune_history();
-                    sync_state.history.insert(target_version, op.clone());
+                        // Gut check.
+                        // TODO we can evict the client if this happens instead of aborting.
+                        validate_doc(&sync_state.doc).expect("Validation error");
 
-                    // log_sync!(Debug(format!("updated op to {:?}", op)));
+                        op
+                    };
 
-                    // Update the document with this operation.
-                    sync_state.doc = Op::apply(&sync_state.doc, &op);
-                    sync_state.version = target_version + 1;
-
-                    validate_doc(&sync_state.doc).expect("Validation error");
-
-                    // log_sync!(Debug(format!("doc is now {:?}", sync_state.doc)));
-
-                    // if let Ok(md) = doc_to_markdown(&sync_state.doc.0) {
                     if let Ok(doc) =
                         remove_carets(&sync_state.doc)
                     {
@@ -331,7 +332,6 @@ fn spawn_sync_server(
                             body: doc,
                         })?;
                     }
-                    // }
 
                     // Broadcast to all connected websockets.
                     let command = SyncClientCommand::Update(
