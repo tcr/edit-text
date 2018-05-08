@@ -1,6 +1,7 @@
 //! mercutio-server standalone binary for web deployment.
 
 #![feature(proc_macro)]
+#![feature(proc_macro_non_items)]
 
 extern crate bus;
 extern crate crossbeam_channel;
