@@ -1,4 +1,5 @@
 #![feature(crate_in_paths, extern_in_paths, nll)]
+#![feature(non_modrs_mods)]
 
 use std::fs::File;
 use std::path::Path;
@@ -66,8 +67,10 @@ extern crate ron;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+#[macro_use]
 extern crate serde_json;
 extern crate simple_ws;
+extern crate reqwest;
 extern crate take_mut;
 #[macro_use]
 extern crate taken;
@@ -81,7 +84,6 @@ extern crate r2d2_diesel;
 // Macros can only be used after they are defined
 pub mod db;
 pub mod graphql;
-pub mod schema;
 pub mod sync;
 pub mod state;
 pub mod util;

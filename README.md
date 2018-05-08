@@ -12,10 +12,11 @@ edit-text is a collaborative rich text editor, written in Rust with a frontend i
 
 ## Getting Started
 
-You'll need `cargo-script` to run the build tool and `diesel-cli` for the Sqlite file:
+You'll need `cargo-script` to run the build script and a few other build tools:
 
 ```
 cargo install cargo-script
+cargo install wasm-bindgen-cli
 cargo install diesel_cli --no-default-features --features sqlite
 ```
 
@@ -58,15 +59,6 @@ In another terminal, run the client proxy:
 ```
 
 You will see any failures appear in the client-proxy code that would appear in the browser console when in WASM mode.
-
-## Directories
-
-* `oatie` — The Operational Transform library.
-* `mercutio` — Common components for Mercutio, the edit-text frontend.
-* `mercutio-server` — Contains the synchronization websocket server + static file server.
-* `mercutio-client` — Contains agnostic client code, including the `client-proxy` binary.
-* `mercutio-wasm` — A thin wrapper around `mercutio-client`, targeting WebAssembly.
-* `mercutio-frontend` — TypeScript code bundled with webpack, and static HTML templates.
 
 ### Compiling the frontend
 

@@ -237,16 +237,20 @@ fn run() -> Result<(), Error> {
 
             eprintln!("Starting server...");
 
+            let release_flag = if release { Some("--release") } else { None };
+
             execute!(
                 r"
                     cd mercutio-server
                     export MERCUTIO_WASM_LOG={use_log}
                     export RUST_BACKTRACE=1
-                    cargo run {release_flag} --bin mercutio-server -- \
+                    cargo run {force_color_flag} {release_flag} \
+                        --bin mercutio-server -- \
                         --period 100 {args}
                 ",
                 use_log = if log { 1 } else { 0 },
-                release_flag = if release { Some("--release") } else { None },
+                release_flag = release_flag,
+                force_color_flag = force_color_flag,
                 args = args,
             )?;
 
@@ -259,6 +263,7 @@ fn run() -> Result<(), Error> {
             execute!(
                 r"
                     cd mercutio-server
+                    export MERCUTIO_WASM_LOG=0
                     export RUST_BACKTRACE=1
                     cargo build {force_color_flag} {release_flag} \
                         --bin mercutio-server {args}
