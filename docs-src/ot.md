@@ -14,7 +14,7 @@ Next, we need to work around the undesirable constraint each operation made by a
 
 1. Start with doc version 100.
 1. Apply operation A. The doc version is now 101.
-2. See that operation B says its version was set to 100. We need to bring it up to date. We store a history of all previous operations, and so we transform operation B &mul; the operation to transition from version 100 &rarr; 101. The result is oepration B as though it operated on version 101, which we can directly apply to our document and send out to all clients to perform.
+2. See that operation B says its version was set to 100. We need to bring it up to date. We store a history of all previous operations, and so we transform operation B &mul; the operation to transition from version 100 &rarr; 101. The result is operation B as though it operated on version 101, which we can directly apply to our document and send out to all clients to perform.
 
 Client A becomes in sync easily:
 

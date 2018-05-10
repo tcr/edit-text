@@ -47,10 +47,16 @@ fn main() {
 #[structopt(name = "edit-text build scripts", about = "Build scripts for mercutio and oatie", author = "")]
 enum Cli {
     #[structopt(name = "wasm-build", about = "Compile the WebAssembly bundle.")]
-    Wasm,
+    Wasm {
+        #[structopt(name = "no-vendor")]
+        no_vendor: bool,
+    },
 
     #[structopt(name = "client-proxy", about = "Run client code in your terminal.")]
     ClientProxy { args: Vec<String> },
+
+    #[structopt(name = "client-proxy-build", about = "Build the client proxy.")]
+    ClientProxyBuild { args: Vec<String> },
 
     #[structopt(name = "oatie-build", about = "Build the operational transform library.")]
     OatieBuild { args: Vec<String> },
@@ -70,6 +76,9 @@ enum Cli {
 
     #[structopt(name = "test")]
     Test { args: Vec<String> },
+
+    #[structopt(name = "test-build")]
+    TestBuild { args: Vec<String> },
 
     #[structopt(name = "frontend-build", about = "Bundle the frontend JavaScript code.")]
     FrontendBuild { args: Vec<String> },
@@ -100,12 +109,18 @@ fn run() -> Result<(), Error> {
     let release = args.iter().find(|x| *x == "--release").is_some();
     args = args.into_iter().filter(|x| *x != "--release").collect();
 
+    // Respect the CLICOLOR env variable.
+    let force_color = ::std::env::var("CLICOLOR").map(|x| x == "1").unwrap_or(false);
+    let force_color_flag = if force_color { Some("--color=always") } else { None };
+
     // Run the subcommand.
     let parsed_args = Cli::from_iter(args.iter());
     match parsed_args {
-        Cli::Wasm => {
+        Cli::Wasm { no_vendor } => {
             // wasm must always be --release
             let release_flag = Some("--release");
+
+            eprintln!("Building...");
 
             execute!(
                 r"
@@ -123,28 +138,31 @@ fn run() -> Result<(), Error> {
                 release_flag = release_flag,
             )?;
 
-            execute!(
-                r"
-                    wasm-bindgen ./target/wasm32-unknown-unknown/release/mercutio.wasm \
-                        --out-dir ./mercutio-frontend/src/bindgen \
-                        --typescript
-                ",
-            )?;
+            if !no_vendor {
+                eprintln!("Vendoring...");
 
-            execute!(
-                r"
-                    cd ./mercutio-frontend/src/bindgen
-                    wasm2es6js \
-                        --base64 -o mercutio_bg.js mercutio_bg.wasm
-                ",
-            )?;
+                ::std::fs::create_dir_all("./mercutio-frontend/src/bindgen")?;
 
-            execute!(
-                r"
-                    cd ./mercutio-frontend/src/bindgen
-                    rm mercutio_bg.wasm
-                ",
-            )?;
+                execute!(
+                    r"
+                        wasm-bindgen ./target/wasm32-unknown-unknown/release/mercutio.wasm \
+                            --out-dir ./mercutio-frontend/src/bindgen \
+                            --typescript
+                    ",
+                )?;
+
+                execute!(
+                    r"
+                        cd ./mercutio-frontend/src/bindgen
+                        wasm2es6js \
+                            --base64 -o mercutio_bg.js mercutio_bg.wasm
+                    ",
+                )?;
+
+                ::std::fs::remove_file("./mercutio-frontend/src/bindgen/mercutio_bg.wasm")?;
+
+                eprintln!("Done.");
+            }
         }
 
         Cli::ClientProxy { args } => {
@@ -156,6 +174,21 @@ fn run() -> Result<(), Error> {
                     export MERCUTIO_WASM_LOG=0
                     export RUST_BACKTRACE=1
                     cargo run {release_flag} --bin mercutio-client-proxy -- {args}
+                ",
+                release_flag = release_flag,
+                args = args,
+            )?;
+        }
+
+        Cli::ClientProxyBuild { args } => {
+            let release_flag = if release { Some("--release") } else { None };
+
+            execute!(
+                r"
+                    cd mercutio-client
+                    export MERCUTIO_WASM_LOG=0
+                    export RUST_BACKTRACE=1
+                    cargo build {release_flag} --bin mercutio-client-proxy -- {args}
                 ",
                 release_flag = release_flag,
                 args = args,
@@ -210,30 +243,26 @@ fn run() -> Result<(), Error> {
             // TODO if we can reliably check for --client-proxy or -c, we should
             // not build on first launch.
 
-            eprintln!("STARTING SERVER");
+            eprintln!("Starting server...");
+
+            let release_flag = if release { Some("--release") } else { None };
 
             execute!(
                 r"
                     cd mercutio-server
                     export MERCUTIO_WASM_LOG={use_log}
                     export RUST_BACKTRACE=1
-                    cargo run {release_flag} --bin mercutio-server -- \
+                    cargo run {force_color_flag} {release_flag} \
+                        --bin mercutio-server -- \
                         --period 100 {args}
                 ",
                 use_log = if log { 1 } else { 0 },
-                release_flag = if release { Some("--release") } else { None },
+                release_flag = release_flag,
+                force_color_flag = force_color_flag,
                 args = args,
             )?;
 
-            eprintln!("DONE WITH SERVER");
-
-
-            // TODO figure out why ctrl+c here doesn't kill YES
-            // execute!(
-            //     r"
-            //         yes
-            //     ",
-            // )?;
+            eprintln!("Server exited.");
         }
 
         Cli::MercutioServerBuild { args } => {
@@ -242,10 +271,13 @@ fn run() -> Result<(), Error> {
             execute!(
                 r"
                     cd mercutio-server
+                    export MERCUTIO_WASM_LOG=0
                     export RUST_BACKTRACE=1
-                    cargo build {release_flag} --bin mercutio-server {args}
+                    cargo build {force_color_flag} {release_flag} \
+                        --bin mercutio-server {args}
                 ",
                 release_flag = release_flag,
+                force_color_flag = force_color_flag,
                 args = args,
             )?;
         }
@@ -265,10 +297,17 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::Test { args } => {
+            eprintln!("building ./x.rs server...");
+            execute!(
+                r"
+                    ./x.rs server-build
+                ",
+            )?;
+
             eprintln!("running ./x.rs server...");
             let _server_guard = command!(
                 r"
-                    cargo script ./x.rs -- server {args}
+                    ./x.rs server {args}
                 ",
                 args = args,
             )?.scoped_spawn().unwrap();
@@ -279,7 +318,43 @@ fn run() -> Result<(), Error> {
             execute!(
                 r"
                     cd tests
-                    cargo run {args}
+                    cargo run
+                ",
+            )?;
+        }
+
+        Cli::TestBuild { args } => {
+            execute!(
+                r"
+                    ./x.rs server-build {args}
+                ",
+                args = args,
+            )?;
+
+            execute!(
+                r"
+                    ./x.rs wasm-build {args}
+                ",
+                args = args,
+            )?;
+
+            execute!(
+                r"
+                    ./x.rs frontend-build {args}
+                ",
+                args = args,
+            )?;
+
+            execute!(
+                r"
+                    ./x.rs client-proxy-build {args}
+                ",
+                args = args,
+            )?;
+
+            execute!(
+                r"
+                    ./x.rs book-build {args}
                 ",
                 args = args,
             )?;

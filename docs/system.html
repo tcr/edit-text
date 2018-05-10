@@ -85,7 +85,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="x.html"><strong aria-hidden="true">1.1.</strong> Build System ./x.rs</a></li><li><a href="oatie.html"><strong aria-hidden="true">1.2.</strong> Working with Documents</a></li><li><a href="ot.html"><strong aria-hidden="true">1.3.</strong> Operational Transform</a></li><li><a href="system.html" class="active"><strong aria-hidden="true">1.4.</strong> System Diagram</a></li></ol></li><li><a href="diaries.html"><strong aria-hidden="true">2.</strong> Development Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">2.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.3.</strong> Carets and You</a></li><li><a href="diary-testing.html"><strong aria-hidden="true">2.4.</strong> Testing</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="x.html"><strong aria-hidden="true">1.1.</strong> Build System ./x.rs</a></li><li><a href="system.html" class="active"><strong aria-hidden="true">1.2.</strong> System Diagram</a></li><li><a href="oatie.html"><strong aria-hidden="true">1.3.</strong> Working with Documents</a></li><li><a href="ot.html"><strong aria-hidden="true">1.4.</strong> Operational Transform</a></li></ol></li><li><a href="diaries.html"><strong aria-hidden="true">2.</strong> Development Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">2.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.3.</strong> Carets and You</a></li><li><a href="diary-testing.html"><strong aria-hidden="true">2.4.</strong> Testing</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -172,7 +172,7 @@ Sync &lt;-+-&gt; User &lt;-&gt; Frontend
 <a class="header" href="system.html#interop-sync---user" id="interop-sync---user"><h2>Interop Sync &lt;-&gt; User</h2></a>
 <p>Defined in <code>mercutio-client/src/client.rs</code>.</p>
 <p>From Sync -&gt; User:</p>
-<pre><code>pub enum SyncClientCommand {
+<pre><code>pub enum SyncToUserCommand {
     // Client id assignment, initial doc, initial version
     Init(String, DocSpan, usize),
 
@@ -181,7 +181,7 @@ Sync &lt;-+-&gt; User &lt;-&gt; Frontend
 }
 </code></pre>
 <p>And from User -&gt; Sync:</p>
-<pre><code>pub enum SyncServerCommand {
+<pre><code>pub enum UserToSyncCommand {
     // Connect(String),
     Commit(String, Op, usize),
     TerminateProxy,
@@ -190,21 +190,21 @@ Sync &lt;-+-&gt; User &lt;-&gt; Frontend
 <a class="header" href="system.html#intop-user---frontend" id="intop-user---frontend"><h2>Intop: User &lt;-&gt; Frontend</h2></a>
 <p>Defined in <code>mercutio-client/src/client.rs</code>.</p>
 <p>From User -&gt; Frontend:</p>
-<pre><code>pub enum ClientCommand {
+<pre><code>pub enum UserToFrontendCommand {
     Init(String),
     Controls {
         keys: Vec&lt;(u32, bool, bool)&gt;,
         buttons: Vec&lt;(usize, String, bool)&gt;,
     },
-    PromptString(String, String, NativeCommand),
+    PromptString(String, String, FrontendToUserCommand),
     Update(String, Option&lt;Op&gt;),
     MarkdownUpdate(String),
     Error(String),
-    SyncServerCommand(SyncServerCommand),
+    UserToSyncCommand(UserToSyncCommand),
 }
 </code></pre>
 <p>And from Frontend -&gt; User:</p>
-<pre><code>pub enum NativeCommand {
+<pre><code>pub enum FrontendToUserCommand {
     // Connect(String),
     Keypress(u32, bool, bool, bool), // code, meta, shift, alt
     Button(u32),
@@ -223,13 +223,13 @@ Sync &lt;-+-&gt; User &lt;-&gt; Frontend
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-                            <a rel="prev" href="ot.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="x.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         
 
                         
-                            <a rel="next" href="diaries.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="oatie.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -241,13 +241,13 @@ Sync &lt;-+-&gt; User &lt;-&gt; Frontend
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-                    <a href="ot.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a href="x.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 
 
                 
-                    <a href="diaries.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a href="oatie.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 
@@ -267,21 +267,6 @@ Sync &lt;-+-&gt; User &lt;-&gt; Frontend
             }
         </script>
 
-        
-        <!-- Livereload script (if served using the cli tool) -->
-        <script type="text/javascript">
-            var socket = new WebSocket("ws://localhost:3001");
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload(true); // force reload from server (not from cache)
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
         
 
         

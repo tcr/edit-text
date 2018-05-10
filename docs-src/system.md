@@ -41,7 +41,7 @@ Defined in `mercutio-client/src/client.rs`.
 From Sync -> User:
 
 ```
-pub enum SyncClientCommand {
+pub enum SyncToUserCommand {
     // Client id assignment, initial doc, initial version
     Init(String, DocSpan, usize),
 
@@ -53,7 +53,7 @@ pub enum SyncClientCommand {
 And from User -> Sync:
 
 ```
-pub enum SyncServerCommand {
+pub enum UserToSyncCommand {
     // Connect(String),
     Commit(String, Op, usize),
     TerminateProxy,
@@ -67,24 +67,24 @@ Defined in `mercutio-client/src/client.rs`.
 From User -> Frontend:
 
 ```
-pub enum ClientCommand {
+pub enum UserToFrontendCommand {
     Init(String),
     Controls {
         keys: Vec<(u32, bool, bool)>,
         buttons: Vec<(usize, String, bool)>,
     },
-    PromptString(String, String, NativeCommand),
+    PromptString(String, String, FrontendToUserCommand),
     Update(String, Option<Op>),
     MarkdownUpdate(String),
     Error(String),
-    SyncServerCommand(SyncServerCommand),
+    UserToSyncCommand(UserToSyncCommand),
 }
 ```
 
 And from Frontend -> User:
 
 ```
-pub enum NativeCommand {
+pub enum FrontendToUserCommand {
     // Connect(String),
     Keypress(u32, bool, bool, bool), // code, meta, shift, alt
     Button(u32),

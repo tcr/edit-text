@@ -1,9 +1,13 @@
 #![feature(crate_in_paths, extern_in_paths, nll)]
+#![feature(non_modrs_mods)]
 
 use std::fs::File;
 use std::path::Path;
 use std::sync::Arc;
 use std::sync::Mutex;
+use mercutio_common::{
+    UserToSyncCommand,
+};
 
 lazy_static! {
     static ref LOG_SYNC_FILE: Arc<Mutex<File>> = {
@@ -17,7 +21,7 @@ pub enum LogSync {
     Launch,
     ServerSpawn,
     ClientConnect,
-    ClientPacket(SyncServerCommand),
+    ClientPacket(UserToSyncCommand),
     Debug(String),
     Spawn,
 }
@@ -47,6 +51,7 @@ extern crate crossbeam_channel;
 #[macro_use]
 extern crate diesel;
 extern crate dotenv;
+#[macro_use]
 extern crate failure;
 #[macro_use]
 extern crate lazy_static;
@@ -62,8 +67,10 @@ extern crate ron;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+#[macro_use]
 extern crate serde_json;
 extern crate simple_ws;
+extern crate reqwest;
 extern crate take_mut;
 #[macro_use]
 extern crate taken;
@@ -75,9 +82,8 @@ extern crate r2d2;
 extern crate r2d2_diesel;
 
 // Macros can only be used after they are defined
-pub mod sync;
-pub mod schema;
 pub mod db;
+pub mod graphql;
+pub mod sync;
+pub mod state;
 pub mod util;
-
-pub use mercutio_common::*;

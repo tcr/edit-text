@@ -19,14 +19,14 @@ use colored::Colorize;
 use failure::Error;
 use std::io::prelude::*;
 use mercutio_common::{
-    SyncServerCommand,
+    UserToSyncCommand,
 };
 use mercutio_client::{
     ProxyClient,
     Client,
     LogWasm,
     state::ClientDoc,
-    ClientCommand,
+    UserToFrontendCommand,
 };
 use std::sync::{
     atomic::AtomicBool,
@@ -35,7 +35,7 @@ use std::sync::{
 use crossbeam_channel::{Receiver, unbounded};
 use structopt::StructOpt;
 
-fn init_new_client(client_id: &str) -> (ProxyClient, Receiver<ClientCommand>, Receiver<SyncServerCommand>) {
+fn init_new_client(client_id: &str) -> (ProxyClient, Receiver<UserToFrontendCommand>, Receiver<UserToSyncCommand>) {
     let (tx_client, rx_client) = unbounded();
     let (tx_sync, rx_sync) = unbounded();
     let client = ProxyClient {

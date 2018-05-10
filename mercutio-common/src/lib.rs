@@ -27,14 +27,14 @@ use oatie::doc::*;
 // TODO move the below to a file
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum SyncServerCommand {
+pub enum UserToSyncCommand {
     // Connect(String),
     Commit(String, Op, usize),
     TerminateProxy,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum SyncClientCommand {
+pub enum SyncToUserCommand {
     // Client id assignment, initial doc, initial version
     Init(String, DocSpan, usize),
 

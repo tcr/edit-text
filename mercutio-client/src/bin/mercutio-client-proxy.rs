@@ -19,10 +19,10 @@ extern crate ron;
 
 use crossbeam_channel::{unbounded, Sender, Receiver};
 use failure::Error;
-use mercutio_client::client::{ClientCommand, NativeCommand};
+use mercutio_client::client::{UserToFrontendCommand, FrontendToUserCommand};
 use mercutio_client::*;
 use simple_ws::*;
-use mercutio_common::{SyncServerCommand, SyncClientCommand};
+use mercutio_common::{UserToSyncCommand, SyncToUserCommand};
 use std::panic;
 use std::process;
 use std::sync::{Arc, Mutex};
@@ -80,11 +80,11 @@ fn spawn_virtual_monkey(port: u16, key: usize) -> JoinHandle<()> {
             // Ignore all incoming messages, as we have no client to update
             move |msg: ws::Message| {
                 // println!("wasm got a packet from sync '{}'. ", msg);
-                let req_parse: Result<ClientCommand, _> =
+                let req_parse: Result<UserToFrontendCommand, _> =
                     serde_json::from_slice(&msg.into_data());
 
-                if let Ok(ClientCommand::Init(..)) = req_parse {
-                    let command = NativeCommand::Monkey(true);
+                if let Ok(UserToFrontendCommand::Init(..)) = req_parse {
+                    let command = FrontendToUserCommand::Monkey(true);
                     let json = serde_json::to_string(&command).unwrap();
                     out.send(json.as_str()).unwrap();
                     // monkey_started.store(true, Ordering::Relaxed);
@@ -118,7 +118,7 @@ fn virtual_monkeys() {
 
 // #[spawn]
 fn spawn_send_to_client(
-    rx_client: Receiver<ClientCommand>,
+    rx_client: Receiver<UserToFrontendCommand>,
     out: Arc<Mutex<ws::Sender>>,
 ) -> JoinHandle<Result<(), Error>> {
     thread::spawn(|| -> Result<(), Error> {
@@ -134,12 +134,12 @@ fn spawn_send_to_client(
 // #[spawn]
 fn spawn_client_to_sync(
     out: ws::Sender,
-    rx: Receiver<SyncServerCommand>,
+    rx: Receiver<UserToSyncCommand>,
     sentinel: Arc<AtomicBool>,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
         while let Ok(command) = rx.recv() {
-            if let SyncServerCommand::TerminateProxy = command {
+            if let UserToSyncCommand::TerminateProxy = command {
                 let _ = out.close(CloseCode::Away);
                 sentinel.store(false, Ordering::SeqCst);
                 break;
@@ -155,7 +155,7 @@ fn spawn_sync_connection(
     ws_port: u16,
     page_id: String,
     tx_task: Sender<Task>,
-    rx: Receiver<SyncServerCommand>,
+    rx: Receiver<UserToSyncCommand>,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
         let sentinel = Arc::new(AtomicBool::new(true));
@@ -172,14 +172,14 @@ fn spawn_sync_connection(
                     // Handle messages received on this connection
                     // println!("wasm got a packet from sync '{}'. ", msg);
 
-                    let req_parse: Result<SyncClientCommand, _> =
+                    let req_parse: Result<SyncToUserCommand, _> =
                         serde_json::from_slice(&msg.into_data());
                     match req_parse {
                         Err(err) => {
                             println!("Packet error: {:?}", err);
                         }
                         Ok(value) => {
-                            let _ = tx_task.send(Task::SyncClientCommand(value));
+                            let _ = tx_task.send(Task::SyncToUserCommand(value));
                         }
                     }
 
@@ -189,7 +189,7 @@ fn spawn_sync_connection(
         }).unwrap();
 
         // Client socket may have disconnected, and we closed
-        // this connection via SyncServerCommand::TerminateProxy
+        // this connection via UserToSyncCommand::TerminateProxy
         if sentinel.load(Ordering::SeqCst) == true {
             // Child client didn't disconnect us, invalid
             unreachable!("Server connection cut");
@@ -202,7 +202,7 @@ fn setup_client(
     page_id: &str,
     out: Arc<Mutex<ws::Sender>>,
     ws_port: u16,
-) -> (Arc<AtomicBool>, Arc<AtomicBool>, Sender<Task>, Sender<SyncServerCommand>) {
+) -> (Arc<AtomicBool>, Arc<AtomicBool>, Sender<Task>, Sender<UserToSyncCommand>) {
     let (tx_sync, rx_sync) = unbounded();
 
     let monkey = Arc::new(AtomicBool::new(false));
@@ -261,7 +261,7 @@ pub struct ProxySocket {
     alive: Arc<AtomicBool>,
     monkey: Arc<AtomicBool>,
     tx_task: Sender<Task>,
-    tx_sync: Sender<SyncServerCommand>,
+    tx_sync: Sender<UserToSyncCommand>,
 }
 
 impl SimpleSocket for ProxySocket {
@@ -286,14 +286,14 @@ impl SimpleSocket for ProxySocket {
 
     fn handle_message(&mut self, data: &[u8]) -> Result<(), Error> {
         let msg = serde_json::from_slice(&data)?;
-        Ok(self.tx_task.send(Task::NativeCommand(msg))?)
+        Ok(self.tx_task.send(Task::FrontendToUserCommand(msg))?)
     }
 
     fn cleanup(&mut self) -> Result<(), Error> {
         self.monkey.store(false, Ordering::Relaxed);
         self.alive.store(false, Ordering::Relaxed);
 
-        self.tx_sync.send(SyncServerCommand::TerminateProxy)?;
+        self.tx_sync.send(UserToSyncCommand::TerminateProxy)?;
 
         Ok(())
     }
@@ -314,8 +314,8 @@ pub fn start_websocket_server(port: u16) {
 #[cfg(not(target_arch="wasm32"))]
 pub struct ProxyClient {
     pub state: Client,
-    pub tx_client: Sender<ClientCommand>,
-    pub tx_sync: Sender<SyncServerCommand>,
+    pub tx_client: Sender<UserToFrontendCommand>,
+    pub tx_sync: Sender<UserToSyncCommand>,
 }
 
 #[cfg(not(target_arch="wasm32"))]
@@ -324,13 +324,13 @@ impl ClientImpl for ProxyClient {
         &mut self.state
     }
 
-    fn send_client(&self, req: &ClientCommand) -> Result<(), Error> {
+    fn send_client(&self, req: &UserToFrontendCommand) -> Result<(), Error> {
         log_wasm!(SendClient(req.clone()));
         self.tx_client.send(req.clone())?;
         Ok(())
     }
 
-    fn send_sync(&self, req: SyncServerCommand) -> Result<(), Error> {
+    fn send_sync(&self, req: UserToSyncCommand) -> Result<(), Error> {
         log_wasm!(SendSync(req.clone()));
         self.tx_sync.send(req)?;
         Ok(())
@@ -350,7 +350,7 @@ macro_rules! spawn_monkey_task {
                         rng.gen_range($wait_params.0, $wait_params.1),
                     ));
                     if monkey.load(Ordering::Relaxed) {
-                        tx.send(Task::NativeCommand($task))?;
+                        tx.send(Task::FrontendToUserCommand($task))?;
                     }
                 }
                 Ok(())
@@ -382,7 +382,7 @@ pub fn setup_monkey<C: ClientImpl + Sized>(alive: Arc<AtomicBool>, monkey: Arc<A
     spawn_monkey_task!(alive, monkey, tx, MONKEY_BUTTON, {
         let mut rng = rand::thread_rng();
         let index = rng.gen_range(0, button_handlers::<C>(None).len() as u32);
-        NativeCommand::Button(index)
+        FrontendToUserCommand::Button(index)
     });
 
     spawn_monkey_task!(alive, monkey, tx, MONKEY_LETTER, {
@@ -394,25 +394,25 @@ pub fn setup_monkey<C: ClientImpl + Sized>(alive: Arc<AtomicBool>, monkey: Arc<A
             b' ',
         ];
         let c = *rng.choose(&char_list).unwrap() as u32;
-        NativeCommand::Character(c)
+        FrontendToUserCommand::Character(c)
     });
 
     spawn_monkey_task!(alive, monkey, tx, MONKEY_ARROW, {
         let mut rng = rand::thread_rng();
         let key = *rng.choose(&[37, 39, 37, 39, 37, 39, 38, 40]).unwrap();
-        NativeCommand::Keypress(key, false, false, false)
+        FrontendToUserCommand::Keypress(key, false, false, false)
     });
 
     spawn_monkey_task!(alive, monkey, tx, MONKEY_BACKSPACE, {
-        NativeCommand::Keypress(8, false, false, false)
+        FrontendToUserCommand::Keypress(8, false, false, false)
     });
 
     spawn_monkey_task!(alive, monkey, tx, MONKEY_ENTER, {
-        NativeCommand::Keypress(13, false, false, false)
+        FrontendToUserCommand::Keypress(13, false, false, false)
     });
 
     spawn_monkey_task!(alive, monkey, tx, MONKEY_CLICK, {
         let mut rng = rand::thread_rng();
-        NativeCommand::RandomTarget(rng.gen::<f64>())
+        FrontendToUserCommand::RandomTarget(rng.gen::<f64>())
     });
 }

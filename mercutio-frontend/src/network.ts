@@ -64,7 +64,7 @@ export class WasmNetwork implements Network {
   syncSocket: WebSocket;
 
   // Create a deferred object for the sync socket
-  // because we may receive SyncServerCommand payloads earlier
+  // because we may receive UserToSyncCommand payloads earlier
   deferSync: Promise<WebSocket>;
   deferSyncResolve: Function;
 
@@ -84,7 +84,7 @@ export class WasmNetwork implements Network {
   nativeCommand(command: commands.Command) {
     delete command.tag;
     this.Module.wasm_command(JSON.stringify({
-      NativeCommand: command,
+      FrontendToUserCommand: command,
     }));
   }
 
@@ -101,9 +101,9 @@ export class WasmNetwork implements Network {
           // Parse the packet.
           let parse = JSON.parse(data);
 
-          if (parse.SyncServerCommand) {
+          if (parse.UserToSyncCommand) {
             network.deferSync.then(syncSocket => {
-              syncSocket.send(JSON.stringify(parse.SyncServerCommand));
+              syncSocket.send(JSON.stringify(parse.UserToSyncCommand));
             });
           } else {
             network.onNativeMessage(parse);
@@ -139,7 +139,7 @@ export class WasmNetwork implements Network {
       syncSocket.onmessage = function (event) {
         // console.log('Got message from sync:', event.data);
         network.Module.wasm_command(JSON.stringify({
-          SyncClientCommand: JSON.parse(event.data),
+          SyncToUserCommand: JSON.parse(event.data),
         }));
       };
 

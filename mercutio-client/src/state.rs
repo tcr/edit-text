@@ -4,7 +4,6 @@ use oatie::OT;
 use oatie::doc::*;
 use oatie::schema::RtfSchema;
 use std::mem;
-use super::*;
 use oatie::validate::{validate_doc};
 
 #[derive(Debug)]
@@ -234,7 +233,6 @@ impl ClientDoc {
 
         use ::oatie::validate::*;
         validate_doc(&self.doc).expect("Validation error BEFORE op application");
-
 
         // Apply the new operation.
         self.doc = Op::apply(&self.doc, op);

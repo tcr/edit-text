@@ -1,0 +1,2 @@
+[term]
+color = 'always'         # whether cargo colorizes output
