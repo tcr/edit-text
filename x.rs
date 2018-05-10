@@ -310,9 +310,8 @@ fn run() -> Result<(), Error> {
             execute!(
                 r"
                     cd tests
-                    cargo run {args}
+                    cargo run
                 ",
-                args = args,
             )?;
         }
 

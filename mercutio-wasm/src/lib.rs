@@ -25,7 +25,7 @@ use mercutio_common::*;
 use failure::Error;
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen(module = "./../network")]
+#[wasm_bindgen(module = "../network")]
 extern "C" {
     /// Send a command *to* the js client.
     pub fn sendCommandToJS(input: &str) -> u32;
