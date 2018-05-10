@@ -47,7 +47,10 @@ fn main() {
 #[structopt(name = "edit-text build scripts", about = "Build scripts for mercutio and oatie", author = "")]
 enum Cli {
     #[structopt(name = "wasm-build", about = "Compile the WebAssembly bundle.")]
-    Wasm,
+    Wasm {
+        #[structopt(name = "no-vendor")]
+        no_vendor: bool,
+    },
 
     #[structopt(name = "client-proxy", about = "Run client code in your terminal.")]
     ClientProxy { args: Vec<String> },
@@ -113,9 +116,11 @@ fn run() -> Result<(), Error> {
     // Run the subcommand.
     let parsed_args = Cli::from_iter(args.iter());
     match parsed_args {
-        Cli::Wasm => {
+        Cli::Wasm { no_vendor } => {
             // wasm must always be --release
             let release_flag = Some("--release");
+
+            eprintln!("Building...");
 
             execute!(
                 r"
@@ -133,28 +138,31 @@ fn run() -> Result<(), Error> {
                 release_flag = release_flag,
             )?;
 
-            execute!(
-                r"
-                    wasm-bindgen ./target/wasm32-unknown-unknown/release/mercutio.wasm \
-                        --out-dir ./mercutio-frontend/src/bindgen \
-                        --typescript
-                ",
-            )?;
+            if !no_vendor {
+                eprintln!("Vendoring...");
 
-            execute!(
-                r"
-                    cd ./mercutio-frontend/src/bindgen
-                    wasm2es6js \
-                        --base64 -o mercutio_bg.js mercutio_bg.wasm
-                ",
-            )?;
+                ::std::fs::create_dir_all("./mercutio-frontend/src/bindgen")?;
 
-            execute!(
-                r"
-                    cd ./mercutio-frontend/src/bindgen
-                    rm mercutio_bg.wasm
-                ",
-            )?;
+                execute!(
+                    r"
+                        wasm-bindgen ./target/wasm32-unknown-unknown/release/mercutio.wasm \
+                            --out-dir ./mercutio-frontend/src/bindgen \
+                            --typescript
+                    ",
+                )?;
+
+                execute!(
+                    r"
+                        cd ./mercutio-frontend/src/bindgen
+                        wasm2es6js \
+                            --base64 -o mercutio_bg.js mercutio_bg.wasm
+                    ",
+                )?;
+
+                ::std::fs::remove_file("./mercutio-frontend/src/bindgen/mercutio_bg.wasm")?;
+
+                eprintln!("Done.");
+            }
         }
 
         Cli::ClientProxy { args } => {
