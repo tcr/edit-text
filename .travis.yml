@@ -15,6 +15,9 @@ before_install:
   # Install commands
   - command -v cargo-script || cargo install cargo-script
   - command -v diesel || cargo install diesel_cli --no-default-features --features sqlite
+  - command -v wasm-bindgen || cargo install wasm-bindgen-cli --vers "=0.2.4"
+
+  - rustup target add wasm32-unknown-unknown
 
 script:
   # Prepare X service
