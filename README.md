@@ -16,7 +16,7 @@ You'll need `cargo-script` to run the build script and a few other build tools:
 
 ```
 cargo install cargo-script
-cargo install wasm-bindgen-cli --vers "=0.2.4"
+cargo install wasm-bindgen-cli
 cargo install diesel_cli --no-default-features --features sqlite
 ```
 
@@ -65,11 +65,11 @@ You will see any failures appear in the client-proxy code that would appear in t
 The bundled frontend code (written in TypeScript) is tracked in git, but you can also compile it yourself. Make sure you have Node installed first, then:
 
 ```
-npm i --prefix ./mercutio-frontend
+npm i --prefix ./edit-frontend
 ./x.rs frontend-watch
 ```
 
-This command watches the `mercutio-frontend` directory and continuously builds all frontend code. Note that the .wasm bundle isn't inlined into the bundle with webpack, but loaded asynchronously.
+This command watches the `edit-frontend` directory and continuously builds all frontend code. Note that the .wasm bundle isn't inlined into the bundle with webpack, but loaded asynchronously.
 
 ## License
 

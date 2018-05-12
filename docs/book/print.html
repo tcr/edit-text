@@ -1,0 +1,788 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>edit-text internals</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <base href="">
+
+        <link rel="stylesheet" href="book.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <link rel="shortcut icon" href="favicon.png">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme -->
+        
+
+        
+
+        <!-- Fetch Clipboard.js from CDN but have a local fallback -->
+        <script src="https://cdn.jsdelivr.net/clipboard.js/1.6.1/clipboard.min.js"></script>
+        <script>
+            if (typeof Clipboard == 'undefined') {
+                document.write(unescape("%3Cscript src='clipboard.min.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <noscript>
+            <style type="text/css">
+                .javascript-only {
+                    display: none;
+                }
+            </style>
+        </noscript>
+
+    </head>
+    <body class="light">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { } 
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            document.body.className = theme;
+            document.querySelector('html').className = theme;
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="x.html"><strong aria-hidden="true">1.1.</strong> Build System ./x.rs</a></li><li><a href="system.html"><strong aria-hidden="true">1.2.</strong> System Diagram</a></li><li><a href="oatie.html"><strong aria-hidden="true">1.3.</strong> Working with Documents</a></li><li><a href="ot.html"><strong aria-hidden="true">1.4.</strong> Operational Transform</a></li></ol></li><li><a href="diaries.html"><strong aria-hidden="true">2.</strong> Development Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">2.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.3.</strong> Carets and You</a></li><li><a href="diary-testing.html"><strong aria-hidden="true">2.4.</strong> Testing</a></li></ol></li></ol>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div id="menu-bar-sticky-container">
+                        <div class="left-buttons javascript-only">
+                            <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                                <i class="fa fa-bars"></i>
+                            </button>
+                            <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                                <i class="fa fa-paint-brush"></i>
+                            </button>
+                            <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                                <li role="none"><button role="menuitem" class="theme" id="light">Light <span class="default">(default)</span></button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            </ul>
+                            
+                            <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                                <i class="fa fa-search"></i>
+                            </button>
+                            
+                        </div>
+
+                        <h1 class="menu-title">edit-text internals</h1> 
+
+                        <div class="right-buttons">
+                            <a href="print.html" title="Print this book" aria-label="Print this book">
+                                <i id="print-button" class="fa fa-print"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div id="searchbar-outer" class="searchbar-outer">
+                    <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                </div>
+                <div id="searchresults-outer" class="searchresults-outer">
+                    <div class="searchresults-header" id="searchresults-header"></div>
+                    <ul id="searchresults">
+                    </ul>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <a class="header" href="print.html#edit-text" id="edit-text"><h1>edit-text</h1></a>
+<p>edit-text is a collaborative text editor, written in Rust.</p>
+<ul>
+<li>oatie, an operational transform library</li>
+<li>edit, the frontend and backend to edit-text</li>
+</ul>
+<p>The frontend is broken out into several crates:</p>
+<ul>
+<li>edit-common</li>
+<li>edit-client</li>
+<li>edit-server</li>
+<li>edit-frontend</li>
+</ul>
+<a class="header" href="print.html#usage" id="usage"><h2>Usage</h2></a>
+<p>Invoking the server:</p>
+<pre><code>./x.rs server [--release] [--client-proxy]
+</code></pre>
+<p>Invoking the client proxy:</p>
+<pre><code>./x.rs client-proxy [--release]
+</code></pre>
+<p>Building the frontend (TypeScript):</p>
+<pre><code>./x.rs frontend-build
+./x.rs frontend-watch # watches builds and rebuilds as you edit
+</code></pre>
+<p>Building the WebAssembly bundle:</p>
+<pre><code>./x.rs wasm-build
+</code></pre>
+<a class="header" href="print.html#build-tool-xrs" id="build-tool-xrs"><h1>Build Tool ./x.rs</h1></a>
+<p><code>./x.rs</code> is the build tool. In order to run it, you'll need to install <a href="https://github.com/DanielKeep/cargo-script"><code>cargo-script</code></a>:</p>
+<pre><code>cargo install cargo-script
+</code></pre>
+<p>Then while you're in the root of the <code>edit-text/</code> respository, from your command line you can run:</p>
+<pre><code class="language-sh">./x.rs help
+</code></pre>
+<a class="header" href="print.html#server-building" id="server-building"><h2>Server building</h2></a>
+<p>To launch the edit-text server:</p>
+<pre><code class="language-sh">./x.rs server-build
+</code></pre>
+<p>To run it on port <code>8000</code>:</p>
+<pre><code class="language-sh">./x.rs server
+</code></pre>
+<a class="header" href="print.html#frontend-build" id="frontend-build"><h2>Frontend build</h2></a>
+<p>The frontend is all the JavaScript code that runs in the browser, and optionally including the WASM build system. To build this, you should run <code>npm install</code> in the <code>edit-frontend/</code> directory:</p>
+<pre><code class="language-sh">cd edit-frontend
+npm install
+</code></pre>
+<p>This will locally install Webpack, Typescript, and all JavaScript dependencies required by the frontend. To then build the frontend, run this from the root directory:</p>
+<pre><code class="language-sh">./x.rs frontend-build
+</code></pre>
+<p>If you want to launch a long-lived script to build the frontend and rebuild each time a relevant file changes:</p>
+<pre><code class="language-sh">./x.rs frontend-watch
+</code></pre>
+<p>Building the frontend component may also require that you use build the WASM bundle from <code>edit-client</code>, which can be generated with this command:</p>
+<pre><code class="language-sh">./x.rs wasm-build
+</code></pre>
+<p>This will compile the wasm bundle and save it to <code>edit-frontend/src/bindgen</code>, which will be linked with the frontend code bundle (generated using <code>frontend-build</code> or <code>frontend-watch</code>).</p>
+<a class="header" href="print.html#testing" id="testing"><h2>Testing</h2></a>
+<p>This command will run comprehensive end-to-end tests. It's used by CI to test all new pull requests:</p>
+<pre><code class="language-sh">./x.rs test
+</code></pre>
+<a class="header" href="print.html#client-proxy" id="client-proxy"><h2>Client Proxy</h2></a>
+<p>If you are testing changes to the <code>edit-client</code> library, you have the option of choosing between running client code in the browser (via WebAssembly) or running it in a local Rust process, having all commands proxied through websockets.</p>
+<pre><code class="language-sh">./x.rs client-proxy
+</code></pre>
+<a class="header" href="print.html#building-the-book" id="building-the-book"><h2>Building the book</h2></a>
+<p>You can build the book with the book-build command:</p>
+<pre><code class="language-sh">./x.rs book-build
+</code></pre>
+<p>Or watch for all changes as they are being made with book-watch.</p>
+<pre><code class="language-sh">./x.rs book-watch
+</code></pre>
+<p>By navigating to <a href="http://localhost:3000/">http://localhost:3000/</a>, you'll see the page refresh automatically as you edit markdown files under <code>docs-src/</code>.</p>
+<a class="header" href="print.html#deploy" id="deploy"><h2>Deploy</h2></a>
+<p>You can deploy edit-text to a Dokku server using <code>./x.rs deploy</code>.</p>
+<ul>
+<li>This first cross-compiles the edit-server binary using a local Docker image.</li>
+<li>It then uploads the binary using the <code>dokku tar:in</code> command on a remote server (not the Git endpoint).</li>
+<li>You can configure the dokku URL using the <code>EDIT_DEPLOY_URL</code> environment variable.</li>
+<li>You can configure the dokku application name using the <code>EDIT_DOKKU_NAME</code> environment variable.</li>
+</ul>
+<a class="header" href="print.html#help" id="help"><h2>Help</h2></a>
+<pre><code>edit-text build scripts 0.1.0
+Build scripts for edit and oatie
+
+USAGE:
+    x &lt;SUBCOMMAND&gt;
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+SUBCOMMANDS:
+    book-build        Builds the book.
+    book-watch        Watches and rebuilds the book.
+    client-proxy      Run client code in your terminal.
+    deploy            Deploy to sandbox.edit.io.
+    frontend-build    Bundle the frontend JavaScript code.
+    frontend-watch    Watch the frontend JavaScript code, building continuously.
+    help              Prints this message or the help of the given subcommand(s)
+    oatie-build       Build the operational transform library.
+    replay            Replay an edit-text log.
+    server            Run the edit-text server.
+    server-build      Build the edit-text server.
+    test              
+    wasm-build        Compile the WebAssembly bundle.
+</code></pre>
+<a class="header" href="print.html#system-diagram" id="system-diagram"><h1>System Diagram</h1></a>
+<p>Basic system diagram:</p>
+<pre><code>
+       /-&gt; User &lt;-&gt; Frontend
+Sync &lt;-+-&gt; User &lt;-&gt; Frontend
+       |-&gt; User &lt;-&gt; Frontend
+       \-&gt; ...
+</code></pre>
+<a class="header" href="print.html#sync" id="sync"><h2>Sync</h2></a>
+<p>The Sync server performs document synchronization. It is the &quot;server&quot; component that orchestrates simultaneous document modifications which happen on several Users.</p>
+<p>It has a websocket component for clients to orchestrate simultaneous document modifications.</p>
+<p>It also has a GraphQL endpoint to (TODO: fill this out) make modifications outside the client API.</p>
+<a class="header" href="print.html#user" id="user"><h2>User</h2></a>
+<p>The User represents a consumer of the document. They can make changes to the document and apply modifications. This is performed over the WebSocket API.</p>
+<a class="header" href="print.html#frontend" id="frontend"><h2>Frontend</h2></a>
+<p>The frontend is the UX that interfaces with the editor. This is split out from the User node for two reasons:</p>
+<ol>
+<li>Rust components intended to run in the browser have a mode in which they can run in the command line as a &quot;proxy&quot;.</li>
+<li>It should be possible for a frontend to be written for any environment, not just the web. For example, GTK+ or Qt could be a frontend instead of HTML is that were desirable.</li>
+</ol>
+<a class="header" href="print.html#api" id="api"><h1>API</h1></a>
+<p>The API between two layers is defined in several enums representing payloads across RPC boundaries.</p>
+<a class="header" href="print.html#interop-sync---user" id="interop-sync---user"><h2>Interop Sync &lt;-&gt; User</h2></a>
+<p>Defined in <code>edit-client/src/client.rs</code>.</p>
+<p>From Sync -&gt; User:</p>
+<pre><code>pub enum SyncToUserCommand {
+    // Client id assignment, initial doc, initial version
+    Init(String, DocSpan, usize),
+
+    // New document, version, client-id, operation
+    Update(DocSpan, usize, String, Op),
+}
+</code></pre>
+<p>And from User -&gt; Sync:</p>
+<pre><code>pub enum UserToSyncCommand {
+    // Connect(String),
+    Commit(String, Op, usize),
+    TerminateProxy,
+}
+</code></pre>
+<a class="header" href="print.html#intop-user---frontend" id="intop-user---frontend"><h2>Intop: User &lt;-&gt; Frontend</h2></a>
+<p>Defined in <code>edit-client/src/client.rs</code>.</p>
+<p>From User -&gt; Frontend:</p>
+<pre><code>pub enum UserToFrontendCommand {
+    Init(String),
+    Controls {
+        keys: Vec&lt;(u32, bool, bool)&gt;,
+        buttons: Vec&lt;(usize, String, bool)&gt;,
+    },
+    PromptString(String, String, FrontendToUserCommand),
+    Update(String, Option&lt;Op&gt;),
+    MarkdownUpdate(String),
+    Error(String),
+    UserToSyncCommand(UserToSyncCommand),
+}
+</code></pre>
+<p>And from Frontend -&gt; User:</p>
+<pre><code>pub enum FrontendToUserCommand {
+    // Connect(String),
+    Keypress(u32, bool, bool, bool), // code, meta, shift, alt
+    Button(u32),
+    Character(u32),
+    RenameGroup(String, CurSpan),
+    // Load(DocSpan),
+    Target(CurSpan),
+    RandomTarget(f64),
+    Monkey(bool),
+    RequestMarkdown,
+}
+</code></pre>
+<a class="header" href="print.html#working-with-documents" id="working-with-documents"><h1>Working with Documents</h1></a>
+<p>The basic structure that Oatie operates on is a Document:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+type DocSpan = Vec&lt;DocElement&gt;;
+
+struct Doc(DocSpan);
+
+// Documents are made up of chars and groups.
+enum DocElement {
+    DocChars(DocString),
+    DocGroup(Attrs, DocSpan),
+}
+
+// Convenience wrapper for opaquely operating on Strings.
+struct DocString(String);
+// Convenience wrapper for group &quot;attributes&quot; like HTML attrs.
+type Attrs = HashMap&lt;String, String&gt;;
+#}</code></pre></pre>
+<a class="header" href="print.html#operations" id="operations"><h3>Operations</h3></a>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+type DelSpan = Vec&lt;DelElement&gt;;
+
+enum DelElement {
+    DelSkip(usize),
+    DelWithGroup(DelSpan),
+    DelChars(usize),
+    DelGroup(DelSpan),
+}
+#}</code></pre></pre>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+type AddSpan = Vec&lt;AddElement&gt;;
+
+enum AddElement {
+    AddSkip(usize),
+    AddWithGroup(AddSpan),
+    AddChars(DocString),
+    AddGroup(Attrs, AddSpan),
+}
+#}</code></pre></pre>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+type Op = (DelSpan, AddSpan);
+#}</code></pre></pre>
+<a class="header" href="print.html#macros" id="macros"><h2>Macros</h2></a>
+<p>When importing oatie, there are several convenience macros which make writing the above easier:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[macro_use]
+extern crate oatie;
+
+let doc = doc_span![
+    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [
+        DocChars(&quot;Hello world!&quot;)
+    ]),
+];
+
+let op = op_span!([
+    DelGroup([DelSkip(12)]),
+    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddSkip(12)]),
+]);
+#}</code></pre></pre>
+<p>This is roughly equivalent to Rust code without needing to type <code>vec!</code> or use explicit <code>HashMap::new()</code> and <code>DocString(...)</code> invocations.</p>
+<a class="header" href="print.html#using-operations" id="using-operations"><h2>Using Operations</h2></a>
+<p>An operation can be applied to a document.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[macro_use]
+extern crate oatie;
+
+use oatie::doc::*;
+use oatie::OT;
+
+let doc = doc_span![
+    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Hello world!&quot;)]),
+];
+
+let op = op_span!([
+    DelGroup([DelSkip(12)]),
+    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddSkip(12)]),
+]);
+
+let doc2 = Op::apply(&amp;doc, $op);
+
+println!(&quot;{:?}&quot;, doc2);
+
+// DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [DocChars(&quot;Hello world!&quot;)])
+#}</code></pre></pre>
+<a class="header" href="print.html#operational-transform" id="operational-transform"><h1>Operational Transform</h1></a>
+<p>When two clients A and B make an operation concurrently, one way to get them back in sync is to determine what would operation B look like if operation A had happened first, and vice versa. If we can guarantee that this result is commutative, meaning:</p>
+<pre><code>operation A + (operation B if A had happened already) == operation B + (operation A if B had happened already)
+</code></pre>
+<p>Then we can keep both clients, which had different operations occur to their documents, can get back in sync. The algorithm used by <code>oatie</code> guarantees this operation will be commutative, which is makes other properties of this system simpler.</p>
+<p>Let's look at a race condition. Client A sends an operation to the server,</p>
+<p>Next, we need to work around the undesirable constraint each operation made by a client has to be transformed against another client's. We actually can generalize up to more than two clients—by transforming the results of the operation A x B with the results of B' &amp;mul; C, etc. But in practice, we are not going to have each operation have a corresponding and concurrent operation on each client at the same instant. Instead, we version the document, and use this to tell what operations an incoming operation should be transformed against. For instance, if operations A and B happen simultaneously, the server can do the following:</p>
+<ol>
+<li>Start with doc version 100.</li>
+<li>Apply operation A. The doc version is now 101.</li>
+<li>See that operation B says its version was set to 100. We need to bring it up to date. We store a history of all previous operations, and so we transform operation B &amp;mul; the operation to transition from version 100 → 101. The result is operation B as though it operated on version 101, which we can directly apply to our document and send out to all clients to perform.</li>
+</ol>
+<p>Client A becomes in sync easily:</p>
+<ol>
+<li>Start with doc version 100.</li>
+<li>Apply operation A. Also send operation A to the server.</li>
+<li>Receive an ACK from the server, and learn our version is now 101.</li>
+<li>Receive operation B, which transitions from version 101 → 102; our document is now at version 102.</li>
+</ol>
+<p>For client B, this is somewhat tricker; we already applied our operation! So we perform a transform locally against <em>our</em> history.</p>
+<ol>
+<li>Start with doc verison 100.</li>
+<li>Apply operation B. Also send operation B to the server. The network queue is synchronous; it only sends one operation at a time, waiting until an ACK to send the next.</li>
+<li>Receive operation A, which transitions from version 100 → 101; we didn't expect this. So we transform this incoming operation A &amp;mul; operation B, for which an ACK from the server is outstanding. We result in A' (operation A if operation B had happened already) which we apply to the document. We also result in B', which we transform against to operations which have accumulated behind operation B in the network queue.</li>
+<li>Receive an ACK from the server, and learn our version is now 102. Note that at this point the server state and the state of our local client are equivalent (A &amp;mul; A' == B &amp;mul; B').</li>
+<li>Because we received an ACK, we can send the next operation in our network queue (if any).</li>
+</ol>
+<p>Note that the strategies for server and client code to bring operations &quot;up to date&quot; differ in that the client only needs to transform against one operation, while the server needs to transform against all intervening operations in its history. The server only needs to store the history up to the client that is the most out of date, however, and can always boot off clients which are off too old a version.</p>
+<a class="header" href="print.html#rules-for-transform" id="rules-for-transform"><h2>Rules for Transform</h2></a>
+<p>As a reminder, operational transform is commutative, which is to say that a result of transforming A &amp;mul; B should result in A' and B', and the property A composed with A' == B composed with B'. Or put another way, the transform function when given two operations will return two subsequent operations to bring both clients into an identical document state.</p>
+<p>Starting with a simple example, what happens when two documents type the same character simultaneously:</p>
+<pre><code>doc:       ed
+
+          bed
+client A: ^
+
+          red
+client B: ^
+</code></pre>
+<p>We can determine a hueristic, say, that when transforming we always know client A goes first and B second, and come up with the transformed operations:</p>
+<pre><code>           bred
+client A':  ^
+
+           bred
+client B': ^
+</code></pre>
+<p>Now both clients are synchronized again, and we can repeat this at any time as long as we use a stable client ordering. If we look at deleting characters, we actually discover we don't even need an order:</p>
+<pre><code>doc:      creditor
+
+            editor
+client A: XX
+
+          credit
+client B:       XX
+
+new doc:   edit
+</code></pre>
+<p>Deletions, as we'll call them, are commutative, and the result of transforming them should update both clients to have deleted their union. This holds true in even more complex scenarios.</p>
+<p>A harder consideration is when we introduce groups, which are similar to HTML elements. <code>oatie</code> doesn't operate on HTML tags, but acts more like the DOM: groups are strictly nested and can only contain text or other groups. Each group has a &quot;tag&quot; (like an HTML tag), but also can contain other attributes (for example, each user's cursor contains the attribute of its originating client).</p>
+<p>Transforming two operations which operate on groups in distinct ways offers some difficulty.</p>
+<p>TODO</p>
+<a class="header" href="print.html#operations-1" id="operations-1"><h2>Operations</h2></a>
+<p>We need both a deletion and an addition to perform some atomic operations, for example, making sure there are only <code>&lt;li&gt;</code> elements inside of a <code>&lt;ul&gt;</code> element for all document versions.</p>
+<p>TODO</p>
+<a class="header" href="print.html#development-diaries" id="development-diaries"><h1>Development Diaries</h1></a>
+<p>This section contains development diaries which are not as structured as the rest of the book, but may cover topics relevant to working inside <code>edit-text</code>. In the future, most of these diaries should have their content moved to relevant sections in the book.</p>
+<a class="header" href="print.html#diary-documents-and-markdown" id="diary-documents-and-markdown"><h1>Diary: Documents and Markdown</h1></a>
+<p><strong>As of April 2018.</strong></p>
+<p>A document in Mercutio is built with <em>groups</em> and <em>characters</em>. The document model that Mercutio uses is similar to HTML. We can trivially define a mapping from Mercutio's document model to HTML:</p>
+<pre><code>&lt;ul&gt;
+  &lt;li&gt;&lt;p&gt;Item 1&lt;/p&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;p&gt;Item 2&lt;/p&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;p&gt;Item 3...&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</code></pre>
+<p>Becomes when converted to Mercutio's document structure (expressed in RON):</p>
+<pre><code>DocGroup({&quot;tag&quot;: &quot;bullet&quot;, [
+    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 1&quot;)]),
+]})
+DocGroup({&quot;tag&quot;: &quot;bullet&quot;, [
+    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 2&quot;)]),
+]})
+DocGroup({&quot;tag&quot;: &quot;bullet&quot;, [
+    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 3...&quot;)]),
+]})
+</code></pre>
+<p>(Conversion from a doc group to HTML can be done with <code>doc_as_html</code> in <code>edit-common/lib.rs</code>. There's no inverse method.)</p>
+<p>Some conversions are straightforward: aside from all non-significant whitespace, all text nodes are converted into the DocChars(...) struct. To simplify other logic, there are some invariants that should be true about DocChars: DocChars(...) must not be empty, and there must not be two successive DocChars(...) components. This isn't validated anywhere (yet) but is expected to be true in all operations.</p>
+<p>For groups, the first argument is a hashmap of <code>String</code> =&gt; <code>String</code> containing the &quot;attributes&quot;. These are similar to HTML attributes and can contain any data. The one attribute required by all groups is the &quot;tag&quot; attribute, which usually maps to the name of its HTML equivalent.</p>
+<p><strong>O/T:</strong> The use of &quot;tag&quot; or even any HTML semantics are not required by the operational transform library, Oatie. References to the &quot;tag&quot; attribute are almost entirely contained in <code>schema.rs</code>. In theory, every document/transform schema could use its own way of distinguishing between group kinds.</p>
+<p>Of interest in the above conversion is that quasi-<code>&lt;bullet&gt;</code> tag has different semantics than its HTML counterpart, <code>&lt;ul&gt;&lt;li&gt;...&lt;/li&gt;&lt;/ul&gt;</code>. This is a deliberate simplification for operational transform (that I should detail elsewhere), but essentially our goal is to better represent Markdown's semantics, not HTML's. Take the following example:</p>
+<pre><code class="language-md">* Item 1
+* Item 2
+
+Interstitial paragraph
+
+* Item 3...
+</code></pre>
+<p>And the middle paragraph, <code>Interstitial paragraph</code> is deleted. The document then becomes:</p>
+<pre><code class="language-md">* Item 1
+* Item 2
+* Item 3...
+</code></pre>
+<p>Because Mercutio converts directly from its document representation into Markdown, we can bypass the logic of joining common <code>&lt;ul&gt;</code> parents in this case and also lean more heavily on Markdown-to-html conversion to perform this for us.</p>
+<a class="header" href="print.html#markdown-serialization--deserialization" id="markdown-serialization--deserialization"><h2>Markdown serialization + deserialization</h2></a>
+<p>The module that controls markdown lives at <code>edit-common/src/markdown</code>.</p>
+<ul>
+<li><a href="https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/ser.rs">ser.rs</a></li>
+<li><a href="https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/de.rs">de.rs</a></li>
+</ul>
+<p>Mercutio's document schema should allow conversion losslessly into Markdown, while the deserialization code takes into account (or should) that Markdown's possible output is a superset of what Mercutio supports, and thus all non-supported content should be stripped out.</p>
+<a class="header" href="print.html#document-elements" id="document-elements"><h2>Document Elements</h2></a>
+<p>This are the current elements supported by Mercutio:</p>
+<pre><code>bullet =&gt; Bulleted item
+p =&gt; Paragraph
+h1/h2/h3/h4/h5/h6 =&gt; Header
+pre =&gt; Code block
+html =&gt; Inline HTML content (a raw string, as it would appear in Markdown)
+caret =&gt; Caret position
+hr =&gt; Horizontal rule
+</code></pre>
+<a class="header" href="print.html#splitting-image" id="splitting-image"><h1>Splitting Image</h1></a>
+<p>The entire document editing process is built on splitting a single origin block element into a series of sub-elements.</p>
+<p>All editing steps you can take in the frontend editor preserve this quality.</p>
+<a class="header" href="print.html#development-diary-delall-hack" id="development-diary-delall-hack"><h1>Development Diary: Delall Hack</h1></a>
+<p><strong>As of April 2018.</strong></p>
+<p>Grepping the codebase for &quot;Delall&quot; turns up this comment in <code>transform.rs</code>:</p>
+<pre><code>// &quot;Delall&quot; transform hack to avoid fully deleted elements that
+// leave their content unwrapped. Because one side deletes the
+// group, we can't recreate it (because we have no knowledge of
+// the document). Instead, we just delete all the newly added
+// content of the group.
+</code></pre>
+<p>Let me expand on some of these ideas here.</p>
+<a class="header" href="print.html#operations-only-know-the-document-structure-implied-by-the-operation" id="operations-only-know-the-document-structure-implied-by-the-operation"><h2>Operations only know the document structure implied by the operation</h2></a>
+<p>You do a DelGroup on a Group, but when transformed against any of these elements, we can respond consistently even without knowing the other type of document.</p>
+<p>TODO: This section</p>
+<ul>
+<li>DelGroup x DelChars</li>
+<li>DelGroup x DelWithGroup</li>
+<li>DelGroup x DelGroup</li>
+</ul>
+<p>...</p>
+<a class="header" href="print.html#example-transform" id="example-transform"><h2>Example Transform</h2></a>
+<p><strong>NOTE:</strong> This is a long, but realistic, example. Imagine every client connected that has a ton of lag, accuring operations until it waits for a server response.</p>
+<p>When transforming two operations, oatie (so far) does not need to know anything about the document the operation will eventually operate on in order to compose or transform two operations. In order to maintain this property, some pedantic cases arise where we need to think carefully what the result of a transform will be.</p>
+<p>Say two clients have the following document:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+&lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/h1&gt;
+&lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world!&lt;/p&gt;
+#}</code></pre></pre>
+<a class="header" href="print.html#the-journey-of-client-a" id="the-journey-of-client-a"><h3>The journey of Client A</h3></a>
+<p>Client A hits backspace, which will collapse the two block-level elements (<code>h1</code> and <code>p</code>) into one. The document there will now look like this:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// This operation:
+Op([
+    DelGroup([DelSkip(7)]), DelGroup([DelSkip(8)]),
+], [
+    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddSkip(15)]),
+])
+
+// New Document
+&lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;caret client=&quot;A&quot; /&gt; world!&lt;/p&gt;
+#}</code></pre></pre>
+<p>Next, Client A forward-deletes everything that existed in the second paragraph (<code>&quot; world!&quot;</code>). So the document now looks like this:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// This operation:
+Op([
+    DelWithGroup([DelSkip(8), DelChars(7)]),
+], [
+])
+
+// Composed operations:
+Op([
+    DelGroup([DelSkip(7)]), DelGroup([DelSkip(1), DelChars(7)]),
+], [
+    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddSkip(15)]),
+])
+
+// New document
+&lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;caret client=&quot;A&quot; /&gt;&lt;/p&gt;
+#}</code></pre></pre>
+<p>Lastly (for good measure) Client A clicks at the beginning of the first paragraph to move its caret:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// This operation:
+Op([
+    DelWithGroup([DelSkip(7), DelGroup([])]),
+], [
+    AddWithGroup([AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;A&quot;})])
+])
+
+// Composed operations:
+Op([
+    DelGroup([DelSkip(7)]), DelGroup([DelGroup([]), DelChars(7)]),
+], [
+    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;A&quot;}), AddSkip(14)]),
+])
+
+// New document
+&lt;h1&gt;&lt;caret client=&quot;A&quot; /&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/p&gt;
+#}</code></pre></pre>
+<a class="header" href="print.html#the-journey-of-client-b" id="the-journey-of-client-b"><h3>The journey of Client B</h3></a>
+<p>Client B is less active, has less lag, or just less to contribute. It simply moves its cursor to the second block...:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// This operation:
+Op([
+    DelGroup([DelGroup([]), DelSkip(7)]),
+], [
+    AddSkip(1), AddWithGroup([AddSkip(8), AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;B&quot;}, [])]),
+])
+
+// New Document
+&lt;h1&gt;Hello &lt;/h1&gt;
+&lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world!&lt;caret client=B&quot; /&gt;&lt;/p&gt;
+#}</code></pre></pre>
+<p>Then Client B hits backspace:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// This operation:
+Op([
+    DelSkip(1), DelWithGroup([DelSkip(7), DelChars(1)]),
+], [
+])
+
+// Cumulative operation:
+Op([
+    DelGroup([DelGroup([]), DelSkip(7)]), DelWithGroup([DelSkip(7), DelChars(1)]),
+], [
+    AddSkip(1), AddWithGroup([AddSkip(8), AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;B&quot;}, [])]),
+])
+
+// New Document
+&lt;h1&gt;Hello &lt;/h1&gt;
+&lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world&lt;caret client=B&quot; /&gt;&lt;/p&gt;
+#}</code></pre></pre>
+<a class="header" href="print.html#transform" id="transform"><h3>Transform</h3></a>
+<p>In the end of this hypothetical, we are now transforming these two operations:</p>
+<pre><code>// Client A
+Op([
+    DelGroup([DelSkip(7)]), DelGroup([DelGroup([]), DelChars(7)]),
+], [
+    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;A&quot;}), AddSkip(14)]),
+])
+
+// Client B
+Op([
+    DelGroup([DelGroup([]), DelSkip(7)]), DelWithGroup([DelSkip(7), DelChars(1)]),
+], [
+    AddSkip(1), AddWithGroup([AddSkip(8), AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;B&quot;}, [])]),
+])
+</code></pre>
+<p>And we know exactly what each result is generated from applying each operation to our original document (first shown at the beginning of this document):</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// Original document
+&lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/h1&gt;
+&lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world!&lt;/p&gt;
+
+
+// Client A
+&lt;h1&gt;&lt;caret client=&quot;A&quot; /&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/p&gt;
+
+// Client B
+&lt;h1&gt;Hello &lt;/h1&gt;
+&lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world&lt;caret client=B&quot; /&gt;&lt;/p&gt;
+#}</code></pre></pre>
+<p>But when transforming, by design, we avoid needing knowledge of what the document looks like. So let's evaluate these operations as though we didn't know what the result was going to look like.</p>
+<p>In particular, we want to look at how the paragraph, <code>&quot; world!&quot;</code>, is modified. Client A has deleted it entirely, whereas Client B deleted a character and inserted its caret:</p>
+<pre><code>Op([DelGroup([DelGroup([]), DelChars(7)])], [])
+Op([DelWithGroup([DelSkip(7), DelChars(1)])], [AddWithGroup([AddSkip(8), AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;B&quot;}, [])])])
+</code></pre>
+<p>We can take the union of the deletions and since there is only one addition component, select it. When we transform the two, our result looks like this:</p>
+<pre><code>Op([DelGroup([DelGroup([]), DelChars(7)])], [AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;B&quot;}, [])])
+</code></pre>
+<p>If you imagine a document consisting of only this element, and we see that one client has deleted the entire element, we accidentally wind up with a client's caret being in the root element (instead of block element). See [Splitting image](./diary-markdown.md].</p>
+<p>To avoid this problem, the Delall hack delets alls newly inserted elements from an insertion that is transformed against a deletion that delets all content. We can verify any arbitrary <code>DelGroup</code> delets all of its inner contents using a recursive check.</p>
+<a class="header" href="print.html#carets-and-you" id="carets-and-you"><h1>Carets and You</h1></a>
+<a class="header" href="print.html#diary-testing" id="diary-testing"><h1>Diary: Testing</h1></a>
+<a class="header" href="print.html#oatie-testing" id="oatie-testing"><h2>Oatie testing</h2></a>
+<ul>
+<li>Unit tests</li>
+<li>Virtual monkey (N/A)</li>
+</ul>
+<a class="header" href="print.html#mercutio-testing" id="mercutio-testing"><h2>Mercutio testing</h2></a>
+<ul>
+<li>Unit tests (N/A)</li>
+<li>Virtual Monkey</li>
+<li>Multimonkey</li>
+<li><code>geckodriver</code> integrated test</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+
+                
+            </nav>
+
+        </div>
+
+
+        <!-- Local fallback for Font Awesome -->
+        <script>
+            if (getComputedStyle(document.querySelector(".fa")).fontFamily !== "FontAwesome") {
+                var link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.type = 'text/css';
+                link.href = '_FontAwesome/css/font-awesome.css';
+                document.head.insertBefore(link, document.head.firstChild)
+            }
+        </script>
+
+        
+
+        
+
+        
+
+        
+        <script src="searchindex.js" type="text/javascript" charset="utf-8"></script>
+        
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                window.print();
+            })
+        </script>
+        
+
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS script -->
+        
+
+    </body>
+</html>

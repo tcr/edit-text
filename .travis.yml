@@ -15,12 +15,12 @@ before_install:
   # Install commands
   - command -v cargo-script || cargo install cargo-script
   - command -v diesel || cargo install diesel_cli --no-default-features --features sqlite
-  - command -v wasm-bindgen || cargo install wasm-bindgen-cli --vers "=0.2.4"
+  - cargo install wasm-bindgen-cli -f
   - command -v mdbook || cargo install mdbook
 
   - rustup target add wasm32-unknown-unknown
 
-  - cd mercutio-frontend; npm i; cd ..
+  - cd edit-frontend; npm i; cd ..
 
 script:
   # Prepare X service

@@ -44,7 +44,7 @@ fn main() {
 
 /// edit-text build scripts
 #[derive(StructOpt)]
-#[structopt(name = "edit-text build scripts", about = "Build scripts for mercutio and oatie", author = "")]
+#[structopt(name = "edit-text build scripts", about = "Build scripts for edit and oatie", author = "")]
 enum Cli {
     #[structopt(name = "wasm-build", about = "Compile the WebAssembly bundle.")]
     Wasm {
@@ -124,7 +124,7 @@ fn run() -> Result<(), Error> {
 
             execute!(
                 r"
-                    cd mercutio-wasm
+                    cd edit-client
                     cargo check {release_flag} --lib --target wasm32-unknown-unknown
                 ",
                 release_flag = release_flag,
@@ -132,7 +132,7 @@ fn run() -> Result<(), Error> {
 
             execute!(
                 r"
-                    cd mercutio-wasm
+                    cd edit-client
                     cargo build {release_flag} --lib --target wasm32-unknown-unknown
                 ",
                 release_flag = release_flag,
@@ -141,25 +141,25 @@ fn run() -> Result<(), Error> {
             if !no_vendor {
                 eprintln!("Vendoring...");
 
-                ::std::fs::create_dir_all("./mercutio-frontend/src/bindgen")?;
+                ::std::fs::create_dir_all("./edit-frontend/src/bindgen")?;
 
                 execute!(
                     r"
-                        wasm-bindgen ./target/wasm32-unknown-unknown/release/mercutio.wasm \
-                            --out-dir ./mercutio-frontend/src/bindgen \
+                        wasm-bindgen ./target/wasm32-unknown-unknown/release/edit_client.wasm \
+                            --out-dir ./edit-frontend/src/bindgen \
                             --typescript
                     ",
                 )?;
 
                 execute!(
                     r"
-                        cd ./mercutio-frontend/src/bindgen
+                        cd ./edit-frontend/src/bindgen
                         wasm2es6js \
-                            --base64 -o mercutio_bg.js mercutio_bg.wasm
+                            --base64 -o edit_client_bg.js edit_client_bg.wasm
                     ",
                 )?;
 
-                ::std::fs::remove_file("./mercutio-frontend/src/bindgen/mercutio_bg.wasm")?;
+                ::std::fs::remove_file("./edit-frontend/src/bindgen/edit_client_bg.wasm")?;
 
                 eprintln!("Done.");
             }
@@ -170,10 +170,10 @@ fn run() -> Result<(), Error> {
 
             execute!(
                 r"
-                    cd mercutio-client
+                    cd edit-client
                     export MERCUTIO_WASM_LOG=0
                     export RUST_BACKTRACE=1
-                    cargo run {release_flag} --bin mercutio-client-proxy -- {args}
+                    cargo run {release_flag} --bin edit-client-proxy -- {args}
                 ",
                 release_flag = release_flag,
                 args = args,
@@ -185,10 +185,10 @@ fn run() -> Result<(), Error> {
 
             execute!(
                 r"
-                    cd mercutio-client
+                    cd edit-client
                     export MERCUTIO_WASM_LOG=0
                     export RUST_BACKTRACE=1
-                    cargo build {release_flag} --bin mercutio-client-proxy -- {args}
+                    cargo build {release_flag} --bin edit-client-proxy -- {args}
                 ",
                 release_flag = release_flag,
                 args = args,
@@ -215,18 +215,19 @@ fn run() -> Result<(), Error> {
                 eprintln!("Building and running edit-text server (debug mode)...");
             }
 
-            if !Path::new("mercutio.sqlite3").exists() {
+            if !Path::new("edit-server/edit.sqlite3").exists() {
                 eprintln!("Building database on first startup...");
                 execute!(
                     r"
+                        cd edit-server
                         diesel setup
                     ",
                 )?;
             } else {
-                println!("Database path: mercutio.sqlite3");
+                println!("Database path: edit.sqlite3");
             }
 
-            // if !Path::new("mercutio-frontend/dist/mercutio.wasm").exists() {
+            // if !Path::new("edit-frontend/dist/edit.wasm").exists() {
                 // execute!(
                 //     r"
                 //         ./x.rs wasm-build
@@ -249,11 +250,12 @@ fn run() -> Result<(), Error> {
 
             execute!(
                 r"
-                    cd mercutio-server
+                    cd edit-server
                     export MERCUTIO_WASM_LOG={use_log}
                     export RUST_BACKTRACE=1
+                    export DATABASE_URL=edit-server/edit.sqlite3
                     cargo run {force_color_flag} {release_flag} \
-                        --bin mercutio-server -- \
+                        --bin edit-server -- \
                         --period 100 {args}
                 ",
                 use_log = if log { 1 } else { 0 },
@@ -270,11 +272,11 @@ fn run() -> Result<(), Error> {
 
             execute!(
                 r"
-                    cd mercutio-server
+                    cd edit-server
                     export MERCUTIO_WASM_LOG=0
                     export RUST_BACKTRACE=1
                     cargo build {force_color_flag} {release_flag} \
-                        --bin mercutio-server {args}
+                        --bin edit-server {args}
                 ",
                 release_flag = release_flag,
                 force_color_flag = force_color_flag,
@@ -287,9 +289,9 @@ fn run() -> Result<(), Error> {
 
             execute!(
                 r"
-                    cd mercutio
+                    cd edit
                     export RUST_BACKTRACE=1
-                    cargo run {release_flag} --bin mercutio-replay -- {args}
+                    cargo run {release_flag} --bin edit-replay -- {args}
                 ",
                 release_flag = release_flag,
                 args = args,
@@ -324,13 +326,7 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::TestBuild { args } => {
-            execute!(
-                r"
-                    ./x.rs server-build {args}
-                ",
-                args = args,
-            )?;
-
+            eprintln!("[wasm-build]");
             execute!(
                 r"
                     ./x.rs wasm-build {args}
@@ -338,6 +334,8 @@ fn run() -> Result<(), Error> {
                 args = args,
             )?;
 
+            eprintln!("");
+            eprintln!("[frontend-build]");
             execute!(
                 r"
                     ./x.rs frontend-build {args}
@@ -345,6 +343,17 @@ fn run() -> Result<(), Error> {
                 args = args,
             )?;
 
+            eprintln!("");
+            eprintln!("[server-build]");
+            execute!(
+                r"
+                    ./x.rs server-build {args}
+                ",
+                args = args,
+            )?;
+
+            eprintln!("");
+            eprintln!("[client-proxy-build]");
             execute!(
                 r"
                     ./x.rs client-proxy-build {args}
@@ -352,6 +361,8 @@ fn run() -> Result<(), Error> {
                 args = args,
             )?;
 
+            eprintln!("");
+            eprintln!("[book-build]");
             execute!(
                 r"
                     ./x.rs book-build {args}
@@ -363,9 +374,9 @@ fn run() -> Result<(), Error> {
         Cli::FrontendBuild { args } => {
             execute!(
                 r"
-                    cd mercutio-frontend
+                    cd edit-frontend
                     ./node_modules/.bin/webpack \
-                        ./src/index.js --mode development --output-filename='mercutio.js' {args}
+                        ./src/index.js --mode development --output-filename='edit.js' {args}
                 ",
                 args = args,
             )?;
@@ -374,9 +385,9 @@ fn run() -> Result<(), Error> {
         Cli::FrontendWatch { args } => {
             execute!(
                 r"
-                    cd mercutio-frontend
+                    cd edit-frontend
                     ./node_modules/.bin/webpack --watch \
-                        ./src/index.js --mode development --output-filename='mercutio.js' {args}
+                        ./src/index.js --mode development --output-filename='edit.js' {args}
                 ",
                 args = args,
             )?;
@@ -415,7 +426,7 @@ fn run() -> Result<(), Error> {
                 "
                     docker build \
                         -f dist/build/Dockerfile dist/build/ \
-                        -t mercutio-build-server
+                        -t edit-build-server
                 "
             )?;
             eprintln!();
@@ -427,9 +438,9 @@ fn run() -> Result<(), Error> {
                         -v {dir_registry}:/usr/local/cargo/registry \
                         -v {dir_rustup}:/usr/local/rustup/toolchains \
                         -v {dir_self}:/app \
-                        -w /app/mercutio-server \
-                        -t mercutio-build-server \
-                        cargo build --release --target=x86_64-unknown-linux-gnu --bin mercutio-server --features 'standalone'
+                        -w /app/edit-server \
+                        -t edit-build-server \
+                        cargo build --release --target=x86_64-unknown-linux-gnu --bin edit-server --features 'standalone'
                 ",
                 dir_git = abs_string_path("dist/build/cargo-git-cache")?,
                 dir_registry = abs_string_path("dist/build/cargo-registry-cache")?,
@@ -440,7 +451,7 @@ fn run() -> Result<(), Error> {
             eprintln!("Copying directories...");
             execute!(
                 "
-                    cp target/x86_64-unknown-linux-gnu/release/mercutio-server dist/deploy
+                    cp target/x86_64-unknown-linux-gnu/release/edit-server dist/deploy
                 "
             )?;
 
@@ -453,8 +464,8 @@ fn run() -> Result<(), Error> {
 
                     # Doing these two commands as one pipe may cause dokku to hang
                     # (from experience) so first, upload the tarball, then load it.
-                    tar c . | bzip2 | ssh root@{dokku_url} "bunzip2 > /tmp/mercutio.tar"
-                    ssh root@{dokku_url} 'cat /tmp/mercutio.tar | dokku tar:in {dokku_name}'
+                    tar c . | bzip2 | ssh root@{dokku_url} "bunzip2 > /tmp/edit.tar"
+                    ssh root@{dokku_url} 'cat /tmp/edit.tar | dokku tar:in {dokku_name}'
                 "#,
                 dokku_url = dokku_url,
                 dokku_name = dokku_name,
@@ -464,7 +475,7 @@ fn run() -> Result<(), Error> {
         Cli::BookBuild => {
             execute!(
                 r"
-                    cd docs-src
+                    cd docs/src
                     mdbook build
                 ",
             )?;
@@ -473,7 +484,7 @@ fn run() -> Result<(), Error> {
         Cli::BookWatch => {
             execute!(
                 r"
-                    cd docs-src
+                    cd docs/src
                     mdbook serve
                 ",
             )?;
