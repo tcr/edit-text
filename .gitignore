@@ -13,3 +13,4 @@ ubuntu*.log
 mercutio-frontend/dist/mercutio.wasm
 mercutio-frontend/dist/mercutio.js.map
 mercutio.js.map
+.cargo
