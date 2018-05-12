@@ -3,9 +3,7 @@
 use extern::{
     bus::{Bus},
     failure::Error,
-    mercutio_common::{
-        SyncToUserCommand,
-    },
+    mercutio_common::commands::*,
     oatie::{
         OT,
         doc::*,

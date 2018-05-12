@@ -18,10 +18,9 @@ extern crate ron;
 
 use crossbeam_channel::{unbounded, Sender, Receiver};
 use failure::Error;
-use mercutio_client::client::{UserToFrontendCommand, FrontendToUserCommand};
 use mercutio_client::*;
 use simple_ws::*;
-use mercutio_common::{UserToSyncCommand, SyncToUserCommand};
+use mercutio_common::commands::*;
 use std::panic;
 use std::process;
 use std::sync::{Arc, Mutex};

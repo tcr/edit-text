@@ -18,10 +18,7 @@ use extern::{
         sqlite::SqliteConnection,
     },
     failure::Error,
-    mercutio_common::{
-        SyncToUserCommand,
-        UserToSyncCommand,
-    },
+    mercutio_common::commands::*,
     oatie::{
         doc::*,
     },

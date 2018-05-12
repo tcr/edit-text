@@ -33,6 +33,7 @@ use std::fs::File;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use mercutio_common::*;
+use mercutio_common::commands::*;
 
 lazy_static! {
     pub static ref LOG_WASM_FILE: Arc<Mutex<File>> = {

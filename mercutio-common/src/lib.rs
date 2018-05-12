@@ -19,29 +19,10 @@ extern crate pulldown_cmark;
 extern crate pulldown_cmark_to_cmark;
 
 pub mod markdown;
+pub mod commands;
 
 use htmlescape::encode_minimal;
 use oatie::doc::*;
-
-
-// TODO move the below to a file
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum UserToSyncCommand {
-    // Connect(String),
-    Commit(String, Op, usize),
-    TerminateProxy,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum SyncToUserCommand {
-    // Client id assignment, initial doc, initial version
-    Init(String, DocSpan, usize),
-
-    // New document, version, client-id, operation
-    Update(DocSpan, usize, String, Op),
-}
-
 
 // TODO move this to a different module
 /// Converts a DocSpan to an HTML string.

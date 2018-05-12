@@ -16,6 +16,7 @@ use super::state::*;
 use mercutio_common::*;
 use failure::Error;
 use wasm_bindgen::prelude::*;
+use mercutio_common::commands::*;
 
 #[wasm_bindgen(module = "./../network")]
 extern "C" {

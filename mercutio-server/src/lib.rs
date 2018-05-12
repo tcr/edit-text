@@ -5,9 +5,7 @@ use std::fs::File;
 use std::path::Path;
 use std::sync::Arc;
 use std::sync::Mutex;
-use mercutio_common::{
-    UserToSyncCommand,
-};
+use mercutio_common::commands::*;
 
 lazy_static! {
     static ref LOG_SYNC_FILE: Arc<Mutex<File>> = {
