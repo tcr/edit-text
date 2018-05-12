@@ -5,5 +5,5 @@ src = "."
 title = "edit-text internals"
 
 [build]
-build-dir = "../docs"
+build-dir = "../book"
 create-missing = true
