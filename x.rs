@@ -253,6 +253,7 @@ fn run() -> Result<(), Error> {
                     cd edit-server
                     export MERCUTIO_WASM_LOG={use_log}
                     export RUST_BACKTRACE=1
+                    export DATABASE_URL=edit-server/edit.sqlite3
                     cargo run {force_color_flag} {release_flag} \
                         --bin edit-server -- \
                         --period 100 {args}
