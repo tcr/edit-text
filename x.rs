@@ -124,7 +124,7 @@ fn run() -> Result<(), Error> {
 
             execute!(
                 r"
-                    cd mercutio-wasm
+                    cd mercutio-client
                     cargo check {release_flag} --lib --target wasm32-unknown-unknown
                 ",
                 release_flag = release_flag,
@@ -132,7 +132,7 @@ fn run() -> Result<(), Error> {
 
             execute!(
                 r"
-                    cd mercutio-wasm
+                    cd mercutio-client
                     cargo build {release_flag} --lib --target wasm32-unknown-unknown
                 ",
                 release_flag = release_flag,
@@ -145,7 +145,7 @@ fn run() -> Result<(), Error> {
 
                 execute!(
                     r"
-                        wasm-bindgen ./target/wasm32-unknown-unknown/release/mercutio.wasm \
+                        wasm-bindgen ./target/wasm32-unknown-unknown/release/mercutio_client.wasm \
                             --out-dir ./mercutio-frontend/src/bindgen \
                             --typescript
                     ",
@@ -155,11 +155,11 @@ fn run() -> Result<(), Error> {
                     r"
                         cd ./mercutio-frontend/src/bindgen
                         wasm2es6js \
-                            --base64 -o mercutio_bg.js mercutio_bg.wasm
+                            --base64 -o mercutio_client_bg.js mercutio_client_bg.wasm
                     ",
                 )?;
 
-                ::std::fs::remove_file("./mercutio-frontend/src/bindgen/mercutio_bg.wasm")?;
+                ::std::fs::remove_file("./mercutio-frontend/src/bindgen/mercutio_client_bg.wasm")?;
 
                 eprintln!("Done.");
             }
@@ -324,6 +324,7 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::TestBuild { args } => {
+            eprintln!("[server-build]");
             execute!(
                 r"
                     ./x.rs server-build {args}
@@ -331,6 +332,8 @@ fn run() -> Result<(), Error> {
                 args = args,
             )?;
 
+            eprintln!("");
+            eprintln!("[wasm-build]");
             execute!(
                 r"
                     ./x.rs wasm-build {args}
@@ -338,6 +341,8 @@ fn run() -> Result<(), Error> {
                 args = args,
             )?;
 
+            eprintln!("");
+            eprintln!("[frontend-build]");
             execute!(
                 r"
                     ./x.rs frontend-build {args}
@@ -345,6 +350,8 @@ fn run() -> Result<(), Error> {
                 args = args,
             )?;
 
+            eprintln!("");
+            eprintln!("[client-proxy-build]");
             execute!(
                 r"
                     ./x.rs client-proxy-build {args}
@@ -352,6 +359,8 @@ fn run() -> Result<(), Error> {
                 args = args,
             )?;
 
+            eprintln!("");
+            eprintln!("[book-build]");
             execute!(
                 r"
                     ./x.rs book-build {args}

@@ -16,7 +16,7 @@ You'll need `cargo-script` to run the build script and a few other build tools:
 
 ```
 cargo install cargo-script
-cargo install wasm-bindgen-cli --vers "=0.2.4"
+cargo install wasm-bindgen-cli
 cargo install diesel_cli --no-default-features --features sqlite
 ```
 

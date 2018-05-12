@@ -11,7 +11,6 @@ extern crate taken;
 extern crate simple_ws;
 extern crate bus;
 extern crate crossbeam_channel;
-extern crate dotenv;
 extern crate rand;
 extern crate failure;
 extern crate url;

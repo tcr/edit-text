@@ -1,8 +1,7 @@
 [workspace]
 members = [
     "oatie",
-    "mercutio-common", 
-    "mercutio-wasm",
+    "mercutio-common",
     "mercutio-server",
     "mercutio-client",
     "simple-ws",

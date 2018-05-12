@@ -1,4 +1,5 @@
 #![feature(crate_in_paths, nll)]
+#![feature(proc_macro, wasm_custom_section, wasm_import_module)]
 
 #[macro_use]
 extern crate failure;
@@ -19,6 +20,10 @@ extern crate colored;
 extern crate pulldown_cmark;
 extern crate pulldown_cmark_to_cmark;
 extern crate mercutio_common;
+
+#[allow(unused)]
+#[macro_use]
+extern crate wasm_bindgen;
 
 /* logging */
 
@@ -74,6 +79,9 @@ pub mod walkers;
 pub mod state;
 pub mod client;
 pub mod random;
+
+#[cfg(target_arch = "wasm32")]
+pub mod wasm;
 
 pub use self::client::*;
 pub use self::state::*;

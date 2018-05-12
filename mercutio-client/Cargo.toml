@@ -18,15 +18,12 @@ serde_derive = "1.0.27"
 serde_json = "1.0.6"
 take_mut = "0.2.0"
 taken = "0.1.1"
+wasm-bindgen = "0.2.5"
 
-[dependencies.include-dir-macro]
-git = "https://github.com/jcdyer/include-dir-macro"
+include-dir-macro = { git = "https://github.com/jcdyer/include-dir-macro" }
+mercutio-common = { path = "../mercutio-common" }
+oatie = { path = "../oatie" }
 
-[dependencies.mercutio-common]
-path = "../mercutio-common"
-
-[dependencies.oatie]
-path = "../oatie"
 [target."cfg(not(target_arch=\"wasm32\"))".dependencies]
 bus = "1.3.2"
 crossbeam-channel = "0.1.2"
@@ -36,9 +33,8 @@ structopt-derive = "0.2.3"
 tiny_http = "0.5.8"
 url = "1.6.0"
 ws = "0.7.3"
-dotenv = "0.11.0"
 simple-ws = { path = "../simple-ws" }
+uuid = { features = ["v4"], version = "0.5" }
 
-[target."cfg(not(target_arch=\"wasm32\"))".dependencies.uuid]
-features = ["v4"]
-version = "0.5"
+[lib]
+crate-type = ["cdylib", "rlib"]

@@ -1,9 +1,6 @@
-//! Connecting to wasm.
-
-#![feature(proc_macro, wasm_custom_section, wasm_import_module)]
+//! Contains the bindings needed for WASM.
 
 extern crate mercutio_common;
-extern crate mercutio_client;
 extern crate failure;
 extern crate maplit;
 extern crate oatie;
@@ -11,21 +8,16 @@ extern crate rand;
 extern crate serde;
 extern crate serde_json;
 extern crate take_mut;
-#[macro_use]
-extern crate lazy_static;
-#[allow(unused)]
-#[macro_use]
-extern crate wasm_bindgen;
 
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicBool;
-use mercutio_client::client::*;
-use mercutio_client::state::*;
+use super::client::*;
+use super::state::*;
 use mercutio_common::*;
 use failure::Error;
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen(module = "../network")]
+#[wasm_bindgen(module = "./../network")]
 extern "C" {
     /// Send a command *to* the js client.
     pub fn sendCommandToJS(input: &str) -> u32;
