@@ -1,4 +1,4 @@
-# Dockerfile for running the mercutio-server
+# Dockerfile for running the edit-server
 
 FROM nginx
 
@@ -13,6 +13,6 @@ ADD . /app
 WORKDIR /app
 EXPOSE 80
 
-RUN mkdir -p mercutio/log; mkdir -p log;
+RUN mkdir -p edit/log; mkdir -p log;
 
-CMD service nginx restart; RUST_BACKTRACE=1 MERCUTIO_SYNC_LOG=0 ./mercutio-server
+CMD service nginx restart; RUST_BACKTRACE=1 MERCUTIO_SYNC_LOG=0 ./edit-server

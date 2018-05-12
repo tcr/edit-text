@@ -28,10 +28,10 @@ To run it on port `8000`:
 
 ## Frontend build
 
-The frontend is all the JavaScript code that runs in the browser, and optionally including the WASM build system. To build this, you should run `npm install` in the `mercutio-frontend/` directory:
+The frontend is all the JavaScript code that runs in the browser, and optionally including the WASM build system. To build this, you should run `npm install` in the `edit-frontend/` directory:
 
 ```sh
-cd mercutio-frontend
+cd edit-frontend
 npm install
 ```
 
@@ -47,13 +47,13 @@ If you want to launch a long-lived script to build the frontend and rebuild each
 ./x.rs frontend-watch
 ```
 
-Building the frontend component may also require that you use build the WASM bundle from `mercutio-client`, which can be generated with this command:
+Building the frontend component may also require that you use build the WASM bundle from `edit-client`, which can be generated with this command:
 
 ```sh
 ./x.rs wasm-build
 ```
 
-This will compile the wasm bundle and save it to `mercutio-frontend/src/bindgen`, which will be linked with the frontend code bundle (generated using `frontend-build` or `frontend-watch`).
+This will compile the wasm bundle and save it to `edit-frontend/src/bindgen`, which will be linked with the frontend code bundle (generated using `frontend-build` or `frontend-watch`).
 
 ## Testing
 
@@ -65,7 +65,7 @@ This command will run comprehensive end-to-end tests. It's used by CI to test al
 
 ## Client Proxy
 
-If you are testing changes to the `mercutio-client` library, you have the option of choosing between running client code in the browser (via WebAssembly) or running it in a local Rust process, having all commands proxied through websockets.
+If you are testing changes to the `edit-client` library, you have the option of choosing between running client code in the browser (via WebAssembly) or running it in a local Rust process, having all commands proxied through websockets.
 
 ```sh
 ./x.rs client-proxy
@@ -91,7 +91,7 @@ By navigating to <http://localhost:3000/>, you'll see the page refresh automatic
 
 You can deploy edit-text to a Dokku server using `./x.rs deploy`.
 
-* This first cross-compiles the mercutio-server binary using a local Docker image.
+* This first cross-compiles the edit-server binary using a local Docker image.
 * It then uploads the binary using the `dokku tar:in` command on a remote server (not the Git endpoint).
 * You can configure the dokku URL using the `EDIT_DEPLOY_URL` environment variable.
 * You can configure the dokku application name using the `EDIT_DOKKU_NAME` environment variable.
@@ -100,7 +100,7 @@ You can deploy edit-text to a Dokku server using `./x.rs deploy`.
 
 ```
 edit-text build scripts 0.1.0
-Build scripts for mercutio and oatie
+Build scripts for edit and oatie
 
 USAGE:
     x <SUBCOMMAND>

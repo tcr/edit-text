@@ -167,7 +167,7 @@ DocGroup({&quot;tag&quot;: &quot;bullet&quot;, [
     DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 3...&quot;)]),
 ]})
 </code></pre>
-<p>(Conversion from a doc group to HTML can be done with <code>doc_as_html</code> in <code>mercutio-common/lib.rs</code>. There's no inverse method.)</p>
+<p>(Conversion from a doc group to HTML can be done with <code>doc_as_html</code> in <code>edit-common/lib.rs</code>. There's no inverse method.)</p>
 <p>Some conversions are straightforward: aside from all non-significant whitespace, all text nodes are converted into the DocChars(...) struct. To simplify other logic, there are some invariants that should be true about DocChars: DocChars(...) must not be empty, and there must not be two successive DocChars(...) components. This isn't validated anywhere (yet) but is expected to be true in all operations.</p>
 <p>For groups, the first argument is a hashmap of <code>String</code> =&gt; <code>String</code> containing the &quot;attributes&quot;. These are similar to HTML attributes and can contain any data. The one attribute required by all groups is the &quot;tag&quot; attribute, which usually maps to the name of its HTML equivalent.</p>
 <p><strong>O/T:</strong> The use of &quot;tag&quot; or even any HTML semantics are not required by the operational transform library, Oatie. References to the &quot;tag&quot; attribute are almost entirely contained in <code>schema.rs</code>. In theory, every document/transform schema could use its own way of distinguishing between group kinds.</p>
@@ -186,10 +186,10 @@ Interstitial paragraph
 </code></pre>
 <p>Because Mercutio converts directly from its document representation into Markdown, we can bypass the logic of joining common <code>&lt;ul&gt;</code> parents in this case and also lean more heavily on Markdown-to-html conversion to perform this for us.</p>
 <a class="header" href="diary-markdown.html#markdown-serialization--deserialization" id="markdown-serialization--deserialization"><h2>Markdown serialization + deserialization</h2></a>
-<p>The module that controls markdown lives at <code>mercutio-common/src/markdown</code>.</p>
+<p>The module that controls markdown lives at <code>edit-common/src/markdown</code>.</p>
 <ul>
-<li><a href="https://github.com/tcr/edit-text/blob/master/mercutio-common/src/markdown/ser.rs">ser.rs</a></li>
-<li><a href="https://github.com/tcr/edit-text/blob/master/mercutio-common/src/markdown/de.rs">de.rs</a></li>
+<li><a href="https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/ser.rs">ser.rs</a></li>
+<li><a href="https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/de.rs">de.rs</a></li>
 </ul>
 <p>Mercutio's document schema should allow conversion losslessly into Markdown, while the deserialization code takes into account (or should) that Markdown's possible output is a superset of what Mercutio supports, and thus all non-supported content should be stripped out.</p>
 <a class="header" href="diary-markdown.html#document-elements" id="document-elements"><h2>Document Elements</h2></a>

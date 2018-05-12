@@ -29,7 +29,7 @@ fn launch(counter: Arc<AtomicUsize>, thread_count: usize) {
     println!();
     println!();
 
-    let mut child1 = Command::new("/Users/trim/tcr/edit-text/target/release/mercutio-sync")
+    let mut child1 = Command::new("/Users/trim/tcr/edit-text/target/release/edit-sync")
         .current_dir(dir.path())
         .env("RUST_BACKTRACE", "1")
         .arg("--port")
@@ -42,7 +42,7 @@ fn launch(counter: Arc<AtomicUsize>, thread_count: usize) {
         .spawn()
         .unwrap();
 
-    let mut child2 = Command::new("/Users/trim/tcr/edit-text/target/release/mercutio-wasm")
+    let mut child2 = Command::new("/Users/trim/tcr/edit-text/target/release/edit-wasm")
         .current_dir(dir.path())
         .env("RUST_BACKTRACE", "1")
         .arg("--port")

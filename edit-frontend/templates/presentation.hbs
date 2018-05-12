@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Title</title>
+    <meta charset="utf-8">
+    <style>
+
+@import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+@import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+@import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+body { font-family: 'Droid Serif'; }
+h1, h2, h3 {
+  font-family: 'Yanone Kaffeesatz';
+  font-weight: normal;
+}
+.remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+
+    </style>
+    <link rel="stylesheet" href="/$/edit.css">
+  </head>
+  <body id="presentation">
+    <textarea id="source">
+{{{body}}}
+    </textarea>
+
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+    <script>
+
+var slideshow = remark.create();
+
+// Adds fullscreen button after remark is instantiated.
+var fullscreen = document.createElement('button');
+fullscreen.innerText = '↕️';
+fullscreen.onclick = function (e) {
+  var a = document.querySelector('.remark-slides-area');
+  try {
+    a.mozRequestFullScreen();
+  } catch (e) {
+    a.requestFullscreen();
+  }
+};
+fullscreen.style.cssText = `
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 1000;
+  height: 3em;
+  width: 3em;
+  border: 1px solid #333;
+  font: Helvetica, Arial;
+  box-shadow: #aaa 2px 2px;
+`;
+document.body.appendChild(fullscreen);
+
+    </script>
+  </body>
+</html>

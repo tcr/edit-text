@@ -36,7 +36,7 @@ The API between two layers is defined in several enums representing payloads acr
 
 ## Interop Sync <-> User
 
-Defined in `mercutio-client/src/client.rs`.
+Defined in `edit-client/src/client.rs`.
 
 From Sync -> User:
 
@@ -62,7 +62,7 @@ pub enum UserToSyncCommand {
 
 ## Intop: User <-> Frontend
 
-Defined in `mercutio-client/src/client.rs`.
+Defined in `edit-client/src/client.rs`.
 
 From User -> Frontend:
 

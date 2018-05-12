@@ -26,7 +26,7 @@ DocGroup({"tag": "bullet", [
 ]})
 ```
 
-(Conversion from a doc group to HTML can be done with `doc_as_html` in `mercutio-common/lib.rs`. There's no inverse method.)
+(Conversion from a doc group to HTML can be done with `doc_as_html` in `edit-common/lib.rs`. There's no inverse method.)
 
 Some conversions are straightforward: aside from all non-significant whitespace, all text nodes are converted into the DocChars(...) struct. To simplify other logic, there are some invariants that should be true about DocChars: DocChars(...) must not be empty, and there must not be two successive DocChars(...) components. This isn't validated anywhere (yet) but is expected to be true in all operations.
 
@@ -57,10 +57,10 @@ Because Mercutio converts directly from its document representation into Markdow
 
 ## Markdown serialization + deserialization
 
-The module that controls markdown lives at `mercutio-common/src/markdown`.
+The module that controls markdown lives at `edit-common/src/markdown`.
 
-* [ser.rs](https://github.com/tcr/edit-text/blob/master/mercutio-common/src/markdown/ser.rs)
-* [de.rs](https://github.com/tcr/edit-text/blob/master/mercutio-common/src/markdown/de.rs)
+* [ser.rs](https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/ser.rs)
+* [de.rs](https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/de.rs)
 
 Mercutio's document schema should allow conversion losslessly into Markdown, while the deserialization code takes into account (or should) that Markdown's possible output is a superset of what Mercutio supports, and thus all non-supported content should be stripped out.
 

@@ -43,7 +43,7 @@ fn launch(input: &str) -> i32 {
     }
 }
 
-//     let mut child2 = Command::new("/Users/trim/github/edit-text//target/release/mercutio-wasm")
+//     let mut child2 = Command::new("/Users/trim/github/edit-text//target/release/edit-wasm")
 //         .current_dir(dir.path())
 //         .env("RUST_BACKTRACE", "1")
 //         .arg("--port")

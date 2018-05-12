@@ -3,14 +3,14 @@
 edit-text is a collaborative text editor, written in Rust.
 
 * oatie, an operational transform library
-* mercutio, the frontend and backend to edit-text
+* edit, the frontend and backend to edit-text
 
 The frontend is broken out into several crates:
 
-* mercutio-common
-* mercutio-client
-* mercutio-server
-* mercutio-frontend
+* edit-common
+* edit-client
+* edit-server
+* edit-frontend
 
 ## Usage
 

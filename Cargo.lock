@@ -398,6 +398,106 @@ version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "edit-client"
+version = "0.1.0"
+dependencies = [
+ "bus 1.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "colored 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "crossbeam-channel 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "edit-common 0.1.0",
+ "env_logger 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "include-dir-macro 0.1.0 (git+https://github.com/jcdyer/include-dir-macro)",
+ "lazy_static 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "maplit 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "matches 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "oatie 0.3.0",
+ "pulldown-cmark 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pulldown-cmark-to-cmark 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quicli 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ron 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.50 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_derive 1.0.50 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_json 1.0.17 (registry+https://github.com/rust-lang/crates.io-index)",
+ "simple-ws 0.1.0",
+ "structopt 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "structopt-derive 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "take_mut 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "taken 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tiny_http 0.5.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "url 1.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "uuid 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wasm-bindgen 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ws 0.7.6 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "edit-common"
+version = "0.1.0"
+dependencies = [
+ "colored 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "env_logger 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "htmlescape 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "include-dir-macro 0.1.0 (git+https://github.com/jcdyer/include-dir-macro)",
+ "lazy_static 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "maplit 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "oatie 0.3.0",
+ "pulldown-cmark 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pulldown-cmark-to-cmark 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ron 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.50 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_derive 1.0.50 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_json 1.0.17 (registry+https://github.com/rust-lang/crates.io-index)",
+ "take_mut 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "taken 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "edit-server"
+version = "0.1.0"
+dependencies = [
+ "bus 1.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "colored 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "crossbeam-channel 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "diesel 1.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "dotenv 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "edit-common 0.1.0",
+ "env_logger 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "handlebars 0.32.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "include-dir-macro 0.1.0 (git+https://github.com/jcdyer/include-dir-macro)",
+ "juniper 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lazy_static 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "maplit 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "md5 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mime_guess 1.8.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "oatie 0.3.0",
+ "pulldown-cmark 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pulldown-cmark-to-cmark 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quicli 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "r2d2 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "r2d2-diesel 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "reqwest 0.8.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ron 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rouille 2.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.50 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_derive 1.0.50 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_json 1.0.17 (registry+https://github.com/rust-lang/crates.io-index)",
+ "simple-ws 0.1.0",
+ "structopt 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "structopt-derive 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "take_mut 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "taken 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "url 1.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "uuid 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ws 0.7.6 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "either"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -873,106 +973,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "memoffset"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "mercutio-client"
-version = "0.1.0"
-dependencies = [
- "bus 1.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "colored 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "crossbeam-channel 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "env_logger 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "include-dir-macro 0.1.0 (git+https://github.com/jcdyer/include-dir-macro)",
- "lazy_static 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "maplit 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "matches 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "mercutio-common 0.1.0",
- "oatie 0.3.0",
- "pulldown-cmark 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "pulldown-cmark-to-cmark 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "quicli 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "ron 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 1.0.50 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_derive 1.0.50 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_json 1.0.17 (registry+https://github.com/rust-lang/crates.io-index)",
- "simple-ws 0.1.0",
- "structopt 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "structopt-derive 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "take_mut 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "taken 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "tiny_http 0.5.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "url 1.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "uuid 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "wasm-bindgen 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "ws 0.7.6 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "mercutio-common"
-version = "0.1.0"
-dependencies = [
- "colored 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "env_logger 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "htmlescape 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "include-dir-macro 0.1.0 (git+https://github.com/jcdyer/include-dir-macro)",
- "lazy_static 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "maplit 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "oatie 0.3.0",
- "pulldown-cmark 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "pulldown-cmark-to-cmark 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "ron 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 1.0.50 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_derive 1.0.50 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_json 1.0.17 (registry+https://github.com/rust-lang/crates.io-index)",
- "take_mut 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "taken 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "mercutio-server"
-version = "0.1.0"
-dependencies = [
- "bus 1.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "colored 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "crossbeam-channel 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "diesel 1.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "dotenv 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "env_logger 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "handlebars 0.32.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "include-dir-macro 0.1.0 (git+https://github.com/jcdyer/include-dir-macro)",
- "juniper 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "lazy_static 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "maplit 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "md5 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "mercutio-common 0.1.0",
- "mime_guess 1.8.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "oatie 0.3.0",
- "pulldown-cmark 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "pulldown-cmark-to-cmark 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "quicli 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "r2d2 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "r2d2-diesel 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "reqwest 0.8.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "ron 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "rouille 2.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 1.0.50 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_derive 1.0.50 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_json 1.0.17 (registry+https://github.com/rust-lang/crates.io-index)",
- "simple-ws 0.1.0",
- "structopt 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "structopt-derive 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "take_mut 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "taken 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "url 1.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "uuid 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "ws 0.7.6 (registry+https://github.com/rust-lang/crates.io-index)",
-]
 
 [[package]]
 name = "mime"

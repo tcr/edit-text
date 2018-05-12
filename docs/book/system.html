@@ -170,7 +170,7 @@ Sync &lt;-+-&gt; User &lt;-&gt; Frontend
 <a class="header" href="system.html#api" id="api"><h1>API</h1></a>
 <p>The API between two layers is defined in several enums representing payloads across RPC boundaries.</p>
 <a class="header" href="system.html#interop-sync---user" id="interop-sync---user"><h2>Interop Sync &lt;-&gt; User</h2></a>
-<p>Defined in <code>mercutio-client/src/client.rs</code>.</p>
+<p>Defined in <code>edit-client/src/client.rs</code>.</p>
 <p>From Sync -&gt; User:</p>
 <pre><code>pub enum SyncToUserCommand {
     // Client id assignment, initial doc, initial version
@@ -188,7 +188,7 @@ Sync &lt;-+-&gt; User &lt;-&gt; Frontend
 }
 </code></pre>
 <a class="header" href="system.html#intop-user---frontend" id="intop-user---frontend"><h2>Intop: User &lt;-&gt; Frontend</h2></a>
-<p>Defined in <code>mercutio-client/src/client.rs</code>.</p>
+<p>Defined in <code>edit-client/src/client.rs</code>.</p>
 <p>From User -&gt; Frontend:</p>
 <pre><code>pub enum UserToFrontendCommand {
     Init(String),
