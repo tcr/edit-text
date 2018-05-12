@@ -215,10 +215,11 @@ fn run() -> Result<(), Error> {
                 eprintln!("Building and running edit-text server (debug mode)...");
             }
 
-            if !Path::new("mercutio.sqlite3").exists() {
+            if !Path::new("mercutio-server/mercutio.sqlite3").exists() {
                 eprintln!("Building database on first startup...");
                 execute!(
                     r"
+                        cd mercutio-server
                         diesel setup
                     ",
                 )?;
