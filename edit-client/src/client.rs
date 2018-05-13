@@ -1,12 +1,23 @@
-use super::*;
-use failure::Error;
-use oatie::doc::*;
-use std::sync::atomic::{AtomicBool};
-use std::sync::atomic::Ordering;
-use oatie::validate::validate_doc;
-use crate::markdown;
-use edit_common::doc_as_html;
-use edit_common::commands::*;
+use crate::{
+    actions::*,
+    state::*,
+    random::*,
+    markdown,
+};
+
+use extern::{
+    edit_common::{
+        doc_as_html,
+        commands::*,
+    },
+    failure::Error,
+    oatie::{
+        doc::*,
+        validate::validate_doc,
+    },
+    std::sync::atomic::{AtomicBool, Ordering},
+    std::sync::Arc,
+};
 
 // Shorthandler
 // code, meta, shift, alt, callback

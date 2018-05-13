@@ -1,5 +1,5 @@
-#![feature(crate_in_paths, nll)]
-#![feature(proc_macro, wasm_custom_section, wasm_import_module)]
+#![feature(crate_in_paths, nll, proc_macro, wasm_custom_section, wasm_import_module)]
+#![feature(extern_in_paths)]
 
 #[macro_use]
 extern crate failure;

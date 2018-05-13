@@ -1,20 +1,17 @@
-use diesel::{
-    self,
-    prelude::*,
-    sqlite::SqliteConnection,
-};
 use crate::{
     db::*,
 };
-use dotenv::dotenv;
-use std::{
-    collections::HashMap,
-    env,
+
+use extern::{
+    diesel::{
+        self,
+        sqlite::SqliteConnection,
+    },
+    std::{
+        collections::HashMap,
+    },
+    failure::Error,
 };
-use failure::Error;
-use oatie::doc::*;
-use r2d2_diesel::ConnectionManager;
-use r2d2;
 
 // TODO usize is not useful.
 pub fn create_page<'a>(conn: &SqliteConnection, id: &'a str, doc: &Doc) -> usize {

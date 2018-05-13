@@ -77,8 +77,8 @@ enum Cli {
     #[structopt(name = "test")]
     Test { args: Vec<String> },
 
-    #[structopt(name = "test-build")]
-    TestBuild { args: Vec<String> },
+    #[structopt(name = "build")]
+    Build { args: Vec<String> },
 
     #[structopt(name = "frontend-build", about = "Bundle the frontend JavaScript code.")]
     FrontendBuild { args: Vec<String> },
@@ -325,7 +325,7 @@ fn run() -> Result<(), Error> {
             )?;
         }
 
-        Cli::TestBuild { args } => {
+        Cli::Build { args } => {
             eprintln!("[wasm-build]");
             execute!(
                 r"

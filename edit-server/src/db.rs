@@ -1,14 +1,11 @@
 use diesel::{
-    self,
     prelude::*,
     sqlite::SqliteConnection,
 };
 use dotenv::dotenv;
 use std::{
-    collections::HashMap,
     env,
 };
-use failure::Error;
 use oatie::doc::*;
 use r2d2_diesel::ConnectionManager;
 use r2d2;
