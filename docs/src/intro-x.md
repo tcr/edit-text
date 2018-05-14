@@ -95,32 +95,3 @@ You can deploy edit-text to a Dokku server using `./x.rs deploy`.
 * It then uploads the binary using the `dokku tar:in` command on a remote server (not the Git endpoint).
 * You can configure the dokku URL using the `EDIT_DEPLOY_URL` environment variable.
 * You can configure the dokku application name using the `EDIT_DOKKU_NAME` environment variable.
-
-## Help
-
-```
-edit-text build scripts 0.1.0
-Build scripts for edit and oatie
-
-USAGE:
-    x <SUBCOMMAND>
-
-FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
-
-SUBCOMMANDS:
-    book-build        Builds the book.
-    book-watch        Watches and rebuilds the book.
-    client-proxy      Run client code in your terminal.
-    deploy            Deploy to sandbox.edit.io.
-    frontend-build    Bundle the frontend JavaScript code.
-    frontend-watch    Watch the frontend JavaScript code, building continuously.
-    help              Prints this message or the help of the given subcommand(s)
-    oatie-build       Build the operational transform library.
-    replay            Replay an edit-text log.
-    server            Run the edit-text server.
-    server-build      Build the edit-text server.
-    test              
-    wasm-build        Compile the WebAssembly bundle.
-```

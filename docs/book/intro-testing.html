@@ -3,12 +3,13 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Introduction - edit-text internals</title>
+        <title>Testing - edit-text internals</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
+        <base href="">
 
         <link rel="stylesheet" href="book.css">
         <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
@@ -68,7 +69,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="intro.html" class="active"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="intro-x.html"><strong aria-hidden="true">1.1.</strong> Build System ./x.rs</a></li><li><a href="intro-system.html"><strong aria-hidden="true">1.2.</strong> System Diagram</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.3.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="rtf-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.2.</strong> Operational Transform</a></li></ol></li><li><a href="diary.html"><strong aria-hidden="true">3.</strong> Development Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">3.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">3.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">3.3.</strong> Carets and You</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="intro-x.html"><strong aria-hidden="true">1.1.</strong> Build System ./x.rs</a></li><li><a href="intro-system.html"><strong aria-hidden="true">1.2.</strong> System Diagram</a></li><li><a href="intro-testing.html" class="active"><strong aria-hidden="true">1.3.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="rtf-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.2.</strong> Operational Transform</a></li></ol></li><li><a href="diary.html"><strong aria-hidden="true">3.</strong> Development Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">3.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">3.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">3.3.</strong> Carets and You</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -132,42 +133,43 @@
 
                 <div id="content" class="content">
                     <main>
-                        <a class="header" href="intro.html#edit-text" id="edit-text"><h1>edit-text</h1></a>
-<p>edit-text is a collaborative text editor, written in Rust.</p>
+                        <a class="header" href="intro-testing.html#diary-testing" id="diary-testing"><h1>Diary: Testing</h1></a>
+<a class="header" href="intro-testing.html#oatie-testing" id="oatie-testing"><h2>Oatie testing</h2></a>
 <ul>
-<li>oatie, an operational transform library</li>
-<li>edit, the frontend and backend to edit-text</li>
+<li>Transform test (oatie/in, transform_test.sh)</li>
+<li>Unit tests</li>
 </ul>
-<p>The frontend is broken out into several crates:</p>
+<p>Missing:</p>
 <ul>
-<li>edit-common</li>
-<li>edit-client</li>
-<li>edit-server</li>
-<li>edit-frontend</li>
+<li>Virtual monkey (on random schemas?)</li>
 </ul>
-<a class="header" href="intro.html#usage" id="usage"><h2>Usage</h2></a>
-<p>Invoking the server:</p>
-<pre><code>./x.rs server [--release] [--client-proxy]
-</code></pre>
-<p>Invoking the client proxy:</p>
-<pre><code>./x.rs client-proxy [--release]
-</code></pre>
-<p>Building the frontend (TypeScript):</p>
-<pre><code>./x.rs frontend-build
-./x.rs frontend-watch # watches builds and rebuilds as you edit
-</code></pre>
-<p>Building the WebAssembly bundle:</p>
-<pre><code>./x.rs wasm-build
-</code></pre>
+<a class="header" href="intro-testing.html#edit-text-testing" id="edit-text-testing"><h2>edit-text testing</h2></a>
+<ul>
+<li></li>
+<li><code>geckodriver</code> integrated test (./x.rs test)</li>
+</ul>
+<p>Manual:</p>
+<ul>
+<li>Multi Monkey (/$/multi.html)</li>
+<li>Virtual Monkey (uh....)</li>
+</ul>
+<p>Missing:</p>
+<ul>
+<li>Unit tests</li>
+</ul>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
+                            <a rel="prev" href="intro-system.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
 
                         
-                            <a rel="next" href="intro-x.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="rtf.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -179,9 +181,13 @@
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
+                    <a href="intro-system.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
 
                 
-                    <a href="intro-x.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a href="rtf.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 
