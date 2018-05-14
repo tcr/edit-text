@@ -32,5 +32,6 @@ script:
   - ./x.rs build
 
   # TODO consolidate these tests
-  - cd oatie; cargo test
+  - cd oatie && cargo test && cd ..
+  - cd edit-common && cargo test && cd ..
   - ./x.rs test

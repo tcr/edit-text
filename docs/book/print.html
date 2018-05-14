@@ -286,24 +286,26 @@ Sync &lt;-+-&gt; User &lt;-&gt; Frontend
 <a class="header" href="print.html#diary-testing" id="diary-testing"><h1>Diary: Testing</h1></a>
 <a class="header" href="print.html#oatie-testing" id="oatie-testing"><h2>Oatie testing</h2></a>
 <ul>
+<li>Transform test (oatie/in, transform_test.sh)</li>
 <li>Unit tests</li>
 </ul>
 <p>Missing:</p>
 <ul>
-<li>Virtual monkey (N/A)</li>
+<li>Virtual monkey (on random schemas?)</li>
 </ul>
-<a class="header" href="print.html#mercutio-testing" id="mercutio-testing"><h2>Mercutio testing</h2></a>
+<a class="header" href="print.html#edit-text-testing" id="edit-text-testing"><h2>edit-text testing</h2></a>
 <ul>
-<li><code>geckodriver</code> integrated test</li>
-</ul>
-<p>Missing:</p>
-<ul>
-<li>Unit tests (N/A)</li>
-<li>Virtual Monkey</li>
+<li></li>
+<li><code>geckodriver</code> integrated test (./x.rs test)</li>
 </ul>
 <p>Manual:</p>
 <ul>
-<li>Multi Monkey</li>
+<li>Multi Monkey (/$/multi.html)</li>
+<li>Virtual Monkey (uh....)</li>
+</ul>
+<p>Missing:</p>
+<ul>
+<li>Unit tests</li>
 </ul>
 <a class="header" href="print.html#rich-text" id="rich-text"><h1>Rich Text</h1></a>
 <p>This section describes the rich text format used by edit-text.</p>
@@ -714,21 +716,6 @@ Op([DelWithGroup([DelSkip(7), DelChars(1)])], [AddWithGroup([AddSkip(8), AddGrou
 
         </div>
 
-        
-        <!-- Livereload script (if served using the cli tool) -->
-        <script type="text/javascript">
-            var socket = new WebSocket("ws://localhost:3001");
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload(true); // force reload from server (not from cache)
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
         
 
         
