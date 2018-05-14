@@ -13,7 +13,6 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicBool;
 use super::client::*;
 use super::state::*;
-use edit_common::*;
 use failure::Error;
 use wasm_bindgen::prelude::*;
 use edit_common::commands::*;

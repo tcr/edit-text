@@ -1,8 +1,8 @@
-#![allow(deprecated)]
+//! Synchronization server. Threads for websockets and graphql.
 
 use crate::{
     db::*,
-    util::*,
+    carets::*,
     graphql::sync_graphql_server,
     state::*,
 };
