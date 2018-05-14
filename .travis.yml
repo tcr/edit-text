@@ -30,4 +30,7 @@ script:
 
   # Run test
   - ./x.rs build
+
+  # TODO consolidate these tests
+  - cd oatie; cargo test
   - ./x.rs test

@@ -69,7 +69,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="x.html"><strong aria-hidden="true">1.1.</strong> Build System ./x.rs</a></li><li><a href="system.html"><strong aria-hidden="true">1.2.</strong> System Diagram</a></li><li><a href="oatie.html"><strong aria-hidden="true">1.3.</strong> Working with Documents</a></li><li><a href="ot.html"><strong aria-hidden="true">1.4.</strong> Operational Transform</a></li></ol></li><li><a href="diaries.html"><strong aria-hidden="true">2.</strong> Development Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">2.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.3.</strong> Carets and You</a></li><li><a href="diary-testing.html"><strong aria-hidden="true">2.4.</strong> Testing</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="intro-x.html"><strong aria-hidden="true">1.1.</strong> Build System ./x.rs</a></li><li><a href="intro-system.html"><strong aria-hidden="true">1.2.</strong> System Diagram</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.3.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="rtf-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.2.</strong> Operational Transform</a></li></ol></li><li><a href="diary.html"><strong aria-hidden="true">3.</strong> Development Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">3.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">3.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">3.3.</strong> Carets and You</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -213,32 +213,6 @@ npm install
 <li>You can configure the dokku URL using the <code>EDIT_DEPLOY_URL</code> environment variable.</li>
 <li>You can configure the dokku application name using the <code>EDIT_DOKKU_NAME</code> environment variable.</li>
 </ul>
-<a class="header" href="print.html#help" id="help"><h2>Help</h2></a>
-<pre><code>edit-text build scripts 0.1.0
-Build scripts for edit and oatie
-
-USAGE:
-    x &lt;SUBCOMMAND&gt;
-
-FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
-
-SUBCOMMANDS:
-    book-build        Builds the book.
-    book-watch        Watches and rebuilds the book.
-    client-proxy      Run client code in your terminal.
-    deploy            Deploy to sandbox.edit.io.
-    frontend-build    Bundle the frontend JavaScript code.
-    frontend-watch    Watch the frontend JavaScript code, building continuously.
-    help              Prints this message or the help of the given subcommand(s)
-    oatie-build       Build the operational transform library.
-    replay            Replay an edit-text log.
-    server            Run the edit-text server.
-    server-build      Build the edit-text server.
-    test              
-    wasm-build        Compile the WebAssembly bundle.
-</code></pre>
 <a class="header" href="print.html#system-diagram" id="system-diagram"><h1>System Diagram</h1></a>
 <p>Basic system diagram:</p>
 <pre><code>
@@ -309,6 +283,30 @@ Sync &lt;-+-&gt; User &lt;-&gt; Frontend
     RequestMarkdown,
 }
 </code></pre>
+<a class="header" href="print.html#diary-testing" id="diary-testing"><h1>Diary: Testing</h1></a>
+<a class="header" href="print.html#oatie-testing" id="oatie-testing"><h2>Oatie testing</h2></a>
+<ul>
+<li>Unit tests</li>
+</ul>
+<p>Missing:</p>
+<ul>
+<li>Virtual monkey (N/A)</li>
+</ul>
+<a class="header" href="print.html#mercutio-testing" id="mercutio-testing"><h2>Mercutio testing</h2></a>
+<ul>
+<li><code>geckodriver</code> integrated test</li>
+</ul>
+<p>Missing:</p>
+<ul>
+<li>Unit tests (N/A)</li>
+<li>Virtual Monkey</li>
+</ul>
+<p>Manual:</p>
+<ul>
+<li>Multi Monkey</li>
+</ul>
+<a class="header" href="print.html#rich-text" id="rich-text"><h1>Rich Text</h1></a>
+<p>This section describes the rich text format used by edit-text.</p>
 <a class="header" href="print.html#working-with-documents" id="working-with-documents"><h1>Working with Documents</h1></a>
 <p>The basic structure that Oatie operates on is a Document:</p>
 <pre><pre class="playpen"><code class="language-rust">
@@ -694,19 +692,6 @@ Op([DelWithGroup([DelSkip(7), DelChars(1)])], [AddWithGroup([AddSkip(8), AddGrou
 <p>If you imagine a document consisting of only this element, and we see that one client has deleted the entire element, we accidentally wind up with a client's caret being in the root element (instead of block element). See [Splitting image](./diary-markdown.md].</p>
 <p>To avoid this problem, the Delall hack delets alls newly inserted elements from an insertion that is transformed against a deletion that delets all content. We can verify any arbitrary <code>DelGroup</code> delets all of its inner contents using a recursive check.</p>
 <a class="header" href="print.html#carets-and-you" id="carets-and-you"><h1>Carets and You</h1></a>
-<a class="header" href="print.html#diary-testing" id="diary-testing"><h1>Diary: Testing</h1></a>
-<a class="header" href="print.html#oatie-testing" id="oatie-testing"><h2>Oatie testing</h2></a>
-<ul>
-<li>Unit tests</li>
-<li>Virtual monkey (N/A)</li>
-</ul>
-<a class="header" href="print.html#mercutio-testing" id="mercutio-testing"><h2>Mercutio testing</h2></a>
-<ul>
-<li>Unit tests (N/A)</li>
-<li>Virtual Monkey</li>
-<li>Multimonkey</li>
-<li><code>geckodriver</code> integrated test</li>
-</ul>
 
                     </main>
 
@@ -729,6 +714,21 @@ Op([DelWithGroup([DelSkip(7), DelChars(1)])], [AddWithGroup([AddSkip(8), AddGrou
 
         </div>
 
+        
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:3001");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
         
 
         

@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Build System ./x.rs - edit-text internals</title>
+        <title>Rich Text - edit-text internals</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -69,7 +69,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="x.html" class="active"><strong aria-hidden="true">1.1.</strong> Build System ./x.rs</a></li><li><a href="system.html"><strong aria-hidden="true">1.2.</strong> System Diagram</a></li><li><a href="oatie.html"><strong aria-hidden="true">1.3.</strong> Working with Documents</a></li><li><a href="ot.html"><strong aria-hidden="true">1.4.</strong> Operational Transform</a></li></ol></li><li><a href="diaries.html"><strong aria-hidden="true">2.</strong> Development Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">2.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.3.</strong> Carets and You</a></li><li><a href="diary-testing.html"><strong aria-hidden="true">2.4.</strong> Testing</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="intro-x.html"><strong aria-hidden="true">1.1.</strong> Build System ./x.rs</a></li><li><a href="intro-system.html"><strong aria-hidden="true">1.2.</strong> System Diagram</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.3.</strong> Testing</a></li></ol></li><li><a href="rtf.html" class="active"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="rtf-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.2.</strong> Operational Transform</a></li></ol></li><li><a href="diary.html"><strong aria-hidden="true">3.</strong> Development Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">3.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">3.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">3.3.</strong> Carets and You</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -133,98 +133,21 @@
 
                 <div id="content" class="content">
                     <main>
-                        <a class="header" href="x.html#build-tool-xrs" id="build-tool-xrs"><h1>Build Tool ./x.rs</h1></a>
-<p><code>./x.rs</code> is the build tool. In order to run it, you'll need to install <a href="https://github.com/DanielKeep/cargo-script"><code>cargo-script</code></a>:</p>
-<pre><code>cargo install cargo-script
-</code></pre>
-<p>Then while you're in the root of the <code>edit-text/</code> respository, from your command line you can run:</p>
-<pre><code class="language-sh">./x.rs help
-</code></pre>
-<a class="header" href="x.html#server-building" id="server-building"><h2>Server building</h2></a>
-<p>To launch the edit-text server:</p>
-<pre><code class="language-sh">./x.rs server-build
-</code></pre>
-<p>To run it on port <code>8000</code>:</p>
-<pre><code class="language-sh">./x.rs server
-</code></pre>
-<a class="header" href="x.html#frontend-build" id="frontend-build"><h2>Frontend build</h2></a>
-<p>The frontend is all the JavaScript code that runs in the browser, and optionally including the WASM build system. To build this, you should run <code>npm install</code> in the <code>edit-frontend/</code> directory:</p>
-<pre><code class="language-sh">cd edit-frontend
-npm install
-</code></pre>
-<p>This will locally install Webpack, Typescript, and all JavaScript dependencies required by the frontend. To then build the frontend, run this from the root directory:</p>
-<pre><code class="language-sh">./x.rs frontend-build
-</code></pre>
-<p>If you want to launch a long-lived script to build the frontend and rebuild each time a relevant file changes:</p>
-<pre><code class="language-sh">./x.rs frontend-watch
-</code></pre>
-<p>Building the frontend component may also require that you use build the WASM bundle from <code>edit-client</code>, which can be generated with this command:</p>
-<pre><code class="language-sh">./x.rs wasm-build
-</code></pre>
-<p>This will compile the wasm bundle and save it to <code>edit-frontend/src/bindgen</code>, which will be linked with the frontend code bundle (generated using <code>frontend-build</code> or <code>frontend-watch</code>).</p>
-<a class="header" href="x.html#testing" id="testing"><h2>Testing</h2></a>
-<p>This command will run comprehensive end-to-end tests. It's used by CI to test all new pull requests:</p>
-<pre><code class="language-sh">./x.rs test
-</code></pre>
-<a class="header" href="x.html#client-proxy" id="client-proxy"><h2>Client Proxy</h2></a>
-<p>If you are testing changes to the <code>edit-client</code> library, you have the option of choosing between running client code in the browser (via WebAssembly) or running it in a local Rust process, having all commands proxied through websockets.</p>
-<pre><code class="language-sh">./x.rs client-proxy
-</code></pre>
-<a class="header" href="x.html#building-the-book" id="building-the-book"><h2>Building the book</h2></a>
-<p>You can build the book with the book-build command:</p>
-<pre><code class="language-sh">./x.rs book-build
-</code></pre>
-<p>Or watch for all changes as they are being made with book-watch.</p>
-<pre><code class="language-sh">./x.rs book-watch
-</code></pre>
-<p>By navigating to <a href="http://localhost:3000/">http://localhost:3000/</a>, you'll see the page refresh automatically as you edit markdown files under <code>docs-src/</code>.</p>
-<a class="header" href="x.html#deploy" id="deploy"><h2>Deploy</h2></a>
-<p>You can deploy edit-text to a Dokku server using <code>./x.rs deploy</code>.</p>
-<ul>
-<li>This first cross-compiles the edit-server binary using a local Docker image.</li>
-<li>It then uploads the binary using the <code>dokku tar:in</code> command on a remote server (not the Git endpoint).</li>
-<li>You can configure the dokku URL using the <code>EDIT_DEPLOY_URL</code> environment variable.</li>
-<li>You can configure the dokku application name using the <code>EDIT_DOKKU_NAME</code> environment variable.</li>
-</ul>
-<a class="header" href="x.html#help" id="help"><h2>Help</h2></a>
-<pre><code>edit-text build scripts 0.1.0
-Build scripts for edit and oatie
-
-USAGE:
-    x &lt;SUBCOMMAND&gt;
-
-FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
-
-SUBCOMMANDS:
-    book-build        Builds the book.
-    book-watch        Watches and rebuilds the book.
-    client-proxy      Run client code in your terminal.
-    deploy            Deploy to sandbox.edit.io.
-    frontend-build    Bundle the frontend JavaScript code.
-    frontend-watch    Watch the frontend JavaScript code, building continuously.
-    help              Prints this message or the help of the given subcommand(s)
-    oatie-build       Build the operational transform library.
-    replay            Replay an edit-text log.
-    server            Run the edit-text server.
-    server-build      Build the edit-text server.
-    test              
-    wasm-build        Compile the WebAssembly bundle.
-</code></pre>
+                        <a class="header" href="rtf.html#rich-text" id="rich-text"><h1>Rich Text</h1></a>
+<p>This section describes the rich text format used by edit-text.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-                            <a rel="prev" href="introduction.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="intro-testing.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         
 
                         
-                            <a rel="next" href="system.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="rtf-documents.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -236,13 +159,13 @@ SUBCOMMANDS:
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-                    <a href="introduction.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a href="intro-testing.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 
 
                 
-                    <a href="system.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a href="rtf-documents.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 
@@ -250,6 +173,21 @@ SUBCOMMANDS:
 
         </div>
 
+        
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:3001");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
         
 
         

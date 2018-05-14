@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Development Diaries - edit-text internals</title>
+        <title>Introduction - edit-text internals</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -69,7 +69,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="x.html"><strong aria-hidden="true">1.1.</strong> Build System ./x.rs</a></li><li><a href="system.html"><strong aria-hidden="true">1.2.</strong> System Diagram</a></li><li><a href="oatie.html"><strong aria-hidden="true">1.3.</strong> Working with Documents</a></li><li><a href="ot.html"><strong aria-hidden="true">1.4.</strong> Operational Transform</a></li></ol></li><li><a href="diaries.html" class="active"><strong aria-hidden="true">2.</strong> Development Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">2.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.3.</strong> Carets and You</a></li><li><a href="diary-testing.html"><strong aria-hidden="true">2.4.</strong> Testing</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="intro.html" class="active"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="intro-x.html"><strong aria-hidden="true">1.1.</strong> Build System ./x.rs</a></li><li><a href="intro-system.html"><strong aria-hidden="true">1.2.</strong> System Diagram</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.3.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="rtf-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.2.</strong> Operational Transform</a></li></ol></li><li><a href="diary.html"><strong aria-hidden="true">3.</strong> Development Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">3.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">3.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">3.3.</strong> Carets and You</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -133,21 +133,42 @@
 
                 <div id="content" class="content">
                     <main>
-                        <a class="header" href="diaries.html#development-diaries" id="development-diaries"><h1>Development Diaries</h1></a>
-<p>This section contains development diaries which are not as structured as the rest of the book, but may cover topics relevant to working inside <code>edit-text</code>. In the future, most of these diaries should have their content moved to relevant sections in the book.</p>
+                        <a class="header" href="intro.html#edit-text" id="edit-text"><h1>edit-text</h1></a>
+<p>edit-text is a collaborative text editor, written in Rust.</p>
+<ul>
+<li>oatie, an operational transform library</li>
+<li>edit, the frontend and backend to edit-text</li>
+</ul>
+<p>The frontend is broken out into several crates:</p>
+<ul>
+<li>edit-common</li>
+<li>edit-client</li>
+<li>edit-server</li>
+<li>edit-frontend</li>
+</ul>
+<a class="header" href="intro.html#usage" id="usage"><h2>Usage</h2></a>
+<p>Invoking the server:</p>
+<pre><code>./x.rs server [--release] [--client-proxy]
+</code></pre>
+<p>Invoking the client proxy:</p>
+<pre><code>./x.rs client-proxy [--release]
+</code></pre>
+<p>Building the frontend (TypeScript):</p>
+<pre><code>./x.rs frontend-build
+./x.rs frontend-watch # watches builds and rebuilds as you edit
+</code></pre>
+<p>Building the WebAssembly bundle:</p>
+<pre><code>./x.rs wasm-build
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-                            <a rel="prev" href="ot.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                                <i class="fa fa-angle-left"></i>
-                            </a>
-                        
 
                         
-                            <a rel="next" href="diary-markdown.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="intro-x.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -159,13 +180,9 @@
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-                    <a href="ot.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                        <i class="fa fa-angle-left"></i>
-                    </a>
-                
 
                 
-                    <a href="diary-markdown.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a href="intro-x.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 
@@ -173,6 +190,21 @@
 
         </div>
 
+        
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:3001");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
         
 
         

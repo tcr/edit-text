@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Working with Documents - edit-text internals</title>
+        <title>Development Diaries - edit-text internals</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -69,7 +69,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="x.html"><strong aria-hidden="true">1.1.</strong> Build System ./x.rs</a></li><li><a href="system.html"><strong aria-hidden="true">1.2.</strong> System Diagram</a></li><li><a href="oatie.html" class="active"><strong aria-hidden="true">1.3.</strong> Working with Documents</a></li><li><a href="ot.html"><strong aria-hidden="true">1.4.</strong> Operational Transform</a></li></ol></li><li><a href="diaries.html"><strong aria-hidden="true">2.</strong> Development Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">2.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.3.</strong> Carets and You</a></li><li><a href="diary-testing.html"><strong aria-hidden="true">2.4.</strong> Testing</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="intro-x.html"><strong aria-hidden="true">1.1.</strong> Build System ./x.rs</a></li><li><a href="intro-system.html"><strong aria-hidden="true">1.2.</strong> System Diagram</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.3.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="rtf-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.2.</strong> Operational Transform</a></li></ol></li><li><a href="diary.html" class="active"><strong aria-hidden="true">3.</strong> Development Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">3.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">3.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">3.3.</strong> Carets and You</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -133,115 +133,21 @@
 
                 <div id="content" class="content">
                     <main>
-                        <a class="header" href="oatie.html#working-with-documents" id="working-with-documents"><h1>Working with Documents</h1></a>
-<p>The basic structure that Oatie operates on is a Document:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-type DocSpan = Vec&lt;DocElement&gt;;
-
-struct Doc(DocSpan);
-
-// Documents are made up of chars and groups.
-enum DocElement {
-    DocChars(DocString),
-    DocGroup(Attrs, DocSpan),
-}
-
-// Convenience wrapper for opaquely operating on Strings.
-struct DocString(String);
-// Convenience wrapper for group &quot;attributes&quot; like HTML attrs.
-type Attrs = HashMap&lt;String, String&gt;;
-#}</code></pre></pre>
-<a class="header" href="oatie.html#operations" id="operations"><h3>Operations</h3></a>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-type DelSpan = Vec&lt;DelElement&gt;;
-
-enum DelElement {
-    DelSkip(usize),
-    DelWithGroup(DelSpan),
-    DelChars(usize),
-    DelGroup(DelSpan),
-}
-#}</code></pre></pre>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-type AddSpan = Vec&lt;AddElement&gt;;
-
-enum AddElement {
-    AddSkip(usize),
-    AddWithGroup(AddSpan),
-    AddChars(DocString),
-    AddGroup(Attrs, AddSpan),
-}
-#}</code></pre></pre>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-type Op = (DelSpan, AddSpan);
-#}</code></pre></pre>
-<a class="header" href="oatie.html#macros" id="macros"><h2>Macros</h2></a>
-<p>When importing oatie, there are several convenience macros which make writing the above easier:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-#[macro_use]
-extern crate oatie;
-
-let doc = doc_span![
-    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [
-        DocChars(&quot;Hello world!&quot;)
-    ]),
-];
-
-let op = op_span!([
-    DelGroup([DelSkip(12)]),
-    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddSkip(12)]),
-]);
-#}</code></pre></pre>
-<p>This is roughly equivalent to Rust code without needing to type <code>vec!</code> or use explicit <code>HashMap::new()</code> and <code>DocString(...)</code> invocations.</p>
-<a class="header" href="oatie.html#using-operations" id="using-operations"><h2>Using Operations</h2></a>
-<p>An operation can be applied to a document.</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-#[macro_use]
-extern crate oatie;
-
-use oatie::doc::*;
-use oatie::OT;
-
-let doc = doc_span![
-    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Hello world!&quot;)]),
-];
-
-let op = op_span!([
-    DelGroup([DelSkip(12)]),
-    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddSkip(12)]),
-]);
-
-let doc2 = Op::apply(&amp;doc, $op);
-
-println!(&quot;{:?}&quot;, doc2);
-
-// DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [DocChars(&quot;Hello world!&quot;)])
-#}</code></pre></pre>
+                        <a class="header" href="diary.html#development-diaries" id="development-diaries"><h1>Development Diaries</h1></a>
+<p>This section contains development diaries which are not as structured as the rest of the book, but may cover topics relevant to working inside <code>edit-text</code>. In the future, most of these diaries should have their content moved to relevant sections in the book.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-                            <a rel="prev" href="system.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="rtf-ot.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         
 
                         
-                            <a rel="next" href="ot.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="diary-markdown.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -253,13 +159,13 @@ println!(&quot;{:?}&quot;, doc2);
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-                    <a href="system.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a href="rtf-ot.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 
 
                 
-                    <a href="ot.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a href="diary-markdown.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 
@@ -267,6 +173,21 @@ println!(&quot;{:?}&quot;, doc2);
 
         </div>
 
+        
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:3001");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
         
 
         
