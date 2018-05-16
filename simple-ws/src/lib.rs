@@ -15,6 +15,8 @@ const TIMEOUT_INTERVAL: u64 = 30_000;
 
 static TOKEN_COUNTER: AtomicUsize = AtomicUsize::new(1);
 
+pub type Sender = Arc<Mutex<ws::Sender>>;
+
 pub struct SocketHandler<S: SimpleSocket> {
     args: Option<S::Args>,
     
