@@ -30,7 +30,7 @@ serde_json = "1.0.6"
 structopt = "0.2.3"
 structopt-derive = "0.2.3"
 take_mut = "0.2.0"
-thread_spawn = "0.3.0"
+thread_spawn = { path = "../../thread_spawn" }
 taken = "0.1.1"
 url = "1.6.0"
 ws = "0.7.3"
