@@ -8,7 +8,6 @@ use crate::{
 };
 
 use extern::{
-    bus::{Bus, BusReader},
     crossbeam_channel::{
         Receiver as CCReceiver,
         Sender as CCSender,
@@ -28,12 +27,14 @@ use extern::{
     r2d2_diesel::ConnectionManager,
     ron,
     serde_json,
+    simple_ws,
     std::{
         collections::{HashMap, VecDeque},
         sync::{Arc, Mutex},
-        thread::{self, JoinHandle},
+        thread,
         time::Duration,
     },
+    thread_spawn::thread_spawn,
     url::Url,
     ws,
 };
@@ -66,60 +67,56 @@ fn generate_random_page_id() -> String {
         .collect()
 }
 
+// Target Page ID, ClientNotification
+struct ClientNotify(String, ClientNotification);
+
+enum ClientNotification {
+    Connect {
+        client_id: String,
+        out: simple_ws::Sender,
+    },
+    Commit {
+        client_id: String,
+        op: Op,
+        version: usize,
+    },
+    Disconnect {
+        client_id: String,
+    },
+}
+
 /// Websocket handler for an individual user.
 struct ClientSocket {
+    page_id: String,
     client_id: String,
-    sync_state_mutex: SharedSyncState,
+    tx: CCSender<ClientNotify>,
 }
 
 impl ClientSocket {
     fn new(
         client_id: &str,
-        sync_state_mutex: SharedSyncState,
-        out: Arc<Mutex<ws::Sender>>,
+        page_id: &str,
+        tx: CCSender<ClientNotify>,
+        out: simple_ws::Sender,
     ) -> Result<ClientSocket, Error> {
+        // Notify sync thread of our connection.
+        let _ = tx.send(ClientNotify(
+            page_id.to_string(),
+            ClientNotification::Connect {
+                client_id: client_id.to_string(),
+                out: out,
+            }
+        ));
+
         let socket = ClientSocket {
+            page_id: page_id.to_string(),
             client_id: client_id.to_string(),
-            sync_state_mutex,
+            tx,
         };
-
-        {
-            let mut sync_state = socket.sync_state_mutex.lock().unwrap();
-            let version = sync_state.version;
-
-            // Initialize client state on outgoing websocket.
-            let command = SyncToUserCommand::Init(
-                client_id.to_string(),
-                sync_state.doc.0.clone(),
-                version,
-            );
-            out.lock().unwrap()
-                .send(serde_json::to_string(&command).unwrap())?;
-
-            // Register with clients list.
-            sync_state.clients.insert(client_id.to_string(), version);
-
-            // Forward packets from sync bus to all clients.
-            let rx = { sync_state.client_bus.add_rx() };
-            ClientSocket::spawn_bus_to_client(out, rx);
-        }
 
         Ok(socket)
     }
 
-    /// Fanout messages from a bus to a websocket sender.
-    // #[spawn]
-    fn spawn_bus_to_client(
-        out: Arc<Mutex<ws::Sender>>,
-        mut rx: BusReader<SyncToUserCommand>,
-    ) -> JoinHandle<Result<(), Error>> {
-        thread::spawn(move || -> Result<(), Error> {
-            while let Ok(command) = rx.recv() {
-                out.lock().unwrap().send(serde_json::to_string(&command).unwrap())?;
-            }
-            Ok(())
-        })
-    }
 
     fn handle_sync_command(
         &self,
@@ -129,8 +126,16 @@ impl ClientSocket {
 
         match command {
             UserToSyncCommand::Commit(client_id, op, version) => {
-                let mut sync_state = self.sync_state_mutex.lock().unwrap();
-                sync_state.ops.push_back((client_id.clone(), version, op.clone()));
+                let _ = self.tx.send(ClientNotify(
+                    self.page_id.to_string(),
+                    ClientNotification::Commit {
+                        client_id,
+                        op,
+                        version,
+                    },
+                ));
+                // let mut sync_state = self.sync_state_mutex.lock().unwrap();
+                // sync_state.ops.push_back((client_id.clone(), version, op.clone()));
             }
             UserToSyncCommand::TerminateProxy => {
                 // NOTE we ignore this, it's only used for user proxy
@@ -143,26 +148,24 @@ impl ClientSocket {
     fn cleanup_user(
         &self,
     ) -> Result<(), Error> {
-        let mut sync_state = self.sync_state_mutex.lock().unwrap();
-
-        let op = remove_carets_op(&sync_state.doc, vec![self.client_id.clone()])?;
-        let version = sync_state.version;
-        sync_state.ops.push_back((self.client_id.clone(), version, op));
-
-        sync_state.clients.remove(&self.client_id);
-
+        let _ = self.tx.send(ClientNotify(
+            self.page_id.to_owned(),
+            ClientNotification::Disconnect {
+                client_id: self.client_id.to_owned(),
+            }
+        ));
         Ok(())
     }
 }
 
 /// Websocket implementation.
 impl SimpleSocket for ClientSocket {
-    type Args = (String, CCSender<Initialize>);
+    type Args = (String, CCSender<ClientNotify>);
 
     fn initialize(
-        (client_id, tx_db): Self::Args,
+        (client_id, tx_master): Self::Args,
         url: &str,
-        out: Arc<Mutex<ws::Sender>>,
+        out: simple_ws::Sender,
     ) -> Result<ClientSocket, Error> {
         let url = Url::parse("http://localhost/")
             .unwrap()
@@ -186,19 +189,8 @@ impl SimpleSocket for ClientSocket {
             client_id, page_id
         );
 
-        // Fetch the sync state mutex for this client.
-        let sync_state_mutex = {
-            let (tx_client, rx_client) = unbounded();
-            let _ = tx_db.send(Initialize {
-                id: page_id.clone(),
-                receiver: tx_client,
-            });
-            rx_client.recv()
-                .expect("Expected a sync state bundle.")
-        };
-
         // Initialize this client.
-        Ok(ClientSocket::new(&client_id, sync_state_mutex, out)?)
+        Ok(ClientSocket::new(&client_id, &page_id, tx_master, out)?)
     }
 
     fn handle_message(&mut self, data: &[u8]) -> Result<(), Error> {
@@ -210,17 +202,72 @@ impl SimpleSocket for ClientSocket {
     }
 }
 
+/// Run a sync server thread for a given page ID.
+#[thread_spawn]
+fn spawn_sync_thread(
+    sync_state_mutex: SharedSyncThreadState,
+    page_id: String,
+    period: u64,
+    db_pool: DbPool,
+) -> Result<(), Error> {
+    // Handle incoming packets.
+    loop {
+        // Wait a set duration between transforms.
+        // Note that this is for artifically forcing a client-side queue of operations.
+        // It's not needed for operation.
+        thread::sleep(Duration::from_millis(period as u64));
 
-type SharedSyncState = Arc<Mutex<SyncState>>;
+        // let now = Instant::now();
 
-struct Initialize {
-    id: String,
-    receiver: CCSender<SharedSyncState>,
+        let mut sync_state = sync_state_mutex.lock().unwrap();
+
+        // Go through the deque and update our operations.
+        while let Some((client_id, input_version, op)) = sync_state.ops.pop_front() {
+            // TODO we should evict the client if this fails.
+            let op = sync_state.state.commit(
+                &client_id,
+                op,
+                input_version,
+            ).expect("Could not commit client operation.");
+
+            // Updates the database with the new document version.
+            if let Ok(doc) =
+                remove_carets(&sync_state.state.doc)
+            {
+                let conn = db_pool.get().unwrap();
+                create_page(&conn, &page_id, &doc);
+            }
+
+            // Broadcast this operation to all connected websockets.
+            let command = SyncToUserCommand::Update(
+                sync_state.state.doc.0.clone(),
+                sync_state.state.version,
+                client_id,
+                op,
+            );
+            let json = serde_json::to_string(&command).unwrap();
+            for item in &sync_state.client_bus_vec {
+                let _ = item.lock().unwrap().send(json.clone());
+            }
+        }
+
+        // let elapsed = now.elapsed();
+        // println!("sync duration: {}s, {}us", elapsed.as_secs(), elapsed.subsec_nanos()/1_000);
+    }
 }
+
+pub struct SyncThreadState {
+    pub state: SyncState,
+    pub ops: VecDeque<(String, usize, Op)>,
+    pub client_bus_vec: Vec<simple_ws::Sender>,
+}
+
+// TODO unshared
+type SharedSyncThreadState = Arc<Mutex<SyncThreadState>>;
 
 struct PageMap {
     db_pool: DbPool,
-    pages: HashMap<String, SharedSyncState>,
+    pages: HashMap<String, SharedSyncThreadState>,
 }
 
 impl PageMap {
@@ -229,62 +276,44 @@ impl PageMap {
     ) -> PageMap {
         PageMap {
             db_pool,
-            pages: HashMap::new(),
-        }
-    }
-
-    fn acquire_page(
-        &mut self,
-        page_id: &str
-    ) -> SharedSyncState {
-        match self.pages.get(page_id) {
-            Some(state) => {
-                eprintln!("(%) reloading {:?}", page_id);
-                state.clone()
-            }
-            None => self.allocate_page(page_id)
+            pages: hashmap![],
         }
     }
 
     /// Creates a new page entry in the page map and spawns a sync
     /// thread to manage it.
-    fn allocate_page(
+    fn acquire_page(
         &mut self,
         page_id: &str,
-    ) -> SharedSyncState {
-        let page_map = &mut self.pages; // TODO just inline this reference
-
-        // See if this page exists, or if we have to start it.
-        //TODO is the else { ... } path ever even taken?
-        if page_map.get(page_id).is_none() {
-            println!("(%) writing new page for {:?}", page_id);
+    ) -> SharedSyncThreadState {
+        // If this page doesn't exist, let's allocate a new thread for it.
+        if self.pages.get(page_id).is_none() {
+            println!("(%) loading new page for {:?}", page_id);
             
             // Retrieve from database, or use a default generic document.
             let conn = self.db_pool.get().unwrap();
             let inner_doc = get_single_page(&conn, page_id)
                 .unwrap_or_else(|| default_new_doc(page_id));
 
-            page_map.insert(
+            self.pages.insert(
                 page_id.to_string(),
-                Arc::new(Mutex::new(SyncState {
+                Arc::new(Mutex::new(SyncThreadState {
+                    state: SyncState::new(inner_doc, 100), // Arbitrarily select version 100
                     ops: VecDeque::new(),
-                    version: 100,
-                    clients: hashmap![],
-                    history: hashmap![],
-                    doc: inner_doc,
-                    client_bus: Bus::new(255),
+                    client_bus_vec: vec![],
                 })),
             );
         } else {
-            println!("(%) launching {:?}", page_id);
+            eprintln!("(%) reloading {:?}", page_id);
         }
 
-        let shared_sync_state = page_map.get(page_id).map(|x| x.clone()).unwrap();
+        let shared_sync_state = self.pages.get(page_id)
+            .map(|x| x.clone()).unwrap();
 
         let _ = spawn_sync_thread(
             shared_sync_state.clone(),
-            page_id,
-            100, // TODO pass in a real _period value
+            page_id.to_owned(),
+            100, // TODO pass in a real _period value from command line arguments
             self.db_pool.clone(),
         );
 
@@ -292,77 +321,60 @@ impl PageMap {
     }
 }
 
-/// Run a sync server thread for a given page ID.
-// #[spawn]
-fn spawn_sync_thread(
-    sync_state_mutex: SharedSyncState,
-    page_id: &str,
-    period: u64,
-    db_pool: DbPool,
-) -> JoinHandle<Result<(), Error>> {
-    let page_id = page_id.to_string();
-    thread::Builder::new()
-        .name("spawn_sync_thread".into())
-        .spawn(move || -> Result<(), Error> {
-            // Handle incoming packets.
-            loop {
-                // Wait a set duration between transforms.
-                // Note that this is for artifically forcing a client-side queue of operations.
-                // It's not needed for operation.
-                thread::sleep(Duration::from_millis(period as u64));
-
-                // let now = Instant::now();
-
-                let mut sync_state = sync_state_mutex.lock().unwrap();
-
-                // Go through the deque and update our operations.
-                while let Some((client_id, input_version, op)) = sync_state.ops.pop_front() {
-                    // TODO we should evict the client if this fails.
-                    let op = sync_state.commit(
-                        &client_id,
-                        op,
-                        input_version,
-                    ).expect("Could not commit client operation.");
-
-                    // Updates the database with the new document version.
-                    if let Ok(doc) =
-                        remove_carets(&sync_state.doc)
-                    {
-                        let conn = db_pool.get().unwrap();
-                        create_page(&conn, &page_id, &doc);
-                    }
-
-                    // Broadcast this operation to all connected websockets.
-                    let command = SyncToUserCommand::Update(
-                        sync_state.doc.0.clone(),
-                        sync_state.version,
-                        client_id,
-                        op,
-                    );
-                    sync_state.client_bus.broadcast(command);
-                }
-
-                // let elapsed = now.elapsed();
-                // println!("sync duration: {}s, {}us", elapsed.as_secs(), elapsed.subsec_nanos()/1_000);
-            }
-        })
-        .expect("could not spawn thread")
-}
-
-// #[spawn]
 // TODO make this coordinate properly with 
+#[thread_spawn]
 fn spawn_master_thread(
     db_pool: DbPool,
-    rx_db: CCReceiver<Initialize>,
-) -> JoinHandle<()> {
-    thread::spawn(move || {
-        let mut page_map = PageMap::new(db_pool);
+    rx_master: CCReceiver<ClientNotify>,
+) {
+    let mut page_map = PageMap::new(db_pool);
 
-        while let Ok(Initialize { id, receiver }) = rx_db.recv() {
-            let shared_sync_state = page_map.acquire_page(&id);
-            let _ = receiver.send(shared_sync_state);
+    while let Ok(ClientNotify(page_id, notification)) = rx_master.recv() {
+        let shared_sync_state = page_map.acquire_page(&page_id);
+
+        match notification {
+            ClientNotification::Connect {
+                client_id, out
+            } => {
+                let mut sync_state = shared_sync_state.lock().unwrap();
+                let version = sync_state.state.version;
+
+                // Initialize client state on outgoing websocket.
+                let command = SyncToUserCommand::Init(
+                    client_id.to_string(),
+                    sync_state.state.doc.0.clone(),
+                    version,
+                );
+                out.lock().unwrap()
+                    .send(serde_json::to_string(&command).unwrap()).unwrap();
+
+                // Register with clients list.
+                sync_state.state.clients.insert(client_id.to_string(), version);
+                
+                sync_state.client_bus_vec.push(out);
+            },
+            ClientNotification::Commit {
+                client_id,
+                op,
+                version,
+            } => {
+                let mut sync_state = shared_sync_state.lock().unwrap();
+                sync_state.ops.push_back((client_id.clone(), version, op));
+            },
+            ClientNotification::Disconnect {
+                client_id
+            } => {
+                let mut sync_state = shared_sync_state.lock().unwrap();
+
+                // Todo 
+                let op = remove_carets_op(&sync_state.state.doc, vec![client_id.clone()]).unwrap();
+                let version = sync_state.state.version;
+                sync_state.ops.push_back((client_id.clone(), version, op));
+
+                sync_state.state.clients.remove(&client_id);
+            },
         }
-    })
+    }
 }
 
 // TODO use _period
@@ -380,8 +392,8 @@ pub fn sync_socket_server(port: u16, _period: usize) {
     });
 
     // Spawn master coordination thread.
-    let (tx_db, rx_db) = unbounded::<Initialize>();
-    spawn_master_thread(db_pool.clone(), rx_db);
+    let (tx_master, rx_master) = unbounded::<ClientNotify>();
+    spawn_master_thread(db_pool.clone(), rx_master);
 
     // Websocket URL.
     let url = format!("0.0.0.0:{}", port);
@@ -389,7 +401,7 @@ pub fn sync_socket_server(port: u16, _period: usize) {
 
     // Start the WebSocket listener.
     let _ = ws::listen(url, {
-        take!(=tx_db);
+        take!(=tx_master);
         move |out| {
             log_sync!(ClientConnect);
 
@@ -399,7 +411,7 @@ pub fn sync_socket_server(port: u16, _period: usize) {
             SocketHandler::<ClientSocket>::new(
                 (
                     generate_random_page_id(), // TODO can we select from unused client IDs?
-                    tx_db.clone(),
+                    tx_master.clone(),
                 ),
                 out,
             )

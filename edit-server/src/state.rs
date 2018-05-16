@@ -1,9 +1,7 @@
 //! Sync state. This is a candidate file to be moved into Oatie.
 
 use extern::{
-    bus::{Bus},
     failure::Error,
-    edit_common::commands::*,
     oatie::{
         OT,
         doc::*,
@@ -11,19 +9,15 @@ use extern::{
         validate::validate_doc,
     },
     std::{
-        collections::{HashMap, VecDeque},
+        collections::HashMap,
     },
 };
 
 pub struct SyncState {
     pub version: usize,
     pub clients: HashMap<String, usize>, // client_id -> client_version
-    pub history: HashMap<usize, Op>,
+    pub history: HashMap<usize, Op>, // version -> op
     pub doc: Doc,
-
-    // TODO move these out of SyncState
-    pub ops: VecDeque<(String, usize, Op)>,
-    pub client_bus: Bus<SyncToUserCommand>,
 }
 
 impl SyncState {
@@ -95,5 +89,14 @@ impl SyncState {
         self.version = target_version + 1;
 
         Ok(op)
+    }
+
+    pub fn new(doc: Doc, version: usize) -> SyncState {
+        SyncState {
+            doc,
+            version,
+            clients: hashmap![],
+            history: hashmap![],
+        }
     }
 }

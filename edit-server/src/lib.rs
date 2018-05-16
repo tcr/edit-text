@@ -1,5 +1,6 @@
 #![feature(crate_in_paths, extern_in_paths, nll)]
 #![feature(non_modrs_mods)]
+#![feature(plugin, proc_macro)]
 
 use std::fs::File;
 use std::path::Path;
@@ -43,6 +44,7 @@ macro_rules! log_sync {
     };
 }
 
+extern crate thread_spawn;
 extern crate bus;
 extern crate colored;
 extern crate crossbeam_channel;
