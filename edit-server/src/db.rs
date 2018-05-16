@@ -37,6 +37,8 @@ pub fn db_connection() -> SqliteConnection {
         .expect(&format!("Error connecting to {}", database_url))
 }
 
+pub type DbPool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
+
 #[derive(Queryable, Debug)]
 pub struct Post {
     pub id: String,

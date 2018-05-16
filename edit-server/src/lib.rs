@@ -45,7 +45,6 @@ macro_rules! log_sync {
 }
 
 extern crate thread_spawn;
-extern crate bus;
 extern crate colored;
 extern crate crossbeam_channel;
 #[macro_use]

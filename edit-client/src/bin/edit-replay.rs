@@ -18,7 +18,7 @@ extern crate structopt_derive;
 use colored::Colorize;
 use failure::Error;
 use std::io::prelude::*;
-use edit_common::{
+use edit_common::commands::{
     UserToSyncCommand,
 };
 use edit_client::{
@@ -26,7 +26,6 @@ use edit_client::{
     Client,
     LogWasm,
     state::ClientDoc,
-    UserToFrontendCommand,
 };
 use std::sync::{
     atomic::AtomicBool,
