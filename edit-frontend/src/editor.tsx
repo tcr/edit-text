@@ -25,7 +25,6 @@ function curto(
   ];
 
   if (textOffset !== null) {
-    console.log('help', textOffset);
     cur.unshift({
       "CurSkip": textOffset,
     });
@@ -72,29 +71,41 @@ function curto(
   return cur;
 }
 
+function resolveCursorFromPositionPrevious(
+  node: Node | null,
+  parent: Node,
+): Cursor {
+  if (node === null) {
+    // Text node is first in element, so select parent node.
+    return curto(parent);
+  } else if (node.nodeType === 3) {
+    // Text node has a preceding text element; move to end.
+    return resolveCursorFromPosition((node as Text), (node as Text).data.length);
+  } else {
+    // TODO can this be made simpler?
+    // Skip empty elements.
+    if (node.childNodes.length == 0) {
+      return resolveCursorFromPositionPrevious(node.previousSibling, parent);
+    }
+
+    // Inspect previous element last to first.
+    let child = node.childNodes[node.childNodes.length - 1];
+    if (child.nodeType === 3) {
+      // Text node
+      return resolveCursorFromPosition((child as Text), (child as Text).data.length);
+    } else {
+      // Element node
+      return resolveCursorFromPositionPrevious(child, node);
+    }
+  }
+}
+
 function resolveCursorFromPosition(
   textNode: Text,
   offset: number,
 ): Cursor {
   if (offset == 0) {
-    if (textNode.previousSibling === null) {
-      // Text node is first in element, so select parent node.
-      return curto(textNode.parentNode);
-    } else if (textNode.previousSibling.nodeType === 3) {
-      // Text node has a preceding text elemnt; move to end.
-      return curto(
-        textNode.previousSibling,
-        (textNode.previousSibling as Text).data.length,
-      );
-    } else {
-      // If it's an element...
-      //TODO do something here,
-      return curto(
-        // This is literally just a random node
-        // TODO replace this
-        textNode.parentNode,
-      );
-    };
+    return resolveCursorFromPositionPrevious(textNode.previousSibling, textNode.parentElement!);
   } else {
     // Move to offset of this text node.
     return curto(
