@@ -73,14 +73,6 @@ export function Connect(
   };
 }
 
-export function RequestMarkdown(
-) {
-  return {
-    tag: 'RequestMarkdown' as 'RequestMarkdown',
-    RequestMarkdown: null,
-  };
-}
-
 export type Command
   = ReturnType<typeof Monkey>
   | ReturnType<typeof RenameGroup>
@@ -90,5 +82,4 @@ export type Command
   | ReturnType<typeof Button>
   | ReturnType<typeof Load>
   | ReturnType<typeof Connect>
-  | ReturnType<typeof RequestMarkdown>
   ;

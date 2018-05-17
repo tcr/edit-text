@@ -14,6 +14,7 @@ use extern::{
 };
 
 // TODO usize is not useful.
+// also is this always upsert? shoudl be named that then
 pub fn create_page<'a>(conn: &SqliteConnection, id: &'a str, doc: &Doc) -> usize {
     use super::schema::posts;
 

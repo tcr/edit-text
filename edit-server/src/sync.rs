@@ -178,6 +178,9 @@ pub struct PageController {
 }
 
 impl PageController {
+    // This is just a commit across all operations, and forwarding it to
+    // all listening clients. It also is the commit point for all new
+    // operations.
     fn sync_commit(
         &mut self,
         client_id: &str,
@@ -196,6 +199,7 @@ impl PageController {
             remove_carets(&self.state.doc)
         {
             let conn = self.db_pool.get().unwrap();
+            // TODO why is this "create" page
             create_page(&conn, &self.page_id, &doc);
         }
 
@@ -207,6 +211,8 @@ impl PageController {
             op,
         );
         let json = serde_json::to_string(&command).unwrap();
+        // TODO move this to a self.send_client_message(...) API
+        // Forward to everyone in our client set.
         for item in &self.clients {
             let _ = item.lock().unwrap().send(json.clone());
         }
@@ -229,23 +235,26 @@ impl PageController {
                     self.state.doc.0.clone(),
                     version,
                 );
+                // TODO move this to a self.send_client_message(...) API
                 out.lock().unwrap()
                     .send(serde_json::to_string(&command).unwrap()).unwrap();
 
                 // Register with clients list.
                 self.state.clients.insert(client_id.to_string(), version);
                 
+                // Forward to all in our client set.
                 self.clients.push(out);
             },
 
             ClientUpdate::Disconnect {
                 client_id
             } => {
-                // Todo 
+                // Remove our caret from document.
                 let op = remove_carets_op(&self.state.doc, vec![client_id.clone()]).unwrap();
                 let version = self.state.version;
                 self.sync_commit(&client_id, op, version);
 
+                // Remove from our client set.
                 self.state.clients.remove(&client_id);
             },
 
@@ -257,6 +266,9 @@ impl PageController {
                 // Commit the operation.
                 self.sync_commit(&client_id, op, version);
             },
+
+            // TODO ClientUpdate::Shutdown for GraphQL overriding/overwriting
+            // then can set Markdown contents from any point in the system
         }
     }
 }
@@ -270,6 +282,8 @@ pub fn spawn_sync_thread(
     period: u64,
     db_pool: DbPool,
 ) -> Result<(), Error> {
+    // This page ID's state.
+    // TODO make this a ::new(...) statement
     let mut sync = PageController {
         page_id,
         db_pool,
@@ -285,6 +299,9 @@ pub fn spawn_sync_thread(
         // It's not needed for operation.
         thread::sleep(Duration::from_millis(period as u64));
 
+        // TODO with ClientUpdate::Shutdown for GraphQL overriding/overwriting,
+        // this will need to listen for errors and break the loop if erorrs occurr
+        // (killin the sync thread).
         sync.handle(notification);
 
         // let elapsed = now.elapsed();
@@ -330,7 +347,8 @@ impl PageMaster {
                 tx_notify.clone(),
             );
 
-            spawn_sync_thread(
+            // We ignore all errors from the sync thread, and thus the whole thread.
+            let _ = spawn_sync_thread(
                 page_id.to_owned(),
                 rx_notify,
                 inner_doc,
@@ -353,7 +371,8 @@ fn spawn_page_master(
     let mut page_map = PageMaster::new(db_pool);
 
     while let Ok(ClientNotify(page_id, notification)) = rx_master.recv() {
-        let _ = page_map.acquire_page(&page_id).send(notification);
+        let _ = page_map.acquire_page(&page_id)
+            .send(notification);
     }
 }
 

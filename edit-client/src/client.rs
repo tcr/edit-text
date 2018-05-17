@@ -239,11 +239,6 @@ fn native_command<C: ClientImpl>(
             println!("received monkey setting: {:?}", setting);
             client.state().monkey.store(setting, Ordering::Relaxed);
         }
-        FrontendToUserCommand::RequestMarkdown => {
-            let markdown = markdown::doc_to_markdown(&client.state().client_doc.doc.0)?;
-            // TODO
-            client.send_client(&UserToFrontendCommand::MarkdownUpdate(markdown))?;
-        }
     }
     Ok(())
 }

@@ -17,3 +17,11 @@ export function syncUrl(): string {
       window.location.host.replace(/:\d+$|$/, ':8001') + '/$/ws/' + pageId() :
       window.location.host + '/$/ws/' + pageId());
 }
+
+export function graphqlUrl(): string {
+  return '' +
+    window.location.protocol + '//' +
+    (window.location.host.match(/localhost|0.0.0.0/) ?
+      window.location.host.replace(/:\d+$|$/, ':8003') + '/graphql/' :
+      window.location.host + '/$/graphql/');
+}

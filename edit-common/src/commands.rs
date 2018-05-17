@@ -28,7 +28,6 @@ pub enum FrontendToUserCommand {
     Target(CurSpan),
     RandomTarget(f64),
     Monkey(bool),
-    RequestMarkdown,
 }
 
 // Commands to send to Frontend.
@@ -41,7 +40,6 @@ pub enum UserToFrontendCommand {
     },
     PromptString(String, String, FrontendToUserCommand),
     Update(String, Option<Op>),
-    MarkdownUpdate(String),
     Error(String),
     UserToSyncCommand(UserToSyncCommand),
 }

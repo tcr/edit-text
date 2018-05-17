@@ -75,7 +75,6 @@ pub enum UserToFrontendCommand {
     },
     PromptString(String, String, FrontendToUserCommand),
     Update(String, Option<Op>),
-    MarkdownUpdate(String),
     Error(String),
     UserToSyncCommand(UserToSyncCommand),
 }
@@ -94,6 +93,5 @@ pub enum FrontendToUserCommand {
     Target(CurSpan),
     RandomTarget(f64),
     Monkey(bool),
-    RequestMarkdown,
 }
 ```
