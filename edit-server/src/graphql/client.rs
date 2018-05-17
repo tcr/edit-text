@@ -16,7 +16,7 @@ pub fn get_single_page_graphql(input_id: &str) -> Option<Doc> {
 query ($id: String!) {
     page(id: $id) {
         doc
-    }
+    
 }
 
 "#,
