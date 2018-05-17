@@ -16,6 +16,7 @@ use extern::{
     oatie::{
         doc::*,
     },
+    edit_common::markdown::*,
     r2d2,
     r2d2_diesel::ConnectionManager,
     rouille,
@@ -23,10 +24,20 @@ use extern::{
     std::io::prelude::*,
 };
 
-#[derive(GraphQLObject)]
 struct Page {
     doc: String,
 }
+
+graphql_object!(Page: () |&self| {
+    field doc() -> &str {
+        self.doc.as_str()
+    }
+
+    field markdown() -> String {
+        let doc = Doc(::ron::de::from_str(&self.doc).unwrap());
+        doc_to_markdown(&doc.0).unwrap()
+    }
+});
 
 struct Query;
 
