@@ -6,6 +6,8 @@ import * as commands from './commands';
 import * as util from './util';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import axios from 'axios';
+import * as route from './route';
 import { Editor } from './editor';
 import { Network, ProxyNetwork, WasmNetwork } from './network';
 
@@ -39,6 +41,7 @@ function NativeButtons(
 class LocalButtons extends React.Component {
   props: {
     editorID: string,
+    editor: any,
   };
 
   state = {
@@ -46,11 +49,40 @@ class LocalButtons extends React.Component {
     copying: false,
   };
 
+  onPresaveMarkdown() {
+    let self = this;
+    // TODO
+    console.log(route.graphqlUrl());
+    axios.post(
+      route.graphqlUrl(),
+      {
+        query: `
+        query ($id: String!) { page(id: $id) { markdown }}
+`,
+        variables: {
+          'id': route.pageId(),
+        },
+      }
+    )
+    .then(res => {
+      let graphql = res.data;
+      let markdown = graphql.data.page.markdown;
+      
+      self.props.editor.markdown = markdown;
+    })
+    .catch(err => {
+      console.error('onSaveMarkdown:', err);
+    })
+  }
+
   onSaveMarkdown() {
+    // The copy logic is handled by the "new Clipboard" segment below.
+
     this.setState({
       ...this.state,
       copying: true,
     });
+
     setTimeout((() => {
       this.setState({
         ...this.state,
@@ -68,6 +100,7 @@ class LocalButtons extends React.Component {
       <div>
         <button
           id="save-markdown"
+          onMouseOver={() => this.onPresaveMarkdown()}
           onClick={() => this.onSaveMarkdown()}
           style={{ width: this.state.copying ? this.state.width : 'auto', }}
           ref={(el) => { el && (this.state.width = el.offsetWidth + 'px'); }}
@@ -81,25 +114,6 @@ class LocalButtons extends React.Component {
       </div>
     );
   }
-}
-
-function pollMarkdown(network: Network) {
-  // Request markdown source.
-  setInterval(() => {
-    try {
-      network.nativeCommand(commands.RequestMarkdown());
-    } catch (e) {
-      // Socket may not be ready yet
-    }
-  }, 2000);
-  setTimeout(() => {
-    // Early request
-    try {
-      network.nativeCommand(commands.RequestMarkdown());
-    } catch (e) {
-      // Socket may not be ready yet
-    }
-  }, 500);
 }
 
 // Initialize child editor.
@@ -116,8 +130,8 @@ export class EditorFrame extends React.Component {
   };
 
   KEY_WHITELIST: any;
-  markdown: string;
   network: Network;
+  markdown: string;
 
   constructor(
     props,
@@ -125,7 +139,6 @@ export class EditorFrame extends React.Component {
     super(props);
 
     this.KEY_WHITELIST = [];
-    this.markdown = '';
 
     this.network = props.network;
     this.network.onNativeMessage = this.onNativeMessage.bind(this);
@@ -139,14 +152,15 @@ export class EditorFrame extends React.Component {
       document.body.style.background = 'red';
     };
 
+    this.markdown = '';
+
     {
+      // TODO
       new Clipboard('#save-markdown', {
         text: (trigger) => {
           return this.markdown;
         }
       });
-
-      pollMarkdown(this.network);
     }
 
     this.state = {
@@ -162,10 +176,11 @@ export class EditorFrame extends React.Component {
         <div id="toolbar">
           <a href="https://github.com/tcr/edit-text" id="logo">edit-text</a>
           <NativeButtons 
-            buttons={this.state.buttons}
-            editor={this} 
+            editor={this}
+            buttons={this.state.buttons} 
           />,
           <LocalButtons
+            editor={this}
             editorID={this.state.editorID}
           />
         </div>
@@ -197,10 +212,6 @@ export class EditorFrame extends React.Component {
       this.setState({
         body: parse.Update[0],
       });
-    }
-
-    else if (parse.MarkdownUpdate) {
-      editor.markdown = parse.MarkdownUpdate;
     }
 
     else if (parse.Controls) {

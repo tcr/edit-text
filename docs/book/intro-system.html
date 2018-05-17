@@ -184,7 +184,6 @@ Sync &lt;-+-&gt; User &lt;-&gt; Frontend
     },
     PromptString(String, String, FrontendToUserCommand),
     Update(String, Option&lt;Op&gt;),
-    MarkdownUpdate(String),
     Error(String),
     UserToSyncCommand(UserToSyncCommand),
 }
@@ -200,7 +199,6 @@ Sync &lt;-+-&gt; User &lt;-&gt; Frontend
     Target(CurSpan),
     RandomTarget(f64),
     Monkey(bool),
-    RequestMarkdown,
 }
 </code></pre>
 

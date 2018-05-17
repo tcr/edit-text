@@ -63,6 +63,9 @@ graphql_object!(Mutations: Ctx |&self| {
         create_page(&conn, &id, &doc);
         let page = get_single_page_raw(&conn, &id);
 
+        // TODO kick of entries in PageMaster[id] (PageController)
+        // with a shutdown query
+
         Ok(page.map(|x| Page {
             doc: x.body
         }).unwrap())
@@ -98,6 +101,12 @@ pub fn sync_graphql_server(
     eprintln!("Graphql served on http://0.0.0.0:8003");
     rouille::start_server("0.0.0.0:8003", move |request| {
         router!(request,
+            (OPTIONS) (/graphql/) => {
+                rouille::Response::text("")
+                    .with_unique_header("Access-Control-Allow-Origin", "*")
+                    .with_unique_header("Access-Control-Allow-Headers", "content-type")
+            },
+
             (POST) (/graphql/) => {
                 let mut data = request.data().unwrap();
                 let mut buf = Vec::new();
@@ -121,6 +130,8 @@ pub fn sync_graphql_server(
                     &ctx,
                 );
                 rouille::Response::json(&res)
+                    .with_unique_header("Access-Control-Allow-Origin", "*")
+                    .with_unique_header("Access-Control-Allow-Headers", "content-type")
             },
 
             _ => rouille::Response::empty_404()
