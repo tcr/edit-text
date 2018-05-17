@@ -112,12 +112,24 @@ kbd {
     z-index: 100;
 }
 
-.edit-text {
-    padding: 54px 30px 50px; // bottom padding for footer
-    margin: 0;
+body.theme-column {
+    background: #eee;
 }
 
-.edit-text.theme-mock {
+body.theme-column .edit-text {
+    max-width: 60em;
+    margin: 0 auto;
+    background: #fff;
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+    box-shadow: 3px 3px 8px #bbb;
+    padding-bottom: 30px;
+}
+
+.edit-text {
+    padding: 67px 30px 50px; // + bottom padding for footer
+    margin: 0;
+
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
@@ -131,7 +143,7 @@ kbd {
     white-space: pre-wrap;
 
     div {
-        margin: 12px 0;
+        line-height: 2.3;
         position: relative;
         min-height: 14px;
     }
@@ -144,6 +156,7 @@ kbd {
         display: inline;
         font-size: inherit;
         vertical-align: bottom;
+        line-height: inherit;
     }
 
     @keyframes fadein {
@@ -187,16 +200,6 @@ kbd {
         position: relative;
     }
 
-
-
-    div[data-tag="hr"] {
-        margin: 16px 0;
-        height: 2px;
-        min-height: 0 !important;
-        border-bottom: 1px solid #eee;
-        background: #ccc;
-    }
-
     // @keyframes caret {
     //     0% {
     //         border-left-width: 1px;
@@ -214,6 +217,14 @@ kbd {
      * span styles
      */
 
+    div[data-tag="hr"] {
+        margin: 16px 0;
+        height: 2px;
+        min-height: 0 !important;
+        border-bottom: 1px solid #eee;
+        background: #ccc;
+    }
+
     div.bold {
         font-weight: 900;
     }
@@ -222,15 +233,15 @@ kbd {
     }
 
     div[data-tag="h1"] {
-        margin-top: 20px;
         font-size: 2.0em;
         font-weight: bold;
+        line-height: 2.0;
     }
 
     div[data-tag="h2"] {
-        margin-top: 16px;
         font-size: 1.5em;
         font-weight: bold;
+        line-height: 2.0;
     }
     
     div[data-tag="h3"] {
@@ -275,138 +286,14 @@ kbd {
         list-style: disc outside none;
         display: list-item;
         margin-left: 25px;
+
+        &, div {
+            line-height: 2.0;
+        }
     }
 
     div[data-tag="bullet"] + div[data-tag="bullet"] {
-        margin-top: -5px;
-    }
-}
-
-.edit-text.theme-block {
-    font-family: monospace;
-
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-
-    div {
-        /*border: 1px solid #444;*/
-        background: rgba(0, 0, 0, .15);
-        padding: 12px 12px 12px 16px;
-        margin: 8px 0;
-        position: relative;
-        min-height: 14px;
-
-        &::before {
-            display: block;
-            content: attr(data-tag);
-            opacity: 0.5;
-            background: black;
-            color: white;
-            padding: 2px 4px;
-            width: -webkit-max-content;
-            margin-bottom: 6px;
-            text-align: center;
-        }
-    }
-
-    * {
-        clear: both;
-    }
-
-    span {
-        background: rgb(125, 200, 125);
-        padding: 3px 5px;
-        /*border: 1px solid rgba(0, 0, 0, .3);*/
-        display: inline-block;
-        width: 20px;
-        height: 1.8em;
-        box-sizing: border-box;
-        margin-left: 1px;
-        margin-bottom: 2px;
-        cursor: pointer;
-        white-space: pre;
-    }
-
-    span:hover {
-        filter: brightness(150%);
-    }
-
-    .active {
-        background: #98e;
-    }
-
-    span.active,
-    span.target {
-        border-right: 3px solid rgba(0, 0, 0, .3);
-        margin-right: -1px;
-        width: 21px;
-    }
-
-    div.active,
-    div.target {
-        border-bottom: 3px solid rgba(0, 0, 0, .3);
-        padding-bottom: 9px;
-    }
-
-    div.active > div {
-        background: #ccc;
-    }
-
-    div[data-tag="span"] {
-        display: inline-block;
-        margin-left: 1px;
-        padding: 4px 6px 1px;
-        margin-bottom: 3px;
-        background: rgba(255, 0, 0, .25);
-
-        &.active {
-            margin-bottom: 0;
-            background: #98e;
-        }
-
-        &::before {
-            float: left;
-            margin-top: 2px;
-            margin-right: 2px;
-            display: none;
-        }
-    }
-
-    /**
-     * targets
-     */
-
-    .active ~ * {
-        background: red;
-    }
-
-    .target ~ span {
-        background: rgb(125, 200, 125);
-    }
-
-    // reset previous changes
-
-    .target ~ div {
-        background: rgba(0, 0, 0, .15);
-    }
-
-    .target ~ div[data-tag="span"] {
-        background: rgba(255, 0, 0, .25);
-    }
-
-    /**
-     * span styles
-     */
-
-    div.bold {
-        font-weight: 900;
-    }
-    div.italic {
-        font-style: italic;
+        // margin-top: -5px;
     }
 }
 
