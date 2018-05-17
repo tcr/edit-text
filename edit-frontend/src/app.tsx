@@ -59,10 +59,8 @@ class LocalButtons extends React.Component {
     }).bind(this), 2000);
   }
 
-  onXray() {
-    // TODO
-    // this.props.editor.$elem.toggleClass('theme-mock');
-    // this.props.editor.$elem.toggleClass('theme-block');
+  toggleWidth() {
+    document.body.classList.toggle('theme-column');
   }
 
   render(): React.ReactNode {
@@ -77,7 +75,7 @@ class LocalButtons extends React.Component {
           {this.state.copying ? `Copied!` : `Save Markdown`}
         </button>
 
-        <button id="xray" onClick={() => this.onXray()}>X-Ray</button>
+        <button id="width" onClick={() => this.toggleWidth()}>Width</button>
 
         <b>Client: <kbd>{this.props.editorID}</kbd></b>
       </div>
@@ -177,7 +175,9 @@ export class EditorFrame extends React.Component {
           KEY_WHITELIST={this.KEY_WHITELIST}
           content={this.state.body}
           editorID={this.state.editorID}
-        />,
+        />
+
+        <div id="footer">See more <a href="http://github.com/tcr/edit-text">on Github</a>.</div>
       </div>
     );
   }
