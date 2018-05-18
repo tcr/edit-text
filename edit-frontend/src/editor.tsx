@@ -121,6 +121,7 @@ export class Editor extends React.Component {
     network: Network,
     KEY_WHITELIST: any,
     editorID: string,
+    disabled: boolean,
   };
 
   el: HTMLElement;
@@ -150,7 +151,7 @@ export class Editor extends React.Component {
   componentDidUpdate() {
     this.el.innerHTML = this.props.content;
 
-    // Highlight our caret.
+    // Highlight our own caret.
     document.querySelectorAll(
       `div[data-tag="caret"][data-client=${JSON.stringify(this.props.editorID)}]`,
     ).forEach(caret => {
@@ -159,7 +160,12 @@ export class Editor extends React.Component {
   }
 
   componentDidMount() {
+    let self = this;
     document.addEventListener('keypress', (e: KeyboardEvent) => {
+      if (self.props.disabled) {
+        return;
+      }
+
       // Don't accept keypresses when a modifier key is pressed w/keypress, except shift.
       if (e.metaKey) {
         return;
@@ -171,6 +177,10 @@ export class Editor extends React.Component {
     });
   
     document.addEventListener('keydown', (e) => {
+      if (self.props.disabled) {
+        return;
+      }
+
       // Check if this event exists in the list of whitelisted key combinations.
       if (!this.props.KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
         return;

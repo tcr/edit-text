@@ -33,7 +33,8 @@ use extern::{
     ws,
 };
 
-const PAGE_TITLE_LEN: usize = 100;
+const INITIAL_SYNC_VERSION: usize = 100; // Arbitrarily select version 100 
+const PAGE_TITLE_LEN: usize = 100; // 100 chars is the limit
 
 pub fn default_new_doc(id: &str) -> Doc {
     Doc(doc_span![
@@ -60,8 +61,9 @@ fn generate_random_page_id() -> String {
 }
 
 // Target Page ID, ClientUpdate
-pub struct ClientNotify(String, ClientUpdate);
+pub struct ClientNotify(pub String, pub ClientUpdate);
 
+// TODO rename this PageUpdate
 pub enum ClientUpdate {
     Connect {
         client_id: String,
@@ -74,6 +76,9 @@ pub enum ClientUpdate {
     },
     Disconnect {
         client_id: String,
+    },
+    Overwrite {
+        doc: Doc,
     },
 }
 
@@ -115,7 +120,7 @@ impl SimpleSocket for ClientSocket {
             client_id, page_id
         );
 
-        // Notify sync thread of our connection.
+        // Notify sync thread of our having connected.
         let _ = tx_master.send(ClientNotify(
             page_id.to_string(),
             ClientUpdate::Connect {
@@ -124,7 +129,7 @@ impl SimpleSocket for ClientSocket {
             }
         ));
 
-        // Preserve client state.
+        // Store client state in a ClientSocket.
         Ok(ClientSocket {
             page_id: page_id.to_string(),
             client_id: client_id.to_string(),
@@ -210,12 +215,40 @@ impl PageController {
             client_id.to_owned(),
             op,
         );
+        self.broadcast_client_command(&command);
+    }
+
+    /// Forward command to everyone in our client set.
+    fn broadcast_client_command(
+        &self,
+        command: &SyncToUserCommand,
+    ) {
         let json = serde_json::to_string(&command).unwrap();
-        // TODO move this to a self.send_client_message(...) API
-        // Forward to everyone in our client set.
-        for item in &self.clients {
-            let _ = item.lock().unwrap().send(json.clone());
+        for client in &self.clients {
+            let _ = client.lock().unwrap().send(json.clone());
         }
+    }
+
+    /// Forward command to everyone in our client set.
+    fn send_client_command(
+        &self,
+        client: &simple_ws::Sender,
+        command: &SyncToUserCommand,
+    ) -> Result<(), Error> {
+        let json = serde_json::to_string(&command).unwrap();
+        Ok(client.lock().unwrap().send(json.clone())?)
+    }
+
+    /// Forward restart code to everyone in our client set.
+    fn broadcast_restart(
+        &self,
+    ) -> Result<(), Error> {
+        let code = ws::CloseCode::Restart;
+        let reason = "Server received an updated version of the document.";
+        for client in &self.clients {
+            let _ = client.lock().unwrap().close_with_reason(code, reason);
+        }
+        Ok(())
     }
 
     // Handle a client's update.
@@ -235,9 +268,7 @@ impl PageController {
                     self.state.doc.0.clone(),
                     version,
                 );
-                // TODO move this to a self.send_client_message(...) API
-                out.lock().unwrap()
-                    .send(serde_json::to_string(&command).unwrap()).unwrap();
+                let _ = self.send_client_command(&out, &command);
 
                 // Register with clients list.
                 self.state.clients.insert(client_id.to_string(), version);
@@ -267,8 +298,15 @@ impl PageController {
                 self.sync_commit(&client_id, op, version);
             },
 
-            // TODO ClientUpdate::Shutdown for GraphQL overriding/overwriting
-            // then can set Markdown contents from any point in the system
+            ClientUpdate::Overwrite {
+                doc
+            } => {
+                let _ = self.broadcast_restart();
+
+                // Rewrite our state.
+                self.state = SyncState::new(doc, INITIAL_SYNC_VERSION);
+                self.clients = vec![];
+            }
         }
     }
 }
@@ -287,7 +325,7 @@ pub fn spawn_sync_thread(
     let mut sync = PageController {
         page_id,
         db_pool,
-        state: SyncState::new(inner_doc, 100), // Arbitrarily select version 100
+        state: SyncState::new(inner_doc, INITIAL_SYNC_VERSION),
         clients: vec![],
     };
 
@@ -299,8 +337,7 @@ pub fn spawn_sync_thread(
         // It's not needed for operation.
         thread::sleep(Duration::from_millis(period as u64));
 
-        // TODO with ClientUpdate::Shutdown for GraphQL overriding/overwriting,
-        // this will need to listen for errors and break the loop if erorrs occurr
+        // TODO with need to listen for errors and break the loop if erorrs occurr
         // (killin the sync thread).
         sync.handle(notification);
 
@@ -382,17 +419,17 @@ pub fn sync_socket_server(port: u16, _period: usize) {
 
     let db_pool = db_pool_create();
 
-    // Start the GraphQL server.
-    ::std::thread::spawn({
-        take!(=db_pool);
-        move || {
-            sync_graphql_server(db_pool);
-        }
-    });
-
     // Spawn master coordination thread.
     let (tx_master, rx_master) = unbounded::<ClientNotify>();
     spawn_page_master(db_pool.clone(), rx_master);
+
+    // Start the GraphQL server.
+    ::std::thread::spawn({
+        take!(=db_pool, =tx_master);
+        move || {
+            sync_graphql_server(db_pool, tx_master);
+        }
+    });
 
     // Websocket URL.
     let url = format!("0.0.0.0:{}", port);
