@@ -1,10 +1,11 @@
 // Global CSS
 import '../styles/edit.scss';
 
-import * as Clipboard from 'clipboard';
+// import * as Clipboard from 'clipboard';
 import * as commands from './commands';
 import * as util from './util';
 import * as React from 'react';
+
 import * as ReactDOM from 'react-dom';
 import axios from 'axios';
 import * as route from './route';
@@ -38,83 +39,143 @@ function NativeButtons(
   );
 }
 
+function graphqlPage(id: string) {
+  return axios.post(
+    route.graphqlUrl(),
+    {
+      query:
+`
+query ($id: String!) { page(id: $id) { markdown }}
+`,
+      variables: {
+         id,
+      },
+    }
+  );
+}
+
+function graphqlCreatePage(id: string, markdown: string) {
+  return axios.post(
+    route.graphqlUrl(),
+    {
+      query:
+`
+mutation ($id: String!, $markdown: String!) { createPage(id: $id, markdown: $markdown) { __typename } }
+`,
+      variables: {
+        id,
+        markdown,
+      },
+    }
+  );
+}
+
+class MarkdownModal extends React.Component {
+  props: {
+    markdown: string,
+    onModal: Function,
+  };
+
+  state = {
+    markdown: this.props.markdown,
+  };
+
+  render() {
+    let self = this;
+    return (
+      <Modal>
+        <h1>Markdown</h1>
+        <p>Copy the text below. Or edit it and click load to overwrite the current page.</p>
+        <textarea
+          value={self.state.markdown}
+          onChange={(e) => {
+            this.setState({
+              markdown: e.target.value,
+            });
+          }}
+        />
+        <button onClick={() => self.props.onModal(null)}>Dismiss</button>
+        <button onClick={() => {
+          graphqlCreatePage(route.pageId(), self.state.markdown)
+          .then(req => {
+            if (req.data.errors && req.data.errors.length) {
+              console.log(req.data.errors);
+              console.error('Error in markdown save.');
+            } else {
+              console.log('Update success, reloading...');
+              setTimeout(() => {
+                window.location.reload();
+              }, 500);
+            }
+          })
+          .catch(err => console.error(err));
+        }}>Load</button>
+      </Modal>
+    );
+  }
+}
+
 class LocalButtons extends React.Component {
   props: {
     editorID: string,
     editor: any,
+    onModal: Function,
   };
 
-  state = {
-    width: 'auto',
-    copying: false,
-  };
+  state = {};
 
-  onPresaveMarkdown() {
+  onMarkdownClick() {
     let self = this;
-    // TODO
-    console.log(route.graphqlUrl());
-    axios.post(
-      route.graphqlUrl(),
-      {
-        query: `
-        query ($id: String!) { page(id: $id) { markdown }}
-`,
-        variables: {
-          'id': route.pageId(),
-        },
-      }
-    )
+    graphqlPage(route.pageId())
     .then(res => {
       let graphql = res.data;
       let markdown = graphql.data.page.markdown;
       
-      self.props.editor.markdown = markdown;
+      self.props.onModal(
+        <MarkdownModal
+          markdown={markdown}
+          onModal={self.props.onModal}
+        />
+      );
     })
     .catch(err => {
       console.error('onSaveMarkdown:', err);
     })
   }
 
-  onSaveMarkdown() {
-    // The copy logic is handled by the "new Clipboard" segment below.
-
-    this.setState({
-      ...this.state,
-      copying: true,
-    });
-
-    setTimeout((() => {
-      this.setState({
-        ...this.state,
-        copying: false,
-      });
-    }).bind(this), 2000);
-  }
-
   toggleWidth() {
     document.body.classList.toggle('theme-column');
+    if (document.body.classList.contains('theme-column')) {
+      localStorage.setItem('edit-text:theme-column', '1');
+    } else {
+      localStorage.removeItem('edit-text:theme-column');
+    }
   }
 
   render(): React.ReactNode {
     return (
       <div>
-        <button
-          id="save-markdown"
-          onMouseOver={() => this.onPresaveMarkdown()}
-          onClick={() => this.onSaveMarkdown()}
-          style={{ width: this.state.copying ? this.state.width : 'auto', }}
-          ref={(el) => { el && (this.state.width = el.offsetWidth + 'px'); }}
-        >
-          {this.state.copying ? `Copied!` : `Save Markdown`}
-        </button>
+        <button onClick={() => this.onMarkdownClick()}>View as Markdown</button>
 
-        <button id="width" onClick={() => this.toggleWidth()}>Width</button>
+        <button id="width" onClick={() => this.toggleWidth()}>Toggle Page Width</button>
 
         <b>Client: <kbd>{this.props.editorID}</kbd></b>
       </div>
     );
   }
 }
+
+function Modal(props: any) {
+  return (
+    <div id="modal">
+      <div id="modal-dialog">
+        {props.children}
+      </div>
+    </div>
+  );
+}
+
+
 
 // Initialize child editor.
 export class EditorFrame extends React.Component {
@@ -127,6 +188,7 @@ export class EditorFrame extends React.Component {
     body: string,
     buttons: any,
     editorID: string,
+    modal: React.ReactNode,
   };
 
   KEY_WHITELIST: any;
@@ -152,47 +214,48 @@ export class EditorFrame extends React.Component {
       document.body.style.background = 'red';
     };
 
-    this.markdown = '';
-
-    {
-      // TODO
-      new Clipboard('#save-markdown', {
-        text: (trigger) => {
-          return this.markdown;
-        }
-      });
-    }
-
     this.state = {
       body: this.props.body,
       buttons: [],
       editorID: '$$$$$$',
+      modal: null,
     };
   }
 
   render(): React.ReactNode {
     return (
       <div>
-        <div id="toolbar">
-          <a href="https://github.com/tcr/edit-text" id="logo">edit-text</a>
-          <NativeButtons 
-            editor={this}
-            buttons={this.state.buttons} 
-          />,
-          <LocalButtons
-            editor={this}
+        {this.state.modal}
+        <div className={this.state.modal == null ? '' : 'modal-active'}>
+          <div id="toolbar">
+            <a href="https://github.com/tcr/edit-text" id="logo">edit-text</a>
+            <NativeButtons 
+              editor={this}
+              buttons={this.state.buttons} 
+            />,
+            <LocalButtons
+              editor={this}
+              editorID={this.state.editorID}
+              onModal={(modal) => {
+                this.setState({
+                  modal
+                });
+              }}
+            />
+          </div>
+
+          <Editor 
+            network={this.props.network} 
+            KEY_WHITELIST={this.KEY_WHITELIST}
+            content={this.state.body}
             editorID={this.state.editorID}
+            disabled={!!this.state.modal}
           />
+
+          <div id="footer">
+            See more <a href="http://github.com/tcr/edit-text">on Github</a>.
+          </div>
         </div>
-
-        <Editor 
-          network={this.props.network} 
-          KEY_WHITELIST={this.KEY_WHITELIST}
-          content={this.state.body}
-          editorID={this.state.editorID}
-        />
-
-        <div id="footer">See more <a href="http://github.com/tcr/edit-text">on Github</a>.</div>
       </div>
     );
   }
@@ -272,6 +335,11 @@ export function start() {
   // Connect to parent window (if exists).
   if (window.parent != window) {
     multiConnect(network);
+  }
+
+  // TODO move this to a better logical location and manage local storage better
+  if (localStorage.getItem('edit-text:theme-column')) {
+    document.body.classList.add('theme-column');
   }
 
   // Create the editor frame.

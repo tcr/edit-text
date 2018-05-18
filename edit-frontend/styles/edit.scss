@@ -335,3 +335,43 @@ body#multi {
         flex: 1;
     }
 }
+
+#modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 10000;
+    flex-direction: column;
+    cursor: pointer;
+}
+
+#modal-dialog {
+    width: 30em;
+    box-shadow: 4px 4px 4px #333;
+    padding: 10px 20px;
+    background: white;
+    border: 1px solid #ddd;
+    align-self: center;
+    cursor: auto;
+}
+
+#modal-dialog textarea {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 10em;
+}
+
+#modal-dialog button {
+    border: 1px solid #999;
+}
+
+.modal-active {
+    pointer-events: none;
+}
