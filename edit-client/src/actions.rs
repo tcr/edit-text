@@ -1,8 +1,8 @@
+use super::walkers::*;
+use failure::Error;
 use oatie::doc::*;
 use oatie::OT;
-use failure::Error;
 use std::char::from_u32;
-use super::walkers::*;
 
 fn is_boundary_char(c: char) -> bool {
     c.is_whitespace() || c == '-' || c == '_'
@@ -24,7 +24,9 @@ pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
                 // Do the list destructuring here
                 let mut writer = parent_walker.to_writer();
 
-                writer.del.place(&DelGroup(del_span![DelSkip(span.skip_len())]));
+                writer
+                    .del
+                    .place(&DelGroup(del_span![DelSkip(span.skip_len())]));
                 writer.del.exit_all();
 
                 writer.add.exit_all();
@@ -110,7 +112,6 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
                     // Do the list destructuring here
                     println!("BEGINNING OF LIST");
 
-
                     // Check if previous sibling is a list item too.
                     if let Some(DocGroup(ref attrs_1, ref span_1)) = parent_walker.doc().unhead() {
                         if attrs_1["tag"] == "bullet" {
@@ -131,7 +132,9 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
 
                             writer.add.begin();
                             if span_1.skip_len() + span_2.skip_len() > 0 {
-                                writer.add.place(&AddSkip(span_1.skip_len() + span_2.skip_len()));
+                                writer
+                                    .add
+                                    .place(&AddSkip(span_1.skip_len() + span_2.skip_len()));
                             }
                             writer.add.close(attrs_1.clone());
                             writer.add.exit_all();
@@ -155,7 +158,7 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
                     writer.del.exit_all();
 
                     let res = writer.result();
-                    
+
                     return Ok(res);
                 }
             }
@@ -273,7 +276,9 @@ pub fn add_char(ctx: ActionContext, key: u32) -> Result<Op, Error> {
 
     // Insert new character.
     let c: char = from_u32(key).unwrap_or('?');
-    writer.add.place(&AddChars(DocString::from_string(format!("{}", c))));
+    writer
+        .add
+        .place(&AddChars(DocString::from_string(format!("{}", c))));
     writer.add.exit_all();
 
     Ok(writer.result())
@@ -338,7 +343,9 @@ pub fn split_block(ctx: ActionContext, add_hr: bool) -> Result<Op, Error> {
     }
     writer.add.close(hashmap! { "tag".into() => "p".into() });
     if nested_bullet {
-        writer.add.close(hashmap! { "tag".into() => "bullet".into() });
+        writer
+            .add
+            .close(hashmap! { "tag".into() => "bullet".into() });
     }
     writer.add.exit_all();
 

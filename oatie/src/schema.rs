@@ -1,19 +1,19 @@
 //! Performs operational transform.
 
-use std::collections::{HashMap, HashSet};
-use std::borrow::ToOwned;
-use std::cmp;
-use super::doc::*;
-use super::stepper::*;
 use super::compose;
+use super::doc::*;
 use super::normalize;
+use super::stepper::*;
+use super::transform::{Schema, Track};
 use super::writer::*;
 use failure::Error;
-use term_painter::ToStyle;
-use term_painter::Color::*;
-use term_painter::Attr::*;
+use std::borrow::ToOwned;
+use std::cmp;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
-use super::transform::{Schema, Track};
+use term_painter::Attr::*;
+use term_painter::Color::*;
+use term_painter::ToStyle;
 
 fn parse_classes(input: &str) -> HashSet<String> {
     input
@@ -29,15 +29,14 @@ fn format_classes(set: &HashSet<String>) -> String {
     classes.join(" ")
 }
 
-
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum RtfTrack {
-    ListItems,      // bullet
-    BlockQuotes,    // blockquote
-    Blocks,         // h1, h2, h3, h4, h5, h6, p, pre
-    BlockObjects,   // hr
-    Inlines,        // span
-    InlineObjects,  // caret
+    ListItems,     // bullet
+    BlockQuotes,   // blockquote
+    Blocks,        // h1, h2, h3, h4, h5, h6, p, pre
+    BlockObjects,  // hr
+    Inlines,       // span
+    InlineObjects, // caret
 }
 
 impl Track for RtfTrack {
@@ -140,7 +139,9 @@ impl Schema for RtfSchema {
     fn track_type_from_attrs(attrs: &Attrs) -> Option<Self::Track> {
         match &*attrs["tag"] {
             "bullet" => Some(RtfTrack::ListItems),
-            "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "pre" | "html" => Some(RtfTrack::Blocks),
+            "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "pre" | "html" => {
+                Some(RtfTrack::Blocks)
+            }
             "span" => Some(RtfTrack::Inlines),
             "caret" => Some(RtfTrack::InlineObjects),
             "hr" => Some(RtfTrack::BlockObjects),

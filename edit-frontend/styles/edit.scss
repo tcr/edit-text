@@ -186,19 +186,22 @@ body.theme-column .edit-text {
         position: relative;
     }
 
+    // TODO the overlapping dashed cursors isn't working well
+
     div[data-tag="caret"] +
     div[data-tag="caret"].current::before {
-        border-left: 1px $color_curcaret dashed !important;
-        border-right: 1px $color_curcaret dashed !important;
+        border-left-style: dashed !important;
+        border-right-style: dashed !important;
     }
 
     div[data-tag="caret"].current +
     div[data-tag="caret"]::before {
-        border-left: 1px $color_caret dashed !important;
-        border-right: 1px $color_caret dashed !important;
+        border-left-style: dashed !important;
+        border-right-style: dashed !important;
         z-index: 1001;
         position: relative;
     }
+    
 
     // @keyframes caret {
     //     0% {
@@ -370,4 +373,8 @@ body#multi {
 
 .modal-active {
     pointer-events: none;
+}
+
+body.editing-blurred div[data-tag="caret"]::before {
+    filter: grayscale(100%);
 }

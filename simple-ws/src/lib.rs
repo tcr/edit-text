@@ -1,13 +1,13 @@
 #![allow(deprecated)]
 
-extern crate ws;
 extern crate failure;
+extern crate ws;
 
 use failure::Error;
-use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
-use ws::util::{Token, Timeout};
+use std::sync::{Arc, Mutex};
+use ws::util::{Timeout, Token};
 use ws::{CloseCode, Frame};
 
 const PING_INTERVAL: u64 = 5_000;
@@ -19,10 +19,10 @@ pub type Sender = Arc<Mutex<ws::Sender>>;
 
 pub struct SocketHandler<S: SimpleSocket> {
     args: Option<S::Args>,
-    
+
     out: Arc<Mutex<ws::Sender>>,
     obj: Option<S>,
-    
+
     timeout: Option<Timeout>,
     ping_event: Token,
     expire_event: Token,
@@ -52,11 +52,13 @@ pub trait SimpleSocket: Sized {
 
 impl<S: SimpleSocket> ws::Handler for SocketHandler<S> {
     fn on_open(&mut self, shake: ws::Handshake) -> Result<(), ws::Error> {
-        self.obj = Some(S::initialize(
-            self.args.take().unwrap(),
-            shake.request.resource(),
-            self.out.clone(),
-        ).expect("Failed to start socket handler due to error"));
+        self.obj = Some(
+            S::initialize(
+                self.args.take().unwrap(),
+                shake.request.resource(),
+                self.out.clone(),
+            ).expect("Failed to start socket handler due to error"),
+        );
 
         {
             let out = self.out.lock().unwrap();
@@ -71,7 +73,8 @@ impl<S: SimpleSocket> ws::Handler for SocketHandler<S> {
 
     fn on_message(&mut self, msg: ws::Message) -> Result<(), ws::Error> {
         self.obj.as_mut().map(|obj| {
-            obj.handle_message(&msg.into_data()).expect("Could not handle native command.");
+            obj.handle_message(&msg.into_data())
+                .expect("Could not handle native command.");
         });
 
         Ok(())
@@ -79,17 +82,23 @@ impl<S: SimpleSocket> ws::Handler for SocketHandler<S> {
 
     fn on_error(&mut self, _err: ws::Error) {
         println!("Killing after error");
-        self.obj.take().map(|mut x| x.cleanup().expect("Failed to clean up socket"));
+        self.obj
+            .take()
+            .map(|mut x| x.cleanup().expect("Failed to clean up socket"));
     }
 
     fn on_close(&mut self, _code: ws::CloseCode, _reason: &str) {
         println!("Killing after close");
-        self.obj.take().map(|mut x| x.cleanup().expect("Failed to clean up socket"));
+        self.obj
+            .take()
+            .map(|mut x| x.cleanup().expect("Failed to clean up socket"));
     }
 
     fn on_shutdown(&mut self) {
         println!("Killing after shutdown");
-        self.obj.take().map(|mut x| x.cleanup().expect("Failed to clean up socket"));
+        self.obj
+            .take()
+            .map(|mut x| x.cleanup().expect("Failed to clean up socket"));
     }
 
     fn on_timeout(&mut self, event: Token) -> ws::Result<()> {
@@ -117,7 +126,10 @@ impl<S: SimpleSocket> ws::Handler for SocketHandler<S> {
 
     fn on_frame(&mut self, frame: Frame) -> ws::Result<Option<Frame>> {
         // some activity has occurred, let's reset the expiration
-        self.out.lock().unwrap().timeout(TIMEOUT_INTERVAL, self.expire_event)?;
+        self.out
+            .lock()
+            .unwrap()
+            .timeout(TIMEOUT_INTERVAL, self.expire_event)?;
         Ok(Some(frame))
     }
 }

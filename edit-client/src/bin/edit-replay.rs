@@ -1,10 +1,10 @@
 #![feature(crate_in_paths)]
 
+extern crate crossbeam_channel;
+extern crate edit_client;
+extern crate edit_common;
 extern crate failure;
 extern crate ron;
-extern crate edit_common;
-extern crate edit_client;
-extern crate crossbeam_channel;
 #[macro_use]
 extern crate maplit;
 extern crate colored;
@@ -16,25 +16,21 @@ extern crate structopt_derive;
 
 // use quicli::prelude::*;
 use colored::Colorize;
+use crossbeam_channel::{unbounded, Receiver};
+use edit_client::{state::ClientDoc, Client, LogWasm, ProxyClient};
+use edit_common::commands::UserToSyncCommand;
 use failure::Error;
 use std::io::prelude::*;
-use edit_common::commands::{
-    UserToSyncCommand,
-};
-use edit_client::{
-    ProxyClient,
-    Client,
-    LogWasm,
-    state::ClientDoc,
-};
-use std::sync::{
-    atomic::AtomicBool,
-    Arc
-};
-use crossbeam_channel::{Receiver, unbounded};
+use std::sync::{atomic::AtomicBool, Arc};
 use structopt::StructOpt;
 
-fn init_new_client(client_id: &str) -> (ProxyClient, Receiver<UserToFrontendCommand>, Receiver<UserToSyncCommand>) {
+fn init_new_client(
+    client_id: &str,
+) -> (
+    ProxyClient,
+    Receiver<UserToFrontendCommand>,
+    Receiver<UserToSyncCommand>,
+) {
     let (tx_client, rx_client) = unbounded();
     let (tx_sync, rx_sync) = unbounded();
     let client = ProxyClient {
@@ -76,7 +72,6 @@ main!(|opts: Opt| {
         Ok(())
     });
 
-
     let mut clients = hashmap![];
 
     let mut i = 0;
@@ -84,7 +79,7 @@ main!(|opts: Opt| {
     if let Some(ref filter_id) = opts.filter {
         println!("\n!!! Using filter {:?}\n", filter_id);
     }
-    
+
     while let Ok(hi) = rx_line.recv() {
         i += 1;
         println!("TASK ~~~~ {:?} ~~~~", i);

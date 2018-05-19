@@ -4,9 +4,9 @@ use super::compose;
 use super::doc::*;
 use super::normalize;
 use super::schema::*;
-use super::{Schema, Track};
 use super::stepper::*;
 use super::writer::*;
+use super::{Schema, Track};
 use failure::Error;
 use std::borrow::ToOwned;
 use std::cmp;
@@ -60,7 +60,9 @@ pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<()
                 } else {
                     // Top-level blocks
                     ensure!(
-                        RtfSchema::track_type_from_attrs(attrs).unwrap().allowed_in_root(),
+                        RtfSchema::track_type_from_attrs(attrs)
+                            .unwrap()
+                            .allowed_in_root(),
                         "Root block has incorrect parent"
                     );
                 }
@@ -70,7 +72,9 @@ pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<()
 
                 if let Some(block) = ctx.stack.last() {
                     ensure!(
-                        RtfSchema::track_type_from_attrs(block).unwrap().supports_text(),
+                        RtfSchema::track_type_from_attrs(block)
+                            .unwrap()
+                            .supports_text(),
                         "Char found outside block"
                     );
                 } else {

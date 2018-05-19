@@ -1,9 +1,9 @@
 //! Enables stepping through a span operation.
 
-use std::collections::HashMap;
 use doc::*;
 use std::borrow::ToOwned;
 use std::cmp;
+use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
 pub struct DelStepper {
@@ -45,8 +45,7 @@ impl DelStepper {
         let head = self.head.clone();
         self.stack.push(self.rest.clone());
         match head {
-            Some(DelGroup(ref span)) |
-            Some(DelWithGroup(ref span)) => {
+            Some(DelGroup(ref span)) | Some(DelWithGroup(ref span)) => {
                 self.head = None;
                 self.rest = span.to_vec();
                 self.next();
@@ -72,7 +71,6 @@ impl DelStepper {
         }
     }
 }
-
 
 #[derive(Clone, Debug)]
 pub struct AddStepper {
@@ -125,8 +123,7 @@ impl AddStepper {
         let head = self.head.clone();
         self.stack.push(self.rest.clone());
         match head {
-            Some(AddGroup(_, ref span)) |
-            Some(AddWithGroup(ref span)) => {
+            Some(AddGroup(_, ref span)) | Some(AddWithGroup(ref span)) => {
                 self.head = None;
                 self.rest = span.to_vec();
                 self.next();
@@ -141,7 +138,6 @@ impl AddStepper {
         self.next();
     }
 }
-
 
 #[derive(Clone, Debug)]
 pub struct CurStepper {
@@ -191,9 +187,7 @@ impl CurStepper {
                     true
                 }
             }
-            Some(CurWithGroup(..)) | Some(CurGroup) | Some(CurChar) => {
-                true
-            }
+            Some(CurWithGroup(..)) | Some(CurGroup) | Some(CurChar) => true,
             _ => unimplemented!(),
         };
         if do_next {
@@ -220,7 +214,6 @@ impl CurStepper {
         self.next();
     }
 }
-
 
 // TODO can switch head to a usize??
 #[derive(Clone, Debug, PartialEq)]
@@ -268,9 +261,7 @@ impl DocStepper {
                 let (_, right) = text.clone().split_at(self.char_debt);
                 Some(DocChars(right))
             }
-            Some(value) => {
-                Some(value.clone())
-            }
+            Some(value) => Some(value.clone()),
             None => None,
         }
     }
@@ -285,7 +276,9 @@ impl DocStepper {
             }
         }
 
-        self.rest.get((self.head - 1) as usize).map(|value| value.clone())
+        self.rest
+            .get((self.head - 1) as usize)
+            .map(|value| value.clone())
     }
 
     pub fn peek(&self) -> Option<DocElement> {
@@ -294,9 +287,7 @@ impl DocStepper {
                 let (_, right) = text.clone().split_at(self.char_debt);
                 Some(DocChars(right))
             }
-            Some(value) => {
-                Some(value.clone())
-            }
+            Some(value) => Some(value.clone()),
             None => None,
         }
     }
@@ -411,4 +402,3 @@ impl DocStepper {
         self.rest[self.head as usize..].to_vec().skip_len()
     }
 }
-

@@ -1,12 +1,12 @@
 //! Defines document types, operation types, and cursor types.
 
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
 use std::sync::atomic::AtomicUsize;
-use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
-pub use self::DocElement::*;
 pub use self::AddElement::*;
 pub use self::DelElement::*;
+pub use self::DocElement::*;
 
 pub type Attrs = HashMap<String, String>;
 pub type DocSpan = Vec<DocElement>;
@@ -16,7 +16,6 @@ pub type AddSpan = Vec<AddElement>;
 pub type Op = (DelSpan, AddSpan);
 
 pub type CurSpan = Vec<CurElement>;
-
 
 /// Abstraction for String that allows a limited set of operations
 /// with good optimization. (Or that's the idea.)
@@ -73,7 +72,8 @@ impl DocString {
 
 impl Serialize for DocString {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
+    where
+        S: Serializer,
     {
         serializer.serialize_str(&self.0)
     }
@@ -88,7 +88,6 @@ impl<'de> Deserialize<'de> for DocString {
         Ok(DocString(string))
     }
 }
-
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum DocElement {
@@ -140,14 +139,12 @@ impl DocPlaceable for DocSpan {
     }
 }
 
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum DelElement {
     DelSkip(usize),
     DelWithGroup(DelSpan),
     DelChars(usize),
     DelGroup(DelSpan),
-
     // TODO Implement these
     // DelGroupAll,
     // DelMany(usize),
@@ -192,13 +189,12 @@ impl DelPlaceable for DelSpan {
             }
             DelGroup(..) | DelWithGroup(..) => {
                 self.push(elem.clone());
-            }
-            // DelGroupAll | DelObject => {
-            //     unimplemented!();
-            // }
-            // DelMany(count) => {
-            //     unimplemented!();
-            // }
+            } // DelGroupAll | DelObject => {
+              //     unimplemented!();
+              // }
+              // DelMany(count) => {
+              //     unimplemented!();
+              // }
         }
     }
 
@@ -207,7 +203,7 @@ impl DelPlaceable for DelSpan {
         for item in self {
             ret += match *item {
                 DelSkip(len) | DelChars(len) => len,
-                DelGroup(..) |DelWithGroup(..) => 1,
+                DelGroup(..) | DelWithGroup(..) => 1,
                 // DelMany(len) => len,
                 // DelObject | DelGroupAll  => 1,
             };
@@ -245,7 +241,6 @@ impl DelPlaceable for DelSpan {
         }
     }
 }
-
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum AddElement {
@@ -335,7 +330,6 @@ impl AddPlaceable for AddSpan {
         }
     }
 }
-
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum CurElement {

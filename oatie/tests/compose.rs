@@ -7,10 +7,10 @@ extern crate log;
 extern crate oatie;
 extern crate term_painter;
 
-use oatie::*;
-use oatie::compose::*;
 use oatie::apply::*;
+use oatie::compose::*;
 use oatie::doc::*;
+use oatie::*;
 use std::collections::HashMap;
 
 fn test_start() {
@@ -51,7 +51,6 @@ fn test_compose_del_del() {
         ),
         vec![DelSkip(1), DelChars(7), DelSkip(1), DelChars(2), DelSkip(1)]
     );
-
 
     assert_eq!(
         compose_del_del(
@@ -110,7 +109,11 @@ fn test_compose_add_add() {
                 AddChars(DocString::from_str("ra8c")),
                 AddSkip(1),
             ],
-            &vec![AddSkip(10), AddChars(DocString::from_str("Eh")), AddSkip(16)],
+            &vec![
+                AddSkip(10),
+                AddChars(DocString::from_str("Eh")),
+                AddSkip(16),
+            ],
         ),
         vec![
             AddSkip(5),
@@ -192,20 +195,16 @@ fn test_compose() {
     ])
     );
 
-
     assert_eq!(
         compose(
             &op_span!(
                 [DelWithGroup([DelSkip(5), DelWithGroup([]), DelSkip(1)])],
                 [AddWithGroup([AddSkip(5), AddWithGroup([]), AddSkip(1), AddGroup({"client": "left", "tag": "caret"}, [])])],
             ),
-            &op_span!(
-                [DelWithGroup([DelSkip(5), DelGroup([])])],
-                []
-            ),
+            &op_span!([DelWithGroup([DelSkip(5), DelGroup([])])], []),
         ),
         op_span!(
-            [DelWithGroup([DelSkip(5), DelGroup([]), DelSkip(1)])], 
+            [DelWithGroup([DelSkip(5), DelGroup([]), DelSkip(1)])],
             [AddWithGroup([AddSkip(6), AddGroup({"tag": "caret", "client": "left"}, [])])],
         ),
     );

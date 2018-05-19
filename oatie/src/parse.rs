@@ -1,11 +1,11 @@
 //! Parse doc_span, add_span, del_span like strings.
 
-use super::OT;
 use super::compose;
 use super::doc::*;
 use super::normalize;
 use super::transform::*;
 use super::validate::{validate_doc_span, ValidateContext};
+use super::OT;
 use failure::Error;
 use regex::Regex;
 use serde_json;

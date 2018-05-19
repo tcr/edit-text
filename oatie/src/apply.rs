@@ -72,41 +72,37 @@ fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan) {
         trace!("next {:?} {:?} {:?}", d, first, exhausted);
 
         match d.clone() {
-            AddSkip(count) => {
-                match first.clone().unwrap() {
-                    DocChars(value) => {
-                        if value.char_len() < count {
-                            place_chars(&mut res, value.as_str());
-                            d = AddSkip(count - value.char_len());
-                            nextdel = false;
-                        } else if value.char_len() > count {
-                            let (left, right) = value.split_at(count);
-                            place_chars(&mut res, left.as_str());
-                            first = Some(DocChars(right));
-                            nextfirst = false;
-                        } else {
-                            place_chars(&mut res, value.as_str());
-                        }
-                    }
-                    DocGroup(..) => {
-                        res.push(first.clone().unwrap());
-                        if count > 1 {
-                            d = AddSkip(count - 1);
-                            nextdel = false;
-                        }
+            AddSkip(count) => match first.clone().unwrap() {
+                DocChars(value) => {
+                    if value.char_len() < count {
+                        place_chars(&mut res, value.as_str());
+                        d = AddSkip(count - value.char_len());
+                        nextdel = false;
+                    } else if value.char_len() > count {
+                        let (left, right) = value.split_at(count);
+                        place_chars(&mut res, left.as_str());
+                        first = Some(DocChars(right));
+                        nextfirst = false;
+                    } else {
+                        place_chars(&mut res, value.as_str());
                     }
                 }
-            }
-            AddWithGroup(ref delspan) => {
-                match first.clone().unwrap() {
-                    DocGroup(ref attrs, ref span) => {
-                        res.push(DocGroup(attrs.clone(), apply_add(span, delspan)));
-                    }
-                    _ => {
-                        panic!("Invalid AddWithGroup");
+                DocGroup(..) => {
+                    res.push(first.clone().unwrap());
+                    if count > 1 {
+                        d = AddSkip(count - 1);
+                        nextdel = false;
                     }
                 }
-            }
+            },
+            AddWithGroup(ref delspan) => match first.clone().unwrap() {
+                DocGroup(ref attrs, ref span) => {
+                    res.push(DocGroup(attrs.clone(), apply_add(span, delspan)));
+                }
+                _ => {
+                    panic!("Invalid AddWithGroup");
+                }
+            },
             AddChars(value) => {
                 place_chars(&mut res, value.as_str());
                 nextfirst = false;
@@ -189,101 +185,92 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
         let mut nextfirst = true;
 
         match d.clone() {
-            DelSkip(count) => {
-                match first.clone() {
-                    DocChars(value) => {
-                        if value.char_len() < count {
-                            place_chars(&mut res, value.as_str());
-                            d = DelSkip(count - value.char_len());
-                            nextdel = false;
-                        } else if value.char_len() > count {
-                            let (left, right) = value.split_at(count);
-                            place_chars(&mut res, left.as_str());
-                            first = DocChars(right);
-                            nextfirst = false;
-                        } else {
-                            place_chars(&mut res, value.as_str());
-                            nextdel = true;
-                        }
-                    }
-                    DocGroup(..) => {
-                        res.push(first.clone());
-                        if count > 1 {
-                            d = DelSkip(count - 1);
-                            nextdel = false;
-                        }
+            DelSkip(count) => match first.clone() {
+                DocChars(value) => {
+                    if value.char_len() < count {
+                        place_chars(&mut res, value.as_str());
+                        d = DelSkip(count - value.char_len());
+                        nextdel = false;
+                    } else if value.char_len() > count {
+                        let (left, right) = value.split_at(count);
+                        place_chars(&mut res, left.as_str());
+                        first = DocChars(right);
+                        nextfirst = false;
+                    } else {
+                        place_chars(&mut res, value.as_str());
+                        nextdel = true;
                     }
                 }
-            }
-            DelWithGroup(ref delspan) => {
-                match first.clone() {
-                    DocGroup(ref attrs, ref span) => {
-                        res.push(DocGroup(attrs.clone(), apply_delete(span, delspan)));
-                    }
-                    _ => {
-                        panic!("Invalid DelWithGroup");
+                DocGroup(..) => {
+                    res.push(first.clone());
+                    if count > 1 {
+                        d = DelSkip(count - 1);
+                        nextdel = false;
                     }
                 }
-            }
-            DelGroup(ref delspan) => {
-                match first.clone() {
-                    DocGroup(ref attrs, ref span) => {
-                        place_many(&mut res, &apply_delete(span, delspan)[..]);
-                    }
-                    _ => {
-                        panic!("Invalid DelGroup");
+            },
+            DelWithGroup(ref delspan) => match first.clone() {
+                DocGroup(ref attrs, ref span) => {
+                    res.push(DocGroup(attrs.clone(), apply_delete(span, delspan)));
+                }
+                _ => {
+                    panic!("Invalid DelWithGroup");
+                }
+            },
+            DelGroup(ref delspan) => match first.clone() {
+                DocGroup(ref attrs, ref span) => {
+                    place_many(&mut res, &apply_delete(span, delspan)[..]);
+                }
+                _ => {
+                    panic!("Invalid DelGroup");
+                }
+            },
+            DelChars(count) => match first.clone() {
+                DocChars(ref value) => {
+                    if value.char_len() > count {
+                        let (_, right) = value.split_at(count);
+                        first = DocChars(right);
+                        nextfirst = false;
+                    } else if value.char_len() < count {
+                        panic!("attempted deletion of too much");
                     }
                 }
-            }
-            DelChars(count) => {
-                match first.clone() {
-                    DocChars(ref value) => {
-                        if value.char_len() > count {
-                            let (_, right) = value.split_at(count);
-                            first = DocChars(right);
-                            nextfirst = false;
-                        } else if value.char_len() < count {
-                            panic!("attempted deletion of too much");
-                        }
-                    }
-                    _ => {
-                        panic!("Invalid DelChars");
-                    }
+                _ => {
+                    panic!("Invalid DelChars");
                 }
-            }
-            // DelObject => {
-            //     unimplemented!();
-            // }
-            // DelMany(count) => {
-            //     match first.clone() {
-            //         DocChars(ref value) => {
-            //             let len = value.chars().count();
-            //             if len > count {
-            //                 first = DocChars(value.chars().skip(count).collect());
-            //                 nextfirst = false;
-            //             } else if len < count {
-            //                 d = DelMany(count - len);
-            //                 nextdel = false;
-            //             }
-            //         }
-            //         DocGroup(..) => {
-            //             if count > 1 {
-            //                 d = DelMany(count - 1);
-            //                 nextdel = false;
-            //             } else {
-            //                 nextdel = true;
-            //             }
-            //         }
-            //     }
-            // }
-            // DelGroupAll => {
-            //     match first.clone() {
-            //         DocGroup(..) => {}
-            //         _ => {
-            //             panic!("Invalid DelGroupAll");
-            //         }
-            //     }
-            // }
+            }, // DelObject => {
+               //     unimplemented!();
+               // }
+               // DelMany(count) => {
+               //     match first.clone() {
+               //         DocChars(ref value) => {
+               //             let len = value.chars().count();
+               //             if len > count {
+               //                 first = DocChars(value.chars().skip(count).collect());
+               //                 nextfirst = false;
+               //             } else if len < count {
+               //                 d = DelMany(count - len);
+               //                 nextdel = false;
+               //             }
+               //         }
+               //         DocGroup(..) => {
+               //             if count > 1 {
+               //                 d = DelMany(count - 1);
+               //                 nextdel = false;
+               //             } else {
+               //                 nextdel = true;
+               //             }
+               //         }
+               //     }
+               // }
+               // DelGroupAll => {
+               //     match first.clone() {
+               //         DocGroup(..) => {}
+               //         _ => {
+               //             panic!("Invalid DelGroupAll");
+               //         }
+               //     }
+               // }
         }
 
         if nextdel {
@@ -304,7 +291,10 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
 
         if nextfirst {
             if span.is_empty() {
-                panic!("exhausted document in apply_delete\n -->{:?}\n -->{:?}", first, span);
+                panic!(
+                    "exhausted document in apply_delete\n -->{:?}\n -->{:?}",
+                    first, span
+                );
             }
 
             first = span[0].clone();
@@ -393,5 +383,8 @@ fn normalize_del_span(del: DelSpan, trim_last: bool) -> DelSpan {
 
 pub fn normalize(op: Op) -> Op {
     // TODO all
-    (normalize_del_span(op.0, true), normalize_add_span(op.1, true))
+    (
+        normalize_del_span(op.0, true),
+        normalize_add_span(op.1, true),
+    )
 }

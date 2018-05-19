@@ -1,7 +1,7 @@
 use oatie::doc::*;
 use oatie::stepper::*;
-use oatie::writer::*;
 use oatie::transform::Schema;
+use oatie::writer::*;
 use take_mut;
 
 fn is_block(attrs: &Attrs) -> bool {

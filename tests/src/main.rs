@@ -1,8 +1,8 @@
 #![feature(integer_atomics)]
 
-extern crate tokio_core;
-extern crate futures;
 extern crate fantoccini;
+extern crate futures;
+extern crate tokio_core;
 #[macro_use]
 extern crate commandspec;
 #[macro_use]
@@ -13,11 +13,11 @@ extern crate failure;
 
 use fantoccini::{Client, Locator};
 // use futures::prelude::*;
-use futures::future::{Future, ok};
-use failure::Error;
 use commandspec::*;
-use std::process::Stdio;
+use failure::Error;
+use futures::future::{ok, Future};
 use rand::thread_rng;
+use std::process::Stdio;
 use std::sync::atomic::{AtomicU16, Ordering};
 use std::sync::{Arc, Barrier};
 use std::thread;
@@ -25,7 +25,10 @@ use std::thread;
 static DRIVER_PORT_COUNTER: AtomicU16 = AtomicU16::new(4445);
 
 fn in_ci() -> bool {
-    ::std::env::var("CI").ok().map(|x| x == "true").unwrap_or(false)
+    ::std::env::var("CI")
+        .ok()
+        .map(|x| x == "true")
+        .unwrap_or(false)
 }
 
 fn main() {
@@ -39,9 +42,7 @@ fn main() {
 
     let j1 = ::std::thread::spawn({
         take!(=both_barrier, =seq_barrier);
-        move || {
-            run(&test_id1, both_barrier, Some(seq_barrier))
-        }
+        move || run(&test_id1, both_barrier, Some(seq_barrier))
     });
     let j2 = ::std::thread::spawn({
         take!(=both_barrier, =seq_barrier);
@@ -91,16 +92,12 @@ fn run(
     let mut cmd = match driver {
         Driver::Chrome => {
             let mut cmd = command!("chromedriver")?;
-            cmd
-                .arg(format!("--port={}", port))
-                .arg(port.to_string());
+            cmd.arg(format!("--port={}", port)).arg(port.to_string());
             cmd
         }
         Driver::Gecko => {
             let mut cmd = command!("geckodriver")?;
-            cmd
-                .arg("-p")
-                .arg(port.to_string());
+            cmd.arg("-p").arg(port.to_string());
             cmd
         }
     };
@@ -112,7 +109,7 @@ fn run(
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn_guard()?;
-    
+
     // Wait for webdriver startup.
     ::std::thread::sleep(::std::time::Duration::from_millis(3_000));
 
@@ -122,18 +119,16 @@ fn run(
     let c = core.run(c).unwrap();
 
     println!("Connected...");
-    
+
     let ret_value = {
         // we want to have a reference to c so we can use it in the and_thens below
         let c = &c;
-    
+
         // now let's set up the sequence of steps we want the browser to take
         // first, go to the Wikipedia page for Foobar
-        let f =
-            c.goto(&format!("http://0.0.0.0:8000/{}", test_id))
-            .and_then(move |_| {
-                c.current_url()
-            })
+        let f = c
+            .goto(&format!("http://0.0.0.0:8000/{}", test_id))
+            .and_then(move |_| c.current_url())
             .and_then(move |url| {
                 println!("1");
                 println!("URL {:?}", url);
@@ -156,9 +151,9 @@ fn run(
             .and_then(|_| {
                 ::std::thread::sleep(::std::time::Duration::from_millis(1_000));
 
-
                 println!("2");
-                c.execute(r#"
+                c.execute(
+                    r#"
 
 let h1 = document.querySelector('.edit-text div[data-tag=h1]');
 
@@ -186,14 +181,16 @@ console.log('x', clientX);
 console.log('y', clientY);
 document.querySelector('.edit-text').dispatchEvent(evt);
 
-                "#, vec![])
+                "#,
+                    vec![],
+                )
             })
             .and_then(|_| {
                 ::std::thread::sleep(::std::time::Duration::from_millis(1_000));
 
-
                 println!("2a");
-                c.execute(r#"
+                c.execute(
+                    r#"
 
 // let charCode = 35;
 let charCode = 0x1f47b;
@@ -204,21 +201,28 @@ var evt = new KeyboardEvent("keypress", {
 });
 document.dispatchEvent(evt);
 
-                "#, vec![])
+                "#,
+                    vec![],
+                )
             })
             .and_then(|_| {
                 // Enough time for both clients to sync up.
-                ok(::std::thread::sleep(::std::time::Duration::from_millis(4000)))
+                ok(::std::thread::sleep(::std::time::Duration::from_millis(
+                    4000,
+                )))
             })
             .and_then(|_| {
                 println!("3");
 
-                c.execute(r#"
+                c.execute(
+                    r#"
 
 let h1 = document.querySelector('.edit-text div[data-tag=h1]');
 return h1.innerText;
 
-                "#, vec![])
+                "#,
+                    vec![],
+                )
             })
             .and_then(move |out| {
                 println!("4");
@@ -227,16 +231,16 @@ return h1.innerText;
                 // assert_eq!(url.as_ref(), "https://en.wikipedia.org/wiki/Foobar");
                 // click "Foo (disambiguation)"
                 // c.wait_for_find(Locator::Css(r#"div[data-tag="cccc"]"#))
-            // })
-            // .and_then(|_e| {
+                // })
+                // .and_then(|_e| {
                 // assert_eq!(url.as_ref(), "https://en.wikipedia.org/wiki/Foo_Lake");
                 Ok(out)
             });
-    
+
         // and set the browser off to do those things
         core.run(f).unwrap()
     };
-    
+
     // drop the client to delete the browser session
     if let Some(fin) = c.close() {
         // and wait for cleanup to finish

@@ -1,39 +1,15 @@
 //! Synchronization server. Threads for websockets and graphql.
 
-use crate::{
-    db::*,
-    carets::*,
-    graphql::sync_graphql_server,
-    state::*,
-};
+use crate::{carets::*, db::*, graphql::sync_graphql_server, state::*};
 
 use extern::{
-    crossbeam_channel::{
-        Receiver as CCReceiver,
-        Sender as CCSender,
-        unbounded,
-    },
-    failure::Error,
-    edit_common::commands::*,
-    oatie::{
-        doc::*,
-    },
-    simple_ws::*,
-    rand::{thread_rng, Rng},
-    ron,
-    serde_json,
-    simple_ws,
-    std::{
-        collections::HashMap,
-        thread,
-        time::Duration,
-    },
-    thread_spawn::thread_spawn,
-    url::Url,
-    ws,
+    crossbeam_channel::{unbounded, Receiver as CCReceiver, Sender as CCSender},
+    edit_common::commands::*, failure::Error, oatie::doc::*, rand::{thread_rng, Rng}, ron,
+    serde_json, simple_ws, simple_ws::*, std::{collections::HashMap, thread, time::Duration},
+    thread_spawn::thread_spawn, url::Url, ws,
 };
 
-const INITIAL_SYNC_VERSION: usize = 100; // Arbitrarily select version 100 
+const INITIAL_SYNC_VERSION: usize = 100; // Arbitrarily select version 100
 const PAGE_TITLE_LEN: usize = 100; // 100 chars is the limit
 
 pub fn default_new_doc(id: &str) -> Doc {
@@ -54,10 +30,7 @@ pub fn valid_page_id(input: &str) -> bool {
 }
 
 fn generate_random_page_id() -> String {
-    thread_rng()
-        .gen_ascii_chars()
-        .take(6)
-        .collect()
+    thread_rng().gen_ascii_chars().take(6).collect()
 }
 
 // Target Page ID, ClientUpdate
@@ -98,10 +71,7 @@ impl SimpleSocket for ClientSocket {
         url: &str,
         out: simple_ws::Sender,
     ) -> Result<ClientSocket, Error> {
-        let url = Url::parse("http://localhost/")
-            .unwrap()
-            .join(url)
-            .unwrap();
+        let url = Url::parse("http://localhost/").unwrap().join(url).unwrap();
         let mut path = url.path().to_owned();
 
         if path.starts_with("/$/ws/") {
@@ -115,10 +85,7 @@ impl SimpleSocket for ClientSocket {
             "home".to_string()
         };
 
-        eprintln!(
-            "(!) Client {:?} connected to {:?}",
-            client_id, page_id
-        );
+        eprintln!("(!) Client {:?} connected to {:?}", client_id, page_id);
 
         // Notify sync thread of our having connected.
         let _ = tx_master.send(ClientNotify(
@@ -126,7 +93,7 @@ impl SimpleSocket for ClientSocket {
             ClientUpdate::Connect {
                 client_id: client_id.to_string(),
                 out: out,
-            }
+            },
         ));
 
         // Store client state in a ClientSocket.
@@ -168,7 +135,7 @@ impl SimpleSocket for ClientSocket {
             self.page_id.to_owned(),
             ClientUpdate::Disconnect {
                 client_id: self.client_id.to_owned(),
-            }
+            },
         ))?;
 
         Ok(())
@@ -186,23 +153,15 @@ impl PageController {
     // This is just a commit across all operations, and forwarding it to
     // all listening clients. It also is the commit point for all new
     // operations.
-    fn sync_commit(
-        &mut self,
-        client_id: &str,
-        op: Op,
-        input_version: usize,
-    ) {
+    fn sync_commit(&mut self, client_id: &str, op: Op, input_version: usize) {
         // TODO we should evict the client if this fails.
-        let op = self.state.commit(
-            &client_id,
-            op,
-            input_version,
-        ).expect("Could not commit client operation.");
+        let op = self
+            .state
+            .commit(&client_id, op, input_version)
+            .expect("Could not commit client operation.");
 
         // Updates the database with the new document version.
-        if let Ok(doc) =
-            remove_carets(&self.state.doc)
-        {
+        if let Ok(doc) = remove_carets(&self.state.doc) {
             let conn = self.db_pool.get().unwrap();
             // TODO why is this "create" page
             create_page(&conn, &self.page_id, &doc);
@@ -219,10 +178,7 @@ impl PageController {
     }
 
     /// Forward command to everyone in our client set.
-    fn broadcast_client_command(
-        &self,
-        command: &SyncToUserCommand,
-    ) {
+    fn broadcast_client_command(&self, command: &SyncToUserCommand) {
         let json = serde_json::to_string(&command).unwrap();
         for client in &self.clients {
             let _ = client.lock().unwrap().send(json.clone());
@@ -240,9 +196,7 @@ impl PageController {
     }
 
     /// Forward restart code to everyone in our client set.
-    fn broadcast_restart(
-        &self,
-    ) -> Result<(), Error> {
+    fn broadcast_restart(&self) -> Result<(), Error> {
         let code = ws::CloseCode::Restart;
         let reason = "Server received an updated version of the document.";
         for client in &self.clients {
@@ -252,14 +206,9 @@ impl PageController {
     }
 
     // Handle a client's update.
-    fn handle(
-        &mut self,
-        notification: ClientUpdate,
-    ) {
+    fn handle(&mut self, notification: ClientUpdate) {
         match notification {
-            ClientUpdate::Connect {
-                client_id, out
-            } => {
+            ClientUpdate::Connect { client_id, out } => {
                 let version = self.state.version;
 
                 // Initialize client state on outgoing websocket.
@@ -272,14 +221,12 @@ impl PageController {
 
                 // Register with clients list.
                 self.state.clients.insert(client_id.to_string(), version);
-                
+
                 // Forward to all in our client set.
                 self.clients.push(out);
-            },
+            }
 
-            ClientUpdate::Disconnect {
-                client_id
-            } => {
+            ClientUpdate::Disconnect { client_id } => {
                 // Remove our caret from document.
                 let op = remove_carets_op(&self.state.doc, vec![client_id.clone()]).unwrap();
                 let version = self.state.version;
@@ -287,7 +234,7 @@ impl PageController {
 
                 // Remove from our client set.
                 self.state.clients.remove(&client_id);
-            },
+            }
 
             ClientUpdate::Commit {
                 client_id,
@@ -296,11 +243,9 @@ impl PageController {
             } => {
                 // Commit the operation.
                 self.sync_commit(&client_id, op, version);
-            },
+            }
 
-            ClientUpdate::Overwrite {
-                doc
-            } => {
+            ClientUpdate::Overwrite { doc } => {
                 let _ = self.broadcast_restart();
 
                 // Rewrite our state.
@@ -354,9 +299,7 @@ struct PageMaster {
 }
 
 impl PageMaster {
-    fn new(
-        db_pool: DbPool,
-    ) -> PageMaster {
+    fn new(db_pool: DbPool) -> PageMaster {
         PageMaster {
             db_pool,
             pages: hashmap![],
@@ -365,24 +308,18 @@ impl PageMaster {
 
     /// Creates a new page entry in the page map and spawns a sync
     /// thread to manage it.
-    fn acquire_page(
-        &mut self,
-        page_id: &str,
-    ) -> CCSender<ClientUpdate> {
+    fn acquire_page(&mut self, page_id: &str) -> CCSender<ClientUpdate> {
         // If this page doesn't exist, let's allocate a new thread for it.
         if self.pages.get(page_id).is_none() {
             println!("(%) loading new page for {:?}", page_id);
-            
+
             // Retrieve from database, or use a default generic document.
             let conn = self.db_pool.get().unwrap();
-            let inner_doc = get_single_page(&conn, page_id)
-                .unwrap_or_else(|| default_new_doc(page_id));
+            let inner_doc =
+                get_single_page(&conn, page_id).unwrap_or_else(|| default_new_doc(page_id));
 
             let (tx_notify, rx_notify) = unbounded();
-            self.pages.insert(
-                page_id.to_string(),
-                tx_notify.clone(),
-            );
+            self.pages.insert(page_id.to_string(), tx_notify.clone());
 
             // We ignore all errors from the sync thread, and thus the whole thread.
             let _ = spawn_sync_thread(
@@ -399,17 +336,13 @@ impl PageMaster {
     }
 }
 
-// TODO make this coordinate properly with 
+// TODO make this coordinate properly with
 #[thread_spawn]
-fn spawn_page_master(
-    db_pool: DbPool,
-    rx_master: CCReceiver<ClientNotify>,
-) {
+fn spawn_page_master(db_pool: DbPool, rx_master: CCReceiver<ClientNotify>) {
     let mut page_map = PageMaster::new(db_pool);
 
     while let Ok(ClientNotify(page_id, notification)) = rx_master.recv() {
-        let _ = page_map.acquire_page(&page_id)
-            .send(notification);
+        let _ = page_map.acquire_page(&page_id).send(notification);
     }
 }
 
@@ -433,7 +366,10 @@ pub fn sync_socket_server(port: u16, _period: usize) {
 
     // Websocket URL.
     let url = format!("0.0.0.0:{}", port);
-    eprintln!("sync_socket_server is listening for ws connections on {}", url);
+    eprintln!(
+        "sync_socket_server is listening for ws connections on {}",
+        url
+    );
 
     // Start the WebSocket listener.
     let _ = ws::listen(url, {
@@ -443,7 +379,7 @@ pub fn sync_socket_server(port: u16, _period: usize) {
 
             eprintln!("Client connected.");
 
-            // Listen to commands from the clients and submit to sync server.            
+            // Listen to commands from the clients and submit to sync server.
             SocketHandler::<ClientSocket>::new(
                 (
                     generate_random_page_id(), // TODO can we select from unused client IDs?

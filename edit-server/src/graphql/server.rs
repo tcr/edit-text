@@ -1,35 +1,13 @@
 //! GraphQL server.
 
 use crate::{
-    db::*,
-    sync::{
-        ClientUpdate,
-        ClientNotify,
-    },
+    db::*, sync::{ClientNotify, ClientUpdate},
 };
 
 use extern::{
-    crossbeam_channel::{
-        Sender as CCSender,
-    },
-    diesel::{
-        sqlite::SqliteConnection,
-    },
-    juniper::{
-        self,
-        http::{GraphQLRequest},
-        FieldResult,
-        FieldError,
-    },
-    oatie::{
-        doc::*,
-    },
-    edit_common::markdown::*,
-    r2d2,
-    r2d2_diesel::ConnectionManager,
-    rouille,
-    serde_json,
-    std::io::prelude::*,
+    crossbeam_channel::Sender as CCSender, diesel::sqlite::SqliteConnection,
+    edit_common::markdown::*, juniper::{self, http::GraphQLRequest, FieldError, FieldResult},
+    oatie::doc::*, r2d2, r2d2_diesel::ConnectionManager, rouille, serde_json, std::io::prelude::*,
 };
 
 struct Page {
@@ -66,7 +44,7 @@ struct Mutations;
 graphql_object!(Mutations: Ctx |&self| {
     // TODO rename this to upsert
     field createPage(
-        &executor, 
+        &executor,
         id: String,
         doc: Option<String>,
         markdown: Option<String>,
@@ -109,8 +87,8 @@ graphql_object!(Mutations: Ctx |&self| {
     }
 
     field getOrCreatePage(
-        &executor, 
-        id: String, 
+        &executor,
+        id: String,
         default: String,
     ) -> FieldResult<Page> {
         let conn = executor.context().db_pool.get().unwrap();
@@ -124,7 +102,7 @@ graphql_object!(Mutations: Ctx |&self| {
                 let _ = executor.context().tx_master.send(ClientNotify(id.clone(), ClientUpdate::Overwrite {
                     doc,
                 }));
-                
+
                 default
             });
 
@@ -150,11 +128,8 @@ pub fn sync_graphql_server(
     tx_master: CCSender<ClientNotify>,
 ) {
     // Create a context object.
-    let ctx = Ctx {
-        db_pool,
-        tx_master,
-    };
-    
+    let ctx = Ctx { db_pool, tx_master };
+
     eprintln!("Graphql served on http://0.0.0.0:8003");
     rouille::start_server("0.0.0.0:8003", move |request| {
         let ctx = ctx.clone();

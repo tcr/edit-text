@@ -8,29 +8,29 @@ extern crate structopt_derive;
 extern crate ws;
 #[macro_use]
 extern crate taken;
-extern crate simple_ws;
 extern crate bus;
 extern crate crossbeam_channel;
-extern crate rand;
 extern crate failure;
-extern crate url;
+extern crate rand;
 extern crate ron;
+extern crate simple_ws;
+extern crate url;
 
-use crossbeam_channel::{unbounded, Sender, Receiver};
-use failure::Error;
+use crossbeam_channel::{unbounded, Receiver, Sender};
 use edit_client::*;
-use simple_ws::*;
 use edit_common::commands::*;
+use failure::Error;
+use rand::Rng;
+use simple_ws::*;
 use std::panic;
 use std::process;
-use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
+use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
 use structopt::StructOpt;
 use ws::CloseCode;
-use rand::Rng;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "edit-client", about = "An example of StructOpt usage.")]
@@ -65,11 +65,7 @@ pub fn main() {
 
 fn spawn_virtual_monkey(port: u16, key: usize) -> JoinHandle<()> {
     thread::spawn(move || {
-        let url = format!(
-            "ws://127.0.0.1:{}/{}",
-            port,
-            "monkey",
-        );
+        let url = format!("ws://127.0.0.1:{}/{}", port, "monkey",);
         println!("Connecting to {:?}", url);
 
         ws::connect(url.as_str(), move |out| {
@@ -99,7 +95,7 @@ fn spawn_virtual_monkies() -> JoinHandle<()> {
         let opt = Opt::from_args();
         let port = opt.port;
         let monkies = opt.monkies.unwrap();
-        
+
         thread::sleep(Duration::from_millis(1000));
 
         for key in 0..monkies {
@@ -200,17 +196,19 @@ fn setup_client(
     page_id: &str,
     out: Arc<Mutex<ws::Sender>>,
     ws_port: u16,
-) -> (Arc<AtomicBool>, Arc<AtomicBool>, Sender<Task>, Sender<UserToSyncCommand>) {
+) -> (
+    Arc<AtomicBool>,
+    Arc<AtomicBool>,
+    Sender<Task>,
+    Sender<UserToSyncCommand>,
+) {
     let (tx_sync, rx_sync) = unbounded();
 
     let monkey = Arc::new(AtomicBool::new(false));
     let alive = Arc::new(AtomicBool::new(true));
 
     let (tx_client, rx_client) = unbounded();
-    spawn_send_to_client(
-        rx_client,
-        out,
-    );
+    spawn_send_to_client(rx_client, out);
 
     let mut client = ProxyClient {
         state: Client {
@@ -234,12 +232,7 @@ fn setup_client(
     setup_monkey::<ProxyClient>(alive.clone(), monkey.clone(), tx_task.clone());
 
     // Connect to the sync server.
-    spawn_sync_connection(
-        ws_port,
-        page_id.to_owned(),
-        tx_task.clone(),
-        rx_sync,
-    );
+    spawn_sync_connection(ws_port, page_id.to_owned(), tx_task.clone(), rx_sync);
 
     // Operate on all incoming tasks.
     //TODO possible to delay until init was handled?
@@ -265,14 +258,14 @@ pub struct ProxySocket {
 impl SimpleSocket for ProxySocket {
     type Args = u16;
 
-    fn initialize(ws_port: u16, url: &str, out: Arc<Mutex<ws::Sender>>) -> Result<ProxySocket, Error> {
+    fn initialize(
+        ws_port: u16,
+        url: &str,
+        out: Arc<Mutex<ws::Sender>>,
+    ) -> Result<ProxySocket, Error> {
         let page_id = url[1..].to_string();
-        let (alive, monkey, tx_task, tx_sync) = setup_client(
-            "$$$$$$",
-            &page_id,
-            out.clone(),
-            ws_port,
-        );
+        let (alive, monkey, tx_task, tx_sync) =
+            setup_client("$$$$$$", &page_id, out.clone(), ws_port);
 
         Ok(ProxySocket {
             alive,
@@ -308,15 +301,14 @@ pub fn start_websocket_server(port: u16) {
     server(&format!("0.0.0.0:{}", port), port - 1);
 }
 
-
-#[cfg(not(target_arch="wasm32"))]
+#[cfg(not(target_arch = "wasm32"))]
 pub struct ProxyClient {
     pub state: Client,
     pub tx_client: Sender<UserToFrontendCommand>,
     pub tx_sync: Sender<UserToSyncCommand>,
 }
 
-#[cfg(not(target_arch="wasm32"))]
+#[cfg(not(target_arch = "wasm32"))]
 impl ClientImpl for ProxyClient {
     fn state(&mut self) -> &mut Client {
         &mut self.state
@@ -336,25 +328,23 @@ impl ClientImpl for ProxyClient {
 }
 
 macro_rules! spawn_monkey_task {
-    ( $alive:expr, $monkey:expr, $tx:expr, $wait_params:expr, $task:expr ) => {
-        {
-            let tx = $tx.clone();
-            let alive = $alive.clone();
-            let monkey = $monkey.clone();
-            thread::spawn::<_, Result<(), Error>>(move || {
-                let mut rng = rand::thread_rng();
-                while alive.load(Ordering::Relaxed) {
-                    thread::sleep(Duration::from_millis(
-                        rng.gen_range($wait_params.0, $wait_params.1),
-                    ));
-                    if monkey.load(Ordering::Relaxed) {
-                        tx.send(Task::FrontendToUserCommand($task))?;
-                    }
+    ($alive:expr, $monkey:expr, $tx:expr, $wait_params:expr, $task:expr) => {{
+        let tx = $tx.clone();
+        let alive = $alive.clone();
+        let monkey = $monkey.clone();
+        thread::spawn::<_, Result<(), Error>>(move || {
+            let mut rng = rand::thread_rng();
+            while alive.load(Ordering::Relaxed) {
+                thread::sleep(Duration::from_millis(
+                    rng.gen_range($wait_params.0, $wait_params.1),
+                ));
+                if monkey.load(Ordering::Relaxed) {
+                    tx.send(Task::FrontendToUserCommand($task))?;
                 }
-                Ok(())
-            })
-        }
-    };
+            }
+            Ok(())
+        })
+    }};
 }
 
 pub type MonkeyParam = (u64, u64);
@@ -375,8 +365,11 @@ pub const MONKEY_CLICK: MonkeyParam = (400, 1000);
 // const MONKEY_ENTER: MonkeyParam = (0, 0, 1_000);
 
 #[allow(unused)]
-pub fn setup_monkey<C: ClientImpl + Sized>(alive: Arc<AtomicBool>, monkey: Arc<AtomicBool>, tx: Sender<Task>) {
-
+pub fn setup_monkey<C: ClientImpl + Sized>(
+    alive: Arc<AtomicBool>,
+    monkey: Arc<AtomicBool>,
+    tx: Sender<Task>,
+) {
     spawn_monkey_task!(alive, monkey, tx, MONKEY_BUTTON, {
         let mut rng = rand::thread_rng();
         let index = rng.gen_range(0, button_handlers::<C>(None).len() as u32);

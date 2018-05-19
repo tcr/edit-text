@@ -1,22 +1,14 @@
 //! Sync state. This is a candidate file to be moved into Oatie.
 
 use extern::{
-    failure::Error,
-    oatie::{
-        OT,
-        doc::*,
-        schema::RtfSchema,
-        validate::validate_doc,
-    },
-    std::{
-        collections::HashMap,
-    },
+    failure::Error, oatie::{doc::*, schema::RtfSchema, validate::validate_doc, OT},
+    std::collections::HashMap,
 };
 
 pub struct SyncState {
     pub version: usize,
     pub clients: HashMap<String, usize>, // client_id -> client_version
-    pub history: HashMap<usize, Op>, // version -> op
+    pub history: HashMap<usize, Op>,     // version -> op
     pub doc: Doc,
 }
 
@@ -42,7 +34,9 @@ impl SyncState {
         // Transform against all more recent operations.
         while input_version < target_version {
             // If the version exists (it should) transform against it.
-            let version_op = self.history.get(&input_version)
+            let version_op = self
+                .history
+                .get(&input_version)
                 .ok_or(format_err!("Version missing from history"))?;
             let (updated_op, _) = Op::transform::<RtfSchema>(version_op, &op);
             op = updated_op;
@@ -52,20 +46,11 @@ impl SyncState {
         Ok(op)
     }
 
-    pub fn commit(
-        &mut self,
-        client_id: &str,
-        op: Op,
-        input_version: usize,
-    ) -> Result<Op, Error> {
+    pub fn commit(&mut self, client_id: &str, op: Op, input_version: usize) -> Result<Op, Error> {
         let target_version = self.version;
 
         // Update the operation so we can apply it to the document.
-        let op = self.update_operation_to_current(
-            op,
-            input_version,
-            target_version,
-        )?;
+        let op = self.update_operation_to_current(op, input_version, target_version)?;
 
         if let Some(version) = self.clients.get_mut(client_id) {
             *version = target_version;
@@ -83,7 +68,7 @@ impl SyncState {
 
         // Gut check.
         validate_doc(&self.doc).map_err(|_| format_err!("Validation error"))?;
-        
+
         // Commit chhanges.
         self.doc = new_doc;
         self.version = target_version + 1;

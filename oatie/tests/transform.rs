@@ -8,11 +8,16 @@ use std::fs;
 
 #[test]
 fn main() {
-    let root_path = &::std::env::current_exe().unwrap()
-        .parent().unwrap()
-        .parent().unwrap()
-        .parent().unwrap()
-        .parent().unwrap()
+    let root_path = &::std::env::current_exe()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
         .join("oatie/tests/transform/");
 
     // eprintln!("HELP: {:?}", root_path);
