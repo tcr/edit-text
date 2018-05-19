@@ -127,7 +127,7 @@ body.theme-column .edit-text {
 }
 
 .edit-text {
-    padding: 67px 30px 50px; // + bottom padding for footer
+    padding: 54px 30px 50px; // + bottom padding for footer
     margin: 0;
 
     -webkit-touch-callout: none;
@@ -143,7 +143,7 @@ body.theme-column .edit-text {
     white-space: pre-wrap;
 
     div {
-        line-height: 2.3;
+        margin: 12px 0;
         position: relative;
         min-height: 14px;
     }
@@ -235,13 +235,13 @@ body.theme-column .edit-text {
     div[data-tag="h1"] {
         font-size: 2.0em;
         font-weight: bold;
-        line-height: 2.0;
+        margin-top: 20px;
     }
 
     div[data-tag="h2"] {
         font-size: 1.5em;
         font-weight: bold;
-        line-height: 2.0;
+        margin-top: 16px;
     }
     
     div[data-tag="h3"] {
@@ -286,15 +286,11 @@ body.theme-column .edit-text {
         list-style: disc outside none;
         display: list-item;
         margin-left: 25px;
-
-        &, div {
-            line-height: 2.0;
-        }
     }
 
-    // div[data-tag="bullet"] + div[data-tag="bullet"] {
-    //     margin-top: -5px;
-    // }
+    div[data-tag="bullet"] + div[data-tag="bullet"] {
+        margin-top: -5px;
+    }
 }
 
 // Multi client
