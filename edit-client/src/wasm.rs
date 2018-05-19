@@ -9,13 +9,13 @@ extern crate serde;
 extern crate serde_json;
 extern crate take_mut;
 
-use std::sync::{Arc, Mutex};
-use std::sync::atomic::AtomicBool;
 use super::client::*;
 use super::state::*;
-use failure::Error;
-use wasm_bindgen::prelude::*;
 use edit_common::commands::*;
+use failure::Error;
+use std::sync::atomic::AtomicBool;
+use std::sync::{Arc, Mutex};
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(module = "./../network")]
 extern "C" {
@@ -26,7 +26,6 @@ extern "C" {
 lazy_static! {
     static ref WASM_CLIENT: Mutex<Option<WasmClient>> = Mutex::new(None);
 }
-
 
 pub struct WasmClient {
     pub state: Client,
@@ -50,7 +49,8 @@ impl ClientImpl for WasmClient {
 }
 
 #[wasm_bindgen]
-pub fn wasm_setup() -> u32 { //input_ptr: *mut c_char) -> u32 {
+pub fn wasm_setup() -> u32 {
+    //input_ptr: *mut c_char) -> u32 {
 
     let editor_id = "$$$$$$".to_string();
 
@@ -67,7 +67,7 @@ pub fn wasm_setup() -> u32 { //input_ptr: *mut c_char) -> u32 {
 
                 monkey,
                 alive,
-            }
+            },
         };
 
         client.setup_controls(None);
@@ -82,12 +82,12 @@ pub fn wasm_setup() -> u32 { //input_ptr: *mut c_char) -> u32 {
 #[wasm_bindgen]
 pub fn wasm_command(input: &str) -> u32 {
     let req_parse: Result<Task, _> = serde_json::from_slice(&input.as_bytes());
-    
+
     let mut client_lock = WASM_CLIENT.lock().unwrap();
     let client = client_lock.as_mut().unwrap();
 
     match req_parse.map(|task| client.handle_task(task)) {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(err) => {
             println!("{:?}", err);
             return 1;

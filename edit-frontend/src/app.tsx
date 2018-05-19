@@ -307,7 +307,7 @@ function multiConnect(network: Network) {
   window.addEventListener('focus', () => {
     document.body.classList.remove('blurred');
   });
-  window.addEventListener('blue', () => {
+  window.addEventListener('blur', () => {
     document.body.classList.add('blurred');
   });
   document.body.classList.add('blurred');
@@ -342,6 +342,16 @@ export function start() {
     document.body.classList.add('theme-column');
   }
 
+  document.addEventListener('focus', () => {
+    console.log('(page focus)');
+    document.body.classList.remove('editing-blurred');
+  });
+  document.addEventListener('blur', () => {
+    console.log('(page blur)');
+    document.body.classList.add('editing-blurred');
+  });
+  document.body.classList.add('editing-blurred');
+
   // Create the editor frame.
   ReactDOM.render(
     <EditorFrame
@@ -349,7 +359,7 @@ export function start() {
       body={document.querySelector('.edit-text')!.innerHTML}
     />,
     document.querySelector('#content')!,
-  )
+  );
 
   // Connect to remote sockets.
   network.nativeConnect()

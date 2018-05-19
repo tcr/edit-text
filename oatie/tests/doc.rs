@@ -8,12 +8,12 @@ extern crate term_painter;
 
 use std::collections::HashMap;
 
-use oatie::*;
 use oatie::apply::*;
-use oatie::doc::*;
-use oatie::doc::DocElement::*;
-use oatie::doc::DelElement::*;
 use oatie::doc::AddElement::*;
+use oatie::doc::DelElement::*;
+use oatie::doc::DocElement::*;
+use oatie::doc::*;
+use oatie::*;
 
 pub fn test_start() {
     if let Ok(_) = env_logger::init() {
@@ -81,51 +81,54 @@ fn try_this() {
 
     assert_eq!(
         apply_delete(
-            &vec![
-                DocGroup(
-                    HashMap::new(),
-                    vec![DocChars(DocString::from_str("Hello Damned World!"))],
-                ),
-            ],
+            &vec![DocGroup(
+                HashMap::new(),
+                vec![DocChars(DocString::from_str("Hello Damned World!"))],
+            )],
             &vec![DelWithGroup(vec![DelSkip(6), DelChars(7)])],
         ),
-        vec![
-            DocGroup(HashMap::new(), vec![DocChars(DocString::from_str("Hello World!"))]),
-        ]
+        vec![DocGroup(
+            HashMap::new(),
+            vec![DocChars(DocString::from_str("Hello World!"))],
+        )]
     );
 
     assert_eq!(
         apply_add(
-            &vec![
-                DocGroup(HashMap::new(), vec![DocChars(DocString::from_str("Hello!"))]),
-            ],
-            &vec![
-                AddWithGroup(vec![AddSkip(5), AddChars(DocString::from_str(" World"))]),
-            ],
+            &vec![DocGroup(
+                HashMap::new(),
+                vec![DocChars(DocString::from_str("Hello!"))],
+            )],
+            &vec![AddWithGroup(vec![
+                AddSkip(5),
+                AddChars(DocString::from_str(" World")),
+            ])],
         ),
-        vec![
-            DocGroup(HashMap::new(), vec![DocChars(DocString::from_str("Hello World!"))]),
-        ]
+        vec![DocGroup(
+            HashMap::new(),
+            vec![DocChars(DocString::from_str("Hello World!"))],
+        )]
     );
 
     assert_eq!(
-        apply_operation(&vec![DocChars(DocString::from_str("Goodbye World!"))], &(
-            vec![
-                DelChars(7),
-            ],
-            vec![
-                AddChars(
-                    DocString::from_str("Hello"),
-                ),
-            ],
-        )),
+        apply_operation(
+            &vec![DocChars(DocString::from_str("Goodbye World!"))],
+            &(
+                vec![DelChars(7)],
+                vec![AddChars(DocString::from_str("Hello"))],
+            )
+        ),
         vec![DocChars(DocString::from_str("Hello World!"))]
     );
 
     assert_eq!(
         apply_add(
             &vec![DocChars(DocString::from_str("Hello world!"))],
-            &vec![AddSkip(10), AddChars(DocString::from_str("dd49")), AddSkip(2)],
+            &vec![
+                AddSkip(10),
+                AddChars(DocString::from_str("dd49")),
+                AddSkip(2),
+            ],
         ),
         vec![DocChars(DocString::from_str("Hello worldd49d!"))]
     );

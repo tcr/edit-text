@@ -1,29 +1,14 @@
-use crate::{
-    actions::*,
-    state::*,
-    random::*,
-    markdown,
-};
+use crate::{actions::*, markdown, random::*, state::*};
 
 use extern::{
-    edit_common::{
-        doc_as_html,
-        commands::*,
-    },
-    failure::Error,
-    oatie::{
-        doc::*,
-        validate::validate_doc,
-    },
-    std::sync::atomic::{AtomicBool, Ordering},
+    edit_common::{commands::*, doc_as_html}, failure::Error,
+    oatie::{doc::*, validate::validate_doc}, std::sync::atomic::{AtomicBool, Ordering},
     std::sync::Arc,
 };
 
 // Shorthandler
 // code, meta, shift, alt, callback
-struct KeyHandler<C: ClientImpl>(
-    u32, bool, bool, bool, Box<Fn(&mut C) -> Result<(), Error>>
-);
+struct KeyHandler<C: ClientImpl>(u32, bool, bool, bool, Box<Fn(&mut C) -> Result<(), Error>>);
 
 impl<C: ClientImpl> KeyHandler<C> {
     fn matches(&self, code: u32, meta_key: bool, shift_key: bool, alt_key: bool) -> bool {
@@ -36,10 +21,7 @@ impl<C: ClientImpl> KeyHandler<C> {
 }
 
 // label, callback, selected
-pub struct ButtonHandler<C: ClientImpl>(
-    &'static str, Box<Fn(&mut C) -> Result<(), Error>>, bool,
-);
-
+pub struct ButtonHandler<C: ClientImpl>(&'static str, Box<Fn(&mut C) -> Result<(), Error>>, bool);
 
 fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
     vec![
@@ -115,7 +97,6 @@ fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
             false,
             Box::new(|client| client.client_op(|doc| toggle_list(doc))),
         ),
-
         // OPT-left
         KeyHandler(
             37,
@@ -135,9 +116,7 @@ fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
     ]
 }
 
-pub fn button_handlers<C: ClientImpl>(
-    state: Option<(String, bool)>
-) -> Vec<ButtonHandler<C>> {
+pub fn button_handlers<C: ClientImpl>(state: Option<(String, bool)>) -> Vec<ButtonHandler<C>> {
     vec![
         ButtonHandler(
             "H1",
@@ -198,10 +177,7 @@ pub fn button_handlers<C: ClientImpl>(
     ]
 }
 
-fn native_command<C: ClientImpl>(
-    client: &mut C,
-    req: FrontendToUserCommand,
-) -> Result<(), Error> {
+fn native_command<C: ClientImpl>(client: &mut C, req: FrontendToUserCommand) -> Result<(), Error> {
     match req {
         FrontendToUserCommand::RenameGroup(tag, _) => {
             client.client_op(|doc| replace_block(doc, &tag))?;
@@ -213,7 +189,10 @@ fn native_command<C: ClientImpl>(
                 .map(|handler| handler.1(client));
         }
         FrontendToUserCommand::Keypress(key_code, meta_key, shift_key, alt_key) => {
-            println!("key: {:?} {:?} {:?} {:?}", key_code, meta_key, shift_key, alt_key);
+            println!(
+                "key: {:?} {:?} {:?} {:?}",
+                key_code, meta_key, shift_key, alt_key
+            );
 
             // Find which key handler to process this command.
             for command in key_handlers() {
@@ -264,24 +243,27 @@ pub trait ClientImpl {
     fn send_client(&self, req: &UserToFrontendCommand) -> Result<(), Error>;
     fn send_sync(&self, req: UserToSyncCommand) -> Result<(), Error>;
 
-    fn setup_controls(&self, state: Option<(String, bool)>) where Self: Sized {
-        self
-            .send_client(&UserToFrontendCommand::Controls {
-                keys: key_handlers::<Self>()
-                    .into_iter()
-                    .map(|x| (x.0, x.1, x.2))
-                    .collect(),
-                buttons: button_handlers::<Self>(state)
-                    .into_iter()
-                    .enumerate()
-                    .map(|(i, x)| (i, x.0.to_string(), x.2))
-                    .collect(),
-            })
-            .expect("Could not send initial state");
+    fn setup_controls(&self, state: Option<(String, bool)>)
+    where
+        Self: Sized,
+    {
+        self.send_client(&UserToFrontendCommand::Controls {
+            keys: key_handlers::<Self>()
+                .into_iter()
+                .map(|x| (x.0, x.1, x.2))
+                .collect(),
+            buttons: button_handlers::<Self>(state)
+                .into_iter()
+                .enumerate()
+                .map(|(i, x)| (i, x.0.to_string(), x.2))
+                .collect(),
+        }).expect("Could not send initial state");
     }
 
     fn handle_task(&mut self, value: Task) -> Result<(), Error>
-        where Self: Sized {
+    where
+        Self: Sized,
+    {
         // let start = ::std::time::Instant::now();
 
         match value.clone() {
@@ -296,9 +278,7 @@ pub trait ClientImpl {
             }
 
             // Sync sent us an Update command with a new document version.
-            Task::SyncToUserCommand(
-                SyncToUserCommand::Init(new_client_id, doc_span, version)
-            ) => {
+            Task::SyncToUserCommand(SyncToUserCommand::Init(new_client_id, doc_span, version)) => {
                 self.state().client_id = new_client_id.clone();
                 self.state().client_doc.init(&Doc(doc_span), version);
 
@@ -308,14 +288,15 @@ pub trait ClientImpl {
                 log_wasm!(Setup(self.state().client_id.clone()));
 
                 // If the caret doesn't exist or was deleted, reinitialize it.
-                if !self.with_action_context(|ctx| Ok(has_caret(ctx)))
+                if !self
+                    .with_action_context(|ctx| Ok(has_caret(ctx)))
                     .ok()
                     .unwrap_or(true)
                 {
                     println!("add caret");
                     self.client_op(|doc| init_caret(doc)).unwrap();
                 }
-                
+
                 let res = UserToFrontendCommand::Init(new_client_id);
                 self.send_client(&res).unwrap();
 
@@ -326,9 +307,12 @@ pub trait ClientImpl {
             }
 
             // Sync sent us an Update command with a new document version.
-            Task::SyncToUserCommand(
-                SyncToUserCommand::Update(doc_span, version, client_id, input_op)
-            ) => {
+            Task::SyncToUserCommand(SyncToUserCommand::Update(
+                doc_span,
+                version,
+                client_id,
+                input_op,
+            )) => {
                 if self.state().client_id == "$$$$$$" {
                     return Ok(());
                 }
@@ -338,21 +322,28 @@ pub trait ClientImpl {
 
                 // If this operation is an acknowledgment...
                 if self.state().client_id == client_id {
-                    if let Some(local_op) = self.state().client_doc.sync_confirmed_pending_op(&doc, version) {
+                    if let Some(local_op) = self
+                        .state()
+                        .client_doc
+                        .sync_confirmed_pending_op(&doc, version)
+                    {
                         // Send our next operation.
                         self.upload(local_op)?;
                     }
                 } else {
                     // Update with new version.
                     println!("---> sync sent new version");
-                    self.state().client_doc.sync_sent_new_version(&doc, version, &input_op);
+                    self.state()
+                        .client_doc
+                        .sync_sent_new_version(&doc, version, &input_op);
                 }
 
                 // Announce.
                 println!("new version is {:?}", version);
 
                 // If the caret doesn't exist or was deleted, reinitialize it.
-                if !self.with_action_context(|ctx| Ok(has_caret(ctx)))
+                if !self
+                    .with_action_context(|ctx| Ok(has_caret(ctx)))
                     .ok()
                     .unwrap_or(true)
                 {
@@ -373,7 +364,7 @@ pub trait ClientImpl {
 
         // BAR.with(|bar| {
         //     let mut b = bar.borrow_mut();
-        
+
         //     b.push(start.elapsed().num_milliseconds());
 
         //     println!("{} ms per task.", average(b.as_slice()));
@@ -388,11 +379,7 @@ pub trait ClientImpl {
         log_wasm!(Debug("CLIENTOP".to_string()));
         let client_id = self.state().client_id.clone();
         let version = self.state().client_doc.version;
-        Ok(self.send_sync(UserToSyncCommand::Commit(
-            client_id,
-            local_op,
-            version,
-        ))?)
+        Ok(self.send_sync(UserToSyncCommand::Commit(client_id, local_op, version))?)
     }
 
     // TODO combine with client_op?
@@ -431,7 +418,7 @@ pub trait ClientImpl {
         //         // println!("  {} 1️⃣: let latest_doc = doc_span!{:?};", name, client.doc);
         //         let _ = OT::apply(&client.original_doc, &check_op_a);
         //     }
-        
+
         //     assert_eq!(OT::apply(&client.original_doc, &check_op_a), client.doc);
         // }
 

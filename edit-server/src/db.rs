@@ -1,14 +1,9 @@
-use diesel::{
-    prelude::*,
-    sqlite::SqliteConnection,
-};
+use diesel::{prelude::*, sqlite::SqliteConnection};
 use dotenv::dotenv;
-use std::{
-    env,
-};
 use oatie::doc::*;
-use r2d2_diesel::ConnectionManager;
 use r2d2;
+use r2d2_diesel::ConnectionManager;
+use std::env;
 
 pub mod queries;
 pub mod schema;
@@ -20,7 +15,7 @@ pub fn db_pool_create() -> r2d2::Pool<ConnectionManager<SqliteConnection>> {
 
     let mut database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     database_url = format!("../{}", database_url);
-    
+
     let manager = ConnectionManager::<SqliteConnection>::new(database_url.clone());
     r2d2::Pool::builder()
         .build(manager)

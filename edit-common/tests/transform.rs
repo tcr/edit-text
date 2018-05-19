@@ -8,11 +8,16 @@ use std::fs;
 
 #[test]
 fn main() {
-    let root_path = &::std::env::current_exe().unwrap()
-        .parent().unwrap()
-        .parent().unwrap()
-        .parent().unwrap()
-        .parent().unwrap()
+    let root_path = &::std::env::current_exe()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
         .join("edit-common/tests/transform/");
 
     eprintln!("root_path: {:?}", root_path);

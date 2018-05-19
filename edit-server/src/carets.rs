@@ -27,7 +27,11 @@ pub fn remove_carets(doc: &Doc) -> Result<Doc, Error> {
     Ok(Doc(remove_carets_span(&doc.0)?))
 }
 
-fn remove_carets_op_span(writer: &mut DelWriter, span: &DocSpan, filter: &[String]) -> Result<(), Error> {
+fn remove_carets_op_span(
+    writer: &mut DelWriter,
+    span: &DocSpan,
+    filter: &[String],
+) -> Result<(), Error> {
     for elem in span {
         match *elem {
             DocGroup(ref attrs, ref span) => {

@@ -45,7 +45,7 @@ impl<'a> Iterator for DocToMarkdown<'a> {
                                 _ => {}
                             }
                         }
-                        self.doc_stepper.next(); 
+                        self.doc_stepper.next();
                         return Some(Event::Html(out.into()));
                     }
                     "bullet" => {

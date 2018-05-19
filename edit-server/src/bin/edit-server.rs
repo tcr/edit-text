@@ -5,10 +5,10 @@
 #![feature(proc_macro_non_items)]
 
 extern crate crossbeam_channel;
-extern crate include_dir_macro;
-extern crate maplit;
 extern crate edit_common;
 extern crate edit_server;
+extern crate include_dir_macro;
+extern crate maplit;
 #[macro_use]
 extern crate oatie;
 extern crate rand;
@@ -19,29 +19,23 @@ extern crate structopt;
 extern crate structopt_derive;
 extern crate take_mut;
 extern crate url;
-extern crate ron;
-extern crate reqwest;
-extern crate ws;
-extern crate mime_guess;
+#[macro_use]
+extern crate failure;
 extern crate handlebars;
 extern crate md5;
+extern crate mime_guess;
+extern crate reqwest;
+extern crate ron;
+extern crate ws;
 #[macro_use]
 extern crate serde_json;
 
-use include_dir_macro::include_dir;
 use edit_common::{
-    doc_as_html,
-    markdown::{
-        markdown_to_doc,
-        doc_to_markdown,
-    },
+    doc_as_html, markdown::{doc_to_markdown, markdown_to_doc},
 };
-use extern::{
-    edit_server::{
-        graphql::client::*,
-        sync::*,
-    },
-};
+use extern::edit_server::{graphql::client::*, sync::*};
+use handlebars::Handlebars;
+use include_dir_macro::include_dir;
 use mime_guess::guess_mime_type;
 use oatie::doc::*;
 use oatie::validate::validate_doc;
@@ -56,7 +50,6 @@ use std::process;
 use std::thread;
 use std::thread::JoinHandle;
 use structopt::StructOpt;
-use handlebars::Handlebars;
 
 trait Dir: Sync + Send {
     fn get(&self, &Path) -> Option<Vec<u8>>;
@@ -101,7 +94,6 @@ impl Dir for LocalDir {
         Box::new(LocalDir(self.0.clone()))
     }
 }
-
 
 pub fn default_doc() -> Doc {
     const INPUT: &'static str = r#"
@@ -181,13 +173,33 @@ fn run_http_server(port: u16, client_proxy: bool) {
             (GET) ["/"] => {
                 let id = random_id();
 
+                let load_doc = request.get_param("from")
+                    .ok_or(format_err!("no from parameter to download from"))
+                    .and_then(|from| {
+                        let mut client = reqwest::Client::new();
+                        let mut res = client.get(&from).send()?;
+                        if !res.status().is_success() {
+                            bail!("Unsuccessful request")
+                        }
+                        let md = res.text()?;
+                        let doc = Doc(markdown_to_doc(&md)?);
+                        Ok(if let Ok(_) = validate_doc(&doc) {
+                            doc
+                        } else {
+                            Doc(doc_span![
+                                DocGroup({"tag": "pre"}, [DocChars("Error decoding document.")]),
+                            ])
+                        })
+                    })
+                    .unwrap_or(default_doc());
+
                 // Initialize the "hello world" post.
                 eprintln!("creating helloworld post for {:?}", id);
-                create_page_graphql(&id, &default_doc());
+                create_page_graphql(&id, &load_doc);
 
                 return Response::redirect_302(format!("/{}", id));
             },
-            (GET) ["/"] => {
+            (GET) ["/index.html"] => {
                 return Response::redirect_302("/");
             },
 
@@ -242,7 +254,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                         &Doc(doc_span![DocGroup({"tag": "h1"}, [DocChars(&id)])]),
                     ).unwrap().0
                 ).unwrap();
-                
+
                 let payload = reg.render_template(&template, &json!({
                     "body": &body,
                 })).unwrap();
@@ -260,7 +272,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 // Inline the stylesheet.
                 let stylesheet = dist_dir.get(Path::new("edit.css")).unwrap();
                 let stylesheet = String::from_utf8_lossy(&stylesheet).to_string();
-                
+
                 let mut template = String::from_utf8_lossy(&update_config_var(
                     &template_dir.get(Path::new("client.hbs")).unwrap(),
                 )).to_owned().to_string();
@@ -272,7 +284,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                         &Doc(doc_span![DocGroup({"tag": "h1"}, [DocChars(&id)])]),
                     ).unwrap().0
                 );
-                
+
                 let payload = reg.render_template(&template, &json!({
                     "body": &body,
                     "stylesheet": &stylesheet,

@@ -1,19 +1,18 @@
 //! Classes for generating operation steps (add / del).
 
-use std::collections::HashMap;
 use std::borrow::ToOwned;
 use std::cmp;
+use std::collections::HashMap;
 
-use doc::*;
-use stepper::*;
 use compose;
+use doc::*;
 use normalize;
+use stepper::*;
 
 use failure::Error;
-use term_painter::ToStyle;
-use term_painter::Color::*;
 use term_painter::Attr::*;
-
+use term_painter::Color::*;
+use term_painter::ToStyle;
 
 #[derive(Clone, Debug, Default)]
 pub struct DelWriter {
@@ -37,8 +36,11 @@ impl DelWriter {
 
     pub fn exit(&mut self) {
         let past = self.past.clone();
-        self.past = self.stack.pop().expect("Cannot exit(), as we aren't in a group");
-        
+        self.past = self
+            .stack
+            .pop()
+            .expect("Cannot exit(), as we aren't in a group");
+
         if past.is_continuous_skip() {
             self.past.place(&DelSkip(1));
         } else {
@@ -48,7 +50,10 @@ impl DelWriter {
 
     pub fn close(&mut self) {
         let past = self.past.clone();
-        self.past = self.stack.pop().expect("Cannot close(), as we aren't in a group");
+        self.past = self
+            .stack
+            .pop()
+            .expect("Cannot close(), as we aren't in a group");
         self.past.place(&DelGroup(past));
     }
 
@@ -75,7 +80,6 @@ impl DelWriter {
     }
 }
 
-
 #[derive(Clone, Debug, Default)]
 pub struct AddWriter {
     pub past: Vec<AddElement>,
@@ -99,7 +103,10 @@ impl AddWriter {
     // TODO should there be an exit_strict that doesn't check is_continuous_skip()?
     pub fn exit(&mut self) {
         let past = self.past.clone();
-        self.past = self.stack.pop().expect("Cannot exit(), as we aren't in a group");
+        self.past = self
+            .stack
+            .pop()
+            .expect("Cannot exit(), as we aren't in a group");
 
         if past.is_continuous_skip() {
             self.past.place(&AddSkip(1));
@@ -110,7 +117,10 @@ impl AddWriter {
 
     pub fn close(&mut self, attrs: Attrs) {
         let past = self.past.clone();
-        self.past = self.stack.pop().expect("Cannot close(), as we aren't in a group");
+        self.past = self
+            .stack
+            .pop()
+            .expect("Cannot close(), as we aren't in a group");
 
         self.past.place(&AddGroup(attrs, past));
     }
@@ -197,7 +207,6 @@ impl CurWriter {
         self.past
     }
 }
-
 
 #[derive(Clone, Debug)]
 pub struct DocWriter {

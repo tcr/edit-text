@@ -1,9 +1,10 @@
 use failure::Error;
 use oatie::doc::*;
 use oatie::writer::DocWriter;
-use pulldown_cmark::{Event::{self, End, FootnoteReference, HardBreak, Html, InlineHtml,
-                             SoftBreak, Start, Text},
-                     Parser, Tag};
+use pulldown_cmark::{
+    Event::{self, End, FootnoteReference, HardBreak, Html, InlineHtml, SoftBreak, Start, Text},
+    Parser, Tag,
+};
 
 struct Ctx<'b, I> {
     iter: I,
@@ -21,7 +22,8 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                     self.end_tag(tag);
                 }
                 Text(text) => {
-                    self.body.place(&DocChars(DocString::from_str(text.as_ref())));
+                    self.body
+                        .place(&DocChars(DocString::from_str(text.as_ref())));
                 }
                 HardBreak => {
                     self.body.place(&DocChars(DocString::from_str("\n")));
@@ -83,8 +85,7 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
             }
 
             Tag::Rule => {
-                self.body
-                    .close(hashmap! { "tag".into() => "hr".into() });
+                self.body.close(hashmap! { "tag".into() => "hr".into() });
             }
             Tag::Image(_, _) => (), // shouldn't happen, handled in start
 

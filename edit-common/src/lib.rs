@@ -9,17 +9,17 @@ extern crate serde;
 extern crate taken;
 #[macro_use]
 extern crate serde_derive;
-extern crate serde_json;
-extern crate take_mut;
-extern crate lazy_static;
-extern crate ron;
 extern crate colored;
 extern crate htmlescape;
+extern crate lazy_static;
 extern crate pulldown_cmark;
 extern crate pulldown_cmark_to_cmark;
+extern crate ron;
+extern crate serde_json;
+extern crate take_mut;
 
-pub mod markdown;
 pub mod commands;
+pub mod markdown;
 
 use htmlescape::encode_minimal;
 use oatie::doc::*;
@@ -50,7 +50,7 @@ pub fn doc_as_html(doc: &DocSpan) -> String {
                 // out.push_str(r"<span>");
                 out.push_str(&encode_minimal(text.as_str()));
                 // out.push_str(r"</span>");
-            },
+            }
         }
     }
     out

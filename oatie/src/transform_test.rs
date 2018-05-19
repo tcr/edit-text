@@ -2,23 +2,23 @@
 
 extern crate ron;
 
-use std::io;
-use std::io::prelude::*;
 use serde_json::Value;
 use std::collections::HashMap;
+use std::io;
+use std::io::prelude::*;
 
 use super::compose;
 use super::doc::*;
 use super::normalize;
-use super::OT;
-use super::validate::{validate_doc_span, ValidateContext};
-use super::transform::*;
 use super::parse::debug_pretty;
-use serde_json;
-use regex::Regex;
+use super::transform::*;
+use super::validate::{validate_doc_span, ValidateContext};
+use super::OT;
 use failure::Error;
-use yansi::Paint;
 use parse::*;
+use regex::Regex;
+use serde_json;
+use yansi::Paint;
 
 fn op_transform_compare<T: Schema>(a: &Op, b: &Op) -> (Op, Op, Op, Op) {
     let (a_, b_) = transform::<T>(a, b);
@@ -49,11 +49,7 @@ fn op_transform_compare<T: Schema>(a: &Op, b: &Op) -> (Op, Op, Op, Op) {
 
 #[derive(Serialize, Deserialize, Debug)]
 enum TestSpec {
-    TransformTest {
-        doc: DocSpan,
-        a: Op,
-        b: Op,
-    },
+    TransformTest { doc: DocSpan, a: Op, b: Op },
 }
 
 pub fn run_transform_test<T: Schema>(input: &str) -> Result<(), Error> {
@@ -62,7 +58,11 @@ pub fn run_transform_test<T: Schema>(input: &str) -> Result<(), Error> {
     // ron-defined test specs
     if input.find("TransformTest").is_some() {
         match ron::de::from_str::<TestSpec>(input)? {
-            TestSpec::TransformTest { ref doc, ref a, ref b } => {
+            TestSpec::TransformTest {
+                ref doc,
+                ref a,
+                ref b,
+            } => {
                 test.insert("doc".into(), ron::ser::to_string(&doc)?);
                 test.insert("a_del".into(), ron::ser::to_string(&a.0)?);
                 test.insert("a_add".into(), ron::ser::to_string(&a.1)?);
@@ -73,7 +73,8 @@ pub fn run_transform_test<T: Schema>(input: &str) -> Result<(), Error> {
     // line by line
     } else {
         let re = Regex::new(r"(\n|^)(\w+):([\n\w\W]+?)(\n(?:\w)|(\n\]))").unwrap();
-        let res: HashMap<String, String> = re.captures_iter(&input)
+        let res: HashMap<String, String> = re
+            .captures_iter(&input)
             .map(|cap| {
                 let name = cap[2].to_string();
                 let end_cap = cap.get(5).map(|x| x.as_str()).unwrap_or("");
