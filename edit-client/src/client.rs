@@ -1,4 +1,4 @@
-use crate::{actions::*, markdown, random::*, state::*};
+use crate::{actions::*, random::*, state::*};
 
 use extern::{
     edit_common::{commands::*, doc_as_html}, failure::Error,
@@ -403,6 +403,8 @@ pub trait ClientImpl {
 
         // Apply new operation.
         self.state().client_doc.apply_local_op(&op);
+
+        eprintln!("-----> {:?}", op);
 
         // Check that our operations can compose well.
         // if cfg!(not(target_arch = "wasm32")) {

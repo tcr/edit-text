@@ -3,6 +3,8 @@
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
 use std::sync::atomic::AtomicUsize;
+use std::sync::Arc;
+use std::ops::Range;
 
 pub use self::AddElement::*;
 pub use self::DelElement::*;
@@ -20,53 +22,74 @@ pub type CurSpan = Vec<CurElement>;
 /// Abstraction for String that allows a limited set of operations
 /// with good optimization. (Or that's the idea.)
 #[derive(Clone, Debug, PartialEq)]
-pub struct DocString(String);
+pub struct DocString(Arc<String>, Option<Range<usize>>);
 
 impl DocString {
-    pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
-
     pub fn from_string(input: String) -> DocString {
-        DocString(input)
+        DocString(Arc::new(input), None)
     }
 
     pub fn from_slice(input: &[char]) -> DocString {
-        DocString(input.iter().collect())
+        DocString(Arc::new(input.iter().collect()), None)
     }
 
     pub fn from_str(input: &str) -> DocString {
-        DocString(input.to_owned())
-    }
-
-    pub fn push_str(&mut self, input: &str) {
-        self.0.push_str(input);
-    }
-
-    pub fn push_doc_string(&mut self, input: &DocString) {
-        self.push_str(&input.0);
+        DocString(Arc::new(input.to_owned()), None)
     }
 
     pub fn as_str(&self) -> &str {
-        &self.0
+        if let Some(ref range) = self.1 {
+            &self.0[range.clone()]
+        } else {
+            &self.0
+        }
+    }
+
+    pub fn push_str(&mut self, input: &str) {
+        let mut value = self.to_string();
+        value.push_str(input);
+        self.0 = Arc::new(value);
+        self.1 = None;
+    }
+
+    // TODO consume self?
+    pub fn split_at(&self, char_boundary: usize) -> (DocString, DocString) {
+        let (byte_index, _) = self.as_str().char_indices().skip(char_boundary).next().unwrap();
+        let mut start = 0;
+        let mut end = self.0.len();
+        if let Some(ref range) = self.1 {
+            start = range.start;
+            end = range.end;
+        }
+        (
+            DocString(self.0.clone(), Some((start + 0)..(start + byte_index))),
+            DocString(self.0.clone(), Some((start + byte_index)..end)),
+        )
+
+        // let left: String = self.0.chars().take(char_boundary).collect();
+        // let right: String = self.0.chars().skip(char_boundary).collect();
+        // (DocString::from_string(left), DocString::from_string(right))
     }
 
     pub fn to_string(&self) -> String {
-        self.0.clone()
+        self.as_str().to_owned()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.as_str().is_empty()
+    }
+
+    pub fn push_doc_string(&mut self, input: &DocString) {
+        self.push_str(input.as_str());
     }
 
     pub fn into_string(self) -> String {
-        self.0
+        // TODO make this faster by deconstructing the Rc?
+        self.to_string()
     }
 
     pub fn char_len(&self) -> usize {
-        self.0.chars().count()
-    }
-
-    pub fn split_at(&self, char_boundary: usize) -> (DocString, DocString) {
-        let left: String = self.0.chars().take(char_boundary).collect();
-        let right: String = self.0.chars().skip(char_boundary).collect();
-        (DocString(left), DocString(right))
+        self.as_str().chars().count()
     }
 }
 
@@ -85,7 +108,7 @@ impl<'de> Deserialize<'de> for DocString {
         D: Deserializer<'de>,
     {
         let string = <String as Deserialize>::deserialize(deserializer)?;
-        Ok(DocString(string))
+        Ok(DocString::from_string(string))
     }
 }
 

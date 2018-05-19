@@ -30,7 +30,6 @@ extern crate wasm_bindgen;
 // Macros can only be used after they are defined
 
 use edit_common::commands::*;
-use edit_common::*;
 use std::fs::File;
 use std::path::Path;
 use std::sync::{Arc, Mutex};

@@ -48,6 +48,34 @@ impl CaretStepper {
         }
         return false;
     }
+
+    // TODO this is an easier alternative to .next() for skipping strings of chars,
+    // but is it the best name or interface
+    fn skip_element(&mut self) -> Option<()> {
+        let len = match self.doc.head() {
+            Some(DocChars(val)) => {
+                let len = val.char_len();
+                self.doc.skip(len);
+                len
+            }
+            Some(DocGroup(..)) => {
+                self.doc.enter();
+                1
+            }
+            None => if self.doc.is_done() {
+                return None;
+            } else {
+                self.doc.exit();
+                1
+            },
+        };
+
+        if self.is_valid_caret_pos() {
+            self.caret_pos += len as isize;
+        }
+
+        Some(())
+    }
 }
 
 impl Iterator for CaretStepper {
@@ -192,7 +220,7 @@ impl Walker {
                     break true;
                 }
             }
-            if stepper.next().is_none() {
+            if stepper.skip_element().is_none() {
                 break false;
             }
         };
