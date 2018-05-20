@@ -177,6 +177,9 @@ export class Editor extends React.Component {
     });
   
     document.addEventListener('keydown', (e) => {
+      let current = document.querySelector('div.current[data-tag="caret"]');
+      console.log('help me', current);
+
       if (self.props.disabled) {
         return;
       }
@@ -184,6 +187,52 @@ export class Editor extends React.Component {
       // Check if this event exists in the list of whitelisted key combinations.
       if (!this.props.KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
         return;
+      }
+
+      if (e.keyCode == 38) {
+        // DO YOUR THING
+        let root = document.querySelector('.edit-text')!;
+        let current = document.querySelector('div.current[data-tag="caret"]');
+        console.log('CURRENt', current);
+        if (current !== null) {
+          let rect = current.getBoundingClientRect();
+          let y = rect.top;
+          let x = rect.right;
+
+          // Temporary hack until the cursor at point can be focused on the cursor for real
+          x += 1;
+
+          let first = util.textNodeAtPoint(x, y);
+          if (first !== null) { // Or we'll loop all day
+            while (true) {
+              y -= 10; // STEP
+
+              let el = document.elementFromPoint(x, y);
+              console.log('el at', el, y);
+              if (!root.contains(el) || el === null) { // Off the page!
+                break;
+              }
+              if (root !== el) {
+                let caret = util.textNodeAtPoint(x, y);
+                if (caret !== null && first.offset !== caret.offset && first.textNode !== caret.textNode) { // TODO would this comparison even work lol
+                  console.log('CARET', caret);
+                  let mouseEvent = new MouseEvent('mousedown', {
+                    clientX: x,
+                    clientY: y,
+                  });
+                  this.onMouseDown(mouseEvent);
+                  return;
+                }
+              }
+            }
+          }
+          // get upper right of caret
+          // then move upward checking if target is NOT the backdrop,
+          // then if target IS in the body?
+          // then querying the selector from point
+          // if the selector state DIFFERs, switch to it.
+          // if it passes 
+        }
       }
   
       // Forward the keypress to native.
@@ -193,7 +242,7 @@ export class Editor extends React.Component {
         e.shiftKey,
         e.altKey,
       ));
-      
+
       e.preventDefault();
     });
   }

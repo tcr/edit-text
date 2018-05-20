@@ -9,6 +9,7 @@ export function textNodeAtPoint(
     offset = range.offset;
   } else if (document.caretRangeFromPoint) {
     let range = (<any>document).caretRangeFromPoint(x, y);
+    console.log('HELP2', textNode, offset);
     textNode = range.startContainer;
     offset = range.startOffset;
   } else {
@@ -16,7 +17,7 @@ export function textNodeAtPoint(
   }
 
   // TODO: can textNode ever be an element?
-  if (textNode.nodeType !== 3) {
+  if (textNode === null || textNode.nodeType !== 3) {
     return null;
   }
 

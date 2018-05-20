@@ -65,10 +65,6 @@ impl DocString {
             DocString(self.0.clone(), Some((start + 0)..(start + byte_index))),
             DocString(self.0.clone(), Some((start + byte_index)..end)),
         )
-
-        // let left: String = self.0.chars().take(char_boundary).collect();
-        // let right: String = self.0.chars().skip(char_boundary).collect();
-        // (DocString::from_string(left), DocString::from_string(right))
     }
 
     pub fn to_string(&self) -> String {
