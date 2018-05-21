@@ -125,8 +125,22 @@ export class Editor extends React.Component {
   };
 
   el: HTMLElement;
+  mouseDown = false;
 
   onMouseDown(e: MouseEvent) {
+    this.mouseDown = true;
+    this.onMouseMove(e);
+  }
+
+  onMouseUp(e: MouseEvent) {
+    this.mouseDown = false;
+  }
+
+  onMouseMove(e: MouseEvent) {
+    if (!this.mouseDown) {
+      return;
+    }
+
     let pos = util.textNodeAtPoint(e.clientX, e.clientY);
 
     // Only support text elements.
@@ -140,7 +154,6 @@ export class Editor extends React.Component {
     window.focus();
     // Cancel the event; prevent text selection.
     e.preventDefault();
-
   }
 
   onMount(el: HTMLElement) {
@@ -255,6 +268,8 @@ export class Editor extends React.Component {
         className="edit-text theme-mock"
         ref={(el) => el && this.onMount(el)}
         onMouseDown={this.onMouseDown.bind(this)}
+        onMouseUp={this.onMouseUp.bind(this)}
+        onMouseMove={this.onMouseMove.bind(this)}
       />
     );
   }
