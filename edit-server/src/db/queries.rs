@@ -41,7 +41,18 @@ pub fn get_single_page(db: &SqliteConnection, input_id: &str) -> Option<Doc> {
         .filter(id.eq(input_id))
         .first::<Post>(db)
         .map_err::<Error, _>(|x| x.into())
-        .and_then(|x| Ok(::ron::de::from_str::<DocSpan>(&x.body)?))
+        
+        // HACK strip null bytes that have snuck into the database
+        .map(|x| {
+            if x.body.find(r"\u{0}").is_some() {
+                eprintln!("(!) Stripped NUL byte from doc.");
+                x.body.replace(r"\u{0}", "")
+            } else {
+                x.body.to_string()
+            }
+        })
+        
+        .and_then(|x| Ok(::ron::de::from_str::<DocSpan>(&x)?))
         .map(|d| Doc(d))
         .ok();
 }

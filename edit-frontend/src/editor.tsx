@@ -129,6 +129,8 @@ export class Editor extends React.Component {
   onMouseDown(e: MouseEvent) {
     let pos = util.textNodeAtPoint(e.clientX, e.clientY);
 
+    console.log('HEY', pos);
+
     // Only support text elements.
     if (pos !== null) {
       this.props.network.nativeCommand(commands.Target(
@@ -170,7 +172,12 @@ export class Editor extends React.Component {
       if (e.metaKey) {
         return;
       }
-  
+      
+      // Don't accept non-characters.
+      if (e.charCode === 0) {
+        return;
+      }
+
       this.props.network.nativeCommand(commands.Character(e.charCode));
   
       e.preventDefault();
@@ -226,12 +233,6 @@ export class Editor extends React.Component {
               }
             }
           }
-          // get upper right of caret
-          // then move upward checking if target is NOT the backdrop,
-          // then if target IS in the body?
-          // then querying the selector from point
-          // if the selector state DIFFERs, switch to it.
-          // if it passes 
         }
       }
   
