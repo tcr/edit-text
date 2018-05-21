@@ -21,7 +21,7 @@ pub type CurSpan = Vec<CurElement>;
 
 /// Abstraction for String that allows a limited set of operations
 /// with good optimization. (Or that's the idea.)
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct DocString(Arc<String>, Option<Range<usize>>);
 
 impl DocString {
@@ -61,6 +61,7 @@ impl DocString {
             start = range.start;
             end = range.end;
         }
+        eprintln!("(^) {:?} + {}, {}, {}, {}", self.0, char_boundary, start, end, byte_index);
         (
             DocString(self.0.clone(), Some((start + 0)..(start + byte_index))),
             DocString(self.0.clone(), Some((start + byte_index)..end)),
@@ -88,6 +89,14 @@ impl DocString {
         self.as_str().chars().count()
     }
 }
+
+impl PartialEq for DocString {
+    fn eq(&self, other: &DocString) -> bool {
+        self.as_str() == other.as_str()
+    }
+}
+
+impl Eq for DocString {}
 
 impl Serialize for DocString {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
