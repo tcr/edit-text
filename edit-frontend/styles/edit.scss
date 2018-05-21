@@ -15,6 +15,7 @@ body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 14px;
     line-height: 1.42857143;
+    padding: 1px;
 }
 
 #toolbar {
@@ -25,9 +26,11 @@ body {
     padding: 5px 20px 8px;
     cursor: auto;
     position: fixed;
-    width: 100%;
-    z-index: 100;
+    z-index: 1000;
     height: 44px;
+    top: 0;
+    left: 0;
+    right: 0;
     overflow: auto;
 }
 
@@ -105,10 +108,9 @@ kbd {
     bottom: 0;
     width: 100%;
     box-sizing: border-box;
-    border-top: 1px solid #ca4;
+    border-top: 1px solid #cb9;
     background: #fff3bb;
     padding: 8px 10px;
-    opacity: 0.85;
     z-index: 100;
 }
 
@@ -118,11 +120,11 @@ body.theme-column {
 
 body.theme-column .edit-text {
     max-width: 60em;
-    margin: 0 auto;
+    margin: 70px auto 70px;
     background: #fff;
-    border-left: 1px solid #ccc;
-    border-right: 1px solid #ccc;
+    border: 1px solid #ccc;
     box-shadow: 3px 3px 8px #bbb;
+    padding-top: 10px;
     padding-bottom: 30px;
 }
 
@@ -170,19 +172,16 @@ body.theme-column .edit-text {
     div[data-tag="caret"]::before {
         border-left: 1px $color_caret solid;
         border-right: 1px $color_caret solid;
-        margin-right: -1px;
+        margin-right: -2px;
         margin-left: -1px;
-        content: '';
+        content: '\200D';
         animation: fadein 0.3s;
     }
 
     div[data-tag="caret"].current::before {
         border-left: 1px $color_curcaret solid;
         border-right: 1px $color_curcaret solid;
-        margin-right: -1px;
-        margin-left: -1px;
-        content: '';
-        z-index: 1000;
+        z-index: 100;
         position: relative;
     }
 
@@ -285,10 +284,18 @@ body.theme-column .edit-text {
         background: #eea;
     }
 
+    // We don't use list-style because we need the element to overlap
+    // the entire margin in order for caret resolution to work.
+
+    div[data-tag="bullet"]::before {
+        content: "\25CF";
+        position: absolute;
+        left: 8px;
+    }
+
     div[data-tag="bullet"] {
-        list-style: disc outside none;
-        display: list-item;
-        margin-left: 25px;
+        padding-left: 25px;
+        position: relative;
     }
 
     div[data-tag="bullet"] + div[data-tag="bullet"] {
