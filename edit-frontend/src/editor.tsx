@@ -129,8 +129,6 @@ export class Editor extends React.Component {
   onMouseDown(e: MouseEvent) {
     let pos = util.textNodeAtPoint(e.clientX, e.clientY);
 
-    console.log('HEY', pos);
-
     // Only support text elements.
     if (pos !== null) {
       this.props.network.nativeCommand(commands.Target(
@@ -185,7 +183,6 @@ export class Editor extends React.Component {
   
     document.addEventListener('keydown', (e) => {
       let current = document.querySelector('div.current[data-tag="caret"]');
-      console.log('help me', current);
 
       if (self.props.disabled) {
         return;
@@ -196,33 +193,37 @@ export class Editor extends React.Component {
         return;
       }
 
-      if (e.keyCode == 38) {
-        // DO YOUR THING
+      // Navigate up and down for text at the same column.
+      let UP = e.keyCode == 38;
+      let DOWN = e.keyCode == 40;
+      if (UP || DOWN) {
         let root = document.querySelector('.edit-text')!;
         let current = document.querySelector('div.current[data-tag="caret"]');
-        console.log('CURRENt', current);
         if (current !== null) {
           let rect = current.getBoundingClientRect();
-          let y = rect.top;
+          let y = UP ? rect.top : rect.bottom;
           let x = rect.right;
 
           // Temporary hack until the cursor at point can be focused on the cursor for real
           x += 1;
 
           let first = util.textNodeAtPoint(x, y);
-          if (first !== null) { // Or we'll loop all day
+          if (first !== null) { // Or we have nothing to compare to and we'll loop all day
             while (true) {
-              y -= 10; // STEP
+              y += UP ? -10 : 10; // STEP
 
               let el = document.elementFromPoint(x, y);
-              console.log('el at', el, y);
+              console.log('locating element at %d, %d:', x, y, el);
               if (!root.contains(el) || el === null) { // Off the page!
                 break;
               }
               if (root !== el) {
                 let caret = util.textNodeAtPoint(x, y);
-                if (caret !== null && first.offset !== caret.offset && first.textNode !== caret.textNode) { // TODO would this comparison even work lol
-                  console.log('CARET', caret);
+                // console.log('attempted caret at', x, y, caret);
+                if (caret !== null && (first.textNode !== caret.textNode || first.offset !== caret.offset)) { // TODO would this comparison even work lol
+                  // console.log('CARET', caret);
+                  e.preventDefault();
+
                   let mouseEvent = new MouseEvent('mousedown', {
                     clientX: x,
                     clientY: y,
