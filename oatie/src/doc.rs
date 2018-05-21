@@ -61,7 +61,6 @@ impl DocString {
             start = range.start;
             end = range.end;
         }
-        eprintln!("(^) {:?} + {}, {}, {}, {}", self.0, char_boundary, start, end, byte_index);
         (
             DocString(self.0.clone(), Some((start + 0)..(start + byte_index))),
             DocString(self.0.clone(), Some((start + byte_index)..end)),
