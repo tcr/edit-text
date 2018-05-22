@@ -47,9 +47,9 @@ pub fn doc_as_html(doc: &DocSpan) -> String {
                 out.push_str(r"</div>");
             }
             &DocChars(ref text) => {
-                // out.push_str(r"<span>");
+                out.push_str(r"<span>");
                 out.push_str(&encode_minimal(text.as_str()));
-                // out.push_str(r"</span>");
+                out.push_str(r"</span>");
             }
         }
     }

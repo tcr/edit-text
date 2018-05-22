@@ -8,6 +8,36 @@ const ROOT_SELECTOR = '.edit-text';
 // TODO define this better
 type Cursor = any;
 
+function isTextNode(
+  el: Node | null,
+) {
+  return el !== null && el.nodeType == 3;
+}
+
+function isSpan(
+  el: Node | null,
+) {
+  return el !== null && el.nodeType == 1 && (el as Element).tagName.toLowerCase() == 'span';
+}
+
+function isElement(
+  el: Node | null,
+) {
+  return el !== null && el.nodeType == 1;
+}
+
+function charLength(
+  node: Node,
+): number {
+  if (isTextNode(node)) {
+    return (node as Text).data.length
+  } else if (isSpan(node)) {
+    return (node.childNodes[0] as Text).data.length;
+  } else {
+    throw new Error('Invalid');
+  }
+}
+
 function curto(
   el: Node | null,
   textOffset: number | null = null,
@@ -16,14 +46,24 @@ function curto(
     return null;
   }
 
+  // Move carets inside the element.
+  if (isSpan(el)) {
+    // assert(el.childNodes.length == 1);
+    // assert(el.childNodes[0].nodeType === 3);
+    el = el.firstChild;
+    textOffset = 0;
+  }
+
+  // Is our cursor at a group or at a char?
   let cur: any = [
-    el.nodeType == 1 ? {
+    isElement(el) ? {
       'CurGroup': null
     } : {
       'CurChar': null
     }
   ];
 
+  // What is the character (or element) offset?
   if (textOffset !== null) {
     cur.unshift({
       "CurSkip": textOffset,
@@ -40,30 +80,38 @@ function curto(
     }
   }
 
+  // Find the offset to the start of the parent element by
+  // iterating previous siblings.
   while (el !== null) {
     if (el.previousSibling) {
-      if (el.previousSibling.nodeType == 3) {
-        place_skip(cur, (el.previousSibling as Text).data.length);
-      } else {
+      // Skip previous sibling.
+      if (isSpan(el.previousSibling)) {
+        place_skip(cur, charLength(el.previousSibling));
+      } else if (isElement(el.previousSibling)) {
         place_skip(cur, 1);
+      } else {
+        throw new Error('unreachable');
       }
       el = el.previousSibling;
     } else {
+      // Move to parent node.
       el = el.parentNode;
       if (el === null) {
         throw new Error('Unexpectedly reached root');
       }
-      if (el.nodeType == 1 && util.matchesSelector(el, ROOT_SELECTOR)) {
-        break;
+      if (!isSpan(el)) {
+        if (isElement(el) && util.matchesSelector(el, ROOT_SELECTOR)) {
+          break;
+        }
+        cur = [{
+          "CurWithGroup": cur,
+        }];
       }
-      cur = [{
-        "CurWithGroup": cur,
-      }];
     }
   }
   el = el!;
 
-  if (!(el.nodeType == 1 && util.matchesSelector(el, ROOT_SELECTOR))) {
+  if (!(isElement(el) && util.matchesSelector(el, ROOT_SELECTOR))) {
     console.error('Invalid selection!!!');
   }
 
@@ -71,31 +119,31 @@ function curto(
   return cur;
 }
 
-function resolveCursorFromPositionPrevious(
+function resolveCursorFromPositionInner(
   node: Node | null,
   parent: Node,
 ): Cursor {
   if (node === null) {
     // Text node is first in element, so select parent node.
     return curto(parent);
-  } else if (node.nodeType === 3) {
+  } else if (isTextNode(node)) {
     // Text node has a preceding text element; move to end.
-    return resolveCursorFromPosition((node as Text), (node as Text).data.length);
+    return resolveCursorFromPosition((node as Text), charLength(node));
   } else {
     // TODO can this be made simpler?
     // Skip empty elements.
     if (node.childNodes.length == 0) {
-      return resolveCursorFromPositionPrevious(node.previousSibling, parent);
+      return resolveCursorFromPositionInner(node.previousSibling, parent);
     }
 
     // Inspect previous element last to first.
     let child = node.childNodes[node.childNodes.length - 1];
-    if (child.nodeType === 3) {
+    if (isTextNode(child)) {
       // Text node
-      return resolveCursorFromPosition((child as Text), (child as Text).data.length);
+      return resolveCursorFromPosition((child as Text), charLength(child));
     } else {
       // Element node
-      return resolveCursorFromPositionPrevious(child, node);
+      return resolveCursorFromPositionInner(child, node);
     }
   }
 }
@@ -105,7 +153,7 @@ function resolveCursorFromPosition(
   offset: number,
 ): Cursor {
   if (offset == 0) {
-    return resolveCursorFromPositionPrevious(textNode.previousSibling, textNode.parentElement!);
+    return resolveCursorFromPositionInner(textNode.previousSibling, textNode.parentElement!);
   } else {
     // Move to offset of this text node.
     return curto(
