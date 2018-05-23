@@ -27,6 +27,10 @@ use oatie::doc::*;
 // TODO move this to a different module
 /// Converts a DocSpan to an HTML string.
 pub fn doc_as_html(doc: &DocSpan) -> String {
+    doc_as_html_inner(doc, false).0
+}
+
+pub fn doc_as_html_inner(doc: &DocSpan, mut alt: bool) -> (String, bool) {
     use oatie::doc::*;
 
     let mut out = String::new();
@@ -43,15 +47,24 @@ pub fn doc_as_html(doc: &DocSpan) -> String {
                     serde_json::to_string(attrs.get("client").unwrap_or(&"".to_string())).unwrap(),
                     serde_json::to_string(attrs.get("class").unwrap_or(&"".to_string())).unwrap(),
                 ));
-                out.push_str(&doc_as_html(span));
+                if attrs.get("tag") == Some(&"caret".to_string()) {
+                    alt = true;
+                }
+                let (inner, new_alt) = doc_as_html_inner(span, alt);
+                alt = new_alt;
+                out.push_str(&inner);
                 out.push_str(r"</div>");
             }
             &DocChars(ref text) => {
-                out.push_str(r"<span>");
+                if alt {
+                    out.push_str(r#"<span class="selected">"#);
+                } else {
+                    out.push_str(r"<span>");
+                }
                 out.push_str(&encode_minimal(text.as_str()));
                 out.push_str(r"</span>");
             }
         }
     }
-    out
+    (out, alt)
 }
