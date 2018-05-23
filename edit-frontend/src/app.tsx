@@ -278,7 +278,7 @@ export class EditorFrame extends React.Component {
     }
 
     else if (parse.Controls) {
-      console.log('SETUP CONTROLS', parse.Controls);
+      // console.log('SETUP CONTROLS', parse.Controls);
 
       // Update the key list in-place.
       editor.KEY_WHITELIST.splice.apply(editor.KEY_WHITELIST,
@@ -343,11 +343,11 @@ export function start() {
   }
 
   document.addEventListener('focus', () => {
-    console.log('(page focus)');
+    // console.log('(page focus)');
     document.body.classList.remove('editing-blurred');
   });
   document.addEventListener('blur', () => {
-    console.log('(page blur)');
+    // console.log('(page blur)');
     document.body.classList.add('editing-blurred');
   });
   document.body.classList.add('editing-blurred');

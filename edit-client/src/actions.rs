@@ -3,6 +3,7 @@ use failure::Error;
 use oatie::doc::*;
 use oatie::OT;
 use std::char::from_u32;
+use oatie::schema::RtfSchema;
 
 fn is_boundary_char(c: char) -> bool {
     c.is_whitespace() || c == '-' || c == '_'
@@ -391,11 +392,7 @@ pub fn caret_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
 
     // Return composed operations. Select proper order or otherwise composition
     // will be invalid.
-    if increase {
-        Ok(OT::compose(&op_2, &op_1))
-    } else {
-        Ok(OT::compose(&op_1, &op_2))
-    }
+    Ok(OT::transform_advance::<RtfSchema>(&op_1, &op_2))
 }
 
 pub fn caret_word_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
@@ -477,11 +474,7 @@ pub fn caret_word_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> 
 
     // Return composed operations. Select proper order or otherwise composition
     // will be invalid.
-    if increase {
-        Ok(OT::compose(&op_2, &op_1))
-    } else {
-        Ok(OT::compose(&op_1, &op_2))
-    }
+    Ok(OT::transform_advance::<RtfSchema>(&op_1, &op_2))
 }
 
 pub fn has_caret(ctx: ActionContext) -> bool {
@@ -548,15 +541,12 @@ pub fn caret_block_move(ctx: ActionContext, increase: bool) -> Result<Op, Error>
 
     // Return composed operations. Select proper order or otherwise composition
     // will be invalid.
-    if increase {
-        Ok(OT::compose(&op_2, &op_1))
-    } else {
-        Ok(OT::compose(&op_1, &op_2))
-    }
+    Ok(OT::transform_advance::<RtfSchema>(&op_1, &op_2))
 }
 
 pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan) -> Result<Op, Error> {
     // First operation removes the caret.
+
     let walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
     let pos_1 = walker.caret_pos();
     let mut writer = walker.to_writer();
@@ -593,11 +583,5 @@ pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan) -> Result<Op, Error> {
 
     // println!("------------->\n{:?}\n\n\nAAAAAA\n-------->", op_2);
 
-    // Return composed operations. Select proper order or otherwise composition
-    // will be invalid.
-    if pos_1 < pos_2 {
-        Ok(OT::compose(&op_2, &op_1))
-    } else {
-        Ok(OT::compose(&op_1, &op_2))
-    }
+    Ok(OT::transform_advance::<RtfSchema>(&op_1, &op_2))
 }

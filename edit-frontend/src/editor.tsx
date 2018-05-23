@@ -14,6 +14,20 @@ function isTextNode(
   return el !== null && el.nodeType == 3;
 }
 
+function isBlock(
+  el: Node | null,
+) {
+  //window.getComputedStyle((el as HTMLElement), null).display === 'block'
+
+  if (el !== null && el.nodeType == 1 && (el as Element).tagName.toLowerCase() == 'div') {
+    if ((el as HTMLElement).dataset['tag'] === 'caret') {
+      return false;
+    }
+    return true;
+  }
+  return false;
+}
+
 function isSpan(
   el: Node | null,
 ) {
@@ -42,16 +56,37 @@ function curto(
   el: Node | null,
   textOffset: number | null = null,
 ): Cursor {
+  // Null elements are null cursors.
   if (!el) {
     return null;
   }
 
-  // Move carets inside the element.
-  if (isSpan(el)) {
-    // assert(el.childNodes.length == 1);
-    // assert(el.childNodes[0].nodeType === 3);
-    el = el.firstChild;
-    textOffset = 0;
+  // Normalize text nodes at 0 to be spans...
+  if (isTextNode(el) && textOffset == 0) {
+    textOffset = null;
+  }
+
+  // Normalize leading spans to be their predecessor text node...
+  while (el !== null && textOffset === null) {
+    if (isElement(el) && isBlock(el)) {
+      break;
+    }
+
+    if (isTextNode(el)) {
+      el = el.parentNode!;
+      continue;
+    }
+
+    let prev = el!.previousSibling;
+    if (prev === null) {
+      el = el!.parentNode!;
+    } else if (isSpan(prev)) {
+      el = prev.firstChild!;
+      textOffset = charLength(el!);
+      break;
+    } else {
+      el = prev;
+    }
   }
 
   // Is our cursor at a group or at a char?
@@ -64,9 +99,9 @@ function curto(
   ];
 
   // What is the character (or element) offset?
-  if (textOffset !== null) {
+  if (textOffset !== null && textOffset > 1) {
     cur.unshift({
-      "CurSkip": textOffset,
+      "CurSkip": textOffset - 1,
     });
   }
 
@@ -85,7 +120,7 @@ function curto(
   while (el !== null) {
     if (el.previousSibling) {
       // Skip previous sibling.
-      if (isSpan(el.previousSibling)) {
+      if (isSpan(el.previousSibling) || isTextNode(el.previousSibling)) {
         place_skip(cur, charLength(el.previousSibling));
       } else if (isElement(el.previousSibling)) {
         place_skip(cur, 1);
@@ -115,7 +150,7 @@ function curto(
     console.error('Invalid selection!!!');
   }
 
-  console.log('cursor', JSON.stringify(cur));
+  // console.log('result:', JSON.stringify(cur));
   return cur;
 }
 
@@ -158,7 +193,7 @@ function resolveCursorFromPosition(
     // Move to offset of this text node.
     return curto(
       textNode,
-      offset - 1,
+      offset,
     );
   }
 }
@@ -174,6 +209,7 @@ export class Editor extends React.Component {
 
   el: HTMLElement;
   mouseDown = false;
+  mouseDownActive = false;
 
   onMouseDown(e: MouseEvent) {
     this.mouseDown = true;
@@ -189,6 +225,13 @@ export class Editor extends React.Component {
       return;
     }
 
+    if (this.mouseDownActive) {
+      return;
+    }
+    this.mouseDownActive = true;
+
+    (window as any).EH = e;
+
     let pos = util.textNodeAtPoint(e.clientX, e.clientY);
 
     // Only support text elements.
@@ -196,6 +239,8 @@ export class Editor extends React.Component {
       this.props.network.nativeCommand(commands.Target(
         resolveCursorFromPosition(pos.textNode, pos.offset),
       ));
+    } else {
+      this.mouseDownActive = false;
     }
 
     // Focus the window despite us cancelling the event.
@@ -211,6 +256,8 @@ export class Editor extends React.Component {
   
   componentDidUpdate() {
     this.el.innerHTML = this.props.content;
+    // console.log('REFRESH');
+    this.mouseDownActive = false;
 
     // Highlight our own caret.
     document.querySelectorAll(
@@ -274,7 +321,7 @@ export class Editor extends React.Component {
               y += UP ? -10 : 10; // STEP
 
               let el = document.elementFromPoint(x, y);
-              console.log('locating element at %d, %d:', x, y, el);
+              // console.log('locating element at %d, %d:', x, y, el);
               if (!root.contains(el) || el === null) { // Off the page!
                 break;
               }
