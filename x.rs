@@ -4,6 +4,7 @@
 //! commandspec = "0.8"
 //! failure = "0.1"
 //! structopt = "0.2"
+//! clap = "2.31"
 //! ```
 
 // Don't add additional noise to cargo-script.
@@ -14,12 +15,14 @@ extern crate commandspec;
 #[macro_use]
 extern crate structopt;
 extern crate failure;
+extern crate clap;
 
 use commandspec::*;
 use std::path::Path;
 use std::env;
 use failure::Error;
 use structopt::StructOpt;
+use clap::Shell;
 
 fn abs_string_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
     Ok(Path::new(".")
@@ -94,6 +97,12 @@ enum Cli {
 
     #[structopt(name = "book-watch", about = "Watches and rebuilds the book.")]
     BookWatch,
+
+    #[structopt(name = "completions", about = "Generates completion scripts for your shell.")]
+    Completions {
+        #[structopt(name = "SHELL")]
+        shell: Shell,
+    },
 }
 
 
@@ -488,6 +497,15 @@ fn run() -> Result<(), Error> {
                     mdbook serve
                 ",
             )?;
+        }
+
+        Cli::Completions { shell } => {
+            let mut app = Cli::clap();
+            app.gen_completions_to(
+                "x.rs", 
+                shell,
+                &mut ::std::io::stdout()
+            );
         }
     }
 

@@ -14,3 +14,7 @@ edit-frontend/dist/edit.wasm
 edit-frontend/dist/edit.js.map
 edit.js.map
 .cargo
+x.d
+x.bash
+x.fish
+_x

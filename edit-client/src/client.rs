@@ -211,7 +211,7 @@ fn native_command<C: ClientImpl>(client: &mut C, req: FrontendToUserCommand) -> 
 
             client.client_op(|doc| cur_to_caret(doc, &cursors[idx]))?;
         }
-        FrontendToUserCommand::Target(cur) => {
+        FrontendToUserCommand::CursorAnchor(cur) => {
             client.client_op(|doc| cur_to_caret(doc, &cur))?;
         }
         FrontendToUserCommand::Monkey(setting) => {

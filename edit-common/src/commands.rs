@@ -25,6 +25,7 @@ pub enum FrontendToUserCommand {
     Character(u32),
     RenameGroup(String, CurSpan),
     // Load(DocSpan),
+    CursorAnchor(CurSpan),
     Target(CurSpan),
     RandomTarget(f64),
     Monkey(bool),

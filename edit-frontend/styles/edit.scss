@@ -143,6 +143,8 @@ body.theme-column .edit-text {
     cursor: text;
 
     white-space: pre-wrap;
+    font-kerning: none; // For caret wrapping with zero-width non-joiner
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 
     div {
         margin: 12px 0;
@@ -172,9 +174,9 @@ body.theme-column .edit-text {
     div[data-tag="caret"]::before {
         border-left: 1px $color_caret solid;
         border-right: 1px $color_caret solid;
-        margin-right: -2px;
+        margin-right: -1px;
         margin-left: -1px;
-        content: '\200D';
+        content: '\200c'; // zero width non-joiner Unicode code point
         animation: fadein 0.3s;
     }
 
