@@ -10,7 +10,7 @@ use std::fmt;
 #[repr(u8)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Style {
-    Fancy,
+    Normie, // sentinel
     Selected, // never used except on the client
     Bold,
 }

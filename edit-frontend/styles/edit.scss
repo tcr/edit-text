@@ -80,7 +80,7 @@ body {
     }
 
     button.active {
-        padding-bottom: 2px;
+        padding-top: 2px;
         border-bottom: 3px solid rgb(255, 168, 69);
         color: #000;
     }
@@ -118,18 +118,19 @@ body.theme-column {
     background: #eee;
 }
 
+// When this is a "page" view
 body.theme-column .edit-text {
+    padding-top: 10px;
+    padding-bottom: 30px;
     max-width: 60em;
     margin: 70px auto 70px;
     background: #fff;
     border: 1px solid #ccc;
     box-shadow: 3px 3px 8px #bbb;
-    padding-top: 10px;
-    padding-bottom: 30px;
 }
 
 .edit-text {
-    padding: 54px 30px 50px; // + bottom padding for footer
+    padding: 54px 35px 50px; // + bottom padding for footer
     margin: 0;
 
     -webkit-touch-callout: none;
@@ -144,7 +145,8 @@ body.theme-column .edit-text {
 
     white-space: pre-wrap;
     font-kerning: none; // For caret wrapping with zero-width non-joiner
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: 'TeX Gyre Heros', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    letter-spacing: 0.05pt;
 
     div {
         margin: 12px 0;
@@ -172,12 +174,16 @@ body.theme-column .edit-text {
     $color_caret: #089;
 
     div[data-tag="caret"]::before {
-        border-left: 1px $color_caret solid;
+        border-left: px $color_caret solid;
         border-right: 1px $color_caret solid;
         margin-right: -1px;
         margin-left: -1px;
-        content: '\200c'; // zero width non-joiner Unicode code point
+        content: '';
         animation: fadein 0.3s;
+    }
+
+    div[data-tag="caret"][data-wsj]::before {
+        content: '\200c' !important; // zero width non-joiner Unicode code point
     }
 
     div[data-tag="caret"].current::before {
@@ -292,7 +298,10 @@ body.theme-column .edit-text {
     div[data-tag="bullet"]::before {
         content: "\25CF";
         position: absolute;
+        vertical-align: bottom;
         left: 8px;
+        font-size: 0.95em;
+        top: 1px;
     }
 
     div[data-tag="bullet"] {
@@ -393,9 +402,10 @@ span.Selected {
     background: #349;
 }
 
-span.Fancy {
+// fancy font
+span:not(.Normie) {
     color: yellow;
-    -webkit-text-stroke: 3px blue;
+    -webkit-text-stroke: 3px #f00;
     paint-order: stroke fill;
     -webkit-text-fill-color: yellow;
     text-shadow:

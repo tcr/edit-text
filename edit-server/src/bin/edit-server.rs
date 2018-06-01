@@ -125,12 +125,15 @@ Type github.com/tcr/edit-text into your search bar for more information.
 fn run_http_server(port: u16, client_proxy: bool) {
     let dist_dir: Box<Dir>;
     let template_dir: Box<Dir>;
+    let static_dir: Box<Dir>;
     if cfg!(feature = "standalone") {
         dist_dir = Box::new(InlineDir(include_dir!("edit-frontend/dist")));
         template_dir = Box::new(InlineDir(include_dir!("edit-frontend/templates")));
+        static_dir = Box::new(InlineDir(include_dir!("edit-frontend/static")));
     } else {
         dist_dir = Box::new(LocalDir(PathBuf::from("../edit-frontend/dist")));
         template_dir = Box::new(LocalDir(PathBuf::from("../edit-frontend/templates")));
+        static_dir = Box::new(LocalDir(PathBuf::from("../edit-frontend/static")));
     }
 
     // Necessary files
@@ -227,6 +230,19 @@ fn run_http_server(port: u16, client_proxy: bool) {
             },
             (GET) ["/$/multi/"] => {
                 return Response::redirect_302("/$/multi");
+            },
+
+            (GET) ["/$/static/{target}", target: String] => {
+                if let Some(data) = static_dir.get(Path::new(&target)) {
+                    return Response::from_data(
+                        guess_mime_type(&target).to_string(),
+                        data.clone(),
+                    ).with_etag(request,
+                        format!("{:x}", md5::compute(data)),
+                    );
+                } else {
+                    return Response::empty_404();
+                }
             },
 
             (GET) ["/$/{target}", target: String] => {

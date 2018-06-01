@@ -5,12 +5,14 @@ extern crate failure;
 extern crate maplit;
 extern crate oatie;
 extern crate rand;
+extern crate regex;
 extern crate serde;
 extern crate taken;
 #[macro_use]
 extern crate serde_derive;
 extern crate colored;
 extern crate htmlescape;
+#[macro_use]
 extern crate lazy_static;
 extern crate pulldown_cmark;
 extern crate pulldown_cmark_to_cmark;
@@ -23,17 +25,27 @@ pub mod markdown;
 
 use htmlescape::encode_minimal;
 use oatie::doc::*;
+use regex::Regex;
 
 // TODO move this to a different module
 /// Converts a DocSpan to an HTML string.
 pub fn doc_as_html(doc: &DocSpan) -> String {
+    lazy_static! {
+        // Whenever caret can be wrapped with the next line, it should.
+        static ref CARET_FOLLOWS_BREAKABLE: Regex =
+            Regex::new(r#"(\s|\-)</span><div\s+data-tag="caret""#).unwrap();
+    }
+
     let (res, res_alt) = doc_as_html_inner(doc, false);
-    // if res_alt {
-    //     // TODO disable the carets for real
-    //     res.replace(r#"<span class="selected">"#, "<span>")
-    // } else {
+    let res = if res_alt {
+        // TODO do this in a save, non-ridiculous way(!)
+        res.replace(r#"Selected""#, "\"")
+    } else {
         res
-    // }
+    };
+    CARET_FOLLOWS_BREAKABLE
+        .replace_all(&res, r#"$1</span><div data-wsj="true" data-tag="caret""#)
+        .to_string()
 }
 
 pub fn doc_as_html_inner(doc: &DocSpan, mut alt: bool) -> (String, bool) {
@@ -65,12 +77,12 @@ pub fn doc_as_html_inner(doc: &DocSpan, mut alt: bool) -> (String, bool) {
             }
             &DocChars(ref text) => {
                 if let &Some(ref styles) = &text.styles() {
-                    let mut classes = styles.keys().map(|e| e.to_string()).collect::<Vec<_>>();
+                    let mut classes = styles.keys().cloned().collect::<Vec<Style>>();
                     // TODO Style::Selected could be selected here directly
-                    // if alt {
-                    //     classes.push(Style::Selected);
-                    // }
-                    out.push_str(&format!(r#"<span class="{}">"#, classes.join(" ")));
+                    if alt {
+                        classes.push(Style::Selected);
+                    }
+                    out.push_str(&format!(r#"<span class="{}">"#, classes.into_iter().map(|e| e.to_string()).collect::<Vec<_>>().join(" ")));
                 } else {
                     out.push_str(r"<span>");
                 }

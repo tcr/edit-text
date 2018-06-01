@@ -23,10 +23,10 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                 }
                 Text(text) => {
                     self.body
-                        .place(&DocChars(DocString::from_str_styled(text.as_ref(), hashmap!{ Style::Fancy => None })));
+                        .place(&DocChars(DocString::from_str_styled(text.as_ref(), hashmap!{ Style::Normie => None })));
                 }
                 HardBreak => {
-                    self.body.place(&DocChars(DocString::from_str_styled("\n", hashmap!{ Style::Fancy => None })));
+                    self.body.place(&DocChars(DocString::from_str_styled("\n", hashmap!{ Style::Normie => None })));
                 }
                 SoftBreak | Html(..) | InlineHtml(..) | FootnoteReference(..) => {}
             }
