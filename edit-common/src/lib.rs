@@ -28,12 +28,12 @@ use oatie::doc::*;
 /// Converts a DocSpan to an HTML string.
 pub fn doc_as_html(doc: &DocSpan) -> String {
     let (res, res_alt) = doc_as_html_inner(doc, false);
-    if res_alt {
-        // Disable the carets
-        res.replace(r#"<span class="selected">"#, "<span>")
-    } else {
+    // if res_alt {
+    //     // TODO disable the carets for real
+    //     res.replace(r#"<span class="selected">"#, "<span>")
+    // } else {
         res
-    }
+    // }
 }
 
 pub fn doc_as_html_inner(doc: &DocSpan, mut alt: bool) -> (String, bool) {
@@ -64,12 +64,13 @@ pub fn doc_as_html_inner(doc: &DocSpan, mut alt: bool) -> (String, bool) {
                 out.push_str(r"</div>");
             }
             &DocChars(ref text) => {
-                // TODO selected...
-                // if alt {
-                //     out.push_str(r#"<span class="selected">"#);
-                // } else
-                if let &Some(ref v) = &text.2 {
-                    out.push_str(&format!(r#"<span class="{}">"#, v));
+                if let &Some(ref styles) = &text.styles() {
+                    let mut classes = styles.keys().map(|e| e.to_string()).collect::<Vec<_>>();
+                    // TODO Style::Selected could be selected here directly
+                    // if alt {
+                    //     classes.push(Style::Selected);
+                    // }
+                    out.push_str(&format!(r#"<span class="{}">"#, classes.join(" ")));
                 } else {
                     out.push_str(r"<span>");
                 }

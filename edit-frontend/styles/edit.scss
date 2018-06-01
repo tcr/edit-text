@@ -388,12 +388,12 @@ body.editing-blurred div[data-tag="caret"]::before {
     filter: grayscale(100%);
 }
 
-span.selected {
+span.Selected {
     color: white;
     background: #349;
 }
 
-span.big-mood {
+span.Fancy {
     color: yellow;
     -webkit-text-stroke: 3px blue;
     paint-order: stroke fill;

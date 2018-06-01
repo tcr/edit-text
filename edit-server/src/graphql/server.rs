@@ -57,6 +57,7 @@ graphql_object!(Mutations: Ctx |&self| {
                 ));
             }
             (_, Some(doc)) => {
+                println!("UGH {:?}", doc);
                 Doc(::ron::de::from_str(&doc).unwrap())
             }
             (Some(markdown), _) => {
