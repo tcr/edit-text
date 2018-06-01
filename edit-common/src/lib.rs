@@ -64,8 +64,12 @@ pub fn doc_as_html_inner(doc: &DocSpan, mut alt: bool) -> (String, bool) {
                 out.push_str(r"</div>");
             }
             &DocChars(ref text) => {
-                if alt {
-                    out.push_str(r#"<span class="selected">"#);
+                // TODO selected...
+                // if alt {
+                //     out.push_str(r#"<span class="selected">"#);
+                // } else
+                if let &Some(ref v) = &text.2 {
+                    out.push_str(&format!(r#"<span class="{}">"#, v));
                 } else {
                     out.push_str(r"<span>");
                 }

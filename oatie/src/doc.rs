@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::sync::atomic::AtomicUsize;
 use std::sync::Arc;
 use std::ops::Range;
-use serde::ser::SerializeTuple;
+use serde::ser::SerializeSeq;
 use serde::de::{self, SeqAccess, Visitor};
 use std::fmt;
 
@@ -25,11 +25,16 @@ pub type CurSpan = Vec<CurElement>;
 /// Abstraction for String that allows a limited set of operations
 /// with good optimization. (Or that's the idea.)
 #[derive(Clone, Debug)]
-pub struct DocString(Arc<String>, Option<Range<usize>>, Option<String>);
+// TODO not public
+pub struct DocString(Arc<String>, Option<Range<usize>>, pub Option<String>);
 
 impl DocString {
     pub fn from_string(input: String) -> DocString {
         DocString(Arc::new(input), None, None)
+    }
+
+    pub fn from_string_styled(input: String) -> DocString {
+        DocString(Arc::new(input), None, Some(format!("big-mood")))
     }
 
     pub fn from_slice(input: &[char]) -> DocString {
@@ -38,6 +43,10 @@ impl DocString {
 
     pub fn from_str(input: &str) -> DocString {
         DocString(Arc::new(input.to_owned()), None, None)
+    }
+
+    pub fn from_str_styled(input: &str) -> DocString {
+        DocString(Arc::new(input.to_owned()), None, Some(format!("big-mood")))
     }
 
     pub fn as_str(&self) -> &str {
@@ -65,8 +74,8 @@ impl DocString {
             end = range.end;
         }
         (
-            DocString(self.0.clone(), Some((start + 0)..(start + byte_index)), None),
-            DocString(self.0.clone(), Some((start + byte_index)..end), None),
+            DocString(self.0.clone(), Some((start + 0)..(start + byte_index)), self.2.clone()),
+            DocString(self.0.clone(), Some((start + byte_index)..end), self.2.clone()),
         )
     }
 
@@ -106,7 +115,7 @@ impl Serialize for DocString {
         S: Serializer,
     {
         if let &Some(ref value) = &self.2 {
-            let mut s = serializer.serialize_tuple(2)?;
+            let mut s = serializer.serialize_seq(Some(2))?;
             s.serialize_element(self.as_str())?;
             s.serialize_element(value)?;
             s.end()
@@ -142,7 +151,8 @@ impl<'de> Deserialize<'de> for DocString {
                 A: SeqAccess<'de>,
             {
                 if let Some(inner) = seq.next_element()? {
-                    Ok(DocString::from_str(inner))
+                    seq.next_element::<String>(); // TODO
+                    Ok(DocString::from_string_styled(inner))
                 } else {
                     Err(de::Error::unknown_field("0", FIELDS))
                 }

@@ -392,3 +392,13 @@ span.selected {
     color: white;
     background: #349;
 }
+
+span.big-mood {
+    color: yellow;
+    -webkit-text-stroke: 3px blue;
+    paint-order: stroke fill;
+    -webkit-text-fill-color: yellow;
+    text-shadow:
+        2px 2px 0 #000,
+        3px 3px 0 #000;
+}

@@ -335,7 +335,11 @@ fn main() {
 
     let opt = Opt::from_args();
 
-    println!("---> ron: {}", ::ron::ser::to_string(&doc_span![DocGroup({"tag": "a"}, [DocChars("hello")])]).unwrap());
+    // let ron_out = ::ron::ser::to_string(&Doc(::edit_common::markdown::de::markdown_to_doc("# hi").unwrap())).unwrap();
+    // println!("---> ron: {}", ron_out);
+    // let ron_in: Doc = ::ron::de::from_str(&ron_out).unwrap();
+    // println!("---> ron: {:?}", ron_in);
+    // ::std::process::exit(1);
 
     println!("client proxy: {:?}", opt.client_proxy);
 

@@ -3,21 +3,21 @@
 use super::doc::*;
 use std::collections::HashMap;
 
-fn place_chars(res: &mut DocSpan, value: &str) {
+fn place_chars(res: &mut DocSpan, value: DocString) {
     if !res.is_empty() {
         let idx = res.len() - 1;
         if let DocChars(ref mut prefix) = res[idx] {
-            prefix.push_str(value);
+            prefix.push_str(value.as_str()); // TODO make DocString
             return;
         }
     }
-    res.push(DocChars(DocString::from_str(value)));
+    res.push(DocChars(value));
 }
 
 fn place_any(res: &mut DocSpan, value: &DocElement) {
     match *value {
         DocChars(ref string) => {
-            place_chars(res, string.as_str());
+            place_chars(res, string.clone());
         }
         _ => {
             res.push(value.clone());
@@ -75,16 +75,16 @@ fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan) {
             AddSkip(count) => match first.clone().unwrap() {
                 DocChars(value) => {
                     if value.char_len() < count {
-                        place_chars(&mut res, value.as_str());
                         d = AddSkip(count - value.char_len());
+                        place_chars(&mut res, value);
                         nextdel = false;
                     } else if value.char_len() > count {
                         let (left, right) = value.split_at(count);
-                        place_chars(&mut res, left.as_str());
+                        place_chars(&mut res, left);
                         first = Some(DocChars(right));
                         nextfirst = false;
                     } else {
-                        place_chars(&mut res, value.as_str());
+                        place_chars(&mut res, value);
                     }
                 }
                 DocGroup(..) => {
@@ -104,7 +104,7 @@ fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan) {
                 }
             },
             AddChars(value) => {
-                place_chars(&mut res, value.as_str());
+                place_chars(&mut res, value);
                 nextfirst = false;
             }
             AddGroup(attrs, innerspan) => {
@@ -188,16 +188,16 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
             DelSkip(count) => match first.clone() {
                 DocChars(value) => {
                     if value.char_len() < count {
-                        place_chars(&mut res, value.as_str());
                         d = DelSkip(count - value.char_len());
+                        place_chars(&mut res, value);
                         nextdel = false;
                     } else if value.char_len() > count {
                         let (left, right) = value.split_at(count);
-                        place_chars(&mut res, left.as_str());
+                        place_chars(&mut res, left);
                         first = DocChars(right);
                         nextfirst = false;
                     } else {
-                        place_chars(&mut res, value.as_str());
+                        place_chars(&mut res, value);
                         nextdel = true;
                     }
                 }
