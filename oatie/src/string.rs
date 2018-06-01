@@ -13,6 +13,7 @@ pub enum Style {
     Normie, // sentinel
     Selected, // never used except on the client
     Bold,
+    Link,
 }
 
 impl fmt::Display for Style {

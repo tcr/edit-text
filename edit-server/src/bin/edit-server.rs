@@ -112,11 +112,12 @@ This is edit-text, a web-based rich text editor.
 
 This app might be easy to break! That's okay though. We'll notice and fix it, and it'll break less in the future.
 
-Type github.com/tcr/edit-text into your search bar for more information.
+Type <http://github.com/tcr/edit-text> into your search bar for more information.
 
 "#;
 
     // Should be no errors
+    eprintln!("(*) WOW");
     let doc = Doc(markdown_to_doc(&INPUT).unwrap());
     validate_doc(&doc).expect("Initial Markdown document was malformed");
     doc

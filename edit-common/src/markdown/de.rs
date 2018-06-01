@@ -9,6 +9,7 @@ use pulldown_cmark::{
 struct Ctx<'b, I> {
     iter: I,
     body: &'b mut DocWriter,
+    styles: StyleMap,
 }
 
 impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
@@ -23,10 +24,10 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                 }
                 Text(text) => {
                     self.body
-                        .place(&DocChars(DocString::from_str_styled(text.as_ref(), hashmap!{ Style::Normie => None })));
+                        .place(&DocChars(DocString::from_str_styled(text.as_ref(), self.styles.clone())));
                 }
                 HardBreak => {
-                    self.body.place(&DocChars(DocString::from_str_styled("\n", hashmap!{ Style::Normie => None })));
+                    self.body.place(&DocChars(DocString::from_str_styled("\n", self.styles.clone())));
                 }
                 SoftBreak | Html(..) | InlineHtml(..) | FootnoteReference(..) => {}
             }
@@ -50,6 +51,10 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
             Tag::Rule => {
                 self.body.begin();
             }
+            Tag::Link(..) => {
+                eprintln!("(*) LINK MARKDOWN");
+                self.styles.insert(Style::Link, None);
+            }
 
             Tag::Table(..)
             | Tag::TableHead
@@ -60,7 +65,6 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
             | Tag::Strong
             | Tag::Code
             | Tag::List(_)
-            | Tag::Link(..)
             | Tag::Image(..)
             | Tag::FootnoteDefinition(_) => {}
         }
@@ -88,11 +92,13 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                 self.body.close(hashmap! { "tag".into() => "hr".into() });
             }
             Tag::Image(_, _) => (), // shouldn't happen, handled in start
+            Tag::Link(..) => {
+                self.styles.remove(&Style::Link);
+            }
 
             Tag::FootnoteDefinition(_)
             | Tag::Code
             | Tag::TableCell
-            | Tag::Link(_, _)
             | Tag::Table(_)
             | Tag::TableHead
             | Tag::TableRow
@@ -111,6 +117,7 @@ pub fn markdown_to_doc(input: &str) -> Result<DocSpan, Error> {
         let mut ctx = Ctx {
             iter: parser,
             body: &mut doc_writer,
+            styles: hashmap!{ Style::Normie => None },
         };
         ctx.run();
     }
