@@ -23,10 +23,12 @@ pub enum FrontendToUserCommand {
     Keypress(u32, bool, bool, bool), // code, meta, shift, alt
     Button(u32),
     Character(u32),
+    InsertText(String),
     RenameGroup(String, CurSpan),
     // Load(DocSpan),
     CursorAnchor(CurSpan),
-    Target(CurSpan),
+    CursorTarget(CurSpan),
+    // Target(CurSpan),
     RandomTarget(f64),
     Monkey(bool),
 }

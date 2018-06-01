@@ -4,6 +4,7 @@ use extern::{
     edit_common::{commands::*, doc_as_html}, failure::Error,
     oatie::{doc::*, validate::validate_doc}, std::sync::atomic::{AtomicBool, Ordering},
     std::sync::Arc,
+    std::char::from_u32,
 };
 
 // Shorthandler
@@ -87,7 +88,7 @@ fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
             false,
             true,
             false,
-            Box::new(|client| client.client_op(|doc| add_char(doc, 10))),
+            Box::new(|client| client.client_op(|doc| add_string(doc, "\n"))),
         ),
         // tab
         KeyHandler(
@@ -203,16 +204,29 @@ fn native_command<C: ClientImpl>(client: &mut C, req: FrontendToUserCommand) -> 
             }
         }
         FrontendToUserCommand::Character(char_code) => {
-            client.client_op(|doc| add_char(doc, char_code))?;
+            client.client_op(|doc| {
+                let c: char = from_u32(char_code).unwrap_or('?');
+                if c == '\0' {
+                    bail!("expected non-null character");
+                }
+
+                add_string(doc, &format!("{}", c))
+            })?;
+        }
+        FrontendToUserCommand::InsertText(text) => {
+            client.client_op(|doc| add_string(doc, &text))?;
         }
         FrontendToUserCommand::RandomTarget(pos) => {
             let cursors = random_cursor(&client.state().client_doc.doc)?;
             let idx = (pos * (cursors.len() as f64)) as usize;
 
-            client.client_op(|doc| cur_to_caret(doc, &cursors[idx]))?;
+            client.client_op(|doc| cur_to_caret(doc, &cursors[idx], false))?;
         }
         FrontendToUserCommand::CursorAnchor(cur) => {
-            client.client_op(|doc| cur_to_caret(doc, &cur))?;
+            client.client_op(|doc| cur_to_caret(doc, &cur, false))?;
+        }
+        FrontendToUserCommand::CursorTarget(cur) => {
+            client.client_op(|doc| cur_to_caret(doc, &cur, true))?;
         }
         FrontendToUserCommand::Monkey(setting) => {
             println!("received monkey setting: {:?}", setting);
@@ -289,7 +303,7 @@ pub trait ClientImpl {
 
                 // If the caret doesn't exist or was deleted, reinitialize it.
                 if !self
-                    .with_action_context(|ctx| Ok(has_caret(ctx)))
+                    .with_action_context(|ctx| Ok(has_caret(ctx, false)))
                     .ok()
                     .unwrap_or(true)
                 {
@@ -343,7 +357,7 @@ pub trait ClientImpl {
 
                 // If the caret doesn't exist or was deleted, reinitialize it.
                 if !self
-                    .with_action_context(|ctx| Ok(has_caret(ctx)))
+                    .with_action_context(|ctx| Ok(has_caret(ctx, false)))
                     .ok()
                     .unwrap_or(true)
                 {

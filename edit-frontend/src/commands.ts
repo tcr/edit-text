@@ -28,12 +28,30 @@ export function Character(
   }
 }
 
-export function Target(
+export function InsertText(
+  text: string,
+) {
+  return {
+    tag: 'InsertText' as 'InsertText',
+    'InsertText': text,
+  }
+}
+
+export function CursorAnchor(
   curspan: [any],
 ) {
   return {
-    tag: 'Target' as 'Target',
-    'Target': curspan,
+    tag: 'CursorAnchor' as 'CursorAnchor',
+    'CursorAnchor': curspan,
+  }
+}
+
+export function CursorTarget(
+  curspan: [any],
+) {
+  return {
+    tag: 'CursorTarget' as 'CursorTarget',
+    'CursorTarget': curspan,
   }
 }
 
@@ -78,8 +96,10 @@ export type Command
   | ReturnType<typeof RenameGroup>
   | ReturnType<typeof Keypress>
   | ReturnType<typeof Character>
-  | ReturnType<typeof Target>
+  | ReturnType<typeof CursorAnchor>
+  | ReturnType<typeof CursorTarget>
   | ReturnType<typeof Button>
   | ReturnType<typeof Load>
   | ReturnType<typeof Connect>
+  | ReturnType<typeof InsertText>
   ;

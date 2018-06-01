@@ -5,6 +5,9 @@ use std::collections::HashMap;
 use std::sync::atomic::AtomicUsize;
 use std::sync::Arc;
 use std::ops::Range;
+use serde::ser::SerializeTuple;
+use serde::de::{self, SeqAccess, Visitor};
+use std::fmt;
 
 pub use self::AddElement::*;
 pub use self::DelElement::*;
@@ -22,19 +25,19 @@ pub type CurSpan = Vec<CurElement>;
 /// Abstraction for String that allows a limited set of operations
 /// with good optimization. (Or that's the idea.)
 #[derive(Clone, Debug)]
-pub struct DocString(Arc<String>, Option<Range<usize>>);
+pub struct DocString(Arc<String>, Option<Range<usize>>, Option<String>);
 
 impl DocString {
     pub fn from_string(input: String) -> DocString {
-        DocString(Arc::new(input), None)
+        DocString(Arc::new(input), None, None)
     }
 
     pub fn from_slice(input: &[char]) -> DocString {
-        DocString(Arc::new(input.iter().collect()), None)
+        DocString(Arc::new(input.iter().collect()), None, None)
     }
 
     pub fn from_str(input: &str) -> DocString {
-        DocString(Arc::new(input.to_owned()), None)
+        DocString(Arc::new(input.to_owned()), None, None)
     }
 
     pub fn as_str(&self) -> &str {
@@ -62,8 +65,8 @@ impl DocString {
             end = range.end;
         }
         (
-            DocString(self.0.clone(), Some((start + 0)..(start + byte_index))),
-            DocString(self.0.clone(), Some((start + byte_index)..end)),
+            DocString(self.0.clone(), Some((start + 0)..(start + byte_index)), None),
+            DocString(self.0.clone(), Some((start + byte_index)..end), None),
         )
     }
 
@@ -102,7 +105,14 @@ impl Serialize for DocString {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.0)
+        if let &Some(ref value) = &self.2 {
+            let mut s = serializer.serialize_tuple(2)?;
+            s.serialize_element(self.as_str())?;
+            s.serialize_element(value)?;
+            s.end()
+        } else {
+            serializer.serialize_str(self.as_str())
+        }
     }
 }
 
@@ -111,8 +121,36 @@ impl<'de> Deserialize<'de> for DocString {
     where
         D: Deserializer<'de>,
     {
-        let string = <String as Deserialize>::deserialize(deserializer)?;
-        Ok(DocString::from_string(string))
+        struct FieldVisitor;
+
+        impl<'de> Visitor<'de> for FieldVisitor {
+            type Value = DocString;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("docstring")
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<DocString, E>
+            where
+                E: de::Error,
+            {
+                Ok(DocString::from_str(value))
+            }
+
+            fn visit_seq<A>(self, mut seq: A) -> Result<DocString, A::Error>
+            where
+                A: SeqAccess<'de>,
+            {
+                if let Some(inner) = seq.next_element()? {
+                    Ok(DocString::from_str(inner))
+                } else {
+                    Err(de::Error::unknown_field("0", FIELDS))
+                }
+            }
+        }
+
+        const FIELDS: &'static [&'static str] = &["docstring"];
+        deserializer.deserialize_any(FieldVisitor)
     }
 }
 

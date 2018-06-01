@@ -335,6 +335,8 @@ fn main() {
 
     let opt = Opt::from_args();
 
+    println!("---> ron: {}", ::ron::ser::to_string(&doc_span![DocGroup({"tag": "a"}, [DocChars("hello")])]).unwrap());
+
     println!("client proxy: {:?}", opt.client_proxy);
 
     let _ = spawn_sync_socket_server();

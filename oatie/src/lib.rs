@@ -52,6 +52,7 @@ pub mod apply;
 pub mod macros;
 mod parse;
 pub mod schema;
+pub mod skip_some;
 pub mod stepper;
 pub mod transform;
 pub mod transform_test;

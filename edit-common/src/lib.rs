@@ -27,7 +27,13 @@ use oatie::doc::*;
 // TODO move this to a different module
 /// Converts a DocSpan to an HTML string.
 pub fn doc_as_html(doc: &DocSpan) -> String {
-    doc_as_html_inner(doc, false).0
+    let (res, res_alt) = doc_as_html_inner(doc, false);
+    if res_alt {
+        // Disable the carets
+        res.replace(r#"<span class="selected">"#, "<span>")
+    } else {
+        res
+    }
 }
 
 pub fn doc_as_html_inner(doc: &DocSpan, mut alt: bool) -> (String, bool) {
@@ -41,14 +47,16 @@ pub fn doc_as_html_inner(doc: &DocSpan, mut alt: bool) -> (String, bool) {
                     r#"<div
                         data-tag={}
                         data-client={}
+                        data-anchor={}
                         class={}
                     >"#,
                     serde_json::to_string(attrs.get("tag").unwrap_or(&"".to_string())).unwrap(),
                     serde_json::to_string(attrs.get("client").unwrap_or(&"".to_string())).unwrap(),
+                    serde_json::to_string(attrs.get("anchor").unwrap_or(&"".to_string())).unwrap(),
                     serde_json::to_string(attrs.get("class").unwrap_or(&"".to_string())).unwrap(),
                 ));
                 if attrs.get("tag") == Some(&"caret".to_string()) {
-                    alt = true;
+                    alt = !alt;
                 }
                 let (inner, new_alt) = doc_as_html_inner(span, alt);
                 alt = new_alt;

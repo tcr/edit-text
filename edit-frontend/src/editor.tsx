@@ -2,6 +2,7 @@ import * as commands from './commands';
 import * as util from './util';
 import {Network, ProxyNetwork, WasmNetwork} from './network';
 import * as React from 'react';
+const copy = require('clipboard-copy');
 
 const ROOT_SELECTOR = '.edit-text';
 
@@ -213,14 +214,14 @@ export class Editor extends React.Component {
 
   onMouseDown(e: MouseEvent) {
     this.mouseDown = true;
-    this.onMouseMove(e);
+    this.onMouseMove(e, true);
   }
 
   onMouseUp(e: MouseEvent) {
     this.mouseDown = false;
   }
 
-  onMouseMove(e: MouseEvent) {
+  onMouseMove(e: MouseEvent, anchor: boolean = false) {
     if (!this.mouseDown) {
       return;
     }
@@ -236,9 +237,17 @@ export class Editor extends React.Component {
 
     // Only support text elements.
     if (pos !== null) {
-      this.props.network.nativeCommand(commands.Target(
-        resolveCursorFromPosition(pos.textNode, pos.offset),
-      ));
+      if (anchor) {
+        console.log('anchor');
+        this.props.network.nativeCommand(commands.CursorAnchor(
+          resolveCursorFromPosition(pos.textNode, pos.offset),
+        ));
+      } else {
+        console.log('target');
+        this.props.network.nativeCommand(commands.CursorTarget(
+          resolveCursorFromPosition(pos.textNode, pos.offset),
+        ));
+      }
     } else {
       this.mouseDownActive = false;
     }
@@ -288,11 +297,38 @@ export class Editor extends React.Component {
   
       e.preventDefault();
     });
+
+    document.addEventListener('paste', (e: ClipboardEvent) => {
+      const text = e.clipboardData.getData('text/plain');
+      console.log('(c) got pasted text: ', text);
+      this.props.network.nativeCommand(commands.InsertText(text));
+    });
   
     document.addEventListener('keydown', (e) => {
       let current = document.querySelector('div.current[data-tag="caret"]');
 
       if (self.props.disabled) {
+        return;
+      }
+
+      // Navigate command+c
+      if (e.keyCode == 67 && e.metaKey) {
+        // Generate string from selected text.
+        let str = Array.from(
+          document.querySelectorAll('span.selected')
+        )
+          .map(x => (x as HTMLElement).innerText)
+          .join('');
+
+        copy(str)
+        .then(res => {
+          console.info('(c) clipboard successful copy');
+        })
+        .catch(err => {
+          console.info('(c) clipboard unsuccessful copy:', err);
+        });
+
+        e.preventDefault();
         return;
       }
 
