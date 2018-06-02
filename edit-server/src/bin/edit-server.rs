@@ -100,7 +100,7 @@ pub fn default_doc() -> Doc {
 
 # Hello world!
 
-This is edit-text, a web-based rich text editor.
+This is **edit-text**, a web-based rich text editor.
 
 * This is a very early preview.
 

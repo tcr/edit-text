@@ -395,28 +395,46 @@ body.editing-blurred div[data-tag="caret"]::before {
     filter: grayscale(100%);
 }
 
-span.Selected {
-    color: white;
-    background: #349;
-}
+// Text spans
+.edit-text {
+    span.Bold {
+        font-weight: bold;
+    }
 
-span.Link {
-    color: blue;
-    text-decoration: underline;
-}
+    span.Selected {
+        color: white;
+        background: #349;
+    }
 
-// fancy font
-span:not(.Normie) {
-    color: yellow;
-    -webkit-text-stroke: 3px #f00;
-    paint-order: stroke fill;
-    -webkit-text-fill-color: yellow;
-    text-shadow:
-        2px 2px 0 #000,
-        3px 3px 0 #000;
-}
+    span.Link {
+        color: blue;
+        text-decoration: underline;
+    }
 
-// for debugging
-span + span {
-    outline: thin solid #32a1ce;
+    span.Link:hover::before {
+        background: black;
+        content: "http://timryan.org/";
+        position: absolute;
+        top: 1.6em;
+        
+        font-size: 0.8em;
+        padding: 2px 5px;
+        color: white;
+    }
+
+    // fancy font
+    span:not(.Normie) {
+        color: yellow;
+        -webkit-text-stroke: 3px #f00;
+        paint-order: stroke fill;
+        -webkit-text-fill-color: yellow;
+        text-shadow:
+            2px 2px 0 #000,
+            3px 3px 0 #000;
+    }
+
+    // for debugging
+    span + span {
+        outline: thin solid #32a1ce;
+    }
 }

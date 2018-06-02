@@ -298,6 +298,44 @@ pub fn add_string(ctx: ActionContext, input: &str) -> Result<Op, Error> {
     Ok(writer.result())
 }
 
+pub fn apply_style(ctx: ActionContext, style: Style, value: Option<String>) -> Result<Op, Error> {
+    let walker1 = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, false);
+
+    let walker2 = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, true);
+
+    let (walker1, walker2) = if let (Some(walker1), Some(walker2)) = (walker1, walker2) {
+        (walker1, walker2)
+    } else {
+        return Ok(Op::empty());
+    };
+
+    // // Style map.
+    // let mut styles = hashmap!{ Style::Normie => None };
+
+    // // Identify previous styles.
+    // let mut char_walker = walker.clone();
+    // if let Some(DocChars(ref prefix)) = char_walker.back_char().doc().head() {
+    //     if let Some(prefix_styles) = prefix.styles() {
+    //         styles.extend(prefix_styles.iter().map(|(a, b)| (a.to_owned(), b.to_owned())));
+    //     }
+    // }
+
+    // let mut writer = walker.to_writer();
+
+    // writer.del.exit_all();
+
+    // // Insert new character.
+    // writer
+    //     .add
+    //     .place(&AddChars(DocString::from_str_styled(input, styles)));
+    // writer.add.exit_all();
+
+    // Ok(writer.result())
+    
+    // TODO
+    unimplemented!()
+}
+
 pub fn split_block(ctx: ActionContext, add_hr: bool) -> Result<Op, Error> {
     let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, false);
     let skip = walker.doc().skip_len();

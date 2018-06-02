@@ -51,9 +51,12 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
             Tag::Rule => {
                 self.body.begin();
             }
-            Tag::Link(..) => {
-                eprintln!("(*) LINK MARKDOWN");
-                self.styles.insert(Style::Link, None);
+            Tag::Link(dest, _title) => {
+                // TODO actually add the link here
+                self.styles.insert(Style::Link, Some(dest.to_string()));
+            }
+            Tag::Strong => {
+                self.styles.insert(Style::Bold, None);
             }
 
             Tag::Table(..)
@@ -62,7 +65,6 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
             | Tag::TableCell
             | Tag::BlockQuote
             | Tag::Emphasis
-            | Tag::Strong
             | Tag::Code
             | Tag::List(_)
             | Tag::Image(..)
@@ -95,6 +97,9 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
             Tag::Link(..) => {
                 self.styles.remove(&Style::Link);
             }
+            Tag::Strong => {
+                self.styles.remove(&Style::Bold);
+            }
 
             Tag::FootnoteDefinition(_)
             | Tag::Code
@@ -103,7 +108,6 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
             | Tag::TableHead
             | Tag::TableRow
             | Tag::Emphasis
-            | Tag::Strong
             | Tag::List(_)
             | Tag::BlockQuote => {}
         }

@@ -117,7 +117,9 @@ fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
     ]
 }
 
-pub fn button_handlers<C: ClientImpl>(state: Option<(String, bool)>) -> Vec<ButtonHandler<C>> {
+pub fn button_handlers<C: ClientImpl>(
+    state: Option<(String, bool)>
+) -> Vec<ButtonHandler<C>> {
     vec![
         ButtonHandler(
             "H1",
@@ -174,6 +176,12 @@ pub fn button_handlers<C: ClientImpl>(state: Option<(String, bool)>) -> Vec<Butt
             "Raw HTML",
             Box::new(|client| client.client_op(|doc| replace_block(doc, "html"))),
             state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
+        ),
+        ButtonHandler(
+            "Bold",
+            Box::new(|client| client.client_op(|doc| apply_style(doc, Style::Bold, None))),
+            // state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
+            false, // TODO what?
         ),
     ]
 }
