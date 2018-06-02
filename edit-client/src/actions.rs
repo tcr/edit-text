@@ -272,14 +272,27 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
 }
 
 pub fn add_string(ctx: ActionContext, input: &str) -> Result<Op, Error> {
-    let mut writer = Walker::to_caret(&ctx.doc, &ctx.client_id, false).to_writer();
+    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, false);
+
+    // Style map.
+    let mut styles = hashmap!{ Style::Normie => None };
+
+    // Identify previous styles.
+    let mut char_walker = walker.clone();
+    if let Some(DocChars(ref prefix)) = char_walker.back_char().doc().head() {
+        if let Some(prefix_styles) = prefix.styles() {
+            styles.extend(prefix_styles.iter().map(|(a, b)| (a.to_owned(), b.to_owned())));
+        }
+    }
+
+    let mut writer = walker.to_writer();
 
     writer.del.exit_all();
 
     // Insert new character.
     writer
         .add
-        .place(&AddChars(DocString::from_str_styled(input, hashmap!{ Style::Normie => None })));
+        .place(&AddChars(DocString::from_str_styled(input, styles)));
     writer.add.exit_all();
 
     Ok(writer.result())

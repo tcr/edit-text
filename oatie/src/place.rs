@@ -7,29 +7,33 @@ pub trait DocPlaceable {
 }
 
 impl DocPlaceable for DocSpan {
-    fn place_all(&mut self, all: &[DocElement]) {
-        for i in all {
-            self.place(i);
-        }
-    }
-
     fn place(&mut self, elem: &DocElement) {
         match *elem {
             DocChars(ref text) => {
                 assert!(text.char_len() > 0);
+
+                // If the most recent element is text, we may want to just
+                // append our text to it to cut down on new elements.
                 if let Some(&mut DocChars(ref mut prefix)) = self.last_mut() {
+                    // Check if they're equal and we can push it directly.
                     if prefix.styles() == text.styles() {
-                        prefix.push_doc_string(text);
+                        prefix.push_str(text.as_str());
                         return;
                     }
                 }
 
-                // Otherwise, push the whole entry
+                // Otherwise, push the new entry
                 self.push(DocChars(text.to_owned()));
             }
             DocGroup(..) => {
                 self.push(elem.clone());
             }
+        }
+    }
+
+    fn place_all(&mut self, all: &[DocElement]) {
+        for i in all {
+            self.place(i);
         }
     }
 
@@ -160,11 +164,19 @@ impl AddPlaceable for AddSpan {
         match *elem {
             AddChars(ref text) => {
                 assert!(text.char_len() > 0);
-                if let Some(&mut AddChars(ref mut value)) = self.last_mut() {
-                    value.push_doc_string(text);
-                } else {
-                    self.push(AddChars(text.to_owned()));
+
+                // If the most recent element is text, we may want to just
+                // append our text to it to cut down on new elements.
+                if let Some(&mut AddChars(ref mut prefix)) = self.last_mut() {
+                    // Check if they're equal and we can push it directly.
+                    if prefix.styles() == text.styles() {
+                        prefix.push_str(text.as_str());
+                        return;
+                    }
                 }
+
+                // Otherwise, push the new entry
+                self.push(AddChars(text.to_owned()));
             }
             AddSkip(count) => {
                 assert!(count > 0);
@@ -221,6 +233,7 @@ impl AddPlaceable for AddSpan {
         }
     }
 }
+
 
 pub trait CurPlaceable {
     fn place_all(&mut self, all: &[CurElement]);

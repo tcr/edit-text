@@ -59,19 +59,20 @@ impl DocString {
         }
     }
 
-    pub fn styles(&self) -> &Option<StyleMap> {
-        &self.2
+    pub fn styles(&self) -> Option<&StyleMap> {
+        self.2.as_ref()
     }
 
+    pub fn styles_mut(&mut self) -> Option<&mut StyleMap> {
+        self.2.as_mut()
+    }
+
+    // Add text (with the same styling) to the end of this string.
     pub fn push_str(&mut self, input: &str) {
         let mut value = self.to_string();
         value.push_str(input);
         self.0 = Arc::new(value);
         self.1 = None;
-    }
-
-    pub fn push_doc_string(&mut self, input: &DocString) {
-        self.push_str(input.as_str());
     }
 
     // TODO consume self?

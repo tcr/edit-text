@@ -174,10 +174,9 @@ body.theme-column .edit-text {
     $color_caret: #089;
 
     div[data-tag="caret"]::before {
-        border-left: px $color_caret solid;
-        border-right: 1px $color_caret solid;
-        margin-right: -1px;
+        border-left: 2px $color_caret solid;
         margin-left: -1px;
+        margin-right: -1px;
         content: '';
         animation: fadein 0.3s;
     }
@@ -187,27 +186,26 @@ body.theme-column .edit-text {
     }
 
     div[data-tag="caret"].current::before {
-        border-left: 1px $color_curcaret solid;
-        border-right: 1px $color_curcaret solid;
+        border-left: 2px $color_curcaret solid;
         z-index: 100;
         position: relative;
     }
 
     // TODO the overlapping dashed cursors isn't working well
 
-    div[data-tag="caret"] +
-    div[data-tag="caret"].current::before {
-        border-left-style: dashed !important;
-        border-right-style: dashed !important;
-    }
+    // div[data-tag="caret"] +
+    // div[data-tag="caret"].current::before {
+    //     border-left-style: dashed !important;
+    //     border-right-style: dashed !important;
+    // }
 
-    div[data-tag="caret"].current +
-    div[data-tag="caret"]::before {
-        border-left-style: dashed !important;
-        border-right-style: dashed !important;
-        z-index: 1001;
-        position: relative;
-    }
+    // div[data-tag="caret"].current +
+    // div[data-tag="caret"]::before {
+    //     border-left-style: dashed !important;
+    //     border-right-style: dashed !important;
+    //     z-index: 1001;
+    //     position: relative;
+    // }
     
 
     // @keyframes caret {

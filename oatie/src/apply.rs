@@ -3,39 +3,6 @@
 use super::doc::*;
 use std::collections::HashMap;
 
-fn place_chars(res: &mut DocSpan, value: DocString) {
-    if !res.is_empty() {
-        let idx = res.len() - 1;
-        if let DocChars(ref mut prefix) = res[idx] {
-            if prefix.styles() == value.styles() {
-                prefix.push_doc_string(&value); // TODO make DocString
-                return;
-            }
-            // prefix.push_str(value.as_str()); // TODO make DocString
-            // return;
-        }
-    }
-    res.push(DocChars(value));
-}
-
-fn place_any(res: &mut DocSpan, value: &DocElement) {
-    match *value {
-        DocChars(ref string) => {
-            place_chars(res, string.clone());
-        }
-        _ => {
-            res.push(value.clone());
-        }
-    }
-}
-
-fn place_many(res: &mut DocSpan, values: &[DocElement]) {
-    if !values.is_empty() {
-        place_any(res, &values[0]);
-        res.extend_from_slice(&values[1..]);
-    }
-}
-
 fn apply_add_inner(
     spanvec: &DocSpan,
     delvec: &AddSpan,
@@ -83,15 +50,15 @@ fn apply_add_inner(
                 DocChars(value) => {
                     if value.char_len() < count {
                         d = AddSkip(count - value.char_len());
-                        place_chars(&mut res, value);
+                        res.place(&DocChars(value));
                         nextdel = false;
                     } else if value.char_len() > count {
                         let (left, right) = value.split_at(count);
-                        place_chars(&mut res, left);
+                        res.place(&DocChars(left));
                         first = Some(DocChars(right));
                         nextfirst = false;
                     } else {
-                        place_chars(&mut res, value);
+                        res.place(&DocChars(value));
                     }
                 }
                 DocGroup(..) => {
@@ -111,7 +78,7 @@ fn apply_add_inner(
                 }
             },
             AddChars(value) => {
-                place_chars(&mut res, value);
+                res.place(&DocChars(value));
                 nextfirst = false;
             }
             AddGroup(attrs, innerspan) => {
@@ -123,12 +90,12 @@ fn apply_add_inner(
                 trace!("CALLING INNER {:?} {:?}", subdoc, innerspan);
 
                 let (inner, rest) = apply_add_inner(&subdoc, &innerspan);
-                place_any(&mut res, &DocGroup(attrs, inner));
+                res.place(&DocGroup(attrs, inner));
 
                 trace!("REST OF INNER {:?} {:?}", rest, del);
 
                 let (inner, rest) = apply_add_inner(&rest, &del.to_vec());
-                place_many(&mut res, &inner);
+                res.place_all(&inner);
                 return (res, rest);
             }
         }
@@ -165,7 +132,7 @@ pub fn apply_add(spanvec: &DocSpan, delvec: &AddSpan) -> DocSpan {
 
     // TODO never accept unbalanced components?
     if !remaining.is_empty() {
-        place_many(&mut res, &remaining);
+        res.place_all(&remaining);
         // panic!("Unbalanced apply_add");
     }
     res
@@ -196,15 +163,15 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
                 DocChars(value) => {
                     if value.char_len() < count {
                         d = DelSkip(count - value.char_len());
-                        place_chars(&mut res, value);
+                        res.place(&DocChars(value));
                         nextdel = false;
                     } else if value.char_len() > count {
                         let (left, right) = value.split_at(count);
-                        place_chars(&mut res, left);
+                        res.place(&DocChars(left));
                         first = DocChars(right);
                         nextfirst = false;
                     } else {
-                        place_chars(&mut res, value);
+                        res.place(&DocChars(value));
                         nextdel = true;
                     }
                 }
@@ -226,7 +193,7 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
             },
             DelGroup(ref delspan) => match first.clone() {
                 DocGroup(ref attrs, ref span) => {
-                    place_many(&mut res, &apply_delete(span, delspan)[..]);
+                    res.place_all(&apply_delete(span, delspan)[..]);
                 }
                 _ => {
                     panic!("Invalid DelGroup");
@@ -283,10 +250,10 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
         if nextdel {
             if del.is_empty() {
                 if !nextfirst {
-                    place_any(&mut res, &first)
+                    res.place(&first)
                 }
                 if !span.is_empty() {
-                    place_any(&mut res, &span[0]);
+                    res.place(&span[0]);
                     res.extend_from_slice(&span[1..]);
                 }
                 break;
