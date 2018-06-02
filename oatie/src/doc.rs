@@ -49,11 +49,15 @@ impl DocPlaceable for DocSpan {
         match *elem {
             DocChars(ref text) => {
                 assert!(text.char_len() > 0);
-                if let Some(&mut DocChars(ref mut value)) = self.last_mut() {
-                    value.push_doc_string(text);
-                } else {
-                    self.push(DocChars(text.to_owned()));
+                if let Some(&mut DocChars(ref mut prefix)) = self.last_mut() {
+                    if prefix.styles() == text.styles() {
+                        prefix.push_doc_string(text);
+                        return;
+                    }
                 }
+
+                // Otherwise, push the whole entry
+                self.push(DocChars(text.to_owned()));
             }
             DocGroup(..) => {
                 self.push(elem.clone());

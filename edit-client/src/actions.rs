@@ -279,7 +279,7 @@ pub fn add_string(ctx: ActionContext, input: &str) -> Result<Op, Error> {
     // Insert new character.
     writer
         .add
-        .place(&AddChars(DocString::from_str(input)));
+        .place(&AddChars(DocString::from_str_styled(input, hashmap!{ Style::Normie => None })));
     writer.add.exit_all();
 
     Ok(writer.result())

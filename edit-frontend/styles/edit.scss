@@ -417,3 +417,8 @@ span:not(.Normie) {
         2px 2px 0 #000,
         3px 3px 0 #000;
 }
+
+// for debugging
+span + span {
+    outline: thin solid #32a1ce;
+}

@@ -7,8 +7,12 @@ fn place_chars(res: &mut DocSpan, value: DocString) {
     if !res.is_empty() {
         let idx = res.len() - 1;
         if let DocChars(ref mut prefix) = res[idx] {
-            prefix.push_str(value.as_str()); // TODO make DocString
-            return;
+            if prefix.styles() == value.styles() {
+                prefix.push_doc_string(&value); // TODO make DocString
+                return;
+            }
+            // prefix.push_str(value.as_str()); // TODO make DocString
+            // return;
         }
     }
     res.push(DocChars(value));
@@ -32,7 +36,10 @@ fn place_many(res: &mut DocSpan, values: &[DocElement]) {
     }
 }
 
-fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan) {
+fn apply_add_inner(
+    spanvec: &DocSpan,
+    delvec: &AddSpan,
+) -> (DocSpan, DocSpan) {
     let mut span = &spanvec[..];
     let mut del = &delvec[..];
 
