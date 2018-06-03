@@ -183,6 +183,12 @@ pub fn button_handlers<C: ClientImpl>(
             // state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
             false, // TODO what?
         ),
+        ButtonHandler(
+            "Italic",
+            Box::new(|client| client.client_op(|doc| apply_style(doc, Style::Italic, None))),
+            // state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
+            false, // TODO what?
+        ),
     ]
 }
 

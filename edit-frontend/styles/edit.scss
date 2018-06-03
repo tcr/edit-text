@@ -401,6 +401,10 @@ body.editing-blurred div[data-tag="caret"]::before {
         font-weight: bold;
     }
 
+    span.Italic {
+        font-style: italic;
+    }
+
     span.Selected {
         color: white;
         background: #349;
@@ -435,6 +439,6 @@ body.editing-blurred div[data-tag="caret"]::before {
 
     // for debugging
     span + span {
-        outline: thin solid #32a1ce;
+        // outline: thin solid #32a1ce;
     }
 }

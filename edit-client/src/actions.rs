@@ -303,28 +303,27 @@ pub fn apply_style(ctx: ActionContext, style: Style, value: Option<String>) -> R
     let walker2 = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, true);
 
     let (walker1, walker2) = if let (Some(walker1), Some(walker2)) = (walker1, walker2) {
-        (walker1, walker2)
+        if walker1.caret_pos() == walker2.caret_pos() {
+            return Ok(Op::empty());
+        } else if walker1.caret_pos() <= walker2.caret_pos() {
+            (walker1, walker2)
+        } else {
+            (walker2, walker1)
+        }
     } else {
         return Ok(Op::empty());
     };
 
     // Style map.
-    let styles = hashmap!{ Style::Bold => None };
+    let mut styles = hashmap!{};
+    styles.insert(style, value);
 
-    // // Identify previous styles.
-    // let mut char_walker = walker.clone();
-    // if let Some(DocChars(ref prefix)) = char_walker.back_char().doc().head() {
-    //     if let Some(prefix_styles) = prefix.styles() {
-    //         styles.extend(prefix_styles.iter().map(|(a, b)| (a.to_owned(), b.to_owned())));
-    //     }
-    // }
 
     let mut writer = walker1.to_writer();
 
     writer.del.exit_all();
 
-    // Walk along
-    eprintln!("(&) walker");
+    // Identify previous styles.
     let mut doc1 = walker1.doc().to_owned();
     let doc2 = walker2.doc().to_owned();
     while doc1 != doc2 {
