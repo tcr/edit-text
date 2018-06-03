@@ -74,7 +74,20 @@ impl<'a> Iterator for DocToMarkdown<'a> {
             }
             Some(DocChars(ref text)) => {
                 self.doc_stepper.next();
-                Some(Event::Text(text.to_string().replace("\n", "  \n").into()))
+                
+                // Styling.
+                let text_event = Event::Text(text.to_string().replace("\n", "  \n").into());
+                if let Some(styles) = text.styles() {
+                    if styles.contains_key(&Style::Bold) {
+                        self.queue.push(text_event);
+                        self.queue.push(Event::End(Tag::Strong));
+                        Some(Event::Start(Tag::Strong))
+                    } else {
+                        Some(text_event)    
+                    }
+                } else {
+                    Some(text_event)
+                }
             }
             None => {
                 if self.doc_stepper.is_done() {

@@ -52,11 +52,13 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                 self.body.begin();
             }
             Tag::Link(dest, _title) => {
-                // TODO actually add the link here
                 self.styles.insert(Style::Link, Some(dest.to_string()));
             }
             Tag::Strong => {
                 self.styles.insert(Style::Bold, None);
+            }
+            Tag::Emphasis => {
+                self.styles.insert(Style::Italic, None);
             }
 
             Tag::Table(..)
@@ -64,7 +66,6 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
             | Tag::TableRow
             | Tag::TableCell
             | Tag::BlockQuote
-            | Tag::Emphasis
             | Tag::Code
             | Tag::List(_)
             | Tag::Image(..)
@@ -100,6 +101,9 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
             Tag::Strong => {
                 self.styles.remove(&Style::Bold);
             }
+            Tag::Emphasis => {
+                self.styles.remove(&Style::Italic);
+            }
 
             Tag::FootnoteDefinition(_)
             | Tag::Code
@@ -107,7 +111,6 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
             | Tag::Table(_)
             | Tag::TableHead
             | Tag::TableRow
-            | Tag::Emphasis
             | Tag::List(_)
             | Tag::BlockQuote => {}
         }
