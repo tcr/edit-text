@@ -46,6 +46,28 @@ fn apply_add_inner(
         trace!("next {:?} {:?} {:?}", d, first, exhausted);
 
         match d.clone() {
+            AddStyles(count, styles) => match first.clone().unwrap() {
+                DocChars(mut value) => {
+                    if value.char_len() < count {
+                        d = AddStyles(count - value.char_len(), styles.clone());
+                        value.extend_styles(&styles);
+                        res.place(&DocChars(value));
+                        nextdel = false;
+                    } else if value.char_len() > count {
+                        let (mut left, right) = value.split_at(count);
+                        left.extend_styles(&styles);
+                        res.place(&DocChars(left));
+                        first = Some(DocChars(right));
+                        nextfirst = false;
+                    } else {
+                        value.extend_styles(&styles);
+                        res.place(&DocChars(value));
+                    }
+                }
+                DocGroup(..) => {
+                    panic!("Invalid AddStyles");
+                }
+            },
             AddSkip(count) => match first.clone().unwrap() {
                 DocChars(value) => {
                     if value.char_len() < count {

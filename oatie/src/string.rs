@@ -67,6 +67,14 @@ impl DocString {
         self.2.as_mut()
     }
 
+    pub fn extend_styles(&mut self, styles: &StyleMap) {
+        if let &mut Some(ref mut self_styles) = &mut self.2 {
+            self_styles.extend(styles.iter().map(|(a, b)| (a.to_owned(), b.to_owned())));
+        } else {
+            self.2 = Some(styles.to_owned());
+        }
+    }
+
     // Add text (with the same styling) to the end of this string.
     pub fn push_str(&mut self, input: &str) {
         let mut value = self.to_string();

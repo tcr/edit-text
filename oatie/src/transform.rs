@@ -244,6 +244,16 @@ where
         self.b_add.place(&AddSkip(n));
     }
 
+    fn style_a(&mut self, count: usize, styles: StyleMap) {
+        self.a_del.place(&DelSkip(count));
+        self.a_add.place(&AddStyles(count, styles));
+    }
+
+    fn style_b(&mut self, count: usize, styles: StyleMap) {
+        self.b_del.place(&DelSkip(count));
+        self.b_add.place(&AddStyles(count, styles));
+    }
+
     fn with_group_a(&mut self, span: &AddSpan) {
         self.a_add.place(&AddWithGroup(span.clone()));
     }
@@ -636,6 +646,11 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                     t.skip_b(b_count);
                     b.next();
                 }
+                Some(AddStyles(b_count, b_styles)) => {
+                    t.style_a(b_count, b_styles);
+                    t.skip_b(b_count);
+                    b.next();
+                }
                 None => {
                     t.close_b();
                     b.exit();
@@ -667,6 +682,11 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                 Some(AddSkip(a_count)) => {
                     t.skip_a(a_count);
                     t.skip_b(a_count);
+                    a.next();
+                }
+                Some(AddStyles(a_count, a_styles)) => {
+                    t.skip_a(a_count);
+                    t.style_b(a_count, a_styles);
                     a.next();
                 }
                 None => {
@@ -990,7 +1010,23 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                     }
                 }
 
-                // Rest
+                // Skip / Char / Styles
+                (Some(AddStyles(a_count, a_styles)), Some(AddStyles(b_count, b_styles))) => {
+                    t.regenerate();
+
+                    if a_count > b_count {
+                        a.head = Some(AddStyles(a_count - b_count, a_styles.clone()));
+                        b.next();
+                    } else if a_count < b_count {
+                        a.next();
+                        b.head = Some(AddStyles(b_count - a_count, b_styles.clone()));
+                    } else {
+                        a.next();
+                        b.next();
+                    }
+                    t.style_a(cmp::min(a_count, b_count), b_styles);
+                    t.style_b(cmp::min(a_count, b_count), a_styles);
+                }
                 (Some(AddSkip(a_count)), Some(AddSkip(b_count))) => {
                     t.regenerate();
 
@@ -1007,7 +1043,40 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                     t.skip_a(cmp::min(a_count, b_count));
                     t.skip_b(cmp::min(a_count, b_count));
                 }
-                (Some(AddSkip(a_count)), Some(AddChars(b_chars))) => {
+                (Some(AddSkip(a_count)), Some(AddStyles(b_count, b_styles))) => {
+                    t.regenerate();
+
+                    if a_count > b_count {
+                        a.head = Some(AddSkip(a_count - b_count));
+                        b.next();
+                    } else if a_count < b_count {
+                        a.next();
+                        b.head = Some(AddStyles(b_count - a_count, b_styles.clone()));
+                    } else {
+                        a.next();
+                        b.next();
+                    }
+                    t.style_a(cmp::min(a_count, b_count), b_styles.clone());
+                    t.skip_a(cmp::min(a_count, b_count));
+                }
+                (Some(AddStyles(a_count, a_styles)), Some(AddSkip(b_count))) => {
+                    t.regenerate();
+
+                    if a_count > b_count {
+                        a.head = Some(AddStyles(a_count - b_count, a_styles.clone()));
+                        b.next();
+                    } else if a_count < b_count {
+                        a.next();
+                        b.head = Some(AddSkip(b_count - a_count));
+                    } else {
+                        a.next();
+                        b.next();
+                    }
+                    t.skip_a(cmp::min(a_count, b_count));
+                    t.style_b(cmp::min(a_count, b_count), a_styles);
+                }
+                | (Some(AddSkip(_)), Some(AddChars(b_chars)))
+                | (Some(AddStyles(..)), Some(AddChars(b_chars))) => {
                     t.regenerate();
 
                     b.next();
@@ -1023,6 +1092,12 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                 }
 
                 // With Groups
+                (Some(AddWithGroup(..)), Some(AddStyles(..))) => {
+                    panic!("invalid transform AddWithGroup by AddStyles");
+                }
+                (Some(AddStyles(..)), Some(AddWithGroup(..))) => {
+                    panic!("invalid transform AddStyles by AddWithGroup");
+                }
                 (Some(AddWithGroup(a_inner)), Some(AddSkip(b_count))) => {
                     t.regenerate(); // caret-31
 
@@ -1495,6 +1570,20 @@ pub fn transform_add_del_inner(
                     addres.place(&AddChars(avalue));
                     a.next();
                 }
+                AddStyles(a_count, a_styles) => {
+                    addres.place(&AddStyles(cmp::min(a_count, bcount), a_styles.clone()));
+                    delres.place(&DelSkip(cmp::min(a_count, bcount)));
+                    if a_count > bcount {
+                        a.head = Some(AddStyles(a_count - bcount, a_styles));
+                        b.next();
+                    } else if a_count < bcount {
+                        a.next();
+                        b.head = Some(DelSkip(bcount - a_count));
+                    } else {
+                        a.next();
+                        b.next();
+                    }
+                }
                 AddSkip(acount) => {
                     addres.place(&AddSkip(cmp::min(acount, bcount)));
                     delres.place(&DelSkip(cmp::min(acount, bcount)));
@@ -1533,6 +1622,9 @@ pub fn transform_add_del_inner(
                 }
             },
             DelWithGroup(span) => match a.get_head() {
+                AddStyles(..) => {
+                    panic!("invalid transform DelWithGroup with AddStyles");
+                }
                 AddChars(avalue) => {
                     delres.place(&DelSkip(avalue.char_len()));
                     addres.place(&a.next().unwrap());
@@ -1570,6 +1662,9 @@ pub fn transform_add_del_inner(
             },
             DelGroup(span) => {
                 match a.get_head() {
+                    AddStyles(..) => {
+                        panic!("invalid transform DelGroup with AddStyles");
+                    }
                     AddChars(avalue) => {
                         delres.place(&DelSkip(avalue.char_len()));
                         addres.place(&a.next().unwrap());
@@ -1598,6 +1693,9 @@ pub fn transform_add_del_inner(
                                     match elem {
                                         &AddChars(ref value) => {
                                             del.place(&DelChars(value.char_len()));
+                                        }
+                                        &AddStyles(count, _) => {
+                                            del.place(&DelSkip(count)); // TODO unsure if correct
                                         }
                                         &AddSkip(value) => {
                                             del.place(&DelSkip(value));

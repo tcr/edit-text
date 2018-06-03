@@ -53,6 +53,7 @@ pub enum AddElement {
     AddWithGroup(AddSpan),
     AddChars(DocString),
     AddGroup(Attrs, AddSpan),
+    AddStyles(usize, StyleMap),
 }
 
 pub use self::AddElement::*;

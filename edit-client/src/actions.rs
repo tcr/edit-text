@@ -300,7 +300,6 @@ pub fn add_string(ctx: ActionContext, input: &str) -> Result<Op, Error> {
 
 pub fn apply_style(ctx: ActionContext, style: Style, value: Option<String>) -> Result<Op, Error> {
     let walker1 = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, false);
-
     let walker2 = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, true);
 
     let (walker1, walker2) = if let (Some(walker1), Some(walker2)) = (walker1, walker2) {
@@ -309,8 +308,8 @@ pub fn apply_style(ctx: ActionContext, style: Style, value: Option<String>) -> R
         return Ok(Op::empty());
     };
 
-    // // Style map.
-    // let mut styles = hashmap!{ Style::Normie => None };
+    // Style map.
+    let styles = hashmap!{ Style::Bold => None };
 
     // // Identify previous styles.
     // let mut char_walker = walker.clone();
@@ -320,20 +319,36 @@ pub fn apply_style(ctx: ActionContext, style: Style, value: Option<String>) -> R
     //     }
     // }
 
-    // let mut writer = walker.to_writer();
+    let mut writer = walker1.to_writer();
 
-    // writer.del.exit_all();
+    writer.del.exit_all();
 
-    // // Insert new character.
-    // writer
-    //     .add
-    //     .place(&AddChars(DocString::from_str_styled(input, styles)));
-    // writer.add.exit_all();
+    // Walk along
+    eprintln!("(&) walker");
+    let mut doc1 = walker1.doc().to_owned();
+    let doc2 = walker2.doc().to_owned();
+    while doc1 != doc2 {
+        match doc1.head() {
+            Some(DocGroup(..)) => {
+                writer.add.begin();
+                doc1.enter();
+            }
+            Some(DocChars(ref text)) => {
+                writer.add.place(&AddStyles(text.char_len(), styles.clone()));
+                doc1.skip(text.char_len());
+            }
+            None => {
+                writer.add.exit();
+                doc1.exit();
+            }
+        }
+    }
+    writer.add.exit_all();
 
-    // Ok(writer.result())
-    
-    // TODO
-    unimplemented!()
+    let r = writer.result();
+    println!("(r) {:?}", r);
+
+    Ok(r)
 }
 
 pub fn split_block(ctx: ActionContext, add_hr: bool) -> Result<Op, Error> {

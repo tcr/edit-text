@@ -188,7 +188,85 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddStepper, b: &mut AddStepp
             AddChars(value) => {
                 res.place(&b.next().unwrap());
             }
+            AddStyles(b_count, b_styles) => match a.get_head() {
+                AddStyles(a_count, a_styles) => {
+                    let mut both_styles = b_styles.clone();
+                    both_styles.extend(a_styles.clone());
+                    res.push(AddStyles(cmp::min(a_count, b_count), both_styles));
+                    if a_count > b_count {
+                        b.head = Some(AddStyles(a_count - b_count, a_styles));
+                        b.next();
+                    } else if a_count < b_count {
+                        a.head = Some(AddStyles(b_count - a_count, b_styles));
+                        a.next();
+                    } else {
+                        a.next();
+                        b.next();
+                    }
+                }
+                AddChars(mut value) => {
+                    if b_count < value.char_len() {
+                        let (mut a_left, a_right) = value.split_at(b_count);
+                        a_left.extend_styles(&b_styles);
+                        res.place(&AddChars(a_left));
+                        a.head = Some(AddChars(a_right));
+                        b.next();
+                    } else if b_count > value.char_len() {
+                        value.extend_styles(&b_styles);
+                        b.head = Some(AddStyles(b_count - value.char_len(), b_styles));
+                        res.place(&AddChars(value));
+                        a.next();
+                    } else {
+                        value.extend_styles(&b_styles);
+                        res.place(&AddChars(value));
+                        a.next();
+                        b.next();
+                    }
+                }
+                AddSkip(acount) => {
+                    res.push(AddStyles(cmp::min(acount, b_count), b_styles.clone()));
+                    if acount > b_count {
+                        b.head = Some(AddSkip(acount - b_count));
+                        b.next();
+                    } else if acount < b_count {
+                        a.head = Some(AddStyles(b_count - acount, b_styles));
+                        a.next();
+                    } else {
+                        a.next();
+                        b.next();
+                    }
+                }
+                AddWithGroup(span) => {
+                    res.push(a.next().unwrap());
+                    if b_count == 1 {
+                        b.next();
+                    } else {
+                        b.head = Some(AddSkip(b_count - 1));
+                    }
+                }
+                AddGroup(..) => {
+                    res.push(a.next().unwrap());
+                    if b_count == 1 {
+                        b.next();
+                    } else {
+                        b.head = Some(AddSkip(b_count - 1));
+                    }
+                }
+            },
             AddSkip(bcount) => match a.get_head() {
+                AddStyles(acount, a_styles) => {
+                    res.push(AddStyles(cmp::min(acount, bcount), a_styles.clone()));
+                    if acount > bcount {
+                        a.head = Some(AddStyles(acount - bcount, a_styles));
+                        b.next();
+                    } else if acount < bcount {
+                        b.head = Some(AddSkip(bcount - acount));
+                        a.next();
+                    } else {
+                        a.next();
+                        b.next();
+                    }
+                }
                 AddChars(value) => {
                     if bcount < value.char_len() {
                         let (a_left, a_right) = value.split_at(bcount);
@@ -248,6 +326,9 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddStepper, b: &mut AddStepp
             AddWithGroup(ref bspan) => match a.get_head() {
                 AddChars(value) => {
                     panic!("Cannot compose AddWithGroup with AddChars");
+                }
+                AddStyles(..) => {
+                    panic!("Cannot compose AddWithGroup with AddStyles");
                 }
                 AddSkip(acount) => {
                     if acount == 1 {
@@ -376,6 +457,20 @@ fn compose_add_del_inner(
                         b.next();
                     }
                 }
+                AddStyles(a_count, a_styles) => {
+                    addres.place(&AddStyles(cmp::min(a_count, bcount), a_styles.clone()));
+                    delres.place(&DelSkip(cmp::min(a_count, bcount)));
+                    if a_count > bcount {
+                        a.head = Some(AddStyles(a_count - bcount, a_styles));
+                        b.next();
+                    } else if a_count < bcount {
+                        a.next();
+                        b.head = Some(DelSkip(bcount - a_count));
+                    } else {
+                        a.next();
+                        b.next();
+                    }
+                }
                 AddSkip(acount) => {
                     addres.place(&AddSkip(cmp::min(acount, bcount)));
                     delres.place(&DelSkip(cmp::min(acount, bcount)));
@@ -412,8 +507,11 @@ fn compose_add_del_inner(
                 }
             },
             DelWithGroup(span) => match a.get_head() {
-                AddChars(avalue) => {
+                AddChars(..) => {
                     panic!("DelWithGroup by AddChars is ILLEGAL");
+                }
+                AddStyles(..) => {
+                    panic!("DelWithGroup by AddStyles is ILLEGAL");
                 }
                 AddSkip(acount) => {
                     delres.place(&b.next().unwrap());
@@ -443,8 +541,11 @@ fn compose_add_del_inner(
             },
             DelGroup(span) => {
                 match a.get_head() {
-                    AddChars(avalue) => {
+                    AddChars(..) => {
                         panic!("DelGroup by AddChars is ILLEGAL");
+                    }
+                    AddStyles(..) => {
+                        panic!("DelGroup by AddStyles is ILLEGAL");
                     }
                     AddSkip(acount) => {
                         delres.place(&b.next().unwrap());

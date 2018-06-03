@@ -424,6 +424,7 @@ pub trait ClientImpl {
         let op = self.with_action_context(callback)?;
 
         // Apply new operation.
+        eprintln!("apply to (d) {:?}", self.state().client_doc.doc);
         self.state().client_doc.apply_local_op(&op);
 
         eprintln!("-----> {:?}", op);

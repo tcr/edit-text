@@ -178,6 +178,17 @@ impl AddPlaceable for AddSpan {
                 // Otherwise, push the new entry
                 self.push(AddChars(text.to_owned()));
             }
+            AddStyles(count, ref styles) => {
+                assert!(count > 0);
+                if let Some(&mut AddStyles(ref mut prefix_count, ref prefix_styles)) = self.last_mut() {
+                    if prefix_styles == styles {
+                        *prefix_count += count;
+                        return;
+                    }
+                }
+
+                self.push(AddStyles(count, styles.to_owned()));
+            }
             AddSkip(count) => {
                 assert!(count > 0);
                 if let Some(&mut AddSkip(ref mut value)) = self.last_mut() {
@@ -196,7 +207,7 @@ impl AddPlaceable for AddSpan {
         let mut ret = 0;
         for item in self {
             ret += match *item {
-                AddSkip(len) => len,
+                AddSkip(len) | AddStyles(len, _) => len,
                 AddChars(ref chars) => 0,
                 AddGroup(_, ref span) => span.skip_pre_len(),
                 AddWithGroup(..) => 1,
@@ -209,7 +220,7 @@ impl AddPlaceable for AddSpan {
         let mut ret = 0;
         for item in self {
             ret += match *item {
-                AddSkip(len) => len,
+                AddSkip(len) | AddStyles(len, _) => len,
                 AddChars(ref chars) => chars.char_len(),
                 AddGroup(..) | AddWithGroup(..) => 1,
             };
