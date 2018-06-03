@@ -155,27 +155,26 @@ fn run(
                 c.execute(
                     r#"
 
-let h1 = document.querySelector('.edit-text div[data-tag=h1]');
+let marker = document.querySelector('.edit-text div[data-tag=h1] span');
 
-let marker = document.createElement('span');
 // marker.style.cssText = `
 // background: red;
 // width: 10px;
 // height: 10px;
 // display: inline-block;
 // `;
-h1.appendChild(marker);
+//h1.appendChild(marker);
 
-let clientX = marker.getBoundingClientRect().left;
+let clientX = marker.getBoundingClientRect().right;
 let clientY = marker.getBoundingClientRect().top;
 
-h1.removeChild(marker);
+// h1.removeChild(marker);
 
 var evt = new MouseEvent("mousedown", {
     bubbles: true,
     cancelable: true,
-    clientX: clientX,
-    clientY: clientY,
+    clientX: clientX - 3,
+    clientY: clientY + 3,
 });
 console.log('x', clientX);
 console.log('y', clientY);
