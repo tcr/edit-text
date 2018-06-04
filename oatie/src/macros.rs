@@ -6,10 +6,21 @@ macro_rules! doc_span {
     ( @kind DocChars $b:expr $(,)* ) => {
         DocChars($crate::doc::DocString::from_str($b))
     };
+    ( @kind DocChars $b:expr , { $( $e:expr => $c:expr ),+  $(,)* } $(,)* ) => {
+        {
+            let mut map = ::std::collections::HashMap::<Style, Option<String>>::new();
+            $(
+                map.insert($e, $c);
+            )*
+            DocChars($crate::doc::DocString::from_str_styled($b, map))
+        }
+    };
     ( @kind DocGroup { $( $e:tt : $b:expr ),+  $(,)* } , [ $( $v:tt )* ] $(,)* ) => {
         {
             let mut map = ::std::collections::HashMap::<String, String>::new();
-            $( map.insert(doc_span!(@str_literal $e).to_owned(), ($b).to_owned()); )*
+            $(
+                map.insert(doc_span!(@str_literal $e).to_owned(), ($b).to_owned());
+            )*
             DocGroup(map, doc_span![ $( $v )* ])
         }
     };
@@ -29,6 +40,15 @@ macro_rules! add_span {
     ( @kind AddSkip $b:expr $(,)* ) => {
         AddSkip($b)
     };
+    ( @kind AddChars $b:expr , { $( $e:expr => $c:expr ),+  $(,)* } $(,)* ) => {
+        {
+            let mut map = ::std::collections::HashMap::<Style, Option<String>>::new();
+            $(
+                map.insert($e, $c);
+            )*
+            AddChars($crate::doc::DocString::from_str_styled($b, map))
+        }
+    };
     ( @kind AddChars $b:expr $(,)* ) => {
         AddChars($crate::doc::DocString::from_str($b))
     };
@@ -38,7 +58,9 @@ macro_rules! add_span {
     ( @kind AddGroup { $( $e:tt : $b:expr ),+  $(,)* } , [ $( $v:tt )* ] $(,)* ) => {
         {
             let mut map = ::std::collections::HashMap::<String, String>::new();
-            $( map.insert(add_span!(@str_literal $e).to_owned(), ($b).to_owned()); )*
+            $(
+                map.insert(add_span!(@str_literal $e).to_owned(), ($b).to_owned());
+            )*
             AddGroup(map, add_span![ $( $v )* ])
         }
     };

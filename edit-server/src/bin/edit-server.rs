@@ -117,7 +117,6 @@ Type <http://github.com/tcr/edit-text> into your search bar for more information
 "#;
 
     // Should be no errors
-    eprintln!("(*) WOW");
     let doc = Doc(markdown_to_doc(&INPUT).unwrap());
     validate_doc(&doc).expect("Initial Markdown document was malformed");
     doc
@@ -298,7 +297,9 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 let body: String = doc_as_html(
                     &get_or_create_page_graphql(
                         &id,
-                        &Doc(doc_span![DocGroup({"tag": "h1"}, [DocChars(&id)])]),
+                        &Doc(doc_span![DocGroup({"tag": "h1"}, [
+                            DocChars(&id, { Style::Normie => None }),
+                        ])]),
                     ).unwrap().0
                 );
 
