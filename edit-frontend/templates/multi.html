@@ -16,13 +16,13 @@
 <table id="clients">
 <tr>
     <td>
-    <iframe src="/monkey"></iframe>
+    <iframe src="about:blank"></iframe>
     </td>
     <td>
-    <iframe src="/monkey"></iframe>
+    <iframe src="about:blank"></iframe>
     </td>
     <td>
-    <iframe src="/monkey"></iframe>
+    <iframe src="about:blank"></iframe>
     </td>
 </tr>
 </table>
@@ -30,6 +30,12 @@
 </body>
 
 <script>
+
+// Randomize a path and set all iframes hrefs to it.
+var path = '/random' + String(Math.random()).slice(2, 10);
+Array.from(document.querySelectorAll('iframe')).map(function (i) {
+  i.src = path;
+});
 
 // Timer component.
 let counter = Date.now();

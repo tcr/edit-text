@@ -262,6 +262,7 @@ pub struct Client {
 
     pub monkey: Arc<AtomicBool>,
     pub alive: Arc<AtomicBool>,
+    pub task_count: usize,
 }
 
 /// Trait shared by the "wasm" and "client proxy" implementations.
@@ -288,119 +289,150 @@ pub trait ClientImpl {
         }).expect("Could not send initial state");
     }
 
+    // TODO can we catch_unwind inside handle task so we can add our own
+    // "TASK: data" dump into the error payload? So then it's easy to
+    // corrolate with the logs.
     fn handle_task(&mut self, value: Task) -> Result<(), Error>
     where
         Self: Sized,
     {
         // let start = ::std::time::Instant::now();
 
-        match value.clone() {
-            // Handle commands from Native.
-            Task::FrontendToUserCommand(command) => {
-                if self.state().client_id == "$$$$$$" {
-                    println!("NATIVE COMMAND TOO EARLY");
-                    return Ok(());
-                }
+        self.state().task_count += 1;
+        let task_count = self.state().task_count;
+        eprintln!("TASK ~~~~ {} ~~~~", task_count);
 
-                native_command(self, command)?;
+        // TODO needing to wrap this in an unwind to create an artificial panic boundary
+        // is only cause of sloppy coding. use panic less, throw more Results<> and it
+        // might be easy to remove this catch_unwind.
+        // TODO Also is it possible to correct the use of AssertUnwindSafe? So it's correct?
+        let res = ::std::panic::catch_unwind(::std::panic::AssertUnwindSafe(move || -> Result<(), Error> {
+            let delay_log = self.state().client_id == "$$$$$$";
+
+            if !delay_log {
+                log_wasm!(Task(self.state().client_id.clone(), value.clone()));
             }
 
-            // Sync sent us an Update command with a new document version.
-            Task::SyncToUserCommand(SyncToUserCommand::Init(new_client_id, doc_span, version)) => {
-                self.state().client_id = new_client_id.clone();
-                self.state().client_doc.init(&Doc(doc_span), version);
-
-                // Announce.
-                println!("inital version is {:?}", version);
-
-                log_wasm!(Setup(self.state().client_id.clone()));
-
-                // If the caret doesn't exist or was deleted, reinitialize it.
-                if !self
-                    .with_action_context(|ctx| Ok(has_caret(ctx, false)))
-                    .ok()
-                    .unwrap_or(true)
-                {
-                    println!("add caret");
-                    self.client_op(|doc| init_caret(doc)).unwrap();
-                }
-
-                let res = UserToFrontendCommand::Init(new_client_id);
-                self.send_client(&res).unwrap();
-
-                // Native drives client state.
-                let state = self.state();
-                let res = UserToFrontendCommand::Update(doc_as_html(&state.client_doc.doc.0), None);
-                self.send_client(&res).unwrap();
-            }
-
-            // Sync sent us an Update command with a new document version.
-            Task::SyncToUserCommand(SyncToUserCommand::Update(
-                doc_span,
-                version,
-                client_id,
-                input_op,
-            )) => {
-                if self.state().client_id == "$$$$$$" {
-                    return Ok(());
-                }
-
-                // TODO this can be generated from original_doc X input_op too
-                let doc = Doc(doc_span);
-
-                // If this operation is an acknowledgment...
-                if self.state().client_id == client_id {
-                    if let Some(local_op) = self
-                        .state()
-                        .client_doc
-                        .sync_confirmed_pending_op(&doc, version)
-                    {
-                        // Send our next operation.
-                        self.upload(local_op)?;
+            match value.clone() {
+                // Handle commands from Native.
+                Task::FrontendToUserCommand(command) => {
+                    if self.state().client_id == "$$$$$$" {
+                        println!("NATIVE COMMAND TOO EARLY");
+                        return Ok(());
                     }
-                } else {
-                    // Update with new version.
-                    println!("---> sync sent new version");
-                    self.state()
-                        .client_doc
-                        .sync_sent_new_version(&doc, version, &input_op);
+
+                    native_command(self, command)?;
                 }
 
-                // Announce.
-                println!("new version is {:?}", version);
+                // Sync sent us an Update command with a new document version.
+                Task::SyncToUserCommand(SyncToUserCommand::Init(new_client_id, doc_span, version)) => {
+                    self.state().client_id = new_client_id.clone();
+                    self.state().client_doc.init(&Doc(doc_span), version);
 
-                // If the caret doesn't exist or was deleted, reinitialize it.
-                if !self
-                    .with_action_context(|ctx| Ok(has_caret(ctx, false)))
-                    .ok()
-                    .unwrap_or(true)
-                {
-                    println!("add caret");
-                    self.client_op(|doc| init_caret(doc)).unwrap();
+                    // Announce.
+                    println!("inital version is {:?}", version);
+
+                    log_wasm!(Setup(self.state().client_id.clone()));
+
+                    // If the caret doesn't exist or was deleted, reinitialize it.
+                    if !self
+                        .with_action_context(|ctx| Ok(has_caret(ctx, false)))
+                        .ok()
+                        .unwrap_or(true)
+                    {
+                        println!("add caret");
+                        self.client_op(|doc| init_caret(doc)).unwrap();
+                    }
+
+                    let res = UserToFrontendCommand::Init(new_client_id);
+                    self.send_client(&res).unwrap();
+
+                    // Native drives client state.
+                    let state = self.state();
+                    let res = UserToFrontendCommand::Update(doc_as_html(&state.client_doc.doc.0), None);
+                    self.send_client(&res).unwrap();
                 }
 
-                // Native drives client state.
-                let state = self.state();
-                let res = UserToFrontendCommand::Update(doc_as_html(&state.client_doc.doc.0), None);
-                self.send_client(&res).unwrap();
+                // Sync sent us an Update command with a new document version.
+                Task::SyncToUserCommand(SyncToUserCommand::Update(
+                    doc_span,
+                    version,
+                    client_id,
+                    input_op,
+                )) => {
+                    if self.state().client_id == "$$$$$$" {
+                        return Ok(());
+                    }
+
+                    // TODO this can be generated from original_doc X input_op too
+                    let doc = Doc(doc_span);
+
+                    // If this operation is an acknowledgment...
+                    if self.state().client_id == client_id {
+                        if let Some(local_op) = self
+                            .state()
+                            .client_doc
+                            .sync_confirmed_pending_op(&doc, version)
+                        {
+                            // Send our next operation.
+                            self.upload(local_op)?;
+                        }
+                    } else {
+                        // Update with new version.
+                        println!("---> sync sent new version");
+                        self.state()
+                            .client_doc
+                            .sync_sent_new_version(&doc, version, &input_op);
+                    }
+
+                    // Announce.
+                    println!("new version is {:?}", version);
+
+                    // If the caret doesn't exist or was deleted, reinitialize it.
+                    if !self
+                        .with_action_context(|ctx| Ok(has_caret(ctx, false)))
+                        .ok()
+                        .unwrap_or(true)
+                    {
+                        println!("add caret");
+                        self.client_op(|doc| init_caret(doc)).unwrap();
+                    }
+
+                    // Native drives client state.
+                    let state = self.state();
+                    let res = UserToFrontendCommand::Update(doc_as_html(&state.client_doc.doc.0), None);
+                    self.send_client(&res).unwrap();
+                }
             }
+
+            // fn average(numbers: &[i64]) -> f32 {
+            //     numbers.iter().sum::<i64>() as f32 / numbers.len() as f32
+            // }
+
+            // BAR.with(|bar| {
+            //     let mut b = bar.borrow_mut();
+
+            //     b.push(start.elapsed().num_milliseconds());
+
+            //     println!("{} ms per task.", average(b.as_slice()));
+            // });
+
+            if delay_log {
+                log_wasm!(Task(self.state().client_id.clone(), value.clone()));
+            }
+
+            Ok(())
+        }));
+
+        if let Ok(value) = res {
+            value
+        } else if let Err(err) = res {
+            // TODO does this actually dump out the error stack trace? otherwise
+            // we should just rethrow err? directly or 
+            bail!("task {} panicked: {:?}", task_count, err);
+        } else {
+            unreachable!();
         }
-
-        // fn average(numbers: &[i64]) -> f32 {
-        //     numbers.iter().sum::<i64>() as f32 / numbers.len() as f32
-        // }
-
-        // BAR.with(|bar| {
-        //     let mut b = bar.borrow_mut();
-
-        //     b.push(start.elapsed().num_milliseconds());
-
-        //     println!("{} ms per task.", average(b.as_slice()));
-        // });
-
-        log_wasm!(Task(self.state().client_id.clone(), value.clone()));
-
-        Ok(())
     }
 
     fn upload(&mut self, local_op: Op) -> Result<(), Error> {

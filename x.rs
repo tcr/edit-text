@@ -294,15 +294,15 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::Replay { args } => {
-            let release_flag = if release { Some("--release") } else { None };
+            // let release_flag = if release { Some("--release") } else { None };
 
             execute!(
                 r"
-                    cd edit
+                    cd edit-client
                     export RUST_BACKTRACE=1
-                    cargo run {release_flag} --bin edit-replay -- {args}
+                    cargo run --release --bin edit-replay -- {args}
                 ",
-                release_flag = release_flag,
+                // release_flag = release_flag,
                 args = args,
             )?;
         }
