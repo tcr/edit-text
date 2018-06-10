@@ -29,14 +29,15 @@ extern crate wasm_bindgen;
 #[macro_use]
 pub mod log;
 
+#[cfg(target_arch = "wasm32")]
+#[macro_use]
+pub mod wasm;
+
 pub mod actions;
 pub mod client;
 pub mod random;
 pub mod state;
 pub mod walkers;
-
-#[cfg(target_arch = "wasm32")]
-pub mod wasm;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub mod proxy;

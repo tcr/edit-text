@@ -23,7 +23,7 @@ lazy_static! {
                 return;
             };
 
-            // eprintln!("------> {:?}", path);
+            eprintln!("------> {:?}", path);
 
             // Crate the file.
             let mut f = File::create(path).unwrap();
@@ -51,17 +51,36 @@ pub enum LogWasm {
     Debug(String),
 }
 
+// TODO switch on a debug flag/feature or something
 #[macro_export]
+#[cfg(target_arch = "wasm32")]
+macro_rules! log_wasm {
+    ($x:expr) => (
+        {
+            // Load the logging enum variants locally.
+            // use $crate::log::LogWasm::*;
+
+            // Serialize body.
+            // let ron = ::ron::ser::to_string(&$x).unwrap();
+
+            // console_log!("[WASM_LOG] {}", ron);
+        }
+    );
+}
+
+#[macro_export]
+#[cfg(not(target_arch = "wasm32"))]
 macro_rules! log_wasm {
     ($x:expr) => (
         {
             // Load the logging enum variants locally.
             use $crate::log::LogWasm::*;
 
-            // Only if MERCUTIO_WASM_LOG=1 is set
+            // Serialize body.
+            let ron = ::ron::ser::to_string(&$x).unwrap();
+
+            // Get value.
             let tx = $crate::log::CLIENT_LOG_TX.lock().unwrap();
-            let mut ron = ::ron::ser::to_string(&$x).unwrap();
-            ron = ron.replace("\n", "\\n"); // TODO escaping embedded string newlines was fixed in a recent version of ron
             let _ = tx.send(ron);
         }
     );

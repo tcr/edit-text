@@ -19,3 +19,4 @@ x.d
 x.bash
 x.fish
 _x
+logs/*

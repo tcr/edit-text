@@ -23,6 +23,18 @@ extern "C" {
     pub fn sendCommandToJS(input: &str) -> u32;
 }
 
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console)]
+    pub fn log(msg: &str);
+}
+
+// A macro to provide `println!(..)`-style syntax for `console.log` logging.
+#[macro_export]
+macro_rules! console_log {
+    ($($t:tt)*) => ($crate::wasm::log(&format!($($t)*)))
+}
+
 lazy_static! {
     static ref WASM_CLIENT: Mutex<Option<WasmClient>> = Mutex::new(None);
 }
@@ -67,6 +79,7 @@ pub fn wasm_setup() -> u32 {
 
                 monkey,
                 alive,
+                task_count: 0,
             },
         };
 
