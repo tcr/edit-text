@@ -315,10 +315,13 @@ export class Editor extends React.Component {
       if (e.keyCode == 67 && e.metaKey) {
         // Generate string from selected text.
         let str = Array.from(
-          document.querySelectorAll('span.selected')
+          document.querySelectorAll('span.Selected')
         )
           .map(x => (x as HTMLElement).innerText)
           .join('');
+        
+        // Debug
+        console.error('copied: ' + JSON.stringify(str));
 
         copy(str)
         .then(res => {

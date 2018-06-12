@@ -229,7 +229,7 @@ export class EditorFrame extends React.Component {
         <div className={this.state.modal == null ? '' : 'modal-active'}>
           <div id="toolbar">
             <a href="https://github.com/tcr/edit-text" id="logo">edit-text</a>
-            <NativeButtons 
+            <NativeButtons
               editor={this}
               buttons={this.state.buttons} 
             />,
