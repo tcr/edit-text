@@ -36,9 +36,10 @@ pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<()
         match *elem {
             DocGroup(ref attrs, ref span) => {
                 if attrs["tag"] == "caret" {
-                    if !ctx.carets.insert(attrs["client"].clone()) {
-                        bail!("Multiple carets for {:?} exist", attrs["client"]);
-                    }
+                    // TODO allow again
+                    // if !ctx.carets.insert(attrs["client"].clone()) {
+                    //     bail!("Multiple carets for {:?} exist", attrs["client"]);
+                    // }
                 }
 
                 if attrs["tag"] == "bullet" {

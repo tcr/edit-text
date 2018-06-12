@@ -9,6 +9,7 @@ use pulldown_cmark::{
 struct Ctx<'b, I> {
     iter: I,
     body: &'b mut DocWriter,
+    styles: StyleMap,
 }
 
 impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
@@ -23,10 +24,10 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                 }
                 Text(text) => {
                     self.body
-                        .place(&DocChars(DocString::from_str(text.as_ref())));
+                        .place(&DocChars(DocString::from_str_styled(text.as_ref(), self.styles.clone())));
                 }
                 HardBreak => {
-                    self.body.place(&DocChars(DocString::from_str("\n")));
+                    self.body.place(&DocChars(DocString::from_str_styled("\n", self.styles.clone())));
                 }
                 SoftBreak | Html(..) | InlineHtml(..) | FootnoteReference(..) => {}
             }
@@ -50,17 +51,23 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
             Tag::Rule => {
                 self.body.begin();
             }
+            Tag::Link(dest, _title) => {
+                self.styles.insert(Style::Link, Some(dest.to_string()));
+            }
+            Tag::Strong => {
+                self.styles.insert(Style::Bold, None);
+            }
+            Tag::Emphasis => {
+                self.styles.insert(Style::Italic, None);
+            }
 
             Tag::Table(..)
             | Tag::TableHead
             | Tag::TableRow
             | Tag::TableCell
             | Tag::BlockQuote
-            | Tag::Emphasis
-            | Tag::Strong
             | Tag::Code
             | Tag::List(_)
-            | Tag::Link(..)
             | Tag::Image(..)
             | Tag::FootnoteDefinition(_) => {}
         }
@@ -88,16 +95,22 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                 self.body.close(hashmap! { "tag".into() => "hr".into() });
             }
             Tag::Image(_, _) => (), // shouldn't happen, handled in start
+            Tag::Link(..) => {
+                self.styles.remove(&Style::Link);
+            }
+            Tag::Strong => {
+                self.styles.remove(&Style::Bold);
+            }
+            Tag::Emphasis => {
+                self.styles.remove(&Style::Italic);
+            }
 
             Tag::FootnoteDefinition(_)
             | Tag::Code
             | Tag::TableCell
-            | Tag::Link(_, _)
             | Tag::Table(_)
             | Tag::TableHead
             | Tag::TableRow
-            | Tag::Emphasis
-            | Tag::Strong
             | Tag::List(_)
             | Tag::BlockQuote => {}
         }
@@ -111,6 +124,7 @@ pub fn markdown_to_doc(input: &str) -> Result<DocSpan, Error> {
         let mut ctx = Ctx {
             iter: parser,
             body: &mut doc_writer,
+            styles: hashmap!{ Style::Normie => None },
         };
         ctx.run();
     }

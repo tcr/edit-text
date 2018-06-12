@@ -25,10 +25,10 @@ pub fn test_start() {
 fn try_this() {
     test_start();
 
-    let source: DocSpan = vec![
-        DocChars(DocString::from_str("Hello world!")),
-        DocGroup(HashMap::new(), vec![]),
-    ];
+    // let source: DocSpan = vec![
+    //     DocChars(DocString::from_str("Hello world!")),
+    //     DocGroup(HashMap::new(), vec![]),
+    // ];
 
     // TODO this has a DelGroupAll that should be removed:
     // assert_eq!(

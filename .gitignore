@@ -1,3 +1,4 @@
+.DS_Store
 target/
 edit/test.txt
 edit/log
@@ -14,3 +15,8 @@ edit-frontend/dist/edit.wasm
 edit-frontend/dist/edit.js.map
 edit.js.map
 .cargo
+x.d
+x.bash
+x.fish
+_x
+logs/*

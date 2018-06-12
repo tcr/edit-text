@@ -2,7 +2,9 @@
 //!
 //! See the book for more details: http://tcr.github.io/edit-text/
 
-#![feature(nll, range_is_empty)]
+#![feature(nll, range_is_empty, crate_in_paths)]
+
+// TODO clean these up
 #![allow(unknown_lints)]
 #![allow(single_char_pattern)]
 #![allow(ptr_arg)]
@@ -53,6 +55,8 @@ pub mod macros;
 mod parse;
 pub mod schema;
 pub mod stepper;
+mod string;
+mod place;
 pub mod transform;
 pub mod transform_test;
 pub mod validate;

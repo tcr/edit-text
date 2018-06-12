@@ -2,19 +2,21 @@ use super::walkers::*;
 use failure::Error;
 use oatie::doc::*;
 use oatie::OT;
-use std::char::from_u32;
+use oatie::schema::RtfSchema;
 
 fn is_boundary_char(c: char) -> bool {
     c.is_whitespace() || c == '-' || c == '_'
 }
 
+// TODO don't require ActionContext to be owned everywhere
+#[derive(Clone)]
 pub struct ActionContext {
     pub doc: Doc,
     pub client_id: String,
 }
 
 pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, false);
     assert!(walker.back_block());
 
     let mut parent_walker = walker.clone();
@@ -51,7 +53,7 @@ pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
 
 // Return a "caret state"
 pub fn identify_block(ctx: ActionContext) -> Result<(String, bool), Error> {
-    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, false);
     assert!(walker.back_block());
     if let Some(DocGroup(ref attrs, _)) = walker.doc().head() {
         let tag = attrs["tag"].clone();
@@ -68,7 +70,7 @@ pub fn identify_block(ctx: ActionContext) -> Result<(String, bool), Error> {
 }
 
 pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, false);
     assert!(walker.back_block());
 
     let len = if let Some(DocGroup(_, ref span)) = walker.doc().head() {
@@ -92,7 +94,7 @@ pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
 }
 
 pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, false);
 
     // Check if caret is at the start of a block.
     let caret_pos = walker.caret_pos();
@@ -269,26 +271,87 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
     Ok(writer.result())
 }
 
-pub fn add_char(ctx: ActionContext, key: u32) -> Result<Op, Error> {
-    let mut writer = Walker::to_caret(&ctx.doc, &ctx.client_id).to_writer();
+pub fn add_string(ctx: ActionContext, input: &str) -> Result<Op, Error> {
+    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, false);
+
+    // Style map.
+    let mut styles = hashmap!{ Style::Normie => None };
+
+    // Identify previous styles.
+    let mut char_walker = walker.clone();
+    if let Some(DocChars(ref prefix)) = char_walker.back_char().doc().head() {
+        if let Some(prefix_styles) = prefix.styles() {
+            styles.extend(prefix_styles.iter().map(|(a, b)| (a.to_owned(), b.to_owned())));
+        }
+    }
+
+    let mut writer = walker.to_writer();
 
     writer.del.exit_all();
 
     // Insert new character.
-    let c: char = from_u32(key).unwrap_or('?');
-    if c == '\0' {
-        bail!("expected non-null character");
-    }
     writer
         .add
-        .place(&AddChars(DocString::from_string(format!("{}", c))));
+        .place(&AddChars(DocString::from_str_styled(input, styles)));
     writer.add.exit_all();
 
     Ok(writer.result())
 }
 
+pub fn apply_style(ctx: ActionContext, style: Style, value: Option<String>) -> Result<Op, Error> {
+    let walker1 = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, false);
+    let walker2 = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, true);
+
+    let (walker1, walker2) = if let (Some(walker1), Some(walker2)) = (walker1, walker2) {
+        if walker1.caret_pos() == walker2.caret_pos() {
+            return Ok(Op::empty());
+        } else if walker1.caret_pos() <= walker2.caret_pos() {
+            (walker1, walker2)
+        } else {
+            (walker2, walker1)
+        }
+    } else {
+        return Ok(Op::empty());
+    };
+
+    // Style map.
+    let mut styles = hashmap!{};
+    styles.insert(style, value);
+
+
+    let mut writer = walker1.to_writer();
+
+    writer.del.exit_all();
+
+    // Identify previous styles.
+    let mut doc1 = walker1.doc().to_owned();
+    let doc2 = walker2.doc().to_owned();
+    while doc1 != doc2 {
+        match doc1.head() {
+            Some(DocGroup(..)) => {
+                writer.add.begin();
+                doc1.enter();
+            }
+            Some(DocChars(ref text)) => {
+                writer.add.place(&AddStyles(text.char_len(), styles.clone()));
+                doc1.skip(text.char_len());
+            }
+            None => {
+                writer.add.exit();
+                doc1.exit();
+            }
+        }
+    }
+    writer.add.exit_all();
+
+    let r = writer.result();
+    println!("(r) {:?}", r);
+
+    Ok(r)
+}
+
 pub fn split_block(ctx: ActionContext, add_hr: bool) -> Result<Op, Error> {
-    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
+    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, false);
     let skip = walker.doc().skip_len();
 
     // Identify the tag of the block we're splitting.
@@ -356,7 +419,7 @@ pub fn split_block(ctx: ActionContext, add_hr: bool) -> Result<Op, Error> {
 }
 
 pub fn caret_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, false);
 
     // First operation removes the caret.
     let mut writer = walker.to_writer();
@@ -391,15 +454,11 @@ pub fn caret_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
 
     // Return composed operations. Select proper order or otherwise composition
     // will be invalid.
-    if increase {
-        Ok(OT::compose(&op_2, &op_1))
-    } else {
-        Ok(OT::compose(&op_1, &op_2))
-    }
+    Ok(OT::transform_advance::<RtfSchema>(&op_1, &op_2))
 }
 
 pub fn caret_word_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, false);
 
     // First operation removes the caret.
     let mut writer = walker.to_writer();
@@ -477,15 +536,11 @@ pub fn caret_word_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> 
 
     // Return composed operations. Select proper order or otherwise composition
     // will be invalid.
-    if increase {
-        Ok(OT::compose(&op_2, &op_1))
-    } else {
-        Ok(OT::compose(&op_1, &op_2))
-    }
+    Ok(OT::transform_advance::<RtfSchema>(&op_1, &op_2))
 }
 
-pub fn has_caret(ctx: ActionContext) -> bool {
-    Walker::to_caret_safe(&ctx.doc, &ctx.client_id).is_some()
+pub fn has_caret(ctx: ActionContext, focus: bool) -> bool {
+    Walker::to_caret_safe(&ctx.doc, &ctx.client_id, focus).is_some()
 }
 
 pub fn init_caret(ctx: ActionContext) -> Result<Op, Error> {
@@ -509,7 +564,7 @@ pub fn init_caret(ctx: ActionContext) -> Result<Op, Error> {
 }
 
 pub fn caret_block_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, false);
 
     // First operation removes the caret.
     let mut writer = walker.to_writer();
@@ -548,17 +603,21 @@ pub fn caret_block_move(ctx: ActionContext, increase: bool) -> Result<Op, Error>
 
     // Return composed operations. Select proper order or otherwise composition
     // will be invalid.
-    if increase {
-        Ok(OT::compose(&op_2, &op_1))
-    } else {
-        Ok(OT::compose(&op_1, &op_2))
-    }
+    Ok(OT::transform_advance::<RtfSchema>(&op_1, &op_2))
 }
 
-pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan) -> Result<Op, Error> {
-    // First operation removes the caret.
-    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
-    let pos_1 = walker.caret_pos();
+
+
+
+
+pub fn caret_clear(ctx: ActionContext, focus: bool) -> Result<(isize, Op), Error> {
+    let walker = if let Some(walker) = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, focus) {
+        walker
+    } else {
+        bail!("could not clear caret");
+    };
+
+    let pos = walker.caret_pos();
     let mut writer = walker.to_writer();
 
     writer.del.begin();
@@ -567,17 +626,37 @@ pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan) -> Result<Op, Error> {
 
     writer.add.exit_all();
 
-    let op_1 = writer.result();
+    let op = writer.result();
+
+    Ok((pos, op))
+}
+
+pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan, focus: bool) -> Result<Op, Error> {
+    // First operation removes the caret.
+    let (pos_1, op_1) = caret_clear(ctx.clone(), focus)
+        .map(|(pos_1, op_1)| (Some(pos_1), op_1))
+        .unwrap_or_else(|_| (None, OT::empty()));
+    
+    // Second operation removes the focus caret if needed.
+    let (_, op_2) = (if !focus {
+        caret_clear(ctx.clone(), true)
+            .map(|(pos_1, op_1)| (Some(pos_1), op_1))
+            .ok()
+    } else {
+        None
+    }).unwrap_or_else(|| (None, OT::empty()));
+
+    // Combine two starting ops.
+    let op_1_2 = OT::transform_advance::<RtfSchema>(&op_1, &op_2);
 
     // Second operation inserts a new caret.
 
     let walker = Walker::to_cursor(&ctx.doc, cur);
-    let pos_2 = walker.caret_pos();
-    if pos_1 == pos_2 {
+    let pos_3 = Some(walker.caret_pos());
+    if pos_1 == pos_3 {
         // Redundant
         return Ok(op_span!([], []));
     }
-
     let mut writer = walker.to_writer();
 
     writer.del.exit_all();
@@ -586,18 +665,13 @@ pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan) -> Result<Op, Error> {
     writer.add.close(hashmap! {
         "tag".to_string() => "caret".to_string(),
         "client".to_string() => ctx.client_id.clone(),
+        "focus".to_string() => if focus { format!("true") } else { format!("false") },
     });
     writer.add.exit_all();
 
-    let op_2 = writer.result();
+    let op_3 = writer.result();
 
     // println!("------------->\n{:?}\n\n\nAAAAAA\n-------->", op_2);
 
-    // Return composed operations. Select proper order or otherwise composition
-    // will be invalid.
-    if pos_1 < pos_2 {
-        Ok(OT::compose(&op_2, &op_1))
-    } else {
-        Ok(OT::compose(&op_1, &op_2))
-    }
+    Ok(OT::transform_advance::<RtfSchema>(&op_1_2, &op_3))
 }

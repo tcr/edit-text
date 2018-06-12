@@ -24,14 +24,15 @@ use std::thread;
 
 static DRIVER_PORT_COUNTER: AtomicU16 = AtomicU16::new(4445);
 
-fn in_ci() -> bool {
-    ::std::env::var("CI")
-        .ok()
-        .map(|x| x == "true")
-        .unwrap_or(false)
-}
+// fn in_ci() -> bool {
+//     ::std::env::var("CI")
+//         .ok()
+//         .map(|x| x == "true")
+//         .unwrap_or(false)
+// }
 
-fn main() {
+#[test]
+fn test_integration() {
     commandspec::forward_ctrlc();
 
     let test_id1 = format!("test{}", random_id());
@@ -155,27 +156,26 @@ fn run(
                 c.execute(
                     r#"
 
-let h1 = document.querySelector('.edit-text div[data-tag=h1]');
+let marker = document.querySelector('.edit-text div[data-tag=h1] span');
 
-let marker = document.createElement('span');
 // marker.style.cssText = `
 // background: red;
 // width: 10px;
 // height: 10px;
 // display: inline-block;
 // `;
-h1.appendChild(marker);
+//h1.appendChild(marker);
 
-let clientX = marker.getBoundingClientRect().left;
+let clientX = marker.getBoundingClientRect().right;
 let clientY = marker.getBoundingClientRect().top;
 
-h1.removeChild(marker);
+// h1.removeChild(marker);
 
 var evt = new MouseEvent("mousedown", {
     bubbles: true,
     cancelable: true,
-    clientX: clientX,
-    clientY: clientY,
+    clientX: clientX - 3,
+    clientY: clientY + 3,
 });
 console.log('x', clientX);
 console.log('y', clientY);

@@ -17,8 +17,14 @@ extern crate structopt_derive;
 // use quicli::prelude::*;
 use colored::Colorize;
 use crossbeam_channel::{unbounded, Receiver};
-use edit_client::{state::ClientDoc, Client, LogWasm, ProxyClient};
-use edit_common::commands::UserToSyncCommand;
+use edit_client::{
+    Client,
+    ClientImpl,
+    state::ClientDoc, 
+    log::*,
+    proxy::ProxyClient,
+};
+use edit_common::commands::*;
 use failure::Error;
 use std::io::prelude::*;
 use std::sync::{atomic::AtomicBool, Arc};
@@ -40,6 +46,7 @@ fn init_new_client(
 
             monkey: Arc::new(AtomicBool::new(false)),
             alive: Arc::new(AtomicBool::new(true)),
+            task_count: 0,
         },
 
         tx_client,
@@ -57,7 +64,7 @@ struct Opt {
 main!(|opts: Opt| {
     let (tx_line, rx_line) = unbounded();
     ::std::thread::spawn(move || -> Result<(), Error> {
-        let f = ::std::fs::File::open("log/client")?;
+        let f = ::std::fs::File::open("../logs/client")?;
         let file = ::std::io::BufReader::new(&f);
 
         for line in file.lines() {
@@ -89,11 +96,11 @@ main!(|opts: Opt| {
             }
             LogWasm::Task(client_id, task) => {
                 // TODO real command-line subfilters
-                if let Some(ref filter_id) = opts.filter {
-                    if client_id != *filter_id {
-                        continue;
-                    }
-                }
+                // if let Some(ref filter_id) = opts.filter {
+                //     if client_id != *filter_id {
+                //         continue;
+                //     }
+                // }
 
                 println!("{}", format!("{:?}: {:?}", client_id, task).green().bold());
                 println!();
@@ -109,5 +116,7 @@ main!(|opts: Opt| {
             _ => {}
         }
     }
-    println!("hi sweetie");
+
+    eprintln!();
+    eprintln!("(edit-replay is done.)");
 });

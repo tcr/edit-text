@@ -118,18 +118,19 @@ body.theme-column {
     background: #eee;
 }
 
+// When this is a "page" view
 body.theme-column .edit-text {
+    padding-top: 10px;
+    padding-bottom: 30px;
     max-width: 60em;
     margin: 70px auto 70px;
     background: #fff;
     border: 1px solid #ccc;
     box-shadow: 3px 3px 8px #bbb;
-    padding-top: 10px;
-    padding-bottom: 30px;
 }
 
 .edit-text {
-    padding: 54px 30px 50px; // + bottom padding for footer
+    padding: 54px 35px 50px; // + bottom padding for footer
     margin: 0;
 
     -webkit-touch-callout: none;
@@ -143,6 +144,9 @@ body.theme-column .edit-text {
     cursor: text;
 
     white-space: pre-wrap;
+    font-kerning: none; // For caret wrapping with zero-width non-joiner
+    font-family: 'TeX Gyre Heros', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    letter-spacing: 0.05pt;
 
     div {
         margin: 12px 0;
@@ -170,36 +174,38 @@ body.theme-column .edit-text {
     $color_caret: #089;
 
     div[data-tag="caret"]::before {
-        border-left: 1px $color_caret solid;
-        border-right: 1px $color_caret solid;
-        margin-right: -2px;
+        border-left: 2px $color_caret solid;
         margin-left: -1px;
-        content: '\200D';
+        margin-right: -1px;
+        content: '';
         animation: fadein 0.3s;
     }
 
+    div[data-tag="caret"][data-wsj]::before {
+        content: '\200c' !important; // zero width non-joiner Unicode code point
+    }
+
     div[data-tag="caret"].current::before {
-        border-left: 1px $color_curcaret solid;
-        border-right: 1px $color_curcaret solid;
+        border-left: 2px $color_curcaret solid;
         z-index: 100;
         position: relative;
     }
 
     // TODO the overlapping dashed cursors isn't working well
 
-    div[data-tag="caret"] +
-    div[data-tag="caret"].current::before {
-        border-left-style: dashed !important;
-        border-right-style: dashed !important;
-    }
+    // div[data-tag="caret"] +
+    // div[data-tag="caret"].current::before {
+    //     border-left-style: dashed !important;
+    //     border-right-style: dashed !important;
+    // }
 
-    div[data-tag="caret"].current +
-    div[data-tag="caret"]::before {
-        border-left-style: dashed !important;
-        border-right-style: dashed !important;
-        z-index: 1001;
-        position: relative;
-    }
+    // div[data-tag="caret"].current +
+    // div[data-tag="caret"]::before {
+    //     border-left-style: dashed !important;
+    //     border-right-style: dashed !important;
+    //     z-index: 1001;
+    //     position: relative;
+    // }
     
 
     // @keyframes caret {
@@ -290,7 +296,10 @@ body.theme-column .edit-text {
     div[data-tag="bullet"]::before {
         content: "\25CF";
         position: absolute;
+        vertical-align: bottom;
         left: 8px;
+        font-size: 0.95em;
+        top: 1px;
     }
 
     div[data-tag="bullet"] {
@@ -384,4 +393,52 @@ body#multi {
 
 body.editing-blurred div[data-tag="caret"]::before {
     filter: grayscale(100%);
+}
+
+// Text spans
+.edit-text {
+    span.Bold {
+        font-weight: bold;
+    }
+
+    span.Italic {
+        font-style: italic;
+    }
+
+    span.Selected {
+        color: white;
+        background: #349;
+    }
+
+    span.Link {
+        color: blue;
+        text-decoration: underline;
+    }
+
+    span.Link:hover::before {
+        background: black;
+        content: "http://timryan.org/";
+        position: absolute;
+        top: 1.6em;
+        
+        font-size: 0.8em;
+        padding: 2px 5px;
+        color: white;
+    }
+
+    // fancy font
+    span:not(.Normie) {
+        color: yellow;
+        -webkit-text-stroke: 3px #f00;
+        paint-order: stroke fill;
+        -webkit-text-fill-color: yellow;
+        text-shadow:
+            2px 2px 0 #000,
+            3px 3px 0 #000;
+    }
+
+    // for debugging
+    span + span {
+        // outline: thin solid #32a1ce;
+    }
 }

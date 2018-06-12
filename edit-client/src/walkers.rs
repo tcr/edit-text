@@ -14,8 +14,10 @@ fn is_block_object(attrs: &Attrs) -> bool {
     RtfSchema::track_type_from_attrs(attrs) == Some(RtfTrack::BlockObjects)
 }
 
-fn is_caret(attrs: &Attrs, client_id: Option<&str>) -> bool {
-    attrs["tag"] == "caret" && client_id.map(|id| attrs["client"] == id).unwrap_or(false)
+fn is_caret(attrs: &Attrs, client_id: Option<&str>, focus: bool) -> bool {
+    attrs["tag"] == "caret"
+        && client_id.map(|id| attrs["client"] == id).unwrap_or(false)
+        && attrs.get("focus").unwrap_or(&"false".to_string()).parse::<bool>().map(|x| x == focus).unwrap_or(false)
 }
 
 #[derive(Clone, Debug)]
@@ -210,13 +212,13 @@ impl Walker {
         matched
     }
 
-    pub fn to_caret(doc: &Doc, client_id: &str) -> Walker {
+    pub fn to_caret(doc: &Doc, client_id: &str, focus: bool) -> Walker {
         let mut stepper = CaretStepper::new(DocStepper::new(&doc.0));
 
         // Iterate until we match the cursor.
         let matched = loop {
             if let Some(DocGroup(attrs, _)) = stepper.doc.head() {
-                if is_caret(&attrs, Some(client_id)) {
+                if is_caret(&attrs, Some(client_id), focus) {
                     break true;
                 }
             }
@@ -225,7 +227,7 @@ impl Walker {
             }
         };
         if !matched {
-            panic!("Didn't find a caret.");
+            panic!("Didn't find a (focus={:?}) caret.", focus);
         }
 
         Walker {
@@ -237,13 +239,13 @@ impl Walker {
     // TODO Have this replace the above and take its name.
     // Only difference is that above consumers
     // haven't had an .unwrap() call added yet for this:
-    pub fn to_caret_safe(doc: &Doc, client_id: &str) -> Option<Walker> {
+    pub fn to_caret_safe(doc: &Doc, client_id: &str, focus: bool) -> Option<Walker> {
         let mut stepper = CaretStepper::new(DocStepper::new(&doc.0));
 
         // Iterate until we match the cursor.
         let matched = loop {
             if let Some(DocGroup(attrs, _)) = stepper.doc.head() {
-                if is_caret(&attrs, Some(client_id)) {
+                if is_caret(&attrs, Some(client_id), focus) {
                     break true;
                 }
             }

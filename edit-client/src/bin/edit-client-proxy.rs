@@ -1,5 +1,6 @@
+#![feature(extern_in_paths)]
+
 extern crate edit_common;
-#[macro_use]
 extern crate edit_client;
 extern crate serde_json;
 extern crate structopt;
@@ -16,21 +17,23 @@ extern crate ron;
 extern crate simple_ws;
 extern crate url;
 
-use crossbeam_channel::{unbounded, Receiver, Sender};
-use edit_client::*;
-use edit_common::commands::*;
-use failure::Error;
-use rand::Rng;
-use simple_ws::*;
-use std::panic;
-use std::process;
-use std::sync::atomic::AtomicBool;
-use std::sync::atomic::Ordering;
-use std::sync::{Arc, Mutex};
-use std::thread::{self, JoinHandle};
-use std::time::Duration;
-use structopt::StructOpt;
-use ws::CloseCode;
+use extern::{
+    crossbeam_channel::{unbounded, Receiver, Sender},
+    edit_client::*,
+    edit_client::proxy::*,
+    edit_common::commands::*,
+    failure::Error,
+    simple_ws::*,
+    std::panic,
+    std::process,
+    std::sync::atomic::AtomicBool,
+    std::sync::atomic::Ordering,
+    std::sync::{Arc, Mutex},
+    std::thread::{self, JoinHandle},
+    std::time::Duration,
+    structopt::StructOpt,
+    ws::CloseCode,
+};
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "edit-client", about = "An example of StructOpt usage.")]
@@ -49,6 +52,8 @@ pub fn main() {
         orig_handler(panic_info);
         process::exit(1);
     }));
+
+    log_wasm!(Debug("main()".to_string()));
 
     println!("started \"wasm\" server");
 
@@ -217,6 +222,7 @@ fn setup_client(
 
             monkey: monkey.clone(),
             alive: alive.clone(),
+            task_count: 0,
         },
 
         tx_client,
@@ -235,7 +241,7 @@ fn setup_client(
     spawn_sync_connection(ws_port, page_id.to_owned(), tx_task.clone(), rx_sync);
 
     // Operate on all incoming tasks.
-    //TODO possible to delay until init was handled?
+    //TODO possible to delay naming or spawning until init was handled?
     let _ = thread::Builder::new()
         .name(format!("setup_client({})", name))
         .spawn::<_, Result<(), Error>>(move || {
@@ -299,111 +305,4 @@ pub fn server(url: &str, ws_port: u16) {
 
 pub fn start_websocket_server(port: u16) {
     server(&format!("0.0.0.0:{}", port), port - 1);
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-pub struct ProxyClient {
-    pub state: Client,
-    pub tx_client: Sender<UserToFrontendCommand>,
-    pub tx_sync: Sender<UserToSyncCommand>,
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl ClientImpl for ProxyClient {
-    fn state(&mut self) -> &mut Client {
-        &mut self.state
-    }
-
-    fn send_client(&self, req: &UserToFrontendCommand) -> Result<(), Error> {
-        log_wasm!(SendClient(req.clone()));
-        self.tx_client.send(req.clone())?;
-        Ok(())
-    }
-
-    fn send_sync(&self, req: UserToSyncCommand) -> Result<(), Error> {
-        log_wasm!(SendSync(req.clone()));
-        self.tx_sync.send(req)?;
-        Ok(())
-    }
-}
-
-macro_rules! spawn_monkey_task {
-    ($alive:expr, $monkey:expr, $tx:expr, $wait_params:expr, $task:expr) => {{
-        let tx = $tx.clone();
-        let alive = $alive.clone();
-        let monkey = $monkey.clone();
-        thread::spawn::<_, Result<(), Error>>(move || {
-            let mut rng = rand::thread_rng();
-            while alive.load(Ordering::Relaxed) {
-                thread::sleep(Duration::from_millis(
-                    rng.gen_range($wait_params.0, $wait_params.1),
-                ));
-                if monkey.load(Ordering::Relaxed) {
-                    tx.send(Task::FrontendToUserCommand($task))?;
-                }
-            }
-            Ok(())
-        })
-    }};
-}
-
-pub type MonkeyParam = (u64, u64);
-
-// "Human-like"
-pub const MONKEY_BUTTON: MonkeyParam = (0, 1500);
-pub const MONKEY_LETTER: MonkeyParam = (0, 200);
-pub const MONKEY_ARROW: MonkeyParam = (0, 500);
-pub const MONKEY_BACKSPACE: MonkeyParam = (0, 300);
-pub const MONKEY_ENTER: MonkeyParam = (6_000, 10_000);
-pub const MONKEY_CLICK: MonkeyParam = (400, 1000);
-
-// Race
-// const MONKEY_BUTTON: MonkeyParam = (0, 0, 100);
-// const MONKEY_LETTER: MonkeyParam = (0, 0, 100);
-// const MONKEY_ARROW: MonkeyParam = (0, 0, 100);
-// const MONKEY_BACKSPACE: MonkeyParam = (0, 0, 100);
-// const MONKEY_ENTER: MonkeyParam = (0, 0, 1_000);
-
-#[allow(unused)]
-pub fn setup_monkey<C: ClientImpl + Sized>(
-    alive: Arc<AtomicBool>,
-    monkey: Arc<AtomicBool>,
-    tx: Sender<Task>,
-) {
-    spawn_monkey_task!(alive, monkey, tx, MONKEY_BUTTON, {
-        let mut rng = rand::thread_rng();
-        let index = rng.gen_range(0, button_handlers::<C>(None).len() as u32);
-        FrontendToUserCommand::Button(index)
-    });
-
-    spawn_monkey_task!(alive, monkey, tx, MONKEY_LETTER, {
-        let mut rng = rand::thread_rng();
-        let char_list = vec![
-            rng.gen_range(b'A', b'Z'),
-            rng.gen_range(b'a', b'z'),
-            rng.gen_range(b'0', b'9'),
-            b' ',
-        ];
-        let c = *rng.choose(&char_list).unwrap() as u32;
-        FrontendToUserCommand::Character(c)
-    });
-
-    spawn_monkey_task!(alive, monkey, tx, MONKEY_ARROW, {
-        let mut rng = rand::thread_rng();
-        let key = *rng.choose(&[37, 39, 37, 39, 37, 39, 38, 40]).unwrap();
-        FrontendToUserCommand::Keypress(key, false, false, false)
-    });
-
-    spawn_monkey_task!(alive, monkey, tx, MONKEY_BACKSPACE, {
-        FrontendToUserCommand::Keypress(8, false, false, false)
-    });
-
-    spawn_monkey_task!(alive, monkey, tx, MONKEY_ENTER, {
-        FrontendToUserCommand::Keypress(13, false, false, false)
-    });
-
-    spawn_monkey_task!(alive, monkey, tx, MONKEY_CLICK, {
-        let mut rng = rand::thread_rng();
-        FrontendToUserCommand::RandomTarget(rng.gen::<f64>())
-    });
 }

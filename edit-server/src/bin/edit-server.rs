@@ -100,7 +100,7 @@ pub fn default_doc() -> Doc {
 
 # Hello world!
 
-This is edit-text, a web-based rich text editor.
+This is **edit-text**, a web-based rich text editor.
 
 * This is a very early preview.
 
@@ -112,7 +112,7 @@ This is edit-text, a web-based rich text editor.
 
 This app might be easy to break! That's okay though. We'll notice and fix it, and it'll break less in the future.
 
-Type github.com/tcr/edit-text into your search bar for more information.
+Type <http://github.com/tcr/edit-text> into your search bar for more information.
 
 "#;
 
@@ -125,12 +125,15 @@ Type github.com/tcr/edit-text into your search bar for more information.
 fn run_http_server(port: u16, client_proxy: bool) {
     let dist_dir: Box<Dir>;
     let template_dir: Box<Dir>;
+    let static_dir: Box<Dir>;
     if cfg!(feature = "standalone") {
         dist_dir = Box::new(InlineDir(include_dir!("edit-frontend/dist")));
         template_dir = Box::new(InlineDir(include_dir!("edit-frontend/templates")));
+        static_dir = Box::new(InlineDir(include_dir!("edit-frontend/static")));
     } else {
         dist_dir = Box::new(LocalDir(PathBuf::from("../edit-frontend/dist")));
         template_dir = Box::new(LocalDir(PathBuf::from("../edit-frontend/templates")));
+        static_dir = Box::new(LocalDir(PathBuf::from("../edit-frontend/static")));
     }
 
     // Necessary files
@@ -229,6 +232,19 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 return Response::redirect_302("/$/multi");
             },
 
+            (GET) ["/$/static/{target}", target: String] => {
+                if let Some(data) = static_dir.get(Path::new(&target)) {
+                    return Response::from_data(
+                        guess_mime_type(&target).to_string(),
+                        data.clone(),
+                    ).with_etag(request,
+                        format!("{:x}", md5::compute(data)),
+                    );
+                } else {
+                    return Response::empty_404();
+                }
+            },
+
             (GET) ["/$/{target}", target: String] => {
                 if let Some(data) = dist_dir.get(Path::new(&target)) {
                     return Response::from_data(
@@ -281,7 +297,9 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 let body: String = doc_as_html(
                     &get_or_create_page_graphql(
                         &id,
-                        &Doc(doc_span![DocGroup({"tag": "h1"}, [DocChars(&id)])]),
+                        &Doc(doc_span![DocGroup({"tag": "h1"}, [
+                            DocChars(&id, { Style::Normie => None }),
+                        ])]),
                     ).unwrap().0
                 );
 
@@ -334,6 +352,12 @@ fn main() {
     }));
 
     let opt = Opt::from_args();
+
+    // let ron_out = ::ron::ser::to_string(&Doc(::edit_common::markdown::de::markdown_to_doc("# hi").unwrap())).unwrap();
+    // println!("---> ron: {}", ron_out);
+    // let ron_in: Doc = ::ron::de::from_str(&ron_out).unwrap();
+    // println!("---> ron: {:?}", ron_in);
+    // ::std::process::exit(1);
 
     println!("client proxy: {:?}", opt.client_proxy);
 

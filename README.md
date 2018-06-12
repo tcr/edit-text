@@ -74,5 +74,3 @@ This command watches the `edit-frontend` directory and continuously builds all f
 ## License
 
 Apache-2.0
-
-Favicon bear by Alexander Krasnov from the Noun Project
