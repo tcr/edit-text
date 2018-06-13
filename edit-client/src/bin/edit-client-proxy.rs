@@ -53,8 +53,6 @@ pub fn main() {
         process::exit(1);
     }));
 
-    log_wasm!(Debug("main()".to_string()));
-
     println!("started \"wasm\" server");
 
     let opt = Opt::from_args();

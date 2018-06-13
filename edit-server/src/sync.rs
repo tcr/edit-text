@@ -126,7 +126,7 @@ impl SimpleSocket for ClientSocket {
                 // NOTE we ignore this, it's only used for user proxy
             }
             UserToSyncCommand::Log(log) => {
-                log_raw!("client", log);
+                log_raw!(self.client_id, log);
             }
         }
 
