@@ -79,6 +79,15 @@ macro_rules! log_sync {
     );
 }
 
+#[macro_export]
+macro_rules! log_raw {
+    ($source:expr, $x:expr) => (
+        {
+            $crate::log::SERVER_LOG_TX.log(($source).to_string(), ($x).to_string());
+        }
+    );
+}
+
 pub fn log_sync_init(pool: DbPool) -> Option<DbPool> {
     SERVER_LOG_TX.replace_db_pool(pool)
 }

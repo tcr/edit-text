@@ -6,7 +6,29 @@ use extern::{
     std::path::PathBuf,
     std::sync::{Arc, Mutex},
     std::io::prelude::*,
+    std::cell::RefCell,
 };
+
+thread_local! {
+    pub static CLIENT_LOG_SENDER: RefCell<Option<Sender<UserToSyncCommand>>> = RefCell::new(None);
+}
+
+pub fn log_init(tx: Sender<UserToSyncCommand>) -> Option<Sender<UserToSyncCommand>> {
+    CLIENT_LOG_SENDER.with(|sender| {
+        sender.replace(Some(tx))
+    })
+}
+
+pub fn log_send(data: &str) {
+    CLIENT_LOG_SENDER.with(|sender| {
+        if let Some(ref sender) = *sender.borrow() {
+            sender.send(UserToSyncCommand::Log(data.to_string()));
+        } else {
+            eprintln!("(~) error: logging without a logger: {}",
+                &data.chars().take(256).collect::<String>());
+        }
+    })
+}
 
 lazy_static! {
     pub static ref CLIENT_LOG_TX: Arc<Mutex<Sender<String>>> = {
@@ -75,13 +97,12 @@ macro_rules! log_wasm {
         {
             // Load the logging enum variants locally.
             use $crate::log::LogWasm::*;
+            use $crate::log::log_send;
 
             // Serialize body.
             let ron = ::ron::ser::to_string(&$x).unwrap();
 
-            // Get value.
-            let tx = $crate::log::CLIENT_LOG_TX.lock().unwrap();
-            let _ = tx.send(ron);
+            log_send(&ron);
         }
     );
 }

@@ -125,6 +125,9 @@ impl SimpleSocket for ClientSocket {
             UserToSyncCommand::TerminateProxy => {
                 // NOTE we ignore this, it's only used for user proxy
             }
+            UserToSyncCommand::Log(log) => {
+                log_raw!("client", log);
+            }
         }
 
         Ok(())

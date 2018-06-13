@@ -1,4 +1,4 @@
-#![feature(extern_in_paths)]
+#![feature(extern_in_paths, crate_in_paths)]
 
 extern crate edit_common;
 extern crate edit_client;
@@ -209,6 +209,9 @@ fn setup_client(
 ) {
     let (tx_sync, rx_sync) = unbounded();
 
+    // Initialize logger.
+    ::crate::log::log_init(tx_sync.clone());
+
     let monkey = Arc::new(AtomicBool::new(false));
     let alive = Arc::new(AtomicBool::new(true));
 
@@ -242,9 +245,13 @@ fn setup_client(
 
     // Operate on all incoming tasks.
     //TODO possible to delay naming or spawning until init was handled?
+    let tx_sync_2 = tx_sync.clone();
     let _ = thread::Builder::new()
         .name(format!("setup_client({})", name))
         .spawn::<_, Result<(), Error>>(move || {
+            // TODO can we inherit thread locals??
+            ::crate::log::log_init(tx_sync_2.clone());
+
             while let Ok(task) = rx_task.recv() {
                 client.handle_task(task)?;
             }

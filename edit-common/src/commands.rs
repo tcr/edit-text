@@ -4,6 +4,7 @@ use oatie::doc::*;
 pub enum UserToSyncCommand {
     // Connect(String),
     Commit(String, Op, usize),
+    Log(String),
     TerminateProxy,
 }
 
