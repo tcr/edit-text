@@ -7,6 +7,7 @@ use extern::{
     std::sync::{Arc, Mutex},
     std::io::prelude::*,
     std::cell::RefCell,
+    serde_json,
 };
 
 thread_local! {
@@ -49,12 +50,19 @@ macro_rules! log_wasm {
     ($x:expr) => (
         {
             // Load the logging enum variants locally.
-            // use $crate::log::LogWasm::*;
+            use $crate::log::LogWasm::*;
 
             // Serialize body.
-            // let ron = ::ron::ser::to_string(&$x).unwrap();
+            let data = ::ron::ser::to_string(&$x).unwrap();
 
             // console_log!("[WASM_LOG] {}", ron);
+
+            let req = ::edit_common::commands::UserToFrontendCommand::UserToSyncCommand(
+                ::edit_common::commands::UserToSyncCommand::Log(data.to_string()),
+            );
+            let data = ::serde_json::to_string(&req).unwrap();
+            use $crate::wasm::sendCommandToJS;
+            let _ = sendCommandToJS(&data);
         }
     );
 }
@@ -69,9 +77,9 @@ macro_rules! log_wasm {
             use $crate::log::log_send;
 
             // Serialize body.
-            let ron = ::ron::ser::to_string(&$x).unwrap();
+            let data = ::ron::ser::to_string(&$x).unwrap();
 
-            log_send(&ron);
+            log_send(&data);
         }
     );
 }
