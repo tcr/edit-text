@@ -7,10 +7,14 @@ use std::env;
 
 pub mod queries;
 pub mod schema;
+pub mod types;
 
 pub use self::queries::*;
+pub use self::types::*;
 
-pub fn db_pool_create() -> r2d2::Pool<ConnectionManager<SqliteConnection>> {
+pub type DbPool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
+
+pub fn db_pool_create() -> DbPool {
     dotenv().ok();
 
     let mut database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -30,21 +34,4 @@ pub fn db_connection() -> SqliteConnection {
 
     SqliteConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url))
-}
-
-pub type DbPool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
-
-#[derive(Queryable, Debug)]
-pub struct Post {
-    pub id: String,
-    pub body: String,
-}
-
-use self::schema::posts;
-
-#[derive(Insertable)]
-#[table_name = "posts"]
-pub struct NewPost<'a> {
-    pub id: &'a str,
-    pub body: &'a str,
 }

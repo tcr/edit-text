@@ -19,7 +19,7 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(module = "./../network")]
 extern "C" {
-    /// Send a command *to* the js client.
+    /// Send a command *from* the client *to* the frontend.
     pub fn sendCommandToJS(input: &str) -> u32;
 }
 
@@ -62,7 +62,6 @@ impl ClientImpl for WasmClient {
 
 #[wasm_bindgen]
 pub fn wasm_setup() -> u32 {
-    //input_ptr: *mut c_char) -> u32 {
 
     let editor_id = "$$$$$$".to_string();
 
@@ -91,7 +90,7 @@ pub fn wasm_setup() -> u32 {
     0
 }
 
-/// Send a command *to* the wasm client.
+/// Send a command *from* the frontend *to* the client.
 #[wasm_bindgen]
 pub fn wasm_command(input: &str) -> u32 {
     let req_parse: Result<Task, _> = serde_json::from_slice(&input.as_bytes());

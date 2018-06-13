@@ -1,0 +1,5 @@
+CREATE TABLE logs (
+  rowid INTEGER NOT NULL PRIMARY KEY,
+  source VARCHAR NOT NULL,
+  body TEXT NOT NULL
+)

@@ -1,10 +1,10 @@
 //! Synchronization server. Threads for websockets and graphql.
 
-use crate::{carets::*, db::*, graphql::sync_graphql_server, state::*};
+use crate::{carets::*, db::*, graphql::sync_graphql_server, log::log_sync_init, state::*};
 
 use extern::{
     crossbeam_channel::{unbounded, Receiver as CCReceiver, Sender as CCSender},
-    edit_common::commands::*, failure::Error, oatie::doc::*, rand::{thread_rng, Rng}, ron,
+    edit_common::commands::*, failure::Error, oatie::doc::*, rand::{thread_rng, Rng},
     serde_json, simple_ws, simple_ws::*, std::{collections::HashMap, thread, time::Duration},
     thread_spawn::thread_spawn, url::Url, ws,
 };
@@ -107,7 +107,7 @@ impl SimpleSocket for ClientSocket {
     fn handle_message(&mut self, data: &[u8]) -> Result<(), Error> {
         let command: UserToSyncCommand = serde_json::from_slice(&data)?;
 
-        log_sync!(ClientPacket(command.clone()));
+        log_sync!("SERVER", ClientPacket(command.clone()));
 
         match command {
             UserToSyncCommand::Commit(client_id, op, version) => {
@@ -125,6 +125,9 @@ impl SimpleSocket for ClientSocket {
             UserToSyncCommand::TerminateProxy => {
                 // NOTE we ignore this, it's only used for user proxy
             }
+            UserToSyncCommand::Log(log) => {
+                log_raw!(self.client_id, log);
+            }
         }
 
         Ok(())
@@ -136,7 +139,7 @@ impl SimpleSocket for ClientSocket {
             ClientUpdate::Disconnect {
                 client_id: self.client_id.to_owned(),
             },
-        ))?;
+        ));
 
         Ok(())
     }
@@ -274,7 +277,7 @@ pub fn spawn_sync_thread(
         clients: vec![],
     };
 
-    while let Ok(notification) = rx_notify.recv() {
+    while let Some(notification) = rx_notify.recv() {
         // let now = Instant::now()
 
         // Wait a set duration between transforms.
@@ -341,16 +344,20 @@ impl PageMaster {
 fn spawn_page_master(db_pool: DbPool, rx_master: CCReceiver<ClientNotify>) {
     let mut page_map = PageMaster::new(db_pool);
 
-    while let Ok(ClientNotify(page_id, notification)) = rx_master.recv() {
+    while let Some(ClientNotify(page_id, notification)) = rx_master.recv() {
         let _ = page_map.acquire_page(&page_id).send(notification);
     }
 }
 
 // TODO use _period
 pub fn sync_socket_server(port: u16, _period: usize) {
-    log_sync!(Spawn);
 
     let db_pool = db_pool_create();
+
+    // Start recorder.
+    log_sync_init(db_pool.clone());
+
+    log_sync!("SERVER", Spawn);
 
     // Spawn master coordination thread.
     let (tx_master, rx_master) = unbounded::<ClientNotify>();
@@ -375,7 +382,7 @@ pub fn sync_socket_server(port: u16, _period: usize) {
     let _ = ws::listen(url, {
         take!(=tx_master);
         move |out| {
-            log_sync!(ClientConnect);
+            log_sync!("SERVER", ClientConnect);
 
             eprintln!("Client connected.");
 

@@ -6,38 +6,30 @@ use extern::{
     std::path::PathBuf,
     std::sync::{Arc, Mutex},
     std::io::prelude::*,
+    std::cell::RefCell,
+    serde_json,
 };
 
-lazy_static! {
-    pub static ref CLIENT_LOG_TX: Arc<Mutex<Sender<String>>> = {
-        use std::env::var;
+thread_local! {
+    pub static CLIENT_LOG_ID: RefCell<Option<String>> = RefCell::new(None);
+    pub static CLIENT_LOG_SENDER: RefCell<Option<Sender<UserToSyncCommand>>> = RefCell::new(None);
+}
 
-        eprintln!("wtf ....");
+pub fn log_init(tx: Sender<UserToSyncCommand>) -> Option<Sender<UserToSyncCommand>> {
+    CLIENT_LOG_SENDER.with(|sender| {
+        sender.replace(Some(tx))
+    })
+}
 
-        let (tx, rx) = unbounded();
-        let _ = ::std::thread::spawn(move || {
-            let path = if let Ok(log_file) = var("EDIT_CLIENT_LOG") {
-                PathBuf::from(log_file)
-            } else {
-                // No file specified, all output is blackholed.
-                return;
-            };
-
-            eprintln!("------> {:?}", path);
-
-            // Crate the file.
-            let mut f = File::create(path).unwrap();
-
-            // Write all input to the log file.
-            while let Ok(value) = rx.recv() {
-                let _ = writeln!(f, "{}", value);
-                // let _ = f.sync_data();
-            }
-        });
-
-        // The static variable is the transmission channel.
-        Arc::new(Mutex::new(tx))
-    };
+pub fn log_send(data: &str) {
+    CLIENT_LOG_SENDER.with(|sender| {
+        if let Some(ref sender) = *sender.borrow() {
+            sender.send(UserToSyncCommand::Log(data.to_string()));
+        } else {
+            eprintln!("(~) error: logging without a logger: {}",
+                &data.chars().take(256).collect::<String>());
+        }
+    })
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -58,12 +50,19 @@ macro_rules! log_wasm {
     ($x:expr) => (
         {
             // Load the logging enum variants locally.
-            // use $crate::log::LogWasm::*;
+            use $crate::log::LogWasm::*;
 
             // Serialize body.
-            // let ron = ::ron::ser::to_string(&$x).unwrap();
+            let data = ::ron::ser::to_string(&$x).unwrap();
 
             // console_log!("[WASM_LOG] {}", ron);
+
+            let req = ::edit_common::commands::UserToFrontendCommand::UserToSyncCommand(
+                ::edit_common::commands::UserToSyncCommand::Log(data.to_string()),
+            );
+            let data = ::serde_json::to_string(&req).unwrap();
+            use $crate::wasm::sendCommandToJS;
+            let _ = sendCommandToJS(&data);
         }
     );
 }
@@ -75,13 +74,12 @@ macro_rules! log_wasm {
         {
             // Load the logging enum variants locally.
             use $crate::log::LogWasm::*;
+            use $crate::log::log_send;
 
             // Serialize body.
-            let ron = ::ron::ser::to_string(&$x).unwrap();
+            let data = ::ron::ser::to_string(&$x).unwrap();
 
-            // Get value.
-            let tx = $crate::log::CLIENT_LOG_TX.lock().unwrap();
-            let _ = tx.send(ron);
+            log_send(&data);
         }
     );
 }
