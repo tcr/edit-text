@@ -1,0 +1,4 @@
+CREATE TABLE logs (
+  source VARCHAR NOT NULL PRIMARY KEY,
+  body TEXT NOT NULL
+)

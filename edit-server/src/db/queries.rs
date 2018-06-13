@@ -62,3 +62,25 @@ pub fn get_single_page_raw(db: &SqliteConnection, input_id: &str) -> Option<Post
 
     return posts.filter(id.eq(input_id)).first::<Post>(db).ok();
 }
+
+// Logs
+
+pub fn create_log<'a>(conn: &SqliteConnection, source: &'a str, body: &'a str) -> Result<usize, Error> {
+    use super::schema::logs;
+
+    let new_log = NewLog {
+        source: source,
+        body: &body,
+    };
+
+    Ok(diesel::replace_into(logs::table)
+        .values(&new_log)
+        .execute(conn)?)
+}
+
+pub fn all_logs(db: &SqliteConnection) -> Vec<Log> {
+    use super::schema::logs::dsl::*;
+
+    let results = logs.load::<Log>(db).expect("Error loading posts");
+    results
+}
