@@ -1,43 +1,56 @@
-use super::client;
+use crate::{
+    db::{
+        DbPool,
+        queries::*,
+    },
+};
+
 use extern::{
     crossbeam_channel::{unbounded, Sender},
     edit_common::commands::*,
-    std::fs::File,
-    std::path::PathBuf,
     std::sync::{Arc, Mutex},
-    std::io::prelude::*,
+    std::mem,
 };
 
-lazy_static! {
-    pub static ref SERVER_LOG_TX: Arc<Mutex<Sender<String>>> = {
-        use std::env::var;
+pub struct Logger {
+    db_pool: Arc<Mutex<Option<DbPool>>>,
+    sender: Sender<(String, String)>,
+}
 
-        eprintln!("wtf ....");
+impl Logger {
+    fn spawn() -> Logger {
+        let db_pool = Arc::new(Mutex::new(None));
 
-        let (tx, rx) = unbounded();
+        let (tx, rx) = unbounded::<(String, String)>();
+        let db_pool_inner = db_pool.clone();
         let _ = ::std::thread::spawn(move || {
-            let path = if let Ok(log_file) = var("EDIT_SERVER_LOG") {
-                PathBuf::from(log_file)
-            } else {
-                // No file specified, all output is blackholed.
-                return;
-            };
-
-            eprintln!("------> {:?}", path);
-
-            // Crate the file.
-            let mut f = File::create(path).unwrap();
-
             // Write all input to the log file.
-            while let Ok(value) = rx.recv() {
-                let _ = writeln!(f, "{}", value);
-                // let _ = f.sync_data();
+            while let Some((source, log)) = rx.recv() {
+                if let &mut Some(ref mut pool) = &mut *db_pool_inner.lock().unwrap() {
+                    let conn = DbPool::get(pool).unwrap();
+                    let _ = create_log(&conn, &source, &log);
+                }
             }
         });
 
-        // The static variable is the transmission channel.
-        Arc::new(Mutex::new(tx))
-    };
+        Logger {
+            db_pool,
+            sender: tx,
+        }
+    }
+
+    fn replace_db_pool(&self, db_pool: DbPool) -> Option<DbPool> {
+        let db_pool_inner = &mut *self.db_pool.lock().unwrap();
+        mem::replace(db_pool_inner, Some(db_pool))
+    }
+
+    pub fn log(&self, source: String, value: String) -> () {
+        self.sender.send((source, value));
+    }
+}
+
+lazy_static! {
+    pub static ref SERVER_LOG_TX: Logger = Logger::spawn();
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -52,7 +65,7 @@ pub enum LogSync {
 
 #[macro_export]
 macro_rules! log_sync {
-    ($x:expr) => (
+    ($source:expr, $x:expr) => (
         {
             // Load the logging enum variants locally.
             use $crate::log::LogSync::*;
@@ -60,9 +73,12 @@ macro_rules! log_sync {
             // Serialize body.
             let ron = ::ron::ser::to_string(&$x).unwrap();
 
-            // Get value.
-            let tx = $crate::log::SERVER_LOG_TX.lock().unwrap();
-            let _ = tx.send(ron);
+            // Send value.
+            $crate::log::SERVER_LOG_TX.log(($source).to_string(), ron);
         }
     );
+}
+
+pub fn log_sync_init(pool: DbPool) -> Option<DbPool> {
+    SERVER_LOG_TX.replace_db_pool(pool)
 }

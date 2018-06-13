@@ -73,14 +73,28 @@ pub fn create_log<'a>(conn: &SqliteConnection, source: &'a str, body: &'a str) -
         body: &body,
     };
 
-    Ok(diesel::replace_into(logs::table)
+    Ok(diesel::insert_into(logs::table)
         .values(&new_log)
         .execute(conn)?)
 }
 
-pub fn all_logs(db: &SqliteConnection) -> Vec<Log> {
+pub fn all_logs(db: &SqliteConnection) -> Result<Vec<Log>, Error> {
     use super::schema::logs::dsl::*;
 
-    let results = logs.load::<Log>(db).expect("Error loading posts");
-    results
+    let results = logs.load::<Log>(db)?;
+    Ok(results)
+}
+
+pub fn select_logs(db: &SqliteConnection, input_source: &str) -> Result<Vec<Log>, Error> {
+    use super::schema::logs::dsl::*;
+
+    let results = logs.filter(source.eq(input_source)).load(db)?;
+    Ok(results)
+}
+
+pub fn clear_all_logs(db: &SqliteConnection) -> Result<usize, Error> {
+    use super::schema::logs::dsl::*;
+
+    Ok(diesel::delete(logs).execute(db)?)
+
 }

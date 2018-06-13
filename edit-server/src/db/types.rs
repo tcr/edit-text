@@ -13,8 +13,9 @@ pub struct NewPost<'a> {
     pub body: &'a str,
 }
 
-#[derive(Queryable, Debug)]
+#[derive(Queryable, Debug, Serialize, Deserialize)]
 pub struct Log {
+    pub rowid: i32,
     pub source: String,
     pub body: String,
 }

@@ -1,5 +1,6 @@
 table! {
-    logs (source) {
+    logs (rowid) {
+        rowid -> Integer,
         source -> Text,
         body -> Text,
     }

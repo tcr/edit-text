@@ -2,46 +2,6 @@
 #![feature(non_modrs_mods)]
 #![feature(plugin, proc_macro)]
 
-use edit_common::commands::*;
-use std::fs::File;
-use std::path::Path;
-use std::sync::Arc;
-use std::sync::Mutex;
-
-lazy_static! {
-    static ref LOG_SYNC_FILE: Arc<Mutex<File>> = {
-        let path = Path::new("./log/server");
-        Arc::new(Mutex::new(File::create(path).unwrap()))
-    };
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub enum LogSync {
-    Launch,
-    ServerSpawn,
-    ClientConnect,
-    ClientPacket(UserToSyncCommand),
-    Debug(String),
-    Spawn,
-}
-
-#[macro_export]
-macro_rules! log_sync {
-    ($x:expr) => {{
-        use std::env::var;
-        use std::io::prelude::*;
-
-        // Only if MERCUTIO_SYNC_LOG=1 is set
-        if var("MERCUTIO_SYNC_LOG") == Ok("1".to_string()) {
-            use $crate::LogSync::*;
-            use $crate::LOG_SYNC_FILE;
-            let mut file_guard = LOG_SYNC_FILE.lock().unwrap();
-            let _ = writeln!(*file_guard, "{}", ron::ser::to_string(&$x).unwrap());
-            let _ = file_guard.sync_data();
-        }
-    }};
-}
-
 extern crate colored;
 extern crate crossbeam_channel;
 extern crate thread_spawn;
@@ -79,6 +39,9 @@ extern crate rouille;
 extern crate juniper;
 extern crate r2d2;
 extern crate r2d2_diesel;
+
+#[macro_use]
+pub mod log;
 
 // Macros can only be used after they are defined
 pub mod carets;

@@ -103,6 +103,9 @@ enum Cli {
         #[structopt(name = "SHELL")]
         shell: Shell,
     },
+
+    #[structopt(name = "logs", about = "Dump database logs.")]
+    Logs { args: Vec<String> },
 }
 
 
@@ -233,7 +236,7 @@ fn run() -> Result<(), Error> {
                     ",
                 )?;
             } else {
-                println!("Database path: edit.sqlite3");
+                println!("Database path: edit-server/edit.sqlite3");
             }
 
             // if !Path::new("edit-frontend/dist/edit.wasm").exists() {
@@ -506,6 +509,19 @@ fn run() -> Result<(), Error> {
                 shell,
                 &mut ::std::io::stdout()
             );
+        }
+
+        Cli::Logs { args } => {
+            execute!(
+                r"
+                    cd edit-server
+                    export RUST_BACKTRACE=1
+                    export DATABASE_URL=edit-server/edit.sqlite3
+                    cargo run --bin edit-server-logs -- {args}
+                ",
+                // release_flag = release_flag,
+                args = args,
+            )?;
         }
     }
 
