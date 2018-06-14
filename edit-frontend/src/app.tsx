@@ -159,7 +159,7 @@ class LocalButtons extends React.Component {
 
         <button id="width" onClick={() => this.toggleWidth()}>Toggle Page Width</button>
 
-        <b>Client: <kbd>{this.props.editorID}</kbd></b>
+        <b>Client: <kbd tabIndex={0}>{this.props.editorID}</kbd></b>
       </div>
     );
   }

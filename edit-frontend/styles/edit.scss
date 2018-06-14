@@ -32,6 +32,15 @@ body {
     left: 0;
     right: 0;
     overflow: auto;
+
+    kbd {
+        border: 1px dashed #eee;
+        background: #fea;
+        padding: 2px 5px;
+        border-radius: 5px;
+        font-weight: normal;
+        font-family: Consolas, 'Courier New', Courier, monospace;
+    }
 }
 
 #logo {
@@ -84,10 +93,6 @@ body {
         border-bottom: 3px solid rgb(255, 168, 69);
         color: #000;
     }
-}
-
-kbd {
-    font-family: monospace !important;
 }
 
 #parent {
