@@ -265,9 +265,13 @@ export class EditorFrame extends React.Component {
     const editor = this;
 
     if (parse.Init) {
+      let editorID = parse.Init;
+
       this.setState({
-        editorID: parse.Init,
-      })
+        editorID,
+      });
+
+      (window as any).Raven.setExtraContext({ editor_id: editorID });
     }
 
     else if (parse.Update) {

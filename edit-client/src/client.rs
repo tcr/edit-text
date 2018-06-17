@@ -266,7 +266,7 @@ pub struct Client {
 }
 
 /// Trait shared by the "wasm" and "client proxy" implementations.
-/// Most methods are implemented on the trait, not its implementors.
+/// Most methods are implemented on this trait, not its implementors.
 pub trait ClientImpl {
     fn state(&mut self) -> &mut Client;
     fn send_client(&self, req: &UserToFrontendCommand) -> Result<(), Error>;

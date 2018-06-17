@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<html>
+<head>
+
 <link rel="icon" type="image/png" href="/favicon.png">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
 @font-face {
   font-family: 'TeX Gyre Heros';
@@ -19,7 +23,13 @@
 
 <style>{{{stylesheet}}}</style>
 
+<script src="https://cdn.ravenjs.com/3.26.2/raven.min.js" crossorigin="anonymous"></script>
+<script>
+Raven.config('https://c221eba12d7b4e279b01764577063af1@sentry.io/1227661').install();
+</script>
+
 <title>edit-text</title>
+</head>
 
 <body>
   <div id="content">

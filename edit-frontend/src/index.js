@@ -10,4 +10,7 @@ export function getWasmModule() {
 
 // Launch the application.
 import * as app from './app';
-app.start();
+
+window.Raven.context(() => {
+    app.start();
+});
