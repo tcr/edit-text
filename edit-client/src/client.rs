@@ -114,6 +114,14 @@ fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
             true,
             Box::new(|client| client.client_op(|doc| caret_word_move(doc, true))),
         ),
+        // OPT-backspace
+        KeyHandler(
+            8,
+            false,
+            false,
+            true,
+            Box::new(|client| client.client_op(|doc| caret_delete_word(doc))),
+        )
     ]
 }
 
