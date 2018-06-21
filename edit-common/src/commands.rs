@@ -14,7 +14,7 @@ pub enum SyncToUserCommand {
     Init(String, DocSpan, usize),
 
     // New document, version, client-id, operation
-    Update(DocSpan, usize, String, Op),
+    Update(usize, String, Op),
 }
 
 // Commands received from frontend.

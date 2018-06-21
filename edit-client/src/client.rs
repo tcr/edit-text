@@ -2,7 +2,7 @@ use crate::{actions::*, random::*, state::*};
 
 use extern::{
     edit_common::{commands::*, doc_as_html}, failure::Error,
-    oatie::{doc::*, validate::validate_doc}, std::sync::atomic::{AtomicBool, Ordering},
+    oatie::{doc::*, validate::validate_doc, OT}, std::sync::atomic::{AtomicBool, Ordering},
     std::sync::Arc,
     std::char::from_u32,
 };
@@ -366,7 +366,6 @@ pub trait ClientImpl {
 
                 // Sync sent us an Update command with a new document version.
                 Task::SyncToUserCommand(SyncToUserCommand::Update(
-                    doc_span,
                     version,
                     client_id,
                     input_op,
@@ -375,8 +374,8 @@ pub trait ClientImpl {
                         return Ok(());
                     }
 
-                    // TODO this can be generated from original_doc X input_op too
-                    let doc = Doc(doc_span);
+                    // Generated from original_doc transformed with input_op
+                    let doc = OT::apply(&self.state().client_doc.original_doc, &input_op);
 
                     // If this operation is an acknowledgment...
                     if self.state().client_id == client_id {

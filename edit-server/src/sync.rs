@@ -176,7 +176,6 @@ impl PageController {
 
         // Broadcast this operation to all connected websockets.
         let command = SyncToUserCommand::Update(
-            self.state.doc.0.clone(),
             self.state.version,
             client_id.to_owned(),
             op,
