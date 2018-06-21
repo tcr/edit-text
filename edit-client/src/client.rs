@@ -231,6 +231,9 @@ fn native_command<C: ClientImpl>(client: &mut C, req: FrontendToUserCommand) -> 
             client.client_op(|doc| add_string(doc, &text))?;
         }
         FrontendToUserCommand::RandomTarget(pos) => {
+            // TODO this should never happen, because we clarify RandomTarget 
+            // beforehand
+
             let cursors = random_cursor(&client.state().client_doc.doc)?;
             let idx = (pos * (cursors.len() as f64)) as usize;
 
@@ -292,7 +295,7 @@ pub trait ClientImpl {
     // TODO can we catch_unwind inside handle task so we can add our own
     // "TASK: data" dump into the error payload? So then it's easy to
     // corrolate with the logs.
-    fn handle_task(&mut self, value: Task) -> Result<(), Error>
+    fn handle_task(&mut self, mut value: Task) -> Result<(), Error>
     where
         Self: Sized,
     {
@@ -308,6 +311,14 @@ pub trait ClientImpl {
         // TODO Also is it possible to correct the use of AssertUnwindSafe? So it's correct?
         let res = ::std::panic::catch_unwind(::std::panic::AssertUnwindSafe(move || -> Result<(), Error> {
             let delay_log = self.state().client_id == "$$$$$$";
+
+            // Rewrite random targets here.
+            if let Task::FrontendToUserCommand(FrontendToUserCommand::RandomTarget(pos)) = value {
+                let cursors = random_cursor(&self.state().client_doc.doc)?;
+                let idx = (pos * (cursors.len() as f64)) as usize;
+
+                value = Task::FrontendToUserCommand(FrontendToUserCommand::CursorAnchor(cursors[idx].clone()));
+            }
 
             if !delay_log {
                 log_wasm!(Task(self.state().client_id.clone(), value.clone()));

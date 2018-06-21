@@ -239,12 +239,10 @@ export class Editor extends React.Component {
     // Only support text elements.
     if (pos !== null) {
       if (anchor) {
-        console.log('anchor');
         this.props.network.nativeCommand(commands.CursorAnchor(
           resolveCursorFromPosition(pos.textNode, pos.offset),
         ));
       } else {
-        console.log('target');
         this.props.network.nativeCommand(commands.CursorTarget(
           resolveCursorFromPosition(pos.textNode, pos.offset),
         ));

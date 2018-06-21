@@ -2,12 +2,12 @@
 import '../styles/edit.scss';
 
 // import * as Clipboard from 'clipboard';
-import * as commands from './commands';
-import * as util from './util';
 import * as React from 'react';
-
 import * as ReactDOM from 'react-dom';
 import axios from 'axios';
+import * as Raven from 'raven-js';
+
+import * as commands from './commands';
 import * as route from './route';
 import { Editor } from './editor';
 import { Network, ProxyNetwork, WasmNetwork } from './network';
@@ -271,7 +271,12 @@ export class EditorFrame extends React.Component {
         editorID,
       });
 
-      (window as any).Raven.setExtraContext({ editor_id: editorID });
+      console.info('Editor "%s" connected.', editorID);
+
+      // Log the editor ID.
+      Raven.setExtraContext({
+        editor_id: editorID,
+      });
     }
 
     else if (parse.Update) {
@@ -367,8 +372,5 @@ export function start() {
 
   // Connect to remote sockets.
   network.nativeConnect()
-    .then(() => network.syncConnect())
-    .then(() => {
-      console.log('edit-text initialized.');
-    });
+    .then(() => network.syncConnect());
 }

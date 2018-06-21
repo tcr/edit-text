@@ -344,13 +344,6 @@ struct Opt {
 }
 
 fn main() {
-    // Set aborting process handler.
-    let orig_handler = panic::take_hook();
-    panic::set_hook(Box::new(move |panic_info| {
-        orig_handler(panic_info);
-        process::exit(1);
-    }));
-
     let opt = Opt::from_args();
 
     // let ron_out = ::ron::ser::to_string(&Doc(::edit_common::markdown::de::markdown_to_doc("# hi").unwrap())).unwrap();

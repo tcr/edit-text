@@ -8,25 +8,40 @@ extern crate rand;
 extern crate serde;
 extern crate serde_json;
 extern crate take_mut;
+extern crate wbg_rand;
+extern crate console_error_panic_hook;
 
 use super::client::*;
 use super::state::*;
+use super::monkey::*;
 use edit_common::commands::*;
 use failure::Error;
 use std::sync::atomic::AtomicBool;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc};
+use std::sync::atomic::Ordering;
 use wasm_bindgen::prelude::*;
+
+lazy_static! {
+    static ref WASM_ALIVE: Arc<AtomicBool> = Arc::new(AtomicBool::new(true));
+    static ref WASM_MONKEY: Arc<AtomicBool> = Arc::new(AtomicBool::new(false));
+}
+
+// JS imports
 
 #[wasm_bindgen(module = "./../network")]
 extern "C" {
     /// Send a command *from* the client *to* the frontend.
     pub fn sendCommandToJS(input: &str) -> u32;
+
+    pub fn forwardWasmTask(input: &str);
 }
 
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = console)]
     pub fn log(msg: &str);
+
+    pub fn setTimeout(closure: &Closure<FnMut()>, time: u32);
 }
 
 // A macro to provide `println!(..)`-style syntax for `console.log` logging.
@@ -35,12 +50,11 @@ macro_rules! console_log {
     ($($t:tt)*) => ($crate::wasm::log(&format!($($t)*)))
 }
 
-lazy_static! {
-    static ref WASM_CLIENT: Mutex<Option<WasmClient>> = Mutex::new(None);
-}
+// WebAssembly client.
 
+#[wasm_bindgen]
 pub struct WasmClient {
-    pub state: Client,
+    state: Client,
 }
 
 impl ClientImpl for WasmClient {
@@ -60,52 +74,82 @@ impl ClientImpl for WasmClient {
     }
 }
 
+// Entry point.
+
 #[wasm_bindgen]
-pub fn wasm_setup() -> u32 {
+pub fn wasm_setup() -> WasmClient {
+    // Set the panic hook to log to console.error.
+    console_error_panic_hook::set_once();
 
     let editor_id = "$$$$$$".to_string();
 
-    {
-        let mut client_lock = WASM_CLIENT.lock().unwrap();
+    // Setup monkey tasks.
+    setup_monkey::<WasmClient>(Scheduler::new(WASM_ALIVE.clone(), WASM_MONKEY.clone()));
 
-        let monkey = Arc::new(AtomicBool::new(false));
-        let alive = Arc::new(AtomicBool::new(true));
+    let client = WasmClient {
+        state: Client {
+            client_id: editor_id,
+            client_doc: ClientDoc::new(),
 
-        let client = WasmClient {
-            state: Client {
-                client_id: editor_id,
-                client_doc: ClientDoc::new(),
+            monkey: WASM_MONKEY.clone(),
+            alive: WASM_ALIVE.clone(),
+            task_count: 0,
+        },
+    };
 
-                monkey,
-                alive,
-                task_count: 0,
-            },
-        };
+    client.setup_controls(None);
 
-        client.setup_controls(None);
-
-        *client_lock = Some(client);
-    }
-
-    0
+    client
 }
 
-/// Send a command *from* the frontend *to* the client.
 #[wasm_bindgen]
-pub fn wasm_command(input: &str) -> u32 {
-    let req_parse: Result<Task, _> = serde_json::from_slice(&input.as_bytes());
+impl WasmClient {
+    /// Send a command *from* the frontend *to* the client.
+    fn client_task(&mut self, input: Task) -> Result<(), Error> {
+        // Do a random roll to see how we react when panicking.
+        // use wbg_rand::Rng;
+        // let mut rng = wbg_rand::wasm_rng();
+        // if rng.gen_range(0, 100) == 0 {
+        //     panic!("{} encountered a Panic Monkey!!!!!!!!!!!!", self.state().client_id);
+        // }
 
-    let mut client_lock = WASM_CLIENT.lock().unwrap();
-    let client = client_lock.as_mut().unwrap();
-
-    match req_parse.map(|task| client.handle_task(task)) {
-        Ok(_) => {}
-        Err(err) => {
-            println!("{:?}", err);
-            return 1;
+        match self.handle_task(input) {
+            Ok(_) => {}
+            Err(err) => {
+                console_log!("error handling task: {:?}", err);
+                return Err(err);
+            }
         }
+
+        // Default status
+        Ok(())
     }
 
-    // Default status
-    0
+
+    /// Send a command *from* the frontend *to* the client.
+    pub fn command(&mut self, input: &str) -> u32 {
+        let req_parse: Result<Task, _> = serde_json::from_slice(&input.as_bytes());
+
+        match req_parse {
+            Ok(task) => {
+                if self.client_task(task).is_err() {
+                    return 1;
+                }
+            }
+            Err(err) => {
+                console_log!("error parsing task: {:?}", err);
+                return 1;
+            }
+        }
+
+        // Default status
+        0
+    }
 }
+
+#[wasm_bindgen]
+pub fn wasm_close() {
+    WASM_ALIVE.store(false, Ordering::Relaxed);
+    WASM_MONKEY.store(false, Ordering::Relaxed);
+}
+

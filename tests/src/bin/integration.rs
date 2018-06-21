@@ -20,7 +20,6 @@ use rand::thread_rng;
 use std::process::Stdio;
 use std::sync::atomic::{AtomicU16, Ordering};
 use std::sync::{Arc, Barrier};
-use std::thread;
 
 static DRIVER_PORT_COUNTER: AtomicU16 = AtomicU16::new(4445);
 

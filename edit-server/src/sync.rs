@@ -149,7 +149,7 @@ pub struct PageController {
     page_id: String,
     db_pool: DbPool,
     state: SyncState,
-    clients: Vec<simple_ws::Sender>,
+    clients: HashMap<String, simple_ws::Sender>,
 }
 
 impl PageController {
@@ -183,12 +183,11 @@ impl PageController {
     /// Forward command to everyone in our client set.
     fn broadcast_client_command(&self, command: &SyncToUserCommand) {
         let json = serde_json::to_string(&command).unwrap();
-        for client in &self.clients {
+        for (_, client) in &self.clients {
             let _ = client.lock().unwrap().send(json.clone());
         }
     }
 
-    /// Forward command to everyone in our client set.
     fn send_client_command(
         &self,
         client: &simple_ws::Sender,
@@ -198,11 +197,23 @@ impl PageController {
         Ok(client.lock().unwrap().send(json.clone())?)
     }
 
+    fn send_client_restart(&self, client_id: &str) -> Result<(), Error> {
+        let code = ws::CloseCode::Restart;
+        let reason = "Server received an updated version of the document.";
+
+        // TODO abort if client doesn't exist, or move the client_id referencing
+        // to its own function
+        self.clients.get(client_id).map(|client| {
+            let _ = client.lock().unwrap().close_with_reason(code, reason);
+        });
+        Ok(())
+    }
+
     /// Forward restart code to everyone in our client set.
     fn broadcast_restart(&self) -> Result<(), Error> {
         let code = ws::CloseCode::Restart;
         let reason = "Server received an updated version of the document.";
-        for client in &self.clients {
+        for (_, client) in &self.clients {
             let _ = client.lock().unwrap().close_with_reason(code, reason);
         }
         Ok(())
@@ -226,7 +237,7 @@ impl PageController {
                 self.state.clients.insert(client_id.to_string(), version);
 
                 // Forward to all in our client set.
-                self.clients.push(out);
+                self.clients.insert(client_id.to_string(), out);
             }
 
             ClientUpdate::Disconnect { client_id } => {
@@ -237,6 +248,7 @@ impl PageController {
 
                 // Remove from our client set.
                 self.state.clients.remove(&client_id);
+                self.clients.remove(&client_id);
             }
 
             ClientUpdate::Commit {
@@ -245,7 +257,15 @@ impl PageController {
                 version,
             } => {
                 // Commit the operation.
-                self.sync_commit(&client_id, op, version);
+                // TODO remove this AssertUnwindSafe, since it's probably not safe.
+                let sync = ::std::panic::catch_unwind(::std::panic::AssertUnwindSafe(|| {
+                    self.sync_commit(&client_id, op, version);
+                }));
+
+                if let Err(err) = sync {
+                    eprintln!("received invalid packet from client: {:?} - {:?}", client_id, err);
+                    // let _ = self.send_client_restart(&client_id);
+                }
             }
 
             ClientUpdate::Overwrite { doc } => {
@@ -253,7 +273,7 @@ impl PageController {
 
                 // Rewrite our state.
                 self.state = SyncState::new(doc, INITIAL_SYNC_VERSION);
-                self.clients = vec![];
+                self.clients = HashMap::new();
             }
         }
     }
@@ -274,7 +294,7 @@ pub fn spawn_sync_thread(
         page_id,
         db_pool,
         state: SyncState::new(inner_doc, INITIAL_SYNC_VERSION),
-        clients: vec![],
+        clients: HashMap::new(),
     };
 
     while let Some(notification) = rx_notify.recv() {

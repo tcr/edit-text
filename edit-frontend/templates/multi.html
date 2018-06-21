@@ -31,8 +31,25 @@
 
 <script>
 
+function getQueryStrings() { 
+  var assoc  = {};
+  var decode = function (s) { return decodeURIComponent(s.replace(/\+/g, " ")); };
+  var queryString = location.search.substring(1); 
+  var keyValues = queryString.split('&'); 
+
+  for(var i in keyValues) { 
+    var key = keyValues[i].split('=');
+    if (key.length > 1) {
+      assoc[decode(key[0])] = decode(key[1]);
+    }
+  } 
+
+  return assoc; 
+}
+
 // Randomize a path and set all iframes hrefs to it.
-var path = '/random' + String(Math.random()).slice(2, 10);
+let path = getQueryStrings()['target'] || ('/random' + String(Math.random()).slice(2, 10));
+
 Array.from(document.querySelectorAll('iframe')).map(function (i) {
   i.src = path;
 });

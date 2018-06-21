@@ -163,15 +163,15 @@ fn run() -> Result<(), Error> {
                     ",
                 )?;
 
-                execute!(
-                    r"
-                        cd ./edit-frontend/src/bindgen
-                        wasm2es6js \
-                            --base64 -o edit_client_bg.js edit_client_bg.wasm
-                    ",
-                )?;
+                // execute!(
+                //     r"
+                //         cd ./edit-frontend/src/bindgen
+                //         wasm2es6js \
+                //             --base64 -o edit_client_bg.js edit_client_bg.wasm
+                //     ",
+                // )?;
 
-                ::std::fs::remove_file("./edit-frontend/src/bindgen/edit_client_bg.wasm")?;
+                // ::std::fs::remove_file("./edit-frontend/src/bindgen/edit_client_bg.wasm")?;
 
                 eprintln!("Done.");
             }

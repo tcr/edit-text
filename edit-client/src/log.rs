@@ -1,13 +1,8 @@
 use super::client;
 use extern::{
-    crossbeam_channel::{unbounded, Sender},
+    crossbeam_channel::{Sender},
     edit_common::commands::*,
-    std::fs::File,
-    std::path::PathBuf,
-    std::sync::{Arc, Mutex},
-    std::io::prelude::*,
     std::cell::RefCell,
-    serde_json,
 };
 
 thread_local! {
@@ -24,7 +19,7 @@ pub fn log_init(tx: Sender<UserToSyncCommand>) -> Option<Sender<UserToSyncComman
 pub fn log_send(data: &str) {
     CLIENT_LOG_SENDER.with(|sender| {
         if let Some(ref sender) = *sender.borrow() {
-            sender.send(UserToSyncCommand::Log(data.to_string()));
+            let _ = sender.send(UserToSyncCommand::Log(data.to_string()));
         } else {
             eprintln!("(~) error: logging without a logger: {}",
                 &data.chars().take(256).collect::<String>());

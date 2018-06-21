@@ -1,6 +1,7 @@
 import * as commands from './commands';
 import * as route from './route';
 import * as index from './index';
+import {WasmClient} from './bindgen/edit_client';
 
 export interface Network {
   onNativeMessage: (any) => void;
@@ -34,7 +35,7 @@ export class ProxyNetwork implements Network {
         route.clientProxyUrl()
       );
       this.nativeSocket.onopen = function (event) {
-        console.log('Editor "%s" is connected.', network.editorID);
+        console.debug('client-proxy socket opened.');
       };
       this.nativeSocket.onmessage = function (event) {
         let parse = JSON.parse(event.data);
@@ -57,6 +58,21 @@ export function sendCommandToJS(msg) {
   sendCommandToJSList.forEach(handler => handler(msg));
 }
 
+let forwardWasmTaskCallback: any = null;
+
+export function forwardWasmTask(msg) {
+  if (forwardWasmTaskCallback) {
+    forwardWasmTaskCallback(msg);
+  }
+}
+
+function WasmError(e, message) {
+    this.name = 'WasmError';
+    this.message = message;
+    this.stack = message + ' ' + e.stack;
+}
+WasmError.prototype = new Error;
+
 export class WasmNetwork implements Network {
   editorID: string;
 
@@ -68,8 +84,9 @@ export class WasmNetwork implements Network {
   deferSync: Promise<WebSocket>;
   deferSyncResolve: Function;
 
-  // TODO remove this
+  // TODO refactor wasmClient, remove Module
   Module: any;
+  wasmClient: WasmClient;
 
   onNativeMessage: (any) => void;
   onNativeClose: () => void; // unused
@@ -83,9 +100,11 @@ export class WasmNetwork implements Network {
 
   nativeCommand(command: commands.Command) {
     delete command.tag;
-    this.Module.wasm_command(JSON.stringify({
-      FrontendToUserCommand: command,
-    }));
+    if (forwardWasmTaskCallback != null) {
+      this.wasmClient.command(JSON.stringify({
+        FrontendToUserCommand: command,
+      }));
+    }
   }
 
   // Wasm connector.
@@ -113,11 +132,23 @@ export class WasmNetwork implements Network {
 
       index.getWasmModule()
       .then(Module => {
-        Module.wasm_setup();
+        let wasmClient = Module.wasm_setup();
   
         setImmediate(() => {
           // Websocket port
           network.Module = Module;
+          network.wasmClient = wasmClient;
+
+          forwardWasmTaskCallback = (msg) => {
+            try {
+              wasmClient.command(msg);
+            } catch (e) {
+              forwardWasmTaskCallback = null;
+
+              throw new WasmError(e, `Error during client command: ${e.message}`);
+            }
+          };
+
           resolve();
         });
       });
@@ -133,14 +164,28 @@ export class WasmNetwork implements Network {
         route.syncUrl()
       );
       syncSocket.onopen = function (event) {
-        console.log('Editor "%s" is connected.', network.editorID);
+        console.debug('server socket opened.');
       };
 
       syncSocket.onmessage = function (event) {
         // console.log('Got message from sync:', event.data);
-        network.Module.wasm_command(JSON.stringify({
-          SyncToUserCommand: JSON.parse(event.data),
-        }));
+        try {
+          if (forwardWasmTaskCallback != null) {
+            network.wasmClient.command(JSON.stringify({
+              SyncToUserCommand: JSON.parse(event.data),
+            }));
+          }
+        } catch (e) {
+          // Kill the current process, we triggered an exception.
+          forwardWasmTaskCallback = null;
+          network.Module.wasm_close();
+          // syncSocket.close();
+
+          // TODO this is the wrong place to put this
+          (document as any).body.background = 'red';
+
+          throw new WasmError(e, `Error during sync command: ${e.message}`);
+        }
       };
 
       syncSocket.onclose = network.onSyncClose;
