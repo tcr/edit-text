@@ -6,8 +6,12 @@ use extern::{
     crossbeam_channel::{unbounded, Receiver as CCReceiver, Sender as CCSender},
     edit_common::commands::*, failure::Error, oatie::doc::*, rand::{thread_rng, Rng},
     serde_json, simple_ws, simple_ws::*, std::{collections::HashMap, thread, time::Duration},
-    thread_spawn::thread_spawn, url::Url, ws,
+    thread_spawn::thread_spawn, url::Url, ws, std::env,
 };
+
+fn debug_sync_delay() -> Option<u64> {
+    env::var("EDIT_DEBUG_SYNC_DELAY").ok().and_then(|x| x.parse::<u64>().ok())
+}
 
 const INITIAL_SYNC_VERSION: usize = 100; // Arbitrarily select version 100
 const PAGE_TITLE_LEN: usize = 100; // 100 chars is the limit
@@ -256,6 +260,13 @@ impl PageController {
                 op,
                 version,
             } => {
+                // Debug setting to wait a set duration between successive notifications.
+                // This is helpful for artifically forcing a client-side queue of operations.
+                // It's not needed for operation though.
+                if let Some(delay) = debug_sync_delay() {
+                    thread::sleep(Duration::from_millis(delay));
+                }
+                
                 // Commit the operation.
                 // TODO remove this AssertUnwindSafe, since it's probably not safe.
                 let sync = ::std::panic::catch_unwind(::std::panic::AssertUnwindSafe(|| {
@@ -285,7 +296,6 @@ pub fn spawn_sync_thread(
     page_id: String,
     rx_notify: CCReceiver<ClientUpdate>,
     inner_doc: Doc,
-    period: u64,
     db_pool: DbPool,
 ) -> Result<(), Error> {
     // This page ID's state.
@@ -299,11 +309,6 @@ pub fn spawn_sync_thread(
 
     while let Some(notification) = rx_notify.recv() {
         // let now = Instant::now()
-
-        // Wait a set duration between transforms.
-        // Note that this is for artifically forcing a client-side queue of operations.
-        // It's not needed for operation.
-        thread::sleep(Duration::from_millis(period as u64));
 
         // TODO with need to listen for errors and break the loop if erorrs occurr
         // (killin the sync thread).
@@ -349,7 +354,6 @@ impl PageMaster {
                 page_id.to_owned(),
                 rx_notify,
                 inner_doc,
-                100, // TODO pass in a real _period value from command line arguments
                 self.db_pool.clone(),
             );
             tx_notify
@@ -370,7 +374,7 @@ fn spawn_page_master(db_pool: DbPool, rx_master: CCReceiver<ClientNotify>) {
 }
 
 // TODO use _period
-pub fn sync_socket_server(port: u16, _period: usize) {
+pub fn sync_socket_server(port: u16) {
 
     let db_pool = db_pool_create();
 

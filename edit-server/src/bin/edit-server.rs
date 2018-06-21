@@ -326,7 +326,7 @@ fn spawn_sync_socket_server() -> JoinHandle<()> {
     // port + 1
     thread::spawn(|| {
         let opt = Opt::from_args();
-        sync_socket_server(opt.port + 1, opt.period);
+        sync_socket_server(opt.port + 1);
     })
 }
 
@@ -335,9 +335,6 @@ fn spawn_sync_socket_server() -> JoinHandle<()> {
 struct Opt {
     #[structopt(long = "port", help = "Port", default_value = "8000")]
     port: u16,
-
-    #[structopt(long = "period", help = "Sync period", default_value = "100")]
-    period: usize,
 
     #[structopt(help = "Enable client proxy", long = "client-proxy", short = "c")]
     client_proxy: bool,
