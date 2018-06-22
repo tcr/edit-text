@@ -5,6 +5,7 @@ extern crate edit_server;
 extern crate serde_json;
 
 use extern::{
+    diesel::connection::Connection,
     quicli::prelude::*,
     edit_server::db::*,
 };
@@ -27,6 +28,7 @@ main!(|args: Cli| {
     match args {
         Cli::Clear => {
             clear_all_logs(&db)?;
+            db.execute("VACUUM").unwrap();
             eprintln!("cleared logs.");
         }
         Cli::List { source } => {

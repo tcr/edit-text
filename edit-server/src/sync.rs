@@ -111,7 +111,8 @@ impl SimpleSocket for ClientSocket {
     fn handle_message(&mut self, data: &[u8]) -> Result<(), Error> {
         let command: UserToSyncCommand = serde_json::from_slice(&data)?;
 
-        log_sync!("SERVER", ClientPacket(command.clone()));
+        // TODO don't log client Log(...)
+        // log_sync!("SERVER", ClientPacket(command.clone()));
 
         match command {
             UserToSyncCommand::Commit(client_id, op, version) => {
