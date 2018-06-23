@@ -158,7 +158,7 @@ pub fn button_handlers<C: ClientImpl>(
             state.as_ref().map(|x| x.0 == "p").unwrap_or(false),
         ),
         ButtonHandler(
-            "Code",
+            "Code Block",
             Box::new(|client| client.client_op(|doc| replace_block(doc, "pre"))),
             state.as_ref().map(|x| x.0 == "pre").unwrap_or(false),
         ),
@@ -168,14 +168,14 @@ pub fn button_handlers<C: ClientImpl>(
             state.as_ref().map(|x| x.1).unwrap_or(false),
         ),
         ButtonHandler(
-            "HR",
-            Box::new(|client| client.client_op(|doc| split_block(doc, true))),
-            false,
-        ),
-        ButtonHandler(
             "Raw HTML",
             Box::new(|client| client.client_op(|doc| replace_block(doc, "html"))),
             state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
+        ),
+        ButtonHandler(
+            "HR",
+            Box::new(|client| client.client_op(|doc| split_block(doc, true))),
+            false,
         ),
         ButtonHandler(
             "Bold",

@@ -111,12 +111,46 @@ body {
 #footer {
     position: fixed;
     bottom: 0;
-    width: 100%;
-    box-sizing: border-box;
-    border-top: 1px solid #cb9;
-    background: #fff3bb;
-    padding: 8px 10px;
-    z-index: 100;
+    left: 0;
+    right: 0;
+
+    .footer-bar {
+        box-sizing: border-box;
+        border-top: 1px solid #cb9;
+        background: #fff3bb;
+        padding: 7px 10px 8px;
+        z-index: 100;
+        padding-left: 34px;
+        position: relative;
+
+        // Close button
+        span {
+            opacity: 0.3;
+            position: absolute;
+            top: 2px;
+            left: 12px;
+            font-size: 20px;
+            cursor: pointer;
+            user-select: none;
+
+            &:hover {
+                opacity: 1.0;
+            }
+        }
+
+        text-shadow: none;
+
+        &.error {
+            border-top-color: #a55;
+            background: #cc3333;
+            color: white;
+            text-shadow: 1px 1px 0px rgba(0.0, 0.0, 0.0, 0.3);
+
+            span {
+                opacity: 0.5;
+            }
+        }
+    }
 }
 
 body.theme-column {

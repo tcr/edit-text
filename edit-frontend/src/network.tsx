@@ -1,16 +1,21 @@
+import * as React from 'react';
+
 import * as commands from './commands';
 import * as route from './route';
 import * as index from './index';
 import {WasmClient} from './bindgen/edit_client';
+import {EditorFrame} from './app';
 
 export interface Network {
   onNativeMessage: (any) => void;
   onNativeClose: () => void;
   onSyncClose: () => void;
 
-  nativeConnect(): Promise<void>;
+  nativeConnect(editorFrame: EditorFrame): Promise<void>;
+
   nativeCommand(command: commands.Command): void;
-  syncConnect(): Promise<void>;
+
+  syncConnect(editorFrame: EditorFrame): Promise<void>;
 }
 
 export class ProxyNetwork implements Network {
@@ -27,7 +32,7 @@ export class ProxyNetwork implements Network {
     this.nativeSocket.send(JSON.stringify(command));
   }
 
-  nativeConnect(): Promise<void> {
+  nativeConnect(editorFrame: EditorFrame): Promise<void> {
     let network = this;
     return Promise.resolve()
     .then(() => {
@@ -46,7 +51,7 @@ export class ProxyNetwork implements Network {
   }
 
   // The native server (the client proxy) handles sync traffic directly
-  syncConnect(): Promise<void> {
+  syncConnect(editorFrame: EditorFrame): Promise<void> {
     return Promise.resolve();
   }
 }
@@ -108,7 +113,7 @@ export class WasmNetwork implements Network {
   }
 
   // Wasm connector.
-  nativeConnect(): Promise<void> {
+  nativeConnect(editorFrame: EditorFrame): Promise<void> {
     const network = this;
     return new Promise((resolve, reject) => {
       sendCommandToJSList.push((data) => {
@@ -145,6 +150,11 @@ export class WasmNetwork implements Network {
             } catch (e) {
               forwardWasmTaskCallback = null;
 
+            editorFrame.showNotification({
+              element: <div>An error occurred on your client and you're now disconnected. We're sorry. You can <a href="?">refresh your browser</a> to continue.</div>,
+              level: 'error',
+            });
+
               throw new WasmError(e, `Error during client command: ${e.message}`);
             }
           };
@@ -155,7 +165,7 @@ export class WasmNetwork implements Network {
     });
   }
 
-  syncConnect(): Promise<void> {
+  syncConnect(editorFrame: EditorFrame): Promise<void> {
     let network = this;
 
     return Promise.resolve()
@@ -183,6 +193,11 @@ export class WasmNetwork implements Network {
 
           // TODO this is the wrong place to put this
           (document as any).body.background = 'red';
+
+          editorFrame.showNotification({
+            element: <div>The client experienced an error talking to the server and you are now disconnected. We're sorry. You can <a href="?">refresh your browser</a> to continue.</div>,
+            level: 'error',
+          });
 
           throw new WasmError(e, `Error during sync command: ${e.message}`);
         }

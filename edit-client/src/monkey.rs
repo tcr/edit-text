@@ -156,7 +156,7 @@ pub type MonkeyParam = (u64, u64);
 pub const MONKEY_BUTTON: MonkeyParam = (0, 1500);
 pub const MONKEY_LETTER: MonkeyParam = (0, 200);
 pub const MONKEY_ARROW: MonkeyParam = (0, 500);
-pub const MONKEY_BACKSPACE: MonkeyParam = (0, 300);
+pub const MONKEY_BACKSPACE: MonkeyParam = (0, 250);
 pub const MONKEY_ENTER: MonkeyParam = (6_000, 10_000);
 pub const MONKEY_CLICK: MonkeyParam = (400, 1000);
 

@@ -174,7 +174,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
 
             // Redirect root page to random page ID
             (GET) ["/"] => {
-                let id = random_id();
+                let id = format!("welcome-{}", random_id());
 
                 let load_doc = request.get_param("from")
                     .ok_or(format_err!("no from parameter to download from"))

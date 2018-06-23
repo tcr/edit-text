@@ -30,7 +30,7 @@ pub fn valid_page_id(input: &str) -> bool {
     }
     input
         .chars()
-        .all(|x| x.is_digit(10) || x.is_ascii_alphabetic() || x == '_')
+        .all(|x| x.is_digit(10) || x.is_ascii_alphabetic() || x == '_' || x == '-')
 }
 
 fn generate_random_page_id() -> String {
