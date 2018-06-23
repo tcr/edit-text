@@ -456,7 +456,7 @@ body.editing-blurred div[data-tag="caret"]::before {
 
     span.Link:hover::before {
         background: black;
-        content: "http://timryan.org/";
+        content: "Command-click or ctrl-click to open this link.";
         position: absolute;
         top: 1.6em;
         
