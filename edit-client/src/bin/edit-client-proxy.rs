@@ -17,10 +17,14 @@ extern crate ron;
 extern crate simple_ws;
 extern crate url;
 
+
 use extern::{
     crossbeam_channel::{unbounded, Receiver, Sender},
-    edit_client::*,
-    edit_client::proxy::*,
+    edit_client::{
+        *,
+        monkey::*,
+        proxy::*,
+    },
     edit_common::commands::*,
     failure::Error,
     simple_ws::*,
@@ -236,7 +240,7 @@ fn setup_client(
     let (tx_task, rx_task) = unbounded();
 
     // Setup monkey tasks.
-    setup_monkey::<ProxyClient>(alive.clone(), monkey.clone(), tx_task.clone());
+    setup_monkey::<ProxyClient>(Scheduler::new(tx_task.clone(), alive.clone(), monkey.clone()));
 
     // Connect to the sync server.
     spawn_sync_connection(ws_port, page_id.to_owned(), tx_task.clone(), rx_sync);

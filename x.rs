@@ -163,15 +163,15 @@ fn run() -> Result<(), Error> {
                     ",
                 )?;
 
-                execute!(
-                    r"
-                        cd ./edit-frontend/src/bindgen
-                        wasm2es6js \
-                            --base64 -o edit_client_bg.js edit_client_bg.wasm
-                    ",
-                )?;
+                // execute!(
+                //     r"
+                //         cd ./edit-frontend/src/bindgen
+                //         wasm2es6js \
+                //             --base64 -o edit_client_bg.js edit_client_bg.wasm
+                //     ",
+                // )?;
 
-                ::std::fs::remove_file("./edit-frontend/src/bindgen/edit_client_bg.wasm")?;
+                // ::std::fs::remove_file("./edit-frontend/src/bindgen/edit_client_bg.wasm")?;
 
                 eprintln!("Done.");
             }
@@ -267,8 +267,7 @@ fn run() -> Result<(), Error> {
                     export RUST_BACKTRACE=1
                     export DATABASE_URL=edit-server/edit.sqlite3
                     cargo run {force_color_flag} {release_flag} \
-                        --bin edit-server -- \
-                        --period 100 {args}
+                        --bin edit-server -- {args}
                 ",
                 use_log = if log { 1 } else { 0 },
                 release_flag = release_flag,

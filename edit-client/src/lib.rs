@@ -20,6 +20,7 @@ extern crate edit_common;
 extern crate pulldown_cmark;
 extern crate pulldown_cmark_to_cmark;
 extern crate ron;
+extern crate wbg_rand;
 
 #[allow(unused)]
 #[macro_use]
@@ -35,6 +36,7 @@ pub mod wasm;
 
 pub mod actions;
 pub mod client;
+pub mod monkey;
 pub mod random;
 pub mod state;
 pub mod walkers;

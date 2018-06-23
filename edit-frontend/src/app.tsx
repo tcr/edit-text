@@ -2,12 +2,12 @@
 import '../styles/edit.scss';
 
 // import * as Clipboard from 'clipboard';
-import * as commands from './commands';
-import * as util from './util';
 import * as React from 'react';
-
 import * as ReactDOM from 'react-dom';
 import axios from 'axios';
+import * as Raven from 'raven-js';
+
+import * as commands from './commands';
 import * as route from './route';
 import { Editor } from './editor';
 import { Network, ProxyNetwork, WasmNetwork } from './network';
@@ -145,10 +145,10 @@ class LocalButtons extends React.Component {
 
   toggleWidth() {
     document.body.classList.toggle('theme-column');
-    if (document.body.classList.contains('theme-column')) {
-      localStorage.setItem('edit-text:theme-column', '1');
+    if (!document.body.classList.contains('theme-column')) {
+      localStorage.setItem('edit-text:theme-wide', '1');
     } else {
-      localStorage.removeItem('edit-text:theme-column');
+      localStorage.removeItem('edit-text:theme-wide');
     }
   }
 
@@ -159,7 +159,7 @@ class LocalButtons extends React.Component {
 
         <button id="width" onClick={() => this.toggleWidth()}>Toggle Page Width</button>
 
-        <b>Client: <kbd>{this.props.editorID}</kbd></b>
+        <b>Client: <kbd tabIndex={0}>{this.props.editorID}</kbd></b>
       </div>
     );
   }
@@ -176,6 +176,24 @@ function Modal(props: any) {
 }
 
 
+export type NoticeProps = {
+  element: React.ReactElement<any>,
+  level: 'notice' | 'error',
+};
+
+function FooterNotice(props: {
+  onDismiss: () => void,
+  children: React.ReactNode,
+  level: string,
+}) {
+  return (
+    <div className={`footer-bar ${props.level}`}>
+      <div>{props.children}</div>
+      <span onClick={props.onDismiss}>&times;</span>
+    </div>
+  );
+}
+
 
 // Initialize child editor.
 export class EditorFrame extends React.Component {
@@ -189,6 +207,7 @@ export class EditorFrame extends React.Component {
     buttons: any,
     editorID: string,
     modal: React.ReactNode,
+    notices: Array<NoticeProps>,
   };
 
   KEY_WHITELIST: any;
@@ -219,7 +238,14 @@ export class EditorFrame extends React.Component {
       buttons: [],
       editorID: '$$$$$$',
       modal: null,
+      notices: [],
     };
+  }
+
+  showNotification(notice: NoticeProps) {
+    this.setState({
+      notices: this.state.notices.slice().concat([notice]),
+    })
   }
 
   render(): React.ReactNode {
@@ -232,7 +258,7 @@ export class EditorFrame extends React.Component {
             <NativeButtons
               editor={this}
               buttons={this.state.buttons} 
-            />,
+            />
             <LocalButtons
               editor={this}
               editorID={this.state.editorID}
@@ -252,9 +278,25 @@ export class EditorFrame extends React.Component {
             disabled={!!this.state.modal}
           />
 
-          <div id="footer">
-            See more <a href="http://github.com/tcr/edit-text">on Github</a>.
-          </div>
+          <div id="footer">{
+            this.state.notices.map((x, key) => {
+              return (
+                <FooterNotice 
+                  key={key}
+                  onDismiss={() => {
+                    let notices = this.state.notices.slice();
+                    notices.splice(key, 1);
+                    this.setState({
+                      notices,
+                    });
+                  }}
+                  level={x.level}
+                >
+                  {x.element}
+                </FooterNotice>
+              );
+            })
+          }</div>
         </div>
       </div>
     );
@@ -265,9 +307,18 @@ export class EditorFrame extends React.Component {
     const editor = this;
 
     if (parse.Init) {
+      let editorID = parse.Init;
+
       this.setState({
-        editorID: parse.Init,
-      })
+        editorID,
+      });
+
+      console.info('Editor "%s" connected.', editorID);
+
+      // Log the editor ID.
+      Raven.setExtraContext({
+        editor_id: editorID,
+      });
     }
 
     else if (parse.Update) {
@@ -338,8 +389,8 @@ export function start() {
   }
 
   // TODO move this to a better logical location and manage local storage better
-  if (localStorage.getItem('edit-text:theme-column')) {
-    document.body.classList.add('theme-column');
+  if (localStorage.getItem('edit-text:theme-wide')) {
+    document.body.classList.remove('theme-column');
   }
 
   document.addEventListener('focus', () => {
@@ -353,18 +404,26 @@ export function start() {
   document.body.classList.add('editing-blurred');
 
   // Create the editor frame.
+  let editorFrame;
   ReactDOM.render(
     <EditorFrame
       network={network}
       body={document.querySelector('.edit-text')!.innerHTML}
+      ref={c => editorFrame = c}
     />,
     document.querySelector('#content')!,
-  );
+    () => {
+      // Default notification
+      editorFrame.showNotification({
+        element: (<div>
+          See more <a href="http://github.com/tcr/edit-text">on Github</a>.
+        </div>),
+        level: 'notice',
+      });
 
-  // Connect to remote sockets.
-  network.nativeConnect()
-    .then(() => network.syncConnect())
-    .then(() => {
-      console.log('edit-text initialized.');
-    });
+      // Connect to remote sockets.
+      network.nativeConnect(editorFrame)
+        .then(() => network.syncConnect(editorFrame));
+    }
+  );
 }

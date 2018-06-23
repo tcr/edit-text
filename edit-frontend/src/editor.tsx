@@ -213,6 +213,7 @@ export class Editor extends React.Component {
   mouseDownActive = false;
 
   onMouseDown(e: MouseEvent) {
+    this.el.focus();
     this.mouseDown = true;
     this.onMouseMove(e, true);
   }
@@ -238,12 +239,10 @@ export class Editor extends React.Component {
     // Only support text elements.
     if (pos !== null) {
       if (anchor) {
-        console.log('anchor');
         this.props.network.nativeCommand(commands.CursorAnchor(
           resolveCursorFromPosition(pos.textNode, pos.offset),
         ));
       } else {
-        console.log('target');
         this.props.network.nativeCommand(commands.CursorTarget(
           resolveCursorFromPosition(pos.textNode, pos.offset),
         ));
@@ -306,6 +305,11 @@ export class Editor extends React.Component {
   
     document.addEventListener('keydown', (e) => {
       let current = document.querySelector('div.current[data-tag="caret"]');
+
+      // Don't interfere with the header.
+      if (e.target !== null && document.querySelector('#toolbar')!.contains(e.target! as Node)) {
+        return;
+      }
 
       if (self.props.disabled) {
         return;
@@ -400,6 +404,7 @@ export class Editor extends React.Component {
     return (
       <div
         className="edit-text theme-mock"
+        tabIndex={0}
         ref={(el) => el && this.onMount(el)}
         onMouseDown={this.onMouseDown.bind(this)}
         onMouseUp={this.onMouseUp.bind(this)}

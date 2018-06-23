@@ -2,7 +2,7 @@ use crate::{actions::*, random::*, state::*};
 
 use extern::{
     edit_common::{commands::*, doc_as_html}, failure::Error,
-    oatie::{doc::*, validate::validate_doc}, std::sync::atomic::{AtomicBool, Ordering},
+    oatie::{doc::*, validate::validate_doc, OT}, std::sync::atomic::{AtomicBool, Ordering},
     std::sync::Arc,
     std::char::from_u32,
 };
@@ -158,7 +158,7 @@ pub fn button_handlers<C: ClientImpl>(
             state.as_ref().map(|x| x.0 == "p").unwrap_or(false),
         ),
         ButtonHandler(
-            "Code",
+            "Code Block",
             Box::new(|client| client.client_op(|doc| replace_block(doc, "pre"))),
             state.as_ref().map(|x| x.0 == "pre").unwrap_or(false),
         ),
@@ -168,14 +168,14 @@ pub fn button_handlers<C: ClientImpl>(
             state.as_ref().map(|x| x.1).unwrap_or(false),
         ),
         ButtonHandler(
-            "HR",
-            Box::new(|client| client.client_op(|doc| split_block(doc, true))),
-            false,
-        ),
-        ButtonHandler(
             "Raw HTML",
             Box::new(|client| client.client_op(|doc| replace_block(doc, "html"))),
             state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
+        ),
+        ButtonHandler(
+            "HR",
+            Box::new(|client| client.client_op(|doc| split_block(doc, true))),
+            false,
         ),
         ButtonHandler(
             "Bold",
@@ -231,6 +231,9 @@ fn native_command<C: ClientImpl>(client: &mut C, req: FrontendToUserCommand) -> 
             client.client_op(|doc| add_string(doc, &text))?;
         }
         FrontendToUserCommand::RandomTarget(pos) => {
+            // TODO this should never happen, because we clarify RandomTarget 
+            // beforehand
+
             let cursors = random_cursor(&client.state().client_doc.doc)?;
             let idx = (pos * (cursors.len() as f64)) as usize;
 
@@ -266,7 +269,7 @@ pub struct Client {
 }
 
 /// Trait shared by the "wasm" and "client proxy" implementations.
-/// Most methods are implemented on the trait, not its implementors.
+/// Most methods are implemented on this trait, not its implementors.
 pub trait ClientImpl {
     fn state(&mut self) -> &mut Client;
     fn send_client(&self, req: &UserToFrontendCommand) -> Result<(), Error>;
@@ -292,7 +295,7 @@ pub trait ClientImpl {
     // TODO can we catch_unwind inside handle task so we can add our own
     // "TASK: data" dump into the error payload? So then it's easy to
     // corrolate with the logs.
-    fn handle_task(&mut self, value: Task) -> Result<(), Error>
+    fn handle_task(&mut self, mut value: Task) -> Result<(), Error>
     where
         Self: Sized,
     {
@@ -308,6 +311,14 @@ pub trait ClientImpl {
         // TODO Also is it possible to correct the use of AssertUnwindSafe? So it's correct?
         let res = ::std::panic::catch_unwind(::std::panic::AssertUnwindSafe(move || -> Result<(), Error> {
             let delay_log = self.state().client_id == "$$$$$$";
+
+            // Rewrite random targets here.
+            if let Task::FrontendToUserCommand(FrontendToUserCommand::RandomTarget(pos)) = value {
+                let cursors = random_cursor(&self.state().client_doc.doc)?;
+                let idx = (pos * (cursors.len() as f64)) as usize;
+
+                value = Task::FrontendToUserCommand(FrontendToUserCommand::CursorAnchor(cursors[idx].clone()));
+            }
 
             if !delay_log {
                 log_wasm!(Task(self.state().client_id.clone(), value.clone()));
@@ -355,7 +366,6 @@ pub trait ClientImpl {
 
                 // Sync sent us an Update command with a new document version.
                 Task::SyncToUserCommand(SyncToUserCommand::Update(
-                    doc_span,
                     version,
                     client_id,
                     input_op,
@@ -364,8 +374,8 @@ pub trait ClientImpl {
                         return Ok(());
                     }
 
-                    // TODO this can be generated from original_doc X input_op too
-                    let doc = Doc(doc_span);
+                    // Generated from original_doc transformed with input_op
+                    let doc = OT::apply(&self.state().client_doc.original_doc, &input_op);
 
                     // If this operation is an acknowledgment...
                     if self.state().client_id == client_id {

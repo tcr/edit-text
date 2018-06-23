@@ -174,7 +174,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
 
             // Redirect root page to random page ID
             (GET) ["/"] => {
-                let id = random_id();
+                let id = format!("welcome-{}", random_id());
 
                 let load_doc = request.get_param("from")
                     .ok_or(format_err!("no from parameter to download from"))
@@ -326,7 +326,7 @@ fn spawn_sync_socket_server() -> JoinHandle<()> {
     // port + 1
     thread::spawn(|| {
         let opt = Opt::from_args();
-        sync_socket_server(opt.port + 1, opt.period);
+        sync_socket_server(opt.port + 1);
     })
 }
 
@@ -336,21 +336,11 @@ struct Opt {
     #[structopt(long = "port", help = "Port", default_value = "8000")]
     port: u16,
 
-    #[structopt(long = "period", help = "Sync period", default_value = "100")]
-    period: usize,
-
     #[structopt(help = "Enable client proxy", long = "client-proxy", short = "c")]
     client_proxy: bool,
 }
 
 fn main() {
-    // Set aborting process handler.
-    let orig_handler = panic::take_hook();
-    panic::set_hook(Box::new(move |panic_info| {
-        orig_handler(panic_info);
-        process::exit(1);
-    }));
-
     let opt = Opt::from_args();
 
     // let ron_out = ::ron::ser::to_string(&Doc(::edit_common::markdown::de::markdown_to_doc("# hi").unwrap())).unwrap();

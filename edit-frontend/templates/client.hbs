@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<html>
+<head>
+
 <link rel="icon" type="image/png" href="/favicon.png">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
 @font-face {
   font-family: 'TeX Gyre Heros';
@@ -20,8 +24,9 @@
 <style>{{{stylesheet}}}</style>
 
 <title>edit-text</title>
+</head>
 
-<body tabindex="0">
+<body class="theme-column">
   <div id="content">
     
     <div id="toolbar">
@@ -30,7 +35,7 @@
       <div id="local-buttons"></div>
     </div>
     
-    <div class="edit-text">{{{body}}}</div>
+    <div class="edit-text" tabIndex="0">{{{body}}}</div>
   </div>
 </body>
 

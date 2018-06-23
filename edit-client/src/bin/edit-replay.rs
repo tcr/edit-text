@@ -64,10 +64,11 @@ struct Opt {
 main!(|opts: Opt| {
     let (tx_line, rx_line) = unbounded();
     ::std::thread::spawn(move || -> Result<(), Error> {
-        let f = ::std::fs::File::open("../logs/client")?;
-        let file = ::std::io::BufReader::new(&f);
+        // let f = ::std::fs::File::open("../logs/client")?;
+        // let file = ::std::io::BufReader::new(&*f);
+        let file = ::std::io::stdin();
 
-        for line in file.lines() {
+        for line in file.lock().lines() {
             if let Ok(line) = line {
                 if line.trim().len() != 0 {
                     let hi: LogWasm = ron::de::from_str(&line)?;

@@ -6,8 +6,12 @@ use extern::{
     crossbeam_channel::{unbounded, Receiver as CCReceiver, Sender as CCSender},
     edit_common::commands::*, failure::Error, oatie::doc::*, rand::{thread_rng, Rng},
     serde_json, simple_ws, simple_ws::*, std::{collections::HashMap, thread, time::Duration},
-    thread_spawn::thread_spawn, url::Url, ws,
+    thread_spawn::thread_spawn, url::Url, ws, std::env,
 };
+
+fn debug_sync_delay() -> Option<u64> {
+    env::var("EDIT_DEBUG_SYNC_DELAY").ok().and_then(|x| x.parse::<u64>().ok())
+}
 
 const INITIAL_SYNC_VERSION: usize = 100; // Arbitrarily select version 100
 const PAGE_TITLE_LEN: usize = 100; // 100 chars is the limit
@@ -26,7 +30,7 @@ pub fn valid_page_id(input: &str) -> bool {
     }
     input
         .chars()
-        .all(|x| x.is_digit(10) || x.is_ascii_alphabetic() || x == '_')
+        .all(|x| x.is_digit(10) || x.is_ascii_alphabetic() || x == '_' || x == '-')
 }
 
 fn generate_random_page_id() -> String {
@@ -107,7 +111,8 @@ impl SimpleSocket for ClientSocket {
     fn handle_message(&mut self, data: &[u8]) -> Result<(), Error> {
         let command: UserToSyncCommand = serde_json::from_slice(&data)?;
 
-        log_sync!("SERVER", ClientPacket(command.clone()));
+        // TODO don't log client Log(...)
+        // log_sync!("SERVER", ClientPacket(command.clone()));
 
         match command {
             UserToSyncCommand::Commit(client_id, op, version) => {
@@ -149,7 +154,7 @@ pub struct PageController {
     page_id: String,
     db_pool: DbPool,
     state: SyncState,
-    clients: Vec<simple_ws::Sender>,
+    clients: HashMap<String, simple_ws::Sender>,
 }
 
 impl PageController {
@@ -172,7 +177,6 @@ impl PageController {
 
         // Broadcast this operation to all connected websockets.
         let command = SyncToUserCommand::Update(
-            self.state.doc.0.clone(),
             self.state.version,
             client_id.to_owned(),
             op,
@@ -183,12 +187,11 @@ impl PageController {
     /// Forward command to everyone in our client set.
     fn broadcast_client_command(&self, command: &SyncToUserCommand) {
         let json = serde_json::to_string(&command).unwrap();
-        for client in &self.clients {
+        for (_, client) in &self.clients {
             let _ = client.lock().unwrap().send(json.clone());
         }
     }
 
-    /// Forward command to everyone in our client set.
     fn send_client_command(
         &self,
         client: &simple_ws::Sender,
@@ -198,11 +201,23 @@ impl PageController {
         Ok(client.lock().unwrap().send(json.clone())?)
     }
 
+    fn send_client_restart(&self, client_id: &str) -> Result<(), Error> {
+        let code = ws::CloseCode::Restart;
+        let reason = "Server received an updated version of the document.";
+
+        // TODO abort if client doesn't exist, or move the client_id referencing
+        // to its own function
+        self.clients.get(client_id).map(|client| {
+            let _ = client.lock().unwrap().close_with_reason(code, reason);
+        });
+        Ok(())
+    }
+
     /// Forward restart code to everyone in our client set.
     fn broadcast_restart(&self) -> Result<(), Error> {
         let code = ws::CloseCode::Restart;
         let reason = "Server received an updated version of the document.";
-        for client in &self.clients {
+        for (_, client) in &self.clients {
             let _ = client.lock().unwrap().close_with_reason(code, reason);
         }
         Ok(())
@@ -226,7 +241,7 @@ impl PageController {
                 self.state.clients.insert(client_id.to_string(), version);
 
                 // Forward to all in our client set.
-                self.clients.push(out);
+                self.clients.insert(client_id.to_string(), out);
             }
 
             ClientUpdate::Disconnect { client_id } => {
@@ -237,6 +252,7 @@ impl PageController {
 
                 // Remove from our client set.
                 self.state.clients.remove(&client_id);
+                self.clients.remove(&client_id);
             }
 
             ClientUpdate::Commit {
@@ -244,8 +260,23 @@ impl PageController {
                 op,
                 version,
             } => {
+                // Debug setting to wait a set duration between successive notifications.
+                // This is helpful for artifically forcing a client-side queue of operations.
+                // It's not needed for operation though.
+                if let Some(delay) = debug_sync_delay() {
+                    thread::sleep(Duration::from_millis(delay));
+                }
+                
                 // Commit the operation.
-                self.sync_commit(&client_id, op, version);
+                // TODO remove this AssertUnwindSafe, since it's probably not safe.
+                let sync = ::std::panic::catch_unwind(::std::panic::AssertUnwindSafe(|| {
+                    self.sync_commit(&client_id, op, version);
+                }));
+
+                if let Err(err) = sync {
+                    eprintln!("received invalid packet from client: {:?} - {:?}", client_id, err);
+                    // let _ = self.send_client_restart(&client_id);
+                }
             }
 
             ClientUpdate::Overwrite { doc } => {
@@ -253,7 +284,7 @@ impl PageController {
 
                 // Rewrite our state.
                 self.state = SyncState::new(doc, INITIAL_SYNC_VERSION);
-                self.clients = vec![];
+                self.clients = HashMap::new();
             }
         }
     }
@@ -265,7 +296,6 @@ pub fn spawn_sync_thread(
     page_id: String,
     rx_notify: CCReceiver<ClientUpdate>,
     inner_doc: Doc,
-    period: u64,
     db_pool: DbPool,
 ) -> Result<(), Error> {
     // This page ID's state.
@@ -274,16 +304,11 @@ pub fn spawn_sync_thread(
         page_id,
         db_pool,
         state: SyncState::new(inner_doc, INITIAL_SYNC_VERSION),
-        clients: vec![],
+        clients: HashMap::new(),
     };
 
     while let Some(notification) = rx_notify.recv() {
         // let now = Instant::now()
-
-        // Wait a set duration between transforms.
-        // Note that this is for artifically forcing a client-side queue of operations.
-        // It's not needed for operation.
-        thread::sleep(Duration::from_millis(period as u64));
 
         // TODO with need to listen for errors and break the loop if erorrs occurr
         // (killin the sync thread).
@@ -329,7 +354,6 @@ impl PageMaster {
                 page_id.to_owned(),
                 rx_notify,
                 inner_doc,
-                100, // TODO pass in a real _period value from command line arguments
                 self.db_pool.clone(),
             );
             tx_notify
@@ -350,7 +374,7 @@ fn spawn_page_master(db_pool: DbPool, rx_master: CCReceiver<ClientNotify>) {
 }
 
 // TODO use _period
-pub fn sync_socket_server(port: u16, _period: usize) {
+pub fn sync_socket_server(port: u16) {
 
     let db_pool = db_pool_create();
 
