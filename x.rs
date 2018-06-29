@@ -1,7 +1,7 @@
 #!/usr/bin/env run-cargo-script
 //! ```cargo
 //! [dependencies]
-//! commandspec = "0.8"
+//! commandspec = "0.9"
 //! failure = "0.1"
 //! structopt = "0.2"
 //! clap = "2.31"
@@ -469,7 +469,7 @@ fn run() -> Result<(), Error> {
             // Shell out for uploading the file to dokku.
             eprintln!();
             eprintln!("Uploading...");
-            shell_sh!(
+            sh_execute!(
                 r#"
                     cd dist/deploy
 
