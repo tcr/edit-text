@@ -1,7 +1,7 @@
 #!/usr/bin/env run-cargo-script
 //! ```cargo
 //! [dependencies]
-//! commandspec = "0.8"
+//! commandspec = "0.10"
 //! failure = "0.1"
 //! structopt = "0.2"
 //! clap = "2.31"
@@ -23,6 +23,12 @@ use std::env;
 use failure::Error;
 use structopt::StructOpt;
 use clap::Shell;
+
+#[cfg(windows)]
+const WEBPACK_PATH: &str = ".\\node_modules\\.bin\\webpack.cmd";
+
+#[cfg(not(windows))]
+const WEBPACK_PATH: &str = "./node_modules/.bin/webpack";
 
 fn abs_string_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
     Ok(Path::new(".")
@@ -110,6 +116,9 @@ enum Cli {
 
 
 fn run() -> Result<(), Error> {
+    #[allow(non_snake_case)]
+    let SELF_PATH = vec!["cargo", "script", "x.rs"];
+
     // Pass arguments directly to subcommands: don't capture -h, -v, or verification
     // Do this by adding "--" into the args flag after the subcommand.
     let mut args = ::std::env::args().collect::<Vec<_>>();
@@ -313,15 +322,17 @@ fn run() -> Result<(), Error> {
             eprintln!("building ./x.rs server...");
             execute!(
                 r"
-                    ./x.rs server-build
+                    {self_path} server-build
                 ",
+                self_path = SELF_PATH,
             )?;
 
             eprintln!("running ./x.rs server...");
             let _server_guard = command!(
                 r"
-                    ./x.rs server {args}
+                    {self_path} server {args}
                 ",
+                self_path = SELF_PATH,
                 args = args,
             )?.scoped_spawn().unwrap();
 
@@ -340,8 +351,9 @@ fn run() -> Result<(), Error> {
             eprintln!("[wasm-build]");
             execute!(
                 r"
-                    ./x.rs wasm-build {args}
+                    {self_path} wasm-build {args}
                 ",
+                self_path = SELF_PATH,
                 args = args,
             )?;
 
@@ -349,8 +361,9 @@ fn run() -> Result<(), Error> {
             eprintln!("[frontend-build]");
             execute!(
                 r"
-                    ./x.rs frontend-build {args}
+                    {self_path} frontend-build {args}
                 ",
+                self_path = SELF_PATH,
                 args = args,
             )?;
 
@@ -358,8 +371,9 @@ fn run() -> Result<(), Error> {
             eprintln!("[server-build]");
             execute!(
                 r"
-                    ./x.rs server-build {args}
+                    {self_path} server-build {args}
                 ",
+                self_path = SELF_PATH,
                 args = args,
             )?;
 
@@ -367,8 +381,9 @@ fn run() -> Result<(), Error> {
             eprintln!("[client-proxy-build]");
             execute!(
                 r"
-                    ./x.rs client-proxy-build {args}
+                    {self_path} client-proxy-build {args}
                 ",
+                self_path = SELF_PATH,
                 args = args,
             )?;
 
@@ -376,8 +391,9 @@ fn run() -> Result<(), Error> {
             eprintln!("[book-build]");
             execute!(
                 r"
-                    ./x.rs book-build {args}
+                    {self_path} book-build {args}
                 ",
+                self_path = SELF_PATH,
                 args = args,
             )?;
         }
@@ -386,9 +402,10 @@ fn run() -> Result<(), Error> {
             execute!(
                 r"
                     cd edit-frontend
-                    ./node_modules/.bin/webpack \
+                    {webpack_path} \
                         ./src/index.js --mode development --output-filename='edit.js' {args}
                 ",
+                webpack_path = WEBPACK_PATH,
                 args = args,
             )?;
         }
@@ -397,9 +414,10 @@ fn run() -> Result<(), Error> {
             execute!(
                 r"
                     cd edit-frontend
-                    ./node_modules/.bin/webpack --watch \
+                    {webpack_path} --watch \
                         ./src/index.js --mode development --output-filename='edit.js' {args}
                 ",
+                webpack_path = WEBPACK_PATH,
                 args = args,
             )?;
         }
@@ -418,16 +436,18 @@ fn run() -> Result<(), Error> {
             )?;
             execute!(
                 "
-                    ./x.rs wasm-build
-                "
+                    {self_path} wasm-build
+                ",
+                self_path = SELF_PATH,
             )?;
 
             // Frontend JavaScript
             eprintln!("Building frontend...");
             execute!(
                 r"
-                    ./x.rs frontend-build
-                "
+                    {self_path} frontend-build
+                ",
+                self_path = SELF_PATH,
             )?;
 
             // Linux binary
@@ -469,7 +489,7 @@ fn run() -> Result<(), Error> {
             // Shell out for uploading the file to dokku.
             eprintln!();
             eprintln!("Uploading...");
-            shell_sh!(
+            sh_execute!(
                 r#"
                     cd dist/deploy
 
