@@ -14,6 +14,11 @@ struct Page {
     doc: String,
 }
 
+#[derive(GraphQLObject)]
+struct PageId {
+    id: String,
+}
+
 graphql_object!(Page: () |&self| {
     field doc() -> &str {
         self.doc.as_str()
@@ -36,6 +41,18 @@ graphql_object!(Query: Ctx |&self| {
         Ok(page.map(|x| Page {
             doc: x.body
         }))
+    }
+
+    field pages(&executor) -> FieldResult<Vec<PageId>> {
+        let conn = executor.context().db_pool.get().unwrap();
+
+        let posts = all_posts(&conn);
+        let mut post_ids: Vec<String> = posts.keys().cloned().collect();
+        post_ids.sort();
+
+        Ok(post_ids.into_iter().map(|x| PageId {
+            id: x.to_string()
+        }).collect::<Vec<_>>())
     }
 });
 

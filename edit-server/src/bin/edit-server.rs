@@ -232,6 +232,24 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 return Response::redirect_302("/$/multi");
             },
 
+            (GET) ["/$/list"] => {
+                let lis = &get_all_pages_graphql()
+                    .unwrap()
+                    .iter()
+                    .map(|x| {
+                        format!(r#"<li><a href="/{id}">{id}</li>"#, id = x)
+                    })
+                    .collect::<Vec<_>>();
+
+                return Response::from_data(
+                    "text/html".to_string(),
+                    format!("<h1>pages</h1><ul>{}</ul>", lis.join("")),
+                )
+            },
+            (GET) ["/$/list/"] => {
+                return Response::redirect_302("/$/list");
+            },
+
             (GET) ["/$/static/{target}", target: String] => {
                 if let Some(data) = static_dir.get(Path::new(&target)) {
                     return Response::from_data(
