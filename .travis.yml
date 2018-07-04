@@ -24,7 +24,7 @@ before_install:
 
   # Install commands
   - command -v cargo-script || cargo install cargo-script
-  - command -v diesel || cargo install diesel_cli --no-default-features --features sqlite
+  - command -v diesel || cargo install diesel_cli --no-default-features --features sqlite-bundled
   - command -v wasm-bindgen || cargo install wasm-bindgen-cli -f
   - command -v mdbook || cargo install mdbook
 
