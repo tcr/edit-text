@@ -1,5 +1,32 @@
 use extern::{failure::Error, oatie::doc::*, reqwest, serde_json};
 
+pub fn get_all_pages_graphql() -> Option<Vec<String>> {
+    let client = reqwest::Client::new();
+    let text = client
+        .post("http://127.0.0.1:8003/graphql/")
+        .json(&json!({
+            "query": r#"
+
+query {
+    pages {
+        id
+    }
+}
+
+"#,
+        }))
+        .send()
+        .ok()?
+        .text()
+        .ok()?;
+
+    let ret: ::serde_json::Value = serde_json::from_str(&text).ok()?;
+    let node = ret.pointer("/data/pages")?;
+    Some(node.as_array()?.iter().map(|x| {
+        x.pointer("/id").unwrap().as_str().unwrap().to_string()
+    }).collect::<Vec<_>>())
+}
+
 pub fn get_single_page_graphql(input_id: &str) -> Option<Doc> {
     let client = reqwest::Client::new();
     let text = client
