@@ -53,6 +53,10 @@ environment:
   #  - channel: stable
   #    target: i686-pc-windows-msvc
 
+cache:
+  - 'C:\Users\appveyor\.cargo'
+  - 'C:\Users\appveyor\.rustup'
+
 ## Install Script ##
 
 # This is the most important part of the Appveyor configuration. This installs the version of Rust
@@ -63,6 +67,7 @@ environment:
 # default-toolchain and default-host manually here.
 install:
   - ps: Install-Product node ''
+  - ps: cd edit-frontend; npm i; cd ..
 
   - appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
   - rustup-init -yv --default-toolchain %channel% --default-host %target%
@@ -77,8 +82,6 @@ install:
   - where mdbook || cargo install mdbook
 
   - rustup target add wasm32-unknown-unknown
-
-  - cd edit-frontend; npm i; cd ..
 
 ## Build Script ##
 
