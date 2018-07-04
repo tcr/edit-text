@@ -213,9 +213,16 @@ export class Editor extends React.Component {
   mouseDownActive = false;
 
   onMouseDown(e: MouseEvent) {
-    this.el.focus();
-    this.mouseDown = true;
-    this.onMouseMove(e, true);
+    let option = e.ctrlKey || e.metaKey;
+    let isAnchor = util.matchesSelector(e.target as Node, '[data-style-Link]');
+    if (option && isAnchor) {
+      let url = (e.target as HTMLElement).dataset['styleLink'];
+      (window as any).open(url, '_blank').focus();
+    } else {
+      this.el.focus();
+      this.mouseDown = true;
+      this.onMouseMove(e, true);
+    }
   }
 
   onMouseUp(e: MouseEvent) {

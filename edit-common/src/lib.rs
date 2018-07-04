@@ -108,7 +108,21 @@ pub fn doc_as_html_inner(doc: &DocSpan, caret_index: &CaretIndex, remote_select_
                     if !remote_select_active.is_empty() {
                         classes.push(Style::Selected);
                     }
-                    out.push_str(&format!(r#"<span class="{}">"#, classes.into_iter().map(|e| e.to_string()).collect::<Vec<_>>().join(" ")));
+
+                    out.push_str(&format!(
+                        r#"<span class="{}" {}>"#,
+                        classes
+                            .into_iter()
+                            .map(|e| e.to_string())
+                            .collect::<Vec<_>>()
+                            .join(" "),
+                        styles
+                            .iter()
+                            .filter(|(_, v)| v.is_some())
+                            .map(|(k, v)| format!("data-style-{k}={v}", k = k, v = serde_json::to_string(&v).unwrap()))
+                            .collect::<Vec<String>>()
+                            .join(" "),
+                    ));
                 } else {
                     out.push_str(r"<span>");
                 }
