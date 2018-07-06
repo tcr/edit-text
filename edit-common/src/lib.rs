@@ -23,16 +23,18 @@ pub mod markdown;
 
 use htmlescape::encode_minimal;
 use oatie::doc::*;
-use std::collections::{HashMap, HashSet};
+use std::collections::{
+    HashMap,
+    HashSet,
+};
 
 type CaretIndex = HashMap<String, usize>;
 type SelectionActive = HashSet<String>;
 
 // TODO unify with its counterpart in edit-client/src/walkers.rs?
 fn is_caret(attrs: &Attrs, client_id: Option<&str>) -> bool {
-    attrs["tag"] == "caret"
-        && client_id.map(|id| attrs["client"] == id).unwrap_or(true)
-        // && attrs.get("focus").unwrap_or(&"false".to_string()).parse::<bool>().map(|x| x == focus).unwrap_or(false)
+    attrs["tag"] == "caret" && client_id.map(|id| attrs["client"] == id).unwrap_or(true)
+    // && attrs.get("focus").unwrap_or(&"false".to_string()).parse::<bool>().map(|x| x == focus).unwrap_or(false)
 }
 
 // TODO move this to a different module
@@ -66,7 +68,11 @@ pub fn doc_as_html(doc: &DocSpan) -> String {
     doc_as_html_inner(doc, &caret_index, &mut remote_select_active)
 }
 
-pub fn doc_as_html_inner(doc: &DocSpan, caret_index: &CaretIndex, remote_select_active: &mut SelectionActive) -> String {
+pub fn doc_as_html_inner(
+    doc: &DocSpan,
+    caret_index: &CaretIndex,
+    remote_select_active: &mut SelectionActive,
+) -> String {
     use oatie::doc::*;
 
     // let mut select_active = false;
@@ -119,7 +125,11 @@ pub fn doc_as_html_inner(doc: &DocSpan, caret_index: &CaretIndex, remote_select_
                         styles
                             .iter()
                             .filter(|(_, v)| v.is_some())
-                            .map(|(k, v)| format!("data-style-{k}={v}", k = k, v = serde_json::to_string(&v).unwrap()))
+                            .map(|(k, v)| format!(
+                                "data-style-{k}={v}",
+                                k = k,
+                                v = serde_json::to_string(&v).unwrap()
+                            ))
                             .collect::<Vec<String>>()
                             .join(" "),
                     ));

@@ -1,15 +1,19 @@
-use crate::{
-    db::{
-        DbPool,
-        queries::*,
-    },
+use crate::db::{
+    queries::*,
+    DbPool,
 };
 
 use extern::{
-    crossbeam_channel::{unbounded, Sender},
+    crossbeam_channel::{
+        unbounded,
+        Sender,
+    },
     edit_common::commands::*,
-    std::sync::{Arc, Mutex},
     std::mem,
+    std::sync::{
+        Arc,
+        Mutex,
+    },
 };
 
 pub struct Logger {
@@ -65,27 +69,23 @@ pub enum LogSync {
 
 #[macro_export]
 macro_rules! log_sync {
-    ($source:expr, $x:expr) => (
-        {
-            // Load the logging enum variants locally.
-            use $crate::log::LogSync::*;
+    ($source:expr, $x:expr) => {{
+        // Load the logging enum variants locally.
+        use $crate::log::LogSync::*;
 
-            // Serialize body.
-            let ron = ::ron::ser::to_string(&$x).unwrap();
+        // Serialize body.
+        let ron = ::ron::ser::to_string(&$x).unwrap();
 
-            // Send value.
-            $crate::log::SERVER_LOG_TX.log(($source).to_string(), ron);
-        }
-    );
+        // Send value.
+        $crate::log::SERVER_LOG_TX.log(($source).to_string(), ron);
+    }};
 }
 
 #[macro_export]
 macro_rules! log_raw {
-    ($source:expr, $x:expr) => (
-        {
-            $crate::log::SERVER_LOG_TX.log(($source).to_string(), ($x).to_string());
-        }
-    );
+    ($source:expr, $x:expr) => {{
+        $crate::log::SERVER_LOG_TX.log(($source).to_string(), ($x).to_string());
+    }};
 }
 
 pub fn log_sync_init(pool: DbPool) -> Option<DbPool> {

@@ -4,12 +4,18 @@ use super::compose;
 use super::doc::*;
 use super::normalize;
 use super::stepper::*;
-use super::transform::{Schema, Track};
+use super::transform::{
+    Schema,
+    Track,
+};
 use super::writer::*;
 use failure::Error;
 use std::borrow::ToOwned;
 use std::cmp;
-use std::collections::{HashMap, HashSet};
+use std::collections::{
+    HashMap,
+    HashSet,
+};
 use std::fmt::Debug;
 use term_painter::Attr::*;
 use term_painter::Color::*;

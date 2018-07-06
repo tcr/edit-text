@@ -1,10 +1,26 @@
-use crate::{actions::*, random::*, state::*};
+use crate::{
+    actions::*,
+    random::*,
+    state::*,
+};
 
 use extern::{
-    edit_common::{commands::*, doc_as_html}, failure::Error,
-    oatie::{doc::*, validate::validate_doc, OT}, std::sync::atomic::{AtomicBool, Ordering},
-    std::sync::Arc,
+    edit_common::{
+        commands::*,
+        doc_as_html,
+    },
+    failure::Error,
+    oatie::{
+        doc::*,
+        validate::validate_doc,
+        OT,
+    },
     std::char::from_u32,
+    std::sync::atomic::{
+        AtomicBool,
+        Ordering,
+    },
+    std::sync::Arc,
 };
 
 // Shorthandler
@@ -117,9 +133,7 @@ fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
     ]
 }
 
-pub fn button_handlers<C: ClientImpl>(
-    state: Option<(String, bool)>
-) -> Vec<ButtonHandler<C>> {
+pub fn button_handlers<C: ClientImpl>(state: Option<(String, bool)>) -> Vec<ButtonHandler<C>> {
     vec![
         ButtonHandler(
             "H1",
@@ -231,7 +245,7 @@ fn native_command<C: ClientImpl>(client: &mut C, req: FrontendToUserCommand) -> 
             client.client_op(|doc| add_string(doc, &text))?;
         }
         FrontendToUserCommand::RandomTarget(pos) => {
-            // TODO this should never happen, because we clarify RandomTarget 
+            // TODO this should never happen, because we clarify RandomTarget
             // beforehand
 
             let cursors = random_cursor(&client.state().client_doc.doc)?;
@@ -309,136 +323,151 @@ pub trait ClientImpl {
         // is only cause of sloppy coding. use panic less, throw more Results<> and it
         // might be easy to remove this catch_unwind.
         // TODO Also is it possible to correct the use of AssertUnwindSafe? So it's correct?
-        let res = ::std::panic::catch_unwind(::std::panic::AssertUnwindSafe(move || -> Result<(), Error> {
-            let delay_log = self.state().client_id == "$$$$$$";
+        let res = ::std::panic::catch_unwind(::std::panic::AssertUnwindSafe(
+            move || -> Result<(), Error> {
+                let delay_log = self.state().client_id == "$$$$$$";
 
-            // Rewrite random targets here.
-            if let Task::FrontendToUserCommand(FrontendToUserCommand::RandomTarget(pos)) = value {
-                let cursors = random_cursor(&self.state().client_doc.doc)?;
-                let idx = (pos * (cursors.len() as f64)) as usize;
+                // Rewrite random targets here.
+                if let Task::FrontendToUserCommand(FrontendToUserCommand::RandomTarget(pos)) = value
+                {
+                    let cursors = random_cursor(&self.state().client_doc.doc)?;
+                    let idx = (pos * (cursors.len() as f64)) as usize;
 
-                value = Task::FrontendToUserCommand(FrontendToUserCommand::CursorAnchor(cursors[idx].clone()));
-            }
-
-            if !delay_log {
-                log_wasm!(Task(self.state().client_id.clone(), value.clone()));
-            }
-
-            match value.clone() {
-                // Handle commands from Native.
-                Task::FrontendToUserCommand(command) => {
-                    if self.state().client_id == "$$$$$$" {
-                        println!("NATIVE COMMAND TOO EARLY");
-                        return Ok(());
-                    }
-
-                    native_command(self, command)?;
+                    value = Task::FrontendToUserCommand(FrontendToUserCommand::CursorAnchor(
+                        cursors[idx].clone(),
+                    ));
                 }
 
-                // Sync sent us an Update command with a new document version.
-                Task::SyncToUserCommand(SyncToUserCommand::Init(new_client_id, doc_span, version)) => {
-                    self.state().client_id = new_client_id.clone();
-                    self.state().client_doc.init(&Doc(doc_span), version);
-
-                    // Announce.
-                    println!("inital version is {:?}", version);
-
-                    log_wasm!(Setup(self.state().client_id.clone()));
-
-                    // If the caret doesn't exist or was deleted, reinitialize it.
-                    if !self
-                        .with_action_context(|ctx| Ok(has_caret(ctx, false)))
-                        .ok()
-                        .unwrap_or(true)
-                    {
-                        println!("add caret");
-                        self.client_op(|doc| init_caret(doc)).unwrap();
-                    }
-
-                    let res = UserToFrontendCommand::Init(new_client_id);
-                    self.send_client(&res).unwrap();
-
-                    // Native drives client state.
-                    let state = self.state();
-                    let res = UserToFrontendCommand::Update(doc_as_html(&state.client_doc.doc.0), None);
-                    self.send_client(&res).unwrap();
+                if !delay_log {
+                    log_wasm!(Task(self.state().client_id.clone(), value.clone()));
                 }
 
-                // Sync sent us an Update command with a new document version.
-                Task::SyncToUserCommand(SyncToUserCommand::Update(
-                    version,
-                    client_id,
-                    input_op,
-                )) => {
-                    if self.state().client_id == "$$$$$$" {
-                        return Ok(());
-                    }
-
-                    // Generated from original_doc transformed with input_op
-                    let doc = OT::apply(&self.state().client_doc.original_doc, &input_op);
-
-                    // If this operation is an acknowledgment...
-                    if self.state().client_id == client_id {
-                        if let Some(local_op) = self
-                            .state()
-                            .client_doc
-                            .sync_confirmed_pending_op(&doc, version)
-                        {
-                            // Send our next operation.
-                            self.upload(local_op)?;
+                match value.clone() {
+                    // Handle commands from Native.
+                    Task::FrontendToUserCommand(command) => {
+                        if self.state().client_id == "$$$$$$" {
+                            println!("NATIVE COMMAND TOO EARLY");
+                            return Ok(());
                         }
-                    } else {
-                        // Update with new version.
-                        println!("---> sync sent new version");
-                        self.state()
-                            .client_doc
-                            .sync_sent_new_version(&doc, version, &input_op);
+
+                        native_command(self, command)?;
                     }
 
-                    // Announce.
-                    println!("new version is {:?}", version);
+                    // Sync sent us an Update command with a new document version.
+                    Task::SyncToUserCommand(SyncToUserCommand::Init(
+                        new_client_id,
+                        doc_span,
+                        version,
+                    )) => {
+                        self.state().client_id = new_client_id.clone();
+                        self.state().client_doc.init(&Doc(doc_span), version);
 
-                    // If the caret doesn't exist or was deleted, reinitialize it.
-                    if !self
-                        .with_action_context(|ctx| Ok(has_caret(ctx, false)))
-                        .ok()
-                        .unwrap_or(true)
-                    {
-                        println!("add caret");
-                        self.client_op(|doc| init_caret(doc)).unwrap();
+                        // Announce.
+                        println!("inital version is {:?}", version);
+
+                        log_wasm!(Setup(self.state().client_id.clone()));
+
+                        // If the caret doesn't exist or was deleted, reinitialize it.
+                        if !self
+                            .with_action_context(|ctx| Ok(has_caret(ctx, false)))
+                            .ok()
+                            .unwrap_or(true)
+                        {
+                            println!("add caret");
+                            self.client_op(|doc| init_caret(doc)).unwrap();
+                        }
+
+                        let res = UserToFrontendCommand::Init(new_client_id);
+                        self.send_client(&res).unwrap();
+
+                        // Native drives client state.
+                        let state = self.state();
+                        let res = UserToFrontendCommand::Update(
+                            doc_as_html(&state.client_doc.doc.0),
+                            None,
+                        );
+                        self.send_client(&res).unwrap();
                     }
 
-                    // Native drives client state.
-                    let state = self.state();
-                    let res = UserToFrontendCommand::Update(doc_as_html(&state.client_doc.doc.0), None);
-                    self.send_client(&res).unwrap();
+                    // Sync sent us an Update command with a new document version.
+                    Task::SyncToUserCommand(SyncToUserCommand::Update(
+                        version,
+                        client_id,
+                        input_op,
+                    )) => {
+                        if self.state().client_id == "$$$$$$" {
+                            return Ok(());
+                        }
+
+                        // Generated from original_doc transformed with input_op
+                        let doc = OT::apply(&self.state().client_doc.original_doc, &input_op);
+
+                        // If this operation is an acknowledgment...
+                        if self.state().client_id == client_id {
+                            if let Some(local_op) = self
+                                .state()
+                                .client_doc
+                                .sync_confirmed_pending_op(&doc, version)
+                            {
+                                // Send our next operation.
+                                self.upload(local_op)?;
+                            }
+                        } else {
+                            // Update with new version.
+                            println!("---> sync sent new version");
+                            self.state()
+                                .client_doc
+                                .sync_sent_new_version(&doc, version, &input_op);
+                        }
+
+                        // Announce.
+                        println!("new version is {:?}", version);
+
+                        // If the caret doesn't exist or was deleted, reinitialize it.
+                        if !self
+                            .with_action_context(|ctx| Ok(has_caret(ctx, false)))
+                            .ok()
+                            .unwrap_or(true)
+                        {
+                            println!("add caret");
+                            self.client_op(|doc| init_caret(doc)).unwrap();
+                        }
+
+                        // Native drives client state.
+                        let state = self.state();
+                        let res = UserToFrontendCommand::Update(
+                            doc_as_html(&state.client_doc.doc.0),
+                            None,
+                        );
+                        self.send_client(&res).unwrap();
+                    }
                 }
-            }
 
-            // fn average(numbers: &[i64]) -> f32 {
-            //     numbers.iter().sum::<i64>() as f32 / numbers.len() as f32
-            // }
+                // fn average(numbers: &[i64]) -> f32 {
+                //     numbers.iter().sum::<i64>() as f32 / numbers.len() as f32
+                // }
 
-            // BAR.with(|bar| {
-            //     let mut b = bar.borrow_mut();
+                // BAR.with(|bar| {
+                //     let mut b = bar.borrow_mut();
 
-            //     b.push(start.elapsed().num_milliseconds());
+                //     b.push(start.elapsed().num_milliseconds());
 
-            //     println!("{} ms per task.", average(b.as_slice()));
-            // });
+                //     println!("{} ms per task.", average(b.as_slice()));
+                // });
 
-            if delay_log {
-                log_wasm!(Task(self.state().client_id.clone(), value.clone()));
-            }
+                if delay_log {
+                    log_wasm!(Task(self.state().client_id.clone(), value.clone()));
+                }
 
-            Ok(())
-        }));
+                Ok(())
+            },
+        ));
 
         if let Ok(value) = res {
             value
         } else if let Err(err) = res {
             // TODO does this actually dump out the error stack trace? otherwise
-            // we should just rethrow err? directly or 
+            // we should just rethrow err? directly or
             bail!("task {} panicked: {:?}", task_count, err);
         } else {
             unreachable!();

@@ -1,8 +1,8 @@
 use super::walkers::*;
 use failure::Error;
 use oatie::doc::*;
-use oatie::OT;
 use oatie::schema::RtfSchema;
+use oatie::OT;
 
 fn is_boundary_char(c: char) -> bool {
     c.is_whitespace() || c == '-' || c == '_'
@@ -281,7 +281,11 @@ pub fn add_string(ctx: ActionContext, input: &str) -> Result<Op, Error> {
     let mut char_walker = walker.clone();
     if let Some(DocChars(ref prefix)) = char_walker.back_char().doc().head() {
         if let Some(prefix_styles) = prefix.styles() {
-            styles.extend(prefix_styles.iter().map(|(a, b)| (a.to_owned(), b.to_owned())));
+            styles.extend(
+                prefix_styles
+                    .iter()
+                    .map(|(a, b)| (a.to_owned(), b.to_owned())),
+            );
         }
     }
 
@@ -318,7 +322,6 @@ pub fn apply_style(ctx: ActionContext, style: Style, value: Option<String>) -> R
     let mut styles = hashmap!{};
     styles.insert(style, value);
 
-
     let mut writer = walker1.to_writer();
 
     writer.del.exit_all();
@@ -333,7 +336,9 @@ pub fn apply_style(ctx: ActionContext, style: Style, value: Option<String>) -> R
                 doc1.enter();
             }
             Some(DocChars(ref text)) => {
-                writer.add.place(&AddStyles(text.char_len(), styles.clone()));
+                writer
+                    .add
+                    .place(&AddStyles(text.char_len(), styles.clone()));
                 doc1.skip(text.char_len());
             }
             None => {
@@ -606,10 +611,6 @@ pub fn caret_block_move(ctx: ActionContext, increase: bool) -> Result<Op, Error>
     Ok(OT::transform_advance::<RtfSchema>(&op_1, &op_2))
 }
 
-
-
-
-
 pub fn caret_clear(ctx: ActionContext, focus: bool) -> Result<(isize, Op), Error> {
     let walker = if let Some(walker) = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, focus) {
         walker
@@ -636,7 +637,7 @@ pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan, focus: bool) -> Result<Op
     let (pos_1, op_1) = caret_clear(ctx.clone(), focus)
         .map(|(pos_1, op_1)| (Some(pos_1), op_1))
         .unwrap_or_else(|_| (None, OT::empty()));
-    
+
     // Second operation removes the focus caret if needed.
     let (_, op_2) = (if !focus {
         caret_clear(ctx.clone(), true)

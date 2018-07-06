@@ -1,5 +1,6 @@
 //! Contains the bindings needed for WASM.
 
+extern crate console_error_panic_hook;
 extern crate edit_common;
 extern crate failure;
 extern crate maplit;
@@ -9,16 +10,15 @@ extern crate serde;
 extern crate serde_json;
 extern crate take_mut;
 extern crate wbg_rand;
-extern crate console_error_panic_hook;
 
 use super::client::*;
-use super::state::*;
 use super::monkey::*;
+use super::state::*;
 use edit_common::commands::*;
 use failure::Error;
 use std::sync::atomic::AtomicBool;
-use std::sync::{Arc};
 use std::sync::atomic::Ordering;
+use std::sync::Arc;
 use wasm_bindgen::prelude::*;
 
 lazy_static! {
@@ -125,7 +125,6 @@ impl WasmClient {
         Ok(())
     }
 
-
     /// Send a command *from* the frontend *to* the client.
     pub fn command(&mut self, input: &str) -> u32 {
         let req_parse: Result<Task, _> = serde_json::from_slice(&input.as_bytes());
@@ -152,4 +151,3 @@ pub fn wasm_close() {
     WASM_ALIVE.store(false, Ordering::Relaxed);
     WASM_MONKEY.store(false, Ordering::Relaxed);
 }
-

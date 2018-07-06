@@ -4,7 +4,10 @@ use super::compose;
 use super::doc::*;
 use super::normalize;
 use super::transform::*;
-use super::validate::{validate_doc_span, ValidateContext};
+use super::validate::{
+    validate_doc_span,
+    ValidateContext,
+};
 use super::OT;
 use failure::Error;
 use regex::Regex;

@@ -1,20 +1,20 @@
 #![allow(unused_imports)]
 
 use crate::{
+    button_handlers,
     ClientImpl,
     Task,
-    button_handlers,
 };
 
 use extern::{
     crossbeam_channel::Sender,
     edit_common::commands::*,
     serde_json,
+    std::cell::RefCell,
     std::rc::Rc,
     std::sync::atomic::AtomicBool,
     std::sync::atomic::Ordering,
     std::sync::Arc,
-    std::cell::RefCell,
     wasm_bindgen::prelude::*,
     wbg_rand::Rng,
 };
@@ -41,22 +41,23 @@ impl Scheduler {
     }
 
     pub fn schedule_random<F>(&mut self, bounds: (u64, u64), task: F)
-    where F: Fn() -> FrontendToUserCommand + 'static {
-        use crate::{
-            wasm::{
-                setTimeout,
-                forwardWasmTask,
-            },
+    where
+        F: Fn() -> FrontendToUserCommand + 'static,
+    {
+        use crate::wasm::{
+            forwardWasmTask,
+            setTimeout,
         };
 
-        use extern::{
-            wbg_rand::{Rng, wasm_rng},
+        use extern::wbg_rand::{
+            wasm_rng,
+            Rng,
         };
-        
+
         // let tx = self.tx.clone();
         let alive = self.alive.clone();
         let monkey = self.monkey.clone();
-    
+
         let task = Rc::new(task);
         let load_it: Rc<RefCell<Option<Box<Fn()>>>> = Rc::new(RefCell::new(None));
         let load_it_clone = load_it.clone();
@@ -68,7 +69,7 @@ impl Scheduler {
             let load_it_clone = load_it_clone.clone();
 
             let outer = Rc::new(RefCell::new(Box::new(None)));
-            
+
             let mut rng = wasm_rng();
             let delay = rng.gen_range(bounds.0, bounds.1);
             // console_log!(" - new delay: {:?}", delay);
@@ -81,7 +82,9 @@ impl Scheduler {
 
                     if alive.load(Ordering::Relaxed) && monkey.load(Ordering::Relaxed) {
                         let task_object = task();
-                        let task_str = serde_json::to_string(&Task::FrontendToUserCommand(task_object)).unwrap();
+                        let task_str = serde_json::to_string(&Task::FrontendToUserCommand(
+                            task_object,
+                        )).unwrap();
                         forwardWasmTask(&task_str);
                     }
                 })
@@ -109,24 +112,18 @@ pub struct Scheduler {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl Scheduler {
-    pub fn new(
-        tx: Sender<Task>,
-        alive: Arc<AtomicBool>,
-        monkey: Arc<AtomicBool>,
-    ) -> Self {
-        Self {
-            tx,
-            alive,
-            monkey,
-        }
+    pub fn new(tx: Sender<Task>, alive: Arc<AtomicBool>, monkey: Arc<AtomicBool>) -> Self {
+        Self { tx, alive, monkey }
     }
 
     pub fn schedule_random<F>(&mut self, bounds: (u64, u64), task: F)
-    where F: Fn() -> FrontendToUserCommand + 'static + Send {
+    where
+        F: Fn() -> FrontendToUserCommand + 'static + Send,
+    {
         use extern::{
+            failure::Error,
             rand,
             std::thread,
-            failure::Error,
             std::time::Duration,
         };
 
@@ -137,9 +134,7 @@ impl Scheduler {
         thread::spawn::<_, Result<(), Error>>(move || {
             let mut rng = rand::thread_rng();
             while alive.load(Ordering::Relaxed) {
-                thread::sleep(Duration::from_millis(
-                    rng.gen_range(bounds.0, bounds.1),
-                ));
+                thread::sleep(Duration::from_millis(rng.gen_range(bounds.0, bounds.1)));
                 if monkey.load(Ordering::Relaxed) {
                     let task_object = task();
                     tx.send(Task::FrontendToUserCommand(task_object))?;
@@ -169,8 +164,9 @@ pub const MONKEY_CLICK: MonkeyParam = (400, 1000);
 
 #[cfg(target_arch = "wasm32")]
 fn local_rng() -> impl Rng {
-    use extern::{
-        wbg_rand::{Rng, wasm_rng},
+    use extern::wbg_rand::{
+        wasm_rng,
+        Rng,
     };
     wasm_rng()
 }
@@ -182,9 +178,7 @@ fn local_rng() -> impl Rng {
 }
 
 #[allow(unused)]
-pub fn setup_monkey<C: ClientImpl + Sized>(
-    mut scheduler: Scheduler,
-) {
+pub fn setup_monkey<C: ClientImpl + Sized>(mut scheduler: Scheduler) {
     // let mut scheduler = Scheduler::new(alive, monkey);
 
     scheduler.schedule_random(MONKEY_BUTTON, || {

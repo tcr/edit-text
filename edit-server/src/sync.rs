@@ -1,16 +1,43 @@
 //! Synchronization server. Threads for websockets and graphql.
 
-use crate::{carets::*, db::*, graphql::sync_graphql_server, log::log_sync_init, state::*};
+use crate::{
+    carets::*,
+    db::*,
+    graphql::sync_graphql_server,
+    log::log_sync_init,
+    state::*,
+};
 
 use extern::{
-    crossbeam_channel::{unbounded, Receiver as CCReceiver, Sender as CCSender},
-    edit_common::commands::*, failure::Error, oatie::doc::*, rand::{thread_rng, Rng},
-    serde_json, simple_ws, simple_ws::*, std::{collections::HashMap, thread, time::Duration},
-    thread_spawn::thread_spawn, url::Url, ws, std::env,
+    crossbeam_channel::{
+        unbounded,
+        Receiver as CCReceiver,
+        Sender as CCSender,
+    },
+    edit_common::commands::*,
+    failure::Error,
+    oatie::doc::*,
+    rand::{
+        thread_rng,
+        Rng,
+    },
+    serde_json, simple_ws,
+    simple_ws::*,
+    std::env,
+    std::{
+        collections::HashMap,
+        thread,
+        time::Duration,
+    },
+    thread_spawn::thread_spawn,
+    url::Url,
+    ws,
 };
 
 fn debug_sync_delay() -> Option<u64> {
-    env::var("EDIT_DEBUG_SYNC_DELAY").ok().and_then(|x| x.parse::<u64>().ok())
+    env::var("EDIT_DEBUG_SYNC_DELAY")
+        .ok()
+        .and_then(|x| x.parse::<u64>().ok())
 }
 
 const INITIAL_SYNC_VERSION: usize = 100; // Arbitrarily select version 100
@@ -176,11 +203,7 @@ impl PageController {
         }
 
         // Broadcast this operation to all connected websockets.
-        let command = SyncToUserCommand::Update(
-            self.state.version,
-            client_id.to_owned(),
-            op,
-        );
+        let command = SyncToUserCommand::Update(self.state.version, client_id.to_owned(), op);
         self.broadcast_client_command(&command);
     }
 
@@ -266,7 +289,7 @@ impl PageController {
                 if let Some(delay) = debug_sync_delay() {
                     thread::sleep(Duration::from_millis(delay));
                 }
-                
+
                 // Commit the operation.
                 // TODO remove this AssertUnwindSafe, since it's probably not safe.
                 let sync = ::std::panic::catch_unwind(::std::panic::AssertUnwindSafe(|| {
@@ -274,7 +297,10 @@ impl PageController {
                 }));
 
                 if let Err(err) = sync {
-                    eprintln!("received invalid packet from client: {:?} - {:?}", client_id, err);
+                    eprintln!(
+                        "received invalid packet from client: {:?} - {:?}",
+                        client_id, err
+                    );
                     // let _ = self.send_client_restart(&client_id);
                 }
             }
@@ -375,7 +401,6 @@ fn spawn_page_master(db_pool: DbPool, rx_master: CCReceiver<ClientNotify>) {
 
 // TODO use _period
 pub fn sync_socket_server(port: u16) {
-
     let db_pool = db_pool_create();
 
     // Start recorder.

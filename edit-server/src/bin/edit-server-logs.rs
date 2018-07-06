@@ -1,13 +1,14 @@
 #![feature(extern_in_paths)]
 
-#[macro_use] extern crate quicli;
+#[macro_use]
+extern crate quicli;
 extern crate edit_server;
 extern crate serde_json;
 
 use extern::{
     diesel::connection::Connection,
-    quicli::prelude::*,
     edit_server::db::*,
+    quicli::prelude::*,
 };
 
 #[derive(Debug, StructOpt)]

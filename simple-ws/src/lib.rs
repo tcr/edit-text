@@ -6,9 +6,18 @@ extern crate ws;
 use failure::Error;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
-use std::sync::{Arc, Mutex};
-use ws::util::{Timeout, Token};
-use ws::{CloseCode, Frame};
+use std::sync::{
+    Arc,
+    Mutex,
+};
+use ws::util::{
+    Timeout,
+    Token,
+};
+use ws::{
+    CloseCode,
+    Frame,
+};
 
 const PING_INTERVAL: u64 = 5_000;
 const TIMEOUT_INTERVAL: u64 = 30_000;

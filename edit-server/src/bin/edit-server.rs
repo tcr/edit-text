@@ -31,9 +31,16 @@ extern crate ws;
 extern crate serde_json;
 
 use edit_common::{
-    doc_as_html, markdown::{doc_to_markdown, markdown_to_doc},
+    doc_as_html,
+    markdown::{
+        doc_to_markdown,
+        markdown_to_doc,
+    },
 };
-use extern::edit_server::{graphql::client::*, sync::*};
+use extern::edit_server::{
+    graphql::client::*,
+    sync::*,
+};
 use handlebars::Handlebars;
 use include_dir_macro::include_dir;
 use mime_guess::guess_mime_type;
@@ -45,7 +52,10 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
 use std::panic;
-use std::path::{Path, PathBuf};
+use std::path::{
+    Path,
+    PathBuf,
+};
 use std::process;
 use std::thread;
 use std::thread::JoinHandle;

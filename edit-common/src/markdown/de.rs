@@ -2,7 +2,17 @@ use failure::Error;
 use oatie::doc::*;
 use oatie::writer::DocWriter;
 use pulldown_cmark::{
-    Event::{self, End, FootnoteReference, HardBreak, Html, InlineHtml, SoftBreak, Start, Text},
+    Event::{
+        self,
+        End,
+        FootnoteReference,
+        HardBreak,
+        Html,
+        InlineHtml,
+        SoftBreak,
+        Start,
+        Text,
+    },
     Parser, Tag,
 };
 
@@ -23,11 +33,16 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                     self.end_tag(tag);
                 }
                 Text(text) => {
-                    self.body
-                        .place(&DocChars(DocString::from_str_styled(text.as_ref(), self.styles.clone())));
+                    self.body.place(&DocChars(DocString::from_str_styled(
+                        text.as_ref(),
+                        self.styles.clone(),
+                    )));
                 }
                 HardBreak => {
-                    self.body.place(&DocChars(DocString::from_str_styled("\n", self.styles.clone())));
+                    self.body.place(&DocChars(DocString::from_str_styled(
+                        "\n",
+                        self.styles.clone(),
+                    )));
                 }
                 SoftBreak | Html(..) | InlineHtml(..) | FootnoteReference(..) => {}
             }

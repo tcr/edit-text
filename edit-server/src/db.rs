@@ -1,4 +1,7 @@
-use diesel::{prelude::*, sqlite::SqliteConnection};
+use diesel::{
+    prelude::*,
+    sqlite::SqliteConnection,
+};
 use dotenv::dotenv;
 use oatie::doc::*;
 use r2d2;

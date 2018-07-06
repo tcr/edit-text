@@ -1,16 +1,25 @@
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::de::{
+    self,
+    SeqAccess,
+    Visitor,
+};
+use serde::ser::SerializeSeq;
+use serde::{
+    Deserialize,
+    Deserializer,
+    Serialize,
+    Serializer,
+};
 use std::collections::HashMap;
+use std::fmt;
+use std::ops::Range;
 use std::sync::atomic::AtomicUsize;
 use std::sync::Arc;
-use std::ops::Range;
-use serde::ser::SerializeSeq;
-use serde::de::{self, SeqAccess, Visitor};
-use std::fmt;
 
 #[repr(u8)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Style {
-    Normie, // sentinel
+    Normie,   // sentinel
     Selected, // never used except on the client
     Bold,
     Italic,
@@ -28,11 +37,7 @@ pub type StyleMap = HashMap<Style, Option<String>>;
 /// Abstraction for String that allows a limited set of operations
 /// with good optimization. (Or that's the idea.)
 #[derive(Clone, Debug)]
-pub struct DocString(
-    Arc<String>,
-    Option<Range<usize>>,
-    Option<StyleMap>,
-);
+pub struct DocString(Arc<String>, Option<Range<usize>>, Option<StyleMap>);
 
 impl DocString {
     pub fn from_string(input: String) -> DocString {
@@ -86,7 +91,12 @@ impl DocString {
 
     // TODO consume self?
     pub fn split_at(&self, char_boundary: usize) -> (DocString, DocString) {
-        let (byte_index, _) = self.as_str().char_indices().skip(char_boundary).next().unwrap();
+        let (byte_index, _) = self
+            .as_str()
+            .char_indices()
+            .skip(char_boundary)
+            .next()
+            .unwrap();
         let mut start = 0;
         let mut end = self.0.len();
         if let Some(ref range) = self.1 {
@@ -94,8 +104,16 @@ impl DocString {
             end = range.end;
         }
         (
-            DocString(self.0.clone(), Some((start + 0)..(start + byte_index)), self.2.clone()),
-            DocString(self.0.clone(), Some((start + byte_index)..end), self.2.clone()),
+            DocString(
+                self.0.clone(),
+                Some((start + 0)..(start + byte_index)),
+                self.2.clone(),
+            ),
+            DocString(
+                self.0.clone(),
+                Some((start + byte_index)..end),
+                self.2.clone(),
+            ),
         )
     }
 

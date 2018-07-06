@@ -1,4 +1,9 @@
-use extern::{failure::Error, oatie::doc::*, reqwest, serde_json};
+use extern::{
+    failure::Error,
+    oatie::doc::*,
+    reqwest,
+    serde_json,
+};
 
 pub fn get_all_pages_graphql() -> Option<Vec<String>> {
     let client = reqwest::Client::new();
@@ -22,9 +27,12 @@ query {
 
     let ret: ::serde_json::Value = serde_json::from_str(&text).ok()?;
     let node = ret.pointer("/data/pages")?;
-    Some(node.as_array()?.iter().map(|x| {
-        x.pointer("/id").unwrap().as_str().unwrap().to_string()
-    }).collect::<Vec<_>>())
+    Some(
+        node.as_array()?
+            .iter()
+            .map(|x| x.pointer("/id").unwrap().as_str().unwrap().to_string())
+            .collect::<Vec<_>>(),
+    )
 }
 
 pub fn get_single_page_graphql(input_id: &str) -> Option<Doc> {

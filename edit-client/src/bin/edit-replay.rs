@@ -16,18 +16,24 @@ extern crate structopt_derive;
 
 // use quicli::prelude::*;
 use colored::Colorize;
-use crossbeam_channel::{unbounded, Receiver};
+use crossbeam_channel::{
+    unbounded,
+    Receiver,
+};
 use edit_client::{
-    Client,
-    ClientImpl,
-    state::ClientDoc, 
     log::*,
     proxy::ProxyClient,
+    state::ClientDoc,
+    Client,
+    ClientImpl,
 };
 use edit_common::commands::*;
 use failure::Error;
 use std::io::prelude::*;
-use std::sync::{atomic::AtomicBool, Arc};
+use std::sync::{
+    atomic::AtomicBool,
+    Arc,
+};
 use structopt::StructOpt;
 
 fn init_new_client(

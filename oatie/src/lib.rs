@@ -3,7 +3,6 @@
 //! See the book for more details: http://tcr.github.io/edit-text/
 
 #![feature(nll, range_is_empty, crate_in_paths)]
-
 // TODO clean these up
 #![allow(unknown_lints)]
 #![allow(single_char_pattern)]
@@ -53,10 +52,10 @@ pub mod doc;
 pub mod apply;
 pub mod macros;
 mod parse;
+mod place;
 pub mod schema;
 pub mod stepper;
 mod string;
-mod place;
 pub mod transform;
 pub mod transform_test;
 pub mod validate;
@@ -68,7 +67,10 @@ use doc::*;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use transform::transform;
-pub use transform::{Schema, Track};
+pub use transform::{
+    Schema,
+    Track,
+};
 
 /// A type that can have operational transform applied to it.
 /// The `OT` trait is implemented on an operation object, and its

@@ -3,10 +3,7 @@
 use super::doc::*;
 use std::collections::HashMap;
 
-fn apply_add_inner(
-    spanvec: &DocSpan,
-    delvec: &AddSpan,
-) -> (DocSpan, DocSpan) {
+fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan) {
     let mut span = &spanvec[..];
     let mut del = &delvec[..];
 

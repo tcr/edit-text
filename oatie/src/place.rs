@@ -49,7 +49,6 @@ impl DocPlaceable for DocSpan {
     }
 }
 
-
 pub trait DelPlaceable {
     fn place_all(&mut self, all: &[DelElement]);
     fn place(&mut self, value: &DelElement);
@@ -141,7 +140,6 @@ impl DelPlaceable for DelSpan {
     }
 }
 
-
 pub trait AddPlaceable {
     fn place_all(&mut self, all: &[AddElement]);
     fn place(&mut self, value: &AddElement);
@@ -180,7 +178,9 @@ impl AddPlaceable for AddSpan {
             }
             AddStyles(count, ref styles) => {
                 assert!(count > 0);
-                if let Some(&mut AddStyles(ref mut prefix_count, ref prefix_styles)) = self.last_mut() {
+                if let Some(&mut AddStyles(ref mut prefix_count, ref prefix_styles)) =
+                    self.last_mut()
+                {
                     if prefix_styles == styles {
                         *prefix_count += count;
                         return;
@@ -244,7 +244,6 @@ impl AddPlaceable for AddSpan {
         }
     }
 }
-
 
 pub trait CurPlaceable {
     fn place_all(&mut self, all: &[CurElement]);

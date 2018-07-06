@@ -1,12 +1,18 @@
 use crate::db::*;
 
 use extern::{
-    diesel::{self, sqlite::SqliteConnection}, failure::Error, std::collections::HashMap,
+    diesel::{
+        self,
+        sqlite::SqliteConnection,
+    },
+    failure::Error,
+    std::collections::HashMap,
 };
 
 fn lock_retry<T, F>(mut f: F) -> Result<T, diesel::result::Error>
 where
-    F: FnMut() -> Result<T, diesel::result::Error> {
+    F: FnMut() -> Result<T, diesel::result::Error>,
+{
     loop {
         let res = f();
         if let Err(ref err) = res {
@@ -16,7 +22,7 @@ where
                 continue;
             }
         }
-        return res
+        return res;
     }
 }
 
@@ -42,9 +48,7 @@ pub fn create_page<'a>(conn: &SqliteConnection, id: &'a str, doc: &Doc) -> usize
 pub fn all_posts(db: &SqliteConnection) -> HashMap<String, String> {
     use super::schema::posts::dsl::*;
 
-    let results = lock_retry(|| {
-        posts.load::<Post>(db)
-    }).expect("Error loading posts");
+    let results = lock_retry(|| posts.load::<Post>(db)).expect("Error loading posts");
 
     let mut ret = HashMap::new();
     for post in results {
@@ -56,15 +60,11 @@ pub fn all_posts(db: &SqliteConnection) -> HashMap<String, String> {
 pub fn get_single_page(db: &SqliteConnection, input_id: &str) -> Option<Doc> {
     use super::schema::posts::dsl::*;
 
-    let post = lock_retry(|| {
-        posts
-            .filter(id.eq(input_id))
-            .first::<Post>(db)
-    });
+    let post = lock_retry(|| posts.filter(id.eq(input_id)).first::<Post>(db));
 
     post
         .map_err::<Error, _>(|x| x.into())
-        
+
         // HACK strip null bytes that have snuck into the database
         .map(|x| {
             if x.body.find(r"\u{0}").is_some() {
@@ -74,7 +74,7 @@ pub fn get_single_page(db: &SqliteConnection, input_id: &str) -> Option<Doc> {
                 x.body.to_string()
             }
         })
-        
+
         .and_then(|x| Ok(::ron::de::from_str::<DocSpan>(&x)?))
         .map(|d| Doc(d))
         .ok()
@@ -83,14 +83,16 @@ pub fn get_single_page(db: &SqliteConnection, input_id: &str) -> Option<Doc> {
 pub fn get_single_page_raw(db: &SqliteConnection, input_id: &str) -> Option<Post> {
     use super::schema::posts::dsl::*;
 
-    lock_retry(|| {
-        posts.filter(id.eq(input_id)).first::<Post>(db)
-    }).ok()
+    lock_retry(|| posts.filter(id.eq(input_id)).first::<Post>(db)).ok()
 }
 
 // Logs
 
-pub fn create_log<'a>(conn: &SqliteConnection, source: &'a str, body: &'a str) -> Result<usize, Error> {
+pub fn create_log<'a>(
+    conn: &SqliteConnection,
+    source: &'a str,
+    body: &'a str,
+) -> Result<usize, Error> {
     use super::schema::logs;
 
     let new_log = NewLog {
@@ -108,9 +110,7 @@ pub fn create_log<'a>(conn: &SqliteConnection, source: &'a str, body: &'a str) -
 pub fn all_logs(db: &SqliteConnection) -> Result<Vec<Log>, Error> {
     use super::schema::logs::dsl::*;
 
-    Ok(lock_retry(|| {
-        logs.load::<Log>(db)
-    })?)
+    Ok(lock_retry(|| logs.load::<Log>(db))?)
 }
 
 pub fn select_logs(db: &SqliteConnection, input_source: &str) -> Result<Vec<Log>, Error> {
@@ -124,8 +124,5 @@ pub fn select_logs(db: &SqliteConnection, input_source: &str) -> Result<Vec<Log>
 pub fn clear_all_logs(db: &SqliteConnection) -> Result<usize, Error> {
     use super::schema::logs::dsl::*;
 
-    Ok(lock_retry(|| {
-        diesel::delete(logs).execute(db)
-    })?)
-
+    Ok(lock_retry(|| diesel::delete(logs).execute(db))?)
 }
