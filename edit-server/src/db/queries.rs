@@ -1,13 +1,11 @@
 use crate::db::*;
 
-use extern::{
-    diesel::{
-        self,
-        sqlite::SqliteConnection,
-    },
-    failure::Error,
-    std::collections::HashMap,
+use diesel::{
+    self,
+    sqlite::SqliteConnection,
 };
+use failure::Error;
+use std::collections::HashMap;
 
 fn lock_retry<T, F>(mut f: F) -> Result<T, diesel::result::Error>
 where

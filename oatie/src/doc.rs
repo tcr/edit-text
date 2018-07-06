@@ -48,6 +48,7 @@ pub enum DelElement {
     DelWithGroup(DelSpan),
     DelChars(usize),
     DelGroup(DelSpan),
+    DelStyles(usize, StyleSet),
     // TODO Implement these
     // DelGroupAll,
     // DelMany(usize),

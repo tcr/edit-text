@@ -178,6 +178,28 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
         let mut nextfirst = true;
 
         match d.clone() {
+            DelStyles(count, styles) => match first.clone() {
+                DocChars(mut value) => {
+                    if value.char_len() < count {
+                        d = DelStyles(count - value.char_len(), styles.clone());
+                        value.remove_styles(&styles);
+                        res.place(&DocChars(value));
+                        nextdel = false;
+                    } else if value.char_len() > count {
+                        let (mut left, right) = value.split_at(count);
+                        left.remove_styles(&styles);
+                        res.place(&DocChars(left));
+                        first = DocChars(right);
+                        nextfirst = false;
+                    } else {
+                        value.remove_styles(&styles);
+                        res.place(&DocChars(value));
+                    }
+                }
+                _ => {
+                    panic!("Invalid DelStyles");
+                }
+            },
             DelSkip(count) => match first.clone() {
                 DocChars(value) => {
                     if value.char_len() < count {

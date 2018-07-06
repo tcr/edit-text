@@ -77,6 +77,19 @@ impl DelPlaceable for DelSpan {
                     self.push(DelChars(count));
                 }
             }
+            DelStyles(count, ref styles) => {
+                assert!(count > 0);
+                if let Some(&mut DelStyles(ref mut prefix_count, ref prefix_styles)) =
+                    self.last_mut()
+                {
+                    if prefix_styles == styles {
+                        *prefix_count += count;
+                        return;
+                    }
+                }
+
+                self.push(DelStyles(count, styles.to_owned()));
+            }
             DelSkip(count) => {
                 assert!(count > 0);
                 if let Some(&mut DelSkip(ref mut value)) = self.last_mut() {
@@ -100,7 +113,7 @@ impl DelPlaceable for DelSpan {
         let mut ret = 0;
         for item in self {
             ret += match *item {
-                DelSkip(len) | DelChars(len) => len,
+                DelSkip(len) | DelChars(len) | DelStyles(len, _) => len,
                 DelGroup(..) | DelWithGroup(..) => 1,
                 // DelMany(len) => len,
                 // DelObject | DelGroupAll  => 1,
@@ -113,7 +126,7 @@ impl DelPlaceable for DelSpan {
         let mut ret = 0;
         for item in self {
             ret += match *item {
-                DelSkip(len) => len,
+                DelSkip(len) | DelStyles(len, _) => len,
                 DelChars(..) => 0,
                 DelWithGroup(..) => 1,
                 DelGroup(ref span) => span.skip_post_len(),

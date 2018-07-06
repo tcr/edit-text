@@ -1166,6 +1166,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
     (op_a, op_b)
 }
 
+// Create del span that occurs after the input deletion has occurred.
 fn undel(input_del: &DelSpan) -> DelSpan {
     let mut del: DelSpan = vec![];
     for elem in input_del {
@@ -1175,6 +1176,9 @@ fn undel(input_del: &DelSpan) -> DelSpan {
             }
             &DelSkip(value) => {
                 del.place(&DelSkip(value));
+            }
+            &DelStyles(count, _) => {
+                del.place(&DelSkip(count));
             }
             &DelWithGroup(ref ins_span) => {
                 del.place(&DelWithGroup(undel(ins_span)));
@@ -1335,9 +1339,84 @@ pub fn transform_del_del_inner(
                 // a_del.skip(cmp::min(a_chars, b_chars));
                 b_del.place(&DelChars(cmp::min(a_chars, b_count)));
             }
-            (Some(DelChars(a_chars)), _) => {
-                a.next();
-                b_del.place(&DelChars(a_chars));
+            (Some(DelStyles(a_count, a_styles)), Some(DelStyles(b_count, b_styles))) => {
+                if a_count > b_count {
+                    a.head = Some(DelStyles(a_count - b_count, a_styles.clone()));
+                    b.next();
+                } else if a_count < b_count {
+                    a.next();
+                    b.head = Some(DelStyles(b_count - a_count, b_styles.clone()));
+                } else {
+                    a.next();
+                    b.next();
+                }
+
+                a_del.place(&DelStyles(cmp::min(a_count, b_count), b_styles));
+                b_del.place(&DelStyles(cmp::min(a_count, b_count), a_styles));
+            }
+            (Some(DelSkip(a_count)), Some(DelStyles(b_count, b_styles))) => {
+                if a_count > b_count {
+                    a.head = Some(DelSkip(a_count - b_count));
+                    b.next();
+                    a_del.place(&DelStyles(b_count, b_styles));
+                    b_del.place(&DelSkip(b_count));
+                } else if a_count < b_count {
+                    a.next();
+                    b.head = Some(DelStyles(b_count - a_count, b_styles.clone()));
+                    a_del.place(&DelStyles(a_count, b_styles));
+                    b_del.place(&DelSkip(a_count));
+                } else {
+                    a.next();
+                    b.next();
+                    a_del.place(&DelStyles(b_count, b_styles));
+                    b_del.place(&DelSkip(a_count));
+                }
+            }
+            (Some(DelStyles(a_count, a_styles)), Some(DelSkip(b_count))) => {
+                if a_count > b_count {
+                    a.head = Some(DelStyles(a_count - b_count, a_styles.clone()));
+                    b.next();
+                    a_del.place(&DelSkip(b_count));
+                    b_del.place(&DelStyles(b_count, a_styles));
+                } else if a_count < b_count {
+                    a.next();
+                    b.head = Some(DelSkip(b_count - a_count));
+                    a_del.place(&DelSkip(a_count));
+                    b_del.place(&DelStyles(a_count, a_styles));
+                } else {
+                    a.next();
+                    b.next();
+                    a_del.place(&DelSkip(b_count));
+                    b_del.place(&DelStyles(a_count, a_styles));
+                }
+            }
+            (Some(DelStyles(a_count, a_styles)), Some(DelChars(b_count))) => {
+                if a_count > b_count {
+                    a.head = Some(DelStyles(a_count - b_count, a_styles.clone()));
+                    b.next();
+                    a_del.place(&DelChars(b_count));
+                } else if a_count < b_count {
+                    a.next();
+                    b.head = Some(DelChars(b_count - a_count));
+                } else {
+                    a.next();
+                    b.next();
+                    a_del.place(&DelChars(a_count));
+                }
+            }
+            (Some(DelChars(a_count)), Some(DelStyles(b_count, b_styles))) => {
+                if a_count > b_count {
+                    a.head = Some(DelChars(a_count - b_count));
+                    b.next();
+                    b_del.place(&DelChars(b_count));
+                } else if a_count < b_count {
+                    a.next();
+                    b.head = Some(DelStyles(b_count - a_count, b_styles.clone()));
+                } else {
+                    a.next();
+                    b.next();
+                    b_del.place(&DelChars(a_count));
+                }
             }
 
             // With Groups
@@ -1457,7 +1536,18 @@ pub fn transform_del_del_inner(
             //     a.next();
             //     b.next();
             // }
-            unimplemented => {
+
+            // TODO why are these unreachable?
+            | (None, _)
+            | (_, None)
+            | (Some(DelWithGroup(_)), Some(DelChars(_)))
+            | (Some(DelWithGroup(_)), Some(DelStyles(_, _)))
+            | (Some(DelStyles(_, _)), Some(DelWithGroup(_)))
+            | (Some(DelChars(_)), Some(DelWithGroup(_)))
+            | (Some(DelGroup(_)), Some(DelChars(_)))
+            | (Some(DelGroup(_)), Some(DelStyles(_, _)))
+            | (Some(DelStyles(_, _)), Some(DelGroup(_)))
+            | (Some(DelChars(_)), Some(DelGroup(_))) => {
                 log_transform!("Not reachable: {:?}", unimplemented);
                 unreachable!();
             }
@@ -1620,6 +1710,62 @@ pub fn transform_add_del_inner(
                     delres.place(&DelWithGroup(delres_inner));
                     a.next();
                 }
+            },
+            DelStyles(b_count, b_styles) => match a.get_head() {
+                AddChars(a_value) => {
+                    delres.place(&DelSkip(a_value.char_len()));
+                    addres.place(&AddChars(a_value));
+                    a.next();
+                }
+                AddStyles(a_count, a_styles) => {
+                    // Remove styles from A that were present in B.
+                    let combined_styles: StyleMap = a_styles
+                        .clone()
+                        .drain()
+                        .filter(|(ref k, _)| b_styles.contains(k))
+                        .collect();
+
+                    addres.place(&AddStyles(cmp::min(a_count, b_count), combined_styles));
+                    delres.place(&DelStyles(b_count, b_styles.clone())); // Not combined
+                    if a_count > b_count {
+                        a.head = Some(AddStyles(a_count - b_count, a_styles));
+                        b.next();
+                    } else if a_count < b_count {
+                        a.next();
+                        b.head = Some(DelStyles(b_count - a_count, b_styles));
+                    } else {
+                        a.next();
+                        b.next();
+                    }
+                }
+                AddSkip(a_count) => {
+                    addres.place(&AddSkip(cmp::min(a_count, b_count)));
+                    delres.place(&DelStyles(cmp::min(a_count, b_count), b_styles.clone()));
+                    if a_count > b_count {
+                        a.head = Some(AddSkip(a_count - b_count));
+                        b.next();
+                    } else if a_count < b_count {
+                        a.next();
+                        b.head = Some(DelStyles(b_count - a_count, b_styles.clone()));
+                    } else {
+                        a.next();
+                        b.next();
+                    }
+                }
+                AddGroup(attrs, a_span) => {
+                    let mut a_inner = AddStepper::new(&a_span);
+                    let mut addres_inner: AddSpan = vec![];
+                    let mut delres_inner: DelSpan = vec![];
+                    transform_add_del_inner(&mut delres_inner, &mut addres_inner, &mut a_inner, b);
+                    if !a_inner.is_done() {
+                        addres_inner.place(&a_inner.head.unwrap());
+                        addres_inner.place_all(&a_inner.rest);
+                    }
+                    addres.place(&AddGroup(attrs, addres_inner));
+                    delres.place(&DelWithGroup(delres_inner));
+                    a.next();
+                }
+                AddWithGroup(..) => panic!("Invalid DelStyles x AddWithGroup"),
             },
             DelWithGroup(span) => match a.get_head() {
                 AddStyles(..) => {
