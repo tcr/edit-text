@@ -4,9 +4,9 @@ use crate::{
 };
 
 use extern::{
-    failure::Error,
     crossbeam_channel::Sender,
     edit_common::commands::*,
+    failure::Error,
 };
 
 #[cfg(not(target_arch = "wasm32"))]

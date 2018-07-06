@@ -1,7 +1,7 @@
 #![feature(extern_in_paths, crate_in_paths)]
 
-extern crate edit_common;
 extern crate edit_client;
+extern crate edit_common;
 extern crate serde_json;
 extern crate structopt;
 #[macro_use]
@@ -17,13 +17,16 @@ extern crate ron;
 extern crate simple_ws;
 extern crate url;
 
-
 use extern::{
-    crossbeam_channel::{unbounded, Receiver, Sender},
+    crossbeam_channel::{
+        unbounded,
+        Receiver,
+        Sender,
+    },
     edit_client::{
-        *,
         monkey::*,
         proxy::*,
+        *,
     },
     edit_common::commands::*,
     failure::Error,
@@ -32,8 +35,14 @@ use extern::{
     std::process,
     std::sync::atomic::AtomicBool,
     std::sync::atomic::Ordering,
-    std::sync::{Arc, Mutex},
-    std::thread::{self, JoinHandle},
+    std::sync::{
+        Arc,
+        Mutex,
+    },
+    std::thread::{
+        self,
+        JoinHandle,
+    },
     std::time::Duration,
     structopt::StructOpt,
     ws::CloseCode,
@@ -240,7 +249,11 @@ fn setup_client(
     let (tx_task, rx_task) = unbounded();
 
     // Setup monkey tasks.
-    setup_monkey::<ProxyClient>(Scheduler::new(tx_task.clone(), alive.clone(), monkey.clone()));
+    setup_monkey::<ProxyClient>(Scheduler::new(
+        tx_task.clone(),
+        alive.clone(),
+        monkey.clone(),
+    ));
 
     // Connect to the sync server.
     spawn_sync_connection(ws_port, page_id.to_owned(), tx_task.clone(), rx_sync);

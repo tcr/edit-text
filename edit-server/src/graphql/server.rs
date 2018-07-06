@@ -1,13 +1,28 @@
 //! GraphQL server.
 
 use crate::{
-    db::*, sync::{ClientNotify, ClientUpdate},
+    db::*,
+    sync::{
+        ClientNotify,
+        ClientUpdate,
+    },
 };
 
 use extern::{
-    crossbeam_channel::Sender as CCSender, diesel::sqlite::SqliteConnection,
-    edit_common::markdown::*, juniper::{self, http::GraphQLRequest, FieldError, FieldResult},
-    oatie::doc::*, r2d2, r2d2_diesel::ConnectionManager, rouille, serde_json, std::io::prelude::*,
+    crossbeam_channel::Sender as CCSender,
+    diesel::sqlite::SqliteConnection,
+    edit_common::markdown::*,
+    juniper::{
+        self,
+        http::GraphQLRequest,
+        FieldError,
+        FieldResult,
+    },
+    oatie::doc::*,
+    r2d2,
+    r2d2_diesel::ConnectionManager,
+    rouille, serde_json,
+    std::io::prelude::*,
 };
 
 struct Page {

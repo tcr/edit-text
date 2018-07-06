@@ -1,17 +1,26 @@
 //! Defines document types, operation types, and cursor types.
 
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::de::{
+    self,
+    SeqAccess,
+    Visitor,
+};
+use serde::ser::SerializeSeq;
+use serde::{
+    Deserialize,
+    Deserializer,
+    Serialize,
+    Serializer,
+};
 use std::collections::HashMap;
+use std::fmt;
+use std::ops::Range;
 use std::sync::atomic::AtomicUsize;
 use std::sync::Arc;
-use std::ops::Range;
-use serde::ser::SerializeSeq;
-use serde::de::{self, SeqAccess, Visitor};
-use std::fmt;
 
 // Re-exports
-pub use super::string::*;
 pub use super::place::*;
+pub use super::string::*;
 
 pub type Attrs = HashMap<String, String>;
 

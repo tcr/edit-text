@@ -1,7 +1,10 @@
 use failure::Error;
 use oatie::doc::*;
 use oatie::stepper::DocStepper;
-use pulldown_cmark::{Event, Tag};
+use pulldown_cmark::{
+    Event,
+    Tag,
+};
 use pulldown_cmark_to_cmark::fmt::cmark;
 
 struct DocToMarkdown<'a> {
@@ -74,7 +77,7 @@ impl<'a> Iterator for DocToMarkdown<'a> {
             }
             Some(DocChars(ref text)) => {
                 self.doc_stepper.next();
-                
+
                 // Styling.
                 let text_event = Event::Text(text.to_string().replace("\n", "  \n").into());
                 if let Some(styles) = text.styles() {
@@ -83,7 +86,7 @@ impl<'a> Iterator for DocToMarkdown<'a> {
                         self.queue.push(Event::End(Tag::Strong));
                         Some(Event::Start(Tag::Strong))
                     } else {
-                        Some(text_event)    
+                        Some(text_event)
                     }
                 } else {
                     Some(text_event)

@@ -11,15 +11,27 @@ extern crate rand;
 #[macro_use]
 extern crate failure;
 
-use fantoccini::{Client, Locator};
+use fantoccini::{
+    Client,
+    Locator,
+};
 // use futures::prelude::*;
 use commandspec::*;
 use failure::Error;
-use futures::future::{ok, Future};
+use futures::future::{
+    ok,
+    Future,
+};
 use rand::thread_rng;
 use std::process::Stdio;
-use std::sync::atomic::{AtomicU16, Ordering};
-use std::sync::{Arc, Barrier};
+use std::sync::atomic::{
+    AtomicU16,
+    Ordering,
+};
+use std::sync::{
+    Arc,
+    Barrier,
+};
 use std::thread;
 
 static DRIVER_PORT_COUNTER: AtomicU16 = AtomicU16::new(4445);

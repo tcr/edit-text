@@ -15,9 +15,13 @@ fn is_block_object(attrs: &Attrs) -> bool {
 }
 
 fn is_caret(attrs: &Attrs, client_id: Option<&str>, focus: bool) -> bool {
-    attrs["tag"] == "caret"
-        && client_id.map(|id| attrs["client"] == id).unwrap_or(false)
-        && attrs.get("focus").unwrap_or(&"false".to_string()).parse::<bool>().map(|x| x == focus).unwrap_or(false)
+    attrs["tag"] == "caret" && client_id.map(|id| attrs["client"] == id).unwrap_or(false)
+        && attrs
+            .get("focus")
+            .unwrap_or(&"false".to_string())
+            .parse::<bool>()
+            .map(|x| x == focus)
+            .unwrap_or(false)
 }
 
 #[derive(Clone, Debug)]
