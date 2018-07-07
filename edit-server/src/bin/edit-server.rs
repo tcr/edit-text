@@ -56,7 +56,6 @@ use std::path::{
     Path,
     PathBuf,
 };
-use std::process;
 use std::thread;
 use std::thread::JoinHandle;
 use structopt::StructOpt;

@@ -203,6 +203,12 @@ pub fn button_handlers<C: ClientImpl>(state: Option<(String, bool)>) -> Vec<Butt
             // state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
             false, // TODO what?
         ),
+        ButtonHandler(
+            "Clear Styles",
+            Box::new(|client| client.client_op(|doc| remove_styles(doc, hashset![Style::Bold, Style::Italic]))),
+            // state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
+            false, // TODO what?
+        ),
     ]
 }
 

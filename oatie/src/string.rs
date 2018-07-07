@@ -1,20 +1,24 @@
-use serde::de::{
-    self,
-    SeqAccess,
-    Visitor,
-};
-use serde::ser::SerializeSeq;
 use serde::{
-    Deserialize,
-    Deserializer,
-    Serialize,
-    Serializer,
+    de::{
+        self,
+        SeqAccess,
+        Visitor,
+    },
+    ser::SerializeSeq,
+    Deserialize, Deserializer, Serialize, Serializer,
 };
-use std::collections::HashMap;
-use std::fmt;
-use std::ops::Range;
-use std::sync::atomic::AtomicUsize;
-use std::sync::Arc;
+use std::{
+    collections::{
+        HashMap,
+        HashSet,
+    },
+    fmt,
+    ops::Range,
+    sync::{
+        atomic::AtomicUsize,
+        Arc,
+    },
+};
 
 #[repr(u8)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -33,6 +37,7 @@ impl fmt::Display for Style {
 }
 
 pub type StyleMap = HashMap<Style, Option<String>>;
+pub type StyleSet = HashSet<Style>;
 
 /// Abstraction for String that allows a limited set of operations
 /// with good optimization. (Or that's the idea.)
@@ -71,6 +76,17 @@ impl DocString {
 
     pub fn styles_mut(&mut self) -> Option<&mut StyleMap> {
         self.2.as_mut()
+    }
+
+    pub fn remove_styles(&mut self, styles: &StyleSet) {
+        if let &mut Some(ref mut self_styles) = &mut self.2 {
+            *self_styles = self_styles
+                .drain()
+                .filter(|(ref x, _)| !styles.contains(x))
+                .collect();
+        } else {
+            // no-op
+        }
     }
 
     pub fn extend_styles(&mut self, styles: &StyleMap) {

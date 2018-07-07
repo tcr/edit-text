@@ -51,6 +51,19 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
                             b.next();
                         }
                     }
+                    Some(DelStyles(b_count, b_styles)) => {
+                        res.place(&DelChars(cmp::min(acount, b_count)));
+                        if acount > b_count {
+                            a.head = Some(DelSkip(acount - b_count));
+                            b.next();
+                        } else if acount < b_count {
+                            b.head = Some(DelStyles(b_count - acount, b_styles));
+                            a.next();
+                        } else {
+                            a.next();
+                            b.next();
+                        }
+                    }
                     None => {
                         res.place(&a.next().unwrap());
                     } // Some(DelMany(bcount)) => {
@@ -76,6 +89,55 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
                       // }
                 }
             }
+            DelStyles(a_count, a_styles) => match b.head.clone() {
+                Some(DelStyles(b_count, b_styles)) => {
+                    let mut both_styles = b_styles.clone();
+                    both_styles.extend(a_styles.clone());
+                    res.push(DelStyles(cmp::min(a_count, b_count), both_styles));
+                    if a_count > b_count {
+                        b.head = Some(DelStyles(a_count - b_count, a_styles));
+                        b.next();
+                    } else if a_count < b_count {
+                        a.head = Some(DelStyles(b_count - a_count, b_styles));
+                        a.next();
+                    } else {
+                        a.next();
+                        b.next();
+                    }
+                }
+                Some(DelSkip(b_count)) => {
+                    res.push(DelStyles(cmp::min(a_count, b_count), a_styles.clone()));
+                    if a_count > b_count {
+                        b.head = Some(DelSkip(a_count - b_count));
+                        b.next();
+                    } else if a_count < b_count {
+                        a.head = Some(DelStyles(b_count - a_count, a_styles));
+                        a.next();
+                    } else {
+                        a.next();
+                        b.next();
+                    }
+                }
+                Some(DelWithGroup(..)) | Some(DelGroup(..)) => {
+                    unreachable!();
+                }
+                Some(DelChars(b_count)) => {
+                    res.place(&DelChars(cmp::min(a_count, b_count)));
+                    if a_count > b_count {
+                        a.head = Some(DelStyles(a_count - b_count, a_styles));
+                        b.next();
+                    } else if a_count < b_count {
+                        b.head = Some(DelChars(b_count - a_count));
+                        a.next();
+                    } else {
+                        a.next();
+                        b.next();
+                    }
+                }
+                None => {
+                    res.place(&a.next().unwrap());
+                }
+            },
             DelWithGroup(ref span) => {
                 match b.head.clone() {
                     Some(DelSkip(bcount)) => {
@@ -85,6 +147,9 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
                             b.next();
                         }
                         res.place(&a.next().unwrap());
+                    }
+                    Some(DelStyles(..)) => {
+                        panic!("DelWithGroup vs DelStyles is bad");
                     }
                     Some(DelWithGroup(ref bspan)) => {
                         res.place(&DelWithGroup(compose_del_del(span, bspan)));
@@ -439,6 +504,70 @@ fn compose_add_del_inner(
                 }
                 _ => {
                     panic!("Unimplemented or Unexpected");
+                }
+            },
+            DelStyles(b_count, b_styles) => match a.get_head() {
+                AddChars(mut a_value) => {
+                    if b_count < a_value.char_len() {
+                        let (mut a_left, a_right) = a_value.split_at(b_count);
+                        a_left.remove_styles(&b_styles);
+                        addres.place(&AddChars(a_left));
+                        a.head = Some(AddChars(a_right));
+                        b.next();
+                    } else if b_count > a_value.char_len() {
+                        a_value.remove_styles(&b_styles);
+                        b.head = Some(DelSkip(b_count - a_value.char_len()));
+                        addres.place(&AddChars(a_value));
+                    } else {
+                        a_value.remove_styles(&b_styles);
+                        addres.place(&AddChars(a_value));
+                        a.next();
+                        b.next();
+                    }
+                }
+                AddStyles(a_count, a_styles) => {
+                    // a_styles - b_styles
+                    let combined_styles = a_styles
+                        .clone()
+                        .drain()
+                        .filter(|(k, _)| !b_styles.contains(k))
+                        .collect();
+
+                    // res.push(AddStyles(cmp::min(a_count, b_count), both_styles));
+                    if a_count > b_count {
+                        a.head = Some(AddStyles(a_count - b_count, a_styles));
+                        a.next();
+                        addres.place(&AddStyles(b_count, combined_styles));
+                    } else if a_count < b_count {
+                        b.head = Some(DelStyles(b_count - a_count, b_styles));
+                        a.next();
+                        addres.place(&AddStyles(b_count, combined_styles));
+                    } else {
+                        a.next();
+                        b.next();
+                        addres.place(&AddStyles(a_count, combined_styles));
+                    }
+                    delres.place(&b.next().unwrap());
+                }
+                AddSkip(a_count) => {
+                    addres.place(&AddSkip(cmp::min(a_count, b_count)));
+                    delres.place(&DelStyles(cmp::min(a_count, b_count), b_styles.clone()));
+                    if a_count > b_count {
+                        a.head = Some(AddSkip(a_count - b_count));
+                        b.next();
+                    } else if a_count < b_count {
+                        a.next();
+                        b.head = Some(DelStyles(b_count - a_count, b_styles.clone()));
+                    } else {
+                        a.next();
+                        b.next();
+                    }
+                }
+                AddWithGroup(..) => {
+                    panic!("DelStyles by AddWithGroup is ILLEGAL");
+                }
+                AddGroup(..) => {
+                    panic!("DelStyles by AddGroup is ILLEGAL");
                 }
             },
             DelSkip(bcount) => match a.get_head() {
