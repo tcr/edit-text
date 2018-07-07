@@ -21,20 +21,34 @@ if (!CONFIG.configured) {
 
 const ROOT_QUERY = '.edit-text';
 
+function UiElement(props, element, i = Math.random()) {
+  if ('Button' in element) {
+    let button = element.Button;
+    return (
+      <button
+        key={i}
+        onClick={
+          () => props.editor.network.nativeCommand(commands.Button(button[1]))
+        }
+        className={button[2] ? 'active' : ''}
+      >{button[0]}</button>
+    )
+  } else if ('ButtonGroup' in element) {
+    return (
+      <div className="menu-buttongroup">
+        {element.ButtonGroup.map((x, i) => UiElement(props, x, i))}
+      </div>
+    )
+  }
+  return null;
+}
+
 function NativeButtons(
   props
 ) {
   return (
     <div id="native-buttons">{
-      props.buttons.map((btn, i) =>
-        <button
-          key={i}
-          onClick={
-            () => props.editor.network.nativeCommand(commands.Button(btn[0]))
-          }
-          className={btn[2] ? 'active' : ''}
-        >{btn[1]}</button>
-      )
+      props.buttons.map((x, i) => UiElement(props, x, i))
     }</div>
   );
 }
@@ -154,12 +168,12 @@ class LocalButtons extends React.Component {
 
   render(): React.ReactNode {
     return (
-      <div>
-        <button onClick={() => this.onMarkdownClick()}>View as Markdown</button>
+      <div className="menu-buttongroup" style={{marginRight: 0}}>
+        <button onClick={() => this.onMarkdownClick()}>Load/Save</button>
 
-        <button id="width" onClick={() => this.toggleWidth()}>Toggle Page Width</button>
+        <button id="width" onClick={() => this.toggleWidth()}>Page Width</button>
 
-        <b>Client: <kbd tabIndex={0}>{this.props.editorID}</kbd></b>
+        <b style={{marginLeft: 10}}>Client: <kbd tabIndex={0}>{this.props.editorID}</kbd></b>
       </div>
     );
   }

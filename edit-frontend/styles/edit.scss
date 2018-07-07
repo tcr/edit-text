@@ -66,13 +66,24 @@ body {
 }
 
 #toolbar {
+    $button-margin: 16px;
+
+    .menu-buttongroup {
+        display: inline-block;
+        margin-right: $button-margin;
+    
+        button {
+            margin-right: 4px !important;
+        }
+    }
+
     button {
         font: inherit;
         border: 1px solid #aaa;
         background: #fff;
         text-transform: uppercase;
         box-shadow: #bbb 2px 2px;
-        margin-right: 8px;
+        margin-right: $button-margin;
         padding: 5px 12px 4px;
         font-size: 0.9em;
         animation: fadein 0.3s;
