@@ -214,7 +214,7 @@ export class Editor extends React.Component {
 
   onMouseDown(e: MouseEvent) {
     let option = e.ctrlKey || e.metaKey;
-    let isAnchor = util.matchesSelector(e.target as Node, '[data-style-Link]');
+    let isAnchor = e.target ? util.matchesSelector(e.target as Node, '[data-style-Link]') : false;
     if (option && isAnchor) {
       let url = (e.target as HTMLElement).dataset['styleLink'];
       (window as any).open(url, '_blank').focus();
