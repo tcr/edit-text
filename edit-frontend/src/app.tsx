@@ -173,7 +173,9 @@ class LocalButtons extends React.Component {
 
         <button id="width" onClick={() => this.toggleWidth()}>Page Width</button>
 
-        <b style={{marginLeft: 10}}>Client: <kbd tabIndex={0}>{this.props.editorID}</kbd></b>
+        <b style={{marginLeft: 10, whiteSpace: 'nowrap'}}>
+          Client: <kbd tabIndex={0}>{this.props.editorID}</kbd>
+        </b>
       </div>
     );
   }
@@ -263,10 +265,11 @@ export class EditorFrame extends React.Component {
   }
 
   render(): React.ReactNode {
+    let modalClass = this.state.modal == null ? '' : 'modal-active';
     return (
-      <div>
+      <div className="fullpage">
         {this.state.modal}
-        <div className={this.state.modal == null ? '' : 'modal-active'}>
+        <div id="root-layout" className={modalClass}>
           <div id="toolbar">
             <a href="https://github.com/tcr/edit-text" id="logo">edit-text</a>
             <NativeButtons
@@ -284,34 +287,35 @@ export class EditorFrame extends React.Component {
             />
           </div>
 
-          <Editor 
-            network={this.props.network} 
-            KEY_WHITELIST={this.KEY_WHITELIST}
-            content={this.state.body}
-            editorID={this.state.editorID}
-            disabled={!!this.state.modal}
-          />
-
-          <div id="footer">{
-            this.state.notices.map((x, key) => {
-              return (
-                <FooterNotice 
-                  key={key}
-                  onDismiss={() => {
-                    let notices = this.state.notices.slice();
-                    notices.splice(key, 1);
-                    this.setState({
-                      notices,
-                    });
-                  }}
-                  level={x.level}
-                >
-                  {x.element}
-                </FooterNotice>
-              );
-            })
-          }</div>
+          <div id="edit-text-outer">
+            <Editor 
+              network={this.props.network} 
+              KEY_WHITELIST={this.KEY_WHITELIST}
+              content={this.state.body}
+              editorID={this.state.editorID}
+              disabled={!!this.state.modal}
+            />
+          </div>
         </div>
+        <div id="footer">{
+          this.state.notices.map((x, key) => {
+            return (
+              <FooterNotice 
+                key={key}
+                onDismiss={() => {
+                  let notices = this.state.notices.slice();
+                  notices.splice(key, 1);
+                  this.setState({
+                    notices,
+                  });
+                }}
+                level={x.level}
+              >
+                {x.element}
+              </FooterNotice>
+            );
+          })
+        }</div>
       </div>
     );
   }

@@ -3,7 +3,7 @@
     box-sizing: border-box;
 }
 
-html, body {
+html, body, #content, .fullpage {
     display: block;
     padding: 0;
     margin: 0;
@@ -15,7 +15,17 @@ body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 14px;
     line-height: 1.42857143;
-    padding: 1px;
+}
+
+#root-layout {
+    display: flex !important;
+    flex-direction: column;
+    height: 100%;
+}
+
+#edit-text-outer {
+    overflow: auto;
+    flex: 1;
 }
 
 #toolbar {
@@ -25,13 +35,30 @@ body {
     border-bottom: 2px solid #aaa;
     padding: 5px 20px 8px;
     cursor: auto;
-    position: fixed;
-    z-index: 1000;
-    height: 44px;
-    top: 0;
-    left: 0;
-    right: 0;
-    overflow: auto;
+    min-height: 44px;
+    flex-wrap: wrap;
+
+    #logo {
+        content: "edit-text";
+        margin: 3px 20px 0 0;
+        font-family: Helvetica, Arial, sans-serif;
+        color: #444;
+        font-size: 20px;
+        height: 0;
+        overflow: visible;
+        vertical-align: middle;
+        display: inline-block;
+        text-decoration: none;
+    }
+
+    #logo:hover {
+        color: black;
+        text-decoration: underline;
+    }
+
+    #native-buttons {
+        flex: 1;
+    }
 
     kbd {
         border: 1px dashed #eee;
@@ -41,31 +68,7 @@ body {
         font-weight: normal;
         font-family: Consolas, 'Courier New', Courier, monospace;
     }
-}
 
-#logo {
-    content: "edit-text";
-    margin: 3px 20px 0 0;
-    font-family: Helvetica, Arial, sans-serif;
-    color: #444;
-    font-size: 20px;
-    height: 0;
-    overflow: visible;
-    vertical-align: middle;
-    display: inline-block;
-    text-decoration: none;
-}
-
-#logo:hover {
-    color: black;
-    text-decoration: underline;
-}
-
-#native-buttons {
-    flex: 1;
-}
-
-#toolbar {
     $button-margin: 16px;
 
     .menu-buttongroup {
@@ -106,6 +109,8 @@ body {
     }
 }
 
+/* multi */
+
 #parent {
     background: #eee;
 }
@@ -118,6 +123,8 @@ body {
 #client.blurred {
     background: #ddd;
 }
+
+/* ^ multi ^ */
 
 #footer {
     position: fixed;
@@ -173,15 +180,16 @@ body.theme-column .edit-text {
     padding-top: 10px;
     padding-bottom: 30px;
     max-width: 60em;
-    margin: 70px auto 70px;
+    margin: 26px auto 70px;
     background: #fff;
     border: 1px solid #ccc;
     box-shadow: 3px 3px 8px #bbb;
 }
 
 .edit-text {
-    padding: 54px 35px 50px; // + bottom padding for footer
+    padding: 10px 35px 50px; // + bottom padding for footer
     margin: 0;
+    flex: 1;
 
     -webkit-touch-callout: none;
     -webkit-user-select: none;
