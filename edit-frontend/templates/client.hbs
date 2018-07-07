@@ -28,14 +28,17 @@
 
 <body class="theme-column">
   <div id="content">
-    
-    <div id="toolbar">
-      <a href="https://github.com/tcr/edit-text" id="logo">edit-text</a>
-      <div id="native-buttons"></div>
-      <div id="local-buttons"></div>
+    <div id="root-layout">
+      <div id="toolbar">
+        <a href="https://github.com/tcr/edit-text" id="logo">edit-text</a>
+        <div id="native-buttons"></div>
+        <div id="local-buttons"></div>
+      </div>
+      
+      <div id="edit-text-outer">
+        <div class="edit-text" tabIndex="0">{{{body}}}</div>
+      </div>
     </div>
-    
-    <div class="edit-text" tabIndex="0">{{{body}}}</div>
   </div>
 </body>
 

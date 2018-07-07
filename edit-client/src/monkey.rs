@@ -183,7 +183,7 @@ pub fn setup_monkey<C: ClientImpl + Sized>(mut scheduler: Scheduler) {
 
     scheduler.schedule_random(MONKEY_BUTTON, || {
         let mut rng = local_rng();
-        let index = rng.gen_range(0, button_handlers::<C>(None).len() as u32);
+        let index = rng.gen_range(0, button_handlers::<C>(None).0.len() as u32);
         FrontendToUserCommand::Button(index)
     });
 

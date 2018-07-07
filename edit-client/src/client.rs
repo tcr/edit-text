@@ -37,9 +37,6 @@ impl<C: ClientImpl> KeyHandler<C> {
     }
 }
 
-// label, callback, selected
-pub struct ButtonHandler<C: ClientImpl>(&'static str, Box<Fn(&mut C) -> Result<(), Error>>, bool);
-
 fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
     vec![
         // backspace
@@ -133,83 +130,100 @@ fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
     ]
 }
 
-pub fn button_handlers<C: ClientImpl>(state: Option<(String, bool)>) -> Vec<ButtonHandler<C>> {
-    vec![
-        ButtonHandler(
-            "H1",
-            Box::new(|client| client.client_op(|doc| replace_block(doc, "h1"))),
-            // TODO i wish we could match on strings, use matches! here
-            state.as_ref().map(|x| x.0 == "h1").unwrap_or(false),
-        ),
-        ButtonHandler(
-            "H2",
-            Box::new(|client| client.client_op(|doc| replace_block(doc, "h2"))),
-            state.as_ref().map(|x| x.0 == "h2").unwrap_or(false),
-        ),
-        ButtonHandler(
-            "H3",
-            Box::new(|client| client.client_op(|doc| replace_block(doc, "h3"))),
-            state.as_ref().map(|x| x.0 == "h3").unwrap_or(false),
-        ),
-        ButtonHandler(
-            "H4",
-            Box::new(|client| client.client_op(|doc| replace_block(doc, "h4"))),
-            state.as_ref().map(|x| x.0 == "h4").unwrap_or(false),
-        ),
-        ButtonHandler(
-            "H5",
-            Box::new(|client| client.client_op(|doc| replace_block(doc, "h5"))),
-            state.as_ref().map(|x| x.0 == "h5").unwrap_or(false),
-        ),
-        ButtonHandler(
-            "H6",
-            Box::new(|client| client.client_op(|doc| replace_block(doc, "h6"))),
-            state.as_ref().map(|x| x.0 == "h6").unwrap_or(false),
-        ),
-        ButtonHandler(
-            "Paragraph",
-            Box::new(|client| client.client_op(|doc| replace_block(doc, "p"))),
-            state.as_ref().map(|x| x.0 == "p").unwrap_or(false),
-        ),
-        ButtonHandler(
-            "Code Block",
-            Box::new(|client| client.client_op(|doc| replace_block(doc, "pre"))),
-            state.as_ref().map(|x| x.0 == "pre").unwrap_or(false),
-        ),
-        ButtonHandler(
-            "List",
-            Box::new(|client| client.client_op(|doc| toggle_list(doc))),
+pub fn button_handlers<C: ClientImpl>(state: Option<(String, bool)>) -> (Vec<Box<Fn(&mut C) -> Result<(), Error>>>, Vec<Ui>) {
+    let mut callbacks: Vec<Box<Fn(&mut C) -> Result<(), Error>>> = vec![];
+    
+    macro_rules! callback {
+        ($t:expr) => {
+            {
+                callbacks.push(Box::new($t));
+                callbacks.len() - 1
+            }
+        }
+    }
+
+    let ui = vec![
+        Ui::ButtonGroup(vec![
+            Ui::Button(
+                "Text".to_string(),
+                callback!(|client| client.client_op(|doc| replace_block(doc, "p"))),
+                state.as_ref().map(|x| x.0 == "p").unwrap_or(false),
+            ),
+            Ui::Button(
+                "H1".to_string(),
+                callback!(|client| client.client_op(|doc| replace_block(doc, "h1"))),
+                // TODO i wish we could match on strings, use matches! here
+                state.as_ref().map(|x| x.0 == "h1").unwrap_or(false),
+            ),
+            Ui::Button(
+                "H2".to_string(),
+                callback!(|client| client.client_op(|doc| replace_block(doc, "h2"))),
+                state.as_ref().map(|x| x.0 == "h2").unwrap_or(false),
+            ),
+            Ui::Button(
+                "H3".to_string(),
+                callback!(|client| client.client_op(|doc| replace_block(doc, "h3"))),
+                state.as_ref().map(|x| x.0 == "h3").unwrap_or(false),
+            ),
+            Ui::Button(
+                "H4".to_string(),
+                callback!(|client| client.client_op(|doc| replace_block(doc, "h4"))),
+                state.as_ref().map(|x| x.0 == "h4").unwrap_or(false),
+            ),
+            Ui::Button(
+                "H5".to_string(),
+                callback!(|client| client.client_op(|doc| replace_block(doc, "h5"))),
+                state.as_ref().map(|x| x.0 == "h5").unwrap_or(false),
+            ),
+            Ui::Button(
+                "H6".to_string(),
+                callback!(|client| client.client_op(|doc| replace_block(doc, "h6"))),
+                state.as_ref().map(|x| x.0 == "h6").unwrap_or(false),
+            ),
+            Ui::Button(
+                "Code".to_string(),
+                callback!(|client| client.client_op(|doc| replace_block(doc, "pre"))),
+                state.as_ref().map(|x| x.0 == "pre").unwrap_or(false),
+            ),
+            Ui::Button(
+                "HTML".to_string(),
+                callback!(|client| client.client_op(|doc| replace_block(doc, "html"))),
+                state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
+            ),
+        ]),
+        Ui::Button(
+            "List".to_string(),
+            callback!(|client| client.client_op(|doc| toggle_list(doc))),
             state.as_ref().map(|x| x.1).unwrap_or(false),
         ),
-        ButtonHandler(
-            "Raw HTML",
-            Box::new(|client| client.client_op(|doc| replace_block(doc, "html"))),
-            state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
-        ),
-        ButtonHandler(
-            "HR",
-            Box::new(|client| client.client_op(|doc| split_block(doc, true))),
+        Ui::Button(
+            "HR".to_string(),
+            callback!(|client| client.client_op(|doc| split_block(doc, true))),
             false,
         ),
-        ButtonHandler(
-            "Bold",
-            Box::new(|client| client.client_op(|doc| apply_style(doc, Style::Bold, None))),
-            // state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
-            false, // TODO what?
-        ),
-        ButtonHandler(
-            "Italic",
-            Box::new(|client| client.client_op(|doc| apply_style(doc, Style::Italic, None))),
-            // state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
-            false, // TODO what?
-        ),
-        ButtonHandler(
-            "Clear Styles",
-            Box::new(|client| client.client_op(|doc| remove_styles(doc, hashset![Style::Bold, Style::Italic]))),
-            // state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
-            false, // TODO what?
-        ),
-    ]
+        Ui::ButtonGroup(vec![
+            Ui::Button(
+                "Bold".to_string(),
+                callback!(|client| client.client_op(|doc| apply_style(doc, Style::Bold, None))),
+                // state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
+                false, // TODO what?
+            ),
+            Ui::Button(
+                "Italic".to_string(),
+                callback!(|client| client.client_op(|doc| apply_style(doc, Style::Italic, None))),
+                // state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
+                false, // TODO what?
+            ),
+            Ui::Button(
+                "Clear".to_string(),
+                callback!(|client| client.client_op(|doc| remove_styles(doc, hashset![Style::Bold, Style::Italic, Style::Link]))),
+                // state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
+                false, // TODO what?
+            ),
+        ]),
+    ];
+
+    (callbacks, ui)
 }
 
 fn native_command<C: ClientImpl>(client: &mut C, req: FrontendToUserCommand) -> Result<(), Error> {
@@ -219,9 +233,9 @@ fn native_command<C: ClientImpl>(client: &mut C, req: FrontendToUserCommand) -> 
         }
         FrontendToUserCommand::Button(index) => {
             // Find which button handler to respond to this command.
-            button_handlers(None)
+            button_handlers(None).0
                 .get(index as usize)
-                .map(|handler| handler.1(client));
+                .map(|handler| handler(client));
         }
         FrontendToUserCommand::Keypress(key_code, meta_key, shift_key, alt_key) => {
             println!(
@@ -304,11 +318,7 @@ pub trait ClientImpl {
                 .into_iter()
                 .map(|x| (x.0, x.1, x.2))
                 .collect(),
-            buttons: button_handlers::<Self>(state)
-                .into_iter()
-                .enumerate()
-                .map(|(i, x)| (i, x.0.to_string(), x.2))
-                .collect(),
+            buttons: button_handlers::<Self>(state).1,
         }).expect("Could not send initial state");
     }
 

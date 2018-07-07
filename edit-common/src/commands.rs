@@ -34,13 +34,20 @@ pub enum FrontendToUserCommand {
     Monkey(bool),
 }
 
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub enum Ui {
+    // label, callback, selected
+    Button(String, usize, bool),
+    ButtonGroup(Vec<Ui>),
+}
+
 // Commands to send to Frontend.
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum UserToFrontendCommand {
     Init(String),
     Controls {
         keys: Vec<(u32, bool, bool)>,
-        buttons: Vec<(usize, String, bool)>,
+        buttons: Vec<Ui>,
     },
     PromptString(String, String, FrontendToUserCommand),
     Update(String, Option<Op>),

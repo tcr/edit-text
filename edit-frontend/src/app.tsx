@@ -21,20 +21,34 @@ if (!CONFIG.configured) {
 
 const ROOT_QUERY = '.edit-text';
 
+function UiElement(props, element, i = Math.random()) {
+  if ('Button' in element) {
+    let button = element.Button;
+    return (
+      <button
+        key={i}
+        onClick={
+          () => props.editor.network.nativeCommand(commands.Button(button[1]))
+        }
+        className={button[2] ? 'active' : ''}
+      >{button[0]}</button>
+    )
+  } else if ('ButtonGroup' in element) {
+    return (
+      <div className="menu-buttongroup">
+        {element.ButtonGroup.map((x, i) => UiElement(props, x, i))}
+      </div>
+    )
+  }
+  return null;
+}
+
 function NativeButtons(
   props
 ) {
   return (
     <div id="native-buttons">{
-      props.buttons.map((btn, i) =>
-        <button
-          key={i}
-          onClick={
-            () => props.editor.network.nativeCommand(commands.Button(btn[0]))
-          }
-          className={btn[2] ? 'active' : ''}
-        >{btn[1]}</button>
-      )
+      props.buttons.map((x, i) => UiElement(props, x, i))
     }</div>
   );
 }
@@ -154,12 +168,14 @@ class LocalButtons extends React.Component {
 
   render(): React.ReactNode {
     return (
-      <div>
-        <button onClick={() => this.onMarkdownClick()}>View as Markdown</button>
+      <div className="menu-buttongroup" style={{marginRight: 0}}>
+        <button onClick={() => this.onMarkdownClick()}>Load/Save</button>
 
-        <button id="width" onClick={() => this.toggleWidth()}>Toggle Page Width</button>
+        <button id="width" onClick={() => this.toggleWidth()}>Page Width</button>
 
-        <b>Client: <kbd tabIndex={0}>{this.props.editorID}</kbd></b>
+        <b style={{marginLeft: 10, whiteSpace: 'nowrap'}}>
+          Client: <kbd tabIndex={0}>{this.props.editorID}</kbd>
+        </b>
       </div>
     );
   }
@@ -249,10 +265,11 @@ export class EditorFrame extends React.Component {
   }
 
   render(): React.ReactNode {
+    let modalClass = this.state.modal == null ? '' : 'modal-active';
     return (
-      <div>
+      <div className="fullpage">
         {this.state.modal}
-        <div className={this.state.modal == null ? '' : 'modal-active'}>
+        <div id="root-layout" className={modalClass}>
           <div id="toolbar">
             <a href="https://github.com/tcr/edit-text" id="logo">edit-text</a>
             <NativeButtons
@@ -270,34 +287,35 @@ export class EditorFrame extends React.Component {
             />
           </div>
 
-          <Editor 
-            network={this.props.network} 
-            KEY_WHITELIST={this.KEY_WHITELIST}
-            content={this.state.body}
-            editorID={this.state.editorID}
-            disabled={!!this.state.modal}
-          />
-
-          <div id="footer">{
-            this.state.notices.map((x, key) => {
-              return (
-                <FooterNotice 
-                  key={key}
-                  onDismiss={() => {
-                    let notices = this.state.notices.slice();
-                    notices.splice(key, 1);
-                    this.setState({
-                      notices,
-                    });
-                  }}
-                  level={x.level}
-                >
-                  {x.element}
-                </FooterNotice>
-              );
-            })
-          }</div>
+          <div id="edit-text-outer">
+            <Editor 
+              network={this.props.network} 
+              KEY_WHITELIST={this.KEY_WHITELIST}
+              content={this.state.body}
+              editorID={this.state.editorID}
+              disabled={!!this.state.modal}
+            />
+          </div>
         </div>
+        <div id="footer">{
+          this.state.notices.map((x, key) => {
+            return (
+              <FooterNotice 
+                key={key}
+                onDismiss={() => {
+                  let notices = this.state.notices.slice();
+                  notices.splice(key, 1);
+                  this.setState({
+                    notices,
+                  });
+                }}
+                level={x.level}
+              >
+                {x.element}
+              </FooterNotice>
+            );
+          })
+        }</div>
       </div>
     );
   }
