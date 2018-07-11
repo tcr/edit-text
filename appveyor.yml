@@ -54,8 +54,10 @@ environment:
   #    target: i686-pc-windows-msvc
 
 cache:
-  - 'C:\Users\appveyor\.cargo'
-  - 'C:\Users\appveyor\.rustup'
+  - '%USERPROFILE%\.cargo'
+  - '%USERPROFILE%\.rustup'
+  - 'target'
+  - 'edit-server\node_modules'
 
 ## Install Script ##
 

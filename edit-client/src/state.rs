@@ -74,7 +74,7 @@ impl ClientDoc {
     // TODO we can determine new_doc without needing it passed in
     pub fn sync_sent_new_version(&mut self, new_doc: &Doc, version: usize, input_op: &Op) {
         // log_wasm!(SyncNew("new_op".into()));
-        self.assert_compose_correctness();
+        self.assert_compose_correctness(None);
 
         // Optimization
         if self.pending_op.is_none() && self.local_op == Op::empty() {
@@ -188,7 +188,7 @@ impl ClientDoc {
 
         // println!("{}", format!("\n----> result {:?}\n{:?}\n{:?}\n\n{:?}\n\n", self.original_doc, self.pending_op, self.local_op, self.doc).red());
 
-        self.assert_compose_correctness();
+        self.assert_compose_correctness(None);
     }
 
     /// When there are no payloads queued, queue a next one.
@@ -204,40 +204,66 @@ impl ClientDoc {
         }
     }
 
-    fn assert_compose_correctness(&self) {
-        // Test matching against the local doc.
-        let mut recreated_doc = OT::apply(
-            &self.original_doc,
-            self.pending_op.as_ref().unwrap_or(&Op::empty()),
-        );
-        recreated_doc = OT::apply(&recreated_doc, &self.local_op);
-        assert_eq!(self.doc, recreated_doc);
+    #[allow(unused)]
+    fn assert_compose_correctness(&self, op: Option<Op>) {
+        // Reference for variable names:
+        // self.original_doc + pending_op + local_op + op
+        //                              ^ recreated_doc
+        //                                         ^ recreated_doc2 (self.doc)
+        //                                              ^ target_doc
+        //                                  (combined_op)
 
-        let total_op = Op::compose(
-            self.pending_op.as_ref().unwrap_or(&Op::empty()),
-            &self.local_op,
-        );
-        let recreated_doc = OT::apply(&self.original_doc, &total_op);
-        assert_eq!(self.doc, recreated_doc);
-    }
+        if cfg!(debug_assertions) {
+//              println!("---->
+// <apply_local_op>
+// original_doc={:?},
+// pending_op={:?},
+// local_op={:?},
+// {op}</apply_local_op>
+// ",
+//             self.original_doc, 
+//             self.pending_op, 
+//             self.local_op,
+//             op = op.as_ref().map(|x| format!("op = {:?},\n", x)).unwrap_or("".to_string()),
+//         );
 
-    /// An operation was applied to the document locally.
-    pub fn apply_local_op(&mut self, op: &Op) {
-        self.assert_compose_correctness();
-
-        #[allow(unused_variables)]
-        {
+            // Test matching against the local doc.
             let recreated_doc = OT::apply(
                 &self.original_doc,
                 self.pending_op.as_ref().unwrap_or(&Op::empty()),
             );
+            // println!("\n\nrecreated_doc={:?}", recreated_doc);
             let recreated_doc2 = OT::apply(&recreated_doc, &self.local_op);
-            // println!("---->\n<apply_local_op>\nrec_doc2: {:?}\n\nlocal_op: {:?}\n\nincoming op:{:?}\n</apply_local_op>\n", recreated_doc2, self.local_op, op);
+            // println!("\n\nrecreated_doc2={:?}", recreated_doc2);
             assert_eq!(self.doc, recreated_doc2);
-            // Op::apply(&self.doc, op);
-            let recreated_doc3 = OT::apply(&recreated_doc, &Op::compose(&self.local_op, op));
-            OT::apply(&recreated_doc2, op);
+            if let &Some(ref op) = &op {
+                let target_doc = Op::apply(&self.doc, op);
+                // println!("\n\ntarget_doc={:?}", target_doc);
+            }
+
+            if let &Some(ref op) = &op {
+                let combined_op = Op::compose(&self.local_op, op);
+                // println!("\n\ncombined_op={:?}", combined_op);
+                let target_doc2 = OT::apply(&recreated_doc, &combined_op);
+                // println!("\n\ntarget_doc2={:?}", target_doc2);
+            }
+
+            let total_op = Op::compose(
+                self.pending_op.as_ref().unwrap_or(&Op::empty()),
+                &self.local_op,
+            );
+            let recreated_doc = OT::apply(&self.original_doc, &total_op);
+            assert_eq!(self.doc, recreated_doc);
         }
+    }
+
+    /// An operation was applied to the document locally.
+    pub fn apply_local_op(&mut self, op: &Op) {
+        self.assert_compose_correctness(Some(op.clone()));
+
+        // TODO pending op should be none, but it's actually a value here.
+        // why? check for when original_Doc gets modified (i ugess) and then
+        // see when self.pending_op gts nulled out.
 
         use oatie::validate::*;
         validate_doc(&self.doc).expect("Validation error BEFORE op application");
@@ -247,8 +273,7 @@ impl ClientDoc {
 
         // Combine operation with previous queued operations.
         self.local_op = Op::compose(&self.local_op, &op);
-        // println!("--!! {:?}\n{:?}\n{:?}\n\n", self.original_doc, self.pending_op, self.local_op);
 
-        self.assert_compose_correctness();
+        self.assert_compose_correctness(None);
     }
 }

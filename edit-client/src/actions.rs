@@ -108,62 +108,73 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
         // Check for first block in a list item.
         let mut parent_walker = walker.clone();
         assert!(parent_walker.back_block());
+
+        let mut is_list_item = false;
+        let mut list_item_skip_len = 1;
         if parent_walker.doc().unhead() == None && parent_walker.parent() {
             if let Some(DocGroup(ref attrs_2, ref span_2)) = parent_walker.doc().head() {
                 if attrs_2["tag"] == "bullet" {
-                    // Do the list destructuring here
-                    println!("BEGINNING OF LIST");
-
-                    // Check if previous sibling is a list item too.
-                    if let Some(DocGroup(ref attrs_1, ref span_1)) = parent_walker.doc().unhead() {
-                        if attrs_1["tag"] == "bullet" {
-                            parent_walker.stepper.doc.prev();
-                            let mut writer = parent_walker.to_writer();
-
-                            writer.del.begin();
-                            if span_1.skip_len() > 0 {
-                                writer.del.place(&DelSkip(span_1.skip_len()));
-                            }
-                            writer.del.close();
-                            writer.del.begin();
-                            if span_2.skip_len() > 0 {
-                                writer.del.place(&DelSkip(span_2.skip_len()));
-                            }
-                            writer.del.close();
-                            writer.del.exit_all();
-
-                            writer.add.begin();
-                            if span_1.skip_len() + span_2.skip_len() > 0 {
-                                writer
-                                    .add
-                                    .place(&AddSkip(span_1.skip_len() + span_2.skip_len()));
-                            }
-                            writer.add.close(attrs_1.clone());
-                            writer.add.exit_all();
-
-                            let res = writer.result();
-
-                            return Ok(res);
-                        }
-                    }
-
-                    // Unindent
-                    println!("REMOVING SELF BULLET");
-
-                    let mut writer = parent_walker.to_writer();
-
-                    writer.del.begin();
-                    if span_2.skip_len() > 0 {
-                        writer.del.place(&DelSkip(span_2.skip_len()));
-                    }
-                    writer.del.close();
-                    writer.del.exit_all();
-
-                    let res = writer.result();
-
-                    return Ok(res);
+                    // We are at the start of a block inside of a list item.
+                    is_list_item = true;
+                    list_item_skip_len = span_2.skip_len();
                 }
             }
+        }
+
+        // Check if previous sibling is a list item too.
+        if let Some(DocGroup(ref attrs_1, ref span_1)) = parent_walker.doc().unhead() {
+            if attrs_1["tag"] == "bullet" {
+                // The previous sibling is a list item.
+
+                parent_walker.stepper.doc.prev();
+                let mut writer = parent_walker.to_writer();
+
+                writer.del.begin();
+                if span_1.skip_len() > 0 {
+                    writer.del.place(&DelSkip(span_1.skip_len()));
+                }
+                writer.del.close();
+
+                if is_list_item {
+                    writer.del.begin();
+                }
+                if list_item_skip_len > 0 {
+                    writer.del.place(&DelSkip(list_item_skip_len));
+                }
+                if is_list_item {
+                    writer.del.close();
+                }
+                writer.del.exit_all();
+
+                writer.add.begin();
+                if span_1.skip_len() + list_item_skip_len > 0 {
+                    writer
+                        .add
+                        .place(&AddSkip(span_1.skip_len() + list_item_skip_len));
+                }
+                writer.add.close(attrs_1.clone());
+                writer.add.exit_all();
+
+                let res = writer.result();
+
+                return Ok(res);
+            }
+        }
+
+        if is_list_item {
+            // We are a list item, but we want to unindent ourselves.
+            let mut writer = parent_walker.to_writer();
+
+            writer.del.begin();
+            if list_item_skip_len > 0 {
+                writer.del.place(&DelSkip(list_item_skip_len));
+            }
+            writer.del.close();
+            writer.del.exit_all();
+
+            let res = writer.result();
+
+            return Ok(res);
         }
 
         // Return to block parent.
@@ -252,6 +263,7 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
     } else {
         // Check if parent is span, if so move outside span
         // TODO check that the parent is actually a span
+        // TODO this might not be possible anymore without spans.
         walker.stepper.next();
         if let Some(DocChars(..)) = walker.doc().head() {
             // fallthrough

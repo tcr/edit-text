@@ -1,7 +1,12 @@
 language: rust
-cache: cargo
 rust:
   - nightly
+
+cache:
+  cargo: true
+  directories:
+    - target
+    - edit-server/node_modules/
 
 addons:
   firefox: "latest"
