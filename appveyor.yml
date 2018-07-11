@@ -56,8 +56,7 @@ environment:
 cache:
   - '%USERPROFILE%\.cargo'
   - '%USERPROFILE%\.rustup'
-  - 'target'
-  - 'edit-server\node_modules'
+  - 'edit-frontend\node_modules'
 
 ## Install Script ##
 
