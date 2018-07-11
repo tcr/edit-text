@@ -213,7 +213,8 @@ impl ClientDoc {
         //                                              ^ target_doc
         //                                  (combined_op)
 
-//         println!("---->
+        if cfg!(debug_assertions) {
+//              println!("---->
 // <apply_local_op>
 // original_doc={:?},
 // pending_op={:?},
@@ -226,33 +227,34 @@ impl ClientDoc {
 //             op = op.as_ref().map(|x| format!("op = {:?},\n", x)).unwrap_or("".to_string()),
 //         );
 
-        // Test matching against the local doc.
-        let recreated_doc = OT::apply(
-            &self.original_doc,
-            self.pending_op.as_ref().unwrap_or(&Op::empty()),
-        );
-        // println!("\n\nrecreated_doc={:?}", recreated_doc);
-        let recreated_doc2 = OT::apply(&recreated_doc, &self.local_op);
-        // println!("\n\nrecreated_doc2={:?}", recreated_doc2);
-        assert_eq!(self.doc, recreated_doc2);
-        if let &Some(ref op) = &op {
-            let target_doc = Op::apply(&self.doc, op);
-            // println!("\n\ntarget_doc={:?}", target_doc);
-        }
+            // Test matching against the local doc.
+            let recreated_doc = OT::apply(
+                &self.original_doc,
+                self.pending_op.as_ref().unwrap_or(&Op::empty()),
+            );
+            // println!("\n\nrecreated_doc={:?}", recreated_doc);
+            let recreated_doc2 = OT::apply(&recreated_doc, &self.local_op);
+            // println!("\n\nrecreated_doc2={:?}", recreated_doc2);
+            assert_eq!(self.doc, recreated_doc2);
+            if let &Some(ref op) = &op {
+                let target_doc = Op::apply(&self.doc, op);
+                // println!("\n\ntarget_doc={:?}", target_doc);
+            }
 
-        if let &Some(ref op) = &op {
-            let combined_op = Op::compose(&self.local_op, op);
-            // println!("\n\ncombined_op={:?}", combined_op);
-            let target_doc2 = OT::apply(&recreated_doc, &combined_op);
-            // println!("\n\ntarget_doc2={:?}", target_doc2);
-        }
+            if let &Some(ref op) = &op {
+                let combined_op = Op::compose(&self.local_op, op);
+                // println!("\n\ncombined_op={:?}", combined_op);
+                let target_doc2 = OT::apply(&recreated_doc, &combined_op);
+                // println!("\n\ntarget_doc2={:?}", target_doc2);
+            }
 
-        let total_op = Op::compose(
-            self.pending_op.as_ref().unwrap_or(&Op::empty()),
-            &self.local_op,
-        );
-        let recreated_doc = OT::apply(&self.original_doc, &total_op);
-        assert_eq!(self.doc, recreated_doc);
+            let total_op = Op::compose(
+                self.pending_op.as_ref().unwrap_or(&Op::empty()),
+                &self.local_op,
+            );
+            let recreated_doc = OT::apply(&self.original_doc, &total_op);
+            assert_eq!(self.doc, recreated_doc);
+        }
     }
 
     /// An operation was applied to the document locally.
