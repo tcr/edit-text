@@ -1,5 +1,6 @@
 #![feature(crate_in_paths, nll, proc_macro, wasm_custom_section, wasm_import_module)]
 #![feature(extern_in_paths)]
+#![allow(unused_imports)]
 
 #[macro_use]
 extern crate failure;
