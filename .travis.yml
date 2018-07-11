@@ -5,8 +5,7 @@ rust:
 cache:
   cargo: true
   directories:
-    - target
-    - edit-server/node_modules/
+    - edit-frontend/node_modules/
 
 addons:
   firefox: "latest"

@@ -96,6 +96,11 @@ pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
 pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
     let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, false);
 
+    // Detect other caret.
+    let walker2 = Walker::to_caret(&ctx.doc, &ctx.client_id, true);
+    let delta = walker.caret_pos() - walker2.caret_pos();
+    println!("delete delta: {:?}, is selection: {:?}", delta, delta != 0);
+
     // Check if caret is at the start of a block.
     let caret_pos = walker.caret_pos();
     let mut block_walker = walker.clone();
