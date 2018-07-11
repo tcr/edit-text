@@ -61,6 +61,12 @@ enum Cli {
         no_vendor: bool,
     },
 
+    #[structopt(name = "wasm-watch", about = "Watch the WebAssembly bundle.")]
+    WasmWatch {
+        #[structopt(name = "no-vendor")]
+        no_vendor: bool,
+    },
+
     #[structopt(name = "client-proxy", about = "Run client code in your terminal.")]
     ClientProxy { args: Vec<String> },
 
@@ -137,6 +143,15 @@ fn run() -> Result<(), Error> {
     // Run the subcommand.
     let parsed_args = Cli::from_iter(args.iter());
     match parsed_args {
+        Cli::WasmWatch { no_vendor } => {
+            execute!(
+                r"
+                    cargo watch -i edit-frontend/** -i x.rs -x 'script x.rs wasm-build {no_vendor}'
+                ",
+                no_vendor = if no_vendor { Some("--no-vendor") } else { None },
+            )?;
+        },
+
         Cli::Wasm { no_vendor } => {
             // wasm must always be --release
             let release_flag = Some("--release");

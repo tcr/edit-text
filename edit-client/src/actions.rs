@@ -94,13 +94,39 @@ pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
 }
 
 pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, false);
+    let walker = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, false)
+        .ok_or(format_err!("Expected one caret for our client"))?;
 
-    // Detect other caret.
-    let walker2 = Walker::to_caret(&ctx.doc, &ctx.client_id, true);
-    let delta = walker.caret_pos() - walker2.caret_pos();
-    println!("delete delta: {:?}, is selection: {:?}", delta, delta != 0);
+    if let Some(walker2) = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, true) {
+        // Detect other caret.
+        let last_walker = if walker.caret_pos() > walker2.caret_pos() { walker.clone() } else { walker2.clone() };
+        let delta = walker.caret_pos() - walker2.caret_pos();
+        println!("delete delta: {:?}, is selection: {:?}", delta, delta != 0);
 
+        // If we found a selection, delete every character in the selection.
+        // We implement this by looping until the caret distance between our
+        // cursors is 0.
+        // TODO: This is incredibly inneficient.
+        //  1. Dont' recurse infinitely, do this in a loop.
+        //  2. Skip entire DocChars components instead of one character at a time.
+        if delta != 0 {
+            // Get real weird with it.
+            let op = delete_char_inner(last_walker)?;
+            // Apply op
+            let ctx2 = ActionContext {
+                doc: OT::apply(&ctx.doc, &op),
+                client_id: ctx.client_id.to_owned(),
+            };
+            let op_next = delete_char(ctx2)?;
+            return Ok(OT::compose(&op, &op_next));
+        }
+    }
+
+    // Delete from unfocused caret.
+    delete_char_inner(walker)
+}
+
+pub fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
     // Check if caret is at the start of a block.
     let caret_pos = walker.caret_pos();
     let mut block_walker = walker.clone();
