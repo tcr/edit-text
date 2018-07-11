@@ -104,7 +104,6 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
     let at_start_of_block = caret_pos == block_walker.caret_pos();
 
     // See if we can collapse this and the previous block or list item.
-    eprintln!("(K) {:?}", at_start_of_block);
     if at_start_of_block {
         // Check for first block in a list item.
         let mut parent_walker = walker.clone();
@@ -164,23 +163,18 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
 
         if is_list_item {
             // We are a list item, but we want to unindent ourselves.
-            if let Some(DocGroup(ref attrs_2, ref span_2)) = parent_walker.doc().head() {
-                let mut writer = parent_walker.to_writer();
+            let mut writer = parent_walker.to_writer();
 
-                writer.del.begin();
-                if span_2.skip_len() > 0 {
-                    writer.del.place(&DelSkip(span_2.skip_len()));
-                }
-                writer.del.close();
-                writer.del.exit_all();
-
-                let res = writer.result();
-
-                return Ok(res);
-            } else {
-                // Guaranteed by the is_list_item check.
-                unreachable!();
+            writer.del.begin();
+            if list_item_skip_len > 0 {
+                writer.del.place(&DelSkip(list_item_skip_len));
             }
+            writer.del.close();
+            writer.del.exit_all();
+
+            let res = writer.result();
+
+            return Ok(res);
         }
 
         // Return to block parent.
@@ -269,6 +263,7 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
     } else {
         // Check if parent is span, if so move outside span
         // TODO check that the parent is actually a span
+        // TODO this might not be possible anymore without spans.
         walker.stepper.next();
         if let Some(DocChars(..)) = walker.doc().head() {
             // fallthrough

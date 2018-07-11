@@ -177,6 +177,8 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
         let mut nextdel = true;
         let mut nextfirst = true;
 
+        // println!("(d) del: {:?}\n    doc: {:?}", d, first);
+
         match d.clone() {
             DelStyles(count, styles) => match first.clone() {
                 DocChars(mut value) => {
@@ -247,7 +249,10 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
                         first = DocChars(right);
                         nextfirst = false;
                     } else if value.char_len() < count {
-                        panic!("attempted deletion of too much");
+                        d = DelChars(count - value.char_len());
+                        nextdel = false;
+                    } else {
+                        // noop
                     }
                 }
                 _ => {
