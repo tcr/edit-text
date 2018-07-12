@@ -518,6 +518,12 @@ pub fn split_block(ctx: ActionContext, add_hr: bool) -> Result<Op, Error> {
     Ok(writer.result())
 }
 
+pub fn caret_delete_word(ctx: ActionContext) -> Result<Op, Error> {
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id);
+
+    
+}
+
 pub fn caret_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
     let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, false);
 
