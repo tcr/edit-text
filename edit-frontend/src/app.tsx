@@ -35,7 +35,7 @@ function UiElement(props, element, i = Math.random()) {
     )
   } else if ('ButtonGroup' in element) {
     return (
-      <div className="menu-buttongroup">
+      <div className="menu-buttongroup" key={i}>
         {element.ButtonGroup.map((x, i) => UiElement(props, x, i))}
       </div>
     )
