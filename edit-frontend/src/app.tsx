@@ -98,8 +98,8 @@ class MarkdownModal extends React.Component {
     let self = this;
     return (
       <Modal>
-        <h1>Markdown</h1>
-        <p>Copy the text below. Or edit it and click load to overwrite the current page.</p>
+        <h1>Markdown Import/Export</h1>
+        <p>The document is displayed as Markdown in the textarea below. Feel free to copy it, or modify it and click "Import" to overwrite the current page with your changes.</p>
         <textarea
           value={self.state.markdown}
           onChange={(e) => {
@@ -108,22 +108,25 @@ class MarkdownModal extends React.Component {
             });
           }}
         />
-        <button onClick={() => self.props.onModal(null)}>Dismiss</button>
-        <button onClick={() => {
-          graphqlCreatePage(route.pageId(), self.state.markdown)
-          .then(req => {
-            if (req.data.errors && req.data.errors.length) {
-              console.log(req.data.errors);
-              console.error('Error in markdown save.');
-            } else {
-              console.log('Update success, reloading...');
-              setTimeout(() => {
-                window.location.reload();
-              }, 500);
-            }
-          })
-          .catch(err => console.error(err));
-        }}>Load</button>
+        <div className="modal-buttons">
+          <button className="dismiss" onClick={() => self.props.onModal(null)}>Back</button>
+          <div style={{flex: 1}} />
+          <button className="load" onClick={() => {
+            graphqlCreatePage(route.pageId(), self.state.markdown)
+            .then(req => {
+              if (req.data.errors && req.data.errors.length) {
+                console.log(req.data.errors);
+                console.error('Error in markdown save.');
+              } else {
+                console.log('Update success, reloading...');
+                setTimeout(() => {
+                  window.location.reload();
+                }, 500);
+              }
+            })
+            .catch(err => console.error(err));
+          }}>Import</button>
+        </div>
       </Modal>
     );
   }

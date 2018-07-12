@@ -50,13 +50,38 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                         self.body.close(hashmap! { "tag".into() => "p".into() });
                     }
                 }
+                SoftBreak => {
+                    // TODO this should actually use some heuristics to know
+                    // if we should soft-space like HTML does. whitespace is
+                    // significant in the document model so we can't always
+                    // just add a space
+                    if self.bare_text {
+                        self.body.begin();
+                    }
+                    self.body.place(&DocChars(DocString::from_str_styled(
+                        " ",
+                        self.styles.clone(),
+                    )));
+                    if self.bare_text {
+                        self.body.close(hashmap! { "tag".into() => "p".into() });
+                    }
+                }
                 HardBreak => {
                     self.body.place(&DocChars(DocString::from_str_styled(
                         "\n",
                         self.styles.clone(),
                     )));
                 }
-                SoftBreak | Html(..) | InlineHtml(..) | FootnoteReference(..) => {}
+                Html(html) => {
+                    self.body.begin();
+                    self.body.place(&DocChars(DocString::from_str_styled(
+                        &html,
+                        hashmap!{ Style::Normie => None },
+                    )));
+                    self.body.close(hashmap! { "tag".into() => "html".into() });
+                }
+                
+                InlineHtml(..) | FootnoteReference(..) => {}
             }
         }
     }
