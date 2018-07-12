@@ -195,12 +195,16 @@ fn run_http_server(port: u16, client_proxy: bool) {
                         }
                         let md = res.text()?;
                         let doc = Doc(markdown_to_doc(&md)?);
-                        Ok(if let Ok(_) = validate_doc(&doc) {
-                            doc
-                        } else {
-                            Doc(doc_span![
-                                DocGroup({"tag": "pre"}, [DocChars("Error decoding document.")]),
-                            ])
+                        Ok(match validate_doc(&doc) {
+                            Ok(_) => doc,
+                            Err(err) => {
+                                eprintln!("Error decoding document: {:?}", err);
+                                Doc(doc_span![
+                                    DocGroup({"tag": "pre"}, [
+                                        DocChars("Error decoding document.", {Style::Normie => None}),
+                                    ]),
+                                ])
+                            }
                         })
                     })
                     .unwrap_or(default_doc());
