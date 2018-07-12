@@ -127,6 +127,14 @@ fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
             true,
             Box::new(|client| client.client_op(|doc| caret_word_move(doc, true))),
         ),
+        // OPT-a
+        KeyHandler(
+            65,
+            true,
+            false,
+            false,
+            Box::new(|client| client.client_op(|doc| caret_select_all(doc))),
+        ),
     ]
 }
 

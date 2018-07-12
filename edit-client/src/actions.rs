@@ -639,6 +639,63 @@ pub fn caret_word_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> 
     Ok(OT::transform_advance::<RtfSchema>(&op_1, &op_2))
 }
 
+pub fn caret_select_all(ctx: ActionContext) -> Result<Op, Error> {
+    let mut start = Walker::new(&ctx.doc);
+    start.goto_pos(0);
+    let mut end = Walker::new(&ctx.doc);
+    end.goto_end();
+
+    // First operation removes the caret.
+    let op_1 = caret_clear(ctx.clone(), true)
+        .map(|(pos_1, op_1)| op_1)
+        .unwrap_or_else(|_| OT::empty());
+
+    // Second operation removes the focus caret if needed.
+    let op_2 = caret_clear(ctx.clone(), false)
+        .map(|(pos_1, op_1)| op_1)
+        .unwrap_or_else(|_| OT::empty());
+
+    // Combine two starting ops.
+    let op_1_2 = OT::transform_advance::<RtfSchema>(&op_1, &op_2);
+
+    // Second operation inserts a new caret.
+
+    let mut writer = start.to_writer();
+
+    writer.del.exit_all();
+
+    writer.add.begin();
+    writer.add.close(hashmap! {
+        "tag".to_string() => "caret".to_string(),
+        "client".to_string() => ctx.client_id.clone(),
+        "focus".to_string() => "false".to_string(),
+    });
+    writer.add.exit_all();
+
+    let op_3 = writer.result();
+
+    let mut writer = end.to_writer();
+
+    writer.del.exit_all();
+
+    writer.add.begin();
+    writer.add.close(hashmap! {
+        "tag".to_string() => "caret".to_string(),
+        "client".to_string() => ctx.client_id.clone(),
+        "focus".to_string() => "true".to_string(),
+    });
+    writer.add.exit_all();
+
+    let op_4 = writer.result();
+
+    // println!("------------->\n{:?}\n\n\nAAAAAA\n-------->", op_2);
+
+    let op_1_2_3 = OT::transform_advance::<RtfSchema>(&op_1_2, &op_3);
+    let op_1_2_3_4 = OT::transform_advance::<RtfSchema>(&op_1_2_3, &op_4);
+
+    Ok(op_1_2_3_4)
+}
+
 pub fn has_caret(ctx: ActionContext, focus: bool) -> bool {
     Walker::to_caret_safe(&ctx.doc, &ctx.client_id, focus).is_some()
 }
