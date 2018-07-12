@@ -305,6 +305,10 @@ export class Editor extends React.Component {
     });
 
     document.addEventListener('paste', (e: ClipboardEvent) => {
+      if (self.props.disabled) {
+        return;
+      }
+
       const text = e.clipboardData.getData('text/plain');
       console.log('(c) got pasted text: ', text);
       this.props.network.nativeCommand(commands.InsertText(text));
