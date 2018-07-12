@@ -84,7 +84,7 @@ pub fn wasm_setup() -> WasmClient {
     let editor_id = "$$$$$$".to_string();
 
     // Setup monkey tasks.
-    setup_monkey::<WasmClient>(Scheduler::new(WASM_ALIVE.clone(), WASM_MONKEY.clone()));
+    // setup_monkey::<WasmClient>(Scheduler::new(WASM_ALIVE.clone(), WASM_MONKEY.clone()));
 
     let client = WasmClient {
         state: Client {
