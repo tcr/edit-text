@@ -6,10 +6,9 @@ version = "0.1.0"
 [dependencies]
 colored = "1.6.0"
 crossbeam-channel = "0.2"
-dotenv = "0.11.0"
-derive-error-chain = "=0.11.0" #https://github.com/purpliminal/rust-dotenv/issues/99#issuecomment-385606174
+dotenv = "^0.13"
 env_logger = "0.4.3"
-failure = "0.1.1"
+failure = "0.1"
 handlebars = "0.32.0"
 juniper = "0.9.2"
 lazy_static = "1.0.0"
