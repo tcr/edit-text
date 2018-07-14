@@ -279,13 +279,21 @@ fn run_http_server(port: u16, client_proxy: bool) {
             },
 
             (GET) ["/$/{target}", target: String] => {
+                use std::cell::RefCell;
+
+                thread_local! {
+                    pub static ETAG: RefCell<HashMap<String, String>> = RefCell::new(HashMap::new());
+                }
+
                 if let Some(data) = dist_dir.get(Path::new(&target)) {
-                    return Response::from_data(
-                        guess_mime_type(&target).to_string(),
-                        data.clone(),
-                    ).with_etag(request,
-                        format!("{:x}", md5::compute(data)),
-                    );
+                    return ETAG.with(|f| {
+                        Response::from_data(
+                            guess_mime_type(&target).to_string(),
+                            data.clone(),
+                        ).with_etag(request, {
+                            f.borrow_mut().entry(target).or_insert_with(|| format!("{:x}", md5::compute(data))).to_owned()
+                        })
+                    });
                 } else {
                     return Response::empty_404();
                 }
