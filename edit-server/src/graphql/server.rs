@@ -18,7 +18,10 @@ use extern::{
         FieldError,
         FieldResult,
     },
-    oatie::doc::*,
+    oatie::{
+        validate::validate_doc,
+        doc::*,
+    },
     r2d2,
     r2d2_diesel::ConnectionManager,
     rouille, serde_json,
@@ -92,7 +95,19 @@ graphql_object!(Mutations: Ctx |&self| {
                 Doc(::ron::de::from_str(&doc).unwrap())
             }
             (Some(markdown), _) => {
-                Doc(markdown_to_doc(&markdown).unwrap())
+                let mut doc = Doc(markdown_to_doc(&markdown).unwrap());
+                match validate_doc(&doc) {
+                    Ok(_) => doc,
+                    Err(err) => {
+                        eprintln!("Error in doc: {:?}", doc);
+                        eprintln!("Error decoding document: {:?}", err);
+                        Doc(doc_span![
+                            DocGroup({"tag": "pre"}, [
+                                DocChars("Error decoding document.", {Style::Normie => None}),
+                            ]),
+                        ])
+                    }
+                }
             }
         };
 

@@ -183,11 +183,13 @@ fn run_http_server(port: u16, client_proxy: bool) {
 
             // Redirect root page to random page ID
             (GET) ["/"] => {
-                let id = format!("welcome-{}", random_id());
+                let mut id = format!("welcome-{}", random_id());
 
                 let load_doc = request.get_param("from")
                     .ok_or(format_err!("no from parameter to download from"))
                     .and_then(|from| {
+                        id = random_id();
+
                         let mut client = reqwest::Client::new();
                         let mut res = client.get(&from).send()?;
                         if !res.status().is_success() {
@@ -195,12 +197,16 @@ fn run_http_server(port: u16, client_proxy: bool) {
                         }
                         let md = res.text()?;
                         let doc = Doc(markdown_to_doc(&md)?);
-                        Ok(if let Ok(_) = validate_doc(&doc) {
-                            doc
-                        } else {
-                            Doc(doc_span![
-                                DocGroup({"tag": "pre"}, [DocChars("Error decoding document.")]),
-                            ])
+                        Ok(match validate_doc(&doc) {
+                            Ok(_) => doc,
+                            Err(err) => {
+                                eprintln!("Error decoding document: {:?}", err);
+                                Doc(doc_span![
+                                    DocGroup({"tag": "pre"}, [
+                                        DocChars("Error decoding document.", {Style::Normie => None}),
+                                    ]),
+                                ])
+                            }
                         })
                     })
                     .unwrap_or(default_doc());

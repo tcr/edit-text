@@ -45,7 +45,7 @@ impl CaretStepper {
     pub fn is_valid_caret_pos(&self) -> bool {
         if let Some(DocChars(..)) = self.doc.unhead() {
             return true;
-        } else if self.doc.unhead().is_none() {
+        } else if self.doc.unhead().is_none() && !self.doc.is_back_done() {
             if let Some(DocGroup(ref attrs, _)) = self.doc.clone().unenter().head() {
                 if is_block(attrs) {
                     return true;
@@ -214,6 +214,25 @@ impl Walker {
         });
 
         matched
+    }
+
+    pub fn goto_end(&mut self) {
+        take_mut::take(&mut self.stepper, |prev_stepper| {
+            let mut stepper = prev_stepper.clone();
+            let mut last_stepper = stepper.clone();
+
+            // Iterate until we match the cursor.
+            loop {
+                if stepper.is_valid_caret_pos() {
+                    last_stepper = stepper.clone();
+                }
+                if stepper.next().is_none() {
+                    break;
+                }
+            };
+
+            last_stepper
+        });
     }
 
     pub fn to_caret(doc: &Doc, client_id: &str, focus: bool) -> Walker {

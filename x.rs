@@ -468,29 +468,52 @@ fn run() -> Result<(), Error> {
             // Linux binary
             eprintln!();
             eprintln!("Building Linux server binary...");
-            execute!(
-                "
-                    docker build \
-                        -f dist/build/Dockerfile dist/build/ \
-                        -t edit-build-server
-                "
-            )?;
-            eprintln!();
-            eprintln!("Running local cargo build...");
-            execute!(
-                r"
-                    docker run --rm \
-                        -v {dir_git}:/usr/local/cargo/git \
-                        -v {dir_registry}:/usr/local/cargo/registry \
-                        -v {dir_rustup}:/usr/local/rustup/toolchains \
-                        -v {dir_self}:/app \
-                        -w /app/edit-server \
-                        -t edit-build-server \
-                        cargo build --release --target=x86_64-unknown-linux-gnu --bin edit-server --features 'standalone'
-                ",
-                dir_git = abs_string_path("dist/build/cargo-git-cache")?,
-                dir_registry = abs_string_path("dist/build/cargo-registry-cache")?,
-                dir_rustup = abs_string_path("dist/build/rustup-toolchain-cache")?,
+            // TODO replace this with discrete execute! commands.
+            sh_execute!(
+                r#"
+                    cd {dir_self}
+
+                    set -e
+                    set -x
+
+                    START="$(pwd)"
+                    LINKROOT="$(pwd)/dist/link"
+
+                    rm -rf $LINKROOT
+                    mkdir -p $LINKROOT
+
+                    cd $LINKROOT
+
+                    export URL=http://security.debian.org/debian-security/pool/updates/main/o/openssl/libssl-dev_1.1.0f-3+deb9u2_amd64.deb
+                    curl -O $URL
+                    ar p $(basename $URL) data.tar.xz | tar xvf -
+
+                    export URL=http://security.debian.org/debian-security/pool/updates/main/o/openssl/libssl1.1_1.1.0f-3+deb9u2_amd64.deb
+                    curl -O $URL
+                    ar p $(basename $URL) data.tar.xz | tar xvf -
+
+                    export URL=http://ftp.us.debian.org/debian/pool/main/g/glibc/libc6_2.24-11+deb9u3_amd64.deb
+                    curl -O $URL
+                    ar p $(basename $URL) data.tar.xz | tar xvf -
+
+                    cd $START
+
+                    echo $LINKROOT
+
+                    export LD_LIBRARY_PATH="$LINKROOT/usr/lib/x86_64-linux-gnu;$LINKROOT/lib/x86_64-linux-gnu"
+                    export OPENSSL_LIB_DIR="$LINKROOT/usr/lib/x86_64-linux-gnu/"
+                    export OPENSSL_DIR="$LINKROOT/usr/"
+                    export TARGET_CC="x86_64-unknown-linux-gnu-gcc"
+                    export TARGET_CFLAGS="-I $LINKROOT/usr/include/x86_64-linux-gnu -isystem $LINKROOT/usr/include"
+
+                    cd edit-server
+                    cargo build --release --target=x86_64-unknown-linux-gnu \
+                        --bin edit-server --features 'standalone'
+
+                "#,
+                // dir_git = abs_string_path("dist/build/cargo-git-cache")?,
+                // dir_registry = abs_string_path("dist/build/cargo-registry-cache")?,
+                // dir_rustup = abs_string_path("dist/build/rustup-toolchain-cache")?,
                 dir_self = abs_string_path(".")?,
             )?;
             eprintln!();
