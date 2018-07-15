@@ -107,21 +107,23 @@ impl Dir for LocalDir {
 pub fn default_doc() -> Doc {
     const INPUT: &'static str = r#"
 
-# Hello world!
+# Welcome
 
-This is **edit-text**, a web-based rich text editor.
+This is a sandbox for edit-text, a web-based rich text editor. Feel free to change and delete the contents of this page, or change the URL to edit a new page. 
 
-* This is a very early preview.
+* This is alpha-quality software. Don't store anything important here.
 
-* Supports collaborative editing.
+* The server and clients are written in Rust, and the front-end is cross-compiled WebAssembly and TypeScript.
 
-* Written in Rust in the backend, cross-compiled to WebAssembly on the frontend.
+* Supports collaborative editing. Share this URL with a (sensible) number of people to all edit this page in realtime.
 
-* Supports Markdown export.
+* Use the Load/Save button in the toolbar to export the page as Markdown or upload your own Markdown file
 
-This app might be easy to break! That's okay though. We'll notice and fix it, and it'll break less in the future.
+* Please file bugs if you encounter them. edit-text is open source, so you can also contribute code!
 
-Type <http://github.com/tcr/edit-text> into your search bar for more information.
+Go to <http://github.com/tcr/edit-text> for more information.
+
+Developer: [@trimryan](http://twitter.com/trimryan)
 
 "#;
 

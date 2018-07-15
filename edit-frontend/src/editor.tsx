@@ -212,12 +212,19 @@ export class Editor extends React.Component {
   mouseDown = false;
   mouseDownActive = false;
 
-  onMouseDown(e: MouseEvent) {
+  onClick(e: MouseEvent) {
     let option = e.ctrlKey || e.metaKey;
     let isAnchor = e.target ? util.matchesSelector(e.target as Node, '[data-style-Link]') : false;
     if (option && isAnchor) {
       let url = (e.target as HTMLElement).dataset['styleLink'];
       (window as any).open(url, '_blank').focus();
+    }
+  }
+
+  onMouseDown(e: MouseEvent) {
+    let option = e.ctrlKey || e.metaKey;
+    if (option) {
+      // Ignore, handle this in onClick
     } else {
       this.el.focus();
       this.mouseDown = true;
@@ -417,6 +424,7 @@ export class Editor extends React.Component {
         className="edit-text theme-mock"
         tabIndex={0}
         ref={(el) => el && this.onMount(el)}
+        onClick={this.onClick.bind(this)}
         onMouseDown={this.onMouseDown.bind(this)}
         onMouseUp={this.onMouseUp.bind(this)}
         onMouseMove={this.onMouseMove.bind(this)}
