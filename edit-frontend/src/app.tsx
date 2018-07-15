@@ -274,7 +274,7 @@ export class EditorFrame extends React.Component {
         {this.state.modal}
         <div id="root-layout" className={modalClass}>
           <div id="toolbar">
-            <a href="https://github.com/tcr/edit-text" id="logo">edit-text</a>
+            <a href="/" id="logo">edit-text</a>
             <NativeButtons
               editor={this}
               buttons={this.state.buttons} 
@@ -435,12 +435,15 @@ export function start() {
     document.querySelector('#content')!,
     () => {
       // Default notification
-      editorFrame.showNotification({
-        element: (<div>
-          See more <a href="http://github.com/tcr/edit-text">on Github</a>.
-        </div>),
-        level: 'notice',
-      });
+      if (!sessionStorage.getItem("its-only-funny-once")) {
+        editorFrame.showNotification({
+          element: (<div>
+            Check out <a href="http://github.com/tcr/edit-text">edit-text</a> on Github for more information.
+          </div>),
+          level: 'notice',
+        });
+        sessionStorage.setItem("its-only-funny-once", 'true');
+      }
 
       // Connect to remote sockets.
       network.nativeConnect(editorFrame)

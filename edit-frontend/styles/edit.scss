@@ -183,7 +183,7 @@ body.theme-column .edit-text {
     margin: 26px auto 70px;
     background: #fff;
     border: 1px solid #ccc;
-    box-shadow: 3px 3px 8px #bbb;
+    box-shadow: 3px 3px 7px #bbb;
 }
 
 .edit-text {
@@ -499,8 +499,12 @@ body.editing-blurred div[data-tag="caret"]::before {
     }
 
     span.Link {
-        color: blue;
+        color: #05d;
         text-decoration: underline;
+    }
+
+    span.Link.Selected {
+        color: white !important;
     }
 
     span.Link:hover::before {
@@ -510,6 +514,7 @@ body.editing-blurred div[data-tag="caret"]::before {
         top: 1.6em;
         
         font-size: 0.8em;
+        font-weight: normal;
         padding: 2px 5px;
         color: white;
     }

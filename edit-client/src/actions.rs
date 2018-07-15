@@ -112,13 +112,22 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
         if delta != 0 {
             // Get real weird with it.
             let op = delete_char_inner(last_walker)?;
-            // Apply op
-            let ctx2 = ActionContext {
-                doc: OT::apply(&ctx.doc, &op),
-                client_id: ctx.client_id.to_owned(),
-            };
-            let op_next = delete_char(ctx2)?;
-            return Ok(OT::compose(&op, &op_next));
+            if delta > 1 {
+                // Apply next op and compose.
+                let ctx2 = ActionContext {
+                    doc: OT::apply(&ctx.doc, &op),
+                    client_id: ctx.client_id.to_owned(),
+                };
+                let op_next = delete_char(ctx2)?;
+                return Ok(OT::compose(&op, &op_next));
+            } else {
+                // Delete focus caret and finish.
+                // First operation removes the caret.
+                let op_del_caret = caret_clear_inner(walker2)
+                    .map(|(_, op_1)| op_1)
+                    .unwrap_or_else(|_| OT::empty());
+                return Ok(OT::compose(&op, &op_del_caret));
+            }
         }
     }
 
@@ -770,6 +779,11 @@ pub fn caret_clear(ctx: ActionContext, focus: bool) -> Result<(isize, Op), Error
         bail!("could not clear caret");
     };
 
+    caret_clear_inner(walker)
+}
+
+
+pub fn caret_clear_inner(walker: Walker) -> Result<(isize, Op), Error> {
     let pos = walker.caret_pos();
     let mut writer = walker.to_writer();
 
