@@ -1,3 +1,3 @@
-# Development Diaries
+# Work in Progress
 
-This section contains development diaries which are not as structured as the rest of the book, but may cover topics relevant to working inside `edit-text`. In the future, most of these diaries should have their content moved to relevant sections in the book.
+This section contains anything which is unstructured, but may cover topics relevant to working inside `edit-text`. Most of this content should be moved to relevant sections in the book.
