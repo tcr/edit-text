@@ -100,13 +100,13 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
     if let Some(walker2) = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, true) {
         // Detect other caret.
         let last_walker = if walker.caret_pos() > walker2.caret_pos() { walker.clone() } else { walker2.clone() };
-        let delta = walker.caret_pos() - walker2.caret_pos();
+        let delta = (walker.caret_pos() - walker2.caret_pos()).abs();
         println!("delete delta: {:?}, is selection: {:?}", delta, delta != 0);
 
         // If we found a selection, delete every character in the selection.
         // We implement this by looping until the caret distance between our
         // cursors is 0.
-        // TODO: This is incredibly inneficient.
+        // TODO: This is incredibly inefficient.
         //  1. Dont' recurse infinitely, do this in a loop.
         //  2. Skip entire DocChars components instead of one character at a time.
         if delta != 0 {
@@ -121,12 +121,13 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
                 let op_next = delete_char(ctx2)?;
                 return Ok(OT::compose(&op, &op_next));
             } else {
-                // Delete focus caret and finish.
-                // First operation removes the caret.
-                let op_del_caret = caret_clear_inner(walker2)
-                    .map(|(_, op_1)| op_1)
-                    .unwrap_or_else(|_| OT::empty());
-                return Ok(OT::compose(&op, &op_del_caret));
+                // Apply next op and compose.
+                let ctx2 = ActionContext {
+                    doc: OT::apply(&ctx.doc, &op),
+                    client_id: ctx.client_id.to_owned(),
+                };
+                let (_, op_next) = caret_clear(ctx2, true)?;
+                return Ok(OT::compose(&op, &op_next));
             }
         }
     }
