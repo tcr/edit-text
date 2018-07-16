@@ -69,7 +69,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="intro.html" class="active"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="intro-x.html"><strong aria-hidden="true">1.1.</strong> Build System ./x.rs</a></li><li><a href="intro-system.html"><strong aria-hidden="true">1.2.</strong> System Diagram</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.3.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="rtf-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.2.</strong> Operational Transform</a></li></ol></li><li><a href="diary.html"><strong aria-hidden="true">3.</strong> Development Diaries</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">3.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">3.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">3.3.</strong> Carets and You</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="intro.html" class="active"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="intro-x.html"><strong aria-hidden="true">1.1.</strong> Build System ./x.rs</a></li><li><a href="intro-system.html"><strong aria-hidden="true">1.2.</strong> System Diagram</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.3.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="rtf-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.2.</strong> Operational Transform</a></li></ol></li><li><a href="diary.html"><strong aria-hidden="true">3.</strong> WIP</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">3.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">3.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">3.3.</strong> Carets and You</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -134,32 +134,48 @@
                 <div id="content" class="content">
                     <main>
                         <a class="header" href="intro.html#edit-text" id="edit-text"><h1>edit-text</h1></a>
-<p>edit-text is a collaborative text editor, written in Rust.</p>
+<p>edit-text is a document editor that is Markdown-compatible and supports collaborative editing. Its server and client are written in Rust, and its frontend is cross-compiled to WebAssembly and TypeScript.</p>
+<a class="header" href="intro.html#installation" id="installation"><h2>Installation</h2></a>
+<p>Before building, you'll need to install the following cargo tools:</p>
+<pre><code>cargo install cargo-script
+cargo install wasm-bindgen-cli
+cargo install diesel_cli --no-default-features --features sqlite-bundled
+</code></pre>
+<p>Next, install the WebAssembly target:</p>
+<pre><code>rustup target add wasm32-unknown-unknown
+</code></pre>
+<p>Whenever the <code>rust-toolchain</code> file is updated, re-run the <code>rustup target add</code> command to fetch the latest wasm32 target.</p>
+<a class="header" href="intro.html#usage" id="usage"><h2>Usage</h2></a>
+<p>To build all components of edit-text (server, client, and frontend) you can use the <code>build</code> command:</p>
+<pre><code>./x.rs build
+</code></pre>
+<p>You can rebuild individual components with <code>server-build</code>, <code>frontend-build</code>, etc. Check <code>./x.rs help</code> for more information.</p>
+<a class="header" href="intro.html#running-edit-text-with-webassembly" id="running-edit-text-with-webassembly"><h3>Running edit-text with WebAssembly</h3></a>
+<p>edit-text using WebAssembly is the &quot;release&quot; mode of edit-text, where you run a server process and then one or many WebAssembly + TypeScript client running in the browser can connect to it.</p>
+<p>In your terminal session, you can run the following command (and optionally use release mode):</p>
+<pre><code>./x.rs server [--release]
+</code></pre>
+<p>Now open http://localhost:8000/ and you are brought to a welcome page to start editing.</p>
+<p>After any changes to client or server code, run <code>./x.rs build</code> and restart the server process.</p>
+<a class="header" href="intro.html#running-edit-text-with-a-client-in-proxy-mode-for-debugging" id="running-edit-text-with-a-client-in-proxy-mode-for-debugging"><h3>Running edit-text with a client in proxy mode (for debugging)</h3></a>
+<p>Debugging WebAssembly code is harder (in most ways) than debugging a local Rust binary. edit-text supports running the client as an independent &quot;proxy&quot;. An edit-text server process connects to a client proxy running in another process, and communicates with browser processes using WebSockets. This client proxy is all code that would normally be cross-compiled to WebAssembly, but runs locally in your terminal and supports the same backtrace and debugging support as a local binary.</p>
+<p>You'll need two terminal sessions to run in this mode. First, start the server, and specify that you want to connect to a client proxy using <code>--client-proxy</code>. Without this argument, the server will expect server connections from WebAssembly instead.</p>
+<pre><code>./x.rs server --client-proxy [--release]
+</code></pre>
+<p>In another terminal session, you can start the proxy. (It's recommended you compile in release mode, as client code is much slower in debug mode.)</p>
+<pre><code>./x.rs client-proxy [--release]
+</code></pre>
+<p>Then you can open http://localhost:8000/ as before in your browser, and monitor the <code>client-proxy</code> script for status of the clients that your browser is connected to.</p>
+<p>If you encounter a panic or fatal error, the client-proxy mechanism of debugging usually gives much more information about where the error originated. Note that aside from running as a binary, there should be no differences between client-proxy mode and cross-compiling to Webassembly.</p>
+<a class="header" href="intro.html#crate-overview" id="crate-overview"><h2>Crate overview</h2></a>
+<p>The top-level crates are these:</p>
 <ul>
 <li>oatie, an operational transform library</li>
-<li>edit, the frontend and backend to edit-text</li>
-</ul>
-<p>The frontend is broken out into several crates:</p>
-<ul>
-<li>edit-common</li>
+<li>edit-common, the frontend and backend to edit-text</li>
 <li>edit-client</li>
 <li>edit-server</li>
 <li>edit-frontend</li>
 </ul>
-<a class="header" href="intro.html#usage" id="usage"><h2>Usage</h2></a>
-<p>Invoking the server:</p>
-<pre><code>./x.rs server [--release] [--client-proxy]
-</code></pre>
-<p>Invoking the client proxy:</p>
-<pre><code>./x.rs client-proxy [--release]
-</code></pre>
-<p>Building the frontend (TypeScript):</p>
-<pre><code>./x.rs frontend-build
-./x.rs frontend-watch # watches builds and rebuilds as you edit
-</code></pre>
-<p>Building the WebAssembly bundle:</p>
-<pre><code>./x.rs wasm-build
-</code></pre>
 
                     </main>
 
@@ -190,6 +206,21 @@
 
         </div>
 
+        
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:3001");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
         
 
         

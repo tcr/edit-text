@@ -1,6 +1,4 @@
-# Development Diary: Delall Hack
-
-**As of April 2018.**
+# [WIP] Delall Hack
 
 Grepping the codebase for "Delall" turns up this comment in `transform.rs`:
 
