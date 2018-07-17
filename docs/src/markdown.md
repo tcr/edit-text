@@ -1,6 +1,6 @@
 # Documents and Markdown
 
-A document in Mercutio is built with *groups* and *characters*. The document model that Mercutio uses is similar to HTML. We can trivially define a mapping from Mercutio's document model to HTML:
+A document in edit-text is built with *groups* and *characters*. The document model that edit-text uses is similar to HTML. We can trivially define a mapping from edit-text's document model to HTML:
 
 ```
 <ul>
@@ -10,7 +10,7 @@ A document in Mercutio is built with *groups* and *characters*. The document mod
 </ul>
 ```
 
-Becomes when converted to Mercutio's document structure (expressed in RON):
+Becomes when converted to edit-text's document structure (expressed in RON):
 
 ```
 DocGroup({"tag": "bullet", [
@@ -51,7 +51,7 @@ And the middle paragraph, `Interstitial paragraph` is deleted. The document then
 * Item 3...
 ```
 
-Because Mercutio converts directly from its document representation into Markdown, we can bypass the logic of joining common `<ul>` parents in this case and also lean more heavily on Markdown-to-html conversion to perform this for us.
+Because edit-text converts directly from its document representation into Markdown, we can bypass the logic of joining common `<ul>` parents in this case and also lean more heavily on Markdown-to-html conversion to perform this for us.
 
 ## Markdown serialization + deserialization
 
@@ -60,11 +60,11 @@ The module that controls markdown lives at `edit-common/src/markdown`.
 * [ser.rs](https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/ser.rs)
 * [de.rs](https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/de.rs)
 
-Mercutio's document schema should allow conversion losslessly into Markdown, while the deserialization code takes into account (or should) that Markdown's possible output is a superset of what Mercutio supports, and thus all non-supported content should be stripped out.
+edit-text's document schema should allow conversion losslessly into Markdown, while the deserialization code takes into account (or should) that Markdown's possible output is a superset of what edit-text supports, and thus all non-supported content should be stripped out.
 
 ## Document Elements
 
-This are the current elements supported by Mercutio:
+This are the current elements supported by edit-text:
 
 ```
 bullet => Bulleted item
