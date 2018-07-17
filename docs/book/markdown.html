@@ -134,14 +134,14 @@
                 <div id="content" class="content">
                     <main>
                         <a class="header" href="markdown.html#documents-and-markdown" id="documents-and-markdown"><h1>Documents and Markdown</h1></a>
-<p>A document in Mercutio is built with <em>groups</em> and <em>characters</em>. The document model that Mercutio uses is similar to HTML. We can trivially define a mapping from Mercutio's document model to HTML:</p>
+<p>A document in edit-text is built with <em>groups</em> and <em>characters</em>. The document model that edit-text uses is similar to HTML. We can trivially define a mapping from edit-text's document model to HTML:</p>
 <pre><code>&lt;ul&gt;
   &lt;li&gt;&lt;p&gt;Item 1&lt;/p&gt;&lt;/li&gt;
   &lt;li&gt;&lt;p&gt;Item 2&lt;/p&gt;&lt;/li&gt;
   &lt;li&gt;&lt;p&gt;Item 3...&lt;/p&gt;&lt;/li&gt;
 &lt;/ul&gt;
 </code></pre>
-<p>Becomes when converted to Mercutio's document structure (expressed in RON):</p>
+<p>Becomes when converted to edit-text's document structure (expressed in RON):</p>
 <pre><code>DocGroup({&quot;tag&quot;: &quot;bullet&quot;, [
     DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 1&quot;)]),
 ]})
@@ -169,16 +169,16 @@ Interstitial paragraph
 * Item 2
 * Item 3...
 </code></pre>
-<p>Because Mercutio converts directly from its document representation into Markdown, we can bypass the logic of joining common <code>&lt;ul&gt;</code> parents in this case and also lean more heavily on Markdown-to-html conversion to perform this for us.</p>
+<p>Because edit-text converts directly from its document representation into Markdown, we can bypass the logic of joining common <code>&lt;ul&gt;</code> parents in this case and also lean more heavily on Markdown-to-html conversion to perform this for us.</p>
 <a class="header" href="markdown.html#markdown-serialization--deserialization" id="markdown-serialization--deserialization"><h2>Markdown serialization + deserialization</h2></a>
 <p>The module that controls markdown lives at <code>edit-common/src/markdown</code>.</p>
 <ul>
 <li><a href="https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/ser.rs">ser.rs</a></li>
 <li><a href="https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/de.rs">de.rs</a></li>
 </ul>
-<p>Mercutio's document schema should allow conversion losslessly into Markdown, while the deserialization code takes into account (or should) that Markdown's possible output is a superset of what Mercutio supports, and thus all non-supported content should be stripped out.</p>
+<p>edit-text's document schema should allow conversion losslessly into Markdown, while the deserialization code takes into account (or should) that Markdown's possible output is a superset of what edit-text supports, and thus all non-supported content should be stripped out.</p>
 <a class="header" href="markdown.html#document-elements" id="document-elements"><h2>Document Elements</h2></a>
-<p>This are the current elements supported by Mercutio:</p>
+<p>This are the current elements supported by edit-text:</p>
 <pre><code>bullet =&gt; Bulleted item
 p =&gt; Paragraph
 h1/h2/h3/h4/h5/h6 =&gt; Header
