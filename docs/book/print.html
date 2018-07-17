@@ -69,7 +69,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="intro-system.html"><strong aria-hidden="true">1.1.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">1.2.</strong> Build System ./x.rs</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.3.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="rtf-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.2.</strong> Operational Transform</a></li><li><a href="diary-markdown.html"><strong aria-hidden="true">2.3.</strong> [WIP] Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.4.</strong> [WIP] Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.5.</strong> [WIP] Carets and You</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="intro-system.html"><strong aria-hidden="true">1.1.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">1.2.</strong> Build System ./x.rs</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.3.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="rtf-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.2.</strong> Operational Transform</a></li><li><a href="diary-markdown.html"><strong aria-hidden="true">2.3.</strong> [WIP] Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.4.</strong> [WIP] Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.5.</strong> [WIP] Carets and You</a></li><li><a href="deploying.html"><strong aria-hidden="true">2.6.</strong> [WIP] Deploying</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -134,9 +134,9 @@
                 <div id="content" class="content">
                     <main>
                         <a class="header" href="print.html#edit-text" id="edit-text"><h1>edit-text</h1></a>
-<p>edit-text is a document editor that is Markdown-compatible and supports collaborative editing. Its server and client are written in Rust, and its frontend is cross-compiled to WebAssembly and TypeScript.</p>
-<a class="header" href="print.html#installation" id="installation"><h3>Installation</h3></a>
-<p>Before building, you'll need to install the following cargo tools:</p>
+<p>edit-text is a Markdown-compatible document editor that supports collaborative editing. Its server and client are written in Rust, and its frontend uses TypeScript and WebAssembly.</p>
+<a class="header" href="print.html#getting-started" id="getting-started"><h3>Getting Started</h3></a>
+<p>Before building, you'll need to install the following cargo build tools:</p>
 <pre><code>cargo install cargo-script
 cargo install wasm-bindgen-cli
 cargo install diesel_cli --no-default-features --features sqlite-bundled
@@ -155,7 +155,7 @@ cargo install diesel_cli --no-default-features --features sqlite-bundled
 <p>In your terminal session, you can run the following command to start the server (and optionally compile with release optimizations):</p>
 <pre><code>./x.rs server [--release]
 </code></pre>
-<p>Now open http://localhost:8000/ and you are brought to a welcome page to start editing.</p>
+<p>Now open http://localhost:8000/ and you are brought to a welcome page to start editing!</p>
 <p>After any changes are made to client or server code, run <code>./x.rs build</code> and restart the server process.</p>
 <a class="header" href="print.html#running-edit-text-with-a-client-in-proxy-mode-for-debugging" id="running-edit-text-with-a-client-in-proxy-mode-for-debugging"><h3>Running edit-text with a client in proxy mode (for debugging)</h3></a>
 <p>Debugging WebAssembly code is harder (in most ways) than debugging a local Rust binary. edit-text supports running the client as an independent &quot;proxy&quot;. An edit-text server process connects to a client proxy running in another process, and communicates with browser processes using WebSockets. This client proxy is all code that would normally be cross-compiled to WebAssembly, but runs locally in your terminal and supports the same backtrace and debugging support as a local binary.</p>
@@ -166,7 +166,13 @@ cargo install diesel_cli --no-default-features --features sqlite-bundled
 <pre><code>./x.rs client-proxy [--release]
 </code></pre>
 <p>Then you can open http://localhost:8000/ as before in your browser, and monitor the <code>client-proxy</code> script for status of the clients that your browser is connected to.</p>
-<p>If you encounter a panic or fatal error, the client-proxy mechanism of debugging usually gives much more information about where the error originated. Note that aside from running as a binary, there should be no differences between client-proxy mode and cross-compiling to Webassembly.</p>
+<p>You will see any failures appear in the client-proxy code that would appear in the browser console when in WASM mode. If you encounter a panic or fatal error, this &quot;proxy&quot; mechanism of debugging usually gives much more information about where the error originated. Note that aside from running as a binary, there should be no differences in behavior between the client-proxy and the client in Webassembly.</p>
+<a class="header" href="print.html#compiling-the-frontend" id="compiling-the-frontend"><h3>Compiling the frontend</h3></a>
+<p>The bundled frontend code (written in TypeScript) is tracked in git, but you can also compile it yourself. Make sure you have Node installed first, then:</p>
+<pre><code>npm i --prefix ./edit-frontend
+./x.rs frontend-watch
+</code></pre>
+<p>This command watches the edit-frontend directory and continuously builds all frontend code, including the <code>wasm-bindgen</code> bindings.</p>
 <a class="header" href="print.html#system-overview" id="system-overview"><h1>System Overview</h1></a>
 <p>edit-text is built from the ground up as a collaborative text editor. It uses operational transform to merge updates from multiple clients, so it requires a synchronizing server. The server is also in charge of storing page content, so that every page can be shared via its URL.</p>
 <p>A client runs in a browser: text editing and synchronization code is written in Rust and cross-compiled to WebAssembly, and frontend code is written in TypeScript.</p>
@@ -724,6 +730,17 @@ Op([DelWithGroup([DelSkip(7), DelChars(1)])], [AddWithGroup([AddSkip(8), AddGrou
 <p>If you imagine a document consisting of only this element, and we see that one client has deleted the entire element, we accidentally wind up with a client's caret being in the root element (instead of block element). See [Splitting image](./diary-markdown.md].</p>
 <p>To avoid this problem, the Delall hack delets alls newly inserted elements from an insertion that is transformed against a deletion that delets all content. We can verify any arbitrary <code>DelGroup</code> delets all of its inner contents using a recursive check.</p>
 <a class="header" href="print.html#wip-carets-and-you" id="wip-carets-and-you"><h1>[WIP] Carets and You</h1></a>
+<a class="header" href="print.html#wip-deploying" id="wip-deploying"><h1>[WIP] Deploying</h1></a>
+<p>[macOS Instructions] To deploy to a Dokku instance, you'll have to install a linux cross-compiler. This will cross-compile the Linux binary locally and then package it in a Docker container for distribution.</p>
+<p>First, to install the cross compiler:</p>
+<pre><code>brew install qinyao-he/homebrew-gcc_cross_compilers/x64-elf-gcc
+</code></pre>
+<p>Then add a new Rust target:</p>
+<pre><code>rustup target add x86_64-unknown-linux-gnu
+</code></pre>
+<p>Then modify <code>./x.rs</code> (for the moment) to add your hostname and credentials, then:</p>
+<pre><code>./x.rs deploy
+</code></pre>
 
                     </main>
 

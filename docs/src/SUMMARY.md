@@ -10,4 +10,5 @@
   - [[WIP] Documents and Markdown](./diary-markdown.md)
   - [[WIP] Delall Hack](./diary-delall.md)
   - [[WIP] Carets and You](./diary-carets.md)
+  - [[WIP] Deploying](./deploying.md)
 
