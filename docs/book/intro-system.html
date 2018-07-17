@@ -159,7 +159,8 @@ dev: 0.0.0.0:8003/  prod: /$/graphql   GraphQL
 <a class="header" href="intro-system.html#cratemodule-overview" id="cratemodule-overview"><h2>Crate/Module overview</h2></a>
 <p>The top-level crates/modules are these:</p>
 <ul>
-<li>oatie, an operational transform crate</li>
+<li>oatie, the operational transform crate</li>
+<li>simple-ws, a thin websocket wrapper</li>
 <li>edit-common, the shared code crate</li>
 <li>edit-client, the client crate</li>
 <li>edit-server, the server crate</li>
@@ -253,21 +254,6 @@ dev: 0.0.0.0:8003/  prod: /$/graphql   GraphQL
 
         </div>
 
-        
-        <!-- Livereload script (if served using the cli tool) -->
-        <script type="text/javascript">
-            var socket = new WebSocket("ws://localhost:3001");
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload(true); // force reload from server (not from cache)
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
         
 
         
