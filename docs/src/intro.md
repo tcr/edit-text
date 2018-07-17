@@ -18,7 +18,7 @@ Next, install the WebAssembly target:
 rustup target add wasm32-unknown-unknown
 ```
 
-Whenever the `rust-toolchain` file is updated, re-run the `rustup target add` command to fetch the latest wasm32 target.
+<!-- Whenever the `rust-toolchain` file is updated, re-run the `rustup target add` command to fetch the latest wasm32 target. -->
 
 ## Usage
 
