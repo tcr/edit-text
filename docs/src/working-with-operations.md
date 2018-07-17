@@ -1,25 +1,8 @@
-# Working with Documents
+# Working with Operations
 
-The basic structure that Oatie operates on is a Document:
+Operations are defined by a "deletion" and an "addition" pair. This covers the whole space of modifications that edit-text can perform, and the distinction allows operational transform logic to be simplified.
 
-```rust
-type DocSpan = Vec<DocElement>;
-
-struct Doc(DocSpan);
-
-// Documents are made up of chars and groups.
-enum DocElement {
-    DocChars(DocString),
-    DocGroup(Attrs, DocSpan),
-}
-
-// Convenience wrapper for opaquely operating on Strings.
-struct DocString(String);
-// Convenience wrapper for group "attributes" like HTML attrs.
-type Attrs = HashMap<String, String>;
-```
-
-### Operations
+The `Op` type is a tuple of an `AddSpan` and a `DelSpan`, each composed of `AddElement` and `DelElement` enums respectively. These `???Element` enums have some obvious `DocElement` counterparts, like `DocChars`, `DelChars`, and `AddChars`.
 
 ```rust
 type DelSpan = Vec<DelElement>;
