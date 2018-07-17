@@ -135,7 +135,11 @@
                     <main>
                         <a class="header" href="rtf-ot.html#operational-transform" id="operational-transform"><h1>Operational Transform</h1></a>
 <p>When two clients A and B make an operation concurrently, one way to get them back in sync is to determine what would operation B look like if operation A had happened first, and vice versa. If we can guarantee that this result is commutative, meaning:</p>
-<pre><code>operation A + (operation B if A had happened already) == operation B + (operation A if B had happened already)
+<pre><code> operation A + (operation B as if A had happened first)
+
+                   is equivalent to
+
+ operation B + (operation A as if B had happened first)
 </code></pre>
 <p>Then we can keep both clients, which had different operations occur to their documents, can get back in sync. The algorithm used by <code>oatie</code> guarantees this operation will be commutative, which is makes other properties of this system simpler.</p>
 <p>Let's look at a race condition. Client A sends an operation to the server,</p>
