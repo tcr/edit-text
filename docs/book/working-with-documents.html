@@ -69,7 +69,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li><li><a href="intro-system.html"><strong aria-hidden="true">1.2.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">1.3.</strong> Build System ./x.rs</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.4.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="rtf-documents.html" class="active"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.2.</strong> Operational Transform</a></li><li><a href="markdown.html"><strong aria-hidden="true">2.3.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.4.</strong> [WIP] Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.5.</strong> [WIP] Carets and You</a></li><li><a href="deploying.html"><strong aria-hidden="true">2.6.</strong> [WIP] Deploying</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li><li><a href="intro-system.html"><strong aria-hidden="true">1.2.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">1.3.</strong> Build System ./x.rs</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.4.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="working-with-documents.html" class="active"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">2.2.</strong> Working with Operations</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.3.</strong> Operational Transform</a></li><li><a href="markdown.html"><strong aria-hidden="true">2.4.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.5.</strong> [WIP] Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.6.</strong> [WIP] Carets and You</a></li><li><a href="deploying.html"><strong aria-hidden="true">2.7.</strong> [WIP] Deploying</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -133,7 +133,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <a class="header" href="rtf-documents.html#working-with-documents" id="working-with-documents"><h1>Working with Documents</h1></a>
+                        <a class="header" href="working-with-documents.html#working-with-documents" id="working-with-documents"><h1>Working with Documents</h1></a>
 <p>The basic structure that Oatie operates on is a Document:</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
@@ -153,82 +153,7 @@ struct DocString(String);
 // Convenience wrapper for group &quot;attributes&quot; like HTML attrs.
 type Attrs = HashMap&lt;String, String&gt;;
 #}</code></pre></pre>
-<a class="header" href="rtf-documents.html#operations" id="operations"><h3>Operations</h3></a>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-type DelSpan = Vec&lt;DelElement&gt;;
-
-enum DelElement {
-    DelSkip(usize),
-    DelWithGroup(DelSpan),
-    DelChars(usize),
-    DelGroup(DelSpan),
-}
-#}</code></pre></pre>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-type AddSpan = Vec&lt;AddElement&gt;;
-
-enum AddElement {
-    AddSkip(usize),
-    AddWithGroup(AddSpan),
-    AddChars(DocString),
-    AddGroup(Attrs, AddSpan),
-}
-#}</code></pre></pre>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-type Op = (DelSpan, AddSpan);
-#}</code></pre></pre>
-<a class="header" href="rtf-documents.html#macros" id="macros"><h2>Macros</h2></a>
-<p>When importing oatie, there are several convenience macros which make writing the above easier:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-#[macro_use]
-extern crate oatie;
-
-let doc = doc_span![
-    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [
-        DocChars(&quot;Hello world!&quot;)
-    ]),
-];
-
-let op = op_span!([
-    DelGroup([DelSkip(12)]),
-    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddSkip(12)]),
-]);
-#}</code></pre></pre>
-<p>This is roughly equivalent to Rust code without needing to type <code>vec!</code> or use explicit <code>HashMap::new()</code> and <code>DocString(...)</code> invocations.</p>
-<a class="header" href="rtf-documents.html#using-operations" id="using-operations"><h2>Using Operations</h2></a>
-<p>An operation can be applied to a document.</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-#[macro_use]
-extern crate oatie;
-
-use oatie::doc::*;
-use oatie::OT;
-
-let doc = doc_span![
-    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Hello world!&quot;)]),
-];
-
-let op = op_span!([
-    DelGroup([DelSkip(12)]),
-    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddSkip(12)]),
-]);
-
-let doc2 = Op::apply(&amp;doc, $op);
-
-println!(&quot;{:?}&quot;, doc2);
-
-// DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [DocChars(&quot;Hello world!&quot;)])
-#}</code></pre></pre>
+<p>Documents can <a href="working-with-operations.html">have operations performed on them</a> to result in a new, modified document.</p>
 
                     </main>
 
@@ -241,7 +166,7 @@ println!(&quot;{:?}&quot;, doc2);
                         
 
                         
-                            <a rel="next" href="rtf-ot.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="working-with-operations.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -259,7 +184,7 @@ println!(&quot;{:?}&quot;, doc2);
                 
 
                 
-                    <a href="rtf-ot.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a href="working-with-operations.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 

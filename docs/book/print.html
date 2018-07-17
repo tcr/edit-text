@@ -69,7 +69,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li><li><a href="intro-system.html"><strong aria-hidden="true">1.2.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">1.3.</strong> Build System ./x.rs</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.4.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="rtf-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.2.</strong> Operational Transform</a></li><li><a href="markdown.html"><strong aria-hidden="true">2.3.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.4.</strong> [WIP] Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.5.</strong> [WIP] Carets and You</a></li><li><a href="deploying.html"><strong aria-hidden="true">2.6.</strong> [WIP] Deploying</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li><li><a href="intro-system.html"><strong aria-hidden="true">1.2.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">1.3.</strong> Build System ./x.rs</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.4.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="working-with-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">2.2.</strong> Working with Operations</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.3.</strong> Operational Transform</a></li><li><a href="markdown.html"><strong aria-hidden="true">2.4.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.5.</strong> [WIP] Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.6.</strong> [WIP] Carets and You</a></li><li><a href="deploying.html"><strong aria-hidden="true">2.7.</strong> [WIP] Deploying</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -363,7 +363,10 @@ struct DocString(String);
 // Convenience wrapper for group &quot;attributes&quot; like HTML attrs.
 type Attrs = HashMap&lt;String, String&gt;;
 #}</code></pre></pre>
-<a class="header" href="print.html#operations" id="operations"><h3>Operations</h3></a>
+<p>Documents can <a href="working-with-operations.html">have operations performed on them</a> to result in a new, modified document.</p>
+<a class="header" href="print.html#working-with-operations" id="working-with-operations"><h1>Working with Operations</h1></a>
+<p>Operations are defined by a &quot;deletion&quot; and an &quot;addition&quot; pair. This covers the whole space of modifications that edit-text can perform, and the distinction allows operational transform logic to be simplified.</p>
+<p>The <code>Op</code> type is a tuple of an <code>AddSpan</code> and a <code>DelSpan</code>, each composed of <code>AddElement</code> and <code>DelElement</code> enums respectively. These <code>???Element</code> enums have some obvious <code>DocElement</code> counterparts, like <code>DocChars</code>, <code>DelChars</code>, and <code>AddChars</code>.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
@@ -504,7 +507,7 @@ new doc:   edit
 <p>A harder consideration is when we introduce groups, which are similar to HTML elements. <code>oatie</code> doesn't operate on HTML tags, but acts more like the DOM: groups are strictly nested and can only contain text or other groups. Each group has a &quot;tag&quot; (like an HTML tag), but also can contain other attributes (for example, each user's cursor contains the attribute of its originating client).</p>
 <p>Transforming two operations which operate on groups in distinct ways offers some difficulty.</p>
 <p>TODO</p>
-<a class="header" href="print.html#operations-1" id="operations-1"><h2>Operations</h2></a>
+<a class="header" href="print.html#operations" id="operations"><h2>Operations</h2></a>
 <p>We need both a deletion and an addition to perform some atomic operations, for example, making sure there are only <code>&lt;li&gt;</code> elements inside of a <code>&lt;ul&gt;</code> element for all document versions.</p>
 <p>TODO</p>
 <a class="header" href="print.html#documents-and-markdown" id="documents-and-markdown"><h1>Documents and Markdown</h1></a>
