@@ -69,7 +69,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="intro-system.html"><strong aria-hidden="true">1.1.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">1.2.</strong> Build System ./x.rs</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.3.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="rtf-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.2.</strong> Operational Transform</a></li><li><a href="diary-markdown.html"><strong aria-hidden="true">2.3.</strong> [WIP] Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.4.</strong> [WIP] Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.5.</strong> [WIP] Carets and You</a></li><li><a href="deploying.html"><strong aria-hidden="true">2.6.</strong> [WIP] Deploying</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li><li><a href="intro-system.html"><strong aria-hidden="true">1.2.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">1.3.</strong> Build System ./x.rs</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.4.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="rtf-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.2.</strong> Operational Transform</a></li><li><a href="diary-markdown.html"><strong aria-hidden="true">2.3.</strong> [WIP] Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.4.</strong> [WIP] Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.5.</strong> [WIP] Carets and You</a></li><li><a href="deploying.html"><strong aria-hidden="true">2.6.</strong> [WIP] Deploying</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -136,7 +136,8 @@
                         <a class="header" href="print.html#edit-text" id="edit-text"><h1>edit-text</h1></a>
 <p>edit-text is a Markdown-compatible document editor that supports collaborative editing. Its server and client are written in Rust, and its frontend uses TypeScript and WebAssembly.</p>
 <p><img src="https://user-images.githubusercontent.com/80639/42796912-9f2ae852-895a-11e8-9aae-9dede91296bf.png" alt="Preview Image" /></p>
-<a class="header" href="print.html#getting-started" id="getting-started"><h3>Getting Started</h3></a>
+<p>For installation instructions, please read <a href="getting-started.html"><strong>Getting Started</strong></a>.</p>
+<a class="header" href="print.html#getting-started" id="getting-started"><h1>Getting Started</h1></a>
 <p>Before building, you'll need to install the following cargo build tools:</p>
 <pre><code>cargo install cargo-script
 cargo install wasm-bindgen-cli
@@ -146,7 +147,7 @@ cargo install diesel_cli --no-default-features --features sqlite-bundled
 <pre><code>rustup target add wasm32-unknown-unknown
 </code></pre>
 <!-- Whenever the `rust-toolchain` file is updated, re-run the `rustup target add` command to fetch the latest wasm32 target. -->
-<a class="header" href="print.html#usage" id="usage"><h3>Usage</h3></a>
+<a class="header" href="print.html#usage" id="usage"><h2>Usage</h2></a>
 <p>To build all components of edit-text (server, client, and frontend) you can use the <code>build</code> command:</p>
 <pre><code>./x.rs build
 </code></pre>
@@ -168,7 +169,7 @@ cargo install diesel_cli --no-default-features --features sqlite-bundled
 </code></pre>
 <p>Then you can open http://localhost:8000/ as before in your browser, and monitor the <code>client-proxy</code> script for status of the clients that your browser is connected to.</p>
 <p>You will see any failures appear in the client-proxy code that would appear in the browser console when in WASM mode. If you encounter a panic or fatal error, this &quot;proxy&quot; mechanism of debugging usually gives much more information about where the error originated. Note that aside from running as a binary, there should be no differences in behavior between the client-proxy and the client in Webassembly.</p>
-<a class="header" href="print.html#compiling-the-frontend" id="compiling-the-frontend"><h3>Compiling the frontend</h3></a>
+<a class="header" href="print.html#compiling-the-frontend" id="compiling-the-frontend"><h2>Compiling the frontend</h2></a>
 <p>The bundled frontend code (written in TypeScript) is tracked in git, but you can also compile it yourself. Make sure you have Node installed first, then:</p>
 <pre><code>npm i --prefix ./edit-frontend
 ./x.rs frontend-watch
@@ -762,21 +763,6 @@ Op([DelWithGroup([DelSkip(7), DelChars(1)])], [AddWithGroup([AddSkip(8), AddGrou
 
         </div>
 
-        
-        <!-- Livereload script (if served using the cli tool) -->
-        <script type="text/javascript">
-            var socket = new WebSocket("ws://localhost:3001");
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload(true); // force reload from server (not from cache)
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
         
 
         

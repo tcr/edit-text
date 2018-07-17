@@ -1,6 +1,7 @@
 # Summary
 
 - [Introduction](./intro.md)
+  - [Getting Started](./getting-started.md)
   - [System Overview](./intro-system.md)
   - [Build System ./x.rs](./intro-x.md)
   - [Testing](./intro-testing.md)
