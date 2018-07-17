@@ -1,16 +1,16 @@
 # Operational Transform
 
-When two clients A and B make an operation concurrently, one way to get them back in sync is to determine what would operation B look like if operation A had happened first, and vice versa. If we can guarantee that this result is commutative, meaning:
+When two clients A and B make an operation concurrently, one way to get them back in sync is to determine what would operation B look like if operation A had happened first, and vice versa. If we can guarantee that this result on both clients produce the same output, meaning if we can guarantee the following (where ":" means "composed with"):
 
 ```
- operation A + (operation B as if A had happened first)
+ operation A : (operation B as if A had happened first)
 
-                   is equivalent to
+        the above composition is equivalent to
 
- operation B + (operation A as if B had happened first)
+ operation B : (operation A as if B had happened first)
 ```
 
-Then we can keep both clients, which had different operations occur to their documents, can get back in sync. The algorithm used by `oatie` guarantees this operation will be commutative, which is makes other properties of this system simpler.
+Then we can guarantee both clients, which had different operations occur to their documents before this moment in time, can get back in sync. The algorithm used by `oatie` guarantees this operation will be commutative, which is makes other properties of this system simpler.
 
 Let's look at a race condition. Client A sends an operation to the server, 
 

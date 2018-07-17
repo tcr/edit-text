@@ -440,14 +440,14 @@ println!(&quot;{:?}&quot;, doc2);
 // DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [DocChars(&quot;Hello world!&quot;)])
 #}</code></pre></pre>
 <a class="header" href="print.html#operational-transform" id="operational-transform"><h1>Operational Transform</h1></a>
-<p>When two clients A and B make an operation concurrently, one way to get them back in sync is to determine what would operation B look like if operation A had happened first, and vice versa. If we can guarantee that this result is commutative, meaning:</p>
-<pre><code> operation A + (operation B as if A had happened first)
+<p>When two clients A and B make an operation concurrently, one way to get them back in sync is to determine what would operation B look like if operation A had happened first, and vice versa. If we can guarantee that this result on both clients produce the same output, meaning if we can guarantee the following (where &quot;:&quot; means &quot;composed with&quot;):</p>
+<pre><code> operation A : (operation B as if A had happened first)
 
-                   is equivalent to
+        the above composition is equivalent to
 
- operation B + (operation A as if B had happened first)
+ operation B : (operation A as if B had happened first)
 </code></pre>
-<p>Then we can keep both clients, which had different operations occur to their documents, can get back in sync. The algorithm used by <code>oatie</code> guarantees this operation will be commutative, which is makes other properties of this system simpler.</p>
+<p>Then we can guarantee both clients, which had different operations occur to their documents before this moment in time, can get back in sync. The algorithm used by <code>oatie</code> guarantees this operation will be commutative, which is makes other properties of this system simpler.</p>
 <p>Let's look at a race condition. Client A sends an operation to the server,</p>
 <p>Next, we need to work around the undesirable constraint each operation made by a client has to be transformed against another client's. We actually can generalize up to more than two clients—by transforming the results of the operation A x B with the results of B' &amp;mul; C, etc. But in practice, we are not going to have each operation have a corresponding and concurrent operation on each client at the same instant. Instead, we version the document, and use this to tell what operations an incoming operation should be transformed against. For instance, if operations A and B happen simultaneously, the server can do the following:</p>
 <ol>
