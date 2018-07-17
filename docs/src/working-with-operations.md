@@ -1,8 +1,8 @@
 # Working with Operations
 
-Operations are defined by a "deletion" and an "addition" pair. This covers the whole space of modifications that edit-text can perform, and the distinction allows operational transform logic to be simplified.
+Operations in edit-text are a sequence of a "deletion" followed by an "addition", grouped together in a pair. All modifications edit-text can perform are designed to perform a deletion followed by an addition, and this distinction between deleting and adding content allows operational transform logic to be simplified.
 
-The `Op` type is a tuple of an `AddSpan` and a `DelSpan`, each composed of `AddElement` and `DelElement` enums respectively. These `???Element` enums have some obvious `DocElement` counterparts, like `DocChars`, `DelChars`, and `AddChars`.
+The `Op` type is a tuple of the `AddSpan` and `DelSpan` types, which just represent vectors of the `AddElement` and `DelElement` enums. The `DocElement` enums has some obvious counterparts here, like the trio of `DocChars`, `DelChars`, and `AddChars`.
 
 ```rust
 type DelSpan = Vec<DelElement>;
