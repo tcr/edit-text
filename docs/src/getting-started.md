@@ -8,13 +8,11 @@ cargo install wasm-bindgen-cli
 cargo install diesel_cli --no-default-features --features sqlite-bundled
 ```
 
-Next, install the WebAssembly target:
+Then you can clone the repository:
 
 ```
-rustup target add wasm32-unknown-unknown
+git clone https://github.com/tcr/edit-text
 ```
-
-<!-- Whenever the `rust-toolchain` file is updated, re-run the `rustup target add` command to fetch the latest wasm32 target. -->
 
 ## Usage
 

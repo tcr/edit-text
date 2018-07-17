@@ -145,6 +145,11 @@ fn run() -> Result<(), Error> {
     match parsed_args {
         Cli::WasmWatch { no_vendor } => {
             execute!(
+                "
+                    rustup target add wasm32-unknown-unknown
+                "
+            )?;
+            execute!(
                 r"
                     cargo watch -i edit-frontend/** -i x.rs -x 'script x.rs wasm-build {no_vendor}'
                 ",
@@ -155,6 +160,12 @@ fn run() -> Result<(), Error> {
         Cli::Wasm { no_vendor } => {
             // wasm must always be --release
             let release_flag = Some("--release");
+
+            execute!(
+                "
+                    rustup target add wasm32-unknown-unknown
+                "
+            )?;
 
             eprintln!("Building...");
 

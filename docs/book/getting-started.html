@@ -139,10 +139,9 @@
 cargo install wasm-bindgen-cli
 cargo install diesel_cli --no-default-features --features sqlite-bundled
 </code></pre>
-<p>Next, install the WebAssembly target:</p>
-<pre><code>rustup target add wasm32-unknown-unknown
+<p>Then you can clone the repository:</p>
+<pre><code>git clone https://github.com/tcr/edit-text
 </code></pre>
-<!-- Whenever the `rust-toolchain` file is updated, re-run the `rustup target add` command to fetch the latest wasm32 target. -->
 <a class="header" href="getting-started.html#usage" id="usage"><h2>Usage</h2></a>
 <p>To build all components of edit-text (server, client, and frontend) you can use the <code>build</code> command:</p>
 <pre><code>./x.rs build
