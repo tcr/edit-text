@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>[WIP] Documents and Markdown - edit-text internals</title>
+        <title>Documents and Markdown - edit-text internals</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -69,7 +69,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li><li><a href="intro-system.html"><strong aria-hidden="true">1.2.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">1.3.</strong> Build System ./x.rs</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.4.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="rtf-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.2.</strong> Operational Transform</a></li><li><a href="diary-markdown.html" class="active"><strong aria-hidden="true">2.3.</strong> [WIP] Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.4.</strong> [WIP] Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.5.</strong> [WIP] Carets and You</a></li><li><a href="deploying.html"><strong aria-hidden="true">2.6.</strong> [WIP] Deploying</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li><li><a href="intro-system.html"><strong aria-hidden="true">1.2.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">1.3.</strong> Build System ./x.rs</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.4.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="rtf-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.2.</strong> Operational Transform</a></li><li><a href="markdown.html" class="active"><strong aria-hidden="true">2.3.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.4.</strong> [WIP] Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.5.</strong> [WIP] Carets and You</a></li><li><a href="deploying.html"><strong aria-hidden="true">2.6.</strong> [WIP] Deploying</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -133,7 +133,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <a class="header" href="diary-markdown.html#wip-documents-and-markdown" id="wip-documents-and-markdown"><h1>[WIP] Documents and Markdown</h1></a>
+                        <a class="header" href="markdown.html#documents-and-markdown" id="documents-and-markdown"><h1>Documents and Markdown</h1></a>
 <p>A document in Mercutio is built with <em>groups</em> and <em>characters</em>. The document model that Mercutio uses is similar to HTML. We can trivially define a mapping from Mercutio's document model to HTML:</p>
 <pre><code>&lt;ul&gt;
   &lt;li&gt;&lt;p&gt;Item 1&lt;/p&gt;&lt;/li&gt;
@@ -170,14 +170,14 @@ Interstitial paragraph
 * Item 3...
 </code></pre>
 <p>Because Mercutio converts directly from its document representation into Markdown, we can bypass the logic of joining common <code>&lt;ul&gt;</code> parents in this case and also lean more heavily on Markdown-to-html conversion to perform this for us.</p>
-<a class="header" href="diary-markdown.html#markdown-serialization--deserialization" id="markdown-serialization--deserialization"><h2>Markdown serialization + deserialization</h2></a>
+<a class="header" href="markdown.html#markdown-serialization--deserialization" id="markdown-serialization--deserialization"><h2>Markdown serialization + deserialization</h2></a>
 <p>The module that controls markdown lives at <code>edit-common/src/markdown</code>.</p>
 <ul>
 <li><a href="https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/ser.rs">ser.rs</a></li>
 <li><a href="https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/de.rs">de.rs</a></li>
 </ul>
 <p>Mercutio's document schema should allow conversion losslessly into Markdown, while the deserialization code takes into account (or should) that Markdown's possible output is a superset of what Mercutio supports, and thus all non-supported content should be stripped out.</p>
-<a class="header" href="diary-markdown.html#document-elements" id="document-elements"><h2>Document Elements</h2></a>
+<a class="header" href="markdown.html#document-elements" id="document-elements"><h2>Document Elements</h2></a>
 <p>This are the current elements supported by Mercutio:</p>
 <pre><code>bullet =&gt; Bulleted item
 p =&gt; Paragraph
@@ -187,7 +187,7 @@ html =&gt; Inline HTML content (a raw string, as it would appear in Markdown)
 caret =&gt; Caret position
 hr =&gt; Horizontal rule
 </code></pre>
-<a class="header" href="diary-markdown.html#splitting-image" id="splitting-image"><h1>Splitting Image</h1></a>
+<a class="header" href="markdown.html#splitting-image" id="splitting-image"><h1>Splitting Image</h1></a>
 <p>The entire document editing process is built on splitting a single origin block element into a series of sub-elements.</p>
 <p>All editing steps you can take in the frontend editor preserve this quality.</p>
 

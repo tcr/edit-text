@@ -1,4 +1,4 @@
-# [WIP] Documents and Markdown
+# Documents and Markdown
 
 A document in Mercutio is built with *groups* and *characters*. The document model that Mercutio uses is similar to HTML. We can trivially define a mapping from Mercutio's document model to HTML:
 
