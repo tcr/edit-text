@@ -178,14 +178,6 @@ npm install
 <pre><code class="language-sh">./x.rs book-watch
 </code></pre>
 <p>By navigating to <a href="http://localhost:3000/">http://localhost:3000/</a>, you'll see the page refresh automatically as you edit markdown files under <code>docs-src/</code>.</p>
-<a class="header" href="intro-x.html#deploy" id="deploy"><h2>Deploy</h2></a>
-<p>You can deploy edit-text to a Dokku server using <code>./x.rs deploy</code>.</p>
-<ul>
-<li>This first cross-compiles the edit-server binary using a local Docker image.</li>
-<li>It then uploads the binary using the <code>dokku tar:in</code> command on a remote server (not the Git endpoint).</li>
-<li>You can configure the dokku URL using the <code>EDIT_DEPLOY_URL</code> environment variable.</li>
-<li>You can configure the dokku application name using the <code>EDIT_DOKKU_NAME</code> environment variable.</li>
-</ul>
 
                     </main>
 
@@ -224,6 +216,21 @@ npm install
 
         </div>
 
+        
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:3001");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
         
 
         

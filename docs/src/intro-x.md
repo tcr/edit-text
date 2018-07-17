@@ -86,12 +86,3 @@ Or watch for all changes as they are being made with book-watch.
 ```
 
 By navigating to <http://localhost:3000/>, you'll see the page refresh automatically as you edit markdown files under `docs-src/`.
-
-## Deploy
-
-You can deploy edit-text to a Dokku server using `./x.rs deploy`.
-
-* This first cross-compiles the edit-server binary using a local Docker image.
-* It then uploads the binary using the `dokku tar:in` command on a remote server (not the Git endpoint).
-* You can configure the dokku URL using the `EDIT_DEPLOY_URL` environment variable.
-* You can configure the dokku application name using the `EDIT_DOKKU_NAME` environment variable.

@@ -135,6 +135,7 @@
                     <main>
                         <a class="header" href="print.html#edit-text" id="edit-text"><h1>edit-text</h1></a>
 <p>edit-text is a Markdown-compatible document editor that supports collaborative editing. Its server and client are written in Rust, and its frontend uses TypeScript and WebAssembly.</p>
+<p><img src="https://user-images.githubusercontent.com/80639/42796912-9f2ae852-895a-11e8-9aae-9dede91296bf.png" alt="Preview Image" /></p>
 <a class="header" href="print.html#getting-started" id="getting-started"><h3>Getting Started</h3></a>
 <p>Before building, you'll need to install the following cargo build tools:</p>
 <pre><code>cargo install cargo-script
@@ -301,14 +302,6 @@ npm install
 <pre><code class="language-sh">./x.rs book-watch
 </code></pre>
 <p>By navigating to <a href="http://localhost:3000/">http://localhost:3000/</a>, you'll see the page refresh automatically as you edit markdown files under <code>docs-src/</code>.</p>
-<a class="header" href="print.html#deploy" id="deploy"><h2>Deploy</h2></a>
-<p>You can deploy edit-text to a Dokku server using <code>./x.rs deploy</code>.</p>
-<ul>
-<li>This first cross-compiles the edit-server binary using a local Docker image.</li>
-<li>It then uploads the binary using the <code>dokku tar:in</code> command on a remote server (not the Git endpoint).</li>
-<li>You can configure the dokku URL using the <code>EDIT_DEPLOY_URL</code> environment variable.</li>
-<li>You can configure the dokku application name using the <code>EDIT_DOKKU_NAME</code> environment variable.</li>
-</ul>
 <a class="header" href="print.html#testing-1" id="testing-1"><h1>Testing</h1></a>
 <p>There are two types of tests, integration tests and unit tests.</p>
 <a class="header" href="print.html#unit-tests" id="unit-tests"><h2>Unit Tests</h2></a>
@@ -738,9 +731,15 @@ Op([DelWithGroup([DelSkip(7), DelChars(1)])], [AddWithGroup([AddSkip(8), AddGrou
 <p>Then add a new Rust target:</p>
 <pre><code>rustup target add x86_64-unknown-linux-gnu
 </code></pre>
-<p>Then modify <code>./x.rs</code> (for the moment) to add your hostname and credentials, then:</p>
+<p>You can deploy edit-text to a Dokku server using <code>./x.rs deploy</code>.</p>
 <pre><code>./x.rs deploy
 </code></pre>
+<ul>
+<li>This first cross-compiles the edit-server binary using a local Docker image.</li>
+<li>It then uploads the binary using the <code>dokku tar:in</code> command on a remote server (not the Git endpoint).</li>
+<li>You can configure the dokku URL using the <code>EDIT_DEPLOY_URL</code> environment variable.</li>
+<li>You can configure the dokku application name using the <code>EDIT_DOKKU_NAME</code> environment variable.</li>
+</ul>
 
                     </main>
 
@@ -763,6 +762,21 @@ Op([DelWithGroup([DelSkip(7), DelChars(1)])], [AddWithGroup([AddSkip(8), AddGrou
 
         </div>
 
+        
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:3001");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
         
 
         

@@ -14,8 +14,13 @@ Then add a new Rust target:
 rustup target add x86_64-unknown-linux-gnu
 ```
 
-Then modify `./x.rs` (for the moment) to add your hostname and credentials, then:
+You can deploy edit-text to a Dokku server using `./x.rs deploy`.
 
 ```
 ./x.rs deploy
 ```
+
+* This first cross-compiles the edit-server binary using a local Docker image.
+* It then uploads the binary using the `dokku tar:in` command on a remote server (not the Git endpoint).
+* You can configure the dokku URL using the `EDIT_DEPLOY_URL` environment variable.
+* You can configure the dokku application name using the `EDIT_DOKKU_NAME` environment variable.
