@@ -1,3 +1,4 @@
+#![cfg(feature = "integration")]
 #![feature(integer_atomics)]
 
 extern crate fantoccini;

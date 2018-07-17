@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>System Diagram - edit-text internals</title>
+        <title>System Overview - edit-text internals</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -69,7 +69,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="intro-x.html"><strong aria-hidden="true">1.1.</strong> Build System ./x.rs</a></li><li><a href="intro-system.html" class="active"><strong aria-hidden="true">1.2.</strong> System Diagram</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.3.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="rtf-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.2.</strong> Operational Transform</a></li></ol></li><li><a href="diary.html"><strong aria-hidden="true">3.</strong> WIP</a></li><li><ol class="section"><li><a href="diary-markdown.html"><strong aria-hidden="true">3.1.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">3.2.</strong> Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">3.3.</strong> Carets and You</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="intro-system.html" class="active"><strong aria-hidden="true">1.1.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">1.2.</strong> Build System ./x.rs</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.3.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="rtf-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.2.</strong> Operational Transform</a></li><li><a href="diary-markdown.html"><strong aria-hidden="true">2.3.</strong> [WIP] Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.4.</strong> [WIP] Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.5.</strong> [WIP] Carets and You</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -133,27 +133,40 @@
 
                 <div id="content" class="content">
                     <main>
-                        <a class="header" href="intro-system.html#system-diagram" id="system-diagram"><h1>System Diagram</h1></a>
-<p>Basic system diagram:</p>
-<pre><code>
-       /-&gt; User &lt;-&gt; Frontend
-Sync &lt;-+-&gt; User &lt;-&gt; Frontend
-       |-&gt; User &lt;-&gt; Frontend
-       \-&gt; ...
+                        <a class="header" href="intro-system.html#system-overview" id="system-overview"><h1>System Overview</h1></a>
+<p>edit-text is built from the ground up as a collaborative text editor. It uses operational transform to merge updates from multiple clients, so it requires a synchronizing server. The server is also in charge of storing page content, so that every page can be shared via its URL.</p>
+<p>A client runs in a browser: text editing and synchronization code is written in Rust and cross-compiled to WebAssembly, and frontend code is written in TypeScript.</p>
+<p>Here's a rough diagram:</p>
+<pre><code> Server &lt;-+--&gt; Client &lt;--------&gt; Frontend
+ (Rust)   | (Rust + Wasm)     (TypeScript)
+          |
+          |--&gt; Client &lt;--------&gt; Frontend
+          |--&gt; Client &lt;--------&gt; Frontend
+          \--&gt; ...
 </code></pre>
-<a class="header" href="intro-system.html#sync" id="sync"><h2>Sync</h2></a>
-<p>The Sync server performs document synchronization. It is the &quot;server&quot; component that orchestrates simultaneous document modifications which happen on several Users.</p>
-<p>It has a websocket component for clients to orchestrate simultaneous document modifications.</p>
-<p>It also has a GraphQL endpoint to (TODO: fill this out) make modifications outside the client API.</p>
-<a class="header" href="intro-system.html#user" id="user"><h2>User</h2></a>
-<p>The User represents a consumer of the document. They can make changes to the document and apply modifications. This is performed over the WebSocket API.</p>
+<a class="header" href="intro-system.html#server-apis" id="server-apis"><h2>Server APIs</h2></a>
+<p>The server performs document synchronization. It is the &quot;server&quot; component that orchestrates simultaneous document modifications which happen on several Users.</p>
+<pre><code>dev: 0.0.0.0:8000/  prod: /            HTML Server
+dev: 0.0.0.0:8002/  prod: /$/ws        WebSocket
+dev: 0.0.0.0:8003/  prod: /$/graphql   GraphQL
+</code></pre>
+<p>HTML is served from <code>/</code>. Static versions of each page are available before scripting is fully downloaded.</p>
+<p>When the client-side script connects the WebSocket, the server recognizes it as a new synchronization client and reloads the content of the page. Editing is then enabled. Each edit made by the client is sent to the server as an operation, and the server computes and pushes push new deltas to the client.</p>
+<p>There is an additional API exposed as GraphQL for non-synchronization tasks. This exposes mutations like updating a page with Markdown, downloading and renaming pages, and other page-editing features.</p>
 <a class="header" href="intro-system.html#frontend" id="frontend"><h2>Frontend</h2></a>
-<p>The frontend is the UX that interfaces with the editor. This is split out from the User node for two reasons:</p>
-<ol>
-<li>Rust components intended to run in the browser have a mode in which they can run in the command line as a &quot;proxy&quot;.</li>
-<li>It should be possible for a frontend to be written for any environment, not just the web. For example, GTK+ or Qt could be a frontend instead of HTML is that were desirable.</li>
-</ol>
-<a class="header" href="intro-system.html#api" id="api"><h1>API</h1></a>
+<p>The edit-text client is written in Rust and can be run both in the browser (to power the editor) or from the command line (for tools like the client proxy, and client replay).</p>
+<p>The frontend invokes the client over a <code>wasm-bindgen</code> bridge, exchanging JSON messages (&quot;commands&quot;). The frontend exposes an editor interface using React. The client instructs the frontend on what text styling options to expose, and responds to keypresses with updated HTML to render in the editor.</p>
+<a class="header" href="intro-system.html#cratemodule-overview" id="cratemodule-overview"><h2>Crate/Module overview</h2></a>
+<p>The top-level crates/modules are these:</p>
+<ul>
+<li>oatie, an operational transform crate</li>
+<li>edit-common, the shared code crate</li>
+<li>edit-client, the client crate</li>
+<li>edit-server, the server crate</li>
+<li>edit-frontend, the TypeScript module using webpack</li>
+</ul>
+<!--
+# API
 <p>The API between two layers is defined in several enums representing payloads across RPC boundaries.</p>
 <a class="header" href="intro-system.html#interop-sync---user" id="interop-sync---user"><h2>Interop Sync &lt;-&gt; User</h2></a>
 <p>Defined in <code>edit-client/src/client.rs</code>.</p>
@@ -201,19 +214,20 @@ Sync &lt;-+-&gt; User &lt;-&gt; Frontend
     Monkey(bool),
 }
 </code></pre>
+<p>--&gt;</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-                            <a rel="prev" href="intro-x.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="intro.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         
 
                         
-                            <a rel="next" href="intro-testing.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="intro-x.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -225,13 +239,13 @@ Sync &lt;-+-&gt; User &lt;-&gt; Frontend
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-                    <a href="intro-x.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a href="intro.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 
 
                 
-                    <a href="intro-testing.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a href="intro-x.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 
@@ -239,6 +253,21 @@ Sync &lt;-+-&gt; User &lt;-&gt; Frontend
 
         </div>
 
+        
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:3001");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
         
 
         

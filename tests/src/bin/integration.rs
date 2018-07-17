@@ -1,4 +1,5 @@
 #![feature(integer_atomics)]
+#![allow(unused)]
 
 extern crate fantoccini;
 extern crate futures;

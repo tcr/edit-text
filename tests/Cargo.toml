@@ -11,3 +11,7 @@ libc = "0.2.40"
 rand = "0.4.2"
 taken = "0.1.1"
 tokio-core = "0.1.16"
+
+[features]
+integration = []
+default = []

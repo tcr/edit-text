@@ -357,7 +357,7 @@ fn run() -> Result<(), Error> {
             execute!(
                 r"
                     cd tests
-                    cargo run
+                    cargo run --features integration
                 ",
             )?;
         }
