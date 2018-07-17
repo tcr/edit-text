@@ -6,7 +6,7 @@ edit-text is a Markdown-compatible document editor that supports collaborative e
 
 👶 This is alpha-quality software.
 
-✏️ [**Try out edit-text online**](http://sandbox.edit.io/) in the <edit.io> sandbox.
+✏️ [**Try out edit-text online**](http://sandbox.edit.io/) in the [edit.io](http://edit.io) sandbox.
 
 📚 [**Read the documentation**](http://tcr.github.io/edit-text/) for installation instructions and a technical overview.
 
