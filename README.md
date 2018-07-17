@@ -1,6 +1,6 @@
 # edit-text
 
-![Preview Image](https://user-images.githubusercontent.com/80639/42796598-12e44326-8959-11e8-8409-7a887ada2afa.png)
+![Preview Image](https://user-images.githubusercontent.com/80639/42796693-92ab2cc8-8959-11e8-84b8-a2681b915f2d.png)
 
 edit-text is a collaborative rich text editor, written in Rust with a frontend in WebAssembly.
 
