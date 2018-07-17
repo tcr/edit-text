@@ -365,8 +365,8 @@ type Attrs = HashMap&lt;String, String&gt;;
 #}</code></pre></pre>
 <p>Documents can <a href="working-with-operations.html">have operations performed on them</a> to result in a new, modified document.</p>
 <a class="header" href="print.html#working-with-operations" id="working-with-operations"><h1>Working with Operations</h1></a>
-<p>Operations are defined by a &quot;deletion&quot; and an &quot;addition&quot; pair. This covers the whole space of modifications that edit-text can perform, and the distinction allows operational transform logic to be simplified.</p>
-<p>The <code>Op</code> type is a tuple of an <code>AddSpan</code> and a <code>DelSpan</code>, each composed of <code>AddElement</code> and <code>DelElement</code> enums respectively. These <code>???Element</code> enums have some obvious <code>DocElement</code> counterparts, like <code>DocChars</code>, <code>DelChars</code>, and <code>AddChars</code>.</p>
+<p>Operations in edit-text are a sequence of a &quot;deletion&quot; followed by an &quot;addition&quot;, grouped together in a pair. All modifications edit-text can perform are designed to perform a deletion followed by an addition, and this distinction between deleting and adding content allows operational transform logic to be simplified.</p>
+<p>The <code>Op</code> type is a tuple of the <code>AddSpan</code> and <code>DelSpan</code> types, which just represent vectors of the <code>AddElement</code> and <code>DelElement</code> enums. The <code>DocElement</code> enums has some obvious counterparts here, like the trio of <code>DocChars</code>, <code>DelChars</code>, and <code>AddChars</code>.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
