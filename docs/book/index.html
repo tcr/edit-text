@@ -143,7 +143,7 @@ cargo install diesel_cli --no-default-features --features sqlite-bundled
 <p>Next, install the WebAssembly target:</p>
 <pre><code>rustup target add wasm32-unknown-unknown
 </code></pre>
-<p>Whenever the <code>rust-toolchain</code> file is updated, re-run the <code>rustup target add</code> command to fetch the latest wasm32 target.</p>
+<!-- Whenever the `rust-toolchain` file is updated, re-run the `rustup target add` command to fetch the latest wasm32 target. -->
 <a class="header" href="intro.html#usage" id="usage"><h2>Usage</h2></a>
 <p>To build all components of edit-text (server, client, and frontend) you can use the <code>build</code> command:</p>
 <pre><code>./x.rs build
@@ -205,21 +205,6 @@ cargo install diesel_cli --no-default-features --features sqlite-bundled
 
         </div>
 
-        
-        <!-- Livereload script (if served using the cli tool) -->
-        <script type="text/javascript">
-            var socket = new WebSocket("ws://localhost:3001");
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload(true); // force reload from server (not from cache)
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
         
 
         
