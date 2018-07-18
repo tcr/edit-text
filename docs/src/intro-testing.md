@@ -19,6 +19,8 @@ Windows:
   choco install selenium-gecko-driver
 ```
 
+(There is only one integration test so far.) This will launch a browser session with multiple clients connecting, to ensure that synchronization code still works.
+
 <!--
 
 ## Oatie testing

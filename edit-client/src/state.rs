@@ -271,6 +271,9 @@ impl ClientDoc {
         // Apply the new operation.
         self.doc = Op::apply(&self.doc, op);
 
+        // TODO Generate an "undo" version of the operation and store it.
+        // This should come from the Op::apply above.
+
         // Combine operation with previous queued operations.
         self.local_op = Op::compose(&self.local_op, &op);
 
