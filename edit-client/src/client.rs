@@ -321,13 +321,13 @@ pub trait ClientImpl {
     where
         Self: Sized,
     {
-        self.send_client(&UserToFrontendCommand::Controls {
+        self.send_client(&UserToFrontendCommand::Controls(Controls{
             keys: key_handlers::<Self>()
                 .into_iter()
                 .map(|x| (x.0, x.1, x.2))
                 .collect(),
-            buttons: button_handlers::<Self>(state).1,
-        }).expect("Could not send initial state");
+            buttons: button_handlers::<Self>(state).1
+        })).expect("Could not send initial state");
     }
 
     // TODO can we catch_unwind inside handle task so we can add our own

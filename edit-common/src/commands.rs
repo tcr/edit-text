@@ -41,14 +41,17 @@ pub enum Ui {
     ButtonGroup(Vec<Ui>),
 }
 
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct Controls {
+    pub keys: Vec<(u32, bool, bool)>,
+    pub buttons: Vec<Ui>,
+}
+
 // Commands to send to Frontend.
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum UserToFrontendCommand {
     Init(String),
-    Controls {
-        keys: Vec<(u32, bool, bool)>,
-        buttons: Vec<Ui>,
-    },
+    Controls(Controls),
     PromptString(String, String, FrontendToUserCommand),
     Update(String, Option<Op>),
     Error(String),
