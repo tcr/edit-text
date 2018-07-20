@@ -221,7 +221,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
 
                 // Initialize the "hello world" post.
                 eprintln!("creating helloworld post for {:?}", id);
-                create_page_graphql(&id, &load_doc);
+                get_or_create_page_graphql(&id, &load_doc);
 
                 return Response::redirect_302(format!("/{}", id));
             },
