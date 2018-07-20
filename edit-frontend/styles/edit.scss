@@ -49,6 +49,20 @@ body {
         vertical-align: middle;
         display: inline-block;
         text-decoration: none;
+
+        &::after {
+            content: "ALPHA";
+            background: #7ad;
+            color: #fff;
+            vertical-align: middle;
+            text-shadow: 1px 1px 0px #006;
+            font-weight: bold;
+            border-radius: 4px;
+            font-size: 10px;
+            margin-left: 10px;
+            padding: 4px 5px 3px;
+
+        }
     }
 
     #logo:hover {
