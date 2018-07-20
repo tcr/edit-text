@@ -183,13 +183,19 @@ fn run_http_server(port: u16, client_proxy: bool) {
 
         router!(request,
 
-            // Redirect root page to random page ID
+            // Redirect root page to a welcome page or a downloaded URL
             (GET) ["/"] => {
-                let mut id = format!("welcome-{}", random_id());
+                // Redirect to /welcome-{remote ip}
+                let mut id = format!(
+                    "welcome-{}",
+                    format!("{}", request.remote_addr().ip()).replace(":", "-").replace(".", "-"),
+                );
 
+                // Upload files using /?from={url}
                 let load_doc = request.get_param("from")
                     .ok_or(format_err!("no from parameter to download from"))
                     .and_then(|from| {
+                        // Create a randomly-named page ID for this downloaded file.
                         id = random_id();
 
                         let mut client = reqwest::Client::new();
