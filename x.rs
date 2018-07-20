@@ -584,9 +584,10 @@ fn run() -> Result<(), Error> {
                 r"
                     cd edit-server
                     export RUST_BACKTRACE=1
-                    export DATABASE_URL=edit-server/edit.sqlite3
+                    export DATABASE_URL={database_url}
                     cargo run --bin edit-server-logs -- {args}
                 ",
+                database_url = env::var("DATABASE_URL").unwrap_or("edit-server/edit.sqlite3".to_string()),
                 // release_flag = release_flag,
                 args = args,
             )?;
