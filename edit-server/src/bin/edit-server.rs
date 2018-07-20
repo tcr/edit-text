@@ -183,13 +183,19 @@ fn run_http_server(port: u16, client_proxy: bool) {
 
         router!(request,
 
-            // Redirect root page to random page ID
+            // Redirect root page to a welcome page or a downloaded URL
             (GET) ["/"] => {
-                let mut id = format!("welcome-{}", random_id());
+                // Redirect to /welcome-{remote ip}
+                let mut id = format!(
+                    "welcome-{}",
+                    format!("{}", request.header("X-Forwarded-For").unwrap_or("127.0.0.1")).replace(":", "-").replace(".", "-"),
+                );
 
+                // Upload files using /?from={url}
                 let load_doc = request.get_param("from")
                     .ok_or(format_err!("no from parameter to download from"))
                     .and_then(|from| {
+                        // Create a randomly-named page ID for this downloaded file.
                         id = random_id();
 
                         let mut client = reqwest::Client::new();
@@ -215,7 +221,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
 
                 // Initialize the "hello world" post.
                 eprintln!("creating helloworld post for {:?}", id);
-                create_page_graphql(&id, &load_doc);
+                get_or_create_page_graphql(&id, &load_doc);
 
                 return Response::redirect_302(format!("/{}", id));
             },
@@ -249,23 +255,25 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 return Response::redirect_302("/$/multi");
             },
 
-            (GET) ["/$/list"] => {
-                let lis = &get_all_pages_graphql()
-                    .unwrap()
-                    .iter()
-                    .map(|x| {
-                        format!(r#"<li><a href="/{id}">{id}</li>"#, id = x)
-                    })
-                    .collect::<Vec<_>>();
+            // TODO: undisable once IP safety is addressed
 
-                return Response::from_data(
-                    "text/html".to_string(),
-                    format!("<h1>pages</h1><ul>{}</ul>", lis.join("")),
-                )
-            },
-            (GET) ["/$/list/"] => {
-                return Response::redirect_302("/$/list");
-            },
+            // (GET) ["/$/list"] => {
+            //     let lis = &get_all_pages_graphql()
+            //         .unwrap()
+            //         .iter()
+            //         .map(|x| {
+            //             format!(r#"<li><a href="/{id}">{id}</li>"#, id = x)
+            //         })
+            //         .collect::<Vec<_>>();
+
+            //     return Response::from_data(
+            //         "text/html".to_string(),
+            //         format!("<h1>pages</h1><ul>{}</ul>", lis.join("")),
+            //     )
+            // },
+            // (GET) ["/$/list/"] => {
+            //     return Response::redirect_302("/$/list");
+            // },
 
             (GET) ["/$/static/{target}", target: String] => {
                 if let Some(data) = static_dir.get(Path::new(&target)) {
