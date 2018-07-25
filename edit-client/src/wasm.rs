@@ -112,10 +112,11 @@ pub fn wasm_setup() -> WasmClient {
     // Setup monkey tasks.
     // setup_monkey::<WasmClient>(Scheduler::new(WASM_ALIVE.clone(), WASM_MONKEY.clone()));
 
-    let client = WasmClient {
+    let mut client = WasmClient {
         state: Client {
             client_id: editor_id,
             client_doc: ClientDoc::new(),
+            last_controls: None,
 
             monkey: WASM_MONKEY.clone(),
             alive: WASM_ALIVE.clone(),

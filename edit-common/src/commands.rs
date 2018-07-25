@@ -1,7 +1,7 @@
 use oatie::doc::*;
 
 // The server is the synchronization server.
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum ServerCommand {
     // Connect(String),
     Commit(String, Op, usize),
@@ -10,7 +10,7 @@ pub enum ServerCommand {
 }
 
 // Client is an individual user / machine.
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum ClientCommand {
     // Client id assignment, initial doc, initial version
     Init(String, DocSpan, usize),
@@ -20,7 +20,7 @@ pub enum ClientCommand {
 }
 
 // Controller is the client interface that is exposed to the frnontend.
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub enum ControllerCommand {
     // Connect(String),
     Keypress(u32, bool, bool, bool), // code, meta, shift, alt
@@ -36,7 +36,7 @@ pub enum ControllerCommand {
 }
 
 // Frontend is the editor components in JavaScript.
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub enum FrontendCommand {
     Init(String),
     Controls(Controls),
@@ -46,14 +46,14 @@ pub enum FrontendCommand {
     ServerCommand(ServerCommand),
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub enum Ui {
     // label, callback, selected
     Button(String, usize, bool),
     ButtonGroup(Vec<Ui>),
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct Controls {
     pub keys: Vec<(u32, bool, bool)>,
     pub buttons: Vec<Ui>,
