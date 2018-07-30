@@ -2,13 +2,13 @@
 
 ![Preview Image](https://user-images.githubusercontent.com/80639/42796912-9f2ae852-895a-11e8-9aae-9dede91296bf.png)
 
-edit-text is a Markdown-compatible document editor that supports collaborative editing. Its server and client are written in Rust, and its frontend is cross-compiled WebAssembly and TypeScript.
+edit-text is a collaborative text editor that for Markdown. Both the server and client are written in Rust, and its frontend is cross-compiled WebAssembly and TypeScript.
 
 ✏️ [**Use edit-text online**](http://sandbox.edit.io/) in the [edit.io](http://edit.io) sandbox.
 
 📚 [**Read "Getting Started" instructions**](http://timryan.org/edit-text/book/getting-started.html) in the [edit-text documentation.](http://tcr.github.io/edit-text/)
 
-This is alpha-quality software.
+(This is alpha-quality software.)
 
 ## License
 
