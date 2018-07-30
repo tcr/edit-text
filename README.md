@@ -8,7 +8,7 @@ edit-text is a collaborative text editor that for Markdown. Both the server and 
 
 📚 [**Read "Getting Started" instructions**](http://timryan.org/edit-text/book/getting-started.html) in the [edit-text documentation.](http://tcr.github.io/edit-text/)
 
-(This is alpha-quality software.)
+This is alpha-quality software.
 
 ## License
 
