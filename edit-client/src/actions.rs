@@ -657,12 +657,12 @@ pub fn caret_select_all(ctx: ActionContext) -> Result<Op, Error> {
 
     // First operation removes the caret.
     let op_1 = caret_clear(ctx.clone(), true)
-        .map(|(pos_1, op_1)| op_1)
+        .map(|(_pos_1, op_1)| op_1)
         .unwrap_or_else(|_| OT::empty());
 
     // Second operation removes the focus caret if needed.
     let op_2 = caret_clear(ctx.clone(), false)
-        .map(|(pos_1, op_1)| op_1)
+        .map(|(_pos_1, op_1)| op_1)
         .unwrap_or_else(|_| OT::empty());
 
     // Combine two starting ops.

@@ -2,12 +2,13 @@
 
 #![feature(extern_in_paths)]
 #![feature(proc_macro)]
-#![feature(proc_macro_non_items)]
+#![feature(proc_macro_non_items, use_extern_macros)]
+
+extern crate include_dir_macro;
 
 extern crate crossbeam_channel;
 extern crate edit_common;
 extern crate edit_server;
-extern crate include_dir_macro;
 extern crate maplit;
 #[macro_use]
 extern crate oatie;
@@ -16,6 +17,7 @@ extern crate rand;
 extern crate rouille;
 extern crate serde;
 extern crate structopt;
+#[macro_use]
 extern crate structopt_derive;
 extern crate take_mut;
 extern crate url;
