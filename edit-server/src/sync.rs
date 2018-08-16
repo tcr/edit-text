@@ -29,7 +29,6 @@ use extern::{
         thread,
         time::Duration,
     },
-    thread_spawn::thread_spawn,
     url::Url,
     ws,
 };
@@ -317,33 +316,33 @@ impl PageController {
 }
 
 /// Run a sync server thread for a given page ID.
-#[thread_spawn]
 pub fn spawn_sync_thread(
     page_id: String,
     rx_notify: CCReceiver<ClientUpdate>,
     inner_doc: Doc,
     db_pool: DbPool,
 ) -> Result<(), Error> {
-    // This page ID's state.
-    // TODO make this a ::new(...) statement
-    let mut sync = PageController {
-        page_id,
-        db_pool,
-        state: SyncState::new(inner_doc, INITIAL_SYNC_VERSION),
-        clients: HashMap::new(),
-    };
+    thread::spawn(move || {
+        // This page ID's state.
+        // TODO make this a ::new(...) statement
+        let mut sync = PageController {
+            page_id,
+            db_pool,
+            state: SyncState::new(inner_doc, INITIAL_SYNC_VERSION),
+            clients: HashMap::new(),
+        };
 
-    while let Some(notification) = rx_notify.recv() {
-        // let now = Instant::now()
+        while let Some(notification) = rx_notify.recv() {
+            // let now = Instant::now()
 
-        // TODO with need to listen for errors and break the loop if erorrs occurr
-        // (killin the sync thread).
-        sync.handle(notification);
+            // TODO with need to listen for errors and break the loop if erorrs occurr
+            // (killin the sync thread).
+            sync.handle(notification);
 
-        // let elapsed = now.elapsed();
-        // println!("sync duration: {}s, {}us", elapsed.as_secs(), elapsed.subsec_nanos()/1_000);
-    }
-
+            // let elapsed = now.elapsed();
+            // println!("sync duration: {}s, {}us", elapsed.as_secs(), elapsed.subsec_nanos()/1_000);
+        }
+    });
     Ok(())
 }
 
@@ -390,13 +389,14 @@ impl PageMaster {
 }
 
 // TODO make this coordinate properly with
-#[thread_spawn]
 fn spawn_page_master(db_pool: DbPool, rx_master: CCReceiver<ClientNotify>) {
-    let mut page_map = PageMaster::new(db_pool);
+    thread::spawn(move || {
+        let mut page_map = PageMaster::new(db_pool);
 
-    while let Some(ClientNotify(page_id, notification)) = rx_master.recv() {
-        let _ = page_map.acquire_page(&page_id).send(notification);
-    }
+        while let Some(ClientNotify(page_id, notification)) = rx_master.recv() {
+            let _ = page_map.acquire_page(&page_id).send(notification);
+        }
+    });
 }
 
 // TODO use _period

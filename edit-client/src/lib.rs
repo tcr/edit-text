@@ -1,5 +1,5 @@
-#![feature(crate_in_paths, nll, proc_macro, wasm_custom_section, wasm_import_module)]
-#![feature(extern_in_paths)]
+#![feature(crate_in_paths, nll)]
+#![feature(extern_in_paths, use_extern_macros)]
 #![allow(unused_imports)]
 
 #[macro_use]

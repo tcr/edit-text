@@ -4,7 +4,6 @@
 
 extern crate colored;
 extern crate crossbeam_channel;
-extern crate thread_spawn;
 #[macro_use]
 extern crate diesel;
 extern crate dotenv;

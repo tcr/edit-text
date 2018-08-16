@@ -22,7 +22,7 @@ serde_json = "1.0.6"
 take_mut = "0.2.0"
 taken = "0.1.1"
 wasm-bindgen = "0.2.11"
-wbg-rand = "0.4"
+wbg-rand = { git = "https://github.com/tcr/wbg-rand", branch = "patch-1" }
 
 include-dir-macro = { git = "https://github.com/jcdyer/include-dir-macro" }
 edit-common = { path = "../edit-common" }
