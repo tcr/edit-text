@@ -3,6 +3,7 @@ import * as React from 'react';
 import * as commands from './commands';
 import * as route from './route';
 import * as index from './index';
+import * as app from './app';
 import {WasmClient} from './bindgen/edit_client';
 import {EditorFrame} from './app';
 
@@ -150,10 +151,10 @@ export class WasmNetwork implements Network {
             } catch (e) {
               forwardWasmTaskCallback = null;
 
-            editorFrame.showNotification({
-              element: <div>An error occurred on your client and you're now disconnected. We're sorry. You can <a href="?">refresh your browser</a> to continue.</div>,
-              level: 'error',
-            });
+              editorFrame.showNotification({
+                element: <div>An error occurred on your client and you're now disconnected. We're sorry. You can <a href="?">refresh your browser</a> to continue.</div>,
+                level: 'error',
+              });
 
               throw new WasmError(e, `Error during client command: ${e.message}`);
             }
@@ -203,7 +204,23 @@ export class WasmNetwork implements Network {
         }
       };
 
-      syncSocket.onclose = network.onSyncClose;
+      syncSocket.onclose = function () {
+        editorFrame.showNotification({
+          element: <div>The editor has disconnected from the server. We're sorry. You can <a href="?">refresh your browser</a>, or we'll refresh once the server is reachable.</div>,
+          level: 'error',
+        });
+
+        setTimeout(() => {
+          setInterval(() => {
+            app.graphqlPage('home').then(() => {
+              // Can access server, continue
+              window.location.reload();
+            });
+          }, 2000);
+        }, 3000);
+
+        network.onSyncClose();
+      };
 
       this.deferSyncResolve(syncSocket);
     });

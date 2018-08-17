@@ -102,7 +102,10 @@ enum Cli {
     FrontendWatch { args: Vec<String> },
 
     #[structopt(name = "deploy", about = "Deploy to sandbox.edit.io.")]
-    Deploy,
+    Deploy {
+        #[structopt(long = "skip-download")]
+        skip_download: bool,
+    },
 
     #[structopt(name = "book-build", about = "Builds the book.")]
     BookBuild,
@@ -128,9 +131,10 @@ fn run() -> Result<(), Error> {
     // Pass arguments directly to subcommands: don't capture -h, -v, or verification
     // Do this by adding "--" into the args flag after the subcommand.
     let mut args = ::std::env::args().collect::<Vec<_>>();
-    if args.len() > 2 && args[1] != "help" {
-        args.insert(2, "--".into());
-    }
+    // TODO this looks broken
+    // if args.len() > 2 && args[1] != "help" {
+    //     args.insert(2, "--".into());
+    // }
 
     // We interpret the --release flag at the build level.
     let release = args.iter().find(|x| *x == "--release").is_some();
@@ -448,9 +452,9 @@ fn run() -> Result<(), Error> {
             )?;
         }
 
-        Cli::Deploy => {
-            let dokku_url = env::var("EDIT_DEPLOY_URL").unwrap_or("sandbox.edit.io".to_string());
-            let dokku_name = env::var("EDIT_DOKKU_NAME").unwrap_or("edit-text".to_string());
+        Cli::Deploy { skip_download } => {
+            let edit_deploy_url = env::var("EDIT_DEPLOY_URL").unwrap_or("sandbox.edit.io".to_string());
+            let edit_dokku_name = env::var("EDIT_DOKKU_NAME").unwrap_or("edit-text".to_string());
 
             // WASM client code
             eprintln!();
@@ -479,53 +483,59 @@ fn run() -> Result<(), Error> {
             // Linux binary
             eprintln!();
             eprintln!("Building Linux server binary...");
-            // TODO replace this with discrete execute! commands.
-            sh_execute!(
+            execute!(
+                "
+                    rustup target add x86_64-unknown-linux-gnu
+                "
+            )?;
+            // TODO replace --skip-download with a smarter heuristic
+            if !skip_download {
+                // TODO replace this with discrete execute! commands.
+                sh_execute!(
+                    r#"
+                        cd {dir_self}
+
+                        set -e
+                        set -x
+
+                        LINKROOT="$(pwd)/dist/link"
+
+                        rm -rf $LINKROOT
+                        mkdir -p $LINKROOT
+
+                        cd $LINKROOT
+
+                        export URL=http://security.debian.org/debian-security/pool/updates/main/o/openssl/libssl-dev_1.1.0f-3+deb9u2_amd64.deb
+                        curl -O $URL
+                        ar p $(basename $URL) data.tar.xz | tar xvf -
+
+                        export URL=http://security.debian.org/debian-security/pool/updates/main/o/openssl/libssl1.1_1.1.0f-3+deb9u2_amd64.deb
+                        curl -O $URL
+                        ar p $(basename $URL) data.tar.xz | tar xvf -
+
+                        export URL=http://ftp.us.debian.org/debian/pool/main/g/glibc/libc6_2.24-11+deb9u3_amd64.deb
+                        curl -O $URL
+                        ar p $(basename $URL) data.tar.xz | tar xvf -
+                    "#,
+                    dir_self = abs_string_path(".")?,
+                );
+            }
+            execute!(
                 r#"
-                    cd {dir_self}
-
-                    set -e
-                    set -x
-
-                    START="$(pwd)"
-                    LINKROOT="$(pwd)/dist/link"
-
-                    rm -rf $LINKROOT
-                    mkdir -p $LINKROOT
-
-                    cd $LINKROOT
-
-                    export URL=http://security.debian.org/debian-security/pool/updates/main/o/openssl/libssl-dev_1.1.0f-3+deb9u2_amd64.deb
-                    curl -O $URL
-                    ar p $(basename $URL) data.tar.xz | tar xvf -
-
-                    export URL=http://security.debian.org/debian-security/pool/updates/main/o/openssl/libssl1.1_1.1.0f-3+deb9u2_amd64.deb
-                    curl -O $URL
-                    ar p $(basename $URL) data.tar.xz | tar xvf -
-
-                    export URL=http://ftp.us.debian.org/debian/pool/main/g/glibc/libc6_2.24-11+deb9u3_amd64.deb
-                    curl -O $URL
-                    ar p $(basename $URL) data.tar.xz | tar xvf -
-
-                    cd $START
-
-                    echo $LINKROOT
-
-                    export LD_LIBRARY_PATH="$LINKROOT/usr/lib/x86_64-linux-gnu;$LINKROOT/lib/x86_64-linux-gnu"
-                    export OPENSSL_LIB_DIR="$LINKROOT/usr/lib/x86_64-linux-gnu/"
-                    export OPENSSL_DIR="$LINKROOT/usr/"
-                    export TARGET_CC="x86_64-unknown-linux-gnu-gcc"
-                    export TARGET_CFLAGS="-I $LINKROOT/usr/include/x86_64-linux-gnu -isystem $LINKROOT/usr/include"
-
                     cd edit-server
+
+                    export LD_LIBRARY_PATH="{dir_link}/usr/lib/x86_64-linux-gnu;{dir_link}/lib/x86_64-linux-gnu"
+                    export OPENSSL_LIB_DIR="{dir_link}/usr/lib/x86_64-linux-gnu/"
+                    export OPENSSL_DIR="{dir_link}/usr/"
+                    export TARGET_CC="x86_64-unknown-linux-gnu-gcc"
+                    export TARGET_CFLAGS="-I {dir_link}/usr/include/x86_64-linux-gnu -isystem {dir_link}/usr/include"
+
                     cargo build --release --target=x86_64-unknown-linux-gnu \
                         --bin edit-server --features 'standalone'
 
                 "#,
-                // dir_git = abs_string_path("dist/build/cargo-git-cache")?,
-                // dir_registry = abs_string_path("dist/build/cargo-registry-cache")?,
-                // dir_rustup = abs_string_path("dist/build/rustup-toolchain-cache")?,
-                dir_self = abs_string_path(".")?,
+                // Must expand absolute path for linking
+                dir_link = format!("{}/dist/link", abs_string_path(".")?),
             )?;
             eprintln!();
             eprintln!("Copying directories...");
@@ -547,8 +557,8 @@ fn run() -> Result<(), Error> {
                     tar c . | bzip2 | ssh root@{dokku_url} "bunzip2 > /tmp/edit.tar"
                     ssh root@{dokku_url} 'cat /tmp/edit.tar | dokku tar:in {dokku_name}'
                 "#,
-                dokku_url = dokku_url,
-                dokku_name = dokku_name,
+                dokku_url = edit_deploy_url,
+                dokku_name = edit_dokku_name,
             )?;
         }
 

@@ -1,7 +1,6 @@
 //! edit-server standalone binary for web deployment.
 
 #![feature(extern_in_paths)]
-#![feature(proc_macro)]
 #![feature(proc_macro_non_items, use_extern_macros)]
 
 extern crate include_dir_macro;
@@ -50,7 +49,10 @@ use oatie::doc::*;
 use oatie::validate::validate_doc;
 use rand::thread_rng;
 use rouille::Response;
-use std::collections::HashMap;
+use std::{
+    env,
+    collections::HashMap,
+};
 use std::fs::File;
 use std::io::prelude::*;
 use std::panic;
@@ -162,14 +164,18 @@ fn run_http_server(port: u16, client_proxy: bool) {
     #[allow(unused)]
     #[allow(unreachable_code)]
     rouille::start_server(format!("0.0.0.0:{}", port), move |request| {
+        let edit_title = env::var("EDIT_TITLE").unwrap_or("edit-text".to_string());
+
+        // TODO want to make this better and 1:1 mapped with the config template bundle below
         let update_config_var = |data: &[u8]| -> Vec<u8> {
             let input = String::from_utf8_lossy(data);
             let output = input.replace(
                 "CONFIG = {}",
-                &format!(
-                    "CONFIG = {{configured: true, wasm: {}}}",
-                    if client_proxy { "false" } else { "true" }
-                ),
+                &format!("CONFIG = {}", serde_json::to_string(&json!({
+                    "configured": true,
+                    "wasm": !client_proxy,
+                    "title": &edit_title,
+                })).unwrap()),
             );
             output.into_bytes()
         };
@@ -358,7 +364,9 @@ fn run_http_server(port: u16, client_proxy: bool) {
 
                 let payload = reg.render_template(&template, &json!({
                     "body": &body,
+                    "id": id,
                     "stylesheet": &stylesheet,
+                    "title": &edit_title,
                 })).unwrap();
 
                 return Response::from_data(

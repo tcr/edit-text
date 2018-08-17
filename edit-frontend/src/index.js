@@ -13,6 +13,7 @@ Raven.config('https://c221eba12d7b4e279b01764577063af1@sentry.io/1227661').insta
 
 // Launch the application.
 import * as app from './app';
+import './debug';
 
 Raven.context(() => {
     app.start();
