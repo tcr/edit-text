@@ -1,8 +1,8 @@
 import * as commands from './commands';
 import * as util from './util';
-import {Network, ProxyNetwork, WasmNetwork} from './network';
+import { ClientImpl } from './client';
 import * as React from 'react';
-const copy = require('clipboard-copy');
+import copy from 'clipboard-copy';
 
 const ROOT_SELECTOR = '.edit-text';
 
@@ -202,7 +202,7 @@ function resolveCursorFromPosition(
 export class Editor extends React.Component {
   props: {
     content: string,
-    network: Network,
+    network: ClientImpl,
     KEY_WHITELIST: any,
     editorID: string,
     disabled: boolean,

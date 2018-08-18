@@ -28,7 +28,7 @@ lazy_static! {
 
 // JS imports
 
-#[wasm_bindgen(module = "./../network")]
+#[wasm_bindgen(module = "./../ui/network")]
 extern "C" {
     /// Send a command *from* the client *to* the frontend.
     pub fn sendCommandToJS(input: &str) -> u32;

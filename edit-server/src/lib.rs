@@ -1,6 +1,6 @@
 #![feature(crate_in_paths, extern_in_paths, nll)]
 #![feature(non_modrs_mods)]
-#![feature(plugin, proc_macro)]
+#![feature(plugin)]
 
 extern crate colored;
 extern crate crossbeam_channel;

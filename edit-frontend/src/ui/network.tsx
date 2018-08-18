@@ -1,25 +1,19 @@
 import * as React from 'react';
 
-import * as commands from './commands';
+import * as commands from '../editor/commands';
 import * as route from './route';
-import * as index from './index';
+import * as index from '../index';
 import * as app from './app';
-import {WasmClient} from './bindgen/edit_client';
+import {WasmClient} from '../bindgen/edit_client';
 import {EditorFrame} from './app';
+import {ClientImpl} from '../editor/client';
 
 export interface Network {
-  onNativeMessage: (any) => void;
-  onNativeClose: () => void;
   onSyncClose: () => void;
-
-  nativeConnect(editorFrame: EditorFrame): Promise<void>;
-
-  nativeCommand(command: commands.Command): void;
-
   syncConnect(editorFrame: EditorFrame): Promise<void>;
 }
 
-export class ProxyNetwork implements Network {
+export class ProxyNetwork implements Network, ClientImpl {
   editorID: string;
 
   nativeSocket: WebSocket;
@@ -33,7 +27,7 @@ export class ProxyNetwork implements Network {
     this.nativeSocket.send(JSON.stringify(command));
   }
 
-  nativeConnect(editorFrame: EditorFrame): Promise<void> {
+  nativeConnect(onError: () => void): Promise<void> {
     let network = this;
     return Promise.resolve()
     .then(() => {
@@ -79,7 +73,7 @@ function WasmError(e, message) {
 }
 WasmError.prototype = new Error;
 
-export class WasmNetwork implements Network {
+export class WasmNetwork implements Network, ClientImpl {
   editorID: string;
 
   nativeSocket: WebSocket;
@@ -114,7 +108,7 @@ export class WasmNetwork implements Network {
   }
 
   // Wasm connector.
-  nativeConnect(editorFrame: EditorFrame): Promise<void> {
+  nativeConnect(onError: () => void): Promise<void> {
     const network = this;
     return new Promise((resolve, reject) => {
       sendCommandToJSList.push((data) => {
@@ -151,10 +145,7 @@ export class WasmNetwork implements Network {
             } catch (e) {
               forwardWasmTaskCallback = null;
 
-              editorFrame.showNotification({
-                element: <div>An error occurred on your client and you're now disconnected. We're sorry. You can <a href="?">refresh your browser</a> to continue.</div>,
-                level: 'error',
-              });
+              onError();
 
               throw new WasmError(e, `Error during client command: ${e.message}`);
             }

@@ -1,5 +1,5 @@
 // Global CSS
-import '../styles/edit.scss';
+import '../../styles/edit.scss';
 
 // import * as Clipboard from 'clipboard';
 import * as React from 'react';
@@ -7,10 +7,11 @@ import * as ReactDOM from 'react-dom';
 import axios from 'axios';
 import * as Raven from 'raven-js';
 
-import * as commands from './commands';
+import * as commands from '../editor/commands';
 import * as route from './route';
-import { Editor } from './editor';
+import { Editor } from '../editor/editor';
 import { Network, ProxyNetwork, WasmNetwork } from './network';
+import { ClientImpl } from '../editor/client';
 
 declare var CONFIG: any;
 
@@ -222,7 +223,7 @@ function FooterNotice(props: {
 // Initialize child editor.
 export class EditorFrame extends React.Component {
   props: {
-    network: Network,
+    network: Network & ClientImpl,
     body: string,
   };
 
@@ -235,7 +236,7 @@ export class EditorFrame extends React.Component {
   };
 
   KEY_WHITELIST: any;
-  network: Network;
+  network: Network & ClientImpl;
   markdown: string;
 
   constructor(
@@ -381,7 +382,7 @@ export class EditorFrame extends React.Component {
 }
 
 
-function multiConnect(network: Network) {
+function multiConnect(network: Network & ClientImpl) {
   // Blur/Focus classes.
   window.addEventListener('focus', () => {
     document.body.classList.remove('blurred');
