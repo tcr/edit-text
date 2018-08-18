@@ -131,10 +131,11 @@ fn run() -> Result<(), Error> {
     // Pass arguments directly to subcommands: don't capture -h, -v, or verification
     // Do this by adding "--" into the args flag after the subcommand.
     let mut args = ::std::env::args().collect::<Vec<_>>();
-    // TODO this looks broken
-    // if args.len() > 2 && args[1] != "help" {
-    //     args.insert(2, "--".into());
-    // }
+    // TODO this is broken for ./x.rs server, or ./x.rs deploy, and
+    // both require different behavior! why?
+    if args.len() > 2 && args[1] != "help" {
+        args.insert(2, "--".into());
+    }
 
     // We interpret the --release flag at the build level.
     let release = args.iter().find(|x| *x == "--release").is_some();
@@ -171,8 +172,7 @@ fn run() -> Result<(), Error> {
                 "
             )?;
 
-            eprintln!("Building...");
-
+            eprintln!("Checking...");
             execute!(
                 r"
                     cd edit-client
@@ -181,6 +181,7 @@ fn run() -> Result<(), Error> {
                 release_flag = release_flag,
             )?;
 
+            eprintln!("Building...");
             execute!(
                 r"
                     cd edit-client

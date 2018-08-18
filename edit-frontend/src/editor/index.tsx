@@ -1,8 +1,9 @@
-import * as commands from './commands';
-import * as util from './util';
-import { ClientImpl } from './client';
 import * as React from 'react';
 import copy from 'clipboard-copy';
+
+import * as commands from './commands';
+import * as util from './util';
+import { ClientImpl } from './network';
 
 const ROOT_SELECTOR = '.edit-text';
 
@@ -202,7 +203,7 @@ function resolveCursorFromPosition(
 export class Editor extends React.Component {
   props: {
     content: string,
-    network: ClientImpl,
+    client: ClientImpl,
     KEY_WHITELIST: any,
     editorID: string,
     disabled: boolean,
@@ -253,11 +254,11 @@ export class Editor extends React.Component {
     // Only support text elements.
     if (pos !== null) {
       if (anchor) {
-        this.props.network.nativeCommand(commands.CursorAnchor(
+        this.props.client.nativeCommand(commands.CursorAnchor(
           resolveCursorFromPosition(pos.textNode, pos.offset),
         ));
       } else {
-        this.props.network.nativeCommand(commands.CursorTarget(
+        this.props.client.nativeCommand(commands.CursorTarget(
           resolveCursorFromPosition(pos.textNode, pos.offset),
         ));
       }
@@ -306,7 +307,7 @@ export class Editor extends React.Component {
         return;
       }
 
-      this.props.network.nativeCommand(commands.Character(e.charCode));
+      this.props.client.nativeCommand(commands.Character(e.charCode));
   
       e.preventDefault();
     });
@@ -318,7 +319,7 @@ export class Editor extends React.Component {
 
       const text = e.clipboardData.getData('text/plain');
       console.log('(c) got pasted text: ', text);
-      this.props.network.nativeCommand(commands.InsertText(text));
+      this.props.client.nativeCommand(commands.InsertText(text));
     });
   
     document.addEventListener('keydown', (e) => {
@@ -407,7 +408,7 @@ export class Editor extends React.Component {
       }
   
       // Forward the keypress to native.
-      this.props.network.nativeCommand(commands.Keypress(
+      this.props.client.nativeCommand(commands.Keypress(
         e.keyCode,
         e.metaKey,
         e.shiftKey,

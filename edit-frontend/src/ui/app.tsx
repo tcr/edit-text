@@ -9,9 +9,10 @@ import * as Raven from 'raven-js';
 
 import * as commands from '../editor/commands';
 import * as route from './route';
-import { Editor } from '../editor/editor';
-import { Network, ProxyNetwork, WasmNetwork } from './network';
-import { ClientImpl } from '../editor/client';
+import { Editor } from '../editor';
+import { AppServer, ProxyClient } from './sync';
+import { NullServer, ClientImpl, ServerImpl } from '../editor/network';
+import { WasmClient } from '../editor/wasm';
 
 declare var CONFIG: any;
 
@@ -20,16 +21,20 @@ if (!CONFIG.configured) {
   alert('The window.CONFIG variable was not configured by the server!')
 }
 
-const ROOT_QUERY = '.edit-text';
-
-function UiElement(props, element, i = Math.random()) {
+function UiElement(
+  props: {
+    editor: EditorFrame,
+  },
+  element,
+  i = Math.random(),
+) {
   if ('Button' in element) {
     let button = element.Button;
     return (
       <button
         key={i}
         onClick={
-          () => props.editor.network.nativeCommand(commands.Button(button[1]))
+          () => props.editor.client.nativeCommand(commands.Button(button[1]))
         }
         className={button[2] ? 'active' : ''}
       >{button[0]}</button>
@@ -45,7 +50,10 @@ function UiElement(props, element, i = Math.random()) {
 }
 
 function NativeButtons(
-  props
+  props: {
+    editor: EditorFrame,
+    buttons: any
+  },
 ) {
   if (!props.buttons.length) {
     return (
@@ -223,7 +231,8 @@ function FooterNotice(props: {
 // Initialize child editor.
 export class EditorFrame extends React.Component {
   props: {
-    network: Network & ClientImpl,
+    network: ServerImpl,
+    client: ClientImpl,
     body: string,
   };
 
@@ -236,7 +245,8 @@ export class EditorFrame extends React.Component {
   };
 
   KEY_WHITELIST: any;
-  network: Network & ClientImpl;
+  network: ServerImpl;
+  client: ClientImpl;
   markdown: string;
 
   constructor(
@@ -247,11 +257,13 @@ export class EditorFrame extends React.Component {
     this.KEY_WHITELIST = [];
 
     this.network = props.network;
-    this.network.onNativeMessage = this.onNativeMessage.bind(this);
+    this.client = props.client;
+
+    this.client.onNativeMessage = this.onNativeMessage.bind(this);
 
     // Background colors.
     // TODO make these actionable on this object right?
-    this.network.onNativeClose = function () {
+    this.client.onNativeClose = function () {
       document.body.style.background = 'red';
       console.error('!!! client close');
     };
@@ -300,7 +312,7 @@ export class EditorFrame extends React.Component {
 
           <div id="edit-text-outer">
             <Editor 
-              network={this.props.network} 
+              client={this.props.client} 
               KEY_WHITELIST={this.KEY_WHITELIST}
               content={this.state.body}
               editorID={this.state.editorID}
@@ -382,7 +394,7 @@ export class EditorFrame extends React.Component {
 }
 
 
-function multiConnect(network: Network & ClientImpl) {
+function multiConnect(client: ClientImpl) {
   // Blur/Focus classes.
   window.addEventListener('focus', () => {
     document.body.classList.remove('blurred');
@@ -404,17 +416,34 @@ function multiConnect(network: Network & ClientImpl) {
 
     if ('Monkey' in msg) {
       // TODO reflect this in the app
-      network.nativeCommand(commands.Monkey(msg.Monkey));
+      client.nativeCommand(commands.Monkey(msg.Monkey));
     }
   };
 }
 
 export function start() {
-  let network = CONFIG.wasm ? new WasmNetwork() : new ProxyNetwork();
+  let server: ServerImpl;
+  let client: ClientImpl;
+
+  // Wasm and Proxy implementations
+  if (CONFIG.wasm) {
+    let wasmClient = new WasmClient();
+    let wasmServer = new AppServer();
+
+    // Link them.
+    wasmClient.server = wasmServer;
+    wasmServer.client = wasmClient;
+
+    client = wasmClient;
+    server = wasmServer;
+  } else {
+    client = new ProxyClient();
+    server = new NullServer();
+  }
 
   // Connect to parent window (if exists).
   if (window.parent != window) {
-    multiConnect(network);
+    multiConnect(client);
   }
 
   // TODO move this to a better logical location and manage local storage better
@@ -437,7 +466,8 @@ export function start() {
   let editorFrame;
   ReactDOM.render(
     <EditorFrame
-      network={network}
+      network={server}
+      client={client}
       body={document.querySelector('.edit-text')!.innerHTML}
       ref={c => editorFrame = c}
     />,
@@ -455,8 +485,19 @@ export function start() {
       }
 
       // Connect to remote sockets.
-      network.nativeConnect(editorFrame)
-        .then(() => network.syncConnect(editorFrame));
+      // TODO why is nativeConnect an error?
+      client
+        .connect(() => {
+          // TODO
+        })
+        .then(() => {
+          server.syncConnect((message: React.ReactNode) => {
+            editorFrame.showNotification({
+              element: message,
+              level: 'error',
+            });
+          });
+        });
     }
   );
 }
