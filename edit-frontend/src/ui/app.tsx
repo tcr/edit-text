@@ -1,5 +1,5 @@
 // Global CSS
-import '../styles/edit.scss';
+import '../../styles/edit.scss';
 
 // import * as Clipboard from 'clipboard';
 import * as React from 'react';
@@ -7,10 +7,11 @@ import * as ReactDOM from 'react-dom';
 import axios from 'axios';
 import * as Raven from 'raven-js';
 
-import * as commands from './commands';
+import * as commands from '../editor/commands';
 import * as route from './route';
-import { Editor } from './editor';
+import { Editor } from '../editor/editor';
 import { Network, ProxyNetwork, WasmNetwork } from './network';
+import { ClientImpl } from '../editor/client';
 
 declare var CONFIG: any;
 
@@ -46,6 +47,11 @@ function UiElement(props, element, i = Math.random()) {
 function NativeButtons(
   props
 ) {
+  if (!props.buttons.length) {
+    return (
+      <div id="native-buttons">Loading...</div>
+    );
+  }
   return (
     <div id="native-buttons">{
       props.buttons.map((x, i) => UiElement(props, x, i))
@@ -53,7 +59,7 @@ function NativeButtons(
   );
 }
 
-function graphqlPage(id: string) {
+export function graphqlPage(id: string) {
   return axios.post(
     route.graphqlUrl(),
     {
@@ -68,7 +74,7 @@ query ($id: String!) { page(id: $id) { markdown }}
   );
 }
 
-function graphqlCreatePage(id: string, markdown: string) {
+export function graphqlCreatePage(id: string, markdown: string) {
   return axios.post(
     route.graphqlUrl(),
     {
@@ -217,7 +223,7 @@ function FooterNotice(props: {
 // Initialize child editor.
 export class EditorFrame extends React.Component {
   props: {
-    network: Network,
+    network: Network & ClientImpl,
     body: string,
   };
 
@@ -230,7 +236,7 @@ export class EditorFrame extends React.Component {
   };
 
   KEY_WHITELIST: any;
-  network: Network;
+  network: Network & ClientImpl;
   markdown: string;
 
   constructor(
@@ -247,9 +253,11 @@ export class EditorFrame extends React.Component {
     // TODO make these actionable on this object right?
     this.network.onNativeClose = function () {
       document.body.style.background = 'red';
+      console.error('!!! client close');
     };
     this.network.onSyncClose = function () {
       document.body.style.background = 'red';
+      console.error('!!! server close');
     };
 
     this.state = {
@@ -274,7 +282,7 @@ export class EditorFrame extends React.Component {
         {this.state.modal}
         <div id="root-layout" className={modalClass}>
           <div id="toolbar">
-            <a href="/" id="logo">edit-text</a>
+            <a href="/" id="logo">{CONFIG.title}</a>
             <NativeButtons
               editor={this}
               buttons={this.state.buttons} 
@@ -374,7 +382,7 @@ export class EditorFrame extends React.Component {
 }
 
 
-function multiConnect(network: Network) {
+function multiConnect(network: Network & ClientImpl) {
   // Blur/Focus classes.
   window.addEventListener('focus', () => {
     document.body.classList.remove('blurred');
@@ -414,15 +422,16 @@ export function start() {
     document.body.classList.remove('theme-column');
   }
 
-  document.addEventListener('focus', () => {
-    // console.log('(page focus)');
-    document.body.classList.remove('editing-blurred');
-  });
-  document.addEventListener('blur', () => {
-    // console.log('(page blur)');
-    document.body.classList.add('editing-blurred');
-  });
-  document.body.classList.add('editing-blurred');
+  // TODO fix the adding of editing-blurred to the bdy
+  // document.addEventListener('focus', () => {
+  //   // console.log('(page focus)');
+  //   document.body.classList.remove('editing-blurred');
+  // });
+  // document.addEventListener('blur', () => {
+  //   // console.log('(page blur)');
+  //   document.body.classList.add('editing-blurred');
+  // });
+  // document.body.classList.add('editing-blurred');
 
   // Create the editor frame.
   let editorFrame;

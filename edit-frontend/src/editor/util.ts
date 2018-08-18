@@ -1,3 +1,5 @@
+// Web utilities
+
 export function textNodeAtPoint(
   x: number,
   y: number,
