@@ -39,7 +39,7 @@ export function matchesSelector(
     (<any>Element.prototype).msMatchesSelector || 
     (<any>Element.prototype).oMatchesSelector || 
     (<any>Element.prototype).webkitMatchesSelector ||
-    function(s) {
+    function(s: any) {
         var matches = (this.document || this.ownerDocument).querySelectorAll(s),
             i = matches.length;
         while (--i >= 0 && matches.item(i) !== this) {}

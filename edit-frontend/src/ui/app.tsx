@@ -25,7 +25,7 @@ function UiElement(
   props: {
     editor: EditorFrame,
   },
-  element,
+  element: any,
   i = Math.random(),
 ) {
   if ('Button' in element) {
@@ -42,7 +42,7 @@ function UiElement(
   } else if ('ButtonGroup' in element) {
     return (
       <div className="menu-buttongroup" key={i}>
-        {element.ButtonGroup.map((x, i) => UiElement(props, x, i))}
+        {element.ButtonGroup.map((x: any, i: number) => UiElement(props, x, i))}
       </div>
     )
   }
@@ -52,7 +52,7 @@ function UiElement(
 function NativeButtons(
   props: {
     editor: EditorFrame,
-    buttons: any
+    buttons: Array<any>
   },
 ) {
   if (!props.buttons.length) {
@@ -101,7 +101,7 @@ mutation ($id: String!, $markdown: String!) { createPage(id: $id, markdown: $mar
 class MarkdownModal extends React.Component {
   props: {
     markdown: string,
-    onModal: Function,
+    onModal: (modal: React.ReactNode) => void,
   };
 
   state = {
@@ -150,7 +150,7 @@ class LocalButtons extends React.Component {
   props: {
     editorID: string,
     editor: any,
-    onModal: Function,
+    onModal: (modal: React.ReactNode) => void,
   };
 
   state = {};
@@ -210,7 +210,7 @@ function Modal(props: any) {
 
 
 export type NoticeProps = {
-  element: React.ReactElement<any>,
+  element: React.ReactNode,
   level: 'notice' | 'error',
 };
 
@@ -227,14 +227,15 @@ function FooterNotice(props: {
   );
 }
 
+type EditorFrameProps = {
+  network: ServerImpl,
+  client: ClientImpl,
+  body: string,
+};
 
 // Initialize child editor.
 export class EditorFrame extends React.Component {
-  props: {
-    network: ServerImpl,
-    client: ClientImpl,
-    body: string,
-  };
+  props: EditorFrameProps;
 
   state: {
     body: string,
@@ -250,7 +251,7 @@ export class EditorFrame extends React.Component {
   markdown: string;
 
   constructor(
-    props,
+    props: EditorFrameProps,
   ) {
     super(props);
 
@@ -374,7 +375,7 @@ export class EditorFrame extends React.Component {
 
       // Update the key list in-place.
       editor.KEY_WHITELIST.splice.apply(editor.KEY_WHITELIST,
-        [0, 0].concat(parse.Controls.keys.map(x => ({
+        [0, 0].concat(parse.Controls.keys.map((x: any) => ({
           keyCode: x[0],
           metaKey: x[1],
           shiftKey: x[2],
@@ -463,7 +464,7 @@ export function start() {
   // document.body.classList.add('editing-blurred');
 
   // Create the editor frame.
-  let editorFrame;
+  let editorFrame: EditorFrame | null;
   ReactDOM.render(
     <EditorFrame
       network={server}
@@ -475,7 +476,7 @@ export function start() {
     () => {
       // Default notification
       if (!sessionStorage.getItem("its-only-funny-once")) {
-        editorFrame.showNotification({
+        editorFrame!.showNotification({
           element: (<div>
             Check out <a href="http://github.com/tcr/edit-text">edit-text</a> on Github for more information.
           </div>),
@@ -492,7 +493,7 @@ export function start() {
         })
         .then(() => {
           server.syncConnect((message: React.ReactNode) => {
-            editorFrame.showNotification({
+            editorFrame!.showNotification({
               element: message,
               level: 'error',
             });

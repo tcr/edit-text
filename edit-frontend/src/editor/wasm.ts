@@ -11,14 +11,13 @@ import {ClientImpl, ServerImpl} from './network';
 
 // TODO what are all of these things vvv
 
-let sendCommandToJSList: Array<(any) => void> = [];
+let sendCommandToJSList: Array<(value: any) => void> = [];
 
-export function sendCommandToJS(msg) {
+export function sendCommandToJS(msg: any) {
   sendCommandToJSList.forEach(handler => handler(msg));
 }
 
 let forwardWasmTaskCallback: any = null;
-
 
 export function getForwardWasmTaskCallback(): any {
   return forwardWasmTaskCallback;
@@ -28,7 +27,7 @@ export function setForwardWasmTaskCallback(value: any) {
   forwardWasmTaskCallback = value;
 }
 
-export function forwardWasmTask(msg) {
+export function forwardWasmTask(msg: any) {
   if (forwardWasmTaskCallback) {
     forwardWasmTaskCallback(msg);
   }
@@ -37,19 +36,22 @@ export function forwardWasmTask(msg) {
 // ^^^^^
 
 
+export class WasmError extends Error {
+    constructor(e: Error, message: any) {
+        super(message);
 
-
-export function WasmError(e, message) {
-    this.name = 'WasmError';
-    this.message = message;
-    this.stack = message + ' ' + e.stack;
+        // Set the prototype explicitly.
+        this.name = 'WasmError';
+        this.message = message;
+        this.stack = message + ' ' + e.stack;
+        Object.setPrototypeOf(this, WasmError.prototype);
+    }
 }
-WasmError.prototype = new Error;
 
 export class WasmClient implements ClientImpl {
   // public
   server: ServerImpl | null;
-  onNativeMessage: (any) => void;
+  onNativeMessage: (msg: any) => void;
   onNativeClose: () => void; // unused
 
   // Private
@@ -99,7 +101,7 @@ export class WasmClient implements ClientImpl {
           client.Module = Module;
           client.wasmClient = wasmClient;
 
-          forwardWasmTaskCallback = (msg) => {
+          forwardWasmTaskCallback = (msg: any) => {
             try {
               wasmClient.command(msg);
             } catch (e) {

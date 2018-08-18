@@ -19,14 +19,14 @@ export class AppServer implements ServerImpl {
   // Create a deferred object for the sync socket
   // because we may receive UserToSyncCommand payloads earlier
   private deferSync: Promise<WebSocket>;
-  private deferSyncResolve: Function;
+  private deferSyncResolve: (socket: WebSocket) => void | null;
 
   private editorFrame: EditorFrame | null;
 
   constructor() {
-    this.deferSync = new Promise(function(resolve, reject){
+    this.deferSync = new Promise((resolve, reject: any) => {
       this.deferSyncResolve = resolve;
-    }.bind(this));
+    });
   }
 
   syncCommand(command: any) {
@@ -97,15 +97,17 @@ export class AppServer implements ServerImpl {
         server.onSyncClose();
       };
 
-      this.deferSyncResolve(syncSocket);
+      if (this.deferSyncResolve !== null) {
+        this.deferSyncResolve(syncSocket);
+      }
     });
   }
 }
 
 export class ProxyClient implements ClientImpl {
   // TODO shouldn't these be nullable?
-  onNativeMessage: (any) => void;
-  onNativeClose: () => void;
+  onNativeMessage: (msg: any) => void | null;
+  onNativeClose: () => void | null;
 
   private editorID: string;
 
@@ -128,7 +130,9 @@ export class ProxyClient implements ClientImpl {
       };
       this.socket.onmessage = function (event) {
         let parse = JSON.parse(event.data);
-        network.onNativeMessage(parse);
+        if (network.onNativeMessage !== null) {
+          network.onNativeMessage(parse);
+        }
       };
       this.socket.onclose = network.onNativeClose;
     });

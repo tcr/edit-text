@@ -54,6 +54,10 @@ function charLength(
   }
 }
 
+export type CurElement = any;
+
+export type CurSpan = Array<CurElement>;
+
 function curto(
   el: Node | null,
   textOffset: number | null = null,
@@ -79,7 +83,7 @@ function curto(
       continue;
     }
 
-    let prev = el!.previousSibling;
+    let prev: Node | null = el!.previousSibling;
     if (prev === null) {
       el = el!.parentNode!;
     } else if (isSpan(prev)) {
@@ -92,7 +96,7 @@ function curto(
   }
 
   // Is our cursor at a group or at a char?
-  let cur: any = [
+  let cur: CurSpan = [
     isElement(el) ? {
       'CurGroup': null
     } : {
@@ -107,7 +111,7 @@ function curto(
     });
   }
 
-  function place_skip(cur, value) {
+  function place_skip(cur: CurSpan, value: number) {
     if ('CurSkip' in cur[0]) {
       cur[0].CurSkip += value;
     } else {
@@ -204,7 +208,7 @@ export class Editor extends React.Component {
   props: {
     content: string,
     client: ClientImpl,
-    KEY_WHITELIST: any,
+    KEY_WHITELIST: Array<any>,
     editorID: string,
     disabled: boolean,
   };
@@ -359,7 +363,9 @@ export class Editor extends React.Component {
       }
 
       // Check if this event exists in the list of whitelisted key combinations.
-      if (!this.props.KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
+      let isWhitelisted = this.props.KEY_WHITELIST
+        .some((x: any) => Object.keys(x).every((key: any) => (e as any)[key] == (x as any)[key]));
+      if (!isWhitelisted) {
         return;
       }
 

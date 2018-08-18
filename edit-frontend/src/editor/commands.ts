@@ -1,6 +1,8 @@
 // Commands
 
-export function RenameGroup(tag: string, curspan) {
+import {CurSpan} from './index';
+
+export function RenameGroup(tag: string, curspan: CurSpan) {
   return {
     tag: 'RenameGroup' as 'RenameGroup',
     'RenameGroup': [tag, curspan],

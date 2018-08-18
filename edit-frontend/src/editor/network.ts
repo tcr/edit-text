@@ -5,15 +5,15 @@ import 'react';
 import {Command} from './commands';
 
 export interface ClientImpl {
-  onNativeMessage: (any) => void;
-  onNativeClose: () => void;
+  onNativeMessage: (msg: any) => void | null;
+  onNativeClose: () => void | null;
 
   connect(onError: () => void): Promise<void>;
   nativeCommand(command: Command): void;
 }
 
 export interface ServerImpl {
-  onSyncClose: () => void;
+  onSyncClose: () => void | null;
   syncConnect(onError: (message: React.ReactNode) => void): Promise<void>;
   syncCommand(command: any): Promise<void>;
 }
