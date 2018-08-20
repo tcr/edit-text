@@ -296,6 +296,7 @@ export class Editor extends React.Component {
 
   componentDidMount() {
     let self = this;
+    console.log('hey');
     document.addEventListener('keypress', (e: KeyboardEvent) => {
       if (self.props.disabled) {
         return;
@@ -329,9 +330,11 @@ export class Editor extends React.Component {
     document.addEventListener('keydown', (e) => {
       let current = document.querySelector('div.current[data-tag="caret"]');
 
-      // Don't interfere with the header.
-      if (e.target !== null && document.querySelector('#toolbar')!.contains(e.target! as Node)) {
-        return;
+      // Don't interfere when clicking the header.
+      if (e.target !== null) {
+        if (document.querySelector('#toolbar') && document.querySelector('#toolbar')!.contains(e.target! as Node)) {
+          return;
+        }
       }
 
       if (self.props.disabled) {

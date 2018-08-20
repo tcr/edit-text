@@ -14,12 +14,17 @@ extern crate wbg_rand;
 use super::client::*;
 use super::monkey::*;
 use super::state::*;
-use edit_common::commands::*;
+use edit_common::{
+    doc_as_html,
+    commands::*,
+    markdown::markdown_to_doc,
+};
 use failure::Error;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use wasm_bindgen::prelude::*;
+use serde_json::Value;
 
 lazy_static! {
     static ref WASM_ALIVE: Arc<AtomicBool> = Arc::new(AtomicBool::new(true));
@@ -48,6 +53,19 @@ extern "C" {
 #[macro_export]
 macro_rules! console_log {
     ($($t:tt)*) => ($crate::wasm::log(&format!($($t)*)))
+}
+
+
+#[wasm_bindgen]
+#[allow(non_snake_case)]
+pub fn convertMarkdownToHtml(input: &str) -> String {
+    doc_as_html(&markdown_to_doc(input).unwrap())
+}
+
+#[wasm_bindgen]
+#[allow(non_snake_case)]
+pub fn convertMarkdownToDoc(input: &str) -> String {
+    serde_json::to_string(&markdown_to_doc(input).unwrap()).unwrap()
 }
 
 // WebAssembly client.

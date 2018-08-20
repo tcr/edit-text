@@ -12,7 +12,8 @@ import * as route from './route';
 import { Editor } from '../editor';
 import { AppServer, ProxyClient } from './sync';
 import { NullServer, ClientImpl, ServerImpl } from '../editor/network';
-import { WasmClient } from '../editor/wasm';
+import { WasmClient, convertMarkdownToHtml, convertMarkdownToDoc } from '../editor/wasm';
+import * as index from '../index';
 
 declare var CONFIG: any;
 
@@ -260,7 +261,7 @@ export class EditorFrame extends React.Component {
     this.network = props.network;
     this.client = props.client;
 
-    this.client.onNativeMessage = this.onNativeMessage.bind(this);
+    this.client.onNativeMessage = this.onClientToFrontendCommand.bind(this);
 
     // Background colors.
     // TODO make these actionable on this object right?
@@ -345,7 +346,7 @@ export class EditorFrame extends React.Component {
   }
 
   // Received message on native socket
-  onNativeMessage(parse: any) {
+  onClientToFrontendCommand(parse: any) {
     const editor = this;
 
     if (parse.Init) {
@@ -422,7 +423,114 @@ function multiConnect(client: ClientImpl) {
   };
 }
 
+
+class EditText extends React.Component {
+  props: {
+    client: WasmClient,
+    markdown: string,
+    onChange: Function | null,
+  };
+
+  state = {
+    content: convertMarkdownToHtml(this.props.markdown),
+    whitelist: [],
+  };
+
+  render() {
+    return (
+      <Editor
+        editorID={'$local'}
+        disabled={false}
+        client={this.props.client}
+        content={this.state.content}
+        KEY_WHITELIST={this.state.whitelist}
+      />
+    );
+  }
+
+  componentDidMount() {
+    this.props.client.onNativeMessage = (parse: any) => {
+      if (parse.Init) {
+        // let editorID = parse.Init;
+  
+        // this.setState({
+        //   editorID,
+        // });
+  
+        // console.info('Editor "%s" connected.', editorID);
+  
+        // // Log the editor ID.
+        // Raven.setExtraContext({
+        //   editor_id: editorID,
+        // });
+      }
+  
+      else if (parse.Update) {
+        // Update page content
+        this.setState({
+          content: parse.Update[0],
+        });
+
+        if (this.props.onChange !== null) {
+          this.props.onChange(parse.Update[1]);
+        }
+      }
+
+      else if (parse.Controls) {
+        // console.log('SETUP CONTROLS', parse.Controls);
+  
+        // Update the key list in-place.
+        this.setState({
+          whitelist: parse.Controls.keys.map((x: any) => ({
+            keyCode: x[0],
+            metaKey: x[1],
+            shiftKey: x[2],
+          })),
+        });
+      }
+    };
+
+    this.props.client
+      .connect(() => {})
+      .then(() => {
+        console.log('Loading static editor.');
+        this.props.client.wasmClient.command(JSON.stringify({
+          SyncToUserCommand: {
+            Init: ["$local", convertMarkdownToDoc(this.props.markdown), 100],
+          } 
+        }));
+      });
+  }
+}
+
 export function start() {
+// export function start_standalone() {
+  let a = document.createElement('pre');
+  a.id = "mdpreview";
+  document.body.appendChild(a);
+
+  index.getWasmModule()
+  .then(() => {
+    let client = new WasmClient();
+
+    // Create the editor frame.
+    ReactDOM.render(
+      <EditText
+        client={client}
+        markdown={"# Most of all\n\nThe world is a place where parts of wholes are perscribred"}
+        onChange={(markdown: string) => {
+          // TODO not visible until styles are encapsulated.
+          // TODO edit-text needs a markdown viewer split pane :P.
+          a.innerText = markdown;
+        }}
+      />,
+      document.querySelector('#content')!,
+    );
+  });
+}
+
+// export function start() {
+export function start_app() {
   let server: ServerImpl;
   let client: ClientImpl;
 

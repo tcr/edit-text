@@ -2,10 +2,28 @@
 import 'react';
 
 import * as index from '..';
-import {WasmClient as WasmClientModule} from '../bindgen/edit_client';
+import { WasmClient as WasmClientModule } from '../bindgen/edit_client';
+import { getWasmModule } from '../index';
+
 import {Command} from './commands';
 import {ClientImpl, ServerImpl} from './network';
 
+let _convertMarkdownToDoc: Function | null = null;
+let _convertMarkdownToHtml: Function | null = null;
+getWasmModule()
+.then(Module => {
+  _convertMarkdownToDoc = Module.convertMarkdownToDoc;
+  _convertMarkdownToHtml = Module.convertMarkdownToHtml;
+});
+
+export function convertMarkdownToDoc(input: string): any {
+  return JSON.parse(_convertMarkdownToDoc!(input));
+}
+
+
+export function convertMarkdownToHtml(input: string): string {
+  return _convertMarkdownToHtml!(input);
+}
 
 
 
@@ -51,8 +69,8 @@ export class WasmError extends Error {
 export class WasmClient implements ClientImpl {
   // public
   server: ServerImpl | null;
-  onNativeMessage: (msg: any) => void;
-  onNativeClose: () => void; // unused
+  onNativeMessage: (msg: any) => void | null;
+  onNativeClose: () => void | null; // unused
 
   // Private
 
@@ -87,7 +105,9 @@ export class WasmClient implements ClientImpl {
           if (parse.UserToSyncCommand && client.server != null) {
             client.server.syncCommand(parse.UserToSyncCommand);
           } else {
-            client.onNativeMessage(parse);
+            if (client.onNativeMessage != null) {
+              client.onNativeMessage(parse);
+            }
           }
         });
       });

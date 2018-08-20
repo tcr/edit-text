@@ -53,7 +53,7 @@ pub enum UserToFrontendCommand {
     Init(String),
     Controls(Controls),
     PromptString(String, String, FrontendToUserCommand),
-    Update(String, Option<Op>),
+    Update(String, String, Option<Op>),
     Error(String),
     UserToSyncCommand(UserToSyncCommand),
 }

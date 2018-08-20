@@ -4,23 +4,24 @@ use crate::{
     state::*,
 };
 
-use extern::{
-    edit_common::{
-        commands::*,
-        doc_as_html,
-    },
-    failure::Error,
-    oatie::{
-        doc::*,
-        validate::validate_doc,
-        OT,
-    },
-    std::char::from_u32,
-    std::sync::atomic::{
+use edit_common::{
+    commands::*,
+    doc_as_html,
+    markdown::doc_to_markdown,
+};
+use failure::Error;
+use oatie::{
+    doc::*,
+    validate::validate_doc,
+    OT,
+};
+use std::{
+    char::from_u32,
+    sync::atomic::{
         AtomicBool,
         Ordering,
     },
-    std::sync::Arc,
+    sync::Arc,
 };
 
 // Shorthandler
@@ -383,6 +384,7 @@ pub trait ClientImpl {
                         doc_span,
                         version,
                     )) => {
+                        console_log!("{:?}", "DID IT WORK");
                         self.state().client_id = new_client_id.clone();
                         self.state().client_doc.init(&Doc(doc_span), version);
 
@@ -408,9 +410,11 @@ pub trait ClientImpl {
                         let state = self.state();
                         let res = UserToFrontendCommand::Update(
                             doc_as_html(&state.client_doc.doc.0),
+                            doc_to_markdown(&state.client_doc.doc.0).unwrap(),
                             None,
                         );
                         self.send_client(&res).unwrap();
+                        console_log!("{:?}", "cool lets go");
                     }
 
                     // Sync sent us an Update command with a new document version.
@@ -461,6 +465,7 @@ pub trait ClientImpl {
                         let state = self.state();
                         let res = UserToFrontendCommand::Update(
                             doc_as_html(&state.client_doc.doc.0),
+                            doc_to_markdown(&state.client_doc.doc.0).unwrap(),
                             None,
                         );
                         self.send_client(&res).unwrap();
@@ -553,7 +558,11 @@ pub trait ClientImpl {
 
         // Render the update.
         let state = self.state();
-        let res = UserToFrontendCommand::Update(doc_as_html(&state.client_doc.doc.0), Some(op));
+        let res = UserToFrontendCommand::Update(
+            doc_as_html(&state.client_doc.doc.0),
+            doc_to_markdown(&state.client_doc.doc.0).unwrap(),
+            Some(op),
+        );
         self.send_client(&res)?;
 
         // Send any queued payloads.
