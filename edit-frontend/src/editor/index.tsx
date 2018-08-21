@@ -241,7 +241,7 @@ export class Editor extends React.Component {
     this.mouseDown = false;
   }
 
-  onMouseMove(e: MouseEvent, anchor: boolean = false) {
+  onMouseMove(e: MouseEvent, drop_anchor: boolean = false) {
     if (!this.mouseDown) {
       return;
     }
@@ -257,12 +257,11 @@ export class Editor extends React.Component {
 
     // Only support text elements.
     if (pos !== null) {
-      if (anchor) {
+      this.props.client.nativeCommand(commands.CursorTarget(
+        resolveCursorFromPosition(pos.textNode, pos.offset),
+      ));
+      if (drop_anchor) {
         this.props.client.nativeCommand(commands.CursorAnchor(
-          resolveCursorFromPosition(pos.textNode, pos.offset),
-        ));
-      } else {
-        this.props.client.nativeCommand(commands.CursorTarget(
           resolveCursorFromPosition(pos.textNode, pos.offset),
         ));
       }
@@ -408,6 +407,11 @@ export class Editor extends React.Component {
                     clientY: y,
                   });
                   this.onMouseDown(mouseEvent);
+                  let mouseEvent2 = new MouseEvent('mouseup', {
+                    clientX: x,
+                    clientY: y,
+                  });
+                  this.onMouseUp(mouseEvent2);
                   return;
                 }
               }

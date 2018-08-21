@@ -3,6 +3,7 @@ use oatie::stepper::*;
 use oatie::transform::Schema;
 use oatie::writer::*;
 use take_mut;
+use failure::Error;
 
 fn is_block(attrs: &Attrs) -> bool {
     use oatie::schema::*;
@@ -18,16 +19,22 @@ fn is_caret(attrs: &Attrs, client_id: Option<&str>, focus: bool) -> bool {
     attrs["tag"] == "caret" && client_id.map(|id| attrs.get("client") == Some(&id.to_string())).unwrap_or(false)
         && attrs
             .get("focus")
-            .unwrap_or(&"false".to_string())
-            .parse::<bool>()
-            .map(|x| x == focus)
-            .unwrap_or(false)
+            .map(|x| x == "true")
+            .unwrap_or(false) == focus
 }
 
 #[derive(Clone, Debug)]
 pub struct CaretStepper {
     pub doc: DocStepper,
     caret_pos: isize,
+}
+
+#[derive(Clone, Debug)]
+pub enum Pos {
+    Start,
+    Anchor,
+    Focus,
+    End,
 }
 
 impl CaretStepper {
@@ -259,7 +266,7 @@ impl Walker {
         }
     }
 
-    // TODO Have this replace the above and take its name.
+    // TODO Have this be replaced with to_caret_position also
     // Only difference is that above consumers
     // haven't had an .unwrap() call added yet for this:
     pub fn to_caret_safe(doc: &Doc, client_id: &str, focus: bool) -> Option<Walker> {
@@ -284,6 +291,51 @@ impl Walker {
                 original_doc: doc.clone(),
                 stepper,
             })
+        }
+    }
+
+    // TODO Have this replace the above and take its name.
+    // Only difference is that above consumers
+    // haven't had an .unwrap() call added yet for this:
+    pub fn to_caret_position(doc: &Doc, client_id: &str, position: Pos) -> Result<Walker, Error> {
+        let mut stepper = CaretStepper::new(DocStepper::new(&doc.0));
+
+        // Iterate until we match the cursor.
+        let mut result_stepper = None;
+        loop {
+            if let Some(DocGroup(attrs, _)) = stepper.doc.head() {
+                match position {
+                    Pos::Focus => if is_caret(&attrs, Some(client_id), true) {
+                        result_stepper = Some(stepper);
+                        break;
+                    },
+                    Pos::Anchor => if is_caret(&attrs, Some(client_id), false) {
+                        result_stepper = Some(stepper);
+                        break;
+                    },
+                    Pos::Start => if is_caret(&attrs, Some(client_id), false) || is_caret(&attrs, Some(client_id), true) {
+                        result_stepper = Some(stepper);
+                        break;
+                    },
+                    // Continue until last match
+                    Pos::End => if is_caret(&attrs, Some(client_id), false) || is_caret(&attrs, Some(client_id), true) {
+                        result_stepper = Some(stepper.clone());
+                    },
+                }
+                
+            }
+            if stepper.next().is_none() {
+                break;
+            }
+        }
+
+        if let Some(result_stepper) = result_stepper {
+            Ok(Walker {
+                original_doc: doc.clone(),
+                stepper: result_stepper,
+            })
+        } else {
+            Err(format_err!("Could not find cursor at {:?} position.", position))
         }
     }
 

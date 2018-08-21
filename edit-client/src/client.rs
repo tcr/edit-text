@@ -580,6 +580,7 @@ pub trait ClientImpl {
 
         // Update the controls state.
         // TODO should optimize this to not always send this out.
+        // console_log!("CUR DOC {:?}", doc);
         let (cur_block, in_list) = self.with_action_context(|doc| identify_block(doc))?;
         println!("current block: {:?}", cur_block);
         println!("in list: {:?}", in_list);

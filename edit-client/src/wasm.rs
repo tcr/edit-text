@@ -46,6 +46,9 @@ extern "C" {
     #[wasm_bindgen(js_namespace = console)]
     pub fn log(msg: &str);
 
+    #[wasm_bindgen(js_namespace = console)]
+    pub fn error(msg: &str);
+
     pub fn setTimeout(closure: &Closure<FnMut()>, time: u32);
 }
 
@@ -53,6 +56,10 @@ extern "C" {
 #[macro_export]
 macro_rules! console_log {
     ($($t:tt)*) => ($crate::wasm::log(&format!($($t)*)))
+}
+#[macro_export]
+macro_rules! console_error {
+    ($($t:tt)*) => ($crate::wasm::error(&format!($($t)*)))
 }
 
 
@@ -131,10 +138,11 @@ impl WasmClient {
         //     panic!("{} encountered a Panic Monkey!!!!!!!!!!!!", self.state().client_id);
         // }
 
-        match self.handle_task(input) {
+        match self.handle_task(input.clone()) {
             Ok(_) => {}
             Err(err) => {
-                console_log!("error handling task: {:?}", err);
+                // We could panic here, but some errors are resumable
+                console_error!("Error handling task: {:?}\n{:?}", input, err);
                 return Err(err);
             }
         }
