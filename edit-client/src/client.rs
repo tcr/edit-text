@@ -54,15 +54,7 @@ fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
             false,
             false,
             false,
-            Box::new(|client| client.client_op(|doc| caret_move(doc, false))),
-        ),
-        // left
-        KeyHandler(
-            37,
-            false,
-            false,
-            false,
-            Box::new(|client| client.client_op(|doc| caret_move(doc, false))),
+            Box::new(|client| client.client_op(|doc| caret_move(doc, false, false))),
         ),
         // right
         KeyHandler(
@@ -70,7 +62,23 @@ fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
             false,
             false,
             false,
-            Box::new(|client| client.client_op(|doc| caret_move(doc, true))),
+            Box::new(|client| client.client_op(|doc| caret_move(doc, true, false))),
+        ),
+        // shift + left
+        KeyHandler(
+            37,
+            false,
+            true,
+            false,
+            Box::new(|client| client.client_op(|doc| caret_move(doc, false, true))),
+        ),
+        // shift + right
+        KeyHandler(
+            39,
+            false,
+            true,
+            false,
+            Box::new(|client| client.client_op(|doc| caret_move(doc, true, true))),
         ),
         // up
         KeyHandler(

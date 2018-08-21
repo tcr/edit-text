@@ -528,7 +528,15 @@ pub fn split_block(ctx: ActionContext, add_hr: bool) -> Result<Op, Error> {
     Ok(writer.result())
 }
 
-pub fn caret_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
+pub fn caret_move(mut ctx: ActionContext, increase: bool, preserve_select: bool) -> Result<Op, Error> {
+    let op_1 = if !preserve_select && has_caret(ctx.clone(), true) {
+        let (_pos, op) = caret_clear(ctx.clone(), true)?;
+        ctx.doc = OT::apply(&ctx.doc.clone(), &op);
+        op
+    } else {
+        Op::empty()
+    };
+
     let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, false);
 
     // First operation removes the caret.
@@ -540,7 +548,7 @@ pub fn caret_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
 
     writer.add.exit_all();
 
-    let op_1 = writer.result();
+    let op_2 = writer.result();
 
     // Second operation inserts the new caret.
     if increase {
@@ -560,11 +568,11 @@ pub fn caret_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
     });
     writer.add.exit_all();
 
-    let op_2 = writer.result();
+    let op_3 = writer.result();
 
     // Return composed operations. Select proper order or otherwise composition
     // will be invalid.
-    Ok(OT::transform_advance::<RtfSchema>(&op_1, &op_2))
+    Ok(OT::compose(&op_1, &OT::transform_advance::<RtfSchema>(&op_2, &op_3)))
 }
 
 pub fn caret_word_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
@@ -773,6 +781,7 @@ pub fn caret_block_move(ctx: ActionContext, increase: bool) -> Result<Op, Error>
     Ok(OT::transform_advance::<RtfSchema>(&op_1, &op_2))
 }
 
+// Returns new caret position
 pub fn caret_clear(ctx: ActionContext, focus: bool) -> Result<(isize, Op), Error> {
     let walker = if let Some(walker) = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, focus) {
         walker
