@@ -8,8 +8,8 @@ import { getWasmModule } from '../index';
 import {Command} from './commands';
 import {ClientImpl, ServerImpl} from './network';
 
-let _convertMarkdownToDoc: Function | null = null;
-let _convertMarkdownToHtml: Function | null = null;
+let _convertMarkdownToDoc: ((x: string) => any) | null = null;
+let _convertMarkdownToHtml: ((x: string) => any) | null = null;
 getWasmModule()
 .then(Module => {
   _convertMarkdownToDoc = Module.convertMarkdownToDoc;

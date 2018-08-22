@@ -107,7 +107,7 @@ function curto(
   // What is the character (or element) offset?
   if (textOffset !== null && textOffset > 1) {
     cur.unshift({
-      "CurSkip": textOffset - 1,
+      "CurSkip": textOffset,
     });
   }
 

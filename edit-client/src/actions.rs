@@ -838,12 +838,14 @@ pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan, focus: bool) -> Result<Op
 
     // Second operation inserts a new caret.
 
+    // console_log!("----@@ {:?}", op_1_2);
+    // console_log!("-----> {:?}", cur);
     let walker = Walker::to_cursor(&ctx.doc, cur);
     let pos_3 = Some(walker.caret_pos());
-    if pos_1 == pos_3 {
-        // Redundant
-        return Ok(op_span!([], []));
-    }
+    // if pos_1 == pos_3 {
+    //     // Redundant
+    //     return Ok(op_span!([], []));
+    // }
     let mut writer = walker.to_writer();
 
     writer.del.exit_all();
@@ -858,7 +860,11 @@ pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan, focus: bool) -> Result<Op
 
     let op_3 = writer.result();
 
+    // console_log!("-----<< {:?}", op_3);
+
     // println!("------------->\n{:?}\n\n\nAAAAAA\n-------->", op_2);
 
-    Ok(OT::transform_advance::<RtfSchema>(&op_1_2, &op_3))
+    let res = OT::transform_advance::<RtfSchema>(&op_1_2, &op_3);
+    // console_log!("------< {:?}", res);
+    Ok(res)
 }

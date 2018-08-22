@@ -10,9 +10,7 @@
 // Don't add additional noise to cargo-script.
 #![deny(warnings)]
 
-#[macro_use]
 extern crate commandspec;
-#[macro_use]
 extern crate structopt;
 extern crate failure;
 extern crate clap;
@@ -170,15 +168,6 @@ fn run() -> Result<(), Error> {
                 "
                     rustup target add wasm32-unknown-unknown
                 "
-            )?;
-
-            eprintln!("Checking...");
-            execute!(
-                r"
-                    cd edit-client
-                    cargo check {release_flag} --lib --target wasm32-unknown-unknown
-                ",
-                release_flag = release_flag,
             )?;
 
             eprintln!("Building...");

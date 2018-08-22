@@ -10,6 +10,7 @@ fn is_block(attrs: &Attrs) -> bool {
     RtfSchema::track_type_from_attrs(attrs) == Some(RtfTrack::Blocks)
 }
 
+// TODO what does this refer to?
 fn is_block_object(attrs: &Attrs) -> bool {
     use oatie::schema::*;
     RtfSchema::track_type_from_attrs(attrs) == Some(RtfTrack::BlockObjects)
@@ -21,6 +22,11 @@ fn is_caret(attrs: &Attrs, client_id: Option<&str>, focus: bool) -> bool {
             .get("focus")
             .map(|x| x == "true")
             .unwrap_or(false) == focus
+}
+
+// Is any caret
+fn is_any_caret(attrs: &Attrs) -> bool {
+    attrs["tag"] == "caret"
 }
 
 #[derive(Clone, Debug)]
@@ -152,9 +158,17 @@ impl Iterator for ReverseCaretStepper {
     type Item = ();
 
     fn next(&mut self) -> Option<()> {
-        if self.is_valid_caret_pos() {
-            self.caret_pos -= 1;
+        // Skip over all preceding carets so we don't confuse the previous
+        // char with a new position.
+        while let Some(DocGroup(ref attrs, _)) = self.doc.unhead() {
+            if is_any_caret(attrs) {
+                self.doc.unskip(1);
+            } else {
+                break;
+            }
         }
+
+        // console_log!("what {:?}", self.doc);
 
         match self.doc.unhead() {
             Some(DocChars(..)) => {
@@ -170,6 +184,10 @@ impl Iterator for ReverseCaretStepper {
                     self.doc.unenter();
                 }
             }
+        }
+
+        if self.is_valid_caret_pos() {
+            self.caret_pos -= 1;
         }
 
         Some(())
@@ -380,15 +398,25 @@ impl Walker {
             panic!("Didn't find the cursor.");
         }
 
+        // console_log!("(^^^) (A) {:?}", stepper.doc);
+
         // Snap to leftmost character boundary. It's possible the
         // cursor points to a character following a span or caret, but
         // we want our stepper to be on the immediate right of its character.
         let mut rstepper = stepper.rev();
-        while !rstepper.is_valid_caret_pos() {
+        loop {
+            // console_log!("(^^^) (uu) {:?}", rstepper.doc);
             if rstepper.next().is_none() {
+                // console_log!("none?");
+                break;
+            }
+            if rstepper.is_valid_caret_pos() {
+                // console_log!("valid");
                 break;
             }
         }
+
+        // console_log!("(^^^) (C) {:?}", rstepper.doc);
 
         // Next, increment by one full char (so cursor is always on right).
         let mut stepper = rstepper.clone().rev();
@@ -400,9 +428,12 @@ impl Walker {
                 break;
             }
         }
+        // ...or else restore the stepper again.
         if !stepper.is_valid_caret_pos() {
             stepper = rstepper.rev();
         }
+
+        // console_log!("(^^^) (B) {:?}", stepper.doc);
 
         Walker {
             original_doc: doc.clone(),

@@ -139,7 +139,8 @@ impl WasmClient {
         // }
 
         match self.handle_task(input.clone()) {
-            Ok(_) => {}
+            Ok(_) => {
+            }
             Err(err) => {
                 // We could panic here, but some errors are resumable
                 console_error!("Error handling task: {:?}\n{:?}", input, err);

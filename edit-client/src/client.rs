@@ -392,7 +392,6 @@ pub trait ClientImpl {
                         doc_span,
                         version,
                     )) => {
-                        console_log!("{:?}", "DID IT WORK");
                         self.state().client_id = new_client_id.clone();
                         self.state().client_doc.init(&Doc(doc_span), version);
 
@@ -422,7 +421,6 @@ pub trait ClientImpl {
                             None,
                         );
                         self.send_client(&res).unwrap();
-                        console_log!("{:?}", "cool lets go");
                     }
 
                     // Sync sent us an Update command with a new document version.
