@@ -9,7 +9,7 @@ import * as Raven from 'raven-js';
 
 import * as commands from '../editor/commands';
 import * as route from './route';
-import { Editor } from '../editor';
+import { Editor } from '../editor/editor';
 import { AppServer, ProxyClient } from './sync';
 import { NullServer, ClientImpl, ServerImpl } from '../editor/network';
 import { WasmClient, convertMarkdownToHtml, convertMarkdownToDoc } from '../editor/wasm';

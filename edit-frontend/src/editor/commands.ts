@@ -1,6 +1,6 @@
 // Commands
 
-import {CurSpan} from './index';
+import {CurSpan} from './editor';
 
 export function RenameGroup(tag: string, curspan: CurSpan) {
   return {

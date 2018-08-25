@@ -55,15 +55,15 @@ export function forwardWasmTask(msg: any) {
 
 
 export class WasmError extends Error {
-    constructor(e: Error, message: any) {
-        super(message);
+  constructor(e: Error, message: any) {
+    super(message);
 
-        // Set the prototype explicitly.
-        this.name = 'WasmError';
-        this.message = message;
-        this.stack = message + ' ' + e.stack;
-        Object.setPrototypeOf(this, WasmError.prototype);
-    }
+    // Set the prototype explicitly.
+    this.name = 'WasmError';
+    this.message = message;
+    this.stack = message + ' ' + e.stack;
+    Object.setPrototypeOf(this, WasmError.prototype);
+  }
 }
 
 export class WasmClient implements ClientImpl {

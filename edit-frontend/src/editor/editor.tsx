@@ -379,20 +379,28 @@ export class Editor extends React.Component {
         let current = document.querySelector('div.current[data-tag="caret"]');
         if (current !== null) {
           let rect = current.getBoundingClientRect();
-          let y = UP ? rect.top : rect.bottom;
-          let x = rect.right;
+          let y = (UP ? rect.top : rect.bottom) + window.scrollY;
+          let x = rect.right + window.scrollX;
 
-          // Temporary hack until the cursor at point can be focused on the cursor for real
-          x += 1;
-
-          let first = util.textNodeAtPoint(x, y);
+          let first = util.textNodeAtPoint(x + 1, y);
+          // In doc "# Most of all\n\nThe world is a place where parts of wholes are perscribed"
+          // When you hit the down key for any character in the first line, it works,
+          // until the last character (end of the line), where if you hit the down key it 
+          // no longer works and the above turns null. Instead, this check once for the main case,
+          // check at this offset for the edge case is weird but works well enough.
+          if (first == null) {
+            first = util.textNodeAtPoint(x - 2, y - 2);
+          }
           if (first !== null) { // Or we have nothing to compare to and we'll loop all day
             while (true) {
-              y += UP ? -10 : 10; // STEP
+              // Stepp a reasonable increment in each direction.
+              const STEP = 10;
+              y += UP ? -STEP : STEP;
 
               let el = document.elementFromPoint(x, y);
               // console.log('locating element at %d, %d:', x, y, el);
               if (!root.contains(el) || el === null) { // Off the page!
+                console.log('fail');
                 break;
               }
               if (root !== el) {
@@ -418,6 +426,9 @@ export class Editor extends React.Component {
             }
           }
         }
+
+        // Don't forward up/down keys.
+        return;
       }
   
       // Forward the keypress to native.

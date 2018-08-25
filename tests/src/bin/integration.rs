@@ -11,10 +11,12 @@ extern crate taken;
 extern crate rand;
 #[macro_use]
 extern crate failure;
+extern crate rustc_serialize;
 
 use fantoccini::{
     Client,
     Locator,
+    error,
 };
 // use futures::prelude::*;
 use commandspec::*;
@@ -35,6 +37,10 @@ use std::sync::{
 };
 
 static DRIVER_PORT_COUNTER: AtomicU16 = AtomicU16::new(4445);
+
+fn sleep_ms(val: u64) {
+    ::std::thread::sleep(::std::time::Duration::from_millis(val))
+}
 
 fn in_ci() -> bool {
     ::std::env::var("CI")
@@ -90,6 +96,53 @@ enum Driver {
     Gecko,
 }
 
+
+struct JsCode<'a> {
+    client: &'a Client,
+    value: String,
+}
+
+fn code<'a>(client: &'a Client) -> JsCode<'a> {
+    JsCode {
+        client: client,
+        value: "".to_string(),
+    }
+}
+
+impl<'a> JsCode<'a> {
+    fn js(mut self, input: &str) -> JsCode<'a> {
+        self.value.push_str(input);
+        self
+    }
+
+    fn keypress(self, key: &str) -> JsCode<'a> {
+        self.js(&format!(r#"
+var event = new KeyboardEvent("keypress", {{
+    bubbles: true,
+    cancelable: true,
+    charCode: {},
+}});
+document.dispatchEvent(event);
+            "#, key))
+    }
+
+    fn mousedown(self, x: &str, y: &str) -> JsCode<'a> {
+        self.js(&format!(r#"
+var evt = new MouseEvent("mousedown", {{
+    bubbles: true,
+    cancelable: true,
+    clientX: {},
+    clientY: {},
+}});
+document.querySelector('.edit-text').dispatchEvent(evt);
+            "#, x, y))
+    }
+
+    fn execute(self) -> impl Future<Item = ::rustc_serialize::json::Json, Error = error::CmdError> {
+        self.client.execute(&self.value, vec![])
+    }
+}
+
 fn run(
     test_id: &str,
     both_barrier: Arc<Barrier>,
@@ -128,7 +181,7 @@ fn run(
     // Connect
     let mut core = tokio_core::reactor::Core::new().unwrap();
     let c = Client::new(&format!("http://0.0.0.0:{}/", port), &core.handle());
-    let c = core.run(c).unwrap();
+    let c: Client = core.run(c).unwrap();
 
     println!("Connected...");
 
@@ -143,13 +196,11 @@ fn run(
             .and_then(move |_| c.current_url())
             .and_then(move |url| {
                 println!("1");
-                println!("URL {:?}", url);
 
                 // Wait for page to load
-                ::std::thread::sleep(::std::time::Duration::from_millis(2_000));
+                sleep_ms(2_000);
 
                 // Align threads
-                println!("\n\n\n\n\n");
                 if let Some(seq_barrier) = seq_barrier {
                     seq_barrier.wait();
                 }
@@ -161,91 +212,45 @@ fn run(
                 c.wait_for_find(Locator::Css(r#"div[data-tag="caret"]"#))
             })
             .and_then(|_| {
-                ::std::thread::sleep(::std::time::Duration::from_millis(1_000));
+                sleep_ms(1_000);
 
                 println!("2");
-                c.execute(
-                    r#"
+                code(c)
+                    .js(r#"
 
 let marker = document.querySelector('.edit-text div[data-tag=h1] span');
-
-// marker.style.cssText = `
-// background: red;
-// width: 10px;
-// height: 10px;
-// display: inline-block;
-// `;
-//h1.appendChild(marker);
-
 let clientX = marker.getBoundingClientRect().right;
 let clientY = marker.getBoundingClientRect().top;
 
-// h1.removeChild(marker);
 
-var evt = new MouseEvent("mousedown", {
-    bubbles: true,
-    cancelable: true,
-    clientX: clientX - 3,
-    clientY: clientY + 3,
-});
-console.log('x', clientX);
-console.log('y', clientY);
-document.querySelector('.edit-text').dispatchEvent(evt);
-
-                "#,
-                    vec![],
-                )
+                "#)
+                    .mousedown("clientX - 3", "clientY + 3")
+                    .execute()
             })
             .and_then(|_| {
-                ::std::thread::sleep(::std::time::Duration::from_millis(1_000));
+                sleep_ms(1_000);
 
                 println!("2a");
-                c.execute(
-                    r#"
-
-// let charCode = 35;
-let charCode = 0x1f47b;
-var evt = new KeyboardEvent("keypress", {
-    bubbles: true,
-    cancelable: true,
-    charCode: charCode,
-});
-document.dispatchEvent(evt);
-
-                "#,
-                    vec![],
-                )
+                code(c)
+                    //.keypress("35")
+                    .keypress("0x1f47b")
+                    .execute()
             })
             .and_then(|_| {
                 // Enough time for both clients to sync up.
-                ok(::std::thread::sleep(::std::time::Duration::from_millis(
-                    4000,
-                )))
+                ok(sleep_ms(4000))
             })
             .and_then(|_| {
                 println!("3");
 
-                c.execute(
-                    r#"
+                code(c)
+                    .js(r#"
 
 let h1 = document.querySelector('.edit-text div[data-tag=h1]');
 return h1.innerText;
 
-                "#,
-                    vec![],
-                )
-            })
-            .and_then(move |out| {
-                println!("4");
-                println!("OUT {:?}", out);
-                // println!("TITLE {:?}", url);
-                // assert_eq!(url.as_ref(), "https://en.wikipedia.org/wiki/Foobar");
-                // click "Foo (disambiguation)"
-                // c.wait_for_find(Locator::Css(r#"div[data-tag="cccc"]"#))
-                // })
-                // .and_then(|_e| {
-                // assert_eq!(url.as_ref(), "https://en.wikipedia.org/wiki/Foo_Lake");
-                Ok(out)
+                    "#)
+                    .execute()
             });
 
         // and set the browser off to do those things
@@ -258,6 +263,7 @@ return h1.innerText;
         core.run(fin).unwrap();
     }
 
+    println!("4. OUT {:?}", ret_value);
     let h1_string = ret_value.as_string().unwrap();
     eprintln!("done: {:?}", h1_string);
 
