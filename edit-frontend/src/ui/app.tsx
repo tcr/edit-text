@@ -503,8 +503,8 @@ class EditText extends React.Component {
   }
 }
 
-export function start() {
-// export function start_standalone() {
+// export function start() {
+export function start_standalone() {
   let a = document.createElement('pre');
   a.id = "mdpreview";
   document.body.appendChild(a);
@@ -529,8 +529,8 @@ export function start() {
   });
 }
 
-// export function start() {
-export function start_app() {
+export function start() {
+// export function start_app() {
   let server: ServerImpl;
   let client: ClientImpl;
 

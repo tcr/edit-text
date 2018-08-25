@@ -73,27 +73,27 @@ function curto(
   }
 
   // Normalize leading spans to be their predecessor text node...
-  while (el !== null && textOffset === null) {
-    if (isElement(el) && isBlock(el)) {
-      break;
-    }
+  // while (el !== null && textOffset === null) {
+  //   if (isElement(el) && isBlock(el)) {
+  //     break;
+  //   }
 
-    if (isTextNode(el)) {
-      el = el.parentNode!;
-      continue;
-    }
+  //   if (isTextNode(el)) {
+  //     el = el.parentNode!;
+  //     continue;
+  //   }
 
-    let prev: Node | null = el!.previousSibling;
-    if (prev === null) {
-      el = el!.parentNode!;
-    } else if (isSpan(prev)) {
-      el = prev.firstChild!;
-      textOffset = charLength(el!);
-      break;
-    } else {
-      el = prev;
-    }
-  }
+  //   let prev: Node | null = el!.previousSibling;
+  //   if (prev === null) {
+  //     el = el!.parentNode!;
+  //   } else if (isSpan(prev)) {
+  //     el = prev.firstChild!;
+  //     textOffset = charLength(el!);
+  //     break;
+  //   } else {
+  //     el = prev;
+  //   }
+  // }
 
   // Is our cursor at a group or at a char?
   let cur: CurSpan = [
@@ -105,11 +105,16 @@ function curto(
   ];
 
   // What is the character (or element) offset?
-  if (textOffset !== null && textOffset > 1) {
+  if (textOffset !== null && textOffset > 0) {
     cur.unshift({
       "CurSkip": textOffset,
     });
   }
+
+  if (isTextNode(el) && isSpan(el.parentNode)) {
+    el = el.parentNode;
+  }
+  // TODO if isTextNode but !isSpan there should be an invariant thrown
 
   function place_skip(cur: CurSpan, value: number) {
     if ('CurSkip' in cur[0]) {
@@ -257,6 +262,7 @@ export class Editor extends React.Component {
 
     // Only support text elements.
     if (pos !== null) {
+      // console.log('### SUBMITTED:', JSON.stringify(resolveCursorFromPosition(pos.textNode, pos.offset)));
       this.props.client.nativeCommand(commands.CursorTarget(
         resolveCursorFromPosition(pos.textNode, pos.offset),
       ));
@@ -379,9 +385,10 @@ export class Editor extends React.Component {
         let current = document.querySelector('div.current[data-tag="caret"]');
         if (current !== null) {
           let rect = current.getBoundingClientRect();
-          let y = (UP ? rect.top : rect.bottom) + window.scrollY;
-          let x = rect.right + window.scrollX;
+          let y = (UP ? rect.top : rect.bottom);
+          let x = rect.right;
 
+          // Attempt to get the text node we are closest to
           let first = util.textNodeAtPoint(x + 1, y);
           // In doc "# Most of all\n\nThe world is a place where parts of wholes are perscribed"
           // When you hit the down key for any character in the first line, it works,
@@ -391,9 +398,10 @@ export class Editor extends React.Component {
           if (first == null) {
             first = util.textNodeAtPoint(x - 2, y - 2);
           }
+
           if (first !== null) { // Or we have nothing to compare to and we'll loop all day
             while (true) {
-              // Stepp a reasonable increment in each direction.
+              // Step a reasonable increment in each direction.
               const STEP = 10;
               y += UP ? -STEP : STEP;
 
@@ -404,6 +412,7 @@ export class Editor extends React.Component {
                 break;
               }
               if (root !== el) {
+                // TODO shold this just reuse first here?
                 let caret = util.textNodeAtPoint(x, y);
                 // console.log('attempted caret at', x, y, caret);
                 if (caret !== null && (first.textNode !== caret.textNode || first.offset !== caret.offset)) { // TODO would this comparison even work lol

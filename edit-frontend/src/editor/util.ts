@@ -1,5 +1,6 @@
 // Web utilities
 
+// x and y are relative to the viewport
 export function textNodeAtPoint(
   x: number,
   y: number,
@@ -7,11 +8,17 @@ export function textNodeAtPoint(
   let textNode, offset;
   if ((<any>document).caretPositionFromPoint) {
     let range = (<any>document).caretPositionFromPoint(x, y);
+    if (!range) {
+      return null;
+    }
     textNode = range.offsetNode;
     offset = range.offset;
   } else if (document.caretRangeFromPoint) {
     let range = (<any>document).caretRangeFromPoint(x, y);
-    console.log('HELP2', textNode, offset);
+    if (!range) {
+      return null;
+    }
+    // console.log('HELP2', textNode, offset);
     textNode = range.startContainer;
     offset = range.startOffset;
   } else {

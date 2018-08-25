@@ -25,7 +25,7 @@ fn is_caret(attrs: &Attrs, client_id: Option<&str>, focus: bool) -> bool {
 }
 
 // Is any caret
-fn is_any_caret(attrs: &Attrs) -> bool {
+pub fn is_any_caret(attrs: &Attrs) -> bool {
     attrs["tag"] == "caret"
 }
 
@@ -138,13 +138,25 @@ impl ReverseCaretStepper {
     }
 
     pub fn is_valid_caret_pos(&self) -> bool {
-        if let Some(DocChars(..)) = self.doc.unhead() {
+        // Skip over all preceding carets so we can identify the previous node
+        // more easily.
+        // TODO can this clone be avoided?
+        let mut doc2 = self.doc.clone();
+        while let Some(DocGroup(ref attrs, _)) = doc2.unhead() {
+            if is_any_caret(attrs) {
+                doc2.unskip(1);
+            } else {
+                break;
+            }
+        }
+
+        if let Some(DocChars(..)) = doc2.unhead() {
             return true;
-        } else if self.doc.unhead().is_none() {
-            if self.doc.stack.is_empty() {
+        } else if doc2.unhead().is_none() {
+            if doc2.stack.is_empty() {
                 return false;
             }
-            if let Some(DocGroup(ref attrs, _)) = self.doc.clone().unenter().head() {
+            if let Some(DocGroup(ref attrs, _)) = doc2.clone().unenter().head() {
                 if is_block(attrs) {
                     return true;
                 }
@@ -428,12 +440,13 @@ impl Walker {
                 break;
             }
         }
+        // console_log!("(^^^) (D) {:?}", stepper.doc);
         // ...or else restore the stepper again.
         if !stepper.is_valid_caret_pos() {
             stepper = rstepper.rev();
         }
 
-        // console_log!("(^^^) (B) {:?}", stepper.doc);
+        // console_log!("(^^^) (E) {:?}", stepper.doc);
 
         Walker {
             original_doc: doc.clone(),

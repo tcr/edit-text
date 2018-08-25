@@ -121,13 +121,7 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
                 let op_next = delete_char(ctx2)?;
                 return Ok(OT::compose(&op, &op_next));
             } else {
-                // Apply next op and compose.
-                let ctx2 = ActionContext {
-                    doc: OT::apply(&ctx.doc, &op),
-                    client_id: ctx.client_id.to_owned(),
-                };
-                let (_, op_next) = caret_clear(ctx2, Pos::Focus)?;
-                return Ok(OT::compose(&op, &op_next));
+                return Ok(op);
             }
         }
     }
@@ -842,11 +836,13 @@ pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan, focus: bool) -> Result<Op
     // console_log!("-----> {:?}", cur);
     let walker = Walker::to_cursor(&ctx.doc, cur);
     let pos_3 = Some(walker.caret_pos());
+    // console_log!("---@@@@@@@@@@ {:?}", pos_3);
     // if pos_1 == pos_3 {
     //     // Redundant
     //     return Ok(op_span!([], []));
     // }
     let mut writer = walker.to_writer();
+    // console_log!("-[[[\n{:?}\n\n]]]", writer.add);
 
     writer.del.exit_all();
 
@@ -858,9 +854,10 @@ pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan, focus: bool) -> Result<Op
     });
     writer.add.exit_all();
 
+
     let op_3 = writer.result();
 
-    // console_log!("-----<< {:?}", op_3);
+    // console_log!("-----op_3: {:?}", op_3);
 
     // println!("------------->\n{:?}\n\n\nAAAAAA\n-------->", op_2);
 
