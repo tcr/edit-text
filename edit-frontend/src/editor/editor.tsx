@@ -388,18 +388,18 @@ export class Editor extends React.Component {
         let current = document.querySelector('div.current[data-tag="caret"]');
         if (current !== null) {
           let rect = current.getBoundingClientRect();
-          let y = (UP ? rect.top : rect.bottom);
+          let y = (rect.top + rect.bottom) / 2;
           let x = rect.right;
 
           // Attempt to get the text node we are closest to
-          let first = util.textNodeAtPoint(x + 1, y);
+          let first = util.textNodeAtPoint(x, y);
           // In doc "# Most of all\n\nThe world is a place where parts of wholes are perscribed"
           // When you hit the down key for any character in the first line, it works,
           // until the last character (end of the line), where if you hit the down key it 
           // no longer works and the above turns null. Instead, this check once for the main case,
           // check at this offset for the edge case is weird but works well enough.
           if (first == null) {
-            first = util.textNodeAtPoint(x - 2, y - 2);
+            first = util.textNodeAtPoint(x - 2, y);
           }
 
           if (first !== null) { // Or we have nothing to compare to and we'll loop all day
