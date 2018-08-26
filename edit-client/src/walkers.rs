@@ -45,7 +45,14 @@ pub enum Pos {
 
 impl CaretStepper {
     pub fn new(doc: DocStepper) -> CaretStepper {
-        CaretStepper { doc, caret_pos: -1 }
+        // Start at caret pos 0
+        let mut stepper = CaretStepper { doc, caret_pos: -1 };
+        while stepper.caret_pos != 0 {
+            if stepper.next().is_none() {
+                break;
+            }
+        }
+        stepper
     }
 
     pub fn rev(self) -> ReverseCaretStepper {
@@ -154,6 +161,7 @@ impl ReverseCaretStepper {
             return true;
         } else if doc2.unhead().is_none() {
             if doc2.stack.is_empty() {
+                // end of document, bail
                 return false;
             }
             if let Some(DocGroup(ref attrs, _)) = doc2.clone().unenter().head() {
@@ -200,6 +208,9 @@ impl Iterator for ReverseCaretStepper {
 
         if self.is_valid_caret_pos() {
             self.caret_pos -= 1;
+        } else if let (None, true) = (self.doc.unhead(), self.doc.stack.is_empty()) {
+            // Fix caret_pos to be -1 when we reach the end.
+            self.caret_pos = -1;
         }
 
         Some(())

@@ -140,6 +140,8 @@ pub fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
 
     // See if we can collapse this and the previous block or list item.
     if at_start_of_block {
+        // console_log!("at_start {:?} {:?}", caret_pos, block_walker.caret_pos());
+
         // Check for first block in a list item.
         let mut parent_walker = walker.clone();
         assert!(parent_walker.back_block());
@@ -321,7 +323,7 @@ pub fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
 pub fn add_string(ctx: ActionContext, input: &str) -> Result<Op, Error> {
     // @HEHEHE
     
-    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, false);
+    let walker = Walker::to_caret_position(&ctx.doc, &ctx.client_id, Pos::Focus)?;
 
     // Style map.
     let mut styles = hashmap!{ Style::Normie => None };

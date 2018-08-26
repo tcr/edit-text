@@ -39,12 +39,13 @@ export function InsertText(
   }
 }
 
-export function CursorAnchor(
-  curspan: [any],
+export function Cursor(
+  focus: [any] | null,
+  anchor: [any] | null,
 ) {
   return {
-    tag: 'CursorAnchor' as 'CursorAnchor',
-    'CursorAnchor': curspan,
+    tag: 'Cursor' as 'Cursor',
+    'Cursor': [focus, anchor],
   }
 }
 
@@ -98,8 +99,7 @@ export type Command
   | ReturnType<typeof RenameGroup>
   | ReturnType<typeof Keypress>
   | ReturnType<typeof Character>
-  | ReturnType<typeof CursorAnchor>
-  | ReturnType<typeof CursorTarget>
+  | ReturnType<typeof Cursor>
   | ReturnType<typeof Button>
   | ReturnType<typeof Load>
   | ReturnType<typeof Connect>

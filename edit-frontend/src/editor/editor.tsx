@@ -263,12 +263,15 @@ export class Editor extends React.Component {
     // Only support text elements.
     if (pos !== null) {
       // console.log('### SUBMITTED:', JSON.stringify(resolveCursorFromPosition(pos.textNode, pos.offset)));
-      this.props.client.nativeCommand(commands.CursorTarget(
-        resolveCursorFromPosition(pos.textNode, pos.offset),
-      ));
       if (drop_anchor) {
-        this.props.client.nativeCommand(commands.CursorAnchor(
+        this.props.client.nativeCommand(commands.Cursor(
           resolveCursorFromPosition(pos.textNode, pos.offset),
+          resolveCursorFromPosition(pos.textNode, pos.offset),
+        ));
+      } else {
+        this.props.client.nativeCommand(commands.Cursor(
+          resolveCursorFromPosition(pos.textNode, pos.offset),
+          null
         ));
       }
     } else {

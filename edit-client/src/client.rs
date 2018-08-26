@@ -288,13 +288,26 @@ fn native_command<C: ClientImpl>(client: &mut C, req: FrontendToUserCommand) -> 
             let cursors = random_cursor(&client.state().client_doc.doc)?;
             let idx = (pos * (cursors.len() as f64)) as usize;
 
-            client.client_op(|doc| cur_to_caret(doc, &cursors[idx], false))?;
+            client.client_op(|doc| cur_to_caret(doc, &cursors[idx], true))?;
         }
-        FrontendToUserCommand::CursorAnchor(cur) => {
-            client.client_op(|doc| cur_to_caret(doc, &cur, false))?;
-        }
-        FrontendToUserCommand::CursorTarget(cur) => {
-            client.client_op(|doc| cur_to_caret(doc, &cur, true))?;
+        FrontendToUserCommand::Cursor(focus, anchor) => {
+            match (focus, anchor) {
+                (Some(focus), Some(anchor)) => {
+                    client.client_op(|mut ctx| {
+                        let op = cur_to_caret(ctx.clone(), &focus, true)?;
+                        ctx.doc = OT::apply(&ctx.doc, &op);
+                        let op2 = cur_to_caret(ctx, &anchor, false)?;
+                        Ok(OT::compose(&op, &op2))
+                    })?;
+                }
+                (Some(focus), None) => {
+                    client.client_op(|doc| cur_to_caret(doc, &focus, true))?;
+                }
+                (None, Some(anchor)) => {
+                    client.client_op(|doc| cur_to_caret(doc, &anchor, false))?;
+                }
+                (None, None) => {}, // ???
+            }
         }
         FrontendToUserCommand::Monkey(setting) => {
             println!("received monkey setting: {:?}", setting);
@@ -366,8 +379,9 @@ pub trait ClientImpl {
                     let cursors = random_cursor(&self.state().client_doc.doc)?;
                     let idx = (pos * (cursors.len() as f64)) as usize;
 
-                    value = Task::FrontendToUserCommand(FrontendToUserCommand::CursorAnchor(
-                        cursors[idx].clone(),
+                    value = Task::FrontendToUserCommand(FrontendToUserCommand::Cursor(
+                        Some(cursors[idx].clone()),
+                        None,
                     ));
                 }
 
@@ -402,11 +416,11 @@ pub trait ClientImpl {
 
                         // If the caret doesn't exist or was deleted, reinitialize it.
                         if !self
-                            .with_action_context(|ctx| Ok(has_caret(ctx, false)))
+                            .with_action_context(|ctx| Ok(has_caret(ctx, true)))
                             .ok()
                             .unwrap_or(true)
                         {
-                            println!("add caret");
+                            // console_log!("add caret");
                             self.client_op(|doc| init_caret(doc)).unwrap();
                         }
 
@@ -459,11 +473,11 @@ pub trait ClientImpl {
 
                         // If the caret doesn't exist or was deleted, reinitialize it.
                         if !self
-                            .with_action_context(|ctx| Ok(has_caret(ctx, false)))
+                            .with_action_context(|ctx| Ok(has_caret(ctx, true)))
                             .ok()
                             .unwrap_or(true)
                         {
-                            println!("add caret");
+                            // console_log!("adding caret after last op");
                             self.client_op(|doc| init_caret(doc)).unwrap();
                         }
 
