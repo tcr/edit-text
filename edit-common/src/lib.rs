@@ -85,11 +85,13 @@ pub fn doc_as_html_inner(
                         data-tag={}
                         data-client={}
                         data-anchor={}
+                        data-focus={}
                         class={}
                     >"#,
                     serde_json::to_string(attrs.get("tag").unwrap_or(&"".to_string())).unwrap(),
                     serde_json::to_string(attrs.get("client").unwrap_or(&"".to_string())).unwrap(),
                     serde_json::to_string(attrs.get("anchor").unwrap_or(&"".to_string())).unwrap(),
+                    serde_json::to_string(attrs.get("focus").unwrap_or(&"".to_string())).unwrap(),
                     serde_json::to_string(attrs.get("class").unwrap_or(&"".to_string())).unwrap(),
                 ));
 

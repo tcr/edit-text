@@ -222,7 +222,22 @@ body.theme-column .edit-text {
     div {
         margin: 12px 0;
         position: relative;
-        min-height: 14px;
+    }
+
+    // All blocks
+    div[data-tag="h1"],
+    div[data-tag="h2"],
+    div[data-tag="h3"],
+    div[data-tag="h4"],
+    div[data-tag="h5"],
+    div[data-tag="h6"],
+    div[data-tag="p"],
+    div[data-tag="pre"],
+    div[data-tag="html"], {
+        // All blocks should be minimum the height of one char.
+        &:empty::after {
+            content: " ";
+        }
     }
 
     * {

@@ -42,7 +42,7 @@ pub type StyleSet = HashSet<Style>;
 /// Abstraction for String that allows a limited set of operations
 /// with good optimization. (Or that's the idea.)
 #[derive(Clone, Debug)]
-pub struct DocString(Arc<String>, Option<Range<usize>>, Option<StyleMap>);
+pub struct DocString(Arc<String>, Option<Range<usize>>, Option<Arc<StyleMap>>);
 
 impl DocString {
     pub fn from_string(input: String) -> DocString {
@@ -54,11 +54,11 @@ impl DocString {
     }
 
     pub fn from_string_styled(input: String, styles: StyleMap) -> DocString {
-        DocString(Arc::new(input), None, Some(styles))
+        DocString(Arc::new(input), None, Some(Arc::new(styles)))
     }
 
     pub fn from_str_styled(input: &str, styles: StyleMap) -> DocString {
-        DocString(Arc::new(input.to_owned()), None, Some(styles))
+        DocString(Arc::new(input.to_owned()), None, Some(Arc::new(styles)))
     }
 
     // TODO audit use of this
@@ -70,30 +70,29 @@ impl DocString {
         }
     }
 
-    pub fn styles(&self) -> Option<&StyleMap> {
-        self.2.as_ref()
-    }
-
-    pub fn styles_mut(&mut self) -> Option<&mut StyleMap> {
-        self.2.as_mut()
+    pub fn styles(&self) -> Option<Arc<StyleMap>> {
+        self.2.clone()
     }
 
     pub fn remove_styles(&mut self, styles: &StyleSet) {
         if let &mut Some(ref mut self_styles) = &mut self.2 {
-            *self_styles = self_styles
+            let mut new_styles: StyleMap = (**self_styles).clone();
+            *self_styles = Arc::new(new_styles
                 .drain()
                 .filter(|(ref x, _)| !styles.contains(x))
-                .collect();
+                .collect());
         } else {
             // no-op
         }
     }
 
     pub fn extend_styles(&mut self, styles: &StyleMap) {
-        if let &mut Some(ref mut self_styles) = &mut self.2 {
-            self_styles.extend(styles.iter().map(|(a, b)| (a.to_owned(), b.to_owned())));
+        if let &mut Some(ref self_styles) = &mut self.2 {
+            let mut new_styles: StyleMap = (**self_styles).clone();
+            new_styles.extend(styles.iter().map(|(a, b)| (a.to_owned(), b.to_owned())));
+            self.2 = Some(Arc::new(new_styles));
         } else {
-            self.2 = Some(styles.to_owned());
+            self.2 = Some(Arc::new(styles.to_owned()));
         }
     }
 
@@ -167,7 +166,7 @@ impl Serialize for DocString {
         if let &Some(ref value) = &self.2 {
             let mut s = serializer.serialize_seq(Some(2))?;
             s.serialize_element(self.as_str())?;
-            s.serialize_element(value)?;
+            s.serialize_element(Arc::as_ref(value))?;
             s.end()
         } else {
             serializer.serialize_str(self.as_str())

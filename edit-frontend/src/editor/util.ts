@@ -1,5 +1,6 @@
 // Web utilities
 
+// x and y are relative to the viewport
 export function textNodeAtPoint(
   x: number,
   y: number,
@@ -7,11 +8,17 @@ export function textNodeAtPoint(
   let textNode, offset;
   if ((<any>document).caretPositionFromPoint) {
     let range = (<any>document).caretPositionFromPoint(x, y);
+    if (!range) {
+      return null;
+    }
     textNode = range.offsetNode;
     offset = range.offset;
   } else if (document.caretRangeFromPoint) {
     let range = (<any>document).caretRangeFromPoint(x, y);
-    console.log('HELP2', textNode, offset);
+    if (!range) {
+      return null;
+    }
+    // console.log('HELP2', textNode, offset);
     textNode = range.startContainer;
     offset = range.startOffset;
   } else {
@@ -39,7 +46,7 @@ export function matchesSelector(
     (<any>Element.prototype).msMatchesSelector || 
     (<any>Element.prototype).oMatchesSelector || 
     (<any>Element.prototype).webkitMatchesSelector ||
-    function(s) {
+    function(s: any) {
         var matches = (this.document || this.ownerDocument).querySelectorAll(s),
             i = matches.length;
         while (--i >= 0 && matches.item(i) !== this) {}
@@ -47,18 +54,4 @@ export function matchesSelector(
     };
 
   return matches.call(el, selector);
-}
-
-export class HashState {
-  static get(): Set<String> {
-    return new Set((location.hash || '')
-      .replace(/^#/, '')
-      .split(',')
-      .map(x => x.replace(/^\s+|\s+$/g, ''))
-      .filter(x => x.length));
-  }
-
-  static set(input: Set<String>) {
-    location.hash = Array.from(input).join(',');
-  }
 }

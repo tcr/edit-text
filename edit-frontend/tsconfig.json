@@ -6,7 +6,8 @@
       "jsx": "react",
       "allowSyntheticDefaultImports": true,
       "allowJs": true,
-      "strictNullChecks": true
+      "strictNullChecks": true,
+      "noImplicitAny": true,
     }
 }
   

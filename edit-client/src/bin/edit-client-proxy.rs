@@ -221,7 +221,7 @@ fn setup_client(
     let (tx_sync, rx_sync) = unbounded();
 
     // Initialize logger.
-    ::crate::log::log_init(tx_sync.clone());
+    crate::log::log_init(tx_sync.clone());
 
     let monkey = Arc::new(AtomicBool::new(false));
     let alive = Arc::new(AtomicBool::new(true));
@@ -265,7 +265,7 @@ fn setup_client(
         .name(format!("setup_client({})", name))
         .spawn::<_, Result<(), Error>>(move || {
             // TODO can we inherit thread locals??
-            ::crate::log::log_init(tx_sync_2.clone());
+            crate::log::log_init(tx_sync_2.clone());
 
             while let Ok(task) = rx_task.recv() {
                 client.handle_task(task)?;

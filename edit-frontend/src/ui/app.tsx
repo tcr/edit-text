@@ -10,8 +10,10 @@ import * as Raven from 'raven-js';
 import * as commands from '../editor/commands';
 import * as route from './route';
 import { Editor } from '../editor/editor';
-import { Network, ProxyNetwork, WasmNetwork } from './network';
-import { ClientImpl } from '../editor/client';
+import { AppServer, ProxyClient } from './sync';
+import { NullServer, ClientImpl, ServerImpl } from '../editor/network';
+import { WasmClient, convertMarkdownToHtml, convertMarkdownToDoc } from '../editor/wasm';
+import * as index from '../index';
 
 declare var CONFIG: any;
 
@@ -20,16 +22,20 @@ if (!CONFIG.configured) {
   alert('The window.CONFIG variable was not configured by the server!')
 }
 
-const ROOT_QUERY = '.edit-text';
-
-function UiElement(props, element, i = Math.random()) {
+function UiElement(
+  props: {
+    editor: EditorFrame,
+  },
+  element: any,
+  i = Math.random(),
+) {
   if ('Button' in element) {
     let button = element.Button;
     return (
       <button
         key={i}
         onClick={
-          () => props.editor.network.nativeCommand(commands.Button(button[1]))
+          () => props.editor.client.nativeCommand(commands.Button(button[1]))
         }
         className={button[2] ? 'active' : ''}
       >{button[0]}</button>
@@ -37,7 +43,7 @@ function UiElement(props, element, i = Math.random()) {
   } else if ('ButtonGroup' in element) {
     return (
       <div className="menu-buttongroup" key={i}>
-        {element.ButtonGroup.map((x, i) => UiElement(props, x, i))}
+        {element.ButtonGroup.map((x: any, i: number) => UiElement(props, x, i))}
       </div>
     )
   }
@@ -45,7 +51,10 @@ function UiElement(props, element, i = Math.random()) {
 }
 
 function NativeButtons(
-  props
+  props: {
+    editor: EditorFrame,
+    buttons: Array<any>
+  },
 ) {
   if (!props.buttons.length) {
     return (
@@ -93,7 +102,7 @@ mutation ($id: String!, $markdown: String!) { createPage(id: $id, markdown: $mar
 class MarkdownModal extends React.Component {
   props: {
     markdown: string,
-    onModal: Function,
+    onModal: (modal: React.ReactNode) => void,
   };
 
   state = {
@@ -142,7 +151,7 @@ class LocalButtons extends React.Component {
   props: {
     editorID: string,
     editor: any,
-    onModal: Function,
+    onModal: (modal: React.ReactNode) => void,
   };
 
   state = {};
@@ -202,7 +211,7 @@ function Modal(props: any) {
 
 
 export type NoticeProps = {
-  element: React.ReactElement<any>,
+  element: React.ReactNode,
   level: 'notice' | 'error',
 };
 
@@ -219,13 +228,15 @@ function FooterNotice(props: {
   );
 }
 
+type EditorFrameProps = {
+  network: ServerImpl,
+  client: ClientImpl,
+  body: string,
+};
 
 // Initialize child editor.
 export class EditorFrame extends React.Component {
-  props: {
-    network: Network & ClientImpl,
-    body: string,
-  };
+  props: EditorFrameProps;
 
   state: {
     body: string,
@@ -236,22 +247,25 @@ export class EditorFrame extends React.Component {
   };
 
   KEY_WHITELIST: any;
-  network: Network & ClientImpl;
+  network: ServerImpl;
+  client: ClientImpl;
   markdown: string;
 
   constructor(
-    props,
+    props: EditorFrameProps,
   ) {
     super(props);
 
     this.KEY_WHITELIST = [];
 
     this.network = props.network;
-    this.network.onNativeMessage = this.onNativeMessage.bind(this);
+    this.client = props.client;
+
+    this.client.onNativeMessage = this.onClientToFrontendCommand.bind(this);
 
     // Background colors.
     // TODO make these actionable on this object right?
-    this.network.onNativeClose = function () {
+    this.client.onNativeClose = function () {
       document.body.style.background = 'red';
       console.error('!!! client close');
     };
@@ -300,7 +314,7 @@ export class EditorFrame extends React.Component {
 
           <div id="edit-text-outer">
             <Editor 
-              network={this.props.network} 
+              client={this.props.client} 
               KEY_WHITELIST={this.KEY_WHITELIST}
               content={this.state.body}
               editorID={this.state.editorID}
@@ -332,7 +346,7 @@ export class EditorFrame extends React.Component {
   }
 
   // Received message on native socket
-  onNativeMessage(parse: any) {
+  onClientToFrontendCommand(parse: any) {
     const editor = this;
 
     if (parse.Init) {
@@ -362,7 +376,7 @@ export class EditorFrame extends React.Component {
 
       // Update the key list in-place.
       editor.KEY_WHITELIST.splice.apply(editor.KEY_WHITELIST,
-        [0, 0].concat(parse.Controls.keys.map(x => ({
+        [0, 0].concat(parse.Controls.keys.map((x: any) => ({
           keyCode: x[0],
           metaKey: x[1],
           shiftKey: x[2],
@@ -382,7 +396,7 @@ export class EditorFrame extends React.Component {
 }
 
 
-function multiConnect(network: Network & ClientImpl) {
+function multiConnect(client: ClientImpl) {
   // Blur/Focus classes.
   window.addEventListener('focus', () => {
     document.body.classList.remove('blurred');
@@ -404,17 +418,141 @@ function multiConnect(network: Network & ClientImpl) {
 
     if ('Monkey' in msg) {
       // TODO reflect this in the app
-      network.nativeCommand(commands.Monkey(msg.Monkey));
+      client.nativeCommand(commands.Monkey(msg.Monkey));
     }
   };
 }
 
+
+class EditText extends React.Component {
+  props: {
+    client: WasmClient,
+    markdown: string,
+    onChange: Function | null,
+  };
+
+  state = {
+    content: convertMarkdownToHtml(this.props.markdown),
+    whitelist: [],
+  };
+
+  render() {
+    return (
+      <Editor
+        editorID={'$local'}
+        disabled={false}
+        client={this.props.client}
+        content={this.state.content}
+        KEY_WHITELIST={this.state.whitelist}
+      />
+    );
+  }
+
+  componentDidMount() {
+    this.props.client.onNativeMessage = (parse: any) => {
+      if (parse.Init) {
+        // let editorID = parse.Init;
+  
+        // this.setState({
+        //   editorID,
+        // });
+  
+        // console.info('Editor "%s" connected.', editorID);
+  
+        // // Log the editor ID.
+        // Raven.setExtraContext({
+        //   editor_id: editorID,
+        // });
+      }
+  
+      else if (parse.Update) {
+        // Update page content
+        this.setState({
+          content: parse.Update[0],
+        });
+
+        if (this.props.onChange !== null) {
+          this.props.onChange(parse.Update[1]);
+        }
+      }
+
+      else if (parse.Controls) {
+        // console.log('SETUP CONTROLS', parse.Controls);
+  
+        // Update the key list in-place.
+        this.setState({
+          whitelist: parse.Controls.keys.map((x: any) => ({
+            keyCode: x[0],
+            metaKey: x[1],
+            shiftKey: x[2],
+          })),
+        });
+      }
+    };
+
+    this.props.client
+      .connect(() => {})
+      .then(() => {
+        console.log('Loading static editor.');
+        this.props.client.wasmClient.command(JSON.stringify({
+          SyncToUserCommand: {
+            Init: ["$local", convertMarkdownToDoc(this.props.markdown), 100],
+          } 
+        }));
+      });
+  }
+}
+
+// export function start() {
+export function start_standalone() {
+  let a = document.createElement('pre');
+  a.id = "mdpreview";
+  document.body.appendChild(a);
+
+  index.getWasmModule()
+  .then(() => {
+    let client = new WasmClient();
+
+    // Create the editor frame.
+    ReactDOM.render(
+      <EditText
+        client={client}
+        markdown={"# Most of all\n\nThe world is a place where parts of wholes are perscribred"}
+        onChange={(markdown: string) => {
+          // TODO not visible until styles are encapsulated.
+          // TODO edit-text needs a markdown viewer split pane :P.
+          a.innerText = markdown;
+        }}
+      />,
+      document.querySelector('#content')!,
+    );
+  });
+}
+
 export function start() {
-  let network = CONFIG.wasm ? new WasmNetwork() : new ProxyNetwork();
+// export function start_app() {
+  let server: ServerImpl;
+  let client: ClientImpl;
+
+  // Wasm and Proxy implementations
+  if (CONFIG.wasm) {
+    let wasmClient = new WasmClient();
+    let wasmServer = new AppServer();
+
+    // Link them.
+    wasmClient.server = wasmServer;
+    wasmServer.client = wasmClient;
+
+    client = wasmClient;
+    server = wasmServer;
+  } else {
+    client = new ProxyClient();
+    server = new NullServer();
+  }
 
   // Connect to parent window (if exists).
   if (window.parent != window) {
-    multiConnect(network);
+    multiConnect(client);
   }
 
   // TODO move this to a better logical location and manage local storage better
@@ -434,10 +572,11 @@ export function start() {
   // document.body.classList.add('editing-blurred');
 
   // Create the editor frame.
-  let editorFrame;
+  let editorFrame: EditorFrame | null;
   ReactDOM.render(
     <EditorFrame
-      network={network}
+      network={server}
+      client={client}
       body={document.querySelector('.edit-text')!.innerHTML}
       ref={c => editorFrame = c}
     />,
@@ -445,7 +584,7 @@ export function start() {
     () => {
       // Default notification
       if (!sessionStorage.getItem("its-only-funny-once")) {
-        editorFrame.showNotification({
+        editorFrame!.showNotification({
           element: (<div>
             Check out <a href="http://github.com/tcr/edit-text">edit-text</a> on Github for more information.
           </div>),
@@ -455,8 +594,19 @@ export function start() {
       }
 
       // Connect to remote sockets.
-      network.nativeConnect(editorFrame)
-        .then(() => network.syncConnect(editorFrame));
+      // TODO why is nativeConnect an error?
+      client
+        .connect(() => {
+          // TODO
+        })
+        .then(() => {
+          server.syncConnect((message: React.ReactNode) => {
+            editorFrame!.showNotification({
+              element: message,
+              level: 'error',
+            });
+          });
+        });
     }
   );
 }

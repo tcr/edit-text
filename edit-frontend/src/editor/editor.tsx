@@ -1,8 +1,9 @@
-import * as commands from './commands';
-import * as util from './util';
-import { ClientImpl } from './client';
 import * as React from 'react';
 import copy from 'clipboard-copy';
+
+import * as commands from './commands';
+import * as util from './util';
+import { ClientImpl } from './network';
 
 const ROOT_SELECTOR = '.edit-text';
 
@@ -29,6 +30,12 @@ function isBlock(
   return false;
 }
 
+function isEmptyBlock(
+  el: Node | null
+) {
+  return isBlock(el) && (el as Element).querySelector('span') === null;
+}
+
 function isSpan(
   el: Node | null,
 ) {
@@ -53,6 +60,10 @@ function charLength(
   }
 }
 
+export type CurElement = any;
+
+export type CurSpan = Array<CurElement>;
+
 function curto(
   el: Node | null,
   textOffset: number | null = null,
@@ -68,30 +79,30 @@ function curto(
   }
 
   // Normalize leading spans to be their predecessor text node...
-  while (el !== null && textOffset === null) {
-    if (isElement(el) && isBlock(el)) {
-      break;
-    }
+  // while (el !== null && textOffset === null) {
+  //   if (isElement(el) && isBlock(el)) {
+  //     break;
+  //   }
 
-    if (isTextNode(el)) {
-      el = el.parentNode!;
-      continue;
-    }
+  //   if (isTextNode(el)) {
+  //     el = el.parentNode!;
+  //     continue;
+  //   }
 
-    let prev = el!.previousSibling;
-    if (prev === null) {
-      el = el!.parentNode!;
-    } else if (isSpan(prev)) {
-      el = prev.firstChild!;
-      textOffset = charLength(el!);
-      break;
-    } else {
-      el = prev;
-    }
-  }
+  //   let prev: Node | null = el!.previousSibling;
+  //   if (prev === null) {
+  //     el = el!.parentNode!;
+  //   } else if (isSpan(prev)) {
+  //     el = prev.firstChild!;
+  //     textOffset = charLength(el!);
+  //     break;
+  //   } else {
+  //     el = prev;
+  //   }
+  // }
 
   // Is our cursor at a group or at a char?
-  let cur: any = [
+  let cur: CurSpan = [
     isElement(el) ? {
       'CurGroup': null
     } : {
@@ -100,13 +111,18 @@ function curto(
   ];
 
   // What is the character (or element) offset?
-  if (textOffset !== null && textOffset > 1) {
+  if (textOffset !== null && textOffset > 0) {
     cur.unshift({
-      "CurSkip": textOffset - 1,
+      "CurSkip": textOffset,
     });
   }
 
-  function place_skip(cur, value) {
+  if (isTextNode(el) && isSpan(el.parentNode)) {
+    el = el.parentNode;
+  }
+  // TODO if isTextNode but !isSpan there should be an invariant thrown
+
+  function place_skip(cur: CurSpan, value: number) {
     if ('CurSkip' in cur[0]) {
       cur[0].CurSkip += value;
     } else {
@@ -167,7 +183,13 @@ function resolveCursorFromPositionInner(
     return resolveCursorFromPosition((node as Text), charLength(node));
   } else {
     // TODO can this be made simpler?
-    // Skip empty elements.
+    
+    // Enter empty block nodes.
+    if (isEmptyBlock(node)) {
+      return curto(node);
+    }
+
+    // Skip empty groups.
     if (node.childNodes.length == 0) {
       return resolveCursorFromPositionInner(node.previousSibling, parent);
     }
@@ -202,8 +224,8 @@ function resolveCursorFromPosition(
 export class Editor extends React.Component {
   props: {
     content: string,
-    network: ClientImpl,
-    KEY_WHITELIST: any,
+    client: ClientImpl,
+    KEY_WHITELIST: Array<any>,
     editorID: string,
     disabled: boolean,
   };
@@ -236,7 +258,7 @@ export class Editor extends React.Component {
     this.mouseDown = false;
   }
 
-  onMouseMove(e: MouseEvent, anchor: boolean = false) {
+  onMouseMove(e: MouseEvent, drop_anchor: boolean = false) {
     if (!this.mouseDown) {
       return;
     }
@@ -246,22 +268,30 @@ export class Editor extends React.Component {
     }
     this.mouseDownActive = true;
 
-    (window as any).EH = e;
+    // (window as any).EH = e;
 
-    let pos = util.textNodeAtPoint(e.clientX, e.clientY);
+    let text = util.textNodeAtPoint(e.clientX, e.clientY);
+    let target = document.elementFromPoint(e.clientX, e.clientY);
 
-    // Only support text elements.
-    if (pos !== null) {
-      if (anchor) {
-        this.props.network.nativeCommand(commands.CursorAnchor(
-          resolveCursorFromPosition(pos.textNode, pos.offset),
-        ));
+    let dest = null;
+    if (text !== null) {
+      // We can focus on all text nodes.
+      dest = resolveCursorFromPosition(text.textNode, text.offset);
+    } else if (isEmptyBlock(target)) {
+      // Or empty elements, which don't have a rooting text node.
+      dest = curto(target as any);
+    }
+
+    // Generate the native commands.
+    // console.log('### SUBMITTED:', JSON.stringify(resolveCursorFromPosition(pos.textNode, pos.offset)));
+    if (dest !== null) {
+      if (drop_anchor) {
+        this.props.client.nativeCommand(commands.Cursor(dest, dest));
       } else {
-        this.props.network.nativeCommand(commands.CursorTarget(
-          resolveCursorFromPosition(pos.textNode, pos.offset),
-        ));
+        this.props.client.nativeCommand(commands.Cursor(dest, null));
       }
     } else {
+      // No target found, stop dragging.
       this.mouseDownActive = false;
     }
 
@@ -306,7 +336,7 @@ export class Editor extends React.Component {
         return;
       }
 
-      this.props.network.nativeCommand(commands.Character(e.charCode));
+      this.props.client.nativeCommand(commands.Character(e.charCode));
   
       e.preventDefault();
     });
@@ -318,15 +348,17 @@ export class Editor extends React.Component {
 
       const text = e.clipboardData.getData('text/plain');
       console.log('(c) got pasted text: ', text);
-      this.props.network.nativeCommand(commands.InsertText(text));
+      this.props.client.nativeCommand(commands.InsertText(text));
     });
   
     document.addEventListener('keydown', (e) => {
       let current = document.querySelector('div.current[data-tag="caret"]');
 
-      // Don't interfere with the header.
-      if (e.target !== null && document.querySelector('#toolbar')!.contains(e.target! as Node)) {
-        return;
+      // Don't interfere when clicking the header.
+      if (e.target !== null) {
+        if (document.querySelector('#toolbar') && document.querySelector('#toolbar')!.contains(e.target! as Node)) {
+          return;
+        }
       }
 
       if (self.props.disabled) {
@@ -358,7 +390,9 @@ export class Editor extends React.Component {
       }
 
       // Check if this event exists in the list of whitelisted key combinations.
-      if (!this.props.KEY_WHITELIST.some(x => Object.keys(x).every(key => e[key] == x[key]))) {
+      let isWhitelisted = this.props.KEY_WHITELIST
+        .some((x: any) => Object.keys(x).every((key: any) => (e as any)[key] == (x as any)[key]));
+      if (!isWhitelisted) {
         return;
       }
 
@@ -370,16 +404,32 @@ export class Editor extends React.Component {
         let current = document.querySelector('div.current[data-tag="caret"]');
         if (current !== null) {
           let rect = current.getBoundingClientRect();
-          let y = UP ? rect.top : rect.bottom;
+          let y = (rect.top + rect.bottom) / 2;
           let x = rect.right;
 
-          // Temporary hack until the cursor at point can be focused on the cursor for real
-          x += 1;
+          // Attempt to get the text node we are closest to
+          let first: any = util.textNodeAtPoint(x, y);
+          // In doc "# Most of all\n\nThe world is a place where parts of wholes are perscribed"
+          // When you hit the down key for any character in the first line, it works,
+          // until the last character (end of the line), where if you hit the down key it 
+          // no longer works and the above turns null. Instead, this check once for the main case,
+          // check at this offset for the edge case is weird but works well enough.
+          if (first == null) {
+            first = util.textNodeAtPoint(x - 2, y);
+          }
+          // Select empty blocks directly, which have no anchoring text nodes.
+          if (first == null) {
+            let el = document.elementFromPoint( x + 2, y);
+            if (isEmptyBlock(el)) {
+              first = el;
+            }
+          }
 
-          let first = util.textNodeAtPoint(x, y);
           if (first !== null) { // Or we have nothing to compare to and we'll loop all day
             while (true) {
-              y += UP ? -10 : 10; // STEP
+              // Step a reasonable increment in each direction.
+              const STEP = 10;
+              y += UP ? -STEP : STEP;
 
               let el = document.elementFromPoint(x, y);
               // console.log('locating element at %d, %d:', x, y, el);
@@ -387,27 +437,49 @@ export class Editor extends React.Component {
                 break;
               }
               if (root !== el) {
-                let caret = util.textNodeAtPoint(x, y);
+                // Check when we hit a text node.
+                let caret = util.textNodeAtPoint(x, y); // TODO should we reuse `first` here?
+                let isTextNode = caret !== null && (first.textNode !== caret.textNode || first.offset !== caret.offset); // TODO would this comparison even work lol
+
+                // Check for the "empty div" scenario
+                let isEmptyDiv = isEmptyBlock(el);
+
+                // console.log(isEmptyDiv, x, y);
+                // if (isEmptyDiv) {
+                //   console.log('----->', el.getBoundingClientRect());
+                // }
+
                 // console.log('attempted caret at', x, y, caret);
-                if (caret !== null && (first.textNode !== caret.textNode || first.offset !== caret.offset)) { // TODO would this comparison even work lol
+                if (isTextNode || isEmptyDiv) {
                   // console.log('CARET', caret);
                   e.preventDefault();
 
+                  // TODO don't replicate events, because properties might
+                  // be omitted that are desired (like target, etc.)
                   let mouseEvent = new MouseEvent('mousedown', {
                     clientX: x,
                     clientY: y,
+
                   });
                   this.onMouseDown(mouseEvent);
+                  let mouseEvent2 = new MouseEvent('mouseup', {
+                    clientX: x,
+                    clientY: y,
+                  });
+                  this.onMouseUp(mouseEvent2);
                   return;
                 }
               }
             }
           }
         }
+
+        // Don't forward up/down keys.
+        return;
       }
   
       // Forward the keypress to native.
-      this.props.network.nativeCommand(commands.Keypress(
+      this.props.client.nativeCommand(commands.Keypress(
         e.keyCode,
         e.metaKey,
         e.shiftKey,

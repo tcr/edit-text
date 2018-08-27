@@ -4,23 +4,24 @@ use crate::{
     state::*,
 };
 
-use extern::{
-    edit_common::{
-        commands::*,
-        doc_as_html,
-    },
-    failure::Error,
-    oatie::{
-        doc::*,
-        validate::validate_doc,
-        OT,
-    },
-    std::char::from_u32,
-    std::sync::atomic::{
+use edit_common::{
+    commands::*,
+    doc_as_html,
+    markdown::doc_to_markdown,
+};
+use failure::Error;
+use oatie::{
+    doc::*,
+    validate::validate_doc,
+    OT,
+};
+use std::{
+    char::from_u32,
+    sync::atomic::{
         AtomicBool,
         Ordering,
     },
-    std::sync::Arc,
+    sync::Arc,
 };
 
 // Shorthandler
@@ -53,15 +54,7 @@ fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
             false,
             false,
             false,
-            Box::new(|client| client.client_op(|doc| caret_move(doc, false))),
-        ),
-        // left
-        KeyHandler(
-            37,
-            false,
-            false,
-            false,
-            Box::new(|client| client.client_op(|doc| caret_move(doc, false))),
+            Box::new(|client| client.client_op(|doc| caret_move(doc, false, false))),
         ),
         // right
         KeyHandler(
@@ -69,7 +62,23 @@ fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
             false,
             false,
             false,
-            Box::new(|client| client.client_op(|doc| caret_move(doc, true))),
+            Box::new(|client| client.client_op(|doc| caret_move(doc, true, false))),
+        ),
+        // shift + left
+        KeyHandler(
+            37,
+            false,
+            true,
+            false,
+            Box::new(|client| client.client_op(|doc| caret_move(doc, false, true))),
+        ),
+        // shift + right
+        KeyHandler(
+            39,
+            false,
+            true,
+            false,
+            Box::new(|client| client.client_op(|doc| caret_move(doc, true, true))),
         ),
         // up
         KeyHandler(
@@ -279,13 +288,26 @@ fn native_command<C: ClientImpl>(client: &mut C, req: FrontendToUserCommand) -> 
             let cursors = random_cursor(&client.state().client_doc.doc)?;
             let idx = (pos * (cursors.len() as f64)) as usize;
 
-            client.client_op(|doc| cur_to_caret(doc, &cursors[idx], false))?;
+            client.client_op(|doc| cur_to_caret(doc, &cursors[idx], true))?;
         }
-        FrontendToUserCommand::CursorAnchor(cur) => {
-            client.client_op(|doc| cur_to_caret(doc, &cur, false))?;
-        }
-        FrontendToUserCommand::CursorTarget(cur) => {
-            client.client_op(|doc| cur_to_caret(doc, &cur, true))?;
+        FrontendToUserCommand::Cursor(focus, anchor) => {
+            match (focus, anchor) {
+                (Some(focus), Some(anchor)) => {
+                    client.client_op(|mut ctx| {
+                        let op = cur_to_caret(ctx.clone(), &focus, true)?;
+                        ctx.doc = OT::apply(&ctx.doc, &op);
+                        let op2 = cur_to_caret(ctx, &anchor, false)?;
+                        Ok(OT::compose(&op, &op2))
+                    })?;
+                }
+                (Some(focus), None) => {
+                    client.client_op(|doc| cur_to_caret(doc, &focus, true))?;
+                }
+                (None, Some(anchor)) => {
+                    client.client_op(|doc| cur_to_caret(doc, &anchor, false))?;
+                }
+                (None, None) => {}, // ???
+            }
         }
         FrontendToUserCommand::Monkey(setting) => {
             println!("received monkey setting: {:?}", setting);
@@ -357,8 +379,9 @@ pub trait ClientImpl {
                     let cursors = random_cursor(&self.state().client_doc.doc)?;
                     let idx = (pos * (cursors.len() as f64)) as usize;
 
-                    value = Task::FrontendToUserCommand(FrontendToUserCommand::CursorAnchor(
-                        cursors[idx].clone(),
+                    value = Task::FrontendToUserCommand(FrontendToUserCommand::Cursor(
+                        Some(cursors[idx].clone()),
+                        None,
                     ));
                 }
 
@@ -393,11 +416,11 @@ pub trait ClientImpl {
 
                         // If the caret doesn't exist or was deleted, reinitialize it.
                         if !self
-                            .with_action_context(|ctx| Ok(has_caret(ctx, false)))
+                            .with_action_context(|ctx| Ok(has_caret(ctx, true)))
                             .ok()
                             .unwrap_or(true)
                         {
-                            println!("add caret");
+                            // console_log!("add caret");
                             self.client_op(|doc| init_caret(doc)).unwrap();
                         }
 
@@ -408,6 +431,7 @@ pub trait ClientImpl {
                         let state = self.state();
                         let res = UserToFrontendCommand::Update(
                             doc_as_html(&state.client_doc.doc.0),
+                            doc_to_markdown(&state.client_doc.doc.0).unwrap(),
                             None,
                         );
                         self.send_client(&res).unwrap();
@@ -449,11 +473,11 @@ pub trait ClientImpl {
 
                         // If the caret doesn't exist or was deleted, reinitialize it.
                         if !self
-                            .with_action_context(|ctx| Ok(has_caret(ctx, false)))
+                            .with_action_context(|ctx| Ok(has_caret(ctx, true)))
                             .ok()
                             .unwrap_or(true)
                         {
-                            println!("add caret");
+                            // console_log!("adding caret after last op");
                             self.client_op(|doc| init_caret(doc)).unwrap();
                         }
 
@@ -461,6 +485,7 @@ pub trait ClientImpl {
                         let state = self.state();
                         let res = UserToFrontendCommand::Update(
                             doc_as_html(&state.client_doc.doc.0),
+                            doc_to_markdown(&state.client_doc.doc.0).unwrap(),
                             None,
                         );
                         self.send_client(&res).unwrap();
@@ -553,7 +578,11 @@ pub trait ClientImpl {
 
         // Render the update.
         let state = self.state();
-        let res = UserToFrontendCommand::Update(doc_as_html(&state.client_doc.doc.0), Some(op));
+        let res = UserToFrontendCommand::Update(
+            doc_as_html(&state.client_doc.doc.0),
+            doc_to_markdown(&state.client_doc.doc.0).unwrap(),
+            Some(op),
+        );
         self.send_client(&res)?;
 
         // Send any queued payloads.
@@ -563,6 +592,7 @@ pub trait ClientImpl {
 
         // Update the controls state.
         // TODO should optimize this to not always send this out.
+        // console_log!("CUR DOC {:?}", doc);
         let (cur_block, in_list) = self.with_action_context(|doc| identify_block(doc))?;
         println!("current block: {:?}", cur_block);
         println!("in list: {:?}", in_list);

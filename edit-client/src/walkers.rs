@@ -3,12 +3,14 @@ use oatie::stepper::*;
 use oatie::transform::Schema;
 use oatie::writer::*;
 use take_mut;
+use failure::Error;
 
 fn is_block(attrs: &Attrs) -> bool {
     use oatie::schema::*;
     RtfSchema::track_type_from_attrs(attrs) == Some(RtfTrack::Blocks)
 }
 
+// TODO what does this refer to?
 fn is_block_object(attrs: &Attrs) -> bool {
     use oatie::schema::*;
     RtfSchema::track_type_from_attrs(attrs) == Some(RtfTrack::BlockObjects)
@@ -18,10 +20,21 @@ fn is_caret(attrs: &Attrs, client_id: Option<&str>, focus: bool) -> bool {
     attrs["tag"] == "caret" && client_id.map(|id| attrs.get("client") == Some(&id.to_string())).unwrap_or(false)
         && attrs
             .get("focus")
-            .unwrap_or(&"false".to_string())
-            .parse::<bool>()
-            .map(|x| x == focus)
-            .unwrap_or(false)
+            .map(|x| x == "true")
+            .unwrap_or(false) == focus
+}
+
+// Is any caret
+pub fn is_any_caret(attrs: &Attrs) -> bool {
+    attrs["tag"] == "caret"
+}
+
+#[derive(Clone, Debug)]
+pub enum Pos {
+    Start,
+    Anchor,
+    Focus,
+    End,
 }
 
 #[derive(Clone, Debug)]
@@ -32,7 +45,14 @@ pub struct CaretStepper {
 
 impl CaretStepper {
     pub fn new(doc: DocStepper) -> CaretStepper {
-        CaretStepper { doc, caret_pos: -1 }
+        // Start at caret pos 0
+        let mut stepper = CaretStepper { doc, caret_pos: -1 };
+        while stepper.caret_pos != 0 {
+            if stepper.next().is_none() {
+                break;
+            }
+        }
+        stepper
     }
 
     pub fn rev(self) -> ReverseCaretStepper {
@@ -125,13 +145,26 @@ impl ReverseCaretStepper {
     }
 
     pub fn is_valid_caret_pos(&self) -> bool {
-        if let Some(DocChars(..)) = self.doc.unhead() {
+        // Skip over all preceding carets so we can identify the previous node
+        // more easily.
+        // TODO can this clone be avoided?
+        let mut doc2 = self.doc.clone();
+        while let Some(DocGroup(ref attrs, _)) = doc2.unhead() {
+            if is_any_caret(attrs) {
+                doc2.unskip(1);
+            } else {
+                break;
+            }
+        }
+
+        if let Some(DocChars(..)) = doc2.unhead() {
             return true;
-        } else if self.doc.unhead().is_none() {
-            if self.doc.stack.is_empty() {
+        } else if doc2.unhead().is_none() {
+            if doc2.stack.is_empty() {
+                // end of document, bail
                 return false;
             }
-            if let Some(DocGroup(ref attrs, _)) = self.doc.clone().unenter().head() {
+            if let Some(DocGroup(ref attrs, _)) = doc2.clone().unenter().head() {
                 if is_block(attrs) {
                     return true;
                 }
@@ -145,9 +178,17 @@ impl Iterator for ReverseCaretStepper {
     type Item = ();
 
     fn next(&mut self) -> Option<()> {
-        if self.is_valid_caret_pos() {
-            self.caret_pos -= 1;
+        // Skip over all preceding carets so we don't confuse the previous
+        // char with a new position.
+        while let Some(DocGroup(ref attrs, _)) = self.doc.unhead() {
+            if is_any_caret(attrs) {
+                self.doc.unskip(1);
+            } else {
+                break;
+            }
         }
+
+        // console_log!("what {:?}", self.doc);
 
         match self.doc.unhead() {
             Some(DocChars(..)) => {
@@ -163,6 +204,14 @@ impl Iterator for ReverseCaretStepper {
                     self.doc.unenter();
                 }
             }
+        }
+
+        if self.is_valid_caret_pos() {
+            self.caret_pos -= 1;
+        } else if let (None, true) = (self.doc.unhead(), self.doc.stack.is_empty()) {
+            // Fix caret_pos to be -1 when we reach the end.
+            // {edit.reset.caret_pos}
+            self.caret_pos = -1;
         }
 
         Some(())
@@ -259,7 +308,7 @@ impl Walker {
         }
     }
 
-    // TODO Have this replace the above and take its name.
+    // TODO Have this be replaced with to_caret_position also
     // Only difference is that above consumers
     // haven't had an .unwrap() call added yet for this:
     pub fn to_caret_safe(doc: &Doc, client_id: &str, focus: bool) -> Option<Walker> {
@@ -284,6 +333,51 @@ impl Walker {
                 original_doc: doc.clone(),
                 stepper,
             })
+        }
+    }
+
+    // TODO Have this replace the above and take its name.
+    // Only difference is that above consumers
+    // haven't had an .unwrap() call added yet for this:
+    pub fn to_caret_position(doc: &Doc, client_id: &str, position: Pos) -> Result<Walker, Error> {
+        let mut stepper = CaretStepper::new(DocStepper::new(&doc.0));
+
+        // Iterate until we match the cursor.
+        let mut result_stepper = None;
+        loop {
+            if let Some(DocGroup(attrs, _)) = stepper.doc.head() {
+                match position {
+                    Pos::Focus => if is_caret(&attrs, Some(client_id), true) {
+                        result_stepper = Some(stepper);
+                        break;
+                    },
+                    Pos::Anchor => if is_caret(&attrs, Some(client_id), false) {
+                        result_stepper = Some(stepper);
+                        break;
+                    },
+                    Pos::Start => if is_caret(&attrs, Some(client_id), false) || is_caret(&attrs, Some(client_id), true) {
+                        result_stepper = Some(stepper);
+                        break;
+                    },
+                    // Continue until last match
+                    Pos::End => if is_caret(&attrs, Some(client_id), false) || is_caret(&attrs, Some(client_id), true) {
+                        result_stepper = Some(stepper.clone());
+                    },
+                }
+                
+            }
+            if stepper.next().is_none() {
+                break;
+            }
+        }
+
+        if let Some(result_stepper) = result_stepper {
+            Ok(Walker {
+                original_doc: doc.clone(),
+                stepper: result_stepper,
+            })
+        } else {
+            Err(format_err!("Could not find cursor at {:?} position.", position))
         }
     }
 
@@ -328,15 +422,25 @@ impl Walker {
             panic!("Didn't find the cursor.");
         }
 
+        // console_log!("(^^^) (A) {:?}", stepper.doc);
+
         // Snap to leftmost character boundary. It's possible the
         // cursor points to a character following a span or caret, but
         // we want our stepper to be on the immediate right of its character.
         let mut rstepper = stepper.rev();
-        while !rstepper.is_valid_caret_pos() {
+        loop {
+            // console_log!("(^^^) (uu) {:?}", rstepper.doc);
             if rstepper.next().is_none() {
+                // console_log!("none?");
+                break;
+            }
+            if rstepper.is_valid_caret_pos() {
+                // console_log!("valid");
                 break;
             }
         }
+
+        // console_log!("(^^^) (C) {:?}", rstepper.doc);
 
         // Next, increment by one full char (so cursor is always on right).
         let mut stepper = rstepper.clone().rev();
@@ -348,9 +452,13 @@ impl Walker {
                 break;
             }
         }
+        // console_log!("(^^^) (D) {:?}", stepper.doc);
+        // ...or else restore the stepper again.
         if !stepper.is_valid_caret_pos() {
             stepper = rstepper.rev();
         }
+
+        // console_log!("(^^^) (E) {:?}", stepper.doc);
 
         Walker {
             original_doc: doc.clone(),
@@ -413,7 +521,7 @@ impl Walker {
 
     pub fn back_block(&mut self) -> bool {
         let mut matched = false;
-        take_mut::take(&mut self.stepper, |prev_stepper| {
+        let stepper = take_mut::take(&mut self.stepper, |prev_stepper| {
             let mut rstepper = prev_stepper.clone().rev();
 
             // Iterate until we reach a block.

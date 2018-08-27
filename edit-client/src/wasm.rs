@@ -14,12 +14,17 @@ extern crate wbg_rand;
 use super::client::*;
 use super::monkey::*;
 use super::state::*;
-use edit_common::commands::*;
+use edit_common::{
+    doc_as_html,
+    commands::*,
+    markdown::markdown_to_doc,
+};
 use failure::Error;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use wasm_bindgen::prelude::*;
+use serde_json::Value;
 
 lazy_static! {
     static ref WASM_ALIVE: Arc<AtomicBool> = Arc::new(AtomicBool::new(true));
@@ -28,7 +33,7 @@ lazy_static! {
 
 // JS imports
 
-#[wasm_bindgen(module = "./../ui/network")]
+#[wasm_bindgen(module = "./../editor/wasm")]
 extern "C" {
     /// Send a command *from* the client *to* the frontend.
     pub fn sendCommandToJS(input: &str) -> u32;
@@ -41,6 +46,9 @@ extern "C" {
     #[wasm_bindgen(js_namespace = console)]
     pub fn log(msg: &str);
 
+    #[wasm_bindgen(js_namespace = console)]
+    pub fn error(msg: &str);
+
     pub fn setTimeout(closure: &Closure<FnMut()>, time: u32);
 }
 
@@ -48,6 +56,23 @@ extern "C" {
 #[macro_export]
 macro_rules! console_log {
     ($($t:tt)*) => ($crate::wasm::log(&format!($($t)*)))
+}
+#[macro_export]
+macro_rules! console_error {
+    ($($t:tt)*) => ($crate::wasm::error(&format!($($t)*)))
+}
+
+
+#[wasm_bindgen]
+#[allow(non_snake_case)]
+pub fn convertMarkdownToHtml(input: &str) -> String {
+    doc_as_html(&markdown_to_doc(input).unwrap())
+}
+
+#[wasm_bindgen]
+#[allow(non_snake_case)]
+pub fn convertMarkdownToDoc(input: &str) -> String {
+    serde_json::to_string(&markdown_to_doc(input).unwrap()).unwrap()
 }
 
 // WebAssembly client.
@@ -113,10 +138,12 @@ impl WasmClient {
         //     panic!("{} encountered a Panic Monkey!!!!!!!!!!!!", self.state().client_id);
         // }
 
-        match self.handle_task(input) {
-            Ok(_) => {}
+        match self.handle_task(input.clone()) {
+            Ok(_) => {
+            }
             Err(err) => {
-                console_log!("error handling task: {:?}", err);
+                // We could panic here, but some errors are resumable
+                console_error!("Error handling task: {:?}\n{:?}", input, err);
                 return Err(err);
             }
         }

@@ -10,9 +10,7 @@
 // Don't add additional noise to cargo-script.
 #![deny(warnings)]
 
-#[macro_use]
 extern crate commandspec;
-#[macro_use]
 extern crate structopt;
 extern crate failure;
 extern crate clap;
@@ -131,10 +129,11 @@ fn run() -> Result<(), Error> {
     // Pass arguments directly to subcommands: don't capture -h, -v, or verification
     // Do this by adding "--" into the args flag after the subcommand.
     let mut args = ::std::env::args().collect::<Vec<_>>();
-    // TODO this looks broken
-    // if args.len() > 2 && args[1] != "help" {
-    //     args.insert(2, "--".into());
-    // }
+    // TODO this is broken for ./x.rs server, or ./x.rs deploy, and
+    // both require different behavior! why?
+    if args.len() > 2 && args[1] != "help" {
+        args.insert(2, "--".into());
+    }
 
     // We interpret the --release flag at the build level.
     let release = args.iter().find(|x| *x == "--release").is_some();
@@ -172,15 +171,6 @@ fn run() -> Result<(), Error> {
             )?;
 
             eprintln!("Building...");
-
-            execute!(
-                r"
-                    cd edit-client
-                    cargo check {release_flag} --lib --target wasm32-unknown-unknown
-                ",
-                release_flag = release_flag,
-            )?;
-
             execute!(
                 r"
                     cd edit-client

@@ -27,8 +27,7 @@ pub enum FrontendToUserCommand {
     InsertText(String),
     RenameGroup(String, CurSpan),
     // Load(DocSpan),
-    CursorAnchor(CurSpan),
-    CursorTarget(CurSpan),
+    Cursor(Option<CurSpan>, Option<CurSpan>),
     // Target(CurSpan),
     RandomTarget(f64),
     Monkey(bool),
@@ -53,7 +52,7 @@ pub enum UserToFrontendCommand {
     Init(String),
     Controls(Controls),
     PromptString(String, String, FrontendToUserCommand),
-    Update(String, Option<Op>),
+    Update(String, String, Option<Op>),
     Error(String),
     UserToSyncCommand(UserToSyncCommand),
 }
