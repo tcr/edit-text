@@ -16,7 +16,7 @@ pub struct ActionContext {
 }
 
 pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, false);
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, true);
     assert!(walker.back_block());
 
     let mut parent_walker = walker.clone();
@@ -70,7 +70,7 @@ pub fn identify_block(ctx: ActionContext) -> Result<(String, bool), Error> {
 }
 
 pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, false);
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, true);
     assert!(walker.back_block());
 
     let len = if let Some(DocGroup(_, ref span)) = walker.doc().head() {
@@ -131,11 +131,16 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
 }
 
 pub fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
-    // Check if caret is at the start of a block.
     let caret_pos = walker.caret_pos();
+    if caret_pos == 0 {
+        return Ok(Op::empty());
+    }
+
+    // Check if caret is at the start of a block.
     let mut block_walker = walker.clone();
     assert!(block_walker.back_block());
-    block_walker.stepper.next(); // re-enter the block to first caret position
+    block_walker.stepper.doc.enter();
+    // block_walker.stepper.next(); // re-enter the block to first caret position
     let at_start_of_block = caret_pos == block_walker.caret_pos();
 
     // See if we can collapse this and the previous block or list item.
@@ -459,7 +464,7 @@ pub fn restyle(ctx: ActionContext, ops: Vec<StyleOp>) -> Result<Op, Error> {
 }
 
 pub fn split_block(ctx: ActionContext, add_hr: bool) -> Result<Op, Error> {
-    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, false);
+    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, true);
     let skip = walker.doc().skip_len();
 
     // Identify the tag of the block we're splitting.
@@ -582,7 +587,7 @@ pub fn caret_move(mut ctx: ActionContext, increase: bool, preserve_select: bool)
 }
 
 pub fn caret_word_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, false);
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, true);
 
     // First operation removes the caret.
     let mut writer = walker.to_writer();
@@ -747,7 +752,7 @@ pub fn init_caret(ctx: ActionContext) -> Result<Op, Error> {
 }
 
 pub fn caret_block_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, false);
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, true);
 
     // First operation removes the caret.
     let mut writer = walker.to_writer();

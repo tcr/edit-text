@@ -30,17 +30,17 @@ pub fn is_any_caret(attrs: &Attrs) -> bool {
 }
 
 #[derive(Clone, Debug)]
-pub struct CaretStepper {
-    pub doc: DocStepper,
-    caret_pos: isize,
-}
-
-#[derive(Clone, Debug)]
 pub enum Pos {
     Start,
     Anchor,
     Focus,
     End,
+}
+
+#[derive(Clone, Debug)]
+pub struct CaretStepper {
+    pub doc: DocStepper,
+    caret_pos: isize,
 }
 
 impl CaretStepper {
@@ -210,6 +210,7 @@ impl Iterator for ReverseCaretStepper {
             self.caret_pos -= 1;
         } else if let (None, true) = (self.doc.unhead(), self.doc.stack.is_empty()) {
             // Fix caret_pos to be -1 when we reach the end.
+            // {edit.reset.caret_pos}
             self.caret_pos = -1;
         }
 
@@ -520,7 +521,7 @@ impl Walker {
 
     pub fn back_block(&mut self) -> bool {
         let mut matched = false;
-        take_mut::take(&mut self.stepper, |prev_stepper| {
+        let stepper = take_mut::take(&mut self.stepper, |prev_stepper| {
             let mut rstepper = prev_stepper.clone().rev();
 
             // Iterate until we reach a block.
