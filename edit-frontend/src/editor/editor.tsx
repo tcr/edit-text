@@ -30,6 +30,12 @@ function isBlock(
   return false;
 }
 
+function isEmptyBlock(
+  el: Node | null
+) {
+  return isBlock(el) && (el as Element).querySelector('span') === null;
+}
+
 function isSpan(
   el: Node | null,
 ) {
@@ -177,7 +183,13 @@ function resolveCursorFromPositionInner(
     return resolveCursorFromPosition((node as Text), charLength(node));
   } else {
     // TODO can this be made simpler?
-    // Skip empty elements.
+    
+    // Enter empty block nodes.
+    if (isEmptyBlock(node)) {
+      return curto(node);
+    }
+
+    // Skip empty groups.
     if (node.childNodes.length == 0) {
       return resolveCursorFromPositionInner(node.previousSibling, parent);
     }
@@ -256,25 +268,30 @@ export class Editor extends React.Component {
     }
     this.mouseDownActive = true;
 
-    (window as any).EH = e;
+    // (window as any).EH = e;
 
-    let pos = util.textNodeAtPoint(e.clientX, e.clientY);
+    let text = util.textNodeAtPoint(e.clientX, e.clientY);
+    let target = document.elementFromPoint(e.clientX, e.clientY);
 
-    // Only support text elements.
-    if (pos !== null) {
-      // console.log('### SUBMITTED:', JSON.stringify(resolveCursorFromPosition(pos.textNode, pos.offset)));
+    let dest = null;
+    if (text !== null) {
+      // We can focus on all text nodes.
+      dest = resolveCursorFromPosition(text.textNode, text.offset);
+    } else if (isEmptyBlock(target)) {
+      // Or empty elements, which don't have a rooting text node.
+      dest = curto(target as any);
+    }
+
+    // Generate the native commands.
+    // console.log('### SUBMITTED:', JSON.stringify(resolveCursorFromPosition(pos.textNode, pos.offset)));
+    if (dest !== null) {
       if (drop_anchor) {
-        this.props.client.nativeCommand(commands.Cursor(
-          resolveCursorFromPosition(pos.textNode, pos.offset),
-          resolveCursorFromPosition(pos.textNode, pos.offset),
-        ));
+        this.props.client.nativeCommand(commands.Cursor(dest, dest));
       } else {
-        this.props.client.nativeCommand(commands.Cursor(
-          resolveCursorFromPosition(pos.textNode, pos.offset),
-          null
-        ));
+        this.props.client.nativeCommand(commands.Cursor(dest, null));
       }
     } else {
+      // No target found, stop dragging.
       this.mouseDownActive = false;
     }
 
@@ -304,7 +321,6 @@ export class Editor extends React.Component {
 
   componentDidMount() {
     let self = this;
-    console.log('hey');
     document.addEventListener('keypress', (e: KeyboardEvent) => {
       if (self.props.disabled) {
         return;
@@ -392,7 +408,7 @@ export class Editor extends React.Component {
           let x = rect.right;
 
           // Attempt to get the text node we are closest to
-          let first = util.textNodeAtPoint(x, y);
+          let first: any = util.textNodeAtPoint(x, y);
           // In doc "# Most of all\n\nThe world is a place where parts of wholes are perscribed"
           // When you hit the down key for any character in the first line, it works,
           // until the last character (end of the line), where if you hit the down key it 
@@ -400,6 +416,13 @@ export class Editor extends React.Component {
           // check at this offset for the edge case is weird but works well enough.
           if (first == null) {
             first = util.textNodeAtPoint(x - 2, y);
+          }
+          // Select empty blocks directly, which have no anchoring text nodes.
+          if (first == null) {
+            let el = document.elementFromPoint( x + 2, y);
+            if (isEmptyBlock(el)) {
+              first = el;
+            }
           }
 
           if (first !== null) { // Or we have nothing to compare to and we'll loop all day
@@ -411,20 +434,32 @@ export class Editor extends React.Component {
               let el = document.elementFromPoint(x, y);
               // console.log('locating element at %d, %d:', x, y, el);
               if (!root.contains(el) || el === null) { // Off the page!
-                console.log('fail');
                 break;
               }
               if (root !== el) {
-                // TODO shold this just reuse first here?
-                let caret = util.textNodeAtPoint(x, y);
+                // Check when we hit a text node.
+                let caret = util.textNodeAtPoint(x, y); // TODO should we reuse `first` here?
+                let isTextNode = caret !== null && (first.textNode !== caret.textNode || first.offset !== caret.offset); // TODO would this comparison even work lol
+
+                // Check for the "empty div" scenario
+                let isEmptyDiv = isEmptyBlock(el);
+
+                // console.log(isEmptyDiv, x, y);
+                // if (isEmptyDiv) {
+                //   console.log('----->', el.getBoundingClientRect());
+                // }
+
                 // console.log('attempted caret at', x, y, caret);
-                if (caret !== null && (first.textNode !== caret.textNode || first.offset !== caret.offset)) { // TODO would this comparison even work lol
+                if (isTextNode || isEmptyDiv) {
                   // console.log('CARET', caret);
                   e.preventDefault();
 
+                  // TODO don't replicate events, because properties might
+                  // be omitted that are desired (like target, etc.)
                   let mouseEvent = new MouseEvent('mousedown', {
                     clientX: x,
                     clientY: y,
+
                   });
                   this.onMouseDown(mouseEvent);
                   let mouseEvent2 = new MouseEvent('mouseup', {

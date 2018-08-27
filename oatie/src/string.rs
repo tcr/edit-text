@@ -74,10 +74,6 @@ impl DocString {
         self.2.clone()
     }
 
-    // pub fn styles_mut(&mut self) -> Option<&mut StyleMap> {
-    //     self.2.as_mut().map(|x| &mut (*x))
-    // }
-
     pub fn remove_styles(&mut self, styles: &StyleSet) {
         if let &mut Some(ref mut self_styles) = &mut self.2 {
             let mut new_styles: StyleMap = (**self_styles).clone();
