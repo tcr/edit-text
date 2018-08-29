@@ -1,16 +1,21 @@
+cargo-features = ["edition"]
+
 [package]
 authors = ["Tim Ryan <id@timryan.org>"]
 name = "tests"
 version = "0.1.0"
+edition = "2018"
+
 [dependencies]
+tokio-timer = "0.2"
+tokio-async-await = "0.1.0"
 commandspec = "0.7"
 failure = "0.1.1"
-fantoccini = "0.8.2"
+fantoccini = { git = "http://github.com/tcr/fantoccini", rev = "85e9a143" } #"0.8.2"
 futures = "0.1.20"
 libc = "0.2.40"
 rand = "0.4.2"
 taken = "0.1.1"
-tokio-core = "0.1.16"
 rustc-serialize = "*"
 
 [features]

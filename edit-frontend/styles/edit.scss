@@ -267,6 +267,10 @@ body.theme-column .edit-text {
         animation: fadein 0.3s;
     }
 
+    div[data-tag="caret"][data-focus="false"] {
+        display: none;
+    }
+
     div[data-tag="caret"][data-wsj]::before {
         content: '\200c' !important; // zero width non-joiner Unicode code point
     }
