@@ -1,9 +1,11 @@
+// The nightly features that are commonly needed with async / await
+#![recursion_limit="128"]
+#![feature(await_macro, async_await, futures_api)]
 #![feature(integer_atomics)]
 #![allow(unused)]
 
 extern crate fantoccini;
 extern crate futures;
-extern crate tokio_core;
 #[macro_use]
 extern crate commandspec;
 #[macro_use]
@@ -12,6 +14,9 @@ extern crate rand;
 #[macro_use]
 extern crate failure;
 extern crate rustc_serialize;
+#[macro_use]
+extern crate tokio;
+extern crate tokio_timer;
 
 use fantoccini::{
     Client,
@@ -38,8 +43,10 @@ use std::sync::{
 
 static DRIVER_PORT_COUNTER: AtomicU16 = AtomicU16::new(4445);
 
-fn sleep_ms(val: u64) {
-    ::std::thread::sleep(::std::time::Duration::from_millis(val))
+#[must_use]
+async fn sleep_ms(val: u64) -> Result<(), Error> {
+    await!(tokio_timer::sleep(::std::time::Duration::from_millis(val)))?;
+    Ok(())
 }
 
 fn in_ci() -> bool {
@@ -47,37 +54,6 @@ fn in_ci() -> bool {
         .ok()
         .map(|x| x == "true")
         .unwrap_or(false)
-}
-
-fn main() {
-    commandspec::forward_ctrlc();
-
-    let test_id1 = format!("test{}", random_id());
-    let test_id2 = test_id1.clone();
-
-    let both_barrier = Arc::new(Barrier::new(2));
-    let seq_barrier = Arc::new(Barrier::new(2));
-
-    let j1 = ::std::thread::spawn({
-        take!(=both_barrier, =seq_barrier);
-        move || run(&test_id1, both_barrier, Some(seq_barrier))
-    });
-    let j2 = ::std::thread::spawn({
-        take!(=both_barrier, =seq_barrier);
-        move || {
-            seq_barrier.wait();
-            println!("ok...");
-            run(&test_id2, both_barrier, None)
-        }
-    });
-
-    let ret1 = j1.join().unwrap().expect("Program failed:");
-    let ret2 = j2.join().unwrap().expect("Program failed:");
-
-    assert!(ret1, "client 1 failed to see ghosts");
-    assert!(ret2, "client 2 failed to see ghosts");
-
-    eprintln!("test successful.");
 }
 
 fn random_id() -> String {
@@ -143,10 +119,62 @@ document.querySelector('.edit-text').dispatchEvent(evt);
     }
 }
 
-fn run(
+struct Checkpoint(Arc<Barrier>, Option<Arc<Barrier>>);
+
+impl Checkpoint {
+    fn sync(self) {
+        if let Some(seq_barrier) = self.1 {
+            seq_barrier.wait();
+        }
+        // Then synchronize both clients.
+        self.0.wait();
+    }
+}
+
+
+
+fn main() {
+    commandspec::forward_ctrlc();
+
+    let test_id1 = format!("test{}", random_id());
+    let test_id2 = test_id1.clone();
+
+    let both_barrier = Arc::new(Barrier::new(2));
+    let seq_barrier = Arc::new(Barrier::new(2));
+
+    let j1 = ::std::thread::spawn({
+        take!(=both_barrier, =seq_barrier);
+        move || -> Result<bool, ()> {
+            tokio::run_async(async move {
+                await!(bootstrap(&test_id1, Checkpoint(both_barrier, Some(seq_barrier))));
+            });
+            Ok(true)
+        }
+    });
+    let j2 = ::std::thread::spawn({
+        take!(=both_barrier, =seq_barrier);
+        move || -> Result<bool, ()> {
+            seq_barrier.wait();
+            println!("ok...");
+            tokio::run_async(async move {
+                await!(bootstrap(&test_id2, Checkpoint(both_barrier, None)));
+            });
+            Ok(true)
+        }
+    });
+
+    let ret1 = j1.join().unwrap().expect("Program failed:");
+    let ret2 = j2.join().unwrap().expect("Program failed:");
+
+    assert!(ret1, "client 1 failed to see ghosts");
+    assert!(ret2, "client 2 failed to see ghosts");
+
+    eprintln!("test successful.");
+}
+
+async fn bootstrap(
     test_id: &str,
-    both_barrier: Arc<Barrier>,
-    seq_barrier: Option<Arc<Barrier>>,
+    checkpoint: Checkpoint,
 ) -> Result<bool, Error> {
     // TODO accept port ID and alternative drivers.
     let port = DRIVER_PORT_COUNTER.fetch_add(1, Ordering::Relaxed);
@@ -176,98 +204,91 @@ fn run(
         .spawn_guard()?;
 
     // Wait for webdriver startup.
-    ::std::thread::sleep(::std::time::Duration::from_millis(3_000));
+    await!(sleep_ms(3_000));
 
-    // Connect
-    let mut core = tokio_core::reactor::Core::new().unwrap();
-    let c = Client::new(&format!("http://0.0.0.0:{}/", port), &core.handle());
-    let c: Client = core.run(c).unwrap();
+    // Connect to the browser driver from Rust.
+    // TODO Pass in the current executor from the current runtime
+    // instead of creating one here.
+    let mut core = tokio::runtime::Runtime::new().unwrap();
+    let client = await!(Client::new(
+        &format!("http://0.0.0.0:{}/", port),
+        core.executor(),
+    ))?;
 
-    println!("Connected...");
+    eprintln!("Connected...");
 
-    let ret_value = {
-        // we want to have a reference to c so we can use it in the and_thens below
-        let c = &c;
+    await!(spooky_test(client, test_id.to_owned(), checkpoint))
+}
 
-        // now let's set up the sequence of steps we want the browser to take
-        // first, go to the Wikipedia page for Foobar
-        let f = c
-            .goto(&format!("http://0.0.0.0:8000/{}", test_id))
-            .and_then(move |_| c.current_url())
-            .and_then(move |url| {
-                println!("1");
 
-                // Wait for page to load
-                sleep_ms(2_000);
 
-                // Align threads
-                if let Some(seq_barrier) = seq_barrier {
-                    seq_barrier.wait();
-                }
-                both_barrier.wait();
-                println!("Barrier done, continuing...");
 
-                // assert_eq!(url.as_ref(), "https://en.wikipedia.org/wiki/Foobar");
-                // click "Foo (disambiguation)"
-                c.wait_for_find(Locator::Css(r#"div[data-tag="caret"]"#))
-            })
-            .and_then(|_| {
-                sleep_ms(1_000);
+// Individual tests
 
-                println!("2");
-                code(c)
-                    .js(r#"
+async fn spooky_test<'a>(
+    c: Client,
+    test_id: String,
+    checkpoint: Checkpoint,
+) -> Result<bool, Error> {
+    // Navigate to the test URL.
+    let test_url = format!("http://0.0.0.0:8000/{}", test_id);
+    await!(c.goto(&test_url));
+
+    // Wait for the page to load.
+    await!(c.wait_for_find(Locator::Css(".edit-text")));
+
+    // Ensure all browsers have loaded before proceeding. Loading
+    // can be deferred or load sequentially, but this checkpoint
+    // will ensure all browsers are in the same editor state.
+    checkpoint.sync();
+    eprintln!("Synchronized.");
+
+    // Now wait until carets show up on the page.
+    await!(c.wait_for_find(Locator::Css(r#"div[data-tag="caret"]"#)));
+
+    // Position the caret.
+    await!(sleep_ms(1_000));
+    await!(code(&c)
+        .js(r#"
+
+// DEBUG.endOfLine();
 
 let marker = document.querySelector('.edit-text div[data-tag=h1] span');
 let clientX = marker.getBoundingClientRect().right;
 let clientY = marker.getBoundingClientRect().top;
 
 
-                "#)
-                    .mousedown("clientX - 3", "clientY + 3")
-                    .execute()
-            })
-            .and_then(|_| {
-                sleep_ms(1_000);
+    "#)
+        .mousedown("clientX - 3", "clientY + 3")
+        .execute());
 
-                println!("2a");
-                code(c)
-                    //.keypress("35")
-                    .keypress("0x1f47b")
-                    .execute()
-            })
-            .and_then(|_| {
-                // Enough time for both clients to sync up.
-                ok(sleep_ms(4000))
-            })
-            .and_then(|_| {
-                println!("3");
+    // Type the ghost character.
+    await!(sleep_ms(1_000));
+    await!(code(&c)
+        //.keypress("35")
+        .keypress("0x1f47b")
+        .execute());
+    
+    // DEBUG.keypress();
 
-                code(c)
-                    .js(r#"
+    // Wait up 4s for both clients to synchronize.
+    await!(sleep_ms(4000));
+    
+    // Get the innerText of the header element.
+    let heading = await!(code(&c)
+        .js(r#"
+    
+    // DEBUG.asMarkdown().match(/\S.*$/m);
 
 let h1 = document.querySelector('.edit-text div[data-tag=h1]');
 return h1.innerText;
 
-                    "#)
-                    .execute()
-            });
+        "#)
+        .execute())?
+        .as_string()
+        .unwrap()
+        .to_owned();
 
-        // and set the browser off to do those things
-        core.run(f).unwrap()
-    };
-
-    // drop the client to delete the browser session
-    if let Some(fin) = c.close() {
-        // and wait for cleanup to finish
-        core.run(fin).unwrap();
-    }
-
-    println!("4. OUT {:?}", ret_value);
-    let h1_string = ret_value.as_string().unwrap();
-    eprintln!("done: {:?}", h1_string);
-
-    // drop(child);
-
-    Ok(h1_string.ends_with("👻👻"))
+    eprintln!("done: {:?}", heading);
+    Ok(heading.ends_with("👻👻"))
 }
