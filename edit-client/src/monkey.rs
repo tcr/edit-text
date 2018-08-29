@@ -6,18 +6,17 @@ use crate::{
     Task,
 };
 
-use extern::{
-    crossbeam_channel::Sender,
-    edit_common::commands::*,
-    serde_json,
-    std::cell::RefCell,
-    std::rc::Rc,
-    std::sync::atomic::AtomicBool,
-    std::sync::atomic::Ordering,
-    std::sync::Arc,
-    wasm_bindgen::prelude::*,
-    wbg_rand::Rng,
-};
+use extern::crossbeam_channel::Sender;
+use edit_common::commands::*;
+use serde_json;
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
+use std::sync::Arc;
+use wasm_bindgen::prelude::*;
+use wasm_bindgen::closure::Closure;
+use wbg_rand::Rng;
 
 #[cfg(target_arch = "wasm32")]
 pub struct Scheduler {
