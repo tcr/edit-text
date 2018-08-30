@@ -1,7 +1,7 @@
 //! edit-server standalone binary for web deployment.
 
 #![feature(extern_in_paths)]
-#![feature(proc_macro_non_items, use_extern_macros)]
+#![feature(proc_macro_non_items)]
 
 extern crate include_dir_macro;
 
@@ -52,6 +52,7 @@ use rouille::Response;
 use std::{
     env,
     collections::HashMap,
+    cell::RefCell,
 };
 use std::fs::File;
 use std::io::prelude::*;
@@ -72,6 +73,8 @@ trait Dir: Sync + Send {
     }
 
     fn clone(&self) -> Box<Dir>;
+
+    fn md5(&self, path: &Path) -> Option<String>;
 }
 
 #[derive(Clone)]
@@ -84,6 +87,20 @@ impl Dir for InlineDir {
 
     fn clone(&self) -> Box<Dir> {
         Box::new(InlineDir(self.0.clone()))
+    }
+
+    fn md5(&self, path: &Path) -> Option<String> {
+        thread_local! {
+            pub static ETAGS: RefCell<HashMap<String, String>> = RefCell::new(HashMap::new());
+        }
+        let md5 = ETAGS.with(|etags| {
+            etags
+                .borrow_mut()
+                .entry(path.to_string_lossy().to_string())
+                .or_insert_with(|| format!("{:x}", md5::compute(&self.get(path).unwrap())))
+                .to_string()
+        });
+        Some(md5)
     }
 }
 
@@ -105,6 +122,10 @@ impl Dir for LocalDir {
 
     fn clone(&self) -> Box<Dir> {
         Box::new(LocalDir(self.0.clone()))
+    }
+
+    fn md5(&self, _path: &Path) -> Option<String> {
+        None
     }
 }
 
@@ -283,35 +304,35 @@ fn run_http_server(port: u16, client_proxy: bool) {
             //     return Response::redirect_302("/$/list");
             // },
 
+            // static_dir
             (GET) ["/$/static/{target}", target: String] => {
                 if let Some(data) = static_dir.get(Path::new(&target)) {
-                    return Response::from_data(
+                    let mut res = Response::from_data(
                         guess_mime_type(&target).to_string(),
                         data.clone(),
-                    ).with_etag(request,
-                        format!("{:x}", md5::compute(data)),
                     );
+                    if let Some(md5) = static_dir.md5(Path::new(&target)) {
+                        eprintln!("md5 {:?}", md5);
+                        res = res.with_etag(request, md5);
+                    }
+                    res
                 } else {
                     return Response::empty_404();
                 }
             },
 
+            // dist_dir
             (GET) ["/$/{target}", target: String] => {
-                use std::cell::RefCell;
-
-                thread_local! {
-                    pub static ETAG: RefCell<HashMap<String, String>> = RefCell::new(HashMap::new());
-                }
-
                 if let Some(data) = dist_dir.get(Path::new(&target)) {
-                    return ETAG.with(|f| {
-                        Response::from_data(
-                            guess_mime_type(&target).to_string(),
-                            data.clone(),
-                        ).with_etag(request, {
-                            f.borrow_mut().entry(target).or_insert_with(|| format!("{:x}", md5::compute(data))).to_owned()
-                        })
-                    });
+                    let mut res = Response::from_data(
+                        guess_mime_type(&target).to_string(),
+                        data.clone(),
+                    );
+                    if let Some(md5) = dist_dir.md5(Path::new(&target)) {
+                        eprintln!("md5 {:?}", md5);
+                        res = res.with_etag(request, md5);
+                    }
+                    res
                 } else {
                     return Response::empty_404();
                 }
