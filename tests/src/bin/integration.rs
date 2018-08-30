@@ -117,6 +117,22 @@ document.querySelector('.edit-text').dispatchEvent(evt);
     fn execute(self) -> impl Future<Item = ::rustc_serialize::json::Json, Error = error::CmdError> {
         self.client.execute(&self.value, vec![])
     }
+
+    fn debug_end_of_line(self) -> impl Future<Item = ::rustc_serialize::json::Json, Error = error::CmdError> {
+        self
+                .js(r#"
+
+// DEBUG.endOfLine();
+
+let marker = document.querySelector('.edit-text div[data-tag=h1] span');
+let clientX = marker.getBoundingClientRect().right;
+let clientY = marker.getBoundingClientRect().top;
+
+
+            "#)
+                .mousedown("clientX - 3", "clientY + 3")
+                .execute()
+    }
 }
 
 struct Checkpoint(Arc<Barrier>, Option<Arc<Barrier>>);
@@ -248,26 +264,11 @@ async fn spooky_test<'a>(
 
     // Position the caret.
     await!(sleep_ms(1_000));
-    await!(code(&c)
-        .js(r#"
-
-// DEBUG.endOfLine();
-
-let marker = document.querySelector('.edit-text div[data-tag=h1] span');
-let clientX = marker.getBoundingClientRect().right;
-let clientY = marker.getBoundingClientRect().top;
-
-
-    "#)
-        .mousedown("clientX - 3", "clientY + 3")
-        .execute());
+    await!(code(&c).debug_end_of_line());
 
     // Type the ghost character.
     await!(sleep_ms(1_000));
-    await!(code(&c)
-        //.keypress("35")
-        .keypress("0x1f47b")
-        .execute());
+    await!(code(&c).keypress("0x1f47b").execute());
     
     // DEBUG.keypress();
 

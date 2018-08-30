@@ -1,4 +1,8 @@
+import { WasmClient as WasmClientModule } from './bindgen/edit_client';
+
 declare var window: any;
+
+let globalClientBindings: WasmClientModule | null = null;
 
 let POEM = `The Telegraphers Valentine, by J.C. Maxwell, 1860
 
@@ -70,6 +74,7 @@ const DEBUG = {
             }, 50);
         }
     },
+
     stopWriter: () => {
         console.log('stop');
         if (int !== null) {
@@ -77,6 +82,20 @@ const DEBUG = {
         }
         int = null;
     },
+
+    asMarkdown: () => {
+        if (globalClientBindings == null) {
+            throw new Error('Bindings not assigned');
+        }
+
+        return globalClientBindings.asMarkdown();
+    },
+
+    setGlobalClientBindings: (
+        bindings: WasmClientModule,
+    ) => {
+        globalClientBindings = bindings;
+    }
 };
 
 window.DEBUG = DEBUG;
