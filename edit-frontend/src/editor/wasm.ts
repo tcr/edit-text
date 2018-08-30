@@ -7,6 +7,7 @@ import { getWasmModule } from '../index';
 
 import {Command} from './commands';
 import {ClientImpl, ServerImpl} from './network';
+import DEBUG from '../debug';
 
 let _convertMarkdownToDoc: ((x: string) => any) | null = null;
 let _convertMarkdownToHtml: ((x: string) => any) | null = null;
@@ -78,12 +79,12 @@ export class WasmClient implements ClientImpl {
 
   // TODO refactor wasmClient, remove Module
   Module: any;
-  wasmClient: WasmClientModule;
+  clientBindings: WasmClientModule;
 
   nativeCommand(command: Command) {
     delete command.tag;
     if (forwardWasmTaskCallback != null) {
-      this.wasmClient.command(JSON.stringify({
+      this.clientBindings.command(JSON.stringify({
         FrontendToUserCommand: command,
       }));
     }
@@ -114,16 +115,17 @@ export class WasmClient implements ClientImpl {
 
       index.getWasmModule()
       .then(Module => {
-        let wasmClient = Module.wasm_setup();
+        let clientBindings = Module.wasm_setup();
+        DEBUG.setGlobalClientBindings(clientBindings);
   
         setImmediate(() => {
           // Websocket port
           client.Module = Module;
-          client.wasmClient = wasmClient;
+          client.clientBindings = clientBindings;
 
           forwardWasmTaskCallback = (msg: any) => {
             try {
-              wasmClient.command(msg);
+              clientBindings.command(msg);
             } catch (e) {
               forwardWasmTaskCallback = null;
 

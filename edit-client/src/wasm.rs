@@ -25,6 +25,7 @@ use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use wasm_bindgen::prelude::*;
 use serde_json::Value;
+use edit_common::markdown::doc_to_markdown;
 
 lazy_static! {
     static ref WASM_ALIVE: Arc<AtomicBool> = Arc::new(AtomicBool::new(true));
@@ -170,6 +171,10 @@ impl WasmClient {
 
         // Default status
         0
+    }
+
+    pub fn asMarkdown(&mut self) -> String {
+        doc_to_markdown(&self.state().client_doc.doc.0).unwrap()
     }
 }
 

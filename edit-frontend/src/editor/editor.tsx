@@ -401,10 +401,10 @@ export class Editor extends React.Component {
       let DOWN = e.keyCode == 40;
       if (UP || DOWN) {
         let root = document.querySelector('.edit-text')!;
-        let current = document.querySelector('div.current[data-tag="caret"]');
+        let current = document.querySelector('div.current[data-tag="caret"][data-focus="true"]');
         if (current !== null) {
           let rect = current.getBoundingClientRect();
-          let y = (rect.top + rect.bottom) / 2;
+          let y = UP ? rect.top + 5 : rect.bottom - 5;
           let x = rect.right;
 
           // Attempt to get the text node we are closest to
@@ -432,8 +432,9 @@ export class Editor extends React.Component {
               y += UP ? -STEP : STEP;
 
               let el = document.elementFromPoint(x, y);
-              // console.log('locating element at %d, %d:', x, y, el);
+              console.log('locating element at %d, %d:', x, y, el);
               if (!root.contains(el) || el === null) { // Off the page!
+                console.log('bad');
                 break;
               }
               if (root !== el) {
@@ -444,12 +445,12 @@ export class Editor extends React.Component {
                 // Check for the "empty div" scenario
                 let isEmptyDiv = isEmptyBlock(el);
 
-                // console.log(isEmptyDiv, x, y);
+                console.log('%%%', isEmptyDiv, isTextNode);
                 // if (isEmptyDiv) {
                 //   console.log('----->', el.getBoundingClientRect());
                 // }
 
-                // console.log('attempted caret at', x, y, caret);
+                console.log('attempted caret at', x, y, caret);
                 if (isTextNode || isEmptyDiv) {
                   // console.log('CARET', caret);
                   e.preventDefault();

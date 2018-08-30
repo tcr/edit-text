@@ -52,7 +52,7 @@ export class AppServer implements ServerImpl {
         try {
           if (getForwardWasmTaskCallback() != null) {
             if (server.client != null) {
-              server.client.wasmClient.command(JSON.stringify({
+              server.client.clientBindings.command(JSON.stringify({
                 SyncToUserCommand: JSON.parse(event.data),
               }));
             }
