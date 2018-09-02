@@ -15,6 +15,8 @@ import { NullServer, ClientImpl, ServerImpl } from '../editor/network';
 import { WasmClient, convertMarkdownToHtml, convertMarkdownToDoc } from '../editor/wasm';
 import * as index from '../index';
 
+import DEBUG from '../debug';
+
 declare var CONFIG: any;
 
 // Check page configuration.
@@ -365,6 +367,8 @@ export class EditorFrame extends React.Component {
     }
 
     else if (parse.Update) {
+      DEBUG.measureTime('first-update');
+
       // Update page content
       this.setState({
         body: parse.Update[0],
@@ -387,6 +391,8 @@ export class EditorFrame extends React.Component {
       this.setState({
         buttons: parse.Controls.buttons,
       });
+
+      DEBUG.measureTime('interactive');
     }
 
     else {
@@ -595,6 +601,7 @@ export function start() {
 
       // Connect to remote sockets.
       // TODO why is nativeConnect an error?
+      DEBUG.measureTime('connect-client');
       client
         .connect(() => {
           // TODO
