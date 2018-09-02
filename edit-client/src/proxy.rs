@@ -12,8 +12,8 @@ use extern::{
 #[cfg(not(target_arch = "wasm32"))]
 pub struct ProxyClient {
     pub state: Client,
-    pub tx_client: Sender<UserToFrontendCommand>,
-    pub tx_sync: Sender<UserToSyncCommand>,
+    pub tx_client: Sender<FrontendCommand>,
+    pub tx_sync: Sender<ServerCommand>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -22,13 +22,13 @@ impl ClientImpl for ProxyClient {
         &mut self.state
     }
 
-    fn send_client(&self, req: &UserToFrontendCommand) -> Result<(), Error> {
+    fn send_client(&self, req: &FrontendCommand) -> Result<(), Error> {
         log_wasm!(SendClient(req.clone()));
         self.tx_client.send(req.clone())?;
         Ok(())
     }
 
-    fn send_sync(&self, req: UserToSyncCommand) -> Result<(), Error> {
+    fn send_sync(&self, req: ServerCommand) -> Result<(), Error> {
         log_wasm!(SendSync(req.clone()));
         self.tx_sync.send(req)?;
         Ok(())
@@ -47,7 +47,7 @@ impl ClientImpl for ProxyClient {
 //                     rng.gen_range($wait_params.0, $wait_params.1),
 //                 ));
 //                 if monkey.load(Ordering::Relaxed) {
-//                     tx.send(Task::FrontendToUserCommand($task))?;
+//                     tx.send(Task::ControllerCommand($task))?;
 //                 }
 //             }
 //             Ok(())

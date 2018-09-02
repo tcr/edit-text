@@ -135,13 +135,13 @@ impl SimpleSocket for ClientSocket {
     }
 
     fn handle_message(&mut self, data: &[u8]) -> Result<(), Error> {
-        let command: UserToSyncCommand = serde_json::from_slice(&data)?;
+        let command: ServerCommand = serde_json::from_slice(&data)?;
 
         // TODO don't log client Log(...)
         // log_sync!("SERVER", ClientPacket(command.clone()));
 
         match command {
-            UserToSyncCommand::Commit(client_id, op, version) => {
+            ServerCommand::Commit(client_id, op, version) => {
                 let _ = self.tx_master.send(ClientNotify(
                     self.page_id.to_string(),
                     ClientUpdate::Commit {
@@ -153,10 +153,10 @@ impl SimpleSocket for ClientSocket {
                 // let mut sync_state = self.sync_state_mutex.lock().unwrap();
                 // sync_state.ops.push_back((client_id.clone(), version, op.clone()));
             }
-            UserToSyncCommand::TerminateProxy => {
+            ServerCommand::TerminateProxy => {
                 // NOTE we ignore this, it's only used for user proxy
             }
-            UserToSyncCommand::Log(log) => {
+            ServerCommand::Log(log) => {
                 log_raw!(self.client_id, log);
             }
         }
@@ -202,12 +202,12 @@ impl PageController {
         }
 
         // Broadcast this operation to all connected websockets.
-        let command = SyncToUserCommand::Update(self.state.version, client_id.to_owned(), op);
+        let command = ClientCommand::Update(self.state.version, client_id.to_owned(), op);
         self.broadcast_client_command(&command);
     }
 
     /// Forward command to everyone in our client set.
-    fn broadcast_client_command(&self, command: &SyncToUserCommand) {
+    fn broadcast_client_command(&self, command: &ClientCommand) {
         let json = serde_json::to_string(&command).unwrap();
         for (_, client) in &self.clients {
             let _ = client.lock().unwrap().send(json.clone());
@@ -217,7 +217,7 @@ impl PageController {
     fn send_client_command(
         &self,
         client: &simple_ws::Sender,
-        command: &SyncToUserCommand,
+        command: &ClientCommand,
     ) -> Result<(), Error> {
         let json = serde_json::to_string(&command).unwrap();
         Ok(client.lock().unwrap().send(json.clone())?)
@@ -252,7 +252,7 @@ impl PageController {
                 let version = self.state.version;
 
                 // Initialize client state on outgoing websocket.
-                let command = SyncToUserCommand::Init(
+                let command = ClientCommand::Init(
                     client_id.to_string(),
                     self.state.doc.0.clone(),
                     version,

@@ -85,7 +85,7 @@ export class WasmClient implements ClientImpl {
     delete command.tag;
     if (forwardWasmTaskCallback != null) {
       this.clientBindings.command(JSON.stringify({
-        FrontendToUserCommand: command,
+        ControllerCommand: command,
       }));
     }
   }
@@ -103,8 +103,8 @@ export class WasmClient implements ClientImpl {
           // Parse the packet.
           let parse = JSON.parse(data);
 
-          if (parse.UserToSyncCommand && client.server != null) {
-            client.server.syncCommand(parse.UserToSyncCommand);
+          if (parse.ServerCommand && client.server != null) {
+            client.server.syncCommand(parse.ServerCommand);
           } else {
             if (client.onNativeMessage != null) {
               client.onNativeMessage(parse);

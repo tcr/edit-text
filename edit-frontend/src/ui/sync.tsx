@@ -70,7 +70,7 @@ export class AppServer implements ServerImpl {
   private nativeSocket: WebSocket;
 
   // Create a deferred object for the sync socket
-  // because we may receive UserToSyncCommand payloads earlier
+  // because we may receive ServerCommand payloads earlier
   private deferSync: Promise<WebSocket>;
   private deferSyncResolve: (socket: WebSocket) => void | null;
 
@@ -106,7 +106,7 @@ export class AppServer implements ServerImpl {
             if (getForwardWasmTaskCallback() != null) {
               if (server.client != null) {
                 server.client.clientBindings.command(JSON.stringify({
-                  SyncToUserCommand: JSON.parse(event.data),
+                  ClientCommand: JSON.parse(event.data),
                 }));
               }
             }

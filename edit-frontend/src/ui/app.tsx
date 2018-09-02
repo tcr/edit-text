@@ -501,7 +501,7 @@ class EditText extends React.Component {
       .then(() => {
         console.log('Loading static editor.');
         this.props.client.clientBindings.command(JSON.stringify({
-          SyncToUserCommand: {
+          ClientCommand: {
             Init: ["$local", convertMarkdownToDoc(this.props.markdown), 100],
           } 
         }));

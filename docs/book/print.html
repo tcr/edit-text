@@ -224,7 +224,7 @@ dev: 0.0.0.0:8003/  prod: /$/graphql   GraphQL
 <a class="header" href="print.html#interop-sync---user" id="interop-sync---user"><h2>Interop Sync &lt;-&gt; User</h2></a>
 <p>Defined in <code>edit-client/src/client.rs</code>.</p>
 <p>From Sync -&gt; User:</p>
-<pre><code>pub enum SyncToUserCommand {
+<pre><code>pub enum ClientCommand {
     // Client id assignment, initial doc, initial version
     Init(String, DocSpan, usize),
 
@@ -233,7 +233,7 @@ dev: 0.0.0.0:8003/  prod: /$/graphql   GraphQL
 }
 </code></pre>
 <p>And from User -&gt; Sync:</p>
-<pre><code>pub enum UserToSyncCommand {
+<pre><code>pub enum ServerCommand {
     // Connect(String),
     Commit(String, Op, usize),
     TerminateProxy,
@@ -242,20 +242,20 @@ dev: 0.0.0.0:8003/  prod: /$/graphql   GraphQL
 <a class="header" href="print.html#intop-user---frontend" id="intop-user---frontend"><h2>Intop: User &lt;-&gt; Frontend</h2></a>
 <p>Defined in <code>edit-client/src/client.rs</code>.</p>
 <p>From User -&gt; Frontend:</p>
-<pre><code>pub enum UserToFrontendCommand {
+<pre><code>pub enum FrontendCommand {
     Init(String),
     Controls {
         keys: Vec&lt;(u32, bool, bool)&gt;,
         buttons: Vec&lt;(usize, String, bool)&gt;,
     },
-    PromptString(String, String, FrontendToUserCommand),
+    PromptString(String, String, ControllerCommand),
     Update(String, Option&lt;Op&gt;),
     Error(String),
-    UserToSyncCommand(UserToSyncCommand),
+    ServerCommand(ServerCommand),
 }
 </code></pre>
 <p>And from Frontend -&gt; User:</p>
-<pre><code>pub enum FrontendToUserCommand {
+<pre><code>pub enum ControllerCommand {
     // Connect(String),
     Keypress(u32, bool, bool, bool), // code, meta, shift, alt
     Button(u32),
