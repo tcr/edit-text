@@ -432,9 +432,8 @@ export class Editor extends React.Component {
               y += UP ? -STEP : STEP;
 
               let el = document.elementFromPoint(x, y);
-              console.log('locating element at %d, %d:', x, y, el);
+              // console.log('locating element at %d, %d:', x, y, el);
               if (!root.contains(el) || el === null) { // Off the page!
-                console.log('bad');
                 break;
               }
               if (root !== el) {
@@ -444,13 +443,11 @@ export class Editor extends React.Component {
 
                 // Check for the "empty div" scenario
                 let isEmptyDiv = isEmptyBlock(el);
-
-                console.log('%%%', isEmptyDiv, isTextNode);
                 // if (isEmptyDiv) {
                 //   console.log('----->', el.getBoundingClientRect());
                 // }
 
-                console.log('attempted caret at', x, y, caret);
+                // console.log('attempted caret at', x, y, caret);
                 if (isTextNode || isEmptyDiv) {
                   // console.log('CARET', caret);
                   e.preventDefault();

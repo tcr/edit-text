@@ -8,6 +8,59 @@ import {EditorFrame} from './app';
 import * as commands from '../editor/commands';
 import {ServerImpl, ClientImpl } from '../editor/network';
 import {WasmClient, WasmError, getForwardWasmTaskCallback, setForwardWasmTaskCallback} from '../editor/wasm';
+import DEBUG from '../debug';
+
+class DeferredSocket {
+  socket: WebSocket;
+
+  openQueue: Array<any>;
+  messageQueue: Array<any>;
+  closeQueue: Array<any>;
+
+  constructor(url: string) {
+    this.openQueue = [];
+    this.messageQueue = [];
+    this.closeQueue = [];
+
+    let self = this;
+    this.socket = new WebSocket(
+      route.syncUrl()
+    );
+    this.socket.onopen = function () {
+      DEBUG.measureTime('websocket-defer-open');
+      self.openQueue.push(arguments);
+    };
+    this.socket.onmessage = function () {
+      self.messageQueue.push(arguments);
+    };
+    this.socket.onclose = function () {
+      self.closeQueue.push(arguments);
+    };
+  }
+
+  handle(handlers: any) {
+    this.socket.onopen = handlers.onopen;
+    this.socket.onmessage = handlers.onmessage;
+    this.socket.onclose = handlers.onclose;
+
+    for (let item of this.openQueue) {
+      console.log('deferred open', item);
+      this.socket.onopen!.apply(this.socket, item);
+    }
+    for (let item of this.messageQueue) {
+      console.log('deferred message', item);
+      this.socket.onmessage!.apply(this.socket, item);
+    }
+    for (let item of this.closeQueue) {
+      console.log('deferred close', item);
+      this.socket.onclose!.apply(this.socket, item);
+    }
+  }
+}
+
+let syncSocket = new DeferredSocket(
+  route.syncUrl()
+);
 
 export class AppServer implements ServerImpl {
   client: WasmClient | null;
@@ -40,65 +93,65 @@ export class AppServer implements ServerImpl {
 
     return Promise.resolve()
     .then(() => {
-      let syncSocket = new WebSocket(
-        route.syncUrl()
-      );
-      syncSocket.onopen = function (event) {
-        console.debug('server socket opened.');
-      };
+      DEBUG.measureTime('connect-server');
 
-      syncSocket.onmessage = function (event) {
-        // console.log('Got message from sync:', event.data);
-        try {
-          if (getForwardWasmTaskCallback() != null) {
-            if (server.client != null) {
-              server.client.clientBindings.command(JSON.stringify({
-                SyncToUserCommand: JSON.parse(event.data),
-              }));
+      syncSocket.handle({
+        onopen: (event: any) => {
+          console.debug('server socket opened.');
+          DEBUG.measureTime('connect-ready');
+        },
+        onmessage: (event: any) => {
+          // console.log('Got message from sync:', event.data);
+          try {
+            if (getForwardWasmTaskCallback() != null) {
+              if (server.client != null) {
+                server.client.clientBindings.command(JSON.stringify({
+                  SyncToUserCommand: JSON.parse(event.data),
+                }));
+              }
             }
-          }
-        } catch (e) {
-          // Kill the current process, we triggered an exception.
-          setForwardWasmTaskCallback(null);
-          if (server.client != null) {
-            server.client.Module.wasm_close();
-          }
-          // syncSocket.close();
+          } catch (e) {
+            // Kill the current process, we triggered an exception.
+            setForwardWasmTaskCallback(null);
+            if (server.client != null) {
+              server.client.Module.wasm_close();
+            }
+            // syncSocket.close();
 
-          // TODO this is the wrong place to put this
-          (document as any).body.background = 'red';
+            // TODO this is the wrong place to put this
+            (document as any).body.background = 'red';
 
-          if (server.editorFrame) {
+            if (server.editorFrame) {
+              onError(
+                <div>The client experienced an error talking to the server and you are now disconnected. We're sorry. You can <a href="?">refresh your browser</a> to continue.</div>
+              );
+            }
+
+            throw new WasmError(e, `Error during sync command: ${e.message}`);
+          }
+        },
+        onclose: () => {
+          if (server.editorFrame) { 
             onError(
-              <div>The client experienced an error talking to the server and you are now disconnected. We're sorry. You can <a href="?">refresh your browser</a> to continue.</div>
+              <div>The editor has disconnected from the server. We're sorry. You can <a href="?">refresh your browser</a>, or we'll refresh once the server is reachable.</div>
             );
           }
 
-          throw new WasmError(e, `Error during sync command: ${e.message}`);
-        }
-      };
+          setTimeout(() => {
+            setInterval(() => {
+              app.graphqlPage('home').then(() => {
+                // Can access server, continue
+                window.location.reload();
+              });
+            }, 2000);
+          }, 3000);
 
-      syncSocket.onclose = function () {
-        if (server.editorFrame) { 
-          onError(
-            <div>The editor has disconnected from the server. We're sorry. You can <a href="?">refresh your browser</a>, or we'll refresh once the server is reachable.</div>
-          );
-        }
-
-        setTimeout(() => {
-          setInterval(() => {
-            app.graphqlPage('home').then(() => {
-              // Can access server, continue
-              window.location.reload();
-            });
-          }, 2000);
-        }, 3000);
-
-        server.onSyncClose();
-      };
+          server.onSyncClose();
+        },
+      });
 
       if (this.deferSyncResolve !== null) {
-        this.deferSyncResolve(syncSocket);
+        this.deferSyncResolve(syncSocket.socket);
       }
     });
   }

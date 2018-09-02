@@ -95,8 +95,22 @@ const DEBUG = {
         bindings: WasmClientModule,
     ) => {
         globalClientBindings = bindings;
-    }
+    },
+
+    times: ({} as any),
+
+    measureTime(key: string) {
+        if (DEBUG.times[key]) {
+            // console.warn('Duplicate time measurement being recorded:', key);
+        } else {
+            DEBUG.times[key] = Date.now() - (DEBUG.times['start'] as any);
+            console.info('Time measurement %s:', key, DEBUG.times[key]);
+        }
+    },
 };
+
+DEBUG.times['start'] = Date.now();
+console.info('DEBUG start.');
 
 window.DEBUG = DEBUG;
 
