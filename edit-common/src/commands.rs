@@ -1,15 +1,17 @@
 use oatie::doc::*;
 
+// The server is the synchronization server.
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum UserToSyncCommand {
+pub enum ServerCommand {
     // Connect(String),
     Commit(String, Op, usize),
     Log(String),
     TerminateProxy,
 }
 
+// Client is an individual user / machine.
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum SyncToUserCommand {
+pub enum ClientCommand {
     // Client id assignment, initial doc, initial version
     Init(String, DocSpan, usize),
 
@@ -17,9 +19,9 @@ pub enum SyncToUserCommand {
     Update(usize, String, Op),
 }
 
-// Commands received from frontend.
+// Controller is the client interface that is exposed to the frnontend.
 #[derive(Clone, Serialize, Deserialize, Debug)]
-pub enum FrontendToUserCommand {
+pub enum ControllerCommand {
     // Connect(String),
     Keypress(u32, bool, bool, bool), // code, meta, shift, alt
     Button(u32),
@@ -33,6 +35,17 @@ pub enum FrontendToUserCommand {
     Monkey(bool),
 }
 
+// Frontend is the editor components in JavaScript.
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub enum FrontendCommand {
+    Init(String),
+    Controls(Controls),
+    PromptString(String, String, ControllerCommand),
+    Update(String, String, Option<Op>),
+    Error(String),
+    ServerCommand(ServerCommand),
+}
+
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum Ui {
     // label, callback, selected
@@ -44,15 +57,4 @@ pub enum Ui {
 pub struct Controls {
     pub keys: Vec<(u32, bool, bool)>,
     pub buttons: Vec<Ui>,
-}
-
-// Commands to send to Frontend.
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub enum UserToFrontendCommand {
-    Init(String),
-    Controls(Controls),
-    PromptString(String, String, FrontendToUserCommand),
-    Update(String, String, Option<Op>),
-    Error(String),
-    UserToSyncCommand(UserToSyncCommand),
 }

@@ -60,7 +60,7 @@ Defined in `edit-client/src/client.rs`.
 From Sync -> User:
 
 ```
-pub enum SyncToUserCommand {
+pub enum ClientCommand {
     // Client id assignment, initial doc, initial version
     Init(String, DocSpan, usize),
 
@@ -72,7 +72,7 @@ pub enum SyncToUserCommand {
 And from User -> Sync:
 
 ```
-pub enum UserToSyncCommand {
+pub enum ServerCommand {
     // Connect(String),
     Commit(String, Op, usize),
     TerminateProxy,
@@ -86,23 +86,23 @@ Defined in `edit-client/src/client.rs`.
 From User -> Frontend:
 
 ```
-pub enum UserToFrontendCommand {
+pub enum FrontendCommand {
     Init(String),
     Controls {
         keys: Vec<(u32, bool, bool)>,
         buttons: Vec<(usize, String, bool)>,
     },
-    PromptString(String, String, FrontendToUserCommand),
+    PromptString(String, String, ControllerCommand),
     Update(String, Option<Op>),
     Error(String),
-    UserToSyncCommand(UserToSyncCommand),
+    ServerCommand(ServerCommand),
 }
 ```
 
 And from Frontend -> User:
 
 ```
-pub enum FrontendToUserCommand {
+pub enum ControllerCommand {
     // Connect(String),
     Keypress(u32, bool, bool, bool), // code, meta, shift, alt
     Button(u32),

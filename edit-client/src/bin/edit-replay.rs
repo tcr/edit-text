@@ -40,8 +40,8 @@ fn init_new_client(
     client_id: &str,
 ) -> (
     ProxyClient,
-    Receiver<UserToFrontendCommand>,
-    Receiver<UserToSyncCommand>,
+    Receiver<FrontendCommand>,
+    Receiver<ServerCommand>,
 ) {
     let (tx_client, rx_client) = unbounded();
     let (tx_sync, rx_sync) = unbounded();

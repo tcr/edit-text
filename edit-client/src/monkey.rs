@@ -41,7 +41,7 @@ impl Scheduler {
 
     pub fn schedule_random<F>(&mut self, bounds: (u64, u64), task: F)
     where
-        F: Fn() -> FrontendToUserCommand + 'static,
+        F: Fn() -> ControllerCommand + 'static,
     {
         use crate::wasm::{
             forwardWasmTask,
@@ -81,7 +81,7 @@ impl Scheduler {
 
                     if alive.load(Ordering::Relaxed) && monkey.load(Ordering::Relaxed) {
                         let task_object = task();
-                        let task_str = serde_json::to_string(&Task::FrontendToUserCommand(
+                        let task_str = serde_json::to_string(&Task::ControllerCommand(
                             task_object,
                         )).unwrap();
                         forwardWasmTask(&task_str);
@@ -117,7 +117,7 @@ impl Scheduler {
 
     pub fn schedule_random<F>(&mut self, bounds: (u64, u64), task: F)
     where
-        F: Fn() -> FrontendToUserCommand + 'static + Send,
+        F: Fn() -> ControllerCommand + 'static + Send,
     {
         use extern::{
             failure::Error,
@@ -136,7 +136,7 @@ impl Scheduler {
                 thread::sleep(Duration::from_millis(rng.gen_range(bounds.0, bounds.1)));
                 if monkey.load(Ordering::Relaxed) {
                     let task_object = task();
-                    tx.send(Task::FrontendToUserCommand(task_object))?;
+                    tx.send(Task::ControllerCommand(task_object))?;
                 }
             }
             Ok(())
@@ -183,7 +183,7 @@ pub fn setup_monkey<C: ClientImpl + Sized>(mut scheduler: Scheduler) {
     scheduler.schedule_random(MONKEY_BUTTON, || {
         let mut rng = local_rng();
         let index = rng.gen_range(0, button_handlers::<C>(None).0.len() as u32);
-        FrontendToUserCommand::Button(index)
+        ControllerCommand::Button(index)
     });
 
     scheduler.schedule_random(MONKEY_LETTER, || {
@@ -195,25 +195,25 @@ pub fn setup_monkey<C: ClientImpl + Sized>(mut scheduler: Scheduler) {
             b' ',
         ];
         let c = *rng.choose(&char_list).unwrap() as u32;
-        FrontendToUserCommand::Character(c)
+        ControllerCommand::Character(c)
     });
 
     scheduler.schedule_random(MONKEY_ARROW, || {
         let mut rng = local_rng();
         let key = *rng.choose(&[37, 39, 37, 39, 37, 39, 38, 40]).unwrap();
-        FrontendToUserCommand::Keypress(key, false, false, false)
+        ControllerCommand::Keypress(key, false, false, false)
     });
 
     scheduler.schedule_random(MONKEY_BACKSPACE, || {
-        FrontendToUserCommand::Keypress(8, false, false, false)
+        ControllerCommand::Keypress(8, false, false, false)
     });
 
     scheduler.schedule_random(MONKEY_ENTER, || {
-        FrontendToUserCommand::Keypress(13, false, false, false)
+        ControllerCommand::Keypress(13, false, false, false)
     });
 
     scheduler.schedule_random(MONKEY_CLICK, || {
         let mut rng = local_rng();
-        FrontendToUserCommand::RandomTarget(rng.gen::<f64>())
+        ControllerCommand::RandomTarget(rng.gen::<f64>())
     });
 }

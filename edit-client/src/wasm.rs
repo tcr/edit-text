@@ -88,15 +88,15 @@ impl ClientImpl for WasmClient {
         &mut self.state
     }
 
-    fn send_client(&self, req: &UserToFrontendCommand) -> Result<(), Error> {
+    fn send_client(&self, req: &FrontendCommand) -> Result<(), Error> {
         let data = serde_json::to_string(&req)?;
         let _ = sendCommandToJS(&data);
 
         Ok(())
     }
 
-    fn send_sync(&self, req: UserToSyncCommand) -> Result<(), Error> {
-        self.send_client(&UserToFrontendCommand::UserToSyncCommand(req))
+    fn send_sync(&self, req: ServerCommand) -> Result<(), Error> {
+        self.send_client(&FrontendCommand::ServerCommand(req))
     }
 }
 

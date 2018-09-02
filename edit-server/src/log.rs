@@ -62,7 +62,7 @@ pub enum LogSync {
     Launch,
     ServerSpawn,
     ClientConnect,
-    ClientPacket(UserToSyncCommand),
+    ClientPacket(ServerCommand),
     Debug(String),
     Spawn,
 }

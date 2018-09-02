@@ -90,11 +90,11 @@ fn spawn_virtual_monkey(port: u16, key: usize) -> JoinHandle<()> {
             // Ignore all incoming messages, as we have no client to update
             move |msg: ws::Message| {
                 // println!("wasm got a packet from sync '{}'. ", msg);
-                let req_parse: Result<UserToFrontendCommand, _> =
+                let req_parse: Result<FrontendCommand, _> =
                     serde_json::from_slice(&msg.into_data());
 
-                if let Ok(UserToFrontendCommand::Init(..)) = req_parse {
-                    let command = FrontendToUserCommand::Monkey(true);
+                if let Ok(FrontendCommand::Init(..)) = req_parse {
+                    let command = ControllerCommand::Monkey(true);
                     let json = serde_json::to_string(&command).unwrap();
                     out.send(json.as_str()).unwrap();
                     // monkey_started.store(true, Ordering::Relaxed);
@@ -128,7 +128,7 @@ fn virtual_monkeys() {
 
 // #[spawn]
 fn spawn_send_to_client(
-    rx_client: Receiver<UserToFrontendCommand>,
+    rx_client: Receiver<FrontendCommand>,
     out: Arc<Mutex<ws::Sender>>,
 ) -> JoinHandle<Result<(), Error>> {
     thread::spawn(|| -> Result<(), Error> {
@@ -144,12 +144,12 @@ fn spawn_send_to_client(
 // #[spawn]
 fn spawn_client_to_sync(
     out: ws::Sender,
-    rx: Receiver<UserToSyncCommand>,
+    rx: Receiver<ServerCommand>,
     sentinel: Arc<AtomicBool>,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
         while let Ok(command) = rx.recv() {
-            if let UserToSyncCommand::TerminateProxy = command {
+            if let ServerCommand::TerminateProxy = command {
                 let _ = out.close(CloseCode::Away);
                 sentinel.store(false, Ordering::SeqCst);
                 break;
@@ -165,7 +165,7 @@ fn spawn_sync_connection(
     ws_port: u16,
     page_id: String,
     tx_task: Sender<Task>,
-    rx: Receiver<UserToSyncCommand>,
+    rx: Receiver<ServerCommand>,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
         let sentinel = Arc::new(AtomicBool::new(true));
@@ -182,14 +182,14 @@ fn spawn_sync_connection(
                     // Handle messages received on this connection
                     // println!("wasm got a packet from sync '{}'. ", msg);
 
-                    let req_parse: Result<SyncToUserCommand, _> =
+                    let req_parse: Result<ClientCommand, _> =
                         serde_json::from_slice(&msg.into_data());
                     match req_parse {
                         Err(err) => {
                             println!("Packet error: {:?}", err);
                         }
                         Ok(value) => {
-                            let _ = tx_task.send(Task::SyncToUserCommand(value));
+                            let _ = tx_task.send(Task::ClientCommand(value));
                         }
                     }
 
@@ -199,7 +199,7 @@ fn spawn_sync_connection(
         }).unwrap();
 
         // Client socket may have disconnected, and we closed
-        // this connection via UserToSyncCommand::TerminateProxy
+        // this connection via ServerCommand::TerminateProxy
         if sentinel.load(Ordering::SeqCst) == true {
             // Child client didn't disconnect us, invalid
             unreachable!("Server connection cut");
@@ -216,7 +216,7 @@ fn setup_client(
     Arc<AtomicBool>,
     Arc<AtomicBool>,
     Sender<Task>,
-    Sender<UserToSyncCommand>,
+    Sender<ServerCommand>,
 ) {
     let (tx_sync, rx_sync) = unbounded();
 
@@ -280,7 +280,7 @@ pub struct ProxySocket {
     alive: Arc<AtomicBool>,
     monkey: Arc<AtomicBool>,
     tx_task: Sender<Task>,
-    tx_sync: Sender<UserToSyncCommand>,
+    tx_sync: Sender<ServerCommand>,
 }
 
 impl SimpleSocket for ProxySocket {
@@ -305,14 +305,14 @@ impl SimpleSocket for ProxySocket {
 
     fn handle_message(&mut self, data: &[u8]) -> Result<(), Error> {
         let msg = serde_json::from_slice(&data)?;
-        Ok(self.tx_task.send(Task::FrontendToUserCommand(msg))?)
+        Ok(self.tx_task.send(Task::ControllerCommand(msg))?)
     }
 
     fn cleanup(&mut self) -> Result<(), Error> {
         self.monkey.store(false, Ordering::Relaxed);
         self.alive.store(false, Ordering::Relaxed);
 
-        self.tx_sync.send(UserToSyncCommand::TerminateProxy)?;
+        self.tx_sync.send(ServerCommand::TerminateProxy)?;
 
         Ok(())
     }

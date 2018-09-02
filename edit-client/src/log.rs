@@ -7,17 +7,17 @@ use extern::{
 
 thread_local! {
     pub static CLIENT_LOG_ID: RefCell<Option<String>> = RefCell::new(None);
-    pub static CLIENT_LOG_SENDER: RefCell<Option<Sender<UserToSyncCommand>>> = RefCell::new(None);
+    pub static CLIENT_LOG_SENDER: RefCell<Option<Sender<ServerCommand>>> = RefCell::new(None);
 }
 
-pub fn log_init(tx: Sender<UserToSyncCommand>) -> Option<Sender<UserToSyncCommand>> {
+pub fn log_init(tx: Sender<ServerCommand>) -> Option<Sender<ServerCommand>> {
     CLIENT_LOG_SENDER.with(|sender| sender.replace(Some(tx)))
 }
 
 pub fn log_send(data: &str) {
     CLIENT_LOG_SENDER.with(|sender| {
         if let Some(ref sender) = *sender.borrow() {
-            let _ = sender.send(UserToSyncCommand::Log(data.to_string()));
+            let _ = sender.send(ServerCommand::Log(data.to_string()));
         } else {
             eprintln!(
                 "(~) error: logging without a logger: {}",
@@ -33,8 +33,8 @@ pub enum LogWasm {
     Task(String, client::Task),
     SyncNew(String),
 
-    SendClient(UserToFrontendCommand),
-    SendSync(UserToSyncCommand),
+    SendClient(FrontendCommand),
+    SendSync(ServerCommand),
     Debug(String),
 }
 
@@ -51,8 +51,8 @@ macro_rules! log_wasm {
 
         // console_log!("[WASM_LOG] {}", ron);
 
-        let req = ::edit_common::commands::UserToFrontendCommand::UserToSyncCommand(
-            ::edit_common::commands::UserToSyncCommand::Log(data.to_string()),
+        let req = ::edit_common::commands::FrontendCommand::ServerCommand(
+            ::edit_common::commands::ServerCommand::Log(data.to_string()),
         );
         let data = ::serde_json::to_string(&req).unwrap();
         use $crate::wasm::sendCommandToJS;
