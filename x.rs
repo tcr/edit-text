@@ -555,7 +555,7 @@ fn run() -> Result<(), Error> {
         Cli::BookBuild => {
             execute!(
                 r"
-                    cd docs/src
+                    cd docs
                     mdbook build
                 ",
             )?;
@@ -564,7 +564,7 @@ fn run() -> Result<(), Error> {
         Cli::BookWatch => {
             execute!(
                 r"
-                    cd docs/src
+                    cd docs
                     mdbook serve
                 ",
             )?;
