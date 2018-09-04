@@ -295,9 +295,9 @@ fn native_command<C: ClientImpl>(client: &mut C, req: ControllerCommand) -> Resu
                 (Some(focus), Some(anchor)) => {
                     client.client_op(|mut ctx| {
                         let op = cur_to_caret(ctx.clone(), &focus, true)?;
-                        ctx.doc = OT::apply(&ctx.doc, &op);
+                        ctx.doc = Op::apply(&ctx.doc, &op);
                         let op2 = cur_to_caret(ctx, &anchor, false)?;
-                        Ok(OT::compose(&op, &op2))
+                        Ok(Op::compose(&op, &op2))
                     })?;
                 }
                 (Some(focus), None) => {
@@ -448,7 +448,7 @@ pub trait ClientImpl {
                         }
 
                         // Generated from original_doc transformed with input_op
-                        let doc = OT::apply(&self.state().client_doc.original_doc, &input_op);
+                        let doc = Op::apply(&self.state().client_doc.original_doc, &input_op);
 
                         // If this operation is an acknowledgment...
                         if self.state().client_id == client_id {
@@ -563,14 +563,14 @@ pub trait ClientImpl {
         //         // println!("  {}: applying {:?}/{:?}", name, i + 1, client.ops.len());
         //         // println!("  {} 1️⃣: let op_left = op_span!{:?};", name, check_op_a);
         //         // println!("  {} 1️⃣: let op_right = op_span!{:?};", name, op);
-        //         check_op_a = OT::compose(&check_op_a, &op);
+        //         check_op_a = Op::compose(&check_op_a, &op);
         //         // println!("  {} 1️⃣: let res = op_span!{:?};", name, check_op_a);
         //         // println!("  {} 1️⃣: let original = doc_span!{:?};", name, client.original_doc);
         //         // println!("  {} 1️⃣: let latest_doc = doc_span!{:?};", name, client.doc);
-        //         let _ = OT::apply(&client.original_doc, &check_op_a);
+        //         let _ = Op::apply(&client.original_doc, &check_op_a);
         //     }
 
-        //     assert_eq!(OT::apply(&client.original_doc, &check_op_a), client.doc);
+        //     assert_eq!(Op::apply(&client.original_doc, &check_op_a), client.doc);
         // }
 
         // Validate local changes.

@@ -92,7 +92,7 @@ where
     fn compose(&Self, &Self) -> Self;
 
     /// Composes an iterator of operations into a single operation.
-    /// If no operations are returned from the iterator, the OT::empty() should be
+    /// If no operations are returned from the iterator, the Op::empty() should be
     /// returned.
     fn compose_iter<'a, I>(iter: I) -> Self
     where

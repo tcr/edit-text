@@ -50,19 +50,19 @@ fn main() {
 
     // Works
     println!("1");
-    let out = OT::apply(&latest_doc, &op_right);
+    let out = Op::apply(&latest_doc, &op_right);
 
     // Works
     println!("2");
-    let out2 = OT::apply(&original, &op_left);
+    let out2 = Op::apply(&original, &op_left);
     println!("3 {}", debug_pretty(&out2));
-    let out3 = OT::apply(&out2, &op_right);
+    let out3 = Op::apply(&out2, &op_right);
 
     // Fails
     println!("4");
     let comp = Operation::compose(&op_left, &op_right);
     println!("OP {}", debug_pretty(&comp));
-    let out4 = OT::apply(&original, &comp);
+    let out4 = Op::apply(&original, &comp);
 
     // let mut ops = vec![
     //     op_span!(
