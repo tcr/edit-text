@@ -1,8 +1,8 @@
+//! An aggressively simple wrapper for `ws`.
+
 #![allow(deprecated)]
 
-extern crate failure;
-extern crate ws;
-
+use ws;
 use failure::Error;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;

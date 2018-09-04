@@ -21,8 +21,9 @@ use extern::{
         thread_rng,
         Rng,
     },
-    serde_json, simple_ws,
-    simple_ws::*,
+    serde_json,
+    edit_common::simple_ws::*,
+    edit_common::simple_ws,
     std::env,
     std::{
         collections::HashMap,
