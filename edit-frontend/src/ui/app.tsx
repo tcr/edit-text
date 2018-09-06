@@ -511,25 +511,28 @@ class EditText extends React.Component {
 
 // export function start() {
 export function start_standalone() {
-  let a = document.createElement('pre');
-  a.id = "mdpreview";
-  document.body.appendChild(a);
-
   index.getWasmModule()
   .then(() => {
     let client = new WasmClient();
 
     // Create the editor frame.
     ReactDOM.render(
-      <EditText
-        client={client}
-        markdown={"# Most of all\n\nThe world is a place where parts of wholes are perscribred"}
-        onChange={(markdown: string) => {
-          // TODO not visible until styles are encapsulated.
-          // TODO edit-text needs a markdown viewer split pane :P.
-          a.innerText = markdown;
-        }}
-      />,
+      <div style={{display: 'flex', height: '100%', width: '100%'}}>
+        <div style={{flex: 1}}>
+          <EditText
+            client={client}
+            markdown={"# Most of all\n\nThe world is a place where parts of wholes are perscribred"}
+            onChange={(markdown: string) => {
+              // TODO not visible until styles are encapsulated.
+              // TODO edit-text needs a markdown viewer split pane :P.
+              document.getElementById('mdpreview')!.innerText = markdown;
+            }}
+          />
+        </div>
+        <div style={{background: '#fef', flex: 1, padding: '20px'}}>
+          <pre id="mdpreview"></pre>
+        </div>
+      </div>,
       document.querySelector('#content')!,
     );
   });
