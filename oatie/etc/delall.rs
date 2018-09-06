@@ -65,17 +65,17 @@ fn run() -> Result<(), Error> {
 
     let (a_, b_) = Op::transform::<RtfSchema>(&a, &b);
 
-    let mut doc_a = OT::apply(&doc, &a);
-    doc_a = OT::apply(&doc_a, &a_);
+    let mut doc_a = Op::apply(&doc, &a);
+    doc_a = Op::apply(&doc_a, &a_);
     validate_doc(&doc_a)?;
 
-    doc_a = OT::apply(&doc, &OT::compose(&a, &a_));
+    doc_a = Op::apply(&doc, &Op::compose(&a, &a_));
     validate_doc(&doc_a)?;
 
-    let mut doc_b = OT::apply(&doc, &b);
-    doc_b = OT::apply(&doc_b, &b_);
+    let mut doc_b = Op::apply(&doc, &b);
+    doc_b = Op::apply(&doc_b, &b_);
     validate_doc(&doc_b)?;
-    doc_b = OT::apply(&doc, &OT::compose(&b, &b_));
+    doc_b = Op::apply(&doc, &Op::compose(&b, &b_));
     validate_doc(&doc_b)?;
 
 
@@ -239,13 +239,13 @@ fn main() {
 
     // println!("DOC\n{:?}\n\n", doc);
 
-    // let mut r = OT::apply(&Doc(doc.clone()), &pending);
-    // r = OT::apply(&r, &local);
+    // let mut r = Op::apply(&Doc(doc.clone()), &pending);
+    // r = Op::apply(&r, &local);
 
     // println!("HELP\n{:?}\n\n", r);
 
-    // println!("----> {:?}", OT::compose(&pending, &local));
-    // OT::apply(&Doc(doc.clone()), &OT::compose(&pending, &local));
+    // println!("----> {:?}", Op::compose(&pending, &local));
+    // Op::apply(&Doc(doc.clone()), &Op::compose(&pending, &local));
 
     // println!("lol");
 }

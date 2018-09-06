@@ -22,5 +22,9 @@ getWasmModule()
 });
 
 Raven.context(() => {
-    app.start();
+    if (window.location.pathname.match(/^\/\$\/react/)) {
+        app.start_standalone();
+    } else {
+        app.start();
+    }
 });

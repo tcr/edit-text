@@ -14,7 +14,6 @@ extern crate crossbeam_channel;
 extern crate failure;
 extern crate rand;
 extern crate ron;
-extern crate simple_ws;
 extern crate url;
 
 use extern::{
@@ -29,8 +28,8 @@ use extern::{
         *,
     },
     edit_common::commands::*,
+    edit_common::simple_ws::*,
     failure::Error,
-    simple_ws::*,
     std::panic,
     std::process,
     std::sync::atomic::AtomicBool,

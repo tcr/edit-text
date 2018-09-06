@@ -2,6 +2,7 @@
 authors = ["Tim Ryan <id@timryan.org>"]
 name = "edit-common"
 version = "0.1.0"
+
 [dependencies]
 colored = "1.6.0"
 # dotenv = "0.11.0"
@@ -27,20 +28,5 @@ git = "https://github.com/jcdyer/include-dir-macro"
 [dependencies.oatie]
 path = "../oatie"
 
-# [target."cfg(not(target_arch=\"wasm32\"))".dependencies]
-# bus = "1.3.2"
-# crossbeam-channel = "0.1.2"
-# quicli = "0.2.0"
-# structopt = "0.2.3"
-# structopt-derive = "0.2.3"
-# tiny_http = "0.5.8"
-# url = "1.6.0"
-# ws = "0.7.3"
-
-# [target."cfg(not(target_arch=\"wasm32\"))".dependencies.diesel]
-# features = ["sqlite"]
-# version = "1.1.1"
-
-# [target."cfg(not(target_arch=\"wasm32\"))".dependencies.uuid]
-# features = ["v4"]
-# version = "0.5"
+[target."cfg(not(target_arch=\"wasm32\"))".dependencies]
+ws = "0.7.3"

@@ -52,9 +52,6 @@ default-features = false
 features = []
 version = "2.1.0"
 
-[dependencies.simple-ws]
-path = "../simple-ws"
-
 [dependencies.uuid]
 features = ["v4"]
 version = "0.5"

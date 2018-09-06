@@ -40,7 +40,7 @@ fn () {
 //     // Flatten client A operations.
 //     let mut op_a = op_span!([], []);
 //     for op in &ops_a {
-//         op_a = OT::compose(&op_a, op);
+//         op_a = Op::compose(&op_a, op);
 //     }
 
 //     println!(" ---> input ops_b");
@@ -50,7 +50,7 @@ fn () {
 //     // Flatten client B operations.
 //     let mut op_b = op_span!([], []);
 //     for op in &ops_b {
-//         op_b = OT::compose(&op_b, op);
+//         op_b = Op::compose(&op_b, op);
 //     }
 
 //     println!("OP A {:?}", op_a);
@@ -95,9 +95,9 @@ fn () {
 //     // let mut check_op_a = op_span!([], []);
 //     // for (i, op) in ops_a.iter().enumerate() {
 //     //     println!("  A: applying {:?}/{:?}", i + 1, ops_a.len());
-//     //     check_op_a = OT::compose(&check_op_a, &op);
+//     //     check_op_a = Op::compose(&check_op_a, &op);
 //     //     println!(" op: {}", debug_pretty(&check_op_a));
-//     //     let _ = OT::apply(&doc.clone(), &check_op_a);
+//     //     let _ = Op::apply(&doc.clone(), &check_op_a);
 //     // }
 
 //     // println!();
@@ -105,13 +105,13 @@ fn () {
 //     // let mut check_op_b = op_span!([], []);
 //     // for (i, op) in ops_b.iter().enumerate() {
 //     //     println!("  B: applying {:?}/{:?}", i + 1, ops_b.len());
-//     //     check_op_b = OT::compose(&check_op_b, &op);
+//     //     check_op_b = Op::compose(&check_op_b, &op);
 //     //     println!(" op: {}", debug_pretty(&check_op_b));
-//     //     let _ = OT::apply(&doc.clone(), &check_op_b);
+//     //     let _ = Op::apply(&doc.clone(), &check_op_b);
 //     // }
 
-//     let doc_a = OT::apply(&doc.clone(), &op_a);
-//     let doc_b = OT::apply(&doc.clone(), &op_b);
+//     let doc_a = Op::apply(&doc.clone(), &op_a);
+//     let doc_b = Op::apply(&doc.clone(), &op_b);
 
 //     println!("ok");
 //     println!();
@@ -124,12 +124,12 @@ fn () {
 //     println!("");
 //     println!("DOC A {:?}", doc_a);
 //     println!("OP A' {:?}", a_);
-//     let a_res = OT::apply(&doc_a, &a_);
+//     let a_res = Op::apply(&doc_a, &a_);
 
 //     println!("");
 //     println!("DOC B {:?}", doc_b);
 //     println!("OP B' {:?}", b_);
-//     let b_res = OT::apply(&doc_b, &b_);
+//     let b_res = Op::apply(&doc_b, &b_);
 
 //     println!("");
 //     println!("a res {:?}", a_res);
@@ -144,5 +144,5 @@ fn () {
 //     let new_doc = Doc(a_res.0);
 //     validate_doc(&new_doc).expect("Validation error");
 
-//     Ok((new_doc, OT::compose(&op_a, &a_)))
+//     Ok((new_doc, Op::compose(&op_a, &a_)))
 // }

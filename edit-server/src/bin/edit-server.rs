@@ -284,6 +284,28 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 return Response::redirect_302("/$/multi");
             },
 
+            (GET) ["/$/react"] => {
+                // Inline the stylesheet.
+                let stylesheet = dist_dir.get(Path::new("edit.css")).unwrap();
+                let stylesheet = String::from_utf8_lossy(&stylesheet).to_string();
+
+                let mut template = String::from_utf8_lossy(&update_config_var(
+                    &template_dir.get(Path::new("react.hbs")).unwrap(),
+                )).to_owned().to_string();
+
+                let payload = reg.render_template(&template, &json!({
+                    "stylesheet": &stylesheet,
+                })).unwrap();
+
+                return Response::from_data(
+                    "text/html",
+                    payload.into_bytes(),
+                );
+            },
+            (GET) ["/$/react/"] => {
+                return Response::redirect_302("/$/react");
+            },
+
             // TODO: undisable once IP safety is addressed
 
             // (GET) ["/$/list"] => {

@@ -53,14 +53,14 @@ impl ClientDoc {
         println!("pending_op: {:?}", self.pending_op);
         assert_eq!(
             new_doc,
-            &OT::apply(&self.original_doc, self.pending_op.as_ref().unwrap()),
+            &Op::apply(&self.original_doc, self.pending_op.as_ref().unwrap()),
             "invalid ack from Sync"
         );
 
         self.original_doc = new_doc.clone();
 
         // Reassemble local document.
-        self.doc = OT::apply(new_doc, &self.local_op);
+        self.doc = Op::apply(new_doc, &self.local_op);
         self.version = version;
 
         validate_doc(&self.doc).expect("Validation error after pending op");
@@ -111,12 +111,12 @@ impl ClientDoc {
         // let correction = correct_op(&pending_transform).unwrap();
         // let input_correction = correct_op(&input_transform).unwrap();
         // let correction_transform = Op::transform_advance::<RtfSchema>(&pending_correction, &input_correction);
-        // let correction = OT::compose(&pending_correction, &correction_transform);
+        // let correction = Op::compose(&pending_correction, &correction_transform);
 
         // println!("\n^^^^^\nCORRECTION\n{:?}\n^^^^^\n\n", correction);
         //
-        // let pending_final = OT::compose(&pending_transform, &correction);
-        // let input_final = OT::compose(&input_transform, &correction);
+        // let pending_final = Op::compose(&pending_transform, &correction);
+        // let input_final = Op::compose(&input_transform, &correction);
 
         // P' x L -> P'', L'
         let (local_transform, _) = Op::transform::<RtfSchema>(&input_transform, &local_op);
@@ -124,9 +124,9 @@ impl ClientDoc {
         // let correction = correct_op(&local_transform).unwrap();
         // let input_correction = correct_op(&input_transform).unwrap();
         // let correction_transform = Op::transform_advance::<RtfSchema>(&local_correction, &input_correction);
-        // let correction = OT::compose(&local_correction, &correction_transform);
+        // let correction = Op::compose(&local_correction, &correction_transform);
 
-        // let local_final = OT::compose(&local_transform, &correction);
+        // let local_final = Op::compose(&local_transform, &correction);
         // Drop input_final
 
         // client_doc = input_doc : I' : P''
@@ -228,12 +228,12 @@ impl ClientDoc {
 //         );
 
             // Test matching against the local doc.
-            let recreated_doc = OT::apply(
+            let recreated_doc = Op::apply(
                 &self.original_doc,
                 self.pending_op.as_ref().unwrap_or(&Op::empty()),
             );
             // println!("\n\nrecreated_doc={:?}", recreated_doc);
-            let recreated_doc2 = OT::apply(&recreated_doc, &self.local_op);
+            let recreated_doc2 = Op::apply(&recreated_doc, &self.local_op);
             // println!("\n\nrecreated_doc2={:?}", recreated_doc2);
             assert_eq!(self.doc, recreated_doc2);
             if let &Some(ref op) = &op {
@@ -244,7 +244,7 @@ impl ClientDoc {
             if let &Some(ref op) = &op {
                 let combined_op = Op::compose(&self.local_op, op);
                 // println!("\n\ncombined_op={:?}", combined_op);
-                let target_doc2 = OT::apply(&recreated_doc, &combined_op);
+                let target_doc2 = Op::apply(&recreated_doc, &combined_op);
                 // println!("\n\ntarget_doc2={:?}", target_doc2);
             }
 
@@ -252,7 +252,7 @@ impl ClientDoc {
                 self.pending_op.as_ref().unwrap_or(&Op::empty()),
                 &self.local_op,
             );
-            let recreated_doc = OT::apply(&self.original_doc, &total_op);
+            let recreated_doc = Op::apply(&self.original_doc, &total_op);
             assert_eq!(self.doc, recreated_doc);
         }
     }

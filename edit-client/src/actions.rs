@@ -115,11 +115,11 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
             if delta > 1 {
                 // Apply next op and compose.
                 let ctx2 = ActionContext {
-                    doc: OT::apply(&ctx.doc, &op),
+                    doc: Op::apply(&ctx.doc, &op),
                     client_id: ctx.client_id.to_owned(),
                 };
                 let op_next = delete_char(ctx2)?;
-                return Ok(OT::compose(&op, &op_next));
+                return Ok(Op::compose(&op, &op_next));
             } else {
                 return Ok(op);
             }
@@ -540,7 +540,7 @@ pub fn caret_move(mut ctx: ActionContext, increase: bool, preserve_select: bool)
     let op_1 = if !preserve_select && has_bounding_carets(ctx.clone()) {
         // TODO caret_clear should take a position also
         let (_pos, op) = caret_clear(ctx.clone(), Pos::Anchor)?;
-        ctx.doc = OT::apply(&ctx.doc.clone(), &op);
+        ctx.doc = Op::apply(&ctx.doc.clone(), &op);
         op
     } else {
         Op::empty()
@@ -583,7 +583,7 @@ pub fn caret_move(mut ctx: ActionContext, increase: bool, preserve_select: bool)
     // Return composed operations. Select proper order or otherwise composition
     // will be invalid.
 
-    Ok(OT::compose(&op_1, &OT::transform_advance::<RtfSchema>(&op_2, &op_3)))
+    Ok(Op::compose(&op_1, &Op::transform_advance::<RtfSchema>(&op_2, &op_3)))
 }
 
 pub fn caret_word_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
@@ -666,7 +666,7 @@ pub fn caret_word_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> 
 
     // Return composed operations. Select proper order or otherwise composition
     // will be invalid.
-    Ok(OT::transform_advance::<RtfSchema>(&op_1, &op_2))
+    Ok(Op::transform_advance::<RtfSchema>(&op_1, &op_2))
 }
 
 pub fn caret_select_all(ctx: ActionContext) -> Result<Op, Error> {
@@ -678,15 +678,15 @@ pub fn caret_select_all(ctx: ActionContext) -> Result<Op, Error> {
     // First operation removes the caret.
     let op_1 = caret_clear(ctx.clone(), Pos::Focus)
         .map(|(_pos_1, op_1)| op_1)
-        .unwrap_or_else(|_| OT::empty());
+        .unwrap_or_else(|_| Op::empty());
 
     // Second operation removes the focus caret if needed.
     let op_2 = caret_clear(ctx.clone(), Pos::Anchor)
         .map(|(_pos_1, op_1)| op_1)
-        .unwrap_or_else(|_| OT::empty());
+        .unwrap_or_else(|_| Op::empty());
 
     // Combine two starting ops.
-    let op_1_2 = OT::transform_advance::<RtfSchema>(&op_1, &op_2);
+    let op_1_2 = Op::transform_advance::<RtfSchema>(&op_1, &op_2);
 
     // Second operation inserts a new caret.
 
@@ -720,8 +720,8 @@ pub fn caret_select_all(ctx: ActionContext) -> Result<Op, Error> {
 
     // println!("------------->\n{:?}\n\n\nAAAAAA\n-------->", op_2);
 
-    let op_1_2_3 = OT::transform_advance::<RtfSchema>(&op_1_2, &op_3);
-    let op_1_2_3_4 = OT::transform_advance::<RtfSchema>(&op_1_2_3, &op_4);
+    let op_1_2_3 = Op::transform_advance::<RtfSchema>(&op_1_2, &op_3);
+    let op_1_2_3_4 = Op::transform_advance::<RtfSchema>(&op_1_2_3, &op_4);
 
     Ok(op_1_2_3_4)
 }
@@ -792,7 +792,7 @@ pub fn caret_block_move(ctx: ActionContext, increase: bool) -> Result<Op, Error>
 
     // Return composed operations. Select proper order or otherwise composition
     // will be invalid.
-    Ok(OT::transform_advance::<RtfSchema>(&op_1, &op_2))
+    Ok(Op::transform_advance::<RtfSchema>(&op_1, &op_2))
 }
 
 // Returns new caret position
@@ -821,7 +821,7 @@ pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan, focus: bool) -> Result<Op
     // First operation removes the caret.
     let (pos_1, op_1) = caret_clear(ctx.clone(), if focus { Pos::Focus } else { Pos::Anchor })
         .map(|(pos_1, op_1)| (Some(pos_1), op_1))
-        .unwrap_or_else(|_| (None, OT::empty()));
+        .unwrap_or_else(|_| (None, Op::empty()));
 
     // Second operation removes the focus caret if needed.
     // let (_, op_2) = (if !focus {
@@ -830,12 +830,12 @@ pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan, focus: bool) -> Result<Op
     //         .ok()
     // } else {
     //     None
-    // }).unwrap_or_else(|| (None, OT::empty()));
+    // }).unwrap_or_else(|| (None, Op::empty()));
     // TODO might just remove this op combo
-    let op_2 = OT::empty();
+    let op_2 = Op::empty();
 
     // Combine two starting ops.
-    let op_1_2 = OT::transform_advance::<RtfSchema>(&op_1, &op_2);
+    let op_1_2 = Op::transform_advance::<RtfSchema>(&op_1, &op_2);
 
     // Second operation inserts a new caret.
 
@@ -868,7 +868,7 @@ pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan, focus: bool) -> Result<Op
 
     // println!("------------->\n{:?}\n\n\nAAAAAA\n-------->", op_2);
 
-    let res = OT::transform_advance::<RtfSchema>(&op_1_2, &op_3);
+    let res = Op::transform_advance::<RtfSchema>(&op_1_2, &op_3);
     // console_log!("------< {:?}", res);
     Ok(res)
 }

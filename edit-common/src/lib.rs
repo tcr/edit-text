@@ -17,9 +17,13 @@ extern crate pulldown_cmark_to_cmark;
 extern crate ron;
 extern crate serde_json;
 extern crate take_mut;
+#[cfg(not(target_arch = "wasm32"))]
+extern crate ws;
 
 pub mod commands;
 pub mod markdown;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod simple_ws;
 
 use htmlescape::encode_minimal;
 use oatie::doc::*;

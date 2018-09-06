@@ -431,6 +431,12 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::FrontendWatch { args } => {
+            let _cargo_watch_guard = command!(
+                r"
+                    cargo watch -i edit-frontend/** -i x.rs -x 'script x.rs wasm-build'
+                ",
+            )?.scoped_spawn()?;
+
             execute!(
                 r"
                     cd edit-frontend

@@ -161,11 +161,11 @@ pub fn run_transform_test<T: Schema>(input: &str) -> Result<(), Error> {
         // (This should always pass.)
         println!("{}", Paint::red("(!) applying first ops..."));
         println!(" ---> doc a : a");
-        let doc_a = OT::apply(&doc, &a);
+        let doc_a = Op::apply(&doc, &a);
         println!("{:?}", doc_a);
         println!();
         println!(" ---> doc b : b");
-        let doc_b = OT::apply(&doc, &b);
+        let doc_b = Op::apply(&doc, &b);
         println!("{:?}", doc_b);
         println!();
         println!("ok");
@@ -174,11 +174,11 @@ pub fn run_transform_test<T: Schema>(input: &str) -> Result<(), Error> {
         // Next apply the transformed ops.
         println!("{}", Paint::red("(!) applying transformed ops..."));
         println!(" ---> doc a : a : a'");
-        let doc_a = OT::apply(&doc_a, &a_);
+        let doc_a = Op::apply(&doc_a, &a_);
         println!("{:?}", doc_a);
         validate_doc_span(&mut ValidateContext::new(), &doc_a.0)?;
         println!(" ---> doc b : b : b'");
-        let doc_b = OT::apply(&doc_b, &b_);
+        let doc_b = Op::apply(&doc_b, &b_);
         println!("{:?}", doc_b);
         validate_doc_span(&mut ValidateContext::new(), &doc_b.0)?;
         println!();
@@ -191,14 +191,14 @@ pub fn run_transform_test<T: Schema>(input: &str) -> Result<(), Error> {
             Paint::red("(!) testing op composed (double check)...")
         );
         println!(" ---> doc a : (a : a')");
-        let doc_a_cmp = OT::apply(&doc, &OT::compose(&a, &a_));
+        let doc_a_cmp = Op::apply(&doc, &Op::compose(&a, &a_));
         println!("{}", debug_pretty(&doc));
         println!();
-        println!("{}", debug_pretty(&OT::compose(&a, &a_)));
+        println!("{}", debug_pretty(&Op::compose(&a, &a_)));
         println!("{}", debug_pretty(&doc_a_cmp));
         validate_doc_span(&mut ValidateContext::new(), &doc_a_cmp.0)?;
         println!(" ---> doc b : (b : b')");
-        let doc_b_cmp = OT::apply(&doc, &OT::compose(&a, &a_));
+        let doc_b_cmp = Op::apply(&doc, &Op::compose(&a, &a_));
         println!("{}", debug_pretty(&doc_b_cmp));
         validate_doc_span(&mut ValidateContext::new(), &doc_b_cmp.0)?;
         println!();

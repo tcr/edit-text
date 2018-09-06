@@ -4,7 +4,6 @@ members = [
     "edit-common",
     "edit-server",
     "edit-client",
-    "simple-ws",
     "tests",
 ]
 
