@@ -4,30 +4,30 @@ import 'react';
 
 import {Command} from './commands';
 
-export interface ClientImpl {
-  onNativeMessage: (msg: any) => void | null;
-  onNativeClose: () => void | null;
+export interface ControllerImpl {
+  onMessage: (msg: any) => void | null;
+  onClose: () => void | null;
 
   connect(onError: () => void): Promise<void>;
-  nativeCommand(command: Command): void;
+  sendCommand(command: Command): void;
 }
 
 export interface ServerImpl {
-  onSyncClose: () => void | null;
-  syncConnect(onError: (message: React.ReactNode) => void): Promise<void>;
-  syncCommand(command: any): Promise<void>;
+  onClose: () => void | null;
+  connect(onError: (message: React.ReactNode) => void): Promise<void>;
+  sendCommand(command: any): Promise<void>;
 }
 
 export class NullServer implements ServerImpl {
-  onSyncClose: () => void; // unused
+  onClose: () => void; // unused
 
   // The native server (the client proxy) handles sync traffic directly
-  syncConnect(onError: (message: React.ReactNode) => void): Promise<void> {
+  connect(onError: (message: React.ReactNode) => void): Promise<void> {
     return Promise.resolve();
   }
 
   // The native server (the client proxy) handles sync traffic directly
-  syncCommand(command: any): Promise<void> {
+  sendCommand(command: any): Promise<void> {
     return Promise.resolve();
   }
 }

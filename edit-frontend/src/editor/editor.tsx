@@ -1,9 +1,10 @@
 import * as React from 'react';
-import copy from 'clipboard-copy';
 
 import * as commands from './commands';
 import * as util from './util';
-import { ClientImpl } from './network';
+import { ControllerImpl } from './network';
+
+const copy = require('clipboard-copy');
 
 const ROOT_SELECTOR = '.edit-text';
 
@@ -221,10 +222,70 @@ function resolveCursorFromPosition(
   }
 }
 
+// Scan from a point in either direction until a caret is reached. 
+function caretScan(
+  x: number,
+  y: number,
+  UP: boolean,
+): {x: number, y: number} | null {
+  let root = document.querySelector('.edit-text')!;
+  
+  // Attempt to get the text node under our scanning point.
+  let first: any = util.textNodeAtPoint(x, y);
+  // In doc "# Most of all\n\nThe world is a place where parts of wholes are perscribed"
+  // When you hit the down key for any character in the first line, it works,
+  // until the last character (end of the line), where if you hit the down key it 
+  // no longer works and the above turns null. Instead, this check once for the main case,
+  // check at this offset for the edge case is weird but works well enough.
+  if (first == null) {
+    first = util.textNodeAtPoint(x - 2, y);
+  }
+  // Select empty blocks directly, which have no anchoring text nodes.
+  if (first == null) {
+    let el = document.elementFromPoint( x + 2, y);
+    if (isEmptyBlock(el)) {
+      first = el;
+    }
+  }
+
+  if (first !== null) { // Or we have nothing to compare to and we'll loop all day
+    while (true) {
+      // Step a reasonable increment in each direction.
+      const STEP = 10;
+      y += UP ? -STEP : STEP;
+
+      let el = document.elementFromPoint(x, y);
+      // console.log('locating element at %d, %d:', x, y, el);
+      if (!root.contains(el) || el === null) { // Off the page!
+        break;
+      }
+      // Don't do anything if the scanned element is the root element.
+      if (root !== el) {
+        // Check when we hit a text node.
+        let caret = util.textNodeAtPoint(x, y); // TODO should we reuse `first` here?
+        let isTextNode = caret !== null && (first.textNode !== caret.textNode || first.offset !== caret.offset); // TODO would this comparison even work lol
+
+        // Check for the "empty div" scenario
+        let isEmptyDiv = isEmptyBlock(el);
+        // if (isEmptyDiv) {
+        //   console.log('----->', el.getBoundingClientRect());
+        // }
+
+        // console.log('attempted caret at', x, y, caret);
+        if (isTextNode || isEmptyDiv) {
+          // console.log('CARET', caret);
+          return {x, y};
+        }
+      }
+    }
+  }
+  return null;
+}
+
 export class Editor extends React.Component {
   props: {
     content: string,
-    client: ClientImpl,
+    controller: ControllerImpl,
     KEY_WHITELIST: Array<any>,
     editorID: string,
     disabled: boolean,
@@ -232,7 +293,6 @@ export class Editor extends React.Component {
 
   el: HTMLElement;
   mouseDown = false;
-  mouseDownActive = false;
 
   onClick(e: MouseEvent) {
     let option = e.ctrlKey || e.metaKey;
@@ -258,59 +318,155 @@ export class Editor extends React.Component {
     this.mouseDown = false;
   }
 
-  onMouseMove(e: MouseEvent, drop_anchor: boolean = false) {
+  onMouseMove(e: MouseEvent, dropAnchor: boolean = false) {
+    // Only enable dragging while the mouse is down.
     if (!this.mouseDown) {
       return;
     }
 
-    if (this.mouseDownActive) {
+    // Cancel the event to prevent native text selection.
+    e.preventDefault();
+
+    // Focus the window
+    //TODO despite us cancelling the event above? why does this need to happen?
+    window.focus();
+
+    this.moveCursorToPoint(e.clientX, e.clientY, dropAnchor);
+  }
+
+  moveCursorToPoint(x: number, y: number, dropAnchor: boolean = false): CurSpan | null {
+    // Check whether we selected a text node or a block element, and create a cursor for it. 
+    // Only select blocks which are empty.
+    let text = util.textNodeAtPoint(x, y);
+    let target = document.elementFromPoint(x, y);
+    let destCursor = text !== null
+      ? resolveCursorFromPosition(text.textNode, text.offset)
+      : (isEmptyBlock(target)
+        ? curto(target as any)
+        : null);
+
+    // Send the command to the client.
+    if (destCursor !== null) {
+      this.props.controller.sendCommand(commands.Cursor(destCursor, dropAnchor ? destCursor : null));
+    }
+    
+    return destCursor;
+  }
+
+  onGlobalKeypress(e: KeyboardEvent) {
+    if (this.props.disabled) {
       return;
     }
-    this.mouseDownActive = true;
 
-    // (window as any).EH = e;
-
-    let text = util.textNodeAtPoint(e.clientX, e.clientY);
-    let target = document.elementFromPoint(e.clientX, e.clientY);
-
-    let dest = null;
-    if (text !== null) {
-      // We can focus on all text nodes.
-      dest = resolveCursorFromPosition(text.textNode, text.offset);
-    } else if (isEmptyBlock(target)) {
-      // Or empty elements, which don't have a rooting text node.
-      dest = curto(target as any);
+    // Don't accept keypresses when a modifier key is pressed.
+    if (e.ctrlKey || e.metaKey) {
+      return;
+    }
+    
+    // Don't accept non-character keypresses.
+    if (e.charCode === 0) {
+      return;
     }
 
-    // Generate the native commands.
-    // console.log('### SUBMITTED:', JSON.stringify(resolveCursorFromPosition(pos.textNode, pos.offset)));
-    if (dest !== null) {
-      if (drop_anchor) {
-        this.props.client.nativeCommand(commands.Cursor(dest, dest));
-      } else {
-        this.props.client.nativeCommand(commands.Cursor(dest, null));
-      }
-    } else {
-      // No target found, stop dragging.
-      this.mouseDownActive = false;
-    }
+    this.props.controller.sendCommand(commands.Character(e.charCode));
 
-    // Focus the window despite us cancelling the event.
-    window.focus();
-    // Cancel the event; prevent text selection.
     e.preventDefault();
   }
 
-  onMount(el: HTMLElement) {
-    this.el = el;
-    this.el.innerHTML = this.props.content;
+  onGlobalPaste(e: ClipboardEvent) {
+    if (this.props.disabled) {
+      return;
+    }
+
+    const text = e.clipboardData.getData('text/plain');
+    console.info('(c) got pasted text: ', text);
+    this.props.controller.sendCommand(commands.InsertText(text));
+  }
+
+  onGlobalKeydown(e: KeyboardEvent) {
+    let current = document.querySelector('div.current[data-tag="caret"]');
+
+    // We should leave a key event targeting the header element unmodified.
+    if (e.target !== null) {
+      if (document.querySelector('#toolbar') && document.querySelector('#toolbar')!.contains(e.target! as Node)) {
+        return;
+      }
+    }
+
+    if (this.props.disabled) {
+      return;
+    }
+
+    // Listen for command+c
+    if (e.keyCode == 67 && (e.ctrlKey || e.metaKey)) {
+      this.performCopy();
+      e.preventDefault();
+      return;
+    }
+
+    // Check if this event exists in the list of whitelisted key combinations.
+    let isWhitelisted = this.props.KEY_WHITELIST
+      .some((x: any) => Object.keys(x).every((key: any) => (e as any)[key] == (x as any)[key]));
+    if (!isWhitelisted) {
+      return;
+    }
+
+    // Navigate up and down for text at the same column.
+    let UP = e.keyCode == 38;
+    let DOWN = e.keyCode == 40;
+    if (UP || DOWN) {
+      let current = document.querySelector('div.current[data-tag="caret"][data-focus="true"]');
+      if (current !== null) {
+        // Calculate starting coordinates to "scan" from above our below
+        // the current cursor position.
+        let rect = current.getBoundingClientRect();
+        let y = UP ? rect.top + 5 : rect.bottom - 5;
+        let x = rect.right;
+
+        let coords = caretScan(x, y, UP);
+        if (coords !== null) {
+          // Move the cursor and prevent the event from bubbling.
+          this.moveCursorToPoint(coords.x, coords.y, false);
+          e.preventDefault();
+        }
+      }
+
+      // Don't forward up or down key to the controller.
+      return;
+    }
+
+    // Forward the keypress to native.
+    this.props.controller.sendCommand(commands.Keypress(
+      e.keyCode,
+      e.metaKey,
+      e.shiftKey,
+      e.altKey,
+    ));
+
+    e.preventDefault();
+  }
+
+  performCopy() {
+    // Generate string from selected text.
+    let str = Array.from(
+      document.querySelectorAll('span.Selected')
+    )
+      .map(x => (x as HTMLElement).innerText)
+      .join('');
+
+    // Debug
+    console.error('copied: ' + JSON.stringify(str));
+
+    copy(str)
+    .then((res: any) => {
+      console.info('(c) clipboard successful copy');
+    })
+    .catch((err: any) => {
+      console.info('(c) clipboard unsuccessful copy:', err);
+    });
   }
   
   componentDidUpdate() {
-    this.el.innerHTML = this.props.content;
-    // console.log('REFRESH');
-    this.mouseDownActive = false;
-
     // Highlight our own caret.
     document.querySelectorAll(
       `div[data-tag="caret"][data-client=${JSON.stringify(this.props.editorID)}]`,
@@ -320,171 +476,15 @@ export class Editor extends React.Component {
   }
 
   componentDidMount() {
-    let self = this;
+    // Attach all "global" events to the document.
     document.addEventListener('keypress', (e: KeyboardEvent) => {
-      if (self.props.disabled) {
-        return;
-      }
-
-      // Don't accept keypresses when a modifier key is pressed w/keypress, except shift.
-      if (e.metaKey) {
-        return;
-      }
-      
-      // Don't accept non-characters.
-      if (e.charCode === 0) {
-        return;
-      }
-
-      this.props.client.nativeCommand(commands.Character(e.charCode));
-  
-      e.preventDefault();
+      this.onGlobalKeypress(e);
     });
-
     document.addEventListener('paste', (e: ClipboardEvent) => {
-      if (self.props.disabled) {
-        return;
-      }
-
-      const text = e.clipboardData.getData('text/plain');
-      console.log('(c) got pasted text: ', text);
-      this.props.client.nativeCommand(commands.InsertText(text));
+      this.onGlobalPaste(e);
     });
-  
     document.addEventListener('keydown', (e) => {
-      let current = document.querySelector('div.current[data-tag="caret"]');
-
-      // Don't interfere when clicking the header.
-      if (e.target !== null) {
-        if (document.querySelector('#toolbar') && document.querySelector('#toolbar')!.contains(e.target! as Node)) {
-          return;
-        }
-      }
-
-      if (self.props.disabled) {
-        return;
-      }
-
-      // Navigate command+c
-      if (e.keyCode == 67 && e.metaKey) {
-        // Generate string from selected text.
-        let str = Array.from(
-          document.querySelectorAll('span.Selected')
-        )
-          .map(x => (x as HTMLElement).innerText)
-          .join('');
-        
-        // Debug
-        console.error('copied: ' + JSON.stringify(str));
-
-        copy(str)
-        .then(res => {
-          console.info('(c) clipboard successful copy');
-        })
-        .catch(err => {
-          console.info('(c) clipboard unsuccessful copy:', err);
-        });
-
-        e.preventDefault();
-        return;
-      }
-
-      // Check if this event exists in the list of whitelisted key combinations.
-      let isWhitelisted = this.props.KEY_WHITELIST
-        .some((x: any) => Object.keys(x).every((key: any) => (e as any)[key] == (x as any)[key]));
-      if (!isWhitelisted) {
-        return;
-      }
-
-      // Navigate up and down for text at the same column.
-      let UP = e.keyCode == 38;
-      let DOWN = e.keyCode == 40;
-      if (UP || DOWN) {
-        let root = document.querySelector('.edit-text')!;
-        let current = document.querySelector('div.current[data-tag="caret"][data-focus="true"]');
-        if (current !== null) {
-          let rect = current.getBoundingClientRect();
-          let y = UP ? rect.top + 5 : rect.bottom - 5;
-          let x = rect.right;
-
-          // Attempt to get the text node we are closest to
-          let first: any = util.textNodeAtPoint(x, y);
-          // In doc "# Most of all\n\nThe world is a place where parts of wholes are perscribed"
-          // When you hit the down key for any character in the first line, it works,
-          // until the last character (end of the line), where if you hit the down key it 
-          // no longer works and the above turns null. Instead, this check once for the main case,
-          // check at this offset for the edge case is weird but works well enough.
-          if (first == null) {
-            first = util.textNodeAtPoint(x - 2, y);
-          }
-          // Select empty blocks directly, which have no anchoring text nodes.
-          if (first == null) {
-            let el = document.elementFromPoint( x + 2, y);
-            if (isEmptyBlock(el)) {
-              first = el;
-            }
-          }
-
-          if (first !== null) { // Or we have nothing to compare to and we'll loop all day
-            while (true) {
-              // Step a reasonable increment in each direction.
-              const STEP = 10;
-              y += UP ? -STEP : STEP;
-
-              let el = document.elementFromPoint(x, y);
-              // console.log('locating element at %d, %d:', x, y, el);
-              if (!root.contains(el) || el === null) { // Off the page!
-                break;
-              }
-              if (root !== el) {
-                // Check when we hit a text node.
-                let caret = util.textNodeAtPoint(x, y); // TODO should we reuse `first` here?
-                let isTextNode = caret !== null && (first.textNode !== caret.textNode || first.offset !== caret.offset); // TODO would this comparison even work lol
-
-                // Check for the "empty div" scenario
-                let isEmptyDiv = isEmptyBlock(el);
-                // if (isEmptyDiv) {
-                //   console.log('----->', el.getBoundingClientRect());
-                // }
-
-                // console.log('attempted caret at', x, y, caret);
-                if (isTextNode || isEmptyDiv) {
-                  // console.log('CARET', caret);
-                  e.preventDefault();
-
-                  // TODO don't replicate events, because properties might
-                  // be omitted that are desired (like target, etc.)
-                  let mouseEvent = new MouseEvent('mousedown', {
-                    clientX: x,
-                    clientY: y,
-
-                  });
-                  this.onMouseDown(mouseEvent);
-                  let mouseEvent2 = new MouseEvent('mouseup', {
-                    clientX: x,
-                    clientY: y,
-                  });
-                  this.onMouseUp(mouseEvent2);
-                  return;
-                }
-              }
-            }
-          }
-        }
-
-        // Don't forward up/down keys.
-        return;
-      }
-  
-      // Forward the keypress to native.
-      this.props.client.nativeCommand(commands.Keypress(
-        e.keyCode,
-        e.metaKey,
-        e.shiftKey,
-        e.altKey,
-      ));
-
-      e.preventDefault();
+      this.onGlobalKeydown(e);
     });
   }
 
@@ -493,11 +493,14 @@ export class Editor extends React.Component {
       <div
         className="edit-text theme-mock"
         tabIndex={0}
-        ref={(el) => el && this.onMount(el)}
+        ref={(el) => { if (el) this.el = el;}}
         onClick={this.onClick.bind(this)}
         onMouseDown={this.onMouseDown.bind(this)}
         onMouseUp={this.onMouseUp.bind(this)}
         onMouseMove={this.onMouseMove.bind(this)}
+        dangerouslySetInnerHTML={{
+          __html: this.props.content,
+        }}
       />
     );
   }

@@ -40,8 +40,8 @@ export function InsertText(
 }
 
 export function Cursor(
-  focus: [any] | null,
-  anchor: [any] | null,
+  focus: Array<any> | null,
+  anchor: Array<any> | null,
 ) {
   return {
     tag: 'Cursor' as 'Cursor',
@@ -50,7 +50,7 @@ export function Cursor(
 }
 
 export function CursorTarget(
-  curspan: [any],
+  curspan: Array<any>,
 ) {
   return {
     tag: 'CursorTarget' as 'CursorTarget',

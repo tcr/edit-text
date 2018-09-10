@@ -11,7 +11,7 @@ import * as commands from '../editor/commands';
 import * as route from './route';
 import { Editor } from '../editor/editor';
 import { AppServer, ProxyClient } from './sync';
-import { NullServer, ClientImpl, ServerImpl } from '../editor/network';
+import { NullServer, ControllerImpl, ServerImpl } from '../editor/network';
 import { WasmClient, convertMarkdownToHtml, convertMarkdownToDoc } from '../editor/wasm';
 import * as index from '../index';
 
@@ -37,7 +37,7 @@ function UiElement(
       <button
         key={i}
         onClick={
-          () => props.editor.client.nativeCommand(commands.Button(button[1]))
+          () => props.editor.client.sendCommand(commands.Button(button[1]))
         }
         className={button[2] ? 'active' : ''}
       >{button[0]}</button>
@@ -232,7 +232,7 @@ function FooterNotice(props: {
 
 type EditorFrameProps = {
   network: ServerImpl,
-  client: ClientImpl,
+  client: ControllerImpl,
   body: string,
 };
 
@@ -250,7 +250,7 @@ export class EditorFrame extends React.Component {
 
   KEY_WHITELIST: any;
   network: ServerImpl;
-  client: ClientImpl;
+  client: ControllerImpl;
   markdown: string;
 
   constructor(
@@ -263,15 +263,15 @@ export class EditorFrame extends React.Component {
     this.network = props.network;
     this.client = props.client;
 
-    this.client.onNativeMessage = this.onClientToFrontendCommand.bind(this);
+    this.client.onMessage = this.onClientToFrontendCommand.bind(this);
 
     // Background colors.
     // TODO make these actionable on this object right?
-    this.client.onNativeClose = function () {
+    this.client.onClose = function () {
       document.body.style.background = 'red';
       console.error('!!! client close');
     };
-    this.network.onSyncClose = function () {
+    this.network.onClose = function () {
       document.body.style.background = 'red';
       console.error('!!! server close');
     };
@@ -314,14 +314,16 @@ export class EditorFrame extends React.Component {
             />
           </div>
 
-          <div id="edit-text-outer">
-            <Editor 
-              client={this.props.client} 
-              KEY_WHITELIST={this.KEY_WHITELIST}
-              content={this.state.body}
-              editorID={this.state.editorID}
-              disabled={!!this.state.modal}
-            />
+          <div id="edit-layout">
+            <div id="edit-outer">
+              <Editor 
+                controller={this.props.client} 
+                KEY_WHITELIST={this.KEY_WHITELIST}
+                content={this.state.body}
+                editorID={this.state.editorID}
+                disabled={!!this.state.modal}
+              />
+            </div>
           </div>
         </div>
         <div id="footer">{
@@ -402,7 +404,7 @@ export class EditorFrame extends React.Component {
 }
 
 
-function multiConnect(client: ClientImpl) {
+function multiConnect(client: ControllerImpl) {
   // Blur/Focus classes.
   window.addEventListener('focus', () => {
     document.body.classList.remove('blurred');
@@ -424,7 +426,7 @@ function multiConnect(client: ClientImpl) {
 
     if ('Monkey' in msg) {
       // TODO reflect this in the app
-      client.nativeCommand(commands.Monkey(msg.Monkey));
+      client.sendCommand(commands.Monkey(msg.Monkey));
     }
   };
 }
@@ -447,7 +449,7 @@ class EditText extends React.Component {
       <Editor
         editorID={'$local'}
         disabled={false}
-        client={this.props.client}
+        controller={this.props.client}
         content={this.state.content}
         KEY_WHITELIST={this.state.whitelist}
       />
@@ -455,7 +457,7 @@ class EditText extends React.Component {
   }
 
   componentDidMount() {
-    this.props.client.onNativeMessage = (parse: any) => {
+    this.props.client.onMessage = (parse: any) => {
       if (parse.Init) {
         // let editorID = parse.Init;
   
@@ -541,7 +543,7 @@ export function start_standalone() {
 export function start() {
 // export function start_app() {
   let server: ServerImpl;
-  let client: ClientImpl;
+  let client: ControllerImpl;
 
   // Wasm and Proxy implementations
   if (CONFIG.wasm) {
@@ -610,7 +612,7 @@ export function start() {
           // TODO
         })
         .then(() => {
-          server.syncConnect((message: React.ReactNode) => {
+          server.connect((message: React.ReactNode) => {
             editorFrame!.showNotification({
               element: message,
               level: 'error',
