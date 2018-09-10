@@ -21,11 +21,10 @@ body {
     display: flex !important;
     flex-direction: column;
     height: 100%;
-}
 
-#edit-text-outer {
-    overflow: auto;
-    flex: 1;
+    #edit-layout {
+        flex: 1;
+    }
 }
 
 #toolbar {
@@ -123,19 +122,6 @@ body {
     }
 }
 
-/* multi */
-
-#parent {
-    background: #eee;
-}
-
-#client {
-    background: white;
-    cursor: text;
-}
-
-/* ^ multi ^ */
-
 #footer {
     position: fixed;
     bottom: 0;
@@ -181,26 +167,29 @@ body {
     }
 }
 
+// When in a "page" like view
 body.theme-column {
     background: #eee;
+    
+    // Shadow and box styling.
+    #edit-outer {
+        font-size: 16px;
+        padding-top: 10px;
+        padding-bottom: 30px;
+        max-width: 60em;
+        margin: 26px auto 70px;
+        background: #fff;
+        border: 1px solid #ddd;
+        box-shadow: 4px 4px 7px #ccc;
+        min-height: 40em;
+        padding: 10px 35px 50px; // + bottom padding for footer
+        cursor: text;
+    }
 }
 
-// When this is a "page" view
-body.theme-column .edit-text {
-    padding-top: 10px;
-    padding-bottom: 30px;
-    max-width: 60em;
-    margin: 26px auto 70px;
-    background: #fff;
-    border: 1px solid #ccc;
-    box-shadow: 3px 3px 7px #bbb;
-    min-height: 40em;
-}
-
+// The core editing component.
 .edit-text {
-    padding: 10px 35px 50px; // + bottom padding for footer
     margin: 0;
-    flex: 1;
 
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -211,38 +200,18 @@ body.theme-column .edit-text {
 
     outline: none;
 
-    font-size: 16px;
+    font-size: 16px; // TODO make variable, share with #edit-text-outer
     cursor: text;
-
     white-space: pre-wrap;
     font-kerning: none; // For caret wrapping with zero-width non-joiner
     font-family: 'TeX Gyre Heros', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     letter-spacing: 0.05pt;
 
-    div {
-        margin: 12px 0;
-        position: relative;
-    }
-
-    // All blocks
-    div[data-tag="h1"],
-    div[data-tag="h2"],
-    div[data-tag="h3"],
-    div[data-tag="h4"],
-    div[data-tag="h5"],
-    div[data-tag="h6"],
-    div[data-tag="p"],
-    div[data-tag="pre"],
-    div[data-tag="html"], {
-        // All blocks should be minimum the height of one char.
-        &:empty::after {
-            content: " ";
-        }
-    }
-
     * {
         clear: both;
     }
+
+    // Carets
     
     div[data-tag="caret"] {
         display: inline;
@@ -297,7 +266,6 @@ body.theme-column .edit-text {
     //     position: relative;
     // }
     
-
     // @keyframes caret {
     //     0% {
     //         border-left-width: 1px;
@@ -311,9 +279,26 @@ body.theme-column .edit-text {
     //     }
     //   }
 
-    /**
-     * span styles
-     */
+    // Blocks
+
+    // All blocks.
+    div[data-tag="h1"],
+    div[data-tag="h2"],
+    div[data-tag="h3"],
+    div[data-tag="h4"],
+    div[data-tag="h5"],
+    div[data-tag="h6"],
+    div[data-tag="p"],
+    div[data-tag="pre"],
+    div[data-tag="html"], {
+        margin: 12px 0;
+        position: relative;
+
+        // All blocks should be minimum the height of one char.
+        &:empty::after {
+            content: " ";
+        }
+    }
 
     div[data-tag="hr"] {
         margin: 16px 0;
@@ -321,13 +306,6 @@ body.theme-column .edit-text {
         min-height: 0 !important;
         border-bottom: 1px solid #eee;
         background: #ccc;
-    }
-
-    div.bold {
-        font-weight: 900;
-    }
-    div.italic {
-        font-style: italic;
     }
 
     div[data-tag="h1"] {
@@ -400,9 +378,71 @@ body.theme-column .edit-text {
     div[data-tag="bullet"] + div[data-tag="bullet"] {
         margin-top: -5px;
     }
+
+    // Spans.
+
+    span.Bold {
+        font-weight: bold;
+    }
+
+    span.Italic {
+        font-style: italic;
+    }
+
+    span.Selected {
+        color: white;
+        background: #349;
+    }
+
+    span.Link {
+        color: #05d;
+        text-decoration: underline;
+    }
+
+    span.Link.Selected {
+        color: white !important;
+    }
+
+    span.Link:hover::before {
+        background: black;
+        content: "Command-click or ctrl-click to open this link.";
+        position: absolute;
+        top: 1.6em;
+        
+        font-size: 0.8em;
+        font-weight: normal;
+        padding: 2px 5px;
+        color: white;
+    }
+
+    // fancy font
+    span:not(.Normie) {
+        color: yellow;
+        -webkit-text-stroke: 3px #f00;
+        paint-order: stroke fill;
+        -webkit-text-fill-color: yellow;
+        text-shadow:
+            2px 2px 0 #000,
+            3px 3px 0 #000;
+    }
+
+    // for debugging
+    span + span {
+        // outline: thin solid #32a1ce;
+    }
 }
 
 // Multi client
+
+#parent {
+    background: #eee;
+}
+
+#client {
+    background: white;
+    cursor: text;
+}
+
 body#multi {
     width: 100%;
     height: 100%;
@@ -512,56 +552,3 @@ body#multi {
 // body.editing-blurred div[data-tag="caret"]::before {
 //     filter: grayscale(100%);
 // }
-
-// Text spans
-.edit-text {
-    span.Bold {
-        font-weight: bold;
-    }
-
-    span.Italic {
-        font-style: italic;
-    }
-
-    span.Selected {
-        color: white;
-        background: #349;
-    }
-
-    span.Link {
-        color: #05d;
-        text-decoration: underline;
-    }
-
-    span.Link.Selected {
-        color: white !important;
-    }
-
-    span.Link:hover::before {
-        background: black;
-        content: "Command-click or ctrl-click to open this link.";
-        position: absolute;
-        top: 1.6em;
-        
-        font-size: 0.8em;
-        font-weight: normal;
-        padding: 2px 5px;
-        color: white;
-    }
-
-    // fancy font
-    span:not(.Normie) {
-        color: yellow;
-        -webkit-text-stroke: 3px #f00;
-        paint-order: stroke fill;
-        -webkit-text-fill-color: yellow;
-        text-shadow:
-            2px 2px 0 #000,
-            3px 3px 0 #000;
-    }
-
-    // for debugging
-    span + span {
-        // outline: thin solid #32a1ce;
-    }
-}

@@ -6,7 +6,7 @@ import { WasmClient as WasmClientModule } from '../bindgen/edit_client';
 import { getWasmModule } from '../index';
 
 import {Command} from './commands';
-import {ClientImpl, ServerImpl} from './network';
+import {ControllerImpl, ServerImpl} from './network';
 import DEBUG from '../debug';
 
 let _convertMarkdownToDoc: ((x: string) => any) | null = null;
@@ -67,11 +67,11 @@ export class WasmError extends Error {
   }
 }
 
-export class WasmClient implements ClientImpl {
+export class WasmClient implements ControllerImpl {
   // public
   server: ServerImpl | null;
-  onNativeMessage: (msg: any) => void | null;
-  onNativeClose: () => void | null; // unused
+  onMessage: (msg: any) => void | null;
+  onClose: () => void | null; // unused
 
   // Private
 
@@ -81,7 +81,7 @@ export class WasmClient implements ClientImpl {
   Module: any;
   clientBindings: WasmClientModule;
 
-  nativeCommand(command: Command) {
+  sendCommand(command: Command) {
     delete command.tag;
     if (forwardWasmTaskCallback != null) {
       this.clientBindings.command(JSON.stringify({
@@ -104,10 +104,10 @@ export class WasmClient implements ClientImpl {
           let parse = JSON.parse(data);
 
           if (parse.ServerCommand && client.server != null) {
-            client.server.syncCommand(parse.ServerCommand);
+            client.server.sendCommand(parse.ServerCommand);
           } else {
-            if (client.onNativeMessage != null) {
-              client.onNativeMessage(parse);
+            if (client.onMessage != null) {
+              client.onMessage(parse);
             }
           }
         });

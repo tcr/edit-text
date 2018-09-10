@@ -6,7 +6,7 @@ import * as route from './route';
 import * as app from './app';
 import {EditorFrame} from './app';
 import * as commands from '../editor/commands';
-import {ServerImpl, ClientImpl } from '../editor/network';
+import {ServerImpl, ControllerImpl } from '../editor/network';
 import {WasmClient, WasmError, getForwardWasmTaskCallback, setForwardWasmTaskCallback} from '../editor/wasm';
 import DEBUG from '../debug';
 
@@ -65,7 +65,7 @@ let syncSocket = new DeferredSocket(
 export class AppServer implements ServerImpl {
   client: WasmClient | null;
   
-  onSyncClose: () => void;
+  onClose: () => void;
 
   private nativeSocket: WebSocket;
 
@@ -82,13 +82,13 @@ export class AppServer implements ServerImpl {
     });
   }
 
-  syncCommand(command: any) {
+  sendCommand(command: any) {
     return this.deferSync.then(syncSocket => {
       syncSocket.send(JSON.stringify(command));
     });
   }
 
-  syncConnect(onError: (message: React.ReactNode) => void): Promise<void> {
+  connect(onError: (message: React.ReactNode) => void): Promise<void> {
     let server = this;
 
     return Promise.resolve()
@@ -146,7 +146,7 @@ export class AppServer implements ServerImpl {
             }, 2000);
           }, 3000);
 
-          server.onSyncClose();
+          server.onClose();
         },
       });
 
@@ -157,16 +157,16 @@ export class AppServer implements ServerImpl {
   }
 }
 
-export class ProxyClient implements ClientImpl {
+export class ProxyClient implements ControllerImpl {
   // TODO shouldn't these be nullable?
-  onNativeMessage: (msg: any) => void | null;
-  onNativeClose: () => void | null;
+  onMessage: (msg: any) => void | null;
+  onClose: () => void | null;
 
   private editorID: string;
 
   private socket: WebSocket;
 
-  nativeCommand(command: commands.Command) {
+  sendCommand(command: commands.Command) {
     delete command.tag;
     this.socket.send(JSON.stringify(command));
   }
@@ -183,11 +183,11 @@ export class ProxyClient implements ClientImpl {
       };
       this.socket.onmessage = function (event) {
         let parse = JSON.parse(event.data);
-        if (network.onNativeMessage !== null) {
-          network.onNativeMessage(parse);
+        if (network.onMessage !== null) {
+          network.onMessage(parse);
         }
       };
-      this.socket.onclose = network.onNativeClose;
+      this.socket.onclose = network.onClose;
     });
   }
 }
