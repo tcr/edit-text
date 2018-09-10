@@ -242,7 +242,7 @@ function caretScan(
   }
   // Select empty blocks directly, which have no anchoring text nodes.
   if (first == null) {
-    let el = document.elementFromPoint( x + 2, y);
+    let el = document.elementFromPoint(x + 2, y);
     if (isEmptyBlock(el)) {
       first = el;
     }
@@ -335,6 +335,25 @@ export class Editor extends React.Component {
   }
 
   moveCursorToPoint(x: number, y: number, dropAnchor: boolean = false): CurSpan | null {
+    // Get the boundaries of the root element. Any coordinate we're looking at that exist
+    // outside of those boundaries, we snap back to the closest edge of the boundary.
+    let boundary = this.el.getBoundingClientRect();
+    console.info('(m) Snapping x', x, 'y', y, 'to boundary');
+    console.info('(m)', boundary);
+    if (x < boundary.left) {
+      x = boundary.left;
+    }
+    if (x > boundary.right) {
+      x = boundary.right - 1;
+    }
+    if (y < boundary.top) {
+      y = boundary.top;
+    }
+    if (y > boundary.bottom) {
+      y = boundary.bottom - 1;
+    }
+    console.info('(m) Snapped x', x, 'y', y, 'to boundary. Done.');
+
     // Check whether we selected a text node or a block element, and create a cursor for it. 
     // Only select blocks which are empty.
     let text = util.textNodeAtPoint(x, y);
@@ -411,7 +430,9 @@ export class Editor extends React.Component {
       return;
     }
 
-    // Navigate up and down for text at the same column.
+    // Up and down cursor navigation to find text in the same visual column.
+    // This requires we perform this from JavaScript, since we need to interact with
+    // the client box model.
     let UP = e.keyCode == 38;
     let DOWN = e.keyCode == 40;
     if (UP || DOWN) {
@@ -431,11 +452,11 @@ export class Editor extends React.Component {
         }
       }
 
-      // Don't forward up or down key to the controller.
+      // Don't forward up or down keypresses to the controller.
       return;
     }
 
-    // Forward the keypress to native.
+    // Forward the keypress to the controller.
     this.props.controller.sendCommand(commands.Keypress(
       e.keyCode,
       e.metaKey,
@@ -447,7 +468,8 @@ export class Editor extends React.Component {
   }
 
   performCopy() {
-    // Generate string from selected text.
+    // Generate string from selected text by just concatenating
+    // all .innerText lines.
     let str = Array.from(
       document.querySelectorAll('span.Selected')
     )

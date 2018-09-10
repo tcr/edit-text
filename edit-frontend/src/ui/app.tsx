@@ -293,6 +293,8 @@ export class EditorFrame extends React.Component {
 
   render(): React.ReactNode {
     let modalClass = this.state.modal == null ? '' : 'modal-active';
+    let editBoundary = null;
+    let editor: Editor | null = null;
     return (
       <div className="fullpage">
         {this.state.modal}
@@ -315,13 +317,26 @@ export class EditorFrame extends React.Component {
           </div>
 
           <div id="edit-layout">
-            <div id="edit-outer">
+            <div
+              id="edit-outer"
+              ref={r => editBoundary = r}
+              onMouseDown={e => {
+                editor!.onMouseDown(e as any);
+              }}
+              onMouseUp={e => {
+                editor!.onMouseUp(e as any);
+              }}
+              onMouseMove={e => {
+                editor!.onMouseMove(e as any);
+              }}
+            >
               <Editor 
                 controller={this.props.client} 
                 KEY_WHITELIST={this.KEY_WHITELIST}
                 content={this.state.body}
                 editorID={this.state.editorID}
                 disabled={!!this.state.modal}
+                ref={r => editor = r}
               />
             </div>
           </div>
