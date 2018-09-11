@@ -19,6 +19,10 @@ use std::{
         Arc,
     },
 };
+use core::{
+    str::next_code_point,
+    char,
+};
 
 #[repr(u8)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

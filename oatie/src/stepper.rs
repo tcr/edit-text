@@ -219,16 +219,111 @@ impl CurStepper {
 #[derive(Clone, Debug, PartialEq)]
 pub struct DocStepper {
     pub head: isize,
-    pub char_debt: usize,
+    pub char_debt: CharDebt,
     rest: Vec<DocElement>,
     pub stack: Vec<(isize, Vec<DocElement>)>,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct CharDebt(Option<(usize, DocString, usize)>);
+
+// impl CharDebt {
+//     fn () {
+//         CharDebt {
+
+//         }
+//     }
+// }
+
 impl DocStepper {
+    // Candidates to be moved to char_debt
+
+    fn char_debt_value(&self) -> usize {
+        if self.head_is_chars() {
+            self.char_debt.0.as_ref().map(|x| x.0).unwrap_or(0)
+        } else {
+            unreachable!()
+        }
+    } 
+
+    fn clear_char_debt(&mut self) {
+        self.char_debt.0 = None;
+    }
+
+    fn char_debt_prepare(&mut self) {
+        if let None = self.char_debt.0 {
+            if let Some(&DocChars(ref text)) = self.head_raw() {
+                self.char_debt.0 = Some((0, text.clone(), text.1.as_ref().map(|x| x.start).unwrap_or(0)));
+            }
+        }
+    }
+
+    fn char_debt_value_add(&mut self, add: usize) {
+        self.char_debt_prepare();
+        let tuple = self.char_debt.0.as_mut().unwrap();
+        tuple.0 += add;
+        unsafe {
+            tuple.1.seek_forward(add);
+        }
+    }
+
+    fn char_debt_value_sub(&mut self, sub: usize) {
+        self.char_debt_prepare();
+        let tuple = self.char_debt.0.as_mut().unwrap();
+        tuple.0 -= sub;
+        unsafe {
+            tuple.1.seek_backward(sub);
+        }
+    }
+
+    pub fn char_debt_docstring(&self) -> DocString {
+        if let Some((ref _index, ref string, ..)) = self.char_debt.0.as_ref() {
+            string.clone()
+        } else {
+            // Return a cloned version of current string, I guess
+            match self.head_raw() {
+                Some(&DocChars(ref text)) => {
+                    text.clone()
+                }
+                _ => unreachable!(),
+            }
+        }
+    }
+
+    pub fn char_debt_docstring_prev(&self) -> Option<DocString> {
+        if let Some((index, ref string, original_index)) = self.char_debt.0.as_ref() {
+            let mut ret = string.clone();
+            unsafe {
+                let range = ret.byte_range_mut();
+                let end = range.start;
+                range.start = *original_index;
+                range.end = end;
+            }
+            Some(ret)
+        } else {
+            None
+        }
+    }
+
+    fn char_debt_prev(&mut self) {
+        self.char_debt.0 = match self.head() {
+            Some(DocChars(ref text)) => {
+                Some((text.char_len() - 1, text.clone(), text.1.as_ref().map(|x| x.start).unwrap_or(0)))
+            }
+            _ => None,
+        };
+    }
+
+
+
+
+
+
+
     pub fn new(span: &DocSpan) -> DocStepper {
         DocStepper {
             head: 0,
-            char_debt: 0,
+            char_debt: CharDebt(None),
             rest: span.to_vec(),
             stack: vec![],
         }
@@ -237,29 +332,49 @@ impl DocStepper {
     pub fn prev(&mut self) -> Option<DocElement> {
         let res = self.head();
         self.head -= 1;
-        self.char_debt = match self.head() {
-            Some(DocChars(ref text)) => text.char_len() - 1,
-            _ => 0,
-        };
+        self.char_debt_prev();
         res
     }
 
     pub fn next(&mut self) -> Option<DocElement> {
         let res = self.head();
         self.head += 1;
-        self.char_debt = 0;
+        self.clear_char_debt();
         res
     }
 
-    pub fn head_pos(&self) -> isize {
+    fn head_pos(&self) -> isize {
         self.head
     }
 
+    fn head_raw<'a>(&'a self) -> Option<&'a DocElement> {
+        self.rest.get(self.head as usize)
+    }
+
+    fn unhead_raw<'a>(&'a self) -> Option<&'a DocElement> {
+        let mut index = self.head - 1;
+
+        if self.head_is_chars() {
+            if self.char_debt_value() > 0 {
+                index = self.head;
+            }
+        }
+
+        self.rest.get(index as usize)
+    }
+
+    fn head_is_chars(&self) -> bool {
+        if let Some(&DocChars(..)) = self.head_raw() {
+            true
+        } else {
+            false
+        }
+    }
+
     pub fn head(&self) -> Option<DocElement> {
-        match self.rest.get(self.head as usize) {
+        match self.head_raw() {
             Some(&DocChars(ref text)) => {
-                let (_, right) = text.clone().split_at(self.char_debt);
-                Some(DocChars(right))
+                Some(DocChars(self.char_debt_docstring()))
             }
             Some(value) => Some(value.clone()),
             None => None,
@@ -267,13 +382,9 @@ impl DocStepper {
     }
 
     pub fn unhead(&self) -> Option<DocElement> {
-        if self.char_debt > 0 {
-            if let Some(&DocChars(ref text)) = self.rest.get(self.head as usize) {
-                let (left, right) = text.clone().split_at(self.char_debt);
-                return Some(DocChars(left));
-            } else {
-                unreachable!();
-            }
+        if let Some(&DocChars(ref text)) = self.head_raw() {
+            let string = self.char_debt_docstring_prev().unwrap_or_else(|| text.clone());
+            return Some(DocChars(string))
         }
 
         self.rest
@@ -284,7 +395,7 @@ impl DocStepper {
     pub fn peek(&self) -> Option<DocElement> {
         match self.rest.get((self.head + 1) as usize) {
             Some(&DocChars(ref text)) => {
-                let (_, right) = text.clone().split_at(self.char_debt);
+                let (_, right) = text.split_at(self.char_debt_value());
                 Some(DocChars(right))
             }
             Some(value) => Some(value.clone()),
@@ -297,13 +408,13 @@ impl DocStepper {
     }
 
     pub fn is_done(&self) -> bool {
-        self.head().is_none() && self.stack.is_empty()
+        self.head_raw().is_none() && self.stack.is_empty()
     }
 
     pub fn unenter(&mut self) -> &mut Self {
         let (head, rest) = self.stack.pop().unwrap();
         self.head = head;
-        self.char_debt = 0;
+        self.clear_char_debt();
         self.rest = rest;
 
         self
@@ -315,7 +426,7 @@ impl DocStepper {
         match head {
             Some(DocGroup(ref attrs, ref span)) => {
                 self.head = 0;
-                self.char_debt = 0;
+                self.clear_char_debt();
                 self.rest = span.to_vec();
             }
             _ => panic!("DocStepper::enter() called on inappropriate element"),
@@ -332,7 +443,7 @@ impl DocStepper {
         match head {
             Some(DocGroup(ref attrs, ref span)) => {
                 self.head = span.len() as isize;
-                self.char_debt = 0;
+                self.clear_char_debt();
                 self.rest = span.to_vec();
                 // if span.len() > 0 {
                 //     self.prev();
@@ -347,7 +458,7 @@ impl DocStepper {
     pub fn exit(&mut self) {
         let (head, rest) = self.stack.pop().unwrap();
         self.head = head;
-        self.char_debt = 0;
+        self.clear_char_debt();
         self.rest = rest;
 
         // Increment pointer
@@ -356,10 +467,10 @@ impl DocStepper {
 
     pub fn unskip(&mut self, mut skip: usize) {
         while skip > 0 && self.head >= 0 {
-            match self.head() {
-                Some(DocChars(ref inner)) => {
-                    if self.char_debt > 0 {
-                        self.char_debt -= 1;
+            match self.head_raw() {
+                Some(DocChars(..)) => {
+                    if self.char_debt_value() > 0 {
+                        self.char_debt_value_sub(1);
                         skip -= 1;
                     } else {
                         self.prev();
@@ -380,19 +491,23 @@ impl DocStepper {
 
     pub fn skip(&mut self, mut skip: usize) {
         while skip > 0 && !self.is_done() {
-            match self.head().unwrap() {
-                DocChars(ref inner) => {
-                    if inner.char_len() <= skip {
+            match self.head_raw() {
+                Some(DocChars(ref text)) => {
+                    let remaining = text.char_len() - self.char_debt_value();
+                    if skip >= remaining {
+                        skip -= remaining;
                         self.next();
-                        skip -= inner.char_len();
                     } else {
-                        self.char_debt += skip;
+                        self.char_debt_value_add(skip);
                         break;
                     }
                 }
-                DocGroup(..) => {
+                Some(DocGroup(..)) => {
                     self.next();
                     skip -= 1;
+                }
+                None => {
+                    break;
                 }
             }
         }
