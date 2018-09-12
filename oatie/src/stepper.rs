@@ -218,274 +218,168 @@ impl CurStepper {
     }
 }
 
-// TODO can switch head to a usize??
+// DocStepper
+
+// For now, this is the rental struct that DocStepper must use until
+// all callsites are converted into supporting a lifetime-bound DocStepper.
 rental! {
     pub mod doc_stepper {
-        use crate::doc::*;
-        use std::sync::Arc;
+        use super::*;
 
         #[rental(clone, debug, covariant)]
         pub struct DocStepperCursor {
             root: Arc<DocSpan>,
-            stack: Vec<(isize, &'root [DocElement])>,
+            inner: DocStepperInner<'root>,
         }
     }
 }
 
+// Where we define the impl on.
 #[derive(Clone, Debug)]
 pub struct DocStepper {
-    pub char_debt: CharDebt,
     cursor: doc_stepper::DocStepperCursor,
 }
 
+// Where the inner contents are.
+#[derive(Clone, Debug)]
+pub struct DocStepperInner<'a> {
+    char_cursor: Option<CharCursor>,
+    stack: Vec<(isize, &'a [DocElement])>,
+}
+
+// DocStepper impls
+
 impl PartialEq for DocStepper {
     fn eq(&self, other: &DocStepper) -> bool {
-        self.char_debt == other.char_debt
-            && self.cursor.rent_all(|a| {
-                other.cursor.rent_all(|b| {
-                    a.root == b.root && a.stack == b.stack
-                })
+        self.cursor.rent_all(|a| {
+            other.cursor.rent_all(|b| {
+                (a.inner.char_cursor.as_ref().map(|c| c.value()) == b.inner.char_cursor.as_ref().map(|c| c.value())
+                    && a.inner.stack == b.inner.stack
+                    && a.root == b.root)
             })
+        })
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct CharDebt(Option<(usize, DocString, usize)>);
-
-// impl CharDebt {
-//     fn () {
-//         CharDebt {
-
-//         }
-//     }
-// }
-
 impl DocStepper {
-    // Candidates to be moved to char_debt
-
-    fn char_debt_value(&self) -> usize {
-        if self.head_is_chars() {
-            self.char_debt.0.as_ref().map(|x| x.0).unwrap_or(0)
-        } else {
-            unreachable!()
-        }
-    } 
-
-    fn clear_char_debt(&mut self) {
-        self.char_debt.0 = None;
+    pub fn new(span: &DocSpan) -> DocStepper {
+        let mut stepper = DocStepper {
+            cursor: doc_stepper::DocStepperCursor::new(
+                Arc::new(span.clone()),
+                |span| DocStepperInner {
+                    char_cursor: None,
+                    stack: vec![(0, &span)],
+                },
+            ),
+        };
+        stepper.char_cursor_update();
+        stepper
     }
 
-    fn char_debt_prepare(&mut self) {
-        if let None = self.char_debt.0 {
-            if let Some(&DocChars(ref text)) = self.head_raw() {
-                self.char_debt.0 = Some((0, text.clone(), text.1.as_ref().map(|x| x.start).unwrap_or(0)));
-            }
-        }
-    }
+    // Managing the char cursor, created each time we reach a DocChars.
 
-    fn char_debt_value_add(&mut self, add: usize) {
-        self.char_debt_prepare();
-        let tuple = self.char_debt.0.as_mut().unwrap();
-        tuple.0 += add;
-        unsafe {
-            tuple.1.seek_forward(add);
-        }
-    }
-
-    fn char_debt_value_sub(&mut self, sub: usize) {
-        self.char_debt_prepare();
-        let tuple = self.char_debt.0.as_mut().unwrap();
-        tuple.0 -= sub;
-        unsafe {
-            tuple.1.seek_backward(sub);
-        }
-    }
-
-    pub fn char_debt_docstring(&self) -> DocString {
-        if let Some((ref _index, ref string, ..)) = self.char_debt.0.as_ref() {
-            string.clone()
-        } else {
-            // Return a cloned version of current string, I guess
-            match self.head_raw() {
-                Some(&DocChars(ref text)) => {
-                    text.clone()
-                }
-                _ => unreachable!(),
-            }
-        }
-    }
-
-    pub fn char_debt_docstring_prev(&self) -> Option<DocString> {
-        if let Some((index, ref string, original_index)) = self.char_debt.0.as_ref() {
-            let mut ret = string.clone();
-            unsafe {
-                let range = ret.byte_range_mut();
-                let end = range.start;
-                range.start = *original_index;
-                range.end = end;
-            }
-            Some(ret)
+    /// Move to the first character of the current string, or clear the
+    /// cursor if we've reached a group.
+    fn char_cursor_update(&mut self) {
+        let cursor = if let Some(&DocChars(ref text)) = self.head_raw() {
+            Some(CharCursor::from_docstring(text))
         } else {
             None
-        }
+        };
+        self.cursor.rent_all_mut(|target| target.inner.char_cursor = cursor);
     }
 
-    fn char_debt_prev(&mut self) {
-        self.char_debt.0 = match self.head() {
+    /// Move to the last character - 1 of the current string, or clear the
+    /// cursor if we've reached a group.
+    fn char_cursor_update_prev(&mut self) {
+        let cursor = match self.head() {
             Some(DocChars(ref text)) => {
-                Some((text.char_len() - 1, text.clone(), text.1.as_ref().map(|x| x.start).unwrap_or(0)))
+                let mut cursor = CharCursor::from_docstring_end(text);
+                cursor.value_sub(1);
+                Some(cursor)
             }
             _ => None,
         };
+        self.cursor.rent_all_mut(|target| target.inner.char_cursor = cursor);
     }
 
-
-
-
-
-
-
-    pub fn new(span: &DocSpan) -> DocStepper {
-        DocStepper {
-            char_debt: CharDebt(None),
-            cursor: doc_stepper::DocStepperCursor::new(
-                Arc::new(span.clone()),
-                |span| vec![(0, &span)],
-            ),
-        }
+    fn char_cursor_expect(&self) -> &CharCursor {
+        self.cursor.suffix().char_cursor.as_ref()
+            .expect("Expected a generated char cursor")
     }
 
-    pub fn prev(&mut self) -> Option<DocElement> {
-        let res = self.head();
-        self.head_index_sub(1);
-        self.char_debt_prev();
-        res
+    fn char_cursor_expect_add(&mut self, add: usize) {
+        self.cursor.rent_all_mut(|target| target.inner.char_cursor.as_mut()
+            .expect("Expected a generated char cursor")
+            .value_add(add));
     }
 
-    pub fn next(&mut self) -> Option<DocElement> {
-        let res = self.head();
-        self.head_index_add(1);
-        self.clear_char_debt();
-        res
+    fn char_cursor_expect_sub(&mut self, sub: usize) {
+        self.cursor.rent_all_mut(|target| target.inner.char_cursor.as_mut()
+            .expect("Expected a generated char cursor")
+            .value_sub(sub));
     }
 
+    // Current row in the stack is a DocSpan reference and an index.
+    // What DocElement the index points to is the "head". If the head points
+    // to a DocChars, we also create a char_cursor to index into the string.
 
-
-
-
-
-
-
-    fn index(&self) -> isize {
-        self.cursor.suffix().last().unwrap().0
-    }
-
-    fn current<'a>(&'a self) -> &'a [DocElement] {
-        &self.cursor.suffix().last().unwrap().1
-    }
-
-    pub fn stack<'a>(&'a self) -> &'a [(isize, &'a [DocElement])] {
-        let mut vec = &self.cursor.suffix();
-        &vec[0..vec.len() - 1]
+    fn current<'a>(&'a self) -> &(isize, &'a [DocElement]) {
+        self.cursor.suffix().stack.last().unwrap()
     }
 
     fn head_index(&self) -> usize {
-        self.cursor.suffix().last().unwrap().0 as usize
+        self.current().0 as usize
     }
 
     fn head_index_add<'a>(&'a mut self, add: usize) {
         self.cursor.rent_mut(|target| {
-            target.last_mut().unwrap().0 += add as isize;
+            target.stack.last_mut().unwrap().0 += add as isize;
         });
+        self.char_cursor_update();
     }
 
     fn head_index_sub<'a>(&'a mut self, sub: usize) {
         self.cursor.rent_mut(|target| {
-            target.last_mut().unwrap().0 -= sub as isize;
+            target.stack.last_mut().unwrap().0 -= sub as isize;
         });
+        self.char_cursor_update();
     }
-
-    pub fn unenter(&mut self) -> &mut Self {
-        self.cursor.rent_all_mut(|target| {
-            target.stack.pop();
-        });
-        self
-    }
-
-    pub fn enter(&mut self) -> &mut Self {
-        // let head = self.head_raw();
-        self.cursor.rent_all_mut(|target| {
-            let index = target.stack.last().unwrap().0 as usize;
-            if let &DocGroup(_, ref inner) = &target.stack.last().unwrap().1[index] {
-                target.stack.push((0, inner));
-            } else {
-                unreachable!();
-            }
-        });
-        self.clear_char_debt();
-        // match head {
-        //     Some(DocGroup(ref attrs, ref span)) => {
-        //         self.head = 0;
-        //         self.clear_char_debt();
-        //         self.cursor.rent_mut(|target| target.push((0, span)));
-        //     }
-        //     _ => panic!("DocStepper::enter() called on inappropriate element"),
-        // }
-
-        self
-    }
-
-    pub fn unexit(&mut self) {
-        self.prev();
-        self.enter();
-        assert!(self.head_index() >= 0);
-    }
-
-    pub fn exit(&mut self) {
-        self.unenter();
-
-        // Increment pointer
-        self.next();
-    }
-
-
-
-
-
-
-
-
-
-
-
 
     fn head_raw<'a>(&'a self) -> Option<&'a DocElement> {
-        self.current().get(self.head_index())
+        self.current().1.get(self.head_index())
     }
 
     fn unhead_raw<'a>(&'a self) -> Option<&'a DocElement> {
         // If we've split a string, don't modify the index.
-        if self.head_is_chars() {
-            if self.char_debt_value() > 0 {
-                return self.head_raw();
-            }
+        if self.cursor.suffix().char_cursor.as_ref()
+            .map(|c| c.value() > 0)
+            .unwrap_or(false) {
+            return self.head_raw();
         }
 
-        self.current().get(self.head_index() - 1)
+        self.current().1.get(self.head_index() - 1)
     }
 
-    fn head_is_chars(&self) -> bool {
-        if let Some(&DocChars(..)) = self.head_raw() {
-            true
-        } else {
-            false
-        }
+    // Cursor Public API
+
+    pub fn next(&mut self) {
+        self.head_index_add(1);
+        self.char_cursor_update();
+    }
+
+    pub fn prev(&mut self) {
+        self.head_index_sub(1);
+        self.char_cursor_update_prev();
     }
 
     pub fn head(&self) -> Option<DocElement> {
         match self.head_raw() {
             Some(&DocChars(ref text)) => {
-                Some(DocChars(self.char_debt_docstring()))
+                // Expect cursor is at a string of length 1 at least
+                // (meaning cursor has not passed to the end of the string)
+                Some(DocChars(self.char_cursor_expect().right()
+                    .expect("Encountered empty DocString").clone()))
             }
             Some(value) => Some(value.clone()),
             None => None,
@@ -494,40 +388,34 @@ impl DocStepper {
 
     pub fn unhead(&self) -> Option<DocElement> {
         if let Some(&DocChars(ref text)) = self.head_raw() {
-            let string = self.char_debt_docstring_prev().unwrap_or_else(|| text.clone());
-            return Some(DocChars(string))
+            // .left may be empty, so allow fall-through (don't .unwrap())
+            if let Some(docstring) = self.char_cursor_expect().left() {
+                return Some(DocChars(docstring.clone()));
+            }
         }
 
-        self.current()
+        self.current().1
             .get((self.head_index() - 1) as usize)
             .map(|value| value.clone())
     }
 
     pub fn peek(&self) -> Option<DocElement> {
-        match self.current().get((self.head_index() + 1) as usize) {
+        match self.current().1.get((self.head_index() + 1) as usize) {
             Some(&DocChars(ref text)) => {
-                let (_, right) = text.split_at(self.char_debt_value());
-                Some(DocChars(right))
+                // Pass along new text node
+                Some(DocChars(text.clone()))
             }
             Some(value) => Some(value.clone()),
             None => None,
         }
     }
 
-    pub fn is_back_done(&self) -> bool {
-        self.unhead_raw().is_none() && self.at_root()
-    }
-
-    pub fn is_done(&self) -> bool {
-        self.head_raw().is_none() && self.at_root()
-    }
-
     pub fn unskip(&mut self, mut skip: usize) {
-        while skip > 0 && self.head_index() >= 0 {
+        while skip > 0 {
             match self.head_raw() {
                 Some(DocChars(..)) => {
-                    if self.char_debt_value() > 0 {
-                        self.char_debt_value_sub(1);
+                    if self.char_cursor_expect().value() > 0 {
+                        self.char_cursor_expect_sub(1);
                         skip -= 1;
                     } else {
                         self.prev();
@@ -540,39 +428,87 @@ impl DocStepper {
                 }
             }
         }
-    }
+    } 
 
     pub fn skip(&mut self, mut skip: usize) {
-        while skip > 0 && !self.is_done() {
-            match self.head_raw() {
-                Some(DocChars(ref text)) => {
-                    let remaining = text.char_len() - self.char_debt_value();
+        while skip > 0 {
+            let head = if let Some(head) = self.head_raw() {
+                head
+            } else {
+                return;
+            };
+
+            match head {
+                DocChars(ref text) => {
+                    let remaining = text.char_len() - self.char_cursor_expect().value();
                     if skip >= remaining {
                         skip -= remaining;
-                        self.next();
                     } else {
-                        self.char_debt_value_add(skip);
-                        break;
+                        self.char_cursor_expect_add(skip);
+                        return;
                     }
                 }
-                Some(DocGroup(..)) => {
-                    self.next();
+                DocGroup(..) => {
                     skip -= 1;
                 }
-                None => {
-                    break;
-                }
             }
+            self.next();
         }
     }
 
+    /// The number of elements to skip until the end of the current group
+    /// the stepper is tracking were reached. After that, head() returns None
+    /// and exit() should be called.
     pub fn skip_len(&self) -> usize {
-        self.current()[self.head_index()..].to_vec().skip_len()
+        self.current().1[self.head_index()..].to_vec().skip_len()
     }
 
+    // Cursor stack operations.
+
     pub fn at_root(&self) -> bool {
-        self.stack().len() == 0
+        self.cursor.suffix().stack.len() <= 1
     }
+
+    pub fn is_back_done(&self) -> bool {
+        self.at_root() && self.unhead_raw().is_none()
+    }
+
+    pub fn is_done(&self) -> bool {
+        self.at_root() && self.head_raw().is_none()
+    }
+    
+    pub fn unenter(&mut self) -> &mut Self {
+        self.cursor.rent_all_mut(|target| {
+            target.inner.stack.pop();
+        });
+        self.char_cursor_update();
+        self
+    }
+
+    pub fn enter(&mut self) -> &mut Self {
+        self.cursor.rent_all_mut(|target| {
+            let index = target.inner.stack.last().unwrap().0 as usize;
+            if let &DocGroup(_, ref inner) = &target.inner.stack.last().unwrap().1[index] {
+                target.inner.stack.push((0, inner));
+            } else {
+                panic!("DocStepper::enter() called on inappropriate element");
+            }
+        });
+        self.char_cursor_update();
+        self
+    }
+
+    pub fn unexit(&mut self) {
+        self.prev();
+        self.enter();
+        self.head_index_add(self.current().1.len());
+    }
+
+    pub fn exit(&mut self) {
+        self.unenter();
+        self.next();
+    }
+
 }
 
 #[cfg(test)]

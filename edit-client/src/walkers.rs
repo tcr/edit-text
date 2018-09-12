@@ -81,7 +81,7 @@ impl CaretStepper {
         let len = match self.doc.head() {
             Some(DocChars(val)) => {
                 let len = val.char_len();
-                self.doc.skip(len);
+                self.doc.next();
                 len
             }
             Some(DocGroup(..)) => {
@@ -288,61 +288,18 @@ impl Walker {
         });
     }
 
+    #[deprecated]
     pub fn to_caret(doc: &Doc, client_id: &str, focus: bool) -> Walker {
-        let mut stepper = CaretStepper::new(DocStepper::new(&doc.0));
-
-        // Iterate until we match the cursor.
-        let matched = loop {
-            if let Some(DocGroup(attrs, _)) = stepper.doc.head() {
-                if is_caret(&attrs, Some(client_id), focus) {
-                    break true;
-                }
-            }
-            if stepper.skip_element().is_none() {
-                break false;
-            }
-        };
-        if !matched {
-            panic!("Didn't find a (focus={:?}) caret.", focus);
-        }
-
-        Walker {
-            original_doc: doc.clone(),
-            stepper,
-        }
+        Walker::to_caret_safe(doc, client_id, focus)
+            .expect(&format!("Didn't find a (focus={:?}) caret.", focus))
     }
 
-    // TODO Have this be replaced with to_caret_position also
-    // Only difference is that above consumers
-    // haven't had an .unwrap() call added yet for this:
+    #[deprecated]
     pub fn to_caret_safe(doc: &Doc, client_id: &str, focus: bool) -> Option<Walker> {
-        let mut stepper = CaretStepper::new(DocStepper::new(&doc.0));
-
-        // Iterate until we match the cursor.
-        let matched = loop {
-            if let Some(DocGroup(attrs, _)) = stepper.doc.head() {
-                if is_caret(&attrs, Some(client_id), focus) {
-                    break true;
-                }
-            }
-            if stepper.next().is_none() {
-                break false;
-            }
-        };
-
-        if !matched {
-            None
-        } else {
-            Some(Walker {
-                original_doc: doc.clone(),
-                stepper,
-            })
-        }
+        Walker::to_caret_position(doc, client_id, if focus { Pos::Focus } else { Pos::Anchor }).ok()
     }
 
-    // TODO Have this replace the above and take its name.
-    // Only difference is that above consumers
-    // haven't had an .unwrap() call added yet for this:
+    // TODO Have this replace to_caret and take its name.
     pub fn to_caret_position(doc: &Doc, client_id: &str, position: Pos) -> Result<Walker, Error> {
         let mut stepper = CaretStepper::new(DocStepper::new(&doc.0));
 
@@ -381,7 +338,7 @@ impl Walker {
                     }
                 }
             }
-            if stepper.next().is_none() {
+            if stepper.skip_element().is_none() {
                 break;
             }
         }

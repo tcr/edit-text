@@ -20,7 +20,6 @@ use std::{
     },
 };
 use core::{
-    str::next_code_point,
     char,
 };
 
