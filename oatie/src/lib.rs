@@ -26,6 +26,8 @@ extern crate failure;
 extern crate either;
 extern crate regex;
 extern crate ron;
+#[macro_use]
+extern crate rental;
 extern crate serde;
 extern crate core;
 
@@ -51,6 +53,7 @@ pub mod compose;
 pub mod doc;
 //pub mod random;
 pub mod apply;
+#[macro_use]
 pub mod macros;
 mod parse;
 mod place;

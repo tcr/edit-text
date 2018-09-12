@@ -1,9 +1,12 @@
 //! Enables stepping through a span operation.
 
+#[macro_use]
+use macros;
+
 use doc::*;
-use std::borrow::ToOwned;
 use std::cmp;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 #[derive(Clone, Debug)]
 pub struct DelStepper {
@@ -216,12 +219,34 @@ impl CurStepper {
 }
 
 // TODO can switch head to a usize??
-#[derive(Clone, Debug, PartialEq)]
+rental! {
+    pub mod doc_stepper {
+        use crate::doc::*;
+        use std::sync::Arc;
+
+        #[rental(clone, debug, covariant)]
+        pub struct DocStepperCursor {
+            root: Arc<DocSpan>,
+            stack: Vec<(isize, &'root [DocElement])>,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
 pub struct DocStepper {
-    pub head: isize,
     pub char_debt: CharDebt,
-    rest: Vec<DocElement>,
-    pub stack: Vec<(isize, Vec<DocElement>)>,
+    cursor: doc_stepper::DocStepperCursor,
+}
+
+impl PartialEq for DocStepper {
+    fn eq(&self, other: &DocStepper) -> bool {
+        self.char_debt == other.char_debt
+            && self.cursor.rent_all(|a| {
+                other.cursor.rent_all(|b| {
+                    a.root == b.root && a.stack == b.stack
+                })
+            })
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -322,45 +347,131 @@ impl DocStepper {
 
     pub fn new(span: &DocSpan) -> DocStepper {
         DocStepper {
-            head: 0,
             char_debt: CharDebt(None),
-            rest: span.to_vec(),
-            stack: vec![],
+            cursor: doc_stepper::DocStepperCursor::new(
+                Arc::new(span.clone()),
+                |span| vec![(0, &span)],
+            ),
         }
     }
 
     pub fn prev(&mut self) -> Option<DocElement> {
         let res = self.head();
-        self.head -= 1;
+        self.head_index_sub(1);
         self.char_debt_prev();
         res
     }
 
     pub fn next(&mut self) -> Option<DocElement> {
         let res = self.head();
-        self.head += 1;
+        self.head_index_add(1);
         self.clear_char_debt();
         res
     }
 
-    fn head_pos(&self) -> isize {
-        self.head
+
+
+
+
+
+
+
+    fn index(&self) -> isize {
+        self.cursor.suffix().last().unwrap().0
     }
 
+    fn current<'a>(&'a self) -> &'a [DocElement] {
+        &self.cursor.suffix().last().unwrap().1
+    }
+
+    pub fn stack<'a>(&'a self) -> &'a [(isize, &'a [DocElement])] {
+        let mut vec = &self.cursor.suffix();
+        &vec[0..vec.len() - 1]
+    }
+
+    fn head_index(&self) -> usize {
+        self.cursor.suffix().last().unwrap().0 as usize
+    }
+
+    fn head_index_add<'a>(&'a mut self, add: usize) {
+        self.cursor.rent_mut(|target| {
+            target.last_mut().unwrap().0 += add as isize;
+        });
+    }
+
+    fn head_index_sub<'a>(&'a mut self, sub: usize) {
+        self.cursor.rent_mut(|target| {
+            target.last_mut().unwrap().0 -= sub as isize;
+        });
+    }
+
+    pub fn unenter(&mut self) -> &mut Self {
+        self.cursor.rent_all_mut(|target| {
+            target.stack.pop();
+        });
+        self
+    }
+
+    pub fn enter(&mut self) -> &mut Self {
+        // let head = self.head_raw();
+        self.cursor.rent_all_mut(|target| {
+            let index = target.stack.last().unwrap().0 as usize;
+            if let &DocGroup(_, ref inner) = &target.stack.last().unwrap().1[index] {
+                target.stack.push((0, inner));
+            } else {
+                unreachable!();
+            }
+        });
+        self.clear_char_debt();
+        // match head {
+        //     Some(DocGroup(ref attrs, ref span)) => {
+        //         self.head = 0;
+        //         self.clear_char_debt();
+        //         self.cursor.rent_mut(|target| target.push((0, span)));
+        //     }
+        //     _ => panic!("DocStepper::enter() called on inappropriate element"),
+        // }
+
+        self
+    }
+
+    pub fn unexit(&mut self) {
+        self.prev();
+        self.enter();
+        assert!(self.head_index() >= 0);
+    }
+
+    pub fn exit(&mut self) {
+        self.unenter();
+
+        // Increment pointer
+        self.next();
+    }
+
+
+
+
+
+
+
+
+
+
+
+
     fn head_raw<'a>(&'a self) -> Option<&'a DocElement> {
-        self.rest.get(self.head as usize)
+        self.current().get(self.head_index())
     }
 
     fn unhead_raw<'a>(&'a self) -> Option<&'a DocElement> {
-        let mut index = self.head - 1;
-
+        // If we've split a string, don't modify the index.
         if self.head_is_chars() {
             if self.char_debt_value() > 0 {
-                index = self.head;
+                return self.head_raw();
             }
         }
 
-        self.rest.get(index as usize)
+        self.current().get(self.head_index() - 1)
     }
 
     fn head_is_chars(&self) -> bool {
@@ -387,13 +498,13 @@ impl DocStepper {
             return Some(DocChars(string))
         }
 
-        self.rest
-            .get((self.head - 1) as usize)
+        self.current()
+            .get((self.head_index() - 1) as usize)
             .map(|value| value.clone())
     }
 
     pub fn peek(&self) -> Option<DocElement> {
-        match self.rest.get((self.head + 1) as usize) {
+        match self.current().get((self.head_index() + 1) as usize) {
             Some(&DocChars(ref text)) => {
                 let (_, right) = text.split_at(self.char_debt_value());
                 Some(DocChars(right))
@@ -404,69 +515,15 @@ impl DocStepper {
     }
 
     pub fn is_back_done(&self) -> bool {
-        self.unhead().is_none() && self.stack.is_empty()
+        self.unhead_raw().is_none() && self.at_root()
     }
 
     pub fn is_done(&self) -> bool {
-        self.head_raw().is_none() && self.stack.is_empty()
-    }
-
-    pub fn unenter(&mut self) -> &mut Self {
-        let (head, rest) = self.stack.pop().unwrap();
-        self.head = head;
-        self.clear_char_debt();
-        self.rest = rest;
-
-        self
-    }
-
-    pub fn enter(&mut self) -> &mut Self {
-        let head = self.head();
-        self.stack.push((self.head, self.rest.clone()));
-        match head {
-            Some(DocGroup(ref attrs, ref span)) => {
-                self.head = 0;
-                self.clear_char_debt();
-                self.rest = span.to_vec();
-            }
-            _ => panic!("DocStepper::enter() called on inappropriate element"),
-        }
-
-        self
-    }
-
-    pub fn unexit(&mut self) {
-        self.prev();
-
-        let head = self.head();
-        self.stack.push((self.head, self.rest.clone()));
-        match head {
-            Some(DocGroup(ref attrs, ref span)) => {
-                self.head = span.len() as isize;
-                self.clear_char_debt();
-                self.rest = span.to_vec();
-                // if span.len() > 0 {
-                //     self.prev();
-                // }
-            }
-            _ => panic!("Unexited wrong thing"),
-        }
-
-        assert!(self.head >= 0);
-    }
-
-    pub fn exit(&mut self) {
-        let (head, rest) = self.stack.pop().unwrap();
-        self.head = head;
-        self.clear_char_debt();
-        self.rest = rest;
-
-        // Increment pointer
-        self.next();
+        self.head_raw().is_none() && self.at_root()
     }
 
     pub fn unskip(&mut self, mut skip: usize) {
-        while skip > 0 && self.head >= 0 {
+        while skip > 0 && self.head_index() >= 0 {
             match self.head_raw() {
                 Some(DocChars(..)) => {
                     if self.char_debt_value() > 0 {
@@ -477,11 +534,7 @@ impl DocStepper {
                         skip -= 1;
                     }
                 }
-                Some(DocGroup(..)) => {
-                    self.prev();
-                    skip -= 1;
-                }
-                None => {
+                Some(DocGroup(..)) | None => {
                     self.prev();
                     skip -= 1;
                 }
@@ -514,6 +567,77 @@ impl DocStepper {
     }
 
     pub fn skip_len(&self) -> usize {
-        self.rest[self.head as usize..].to_vec().skip_len()
+        self.current()[self.head_index()..].to_vec().skip_len()
+    }
+
+    pub fn at_root(&self) -> bool {
+        self.stack().len() == 0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[macro_use]
+    use crate::macros;
+
+    fn test_doc_0() -> DocSpan {
+        doc_span![
+            DocGroup({"tag": "h1"}, [
+                DocChars("Cool"),
+            ]),
+        ]
+    }
+
+    #[test]
+    fn docstepper_middle() {
+        let doc = test_doc_0();
+        let mut stepper = DocStepper::new(&doc);
+        stepper.enter();
+        stepper.skip(2);
+        assert_eq!(stepper.head().unwrap(), DocChars(DocString::from_str("ol")));
+    }
+
+    #[test]
+    #[should_panic]
+    fn docstepper_peek_too_far_0() {
+        let doc = test_doc_0();
+        let mut stepper = DocStepper::new(&doc);
+        stepper.enter();
+        stepper.skip(2);
+        stepper.peek().unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn docstepper_peek_too_far_1() {
+        let doc = test_doc_0();
+        let mut stepper = DocStepper::new(&doc);
+        stepper.enter();
+        stepper.skip(4);
+        stepper.peek().unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn docstepper_peek_too_far_2() {
+        let doc = test_doc_0();
+        let mut stepper = DocStepper::new(&doc);
+        stepper.enter();
+        stepper.peek().unwrap();
+    }
+
+    #[test]
+    fn docstepper_deep_0() {
+        let doc = test_doc_0();
+        let mut stepper = DocStepper::new(&doc);
+        stepper.enter();
+        stepper.skip(3);
+        stepper.unskip(3);
+        stepper.unenter();
+        stepper.enter();
+        stepper.skip(3);
+        assert_eq!(stepper.peek().is_none(), true);
     }
 }

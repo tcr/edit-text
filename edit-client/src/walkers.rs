@@ -164,7 +164,7 @@ impl ReverseCaretStepper {
         if let Some(DocChars(..)) = doc2.unhead() {
             return true;
         } else if doc2.unhead().is_none() {
-            if doc2.stack.is_empty() {
+            if doc2.at_root() {
                 // end of document, bail
                 return false;
             }
@@ -202,7 +202,7 @@ impl Iterator for ReverseCaretStepper {
                 self.doc.unexit();
             }
             None => {
-                if self.doc.stack.is_empty() {
+                if self.doc.at_root() {
                     return None;
                 } else {
                     self.doc.unenter();
@@ -212,7 +212,7 @@ impl Iterator for ReverseCaretStepper {
 
         if self.is_valid_caret_pos() {
             self.caret_pos -= 1;
-        } else if let (None, true) = (self.doc.unhead(), self.doc.stack.is_empty()) {
+        } else if let (None, true) = (self.doc.unhead(), self.doc.at_root()) {
             // Fix caret_pos to be -1 when we reach the end.
             // {edit.reset.caret_pos}
             self.caret_pos = -1;
@@ -653,6 +653,9 @@ impl Walker {
         let mut doc_stepper = DocStepper::new(&self.original_doc.0);
 
         while self.stepper.doc != doc_stepper {
+            // console_log!("head ----> {:?}", doc_stepper.head());
+            // console_log!("head stack len ---> {:?}", doc_stepper.stack().len());
+            // console_log!("head stack ---> {:?}", doc_stepper.stack());
             match doc_stepper.head() {
                 Some(DocChars(..)) => {
                     del.place(&DelSkip(1));
