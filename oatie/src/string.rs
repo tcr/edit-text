@@ -19,9 +19,6 @@ use std::{
         Arc,
     },
 };
-use core::{
-    char,
-};
 
 #[repr(u8)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

@@ -343,7 +343,8 @@ impl Walker {
             }
         }
 
-        if let Some(result_stepper) = result_stepper {
+        if let Some(mut result_stepper) = result_stepper {
+            result_stepper.caret_pos = 0;
             Ok(Walker {
                 original_doc: doc.clone(),
                 stepper: result_stepper,
@@ -608,16 +609,21 @@ impl Walker {
 
         // Walk the doc until we reach our current doc position.
         let mut doc_stepper = DocStepper::new(&self.original_doc.0);
+        let mut current_stepper = self.stepper.doc.clone();
 
-        while self.stepper.doc != doc_stepper {
+        let char_index = current_stepper.char_index();
+        current_stepper.char_cursor_update();
+
+        while doc_stepper != current_stepper {
             // console_log!("head ----> {:?}", doc_stepper.head());
             // console_log!("head stack len ---> {:?}", doc_stepper.stack().len());
             // console_log!("head stack ---> {:?}", doc_stepper.stack());
             match doc_stepper.head() {
-                Some(DocChars(..)) => {
-                    del.place(&DelSkip(1));
-                    add.place(&AddSkip(1));
-                    doc_stepper.skip(1);
+                Some(DocChars(ref text)) => {
+                    let text_len = text.char_len();
+                    del.place(&DelSkip(text_len));
+                    add.place(&AddSkip(text_len));
+                    doc_stepper.next();
                 }
                 Some(DocGroup(..)) => {
                     del.begin();
@@ -634,6 +640,14 @@ impl Walker {
                         doc_stepper.exit();
                     }
                 }
+            }
+        }
+
+
+        if let Some(index) = char_index {
+            if index > 0 {
+                del.place(&DelSkip(index));
+                add.place(&AddSkip(index));
             }
         }
 

@@ -280,13 +280,20 @@ impl DocStepper {
 
     /// Move to the first character of the current string, or clear the
     /// cursor if we've reached a group.
-    fn char_cursor_update(&mut self) {
+    //TODO rename char_cursor_reset ?
+    pub fn char_cursor_update(&mut self) {
         let cursor = if let Some(&DocChars(ref text)) = self.head_raw() {
             Some(CharCursor::from_docstring(text))
         } else {
             None
         };
         self.cursor.rent_all_mut(|target| target.inner.char_cursor = cursor);
+    }
+
+    pub fn char_index(&self) -> Option<usize> {
+        self.cursor.suffix().char_cursor.as_ref().map(
+            |cc| cc.left().map(|s| s.char_len()).unwrap_or(0)
+        )
     }
 
     /// Move to the last character - 1 of the current string, or clear the
@@ -303,7 +310,7 @@ impl DocStepper {
         self.cursor.rent_all_mut(|target| target.inner.char_cursor = cursor);
     }
 
-    fn char_cursor_expect(&self) -> &CharCursor {
+    pub fn char_cursor_expect(&self) -> &CharCursor {
         self.cursor.suffix().char_cursor.as_ref()
             .expect("Expected a generated char cursor")
     }
@@ -431,6 +438,19 @@ impl DocStepper {
     } 
 
     pub fn skip(&mut self, mut skip: usize) {
+        if let Some(ref char_cursor) = &self.cursor.suffix().char_cursor {
+            let remaining = char_cursor.index_from_end();
+            if remaining == skip {
+                self.next();
+                return;
+            } else if remaining > skip {
+                self.char_cursor_expect_add(skip);
+                return;
+            } else {
+                // remaining < skip, fall-through to loop
+            }
+        }
+
         while skip > 0 {
             let head = if let Some(head) = self.head_raw() {
                 head
@@ -440,7 +460,7 @@ impl DocStepper {
 
             match head {
                 DocChars(ref text) => {
-                    let remaining = text.char_len() - self.char_cursor_expect().value();
+                    let remaining = text.char_len();
                     if skip >= remaining {
                         skip -= remaining;
                     } else {
