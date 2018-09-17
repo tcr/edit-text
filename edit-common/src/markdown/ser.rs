@@ -7,13 +7,13 @@ use pulldown_cmark::{
 };
 use pulldown_cmark_to_cmark::fmt::cmark;
 
-struct DocToMarkdown<'a> {
-    doc_stepper: DocStepper,
-    queue: Vec<Event<'a>>,
+struct DocToMarkdown<'a, 'b> {
+    doc_stepper: DocStepper<'a>,
+    queue: Vec<Event<'b>>,
 }
 
-impl<'a> DocToMarkdown<'a> {
-    fn new(doc: &DocSpan) -> Self {
+impl<'a, 'b> DocToMarkdown<'a, 'b> {
+    fn new(doc: &'a DocSpan) -> Self {
         DocToMarkdown {
             doc_stepper: DocStepper::new(doc),
             queue: vec![],
@@ -21,10 +21,10 @@ impl<'a> DocToMarkdown<'a> {
     }
 }
 
-impl<'a> Iterator for DocToMarkdown<'a> {
-    type Item = Event<'a>;
+impl<'a, 'b> Iterator for DocToMarkdown<'a, 'b> {
+    type Item = Event<'b>;
 
-    fn next(&mut self) -> Option<Event<'a>> {
+    fn next(&mut self) -> Option<Event<'b>> {
         if self.queue.len() > 0 {
             return Some(self.queue.remove(0));
         }
@@ -76,11 +76,10 @@ impl<'a> Iterator for DocToMarkdown<'a> {
                 res
             }
             Some(DocChars(ref text)) => {
-                self.doc_stepper.next();
 
                 // Styling.
                 let text_event = Event::Text(text.to_string().replace("\n", "  \n").into());
-                if let Some(styles) = text.styles() {
+                let res = if let Some(styles) = text.styles() {
                     if styles.contains_key(&Style::Bold) {
                         self.queue.push(text_event);
                         self.queue.push(Event::End(Tag::Strong));
@@ -90,7 +89,10 @@ impl<'a> Iterator for DocToMarkdown<'a> {
                     }
                 } else {
                     Some(text_event)
-                }
+                };
+
+                self.doc_stepper.next();
+                res
             }
             None => {
                 if self.doc_stepper.is_done() {

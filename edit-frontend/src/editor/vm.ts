@@ -104,11 +104,10 @@ export function vm(el: Node) {
         },
         UnwrapSelf() {
             let node = cur()[1];
-		        stack.pop();
-            while (node.childNodes.length) {
-            		cur()[0] += 1;
-                node.parentNode!.insertBefore(node.firstChild!, node);
-            }
+            stack.pop();
+            let children = Array.from(node.childNodes);
+            cur()[0] += children.length
+            children.forEach(child => node.parentNode!.insertBefore(child, node));
             node.parentNode!.removeChild(node);
         },
 
@@ -138,7 +137,28 @@ export function vm(el: Node) {
                 throw new Error(`Unknown opcode ${tag}`)
             }
             // console.warn(tag);
-            handlers[tag]!(fields);
+            switch (tag) {
+                case 'AdvanceElements':
+                    assert(typeof fields == 'number');
+                    return handlers.AdvanceElements(fields);
+                case 'DeleteElements':
+                    assert(typeof fields == 'number');
+                    return handlers.DeleteElements(fields);
+                case 'InsertDocString':
+                    assert(Array.isArray(fields));
+                    assert(fields.length == 2);
+                    assert(typeof fields[0] == 'string');
+                    assert(typeof fields[1] == 'object');
+                    return handlers.InsertDocString(fields);
+                case 'WrapPrevious':
+                    assert(Array.isArray(fields));
+                    assert(fields.length == 2);
+                    assert(typeof fields[0] == 'number');
+                    assert(typeof fields[1] == 'object');
+                    return handlers.WrapPrevious(fields);
+                default:
+                    return handlers[tag]!();
+            }
         },
         run(program: Array<any>) {
             // console.group('VM group: %d opcodes', program.length)

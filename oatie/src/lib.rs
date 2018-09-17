@@ -32,6 +32,8 @@ extern crate serde;
 extern crate core;
 #[macro_use]
 extern crate wasm_bindgen;
+#[macro_use]
+extern crate smallvec;
 
 /* logging */
 

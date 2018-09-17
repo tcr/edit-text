@@ -2,7 +2,7 @@
 
 use super::doc::*;
 use std::collections::HashMap;
-use super::wasm::*;
+// use super::wasm::*;
 use crate::normalize::*;
 use crate::stepper::*;
 

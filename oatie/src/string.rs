@@ -259,6 +259,7 @@ impl<'de> Deserialize<'de> for DocString {
     }
 }
 
+use crate::doc::DocElement;
 
 /// Indexes into a DocString, tracking two owned DocStrings left() and right() which
 /// can be retrieved by reference. Because indexing into the string is 
@@ -266,30 +267,88 @@ impl<'de> Deserialize<'de> for DocString {
 /// much faster than split_at().
 #[derive(Clone, Debug, PartialEq)]
 pub struct CharCursor {
-    right_string: DocString,
-    left_string: DocString,
+    left_string: DocElement,
+    right_string: DocElement,
     index: usize,
     //TODO add str_len: usize, and do more checking that index doesn't go out of range
 }
 
 impl CharCursor {
+    pub fn update_from_docstring(&mut self, text: &DocString) {
+        self.left_string = DocElement::DocChars(text.clone());
+        self.right_string = DocElement::DocChars(text.clone());
+        self.index = text.char_len();
+    }
+
     pub fn left<'a>(&'a self) -> Option<&'a DocString> {
-        if unsafe {
-            self.left_string.try_byte_range().unwrap().len() == 0
-        } {
-            None
+        if let DocElement::DocChars(ref left_text) = &self.left_string {
+            if unsafe {
+                left_text.try_byte_range().unwrap().len() == 0
+            } {
+                None
+            } else {
+                Some(left_text)
+            }
         } else {
-            Some(&self.left_string)
+            unreachable!();
         }
     }
 
     pub fn right<'a>(&'a self) -> Option<&'a DocString> {
-        if unsafe {
-            self.right_string.try_byte_range().unwrap().len() == 0
-        } {
-            None
+        if let DocElement::DocChars(ref right_text) = &self.right_string {
+            if unsafe {
+                right_text.try_byte_range().unwrap().len() == 0
+            } {
+                None
+            } else {
+                Some(right_text)
+            }
         } else {
-            Some(&self.right_string)
+            unreachable!();
+        }
+    }
+
+    pub fn left_element<'a>(&'a self) -> Option<&'a DocElement> {
+        if let DocElement::DocChars(ref left_text) = &self.left_string {
+            if unsafe {
+                left_text.try_byte_range().unwrap().len() == 0
+            } {
+                None
+            } else {
+                Some(&self.left_string)
+            }
+        } else {
+            unreachable!();
+        }
+    }
+
+    pub fn right_element<'a>(&'a self) -> Option<&'a DocElement> {
+        if let DocElement::DocChars(ref right_text) = &self.right_string {
+            if unsafe {
+                right_text.try_byte_range().unwrap().len() == 0
+            } {
+                None
+            } else {
+                Some(&self.right_string)
+            }
+        } else {
+            unreachable!();
+        }
+    }
+
+    fn left_text_mut<'a>(&'a mut self) -> &'a mut DocString {
+        if let DocElement::DocChars(ref mut left_text) = self.left_string {
+            left_text
+        } else {
+            unreachable!();
+        }
+    }
+
+    fn right_text_mut<'a>(&'a mut self) -> &'a mut DocString {
+        if let DocElement::DocChars(ref mut right_text) = self.right_string {
+            right_text
+        } else {
+            unreachable!();
         }
     }
 
@@ -303,23 +362,23 @@ impl CharCursor {
             // TODO this is incorrect (unwrap_or should be str len),
             // try_byte_range really needs to be replaced
             // with something that guarantees a range
-            self.right_string.try_byte_range().map(|x| x.len()).unwrap_or(0)
+            self.right().and_then(|text| text.try_byte_range()).map(|x| x.len()).unwrap_or(0)
         }
     }
 
     pub fn value_add(&mut self, add: usize) {
         self.index += add;
         unsafe {
-            self.right_string.seek_start_forward(add);
-            self.left_string.byte_range_mut().end = self.right_string.byte_range_mut().start;
+            self.right_text_mut().seek_start_forward(add);
+            self.left_text_mut().byte_range_mut().end = self.right_text_mut().byte_range_mut().start;
         }
     }
 
     pub fn value_sub(&mut self, sub: usize) {
         self.index -= sub;
         unsafe {
-            self.right_string.seek_start_backward(sub);
-            self.left_string.byte_range_mut().end = self.right_string.byte_range_mut().start;
+            self.right_text_mut().seek_start_backward(sub);
+            self.left_text_mut().byte_range_mut().end = self.right_text_mut().byte_range_mut().start;
         }
     }
 
@@ -335,8 +394,8 @@ impl CharCursor {
         }
 
         CharCursor {
-            left_string,
-            right_string,
+            left_string: DocElement::DocChars(left_string),
+            right_string: DocElement::DocChars(right_string),
             index: 0,
         }
     }
@@ -353,8 +412,8 @@ impl CharCursor {
         }
 
         CharCursor {
-            left_string,
-            right_string,
+            left_string: DocElement::DocChars(left_string),
+            right_string: DocElement::DocChars(right_string),
             index: text.char_len(),
         }
     }

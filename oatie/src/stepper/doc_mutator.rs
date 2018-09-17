@@ -49,9 +49,9 @@ impl Program {
 }
 
 #[derive(Clone, Debug)]
-pub struct DocMutator {
+pub struct DocMutator<'a> {
     bc: Program,
-    stepper: DocStepper,
+    stepper: DocStepper<'a>,
     writer: DocWriter,
 }
 
@@ -103,8 +103,8 @@ pub trait Mutator {
     }
 }
 
-impl DocMutator {
-    pub fn stepper(&self) -> &DocStepper {
+impl<'a> DocMutator<'a> {
+    pub fn stepper(&'a self) -> &'a DocStepper {
         &self.stepper
     }
 
@@ -205,7 +205,7 @@ impl Mutator for EmptyDocMutator {
 
 
 #[allow(non_snake_case)]
-impl Mutator for DocMutator {
+impl<'a> Mutator for DocMutator<'a> {
     fn Enter(&mut self) {
         self.bc.place(Bytecode::Enter);
 
@@ -312,7 +312,8 @@ impl Mutator for DocMutator {
             // We're on the same element, possibly a text node.
         
             // console_log!(" -----> post skip {:?} is {:?}", count, self.stepper.cursor.suffix().char_cursor.clone());
-            if let Some(ref cursor) = &self.stepper.cursor.suffix().char_cursor.clone() {
+            // TODO don't address char_cursor directly?
+            if let Some(ref cursor) = &self.stepper.char_cursor.clone() {
                 // Some(..) means left is already of len > 0
                 if let Some(left) = cursor.left() {
                     if left.char_len() == count {

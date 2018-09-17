@@ -21,6 +21,7 @@ term-painter = "0.2.2"
 yansi = "0.3.4"
 rental = "*"
 wasm-bindgen = "0.2"
+smallvec = "*"
 
 [dev-dependencies]
 env_logger = "0.3"

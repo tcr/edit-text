@@ -38,13 +38,13 @@ pub enum Pos {
 }
 
 #[derive(Clone, Debug)]
-pub struct CaretStepper {
-    pub doc: DocStepper,
+pub struct CaretStepper<'a> {
+    pub doc: DocStepper<'a>,
     caret_pos: isize,
 }
 
-impl CaretStepper {
-    pub fn new(doc: DocStepper) -> CaretStepper {
+impl<'a> CaretStepper<'a> {
+    pub fn new(doc: DocStepper<'a>) -> CaretStepper<'a> {
         // Start at caret pos 0
         let mut stepper = CaretStepper { doc, caret_pos: -1 };
         while stepper.caret_pos != 0 {
@@ -55,7 +55,7 @@ impl CaretStepper {
         stepper
     }
 
-    pub fn rev(self) -> ReverseCaretStepper {
+    pub fn rev(self) -> ReverseCaretStepper<'a> {
         ReverseCaretStepper {
             doc: self.doc,
             caret_pos: self.caret_pos,
@@ -66,10 +66,8 @@ impl CaretStepper {
         if let Some(DocChars(..)) = self.doc.unhead() {
             return true;
         } else if self.doc.unhead().is_none() && !self.doc.is_back_done() {
-            if let Some(DocGroup(ref attrs, _)) = self.doc.clone().unenter().head() {
-                if is_block(attrs) {
-                    return true;
-                }
+            if is_block(self.doc.parent_attrs()) {
+                return true;
             }
         }
         return false;
@@ -106,7 +104,7 @@ impl CaretStepper {
     }
 }
 
-impl Iterator for CaretStepper {
+impl<'a> Iterator for CaretStepper<'a> {
     type Item = ();
 
     fn next(&mut self) -> Option<()> {
@@ -135,13 +133,13 @@ impl Iterator for CaretStepper {
 }
 
 #[derive(Clone, Debug)]
-pub struct ReverseCaretStepper {
-    doc: DocStepper,
+pub struct ReverseCaretStepper<'a> {
+    doc: DocStepper<'a>,
     caret_pos: isize,
 }
 
-impl ReverseCaretStepper {
-    pub fn rev(self) -> CaretStepper {
+impl<'a> ReverseCaretStepper<'a> {
+    pub fn rev(self) -> CaretStepper<'a> {
         CaretStepper {
             doc: self.doc,
             caret_pos: self.caret_pos,
@@ -151,7 +149,22 @@ impl ReverseCaretStepper {
     pub fn is_valid_caret_pos(&self) -> bool {
         // Skip over all preceding carets so we can identify the previous node
         // more easily.
-        // TODO can this clone be avoided?
+        
+        // Fast-path
+        if let Some(DocChars(..)) = self.doc.unhead() {
+            return true;
+        } else if self.doc.unhead().is_none() {
+            if self.doc.at_root() {
+                // end of document, bail
+                return false;
+            }
+            if is_block(self.doc.parent_attrs()) {
+                return true;
+            }
+        }
+
+        // Move back through the cursors, cloning the document stepper
+        // TODO need a real caret stepper model so this can be avoided
         let mut doc2 = self.doc.clone();
         while let Some(DocGroup(ref attrs, _)) = doc2.unhead() {
             if is_any_caret(attrs) {
@@ -160,7 +173,8 @@ impl ReverseCaretStepper {
                 break;
             }
         }
-
+        
+        // Identically repeat fast-path logic 
         if let Some(DocChars(..)) = doc2.unhead() {
             return true;
         } else if doc2.unhead().is_none() {
@@ -168,17 +182,15 @@ impl ReverseCaretStepper {
                 // end of document, bail
                 return false;
             }
-            if let Some(DocGroup(ref attrs, _)) = doc2.clone().unenter().head() {
-                if is_block(attrs) {
-                    return true;
-                }
+            if is_block(doc2.parent_attrs()) {
+                return true;
             }
         }
         return false;
     }
 }
 
-impl Iterator for ReverseCaretStepper {
+impl<'a> Iterator for ReverseCaretStepper<'a> {
     type Item = ();
 
     fn next(&mut self) -> Option<()> {
@@ -223,20 +235,20 @@ impl Iterator for ReverseCaretStepper {
 }
 
 #[derive(Debug, Clone)]
-pub struct Walker {
+pub struct Walker<'a> {
     original_doc: Doc,
-    pub stepper: CaretStepper,
+    pub stepper: CaretStepper<'a>,
 }
 
-impl Walker {
-    pub fn new(doc: &Doc) -> Walker {
+impl<'a> Walker<'a> {
+    pub fn new(doc: &'a Doc) -> Walker<'a> {
         Walker {
             original_doc: doc.clone(),
             stepper: CaretStepper::new(DocStepper::new(&doc.0)),
         }
     }
 
-    pub fn doc(&self) -> &DocStepper {
+    pub fn doc(&self) -> &'a DocStepper {
         &self.stepper.doc
     }
 
@@ -289,18 +301,18 @@ impl Walker {
     }
 
     #[deprecated]
-    pub fn to_caret(doc: &Doc, client_id: &str, focus: bool) -> Walker {
+    pub fn to_caret(doc: &'a Doc, client_id: &str, focus: bool) -> Walker<'a> {
         Walker::to_caret_safe(doc, client_id, focus)
             .expect(&format!("Didn't find a (focus={:?}) caret.", focus))
     }
 
     #[deprecated]
-    pub fn to_caret_safe(doc: &Doc, client_id: &str, focus: bool) -> Option<Walker> {
+    pub fn to_caret_safe(doc: &'a Doc, client_id: &str, focus: bool) -> Option<Walker<'a>> {
         Walker::to_caret_position(doc, client_id, if focus { Pos::Focus } else { Pos::Anchor }).ok()
     }
 
     // TODO Have this replace to_caret and take its name.
-    pub fn to_caret_position(doc: &Doc, client_id: &str, position: Pos) -> Result<Walker, Error> {
+    pub fn to_caret_position(doc: &'a Doc, client_id: &str, position: Pos) -> Result<Walker<'a>, Error> {
         let mut stepper = CaretStepper::new(DocStepper::new(&doc.0));
 
         // Iterate until we match the cursor.
@@ -357,7 +369,7 @@ impl Walker {
         }
     }
 
-    pub fn to_cursor(doc: &Doc, cur: &CurSpan) -> Walker {
+    pub fn to_cursor(doc: &'a Doc, cur: &CurSpan) -> Walker<'a> {
         let mut stepper = CaretStepper::new(DocStepper::new(&doc.0));
 
         let mut match_cur = CurStepper::new(cur);
@@ -551,7 +563,7 @@ impl Walker {
         matched
     }
 
-    pub fn next_char(&mut self) -> &mut Walker {
+    pub fn next_char(&mut self) {
         take_mut::take(&mut self.stepper, |prev_stepper| {
             let mut stepper = prev_stepper.clone();
             let target_pos = stepper.caret_pos + 1;
@@ -572,11 +584,9 @@ impl Walker {
                 prev_stepper
             }
         });
-
-        self
     }
 
-    pub fn back_char(&mut self) -> &mut Walker {
+    pub fn back_char(&mut self) {
         let _ = take_mut::take(&mut self.stepper, |prev_stepper| {
             let mut rstepper = prev_stepper.clone().rev();
 
@@ -599,8 +609,6 @@ impl Walker {
                 prev_stepper
             }
         });
-
-        self
     }
 
     pub fn to_writer(&self) -> OpWriter {
@@ -608,13 +616,14 @@ impl Walker {
         let mut add = AddWriter::new();
 
         // Walk the doc until we reach our current doc position.
-        let mut doc_stepper = DocStepper::new(&self.original_doc.0);
         let mut current_stepper = self.stepper.doc.clone();
 
         let char_index = current_stepper.char_index();
         current_stepper.char_cursor_update();
 
-        while doc_stepper != current_stepper {
+        let mut doc_stepper = DocStepper::new(&self.original_doc.0);
+        // TODO added raw_index since raw partialeq operation breaks. see DocStepper:raw_index
+        while unsafe { current_stepper.raw_index() != doc_stepper.raw_index() } {
             // console_log!("head ----> {:?}", doc_stepper.head());
             // console_log!("head stack len ---> {:?}", doc_stepper.stack().len());
             // console_log!("head stack ---> {:?}", doc_stepper.stack());
@@ -643,7 +652,6 @@ impl Walker {
             }
         }
 
-
         if let Some(index) = char_index {
             if index > 0 {
                 del.place(&DelSkip(index));
@@ -654,7 +662,7 @@ impl Walker {
         OpWriter { del, add }
     }
 
-    pub fn stepper(&self) -> &DocStepper {
+    pub fn stepper(&self) -> &'a DocStepper {
         &self.stepper.doc
     }
 }

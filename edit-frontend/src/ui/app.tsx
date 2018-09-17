@@ -388,7 +388,7 @@ export class EditorFrame extends React.Component {
     else if (parse.Update) {
       // Update page content
       // console.groupCollapsed('Parse Update');
-      // console.log(JSON.stringify(parse.Update[2]));
+      // console.log(parse.Update);
       let programs = JSON.parse(parse.Update[0]);
       programs.forEach((program: any) => {
         // console.log('🚗🚗🚗🚗', program, '\n');
@@ -422,8 +422,7 @@ export class EditorFrame extends React.Component {
     else if (parse.UpdateFull) {
       DEBUG.measureTime('first-update');
 
-
-      this.editor!._setHTML(parse.UpdateFull[0]);
+      this.editor!._setHTML(parse.UpdateFull);
       // Update page content
       // this.setState({
       //   body: parse.UpdateFull[0],
@@ -443,9 +442,9 @@ export class EditorFrame extends React.Component {
       );
 
       // Update buttons view
-      this.setState({
-        buttons: parse.Controls.buttons,
-      });
+      // this.setState({
+      //   buttons: parse.Controls.buttons,
+      // });
 
       DEBUG.measureTime('interactive');
     }
@@ -532,20 +531,22 @@ class EditText extends React.Component {
           content: parse.Update[0],
         });
 
-        if (this.props.onChange !== null) {
-          this.props.onChange(parse.Update[1]);
-        }
+        // TODO generate markdown from client now
+        // if (this.props.onChange !== null) {
+        //   this.props.onChange(parse.Update[1]);
+        // }
       }
   
       else if (parse.UpdateFull) {
         // Update page content
         this.setState({
-          content: parse.UpdateFull[0],
+          content: parse.UpdateFull,
         });
 
-        if (this.props.onChange !== null) {
-          this.props.onChange(parse.UpdateFull[1]);
-        }
+        // TODO generate markdown from client now
+        // if (this.props.onChange !== null) {
+        //   this.props.onChange(parse.UpdateFull[1]);
+        // }
       }
 
       else if (parse.Controls) {

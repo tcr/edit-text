@@ -99,7 +99,7 @@ export class WasmClient implements ControllerImpl {
         // console.log('----> js_command:', data);
 
         // Make this async so we don't have deeply nested call stacks from Rust<->JS interop.
-        setImmediate(() => {
+        // setImmediate(() => {
           // Parse the packet.
           let parse = JSON.parse(data);
 
@@ -110,7 +110,7 @@ export class WasmClient implements ControllerImpl {
               client.onMessage(parse);
             }
           }
-        });
+        // });
       });
 
       index.getWasmModule()

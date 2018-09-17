@@ -6,9 +6,9 @@ version = "0.1.0"
 [dependencies]
 colored = "1.6.0"
 console_error_panic_hook = "0.1.1"
+crossbeam-channel = "0.1.2"
 env_logger = "0.4.3"
 failure = "0.1.1"
-crossbeam-channel = "0.1.2"
 lazy_static = "1.0.0"
 maplit = "1.0.0"
 matches = "0.1.6"
@@ -23,6 +23,7 @@ take_mut = "0.2.0"
 taken = "0.1.1"
 wasm-bindgen = { version = "0.2", features = ["nightly"] }
 wbg-rand = "0.4.1"
+wee_alloc = "*"
 
 include-dir-macro = { git = "https://github.com/jcdyer/include-dir-macro" }
 edit-common = { path = "../edit-common" }

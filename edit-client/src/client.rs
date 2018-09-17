@@ -438,7 +438,6 @@ pub trait ClientImpl {
                         let state = self.state();
                         let res = FrontendCommand::UpdateFull(
                             doc_as_html(&state.client_doc.doc.0),
-                            doc_to_markdown(&state.client_doc.doc.0).unwrap(),
                         );
                         self.send_client(&res).unwrap();
                     }
@@ -476,11 +475,9 @@ pub trait ClientImpl {
                             // Native drives client state.
                             let state = self.state();
                             let res = FrontendCommand::Update(
-                                // doc_as_html(&state.client_doc.doc.0),
                                 ::serde_json::to_string(
                                     &::oatie::apply::apply_op_bc(&last_doc.0, &input_op)
                                 ).unwrap(),
-                                doc_to_markdown(&state.client_doc.doc.0).unwrap(),
                                 input_op,
                             );
                             self.send_client(&res).unwrap();
@@ -590,8 +587,6 @@ pub trait ClientImpl {
         let state = self.state();
         let res = FrontendCommand::Update(
             ::serde_json::to_string(&bc).unwrap(),
-            // doc_as_html(&state.client_doc.doc.0),
-            doc_to_markdown(&state.client_doc.doc.0).unwrap(),
             op,
         );
         self.send_client(&res)?;
