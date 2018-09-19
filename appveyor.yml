@@ -79,7 +79,7 @@ install:
   # Install commands
   - where cargo-script || cargo install cargo-script
   - where diesel || cargo install diesel_cli --no-default-features --features sqlite-bundled
-  - where wasm-bindgen || cargo install wasm-bindgen-cli -f
+  - cargo install wasm-bindgen-cli -f
   - where mdbook || cargo install mdbook
 
   - rustup target add wasm32-unknown-unknown
