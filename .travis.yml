@@ -29,7 +29,7 @@ before_install:
   # Install commands
   - command -v cargo-script || cargo install --debug cargo-script
   - command -v diesel || cargo install --debug diesel_cli --no-default-features --features sqlite-bundled
-  - command -v wasm-bindgen || cargo install --debug wasm-bindgen-cli -f
+  - cargo install --debug wasm-bindgen-cli -f
   - command -v mdbook || cargo install --debug mdbook
 
   - rustup target add wasm32-unknown-unknown
