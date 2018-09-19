@@ -21,7 +21,7 @@ serde_derive = "^1.0.27"
 serde_json = "^1.0.6"
 take_mut = "0.2.0"
 taken = "0.1.1"
-wasm-bindgen = { version = "0.2.19", features = ["nightly"] }
+wasm-bindgen = { version = "0.2.21", features = ["nightly"] }
 wbg-rand = "0.4.1"
 
 include-dir-macro = { git = "https://github.com/jcdyer/include-dir-macro" }
