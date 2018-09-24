@@ -149,7 +149,7 @@ fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
 
 pub fn button_handlers<C: ClientImpl>(state: Option<(String, bool)>) -> (Vec<Box<Fn(&mut C) -> Result<(), Error>>>, Vec<Ui>) {
     let mut callbacks: Vec<Box<Fn(&mut C) -> Result<(), Error>>> = vec![];
-    
+
     macro_rules! callback {
         ($t:expr) => {
             {
@@ -326,6 +326,7 @@ pub enum Task {
 pub struct Client {
     pub client_id: String,
     pub client_doc: ClientDoc,
+    pub last_controls: Option<Controls>,
 
     pub monkey: Arc<AtomicBool>,
     pub alive: Arc<AtomicBool>,
@@ -339,17 +340,24 @@ pub trait ClientImpl {
     fn send_client(&self, req: &FrontendCommand) -> Result<(), Error>;
     fn send_sync(&self, req: ServerCommand) -> Result<(), Error>;
 
-    fn setup_controls(&self, state: Option<(String, bool)>)
+    fn setup_controls(&mut self, state: Option<(String, bool)>)
     where
         Self: Sized,
     {
-        self.send_client(&FrontendCommand::Controls(Controls{
+        let controls_object = Controls {
             keys: key_handlers::<Self>()
                 .into_iter()
                 .map(|x| (x.0, x.1, x.2))
                 .collect(),
             buttons: button_handlers::<Self>(state).1
-        })).expect("Could not send initial state");
+        };
+
+        if Some(controls_object.clone()) != self.state().last_controls {
+            self.send_client(&FrontendCommand::Controls(controls_object.clone()))
+                .expect("Could not send initial state");
+
+            self.state().last_controls = Some(controls_object);
+        };
     }
 
     // TODO can we catch_unwind inside handle task so we can add our own

@@ -232,6 +232,7 @@ fn setup_client(
         state: Client {
             client_id: name.to_owned(),
             client_doc: ClientDoc::new(),
+            last_controls: None,
 
             monkey: monkey.clone(),
             alive: alive.clone(),
