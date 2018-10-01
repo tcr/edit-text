@@ -31,10 +31,6 @@ before_install:
   - cargo install --debug wasm-bindgen-cli -f
   - command -v mdbook || cargo install --debug mdbook
 
-  - rustup target add wasm32-unknown-unknown
-
-  - cd edit-frontend; npm i; cd ..
-
 script:
   # Prepare X service
   - export DISPLAY=:99.0
@@ -42,7 +38,7 @@ script:
   - sleep 3 # wait to start
 
   # Run test
-  - ./tools.sh build
+  - ./tools build
 
   # TODO consolidate these tests
   - cd oatie && cargo test && cd ..

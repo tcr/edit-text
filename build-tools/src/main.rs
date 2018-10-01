@@ -420,6 +420,14 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::FrontendBuild { args } => {
+            // Install latest npm dependencies
+            execute!(
+                r"
+                    cd edit-frontend
+                    npm install --no-audit
+                ",
+            )?;
+
             execute!(
                 r"
                     cd edit-frontend
@@ -432,6 +440,14 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::FrontendWatch { args } => {
+            // Install latest npm dependencies
+            execute!(
+                r"
+                    cd edit-frontend
+                    npm install --no-audit
+                ",
+            )?;
+
             let _cargo_watch_guard = command!(
                 r"
                     cargo watch -i edit-frontend/** -i tools -x 'run --bin build-tools -- wasm-build'
