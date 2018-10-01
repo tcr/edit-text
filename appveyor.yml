@@ -77,7 +77,6 @@ install:
   - cargo -vV
 
   # Install commands
-  - where cargo-script || cargo install cargo-script
   - where diesel || cargo install diesel_cli --no-default-features --features sqlite-bundled
   - cargo install wasm-bindgen-cli -f
   - where mdbook || cargo install mdbook
@@ -95,4 +94,4 @@ build: false
 # environment variable.
 test_script:
 - git show-ref --head | grep refs/remotes/origin/master || true
-- cargo script x.rs build
+- .\tools build

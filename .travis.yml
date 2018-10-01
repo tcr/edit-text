@@ -27,7 +27,6 @@ before_install:
   - export PATH=$PATH:$PWD/geckodriver
 
   # Install commands
-  - command -v cargo-script || cargo install --debug cargo-script
   - command -v diesel || cargo install --debug diesel_cli --no-default-features --features sqlite-bundled
   - cargo install --debug wasm-bindgen-cli -f
   - command -v mdbook || cargo install --debug mdbook
@@ -43,9 +42,9 @@ script:
   - sleep 3 # wait to start
 
   # Run test
-  - ./x.rs build
+  - ./tools.sh build
 
   # TODO consolidate these tests
   - cd oatie && cargo test && cd ..
   - cd edit-common && cargo test && cd ..
-  - ./x.rs test
+  - ./tools test

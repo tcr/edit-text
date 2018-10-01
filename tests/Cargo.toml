@@ -1,5 +1,3 @@
-cargo-features = ["edition"]
-
 [package]
 authors = ["Tim Ryan <id@timryan.org>"]
 name = "tests"

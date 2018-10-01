@@ -3,9 +3,10 @@
 Before running with edit-text, you'll need to install the following cargo build tools globally:
 
 ```
-cargo install cargo-script
 cargo install wasm-bindgen-cli
 cargo install diesel_cli --no-default-features --features sqlite-bundled
+cargo install cargo-watch
+cargo install mdbook
 ```
 
 You'll also need to install the JavaScript dependencies (because cargo doesn't handle this for us). Ensure you have Node installed, then run:
