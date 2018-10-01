@@ -269,22 +269,21 @@ fn run() -> Result<(), Error> {
                 println!("Database path: edit-server/edit.sqlite3");
             }
 
-            // if !Path::new("edit-frontend/dist/edit.wasm").exists() {
-                // execute!(
-                //     r"
-                //         {self_path} wasm-build
-                //     "
-                // )?;
-                // execute!(
-                //     r"
-                //         {self_path} frontend-build
-                //     ",
-                // )?;
-            // }
-            // Don't print anything if it existed, because we might not have
-            // launched in --client-proxy mode.
-            // TODO if we can reliably check for --client-proxy or -c, we should
-            // not build on first launch.
+            // Build dist folder if it doesn't exist.
+            if !Path::new("edit-frontend/dist/edit.js").exists() {
+                execute!(
+                    r"
+                        {self_path} wasm-build
+                    ",
+                    self_path = SELF_PATH,
+                )?;
+                execute!(
+                    r"
+                        {self_path} frontend-build
+                    ",
+                    self_path = SELF_PATH,
+                )?;
+            }
 
             eprintln!("Starting server...");
 
@@ -311,11 +310,25 @@ fn run() -> Result<(), Error> {
         Cli::MercutioServerBuild { args } => {
             let release_flag = if release { Some("--release") } else { None };
 
+            // Build dist folder if it doesn't exist.
+            if !Path::new("edit-frontend/dist/edit.js").exists() {
+                execute!(
+                    r"
+                        {self_path} wasm-build
+                    ",
+                    self_path = SELF_PATH,
+                )?;
+                execute!(
+                    r"
+                        {self_path} frontend-build
+                    ",
+                    self_path = SELF_PATH,
+                )?;
+            }
+
             execute!(
                 r"
                     cd edit-server
-                    export MERCUTIO_WASM_LOG=0
-                    export RUST_BACKTRACE=1
                     cargo build {force_color_flag} {release_flag} \
                         --bin edit-server {args}
                 ",
@@ -421,12 +434,14 @@ fn run() -> Result<(), Error> {
 
         Cli::FrontendBuild { args } => {
             // Install latest npm dependencies
+            eprintln!("1");
             execute!(
                 r"
                     cd edit-frontend
                     npm install --no-audit
                 ",
             )?;
+            eprintln!("2");
 
             execute!(
                 r"
@@ -437,6 +452,7 @@ fn run() -> Result<(), Error> {
                 webpack_path = WEBPACK_PATH,
                 args = args,
             )?;
+            eprintln!("3");
         }
 
         Cli::FrontendWatch { args } => {

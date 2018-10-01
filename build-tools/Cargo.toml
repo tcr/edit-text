@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Tim Ryan <id@timryan.org>"]
 
 [dependencies]
-commandspec = "0.10"
+commandspec = "0.11"
 failure = "0.1"
 structopt = "0.2"
 clap = "2.32"

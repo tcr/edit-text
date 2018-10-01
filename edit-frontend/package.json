@@ -31,7 +31,6 @@
     "@types/react-dom": "^16.0.7",
     "axios": "^0.18.0",
     "clipboard-copy": "^2.0.0",
-    "inferno": "^5.4.0",
     "raven-js": "^3.26.4",
     "react": "^16.4.2",
     "react-dom": "^16.4.2",
