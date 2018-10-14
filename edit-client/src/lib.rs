@@ -1,5 +1,4 @@
-#![feature(crate_in_paths, nll)]
-#![feature(extern_in_paths, use_extern_macros)]
+#![feature(nll)]
 #![allow(unused_imports)]
 
 #[macro_use]

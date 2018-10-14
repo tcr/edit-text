@@ -130,6 +130,7 @@ pub fn wasm_setup() -> WasmClient {
 }
 
 #[wasm_bindgen]
+#[allow(non_snake_case)]
 impl WasmClient {
     /// Send a command *from* the frontend *to* the client.
     fn client_task(&mut self, input: Task) -> Result<(), Error> {

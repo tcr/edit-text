@@ -1,12 +1,14 @@
 #![allow(unused_imports)]
 
+extern crate crossbeam_channel;
+
 use crate::{
     button_handlers,
     ClientImpl,
     Task,
 };
 
-use extern::crossbeam_channel::Sender;
+use self::crossbeam_channel::Sender;
 use edit_common::commands::*;
 use serde_json;
 use std::cell::RefCell;
@@ -48,7 +50,7 @@ impl Scheduler {
             setTimeout,
         };
 
-        use extern::wbg_rand::{
+        use ::wbg_rand::{
             wasm_rng,
             Rng,
         };
@@ -119,12 +121,10 @@ impl Scheduler {
     where
         F: Fn() -> ControllerCommand + 'static + Send,
     {
-        use extern::{
-            failure::Error,
-            rand,
-            std::thread,
-            std::time::Duration,
-        };
+        use ::failure::Error;
+        use ::rand;
+        use ::std::thread;
+        use ::std::time::Duration;
 
         // Proxy impl
         let tx = self.tx.clone();
@@ -163,7 +163,7 @@ pub const MONKEY_CLICK: MonkeyParam = (400, 1000);
 
 #[cfg(target_arch = "wasm32")]
 fn local_rng() -> impl Rng {
-    use extern::wbg_rand::{
+    use ::wbg_rand::{
         wasm_rng,
         Rng,
     };
@@ -172,7 +172,7 @@ fn local_rng() -> impl Rng {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn local_rng() -> impl Rng {
-    use extern::rand;
+    use ::rand;
     rand::thread_rng()
 }
 

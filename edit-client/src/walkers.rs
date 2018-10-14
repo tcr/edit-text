@@ -521,7 +521,7 @@ impl Walker {
 
     pub fn back_block(&mut self) -> bool {
         let mut matched = false;
-        let stepper = take_mut::take(&mut self.stepper, |prev_stepper| {
+        take_mut::take(&mut self.stepper, |prev_stepper| {
             let mut rstepper = prev_stepper.clone().rev();
 
             // Iterate until we reach a block.

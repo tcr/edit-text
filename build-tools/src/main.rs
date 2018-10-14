@@ -9,6 +9,9 @@ extern crate mdbook;
 extern crate notify;
 #[macro_use] extern crate log;
 extern crate env_logger;
+extern crate wasm_bindgen_cli_support;
+extern crate wasm_bindgen_shared;
+
 
 mod mdbook_bin;
 
@@ -21,6 +24,7 @@ use structopt::StructOpt;
 use log::LevelFilter;
 use clap::Shell;
 use structopt::clap::AppSettings;
+use wasm_bindgen_cli_support::Bindgen;
 
 #[cfg(windows)]
 const WEBPACK_PATH: &str = ".\\node_modules\\.bin\\webpack.cmd";
@@ -187,13 +191,25 @@ fn run() -> Result<(), Error> {
 
                 ::std::fs::create_dir_all("./edit-frontend/src/bindgen")?;
 
-                execute!(
-                    r"
-                        wasm-bindgen ./target/wasm32-unknown-unknown/release/edit_client.wasm \
-                            --out-dir ./edit-frontend/src/bindgen \
-                            --typescript
-                    ",
-                )?;
+                let mut b = Bindgen::new();
+                b.input_path("./target/wasm32-unknown-unknown/release/edit_client.wasm")
+                    // .nodejs(false)
+                    // .browser(false)
+                    // .no_modules(args.flag_no_modules)
+                    // .debug(args.flag_debug)
+                    // .demangle(!args.flag_no_demangle)
+                    // .keep_debug(args.flag_keep_debug)
+                    .typescript(true);
+
+                b.generate("./edit-frontend/src/bindgen")?;
+
+                // execute!(
+                //     r"
+                //         wasm-bindgen ./target/wasm32-unknown-unknown/release/edit_client.wasm \
+                //             --out-dir ./edit-frontend/src/bindgen \
+                //             --typescript
+                //     ",
+                // )?;
 
                 // execute!(
                 //     r"
@@ -378,7 +394,7 @@ fn run() -> Result<(), Error> {
             execute!(
                 r"
                     cd tests
-                    cargo run --features integration
+                    cargo test --features integration
                 ",
             )?;
         }

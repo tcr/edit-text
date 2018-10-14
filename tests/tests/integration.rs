@@ -148,7 +148,7 @@ impl Checkpoint {
 }
 
 
-
+#[test]
 fn main() {
     commandspec::forward_ctrlc();
 

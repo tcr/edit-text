@@ -819,7 +819,7 @@ pub fn caret_clear_inner(walker: Walker) -> Result<(isize, Op), Error> {
 
 pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan, focus: bool) -> Result<Op, Error> {
     // First operation removes the caret.
-    let (pos_1, op_1) = caret_clear(ctx.clone(), if focus { Pos::Focus } else { Pos::Anchor })
+    let (_pos_1, op_1) = caret_clear(ctx.clone(), if focus { Pos::Focus } else { Pos::Anchor })
         .map(|(pos_1, op_1)| (Some(pos_1), op_1))
         .unwrap_or_else(|_| (None, Op::empty()));
 
@@ -842,7 +842,7 @@ pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan, focus: bool) -> Result<Op
     // console_log!("----@@ {:?}", op_1_2);
     // console_log!("-----> {:?}", cur);
     let walker = Walker::to_cursor(&ctx.doc, cur);
-    let pos_3 = Some(walker.caret_pos());
+    let _pos_3 = Some(walker.caret_pos());
     // console_log!("---@@@@@@@@@@ {:?}", pos_3);
     // if pos_1 == pos_3 {
     //     // Redundant

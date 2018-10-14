@@ -79,7 +79,6 @@ install:
 
   # Install commands
   - where diesel || cargo install diesel_cli --no-default-features --features sqlite-bundled
-  - cargo install wasm-bindgen-cli -f
 
   - rustup target add wasm32-unknown-unknown
 

@@ -1,10 +1,7 @@
-#![feature(extern_in_paths, crate_in_paths)]
-
 extern crate edit_client;
 extern crate edit_common;
 extern crate serde_json;
 extern crate structopt;
-#[macro_use]
 extern crate structopt_derive;
 extern crate ws;
 #[macro_use]
@@ -16,36 +13,38 @@ extern crate rand;
 extern crate ron;
 extern crate url;
 
-use extern::{
-    crossbeam_channel::{
-        unbounded,
-        Receiver,
-        Sender,
-    },
-    edit_client::{
-        monkey::*,
-        proxy::*,
-        *,
-    },
-    edit_common::commands::*,
-    edit_common::simple_ws::*,
-    failure::Error,
-    std::panic,
-    std::process,
-    std::sync::atomic::AtomicBool,
-    std::sync::atomic::Ordering,
-    std::sync::{
+use crossbeam_channel::{
+    unbounded,
+    Receiver,
+    Sender,
+};
+use edit_client::{
+    monkey::*,
+    proxy::*,
+    *,
+};
+use edit_common::{
+    commands::*,
+    simple_ws::*,
+};
+use failure::Error;
+use std::{
+    panic,
+    process,
+    sync::atomic::AtomicBool,
+    sync::atomic::Ordering,
+    sync::{
         Arc,
         Mutex,
     },
-    std::thread::{
+    thread::{
         self,
         JoinHandle,
     },
-    std::time::Duration,
-    structopt::StructOpt,
-    ws::CloseCode,
+    time::Duration,
 };
+use structopt::StructOpt;
+use ws::CloseCode;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "edit-client", about = "An example of StructOpt usage.")]

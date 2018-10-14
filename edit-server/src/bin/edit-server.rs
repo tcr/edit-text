@@ -1,7 +1,7 @@
 //! edit-server standalone binary for web deployment.
 
 #![feature(extern_in_paths)]
-#![feature(proc_macro_non_items)]
+#![feature(proc_macro_hygiene)]
 
 extern crate include_dir_macro;
 
@@ -16,7 +16,6 @@ extern crate rand;
 extern crate rouille;
 extern crate serde;
 extern crate structopt;
-#[macro_use]
 extern crate structopt_derive;
 extern crate take_mut;
 extern crate url;

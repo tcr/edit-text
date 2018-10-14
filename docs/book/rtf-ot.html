@@ -100,7 +100,7 @@
                                 <i class="fa fa-search"></i>
                             </button>
                             
-                            <a id="edit-toggle" class="icon-button" title="Edit page" aria-label="Edit page" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list" href="https://github.com/tcr/edit-text/blob/master/docs/src/rtf-ot.md" style="text-decoration: none">
+                            <a id="edit-toggle" class="icon-button" title="Edit page" aria-label="Edit page" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list" href="https://github.com/tcr/edit-text/edit/master/docs/src/rtf-ot.md?message=[ci skip] Updating docs for rtf-ot.md" style="text-decoration: none">
                                 <i class="fa fa-pencil"></i> EDIT
                             </a>
                         </div>
@@ -245,21 +245,6 @@ new doc:   edit
 
         </div>
 
-        
-        <!-- Livereload script (if served using the cli tool) -->
-        <script type="text/javascript">
-            var socket = new WebSocket("ws://localhost:3001");
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload(true); // force reload from server (not from cache)
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
         
 
         

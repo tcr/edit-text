@@ -2,7 +2,7 @@
 //!
 //! See the book for more details: http://tcr.github.io/edit-text/
 
-#![feature(nll, range_is_empty, crate_in_paths)]
+#![feature(nll, range_is_empty)]
 // TODO clean these up
 #![allow(unknown_lints)]
 #![allow(single_char_pattern)]
