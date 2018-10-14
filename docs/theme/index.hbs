@@ -1,38 +1,43 @@
 <!DOCTYPE HTML>
-<html lang="en" class="sidebar-visible no-js">
+<html lang="{{ language }}" class="sidebar-visible no-js">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Build System ./x.rs - </title>
+        <title>{{ title }}</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <meta name="description" content="">
+        <meta name="description" content="{{ description }}">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
-        <link rel="shortcut icon" href="favicon.png">
-        <link rel="stylesheet" href="css/variables.css">
-        <link rel="stylesheet" href="css/general.css">
-        <link rel="stylesheet" href="css/chrome.css">
-        <link rel="stylesheet" href="css/print.css" media="print">
+        <link rel="shortcut icon" href="{{ path_to_root }}{{ favicon }}">
+        <link rel="stylesheet" href="{{ path_to_root }}css/variables.css">
+        <link rel="stylesheet" href="{{ path_to_root }}css/general.css">
+        <link rel="stylesheet" href="{{ path_to_root }}css/chrome.css">
+        <link rel="stylesheet" href="{{ path_to_root }}css/print.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="{{ path_to_root }}FontAwesome/css/font-awesome.css">
         <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
         <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" href="highlight.css">
-        <link rel="stylesheet" href="tomorrow-night.css">
-        <link rel="stylesheet" href="ayu-highlight.css">
+        <link rel="stylesheet" href="{{ path_to_root }}highlight.css">
+        <link rel="stylesheet" href="{{ path_to_root }}tomorrow-night.css">
+        <link rel="stylesheet" href="{{ path_to_root }}ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
-        
+        {{#each additional_css}}
+        <link rel="stylesheet" href="{{ ../path_to_root }}{{ this }}">
+        {{/each}}
 
-        
+        {{#if mathjax_support}}
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        {{/if}}
     </head>
     <body class="light">
         <!-- Provide site root to javascript -->
-        <script type="text/javascript">var path_to_root = "";</script>
+        <script type="text/javascript">var path_to_root = "{{ path_to_root }}";</script>
 
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script type="text/javascript">
@@ -72,13 +77,13 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li><li><a href="intro-system.html"><strong aria-hidden="true">1.2.</strong> System Overview</a></li><li><a href="intro-x.html" class="active"><strong aria-hidden="true">1.3.</strong> Build System ./x.rs</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.4.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="working-with-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">2.2.</strong> Working with Operations</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.3.</strong> Operational Transform</a></li><li><a href="markdown.html"><strong aria-hidden="true">2.4.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.5.</strong> [WIP] Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.6.</strong> [WIP] Carets and You</a></li><li><a href="deploying.html"><strong aria-hidden="true">2.7.</strong> [WIP] Deploying</a></li></ol></li></ol>
+            {{#toc}}{{/toc}}
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
 
             <div class="page">
-                
+                {{> header}}
                 <div id="menu-bar" class="menu-bar">
                     <div id="menu-bar-sticky-container">
                         <div class="left-buttons">
@@ -95,27 +100,27 @@
                                 <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                                 <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                             </ul>
-                            
+                            {{#if search_enabled}}
                             <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
                                 <i class="fa fa-search"></i>
                             </button>
-                            
-                            <a id="edit-toggle" class="icon-button" title="Edit page" aria-label="Edit page" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list" href="https://github.com/tcr/edit-text/blob/master/docs/src/intro-x.md" style="text-decoration: none">
+                            {{/if}}
+                            <a id="edit-toggle" class="icon-button" title="Edit page" aria-label="Edit page" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list" href="https://github.com/tcr/edit-text/edit/master/docs/src/{{ path }}" style="text-decoration: none">
                                 <i class="fa fa-pencil"></i> EDIT
                             </a>
                         </div>
 
-                        <h1 class="menu-title"></h1> 
+                        <h1 class="menu-title">{{ book_title }}</h1> 
 
                         <div class="right-buttons">
-                            <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <a href="{{ path_to_root }}print.html" title="Print this book" aria-label="Print this book">
                                 <i id="print-button" class="fa fa-print"></i>
                             </a>
                         </div>
                     </div>
                 </div>
 
-                
+                {{#if search_enabled}}
                 <div id="search-wrapper" class="hidden">
                     <form id="searchbar-outer" class="searchbar-outer">
                         <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
@@ -126,7 +131,7 @@
                         </ul>
                     </div>
                 </div>
-                
+                {{/if}}
 
                 <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
                 <script type="text/javascript">
@@ -139,67 +144,22 @@
 
                 <div id="content" class="content">
                     <main>
-                        <a class="header" href="#build-tool-xrs" id="build-tool-xrs"><h1>Build Tool ./x.rs</h1></a>
-<p><code>./x.rs</code> is the build tool. In order to run it, you'll need to install <a href="https://github.com/DanielKeep/cargo-script"><code>cargo-script</code></a>:</p>
-<pre><code>cargo install cargo-script
-</code></pre>
-<p>Then while you're in the root of the <code>edit-text/</code> respository, from your command line you can run:</p>
-<pre><code class="language-sh">./x.rs help
-</code></pre>
-<a class="header" href="#server-building" id="server-building"><h2>Server building</h2></a>
-<p>To launch the edit-text server:</p>
-<pre><code class="language-sh">./x.rs server-build
-</code></pre>
-<p>To run it on port <code>8000</code>:</p>
-<pre><code class="language-sh">./x.rs server
-</code></pre>
-<a class="header" href="#frontend-build" id="frontend-build"><h2>Frontend build</h2></a>
-<p>The frontend is all the JavaScript code that runs in the browser, and optionally including the WASM build system. To build this, you should run <code>npm install</code> in the <code>edit-frontend/</code> directory:</p>
-<pre><code class="language-sh">cd edit-frontend
-npm install
-</code></pre>
-<p>This will locally install Webpack, Typescript, and all JavaScript dependencies required by the frontend. To then build the frontend, run this from the root directory:</p>
-<pre><code class="language-sh">./x.rs frontend-build
-</code></pre>
-<p>If you want to launch a long-lived script to build the frontend and rebuild each time a relevant file changes:</p>
-<pre><code class="language-sh">./x.rs frontend-watch
-</code></pre>
-<p>Building the frontend component may also require that you use build the WASM bundle from <code>edit-client</code>, which can be generated with this command:</p>
-<pre><code class="language-sh">./x.rs wasm-build
-</code></pre>
-<p>This will compile the wasm bundle and save it to <code>edit-frontend/src/bindgen</code>, which will be linked with the frontend code bundle (generated using <code>frontend-build</code> or <code>frontend-watch</code>).</p>
-<a class="header" href="#testing" id="testing"><h2>Testing</h2></a>
-<p>This command will run comprehensive end-to-end tests. It's used by CI to test all new pull requests:</p>
-<pre><code class="language-sh">./x.rs test
-</code></pre>
-<a class="header" href="#client-proxy" id="client-proxy"><h2>Client Proxy</h2></a>
-<p>If you are testing changes to the <code>edit-client</code> library, you have the option of choosing between running client code in the browser (via WebAssembly) or running it in a local Rust process, having all commands proxied through websockets.</p>
-<pre><code class="language-sh">./x.rs client-proxy
-</code></pre>
-<a class="header" href="#building-the-book" id="building-the-book"><h2>Building the book</h2></a>
-<p>You can build the book with the book-build command:</p>
-<pre><code class="language-sh">./x.rs book-build
-</code></pre>
-<p>Or watch for all changes as they are being made with book-watch.</p>
-<pre><code class="language-sh">./x.rs book-watch
-</code></pre>
-<p>By navigating to <a href="http://localhost:3000/">http://localhost:3000/</a>, you'll see the page refresh automatically as you edit markdown files under <code>docs-src/</code>.</p>
-
+                        {{{ content }}}
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                        
-                            <a rel="prev" href="intro-system.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        {{#previous}}
+                            <a rel="prev" href="{{ path_to_root }}{{link}}" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
-                        
+                        {{/previous}}
 
-                        
-                            <a rel="next" href="intro-testing.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        {{#next}}
+                            <a rel="next" href="{{ path_to_root }}{{link}}" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
-                        
+                        {{/next}}
 
                         <div style="clear: both"></div>
                     </nav>
@@ -207,25 +167,25 @@ npm install
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                
-                    <a href="intro-system.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                {{#previous}}
+                    <a href="{{ path_to_root }}{{link}}" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
-                
+                {{/previous}}
 
-                
-                    <a href="intro-testing.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                {{#next}}
+                    <a href="{{ path_to_root }}{{link}}" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
-                
+                {{/next}}
             </nav>
 
         </div>
 
-        
+        {{#if livereload}}
         <!-- Livereload script (if served using the cli tool) -->
         <script type="text/javascript">
-            var socket = new WebSocket("ws://localhost:3001");
+            var socket = new WebSocket("{{{livereload}}}");
             socket.onmessage = function (event) {
                 if (event.data === "reload") {
                     socket.close();
@@ -237,26 +197,67 @@ npm install
                 socket.close();
             }
         </script>
-        
+        {{/if}}
 
-        
+        {{#if google_analytics}}
+        <!-- Google Analytics Tag -->
+        <script type="text/javascript">
+            var localAddrs = ["localhost", "127.0.0.1", ""];
 
-        
+            // make sure we don't activate google analytics if the developer is
+            // inspecting the book locally...
+            if (localAddrs.indexOf(document.location.hostname) === -1) {
+                (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
-        
-        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
-        
+                ga('create', '{{google_analytics}}', 'auto');
+                ga('send', 'pageview');
+            }
+        </script>
+        {{/if}}
 
-        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
-        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+        {{#if playpen_js}}
+        <script src="{{ path_to_root }}ace.js" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ path_to_root }}editor.js" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ path_to_root }}mode-rust.js" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ path_to_root }}theme-dawn.js" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ path_to_root }}theme-tomorrow_night.js" type="text/javascript" charset="utf-8"></script>
+        {{/if}}
+
+        {{#if search_js}}
+        <script src="{{ path_to_root }}elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ path_to_root }}mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ path_to_root }}searcher.js" type="text/javascript" charset="utf-8"></script>
+        {{/if}}
+
+        <script src="{{ path_to_root }}clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ path_to_root }}highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ path_to_root }}book.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- Custom JS scripts -->
-        
+        {{#each additional_js}}
+        <script type="text/javascript" src="{{ ../path_to_root }}{{this}}"></script>
+        {{/each}}
 
-        
+        {{#if is_print}}
+        {{#if mathjax_support}}
+        <script type="text/javascript">
+        window.addEventListener('load', function() {
+            MathJax.Hub.Register.StartupHook('End', function() {
+                window.setTimeout(window.print, 100);
+            });
+        });
+        </script>
+        {{else}}
+        <script type="text/javascript">
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+        {{/if}}
+        {{/if}}
 
     </body>
 </html>

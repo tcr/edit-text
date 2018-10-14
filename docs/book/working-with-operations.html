@@ -9,17 +9,18 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
-        <base href="">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
 
-        <link rel="stylesheet" href="book.css">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
         <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
         <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
 
-        <link rel="shortcut icon" href="favicon.png">
-
-        <!-- Font Awesome -->
-        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
-
+        <!-- Highlight.js Stylesheets -->
         <link rel="stylesheet" href="highlight.css">
         <link rel="stylesheet" href="tomorrow-night.css">
         <link rel="stylesheet" href="ayu-highlight.css">
@@ -28,9 +29,11 @@
         
 
         
-
     </head>
     <body class="light">
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">var path_to_root = "";</script>
+
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script type="text/javascript">
             try {
@@ -97,6 +100,9 @@
                                 <i class="fa fa-search"></i>
                             </button>
                             
+                            <a id="edit-toggle" class="icon-button" title="Edit page" aria-label="Edit page" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list" href="https://github.com/tcr/edit-text/blob/master/docs/src/working-with-operations.md" style="text-decoration: none">
+                                <i class="fa fa-pencil"></i> EDIT
+                            </a>
                         </div>
 
                         <h1 class="menu-title"></h1> 
@@ -133,7 +139,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <a class="header" href="working-with-operations.html#working-with-operations" id="working-with-operations"><h1>Working with Operations</h1></a>
+                        <a class="header" href="#working-with-operations" id="working-with-operations"><h1>Working with Operations</h1></a>
 <p>Operations in edit-text are a sequence of a &quot;deletion&quot; followed by an &quot;addition&quot;, grouped together in a pair. All modifications edit-text can perform are designed to perform a deletion followed by an addition, and this distinction between deleting and adding content allows operational transform logic to be simplified.</p>
 <p>The <code>Op</code> type is a tuple of the <code>AddSpan</code> and <code>DelSpan</code> types, which just represent vectors of the <code>AddElement</code> and <code>DelElement</code> enums. The <code>DocElement</code> enums has some obvious counterparts here, like the trio of <code>DocChars</code>, <code>DelChars</code>, and <code>AddChars</code>.</p>
 <pre><pre class="playpen"><code class="language-rust">
@@ -165,7 +171,7 @@ enum AddElement {
 #fn main() {
 type Op = (DelSpan, AddSpan);
 #}</code></pre></pre>
-<a class="header" href="working-with-operations.html#macros" id="macros"><h2>Macros</h2></a>
+<a class="header" href="#macros" id="macros"><h2>Macros</h2></a>
 <p>When importing oatie, there are several convenience macros which make writing the above easier:</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
@@ -185,7 +191,7 @@ let op = op_span!([
 ]);
 #}</code></pre></pre>
 <p>This is roughly equivalent to Rust code without needing to type <code>vec!</code> or use explicit <code>HashMap::new()</code> and <code>DocString(...)</code> invocations.</p>
-<a class="header" href="working-with-operations.html#using-operations" id="using-operations"><h2>Using Operations</h2></a>
+<a class="header" href="#using-operations" id="using-operations"><h2>Using Operations</h2></a>
 <p>An operation can be applied to a document.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
@@ -250,14 +256,26 @@ println!(&quot;{:?}&quot;, doc2);
         </div>
 
         
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:3001");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        
 
         
 
         
 
-        
-        <script src="searchindex.js" type="text/javascript" charset="utf-8"></script>
-        
         
         <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>

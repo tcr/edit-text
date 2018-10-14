@@ -20,8 +20,6 @@ cargo install wasm-bindgen-cli
 cargo install diesel_cli --no-default-features --features sqlite-bundled
 # Watch an entire directory for changes with cargo-watch
 cargo install cargo-watch
-# (Optional) mdbook is the build system for this documentation you're reading.
-cargo install mdbook
 ```
 
 **Node.js:** You will also need to make sure you have [Node.js](http://nodejs.org/) installed. The build tool uses `npm` to manage frontend dependencies by installing and managing JavaScript packages. To check if you have a recent version of Node, see if the output of this command is `>= v6.0.0`:

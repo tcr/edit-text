@@ -21,3 +21,4 @@ x.bash
 x.fish
 _x
 logs/*
+*.code-workspace

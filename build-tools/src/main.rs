@@ -1,25 +1,24 @@
-#!/usr/bin/env run-cargo-script
-//! ```cargo
-//! [dependencies]
-//! commandspec = "0.10"
-//! failure = "0.1"
-//! structopt = "0.2"
-//! clap = "2.31"
-//! ```
-
-// Don't add additional noise to cargo-script.
+// Don't add additional noise to the build tools.
 #![deny(warnings)]
 
 extern crate commandspec;
 extern crate structopt;
 extern crate failure;
 extern crate clap;
+extern crate mdbook;
+extern crate notify;
+#[macro_use] extern crate log;
+extern crate env_logger;
 
+mod mdbook_bin;
+
+use mdbook::MDBook;
 use commandspec::*;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::env;
 use failure::Error;
 use structopt::StructOpt;
+use log::LevelFilter;
 use clap::Shell;
 use structopt::clap::AppSettings;
 
@@ -40,6 +39,9 @@ fn abs_string_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
 // Thin wrapper around run()
 fn main() {
     commandspec::cleanup_on_ctrlc();
+    env_logger::Builder::from_default_env()
+        .filter_level(LevelFilter::Info)
+        .init();
 
     match run() {
         Ok(_) => {},
@@ -592,21 +594,22 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::BookBuild => {
-            execute!(
-                r"
-                    cd docs
-                    mdbook build
-                ",
-            )?;
+            let docs_dir = format!("{}/docs", abs_string_path(".")?);
+
+            MDBook::load(docs_dir)
+                .expect("Could not load mdbook")
+                .build()
+                .expect("Could not build mdbook");
         }
 
         Cli::BookWatch => {
-            execute!(
-                r"
-                    cd docs
-                    mdbook serve
-                ",
-            )?;
+            let docs_dir = format!("{}/docs", abs_string_path(".")?);
+
+            let args = mdbook_bin::serve::make_subcommand()
+                .get_matches_from(vec!["mdbook", "serve"]);
+            
+            mdbook_bin::serve::execute(&args, &PathBuf::from(docs_dir))
+                .expect("Could not serve mdbook");
         }
 
         Cli::Completions { shell } => {

@@ -9,17 +9,18 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
-        <base href="">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
 
-        <link rel="stylesheet" href="book.css">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
         <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
         <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
 
-        <link rel="shortcut icon" href="favicon.png">
-
-        <!-- Font Awesome -->
-        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
-
+        <!-- Highlight.js Stylesheets -->
         <link rel="stylesheet" href="highlight.css">
         <link rel="stylesheet" href="tomorrow-night.css">
         <link rel="stylesheet" href="ayu-highlight.css">
@@ -28,9 +29,11 @@
         
 
         
-
     </head>
     <body class="light">
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">var path_to_root = "";</script>
+
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script type="text/javascript">
             try {
@@ -97,6 +100,9 @@
                                 <i class="fa fa-search"></i>
                             </button>
                             
+                            <a id="edit-toggle" class="icon-button" title="Edit page" aria-label="Edit page" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list" href="https://github.com/tcr/edit-text/blob/master/docs/src/rtf-ot.md" style="text-decoration: none">
+                                <i class="fa fa-pencil"></i> EDIT
+                            </a>
                         </div>
 
                         <h1 class="menu-title"></h1> 
@@ -133,7 +139,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <a class="header" href="rtf-ot.html#operational-transform" id="operational-transform"><h1>Operational Transform</h1></a>
+                        <a class="header" href="#operational-transform" id="operational-transform"><h1>Operational Transform</h1></a>
 <p>When two clients A and B make an operation concurrently, one way to get them back in sync is to determine what would operation B look like if operation A had happened first, and vice versa. If we can guarantee that this result on both clients produce the same output, meaning if we can guarantee the following (where &quot;:&quot; means &quot;composed with&quot;):</p>
 <pre><code> operation A : (operation B as if A had happened first)
 
@@ -165,7 +171,7 @@
 <li>Because we received an ACK, we can send the next operation in our network queue (if any).</li>
 </ol>
 <p>Note that the strategies for server and client code to bring operations &quot;up to date&quot; differ in that the client only needs to transform against one operation, while the server needs to transform against all intervening operations in its history. The server only needs to store the history up to the client that is the most out of date, however, and can always boot off clients which are off too old a version.</p>
-<a class="header" href="rtf-ot.html#rules-for-transform" id="rules-for-transform"><h2>Rules for Transform</h2></a>
+<a class="header" href="#rules-for-transform" id="rules-for-transform"><h2>Rules for Transform</h2></a>
 <p>As a reminder, operational transform is commutative, which is to say that a result of transforming A &amp;mul; B should result in A' and B', and the property A composed with A' == B composed with B'. Or put another way, the transform function when given two operations will return two subsequent operations to bring both clients into an identical document state.</p>
 <p>Starting with a simple example, what happens when two documents type the same character simultaneously:</p>
 <pre><code>doc:       ed
@@ -198,7 +204,7 @@ new doc:   edit
 <p>A harder consideration is when we introduce groups, which are similar to HTML elements. <code>oatie</code> doesn't operate on HTML tags, but acts more like the DOM: groups are strictly nested and can only contain text or other groups. Each group has a &quot;tag&quot; (like an HTML tag), but also can contain other attributes (for example, each user's cursor contains the attribute of its originating client).</p>
 <p>Transforming two operations which operate on groups in distinct ways offers some difficulty.</p>
 <p>TODO</p>
-<a class="header" href="rtf-ot.html#operations" id="operations"><h2>Operations</h2></a>
+<a class="header" href="#operations" id="operations"><h2>Operations</h2></a>
 <p>We need both a deletion and an addition to perform some atomic operations, for example, making sure there are only <code>&lt;li&gt;</code> elements inside of a <code>&lt;ul&gt;</code> element for all document versions.</p>
 <p>TODO</p>
 
@@ -240,14 +246,26 @@ new doc:   edit
         </div>
 
         
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:3001");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        
 
         
 
         
 
-        
-        <script src="searchindex.js" type="text/javascript" charset="utf-8"></script>
-        
         
         <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>

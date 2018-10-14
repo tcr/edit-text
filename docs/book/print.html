@@ -9,17 +9,18 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
-        <base href="">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
 
-        <link rel="stylesheet" href="book.css">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
         <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
         <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
 
-        <link rel="shortcut icon" href="favicon.png">
-
-        <!-- Font Awesome -->
-        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
-
+        <!-- Highlight.js Stylesheets -->
         <link rel="stylesheet" href="highlight.css">
         <link rel="stylesheet" href="tomorrow-night.css">
         <link rel="stylesheet" href="ayu-highlight.css">
@@ -28,9 +29,11 @@
         
 
         
-
     </head>
     <body class="light">
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">var path_to_root = "";</script>
+
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script type="text/javascript">
             try {
@@ -97,6 +100,9 @@
                                 <i class="fa fa-search"></i>
                             </button>
                             
+                            <a id="edit-toggle" class="icon-button" title="Edit page" aria-label="Edit page" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list" href="https://github.com/tcr/edit-text/blob/master/docs/src/print.md" style="text-decoration: none">
+                                <i class="fa fa-pencil"></i> EDIT
+                            </a>
                         </div>
 
                         <h1 class="menu-title"></h1> 
@@ -133,59 +139,68 @@
 
                 <div id="content" class="content">
                     <main>
-                        <a class="header" href="print.html#edit-text" id="edit-text"><h1>edit-text</h1></a>
+                        <a class="header" href="#edit-text" id="edit-text"><h1>edit-text</h1></a>
 <p>edit-text is a Markdown-compatible document editor that supports collaborative editing. Its server and client are written in Rust, and its frontend uses TypeScript and WebAssembly.</p>
 <p><img src="https://user-images.githubusercontent.com/80639/42796912-9f2ae852-895a-11e8-9aae-9dede91296bf.png" alt="Preview Image" /></p>
 <p>For installation instructions, please read <a href="getting-started.html"><strong>Getting Started</strong></a>.</p>
-<a class="header" href="print.html#getting-started" id="getting-started"><h1>Getting Started</h1></a>
-<p>Before running with edit-text, you'll need to install the following cargo build tools globally:</p>
-<pre><code>cargo install cargo-script
+<a class="header" href="#getting-started" id="getting-started"><h1>Getting Started</h1></a>
+<a class="header" href="#requirements" id="requirements"><h1>Requirements</h1></a>
+<p><strong>rustup:</strong> <code>edit-text</code> is written in Rust, and so you will need a Rust compiler in order to serve the application. Rust may be installed using your system package manager, but the preferred way to download and install Rust is through the <a href="http://rustup.rs/"><code>rustup</code> toolchain</a> available at rustup.rs. To check if you have <code>rustup</code> installed, you can run the following command:</p>
+<pre><code>$ rustup show active-toolchain
+nightly-2018-09-25-x86_64-apple-darwin
+</code></pre>
+<p>This result should be equivalent to the value contained in the <code>./rust-toolchain</code> file. This value indicates which version of the nightly Rust compiler the project depends on. <code>rustup</code> automatically manages downloading and using this compiler version for us.</p>
+<p><strong>Global build tools:</strong> The build environment requires some Rust binary dependencies to be installed using <code>cargo install</code>. You can run the following commands to install these requirements one at a time:</p>
+<pre><code># This generates the bindings between Rust and JavaScript when compiling to WebAssembly.
 cargo install wasm-bindgen-cli
+# The diesel command creates database files and manages migrations.
 cargo install diesel_cli --no-default-features --features sqlite-bundled
+# Watch an entire directory for changes with cargo-watch
+cargo install cargo-watch
+# (Optional) mdbook is the build system for this documentation you're reading.
+cargo install mdbook
 </code></pre>
-<p>You'll also need to install the JavaScript dependencies (because cargo doesn't handle this for us). Ensure you have Node installed, then run:</p>
-<pre><code>npm i --prefix ./edit-frontend
+<p><strong>Node.js:</strong> You will also need to make sure you have <a href="http://nodejs.org/">Node.js</a> installed. The build tool uses <code>npm</code> to manage frontend dependencies by installing and managing JavaScript packages. To check if you have a recent version of Node, see if the output of this command is <code>&gt;= v6.0.0</code>:</p>
+<pre><code>$ node -v
+v9.5.0
 </code></pre>
-<a class="header" href="print.html#usage" id="usage"><h2>Usage</h2></a>
+<a class="header" href="#usage" id="usage"><h2>Usage</h2></a>
 <p>Clone the repository from Github:</p>
 <pre><code>git clone https://github.com/tcr/edit-text
 </code></pre>
 <p>To build all components of edit-text (server, client, and frontend) at once, run this command from the root of the repository:</p>
-<pre><code>./x.rs build
+<pre><code>./tools build
 </code></pre>
 <p>Build commands are executed using the <code>./x.rs</code> script. (<a href="http://timryan.org/2018/07/02/moving-from-the-shell-to-rust-with-commandspec.html">Read more.</a>)  You can rebuild individual edit-text components with <code>./x.rs server-build</code>, <code>./x.rs frontend-build</code>, etc. Run <code>./x.rs help</code> for more information.</p>
-<a class="header" href="print.html#running-edit-text-standard" id="running-edit-text-standard"><h3>Running edit-text (standard)</h3></a>
+<a class="header" href="#running-edit-text-standard" id="running-edit-text-standard"><h3>Running edit-text (standard)</h3></a>
 <p>The production configuration of edit-text is a long-running server process, and one or many WebAssembly + TypeScript clients running in the browser that connect to it.</p>
 <p>In your terminal session, you can run this command to start the server (and optionally compile with release optimizations):</p>
-<pre><code>./x.rs server [--release]
+<pre><code>./tools server [--release]
 </code></pre>
 <p>Now open <a href="http://localhost:8000/">http://localhost:8000/</a> and you are brought to a welcome page to start editing text!</p>
 <p>Note that the server also serves WebAssembly code to the browser that contains the edit-text client. After you make changes are made to client or server code, you should re-run <code>./x.rs build</code> to recompile both and then restart the server process. (If only server changes were made, you can skip this step and just run <code>./x.rs server</code> directly.)</p>
-<a class="header" href="print.html#running-edit-text-with-a-client-in-proxy-mode-for-debugging" id="running-edit-text-with-a-client-in-proxy-mode-for-debugging"><h3>Running edit-text with a client in proxy mode (for debugging)</h3></a>
+<a class="header" href="#running-edit-text-with-a-client-in-proxy-mode-for-debugging" id="running-edit-text-with-a-client-in-proxy-mode-for-debugging"><h3>Running edit-text with a client in proxy mode (for debugging)</h3></a>
 <p>Debugging WebAssembly code is harder (in most ways) than debugging a local Rust binary. edit-text supports running the client as an independent &quot;proxy&quot;. An edit-text server running in one terminal connects to a client proxy running in another terminal, and communicates with frontend code running in the browser (TypeScript) over WebSockets. This client proxy is all code that would normally be cross-compiled to WebAssembly, but runs locally in your terminal and supports the same backtrace and debugging support as a local binary.</p>
 <p>You'll need two terminal sessions to run in this mode. First, start the server, and specify that you want to connect to a client proxy using <code>--client-proxy</code>. Without this argument, the server will expect server connections from WebAssembly instead.</p>
-<pre><code>./x.rs server --client-proxy [--release]
+<pre><code>./tools server --client-proxy [--release]
 </code></pre>
 <p>In another terminal session, you can start the proxy. (It's recommended you compile in release mode, as client code is much slower in debug mode.)</p>
-<pre><code>./x.rs client-proxy [--release]
+<pre><code>./tools client-proxy [--release]
 </code></pre>
 <p>Then you can open http://localhost:8000/ as before in your browser, and monitor the <code>client-proxy</code> terminal for status of the clients that your browser is connected to.</p>
 <p>You will see any failures appear in the client-proxy code that would appear in the browser console when in WASM mode. If you encounter a panic or fatal error, this &quot;proxy&quot; mechanism of debugging usually gives much more information about where the error originated. Note that aside from running as a binary, there should be no differences in behavior between the client-proxy and the client in Webassembly.</p>
-<a class="header" href="print.html#compiling-the-frontend" id="compiling-the-frontend"><h2>Compiling the frontend</h2></a>
+<a class="header" href="#compiling-the-frontend" id="compiling-the-frontend"><h2>Compiling the frontend</h2></a>
 <p>If you're made changes to WebAssembly code in &quot;edit-client/&quot;, you can cross-compile the wasm binary including any <a href="https://github.com/rustwasm/wasm-bindgen">wasm-bindgen</a> with this command:</p>
-<pre><code class="language-sh">./x.rs wasm-build
+<pre><code class="language-sh">./tools wasm-build
 </code></pre>
 <p>The bundled frontend code (written in TypeScript) is tracked in git and can be run immediately after cloning the repository. You can also compile it yourself. Make sure you have Node installed first, then build the frontend:</p>
-<pre><code class="language-sh"># Optional: run this on first run or whenever package.json changes
-npm i --prefix ./edit-frontend
-
-./x.rs frontend-build
+<pre><code class="language-sh">./tools frontend-build
 </code></pre>
 <p>This cross-compiles all frontend code and pulls in the compiled WebAssembly binary. To watch and recompile frontend code whenever it's modified, run this command:</p>
-<pre><code class="language-sh">./x.rs frontend-watch
+<pre><code class="language-sh">./tools frontend-watch
 </code></pre>
 <p>This command watches the edit-frontend directory and continuously builds its after each change. Note that you may need to run <code>./x.rs wasm-build</code> as well.</p>
-<a class="header" href="print.html#system-overview" id="system-overview"><h1>System Overview</h1></a>
+<a class="header" href="#system-overview" id="system-overview"><h1>System Overview</h1></a>
 <p>edit-text is built from the ground up as a collaborative text editor. It uses operational transform to merge updates from multiple clients, so it requires a synchronizing server. The server is also in charge of storing page content, so that every page can be shared via its URL.</p>
 <p>A client runs in a browser: text editing and synchronization code is written in Rust and cross-compiled to WebAssembly, and frontend code is written in TypeScript.</p>
 <p>Here's a rough diagram:</p>
@@ -196,7 +211,7 @@ npm i --prefix ./edit-frontend
           |--&gt; Client &lt;--------&gt; Frontend
           \--&gt; ...
 </code></pre>
-<a class="header" href="print.html#server-apis" id="server-apis"><h2>Server APIs</h2></a>
+<a class="header" href="#server-apis" id="server-apis"><h2>Server APIs</h2></a>
 <p>The server performs document synchronization. It is the &quot;server&quot; component that orchestrates simultaneous document modifications which happen on several Users.</p>
 <pre><code>dev: 0.0.0.0:8000/  prod: /            HTML Server
 dev: 0.0.0.0:8002/  prod: /$/ws        WebSocket
@@ -205,10 +220,10 @@ dev: 0.0.0.0:8003/  prod: /$/graphql   GraphQL
 <p>HTML is served from <code>/</code>. Static versions of each page are available before scripting is fully downloaded.</p>
 <p>When the client-side script connects the WebSocket, the server recognizes it as a new synchronization client and reloads the content of the page. Editing is then enabled. Each edit made by the client is sent to the server as an operation, and the server computes and pushes push new deltas to the client.</p>
 <p>There is an additional API exposed as GraphQL for non-synchronization tasks. This exposes mutations like updating a page with Markdown, downloading and renaming pages, and other page-editing features.</p>
-<a class="header" href="print.html#frontend" id="frontend"><h2>Frontend</h2></a>
+<a class="header" href="#frontend" id="frontend"><h2>Frontend</h2></a>
 <p>The edit-text client is written in Rust and can be run both in the browser (to power the editor) or from the command line (for tools like the client proxy, and client replay).</p>
 <p>The frontend invokes the client over a <code>wasm-bindgen</code> bridge, exchanging JSON messages (&quot;commands&quot;). The frontend exposes an editor interface using React. The client instructs the frontend on what text styling options to expose, and responds to keypresses with updated HTML to render in the editor.</p>
-<a class="header" href="print.html#cratemodule-overview" id="cratemodule-overview"><h2>Crate/Module overview</h2></a>
+<a class="header" href="#cratemodule-overview" id="cratemodule-overview"><h2>Crate/Module overview</h2></a>
 <p>The top-level crates/modules are these:</p>
 <ul>
 <li>oatie, the operational transform crate</li>
@@ -221,7 +236,7 @@ dev: 0.0.0.0:8003/  prod: /$/graphql   GraphQL
 <!--
 # API
 <p>The API between two layers is defined in several enums representing payloads across RPC boundaries.</p>
-<a class="header" href="print.html#interop-sync---user" id="interop-sync---user"><h2>Interop Sync &lt;-&gt; User</h2></a>
+<a class="header" href="#interop-sync---user" id="interop-sync---user"><h2>Interop Sync &lt;-&gt; User</h2></a>
 <p>Defined in <code>edit-client/src/client.rs</code>.</p>
 <p>From Sync -&gt; User:</p>
 <pre><code>pub enum ClientCommand {
@@ -239,7 +254,7 @@ dev: 0.0.0.0:8003/  prod: /$/graphql   GraphQL
     TerminateProxy,
 }
 </code></pre>
-<a class="header" href="print.html#intop-user---frontend" id="intop-user---frontend"><h2>Intop: User &lt;-&gt; Frontend</h2></a>
+<a class="header" href="#intop-user---frontend" id="intop-user---frontend"><h2>Intop: User &lt;-&gt; Frontend</h2></a>
 <p>Defined in <code>edit-client/src/client.rs</code>.</p>
 <p>From User -&gt; Frontend:</p>
 <pre><code>pub enum FrontendCommand {
@@ -268,21 +283,21 @@ dev: 0.0.0.0:8003/  prod: /$/graphql   GraphQL
 }
 </code></pre>
 <p>--&gt;</p>
-<a class="header" href="print.html#build-tool-xrs" id="build-tool-xrs"><h1>Build Tool ./x.rs</h1></a>
+<a class="header" href="#build-tool-xrs" id="build-tool-xrs"><h1>Build Tool ./x.rs</h1></a>
 <p><code>./x.rs</code> is the build tool. In order to run it, you'll need to install <a href="https://github.com/DanielKeep/cargo-script"><code>cargo-script</code></a>:</p>
 <pre><code>cargo install cargo-script
 </code></pre>
 <p>Then while you're in the root of the <code>edit-text/</code> respository, from your command line you can run:</p>
 <pre><code class="language-sh">./x.rs help
 </code></pre>
-<a class="header" href="print.html#server-building" id="server-building"><h2>Server building</h2></a>
+<a class="header" href="#server-building" id="server-building"><h2>Server building</h2></a>
 <p>To launch the edit-text server:</p>
 <pre><code class="language-sh">./x.rs server-build
 </code></pre>
 <p>To run it on port <code>8000</code>:</p>
 <pre><code class="language-sh">./x.rs server
 </code></pre>
-<a class="header" href="print.html#frontend-build" id="frontend-build"><h2>Frontend build</h2></a>
+<a class="header" href="#frontend-build" id="frontend-build"><h2>Frontend build</h2></a>
 <p>The frontend is all the JavaScript code that runs in the browser, and optionally including the WASM build system. To build this, you should run <code>npm install</code> in the <code>edit-frontend/</code> directory:</p>
 <pre><code class="language-sh">cd edit-frontend
 npm install
@@ -297,15 +312,15 @@ npm install
 <pre><code class="language-sh">./x.rs wasm-build
 </code></pre>
 <p>This will compile the wasm bundle and save it to <code>edit-frontend/src/bindgen</code>, which will be linked with the frontend code bundle (generated using <code>frontend-build</code> or <code>frontend-watch</code>).</p>
-<a class="header" href="print.html#testing" id="testing"><h2>Testing</h2></a>
+<a class="header" href="#testing" id="testing"><h2>Testing</h2></a>
 <p>This command will run comprehensive end-to-end tests. It's used by CI to test all new pull requests:</p>
 <pre><code class="language-sh">./x.rs test
 </code></pre>
-<a class="header" href="print.html#client-proxy" id="client-proxy"><h2>Client Proxy</h2></a>
+<a class="header" href="#client-proxy" id="client-proxy"><h2>Client Proxy</h2></a>
 <p>If you are testing changes to the <code>edit-client</code> library, you have the option of choosing between running client code in the browser (via WebAssembly) or running it in a local Rust process, having all commands proxied through websockets.</p>
 <pre><code class="language-sh">./x.rs client-proxy
 </code></pre>
-<a class="header" href="print.html#building-the-book" id="building-the-book"><h2>Building the book</h2></a>
+<a class="header" href="#building-the-book" id="building-the-book"><h2>Building the book</h2></a>
 <p>You can build the book with the book-build command:</p>
 <pre><code class="language-sh">./x.rs book-build
 </code></pre>
@@ -313,11 +328,11 @@ npm install
 <pre><code class="language-sh">./x.rs book-watch
 </code></pre>
 <p>By navigating to <a href="http://localhost:3000/">http://localhost:3000/</a>, you'll see the page refresh automatically as you edit markdown files under <code>docs-src/</code>.</p>
-<a class="header" href="print.html#testing-1" id="testing-1"><h1>Testing</h1></a>
+<a class="header" href="#testing-1" id="testing-1"><h1>Testing</h1></a>
 <p>There are two types of tests, integration tests and unit tests.</p>
-<a class="header" href="print.html#unit-tests" id="unit-tests"><h2>Unit Tests</h2></a>
+<a class="header" href="#unit-tests" id="unit-tests"><h2>Unit Tests</h2></a>
 <p>To run unit tests, run <code>cargo test</code>.</p>
-<a class="header" href="print.html#integration-tests" id="integration-tests"><h2>Integration Tests</h2></a>
+<a class="header" href="#integration-tests" id="integration-tests"><h2>Integration Tests</h2></a>
 <p>Run <code>./x.rs test</code> to run the integration test. It requires <code>geckodriver</code> to be installed.</p>
 <pre><code>macOS:
   brew install geckodriver
@@ -328,7 +343,7 @@ Windows:
 </code></pre>
 <p>(There is only one integration test so far.) This will launch a browser session with multiple clients connecting, to ensure that synchronization code still works.</p>
 <!--
-<a class="header" href="print.html#oatie-testing" id="oatie-testing"><h2>Oatie testing</h2></a>
+<a class="header" href="#oatie-testing" id="oatie-testing"><h2>Oatie testing</h2></a>
 <ul>
 <li>Transform test (oatie/in, transform_test.sh)</li>
 <li>Unit tests</li>
@@ -337,7 +352,7 @@ Windows:
 <ul>
 <li>Virtual monkey (on random schemas?)</li>
 </ul>
-<a class="header" href="print.html#edit-text-testing" id="edit-text-testing"><h2>edit-text testing</h2></a>
+<a class="header" href="#edit-text-testing" id="edit-text-testing"><h2>edit-text testing</h2></a>
 <ul>
 <li></li>
 <li><code>geckodriver</code> integrated test (./x.rs test)</li>
@@ -352,9 +367,9 @@ Windows:
 <li>Unit tests</li>
 </ul>
 <p>--&gt;</p>
-<a class="header" href="print.html#rich-text" id="rich-text"><h1>Rich Text</h1></a>
+<a class="header" href="#rich-text" id="rich-text"><h1>Rich Text</h1></a>
 <p>This section describes the rich text format used by edit-text.</p>
-<a class="header" href="print.html#working-with-documents" id="working-with-documents"><h1>Working with Documents</h1></a>
+<a class="header" href="#working-with-documents" id="working-with-documents"><h1>Working with Documents</h1></a>
 <p>The basic structure that Oatie operates on is a Document:</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
@@ -375,7 +390,7 @@ struct DocString(String);
 type Attrs = HashMap&lt;String, String&gt;;
 #}</code></pre></pre>
 <p>Documents can <a href="working-with-operations.html">have operations performed on them</a> to result in a new, modified document.</p>
-<a class="header" href="print.html#working-with-operations" id="working-with-operations"><h1>Working with Operations</h1></a>
+<a class="header" href="#working-with-operations" id="working-with-operations"><h1>Working with Operations</h1></a>
 <p>Operations in edit-text are a sequence of a &quot;deletion&quot; followed by an &quot;addition&quot;, grouped together in a pair. All modifications edit-text can perform are designed to perform a deletion followed by an addition, and this distinction between deleting and adding content allows operational transform logic to be simplified.</p>
 <p>The <code>Op</code> type is a tuple of the <code>AddSpan</code> and <code>DelSpan</code> types, which just represent vectors of the <code>AddElement</code> and <code>DelElement</code> enums. The <code>DocElement</code> enums has some obvious counterparts here, like the trio of <code>DocChars</code>, <code>DelChars</code>, and <code>AddChars</code>.</p>
 <pre><pre class="playpen"><code class="language-rust">
@@ -407,7 +422,7 @@ enum AddElement {
 #fn main() {
 type Op = (DelSpan, AddSpan);
 #}</code></pre></pre>
-<a class="header" href="print.html#macros" id="macros"><h2>Macros</h2></a>
+<a class="header" href="#macros" id="macros"><h2>Macros</h2></a>
 <p>When importing oatie, there are several convenience macros which make writing the above easier:</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
@@ -427,7 +442,7 @@ let op = op_span!([
 ]);
 #}</code></pre></pre>
 <p>This is roughly equivalent to Rust code without needing to type <code>vec!</code> or use explicit <code>HashMap::new()</code> and <code>DocString(...)</code> invocations.</p>
-<a class="header" href="print.html#using-operations" id="using-operations"><h2>Using Operations</h2></a>
+<a class="header" href="#using-operations" id="using-operations"><h2>Using Operations</h2></a>
 <p>An operation can be applied to a document.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
@@ -453,7 +468,7 @@ println!(&quot;{:?}&quot;, doc2);
 
 // DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [DocChars(&quot;Hello world!&quot;)])
 #}</code></pre></pre>
-<a class="header" href="print.html#operational-transform" id="operational-transform"><h1>Operational Transform</h1></a>
+<a class="header" href="#operational-transform" id="operational-transform"><h1>Operational Transform</h1></a>
 <p>When two clients A and B make an operation concurrently, one way to get them back in sync is to determine what would operation B look like if operation A had happened first, and vice versa. If we can guarantee that this result on both clients produce the same output, meaning if we can guarantee the following (where &quot;:&quot; means &quot;composed with&quot;):</p>
 <pre><code> operation A : (operation B as if A had happened first)
 
@@ -485,7 +500,7 @@ println!(&quot;{:?}&quot;, doc2);
 <li>Because we received an ACK, we can send the next operation in our network queue (if any).</li>
 </ol>
 <p>Note that the strategies for server and client code to bring operations &quot;up to date&quot; differ in that the client only needs to transform against one operation, while the server needs to transform against all intervening operations in its history. The server only needs to store the history up to the client that is the most out of date, however, and can always boot off clients which are off too old a version.</p>
-<a class="header" href="print.html#rules-for-transform" id="rules-for-transform"><h2>Rules for Transform</h2></a>
+<a class="header" href="#rules-for-transform" id="rules-for-transform"><h2>Rules for Transform</h2></a>
 <p>As a reminder, operational transform is commutative, which is to say that a result of transforming A &amp;mul; B should result in A' and B', and the property A composed with A' == B composed with B'. Or put another way, the transform function when given two operations will return two subsequent operations to bring both clients into an identical document state.</p>
 <p>Starting with a simple example, what happens when two documents type the same character simultaneously:</p>
 <pre><code>doc:       ed
@@ -518,10 +533,10 @@ new doc:   edit
 <p>A harder consideration is when we introduce groups, which are similar to HTML elements. <code>oatie</code> doesn't operate on HTML tags, but acts more like the DOM: groups are strictly nested and can only contain text or other groups. Each group has a &quot;tag&quot; (like an HTML tag), but also can contain other attributes (for example, each user's cursor contains the attribute of its originating client).</p>
 <p>Transforming two operations which operate on groups in distinct ways offers some difficulty.</p>
 <p>TODO</p>
-<a class="header" href="print.html#operations" id="operations"><h2>Operations</h2></a>
+<a class="header" href="#operations" id="operations"><h2>Operations</h2></a>
 <p>We need both a deletion and an addition to perform some atomic operations, for example, making sure there are only <code>&lt;li&gt;</code> elements inside of a <code>&lt;ul&gt;</code> element for all document versions.</p>
 <p>TODO</p>
-<a class="header" href="print.html#documents-and-markdown" id="documents-and-markdown"><h1>Documents and Markdown</h1></a>
+<a class="header" href="#documents-and-markdown" id="documents-and-markdown"><h1>Documents and Markdown</h1></a>
 <p>A document in edit-text is built with <em>groups</em> and <em>characters</em>. The document model that edit-text uses is similar to HTML. We can trivially define a mapping from edit-text's document model to HTML:</p>
 <pre><code>&lt;ul&gt;
   &lt;li&gt;&lt;p&gt;Item 1&lt;/p&gt;&lt;/li&gt;
@@ -558,14 +573,14 @@ Interstitial paragraph
 * Item 3...
 </code></pre>
 <p>Because edit-text converts directly from its document representation into Markdown, we can bypass the logic of joining common <code>&lt;ul&gt;</code> parents in this case and also lean more heavily on Markdown-to-html conversion to perform this for us.</p>
-<a class="header" href="print.html#markdown-serialization--deserialization" id="markdown-serialization--deserialization"><h2>Markdown serialization + deserialization</h2></a>
+<a class="header" href="#markdown-serialization--deserialization" id="markdown-serialization--deserialization"><h2>Markdown serialization + deserialization</h2></a>
 <p>The module that controls markdown lives at <code>edit-common/src/markdown</code>.</p>
 <ul>
 <li><a href="https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/ser.rs">ser.rs</a></li>
 <li><a href="https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/de.rs">de.rs</a></li>
 </ul>
 <p>edit-text's document schema should allow conversion losslessly into Markdown, while the deserialization code takes into account (or should) that Markdown's possible output is a superset of what edit-text supports, and thus all non-supported content should be stripped out.</p>
-<a class="header" href="print.html#document-elements" id="document-elements"><h2>Document Elements</h2></a>
+<a class="header" href="#document-elements" id="document-elements"><h2>Document Elements</h2></a>
 <p>This are the current elements supported by edit-text:</p>
 <pre><code>bullet =&gt; Bulleted item
 p =&gt; Paragraph
@@ -575,10 +590,10 @@ html =&gt; Inline HTML content (a raw string, as it would appear in Markdown)
 caret =&gt; Caret position
 hr =&gt; Horizontal rule
 </code></pre>
-<a class="header" href="print.html#splitting-image" id="splitting-image"><h1>Splitting Image</h1></a>
+<a class="header" href="#splitting-image" id="splitting-image"><h1>Splitting Image</h1></a>
 <p>The entire document editing process is built on splitting a single origin block element into a series of sub-elements.</p>
 <p>All editing steps you can take in the frontend editor preserve this quality.</p>
-<a class="header" href="print.html#wip-delall-hack" id="wip-delall-hack"><h1>[WIP] Delall Hack</h1></a>
+<a class="header" href="#wip-delall-hack" id="wip-delall-hack"><h1>[WIP] Delall Hack</h1></a>
 <p>Grepping the codebase for &quot;Delall&quot; turns up this comment in <code>transform.rs</code>:</p>
 <pre><code>// &quot;Delall&quot; transform hack to avoid fully deleted elements that
 // leave their content unwrapped. Because one side deletes the
@@ -587,7 +602,7 @@ hr =&gt; Horizontal rule
 // content of the group.
 </code></pre>
 <p>Let me expand on some of these ideas here.</p>
-<a class="header" href="print.html#operations-only-know-the-document-structure-implied-by-the-operation" id="operations-only-know-the-document-structure-implied-by-the-operation"><h2>Operations only know the document structure implied by the operation</h2></a>
+<a class="header" href="#operations-only-know-the-document-structure-implied-by-the-operation" id="operations-only-know-the-document-structure-implied-by-the-operation"><h2>Operations only know the document structure implied by the operation</h2></a>
 <p>You do a DelGroup on a Group, but when transformed against any of these elements, we can respond consistently even without knowing the other type of document.</p>
 <p>TODO: This section</p>
 <ul>
@@ -596,7 +611,7 @@ hr =&gt; Horizontal rule
 <li>DelGroup x DelGroup</li>
 </ul>
 <p>...</p>
-<a class="header" href="print.html#example-transform" id="example-transform"><h2>Example Transform</h2></a>
+<a class="header" href="#example-transform" id="example-transform"><h2>Example Transform</h2></a>
 <p><strong>NOTE:</strong> This is a long, but realistic, example. Imagine every client connected that has a ton of lag, accuring operations until it waits for a server response.</p>
 <p>When transforming two operations, oatie (so far) does not need to know anything about the document the operation will eventually operate on in order to compose or transform two operations. In order to maintain this property, some pedantic cases arise where we need to think carefully what the result of a transform will be.</p>
 <p>Say two clients have the following document:</p>
@@ -606,7 +621,7 @@ hr =&gt; Horizontal rule
 &lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/h1&gt;
 &lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world!&lt;/p&gt;
 #}</code></pre></pre>
-<a class="header" href="print.html#the-journey-of-client-a" id="the-journey-of-client-a"><h3>The journey of Client A</h3></a>
+<a class="header" href="#the-journey-of-client-a" id="the-journey-of-client-a"><h3>The journey of Client A</h3></a>
 <p>Client A hits backspace, which will collapse the two block-level elements (<code>h1</code> and <code>p</code>) into one. The document there will now look like this:</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
@@ -662,7 +677,7 @@ Op([
 // New document
 &lt;h1&gt;&lt;caret client=&quot;A&quot; /&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/p&gt;
 #}</code></pre></pre>
-<a class="header" href="print.html#the-journey-of-client-b" id="the-journey-of-client-b"><h3>The journey of Client B</h3></a>
+<a class="header" href="#the-journey-of-client-b" id="the-journey-of-client-b"><h3>The journey of Client B</h3></a>
 <p>Client B is less active, has less lag, or just less to contribute. It simply moves its cursor to the second block...:</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
@@ -699,7 +714,7 @@ Op([
 &lt;h1&gt;Hello &lt;/h1&gt;
 &lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world&lt;caret client=B&quot; /&gt;&lt;/p&gt;
 #}</code></pre></pre>
-<a class="header" href="print.html#transform" id="transform"><h3>Transform</h3></a>
+<a class="header" href="#transform" id="transform"><h3>Transform</h3></a>
 <p>In the end of this hypothetical, we are now transforming these two operations:</p>
 <pre><code>// Client A
 Op([
@@ -741,8 +756,8 @@ Op([DelWithGroup([DelSkip(7), DelChars(1)])], [AddWithGroup([AddSkip(8), AddGrou
 </code></pre>
 <p>If you imagine a document consisting of only this element, and we see that one client has deleted the entire element, we accidentally wind up with a client's caret being in the root element (instead of block element). See [Splitting image](./diary-markdown.md].</p>
 <p>To avoid this problem, the Delall hack delets alls newly inserted elements from an insertion that is transformed against a deletion that delets all content. We can verify any arbitrary <code>DelGroup</code> delets all of its inner contents using a recursive check.</p>
-<a class="header" href="print.html#wip-carets-and-you" id="wip-carets-and-you"><h1>[WIP] Carets and You</h1></a>
-<a class="header" href="print.html#wip-deploying" id="wip-deploying"><h1>[WIP] Deploying</h1></a>
+<a class="header" href="#wip-carets-and-you" id="wip-carets-and-you"><h1>[WIP] Carets and You</h1></a>
+<a class="header" href="#wip-deploying" id="wip-deploying"><h1>[WIP] Deploying</h1></a>
 <p>[macOS Instructions] To deploy to a Dokku instance, you'll have to install a linux cross-compiler. This will cross-compile the Linux binary locally and then package it in a Docker container for distribution.</p>
 <p>First, to install the cross compiler:</p>
 <pre><code>brew install qinyao-he/homebrew-gcc_cross_compilers/x64-elf-gcc
@@ -782,14 +797,26 @@ Op([DelWithGroup([DelSkip(7), DelChars(1)])], [AddWithGroup([AddSkip(8), AddGrou
         </div>
 
         
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:3001");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        
 
         
 
         
 
-        
-        <script src="searchindex.js" type="text/javascript" charset="utf-8"></script>
-        
         
         <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
