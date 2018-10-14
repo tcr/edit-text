@@ -1,6 +1,8 @@
 # Documents and Markdown
 
-A document in edit-text is built with *groups* and *characters*. The document model that edit-text uses is similar to HTML. We can trivially define a mapping from edit-text's document model to HTML:
+A document in edit-text is built with *groups* and *characters*.
+
+The document model that edit-text uses is similar to HTML. We can trivially define a mapping from edit-text's document model to HTML:
 
 ```
 <ul>
