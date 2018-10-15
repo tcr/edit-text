@@ -17,7 +17,7 @@ mod mdbook_bin;
 
 use mdbook::MDBook;
 use commandspec::*;
-use std::path::{Path, PathBuf};
+use std::path::{Path};
 use std::env;
 use failure::Error;
 use structopt::StructOpt;
@@ -36,6 +36,7 @@ fn abs_string_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
     Ok(Path::new(".")
         .canonicalize()?
         .join(path)
+        .canonicalize()?
         .to_string_lossy()
         .into_owned())
 }
@@ -451,15 +452,13 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::FrontendBuild { args } => {
-            // Install latest npm dependencies
-            eprintln!("1");
+            // Install latest Node dependencies
             execute!(
                 r"
                     cd edit-frontend
-                    npm install --no-audit
+                    yarn install
                 ",
             )?;
-            eprintln!("2");
 
             execute!(
                 r"
@@ -470,15 +469,14 @@ fn run() -> Result<(), Error> {
                 webpack_path = WEBPACK_PATH,
                 args = args,
             )?;
-            eprintln!("3");
         }
 
         Cli::FrontendWatch { args } => {
-            // Install latest npm dependencies
+            // Install latest Node dependencies
             execute!(
                 r"
                     cd edit-frontend
-                    npm install --no-audit
+                    yarn install
                 ",
             )?;
 
@@ -610,21 +608,23 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::BookBuild => {
-            let docs_dir = format!("{}/docs", abs_string_path(".")?);
+            let docs_dir = Path::new("docs");
+            eprintln!("Building {:?}", docs_dir);
 
-            MDBook::load(docs_dir)
+            MDBook::load(&docs_dir)
                 .expect("Could not load mdbook")
                 .build()
                 .expect("Could not build mdbook");
         }
 
         Cli::BookWatch => {
-            let docs_dir = format!("{}/docs", abs_string_path(".")?);
+            let docs_dir = Path::new("docs");
+            eprintln!("Building {:?}", docs_dir);
 
             let args = mdbook_bin::serve::make_subcommand()
                 .get_matches_from(vec!["mdbook", "serve"]);
             
-            mdbook_bin::serve::execute(&args, &PathBuf::from(docs_dir))
+            mdbook_bin::serve::execute(&args, &docs_dir)
                 .expect("Could not serve mdbook");
         }
 
