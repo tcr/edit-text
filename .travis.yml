@@ -21,6 +21,8 @@ branches:
     - staging
     # This is where pull requests from "bors try" are built.
     - trying
+    
+    # Greenkeeper
     - /^greenkeeper/.*$/
 
 before_install:
@@ -41,6 +43,9 @@ script:
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
   - sleep 3 # wait to start
+  
+  # Check travis mode type
+  - if [ $TRAVIS_EVENT_TYPE = "cron" ]; then echo 'nightly' > rust-toolchain; fi
 
   # Run test
   - ./tools build
