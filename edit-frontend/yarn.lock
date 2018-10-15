@@ -465,18 +465,6 @@ babel-code-frame@^6.26.0:
     esutils "^2.0.2"
     js-tokens "^3.0.2"
 
-babel-plugin-inferno@^5.1.0:
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/babel-plugin-inferno/-/babel-plugin-inferno-5.1.0.tgz#8eee800735511b4ce06aded6737edddd73c66dab"
-  integrity sha512-TtB+nM2Fh5jnXGS8Jab1qjtDj9fZD9xiLvwLI/49d/YqyzA73RSiSngnfCFdHwihwq2I4jNvaI9A5PHHqNQaoA==
-  dependencies:
-    babel-plugin-syntax-jsx "^6.18.0"
-
-babel-plugin-syntax-jsx@^6.18.0:
-  version "6.18.0"
-  resolved "https://registry.yarnpkg.com/babel-plugin-syntax-jsx/-/babel-plugin-syntax-jsx-6.18.0.tgz#0af32a9a6e13ca7a3fd5069e62d7b0f58d0d8946"
-  integrity sha1-CvMqmm4Tyno/1QaeYtew9Y0NiUY=
-
 balanced-match@^0.4.2:
   version "0.4.2"
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-0.4.2.tgz#cb3f3e3c732dc0f01ee70b403f302e61d7709838"

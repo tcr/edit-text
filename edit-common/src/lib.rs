@@ -1,5 +1,3 @@
-#![feature(crate_in_paths)]
-
 extern crate failure;
 #[macro_use]
 extern crate maplit;
