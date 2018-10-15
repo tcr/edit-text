@@ -21,6 +21,7 @@ branches:
     - staging
     # This is where pull requests from "bors try" are built.
     - trying
+    - /^greenkeeper/.*$/
 
 before_install:
   # Install geckodriver
