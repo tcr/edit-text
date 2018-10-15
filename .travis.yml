@@ -10,6 +10,9 @@ cache:
 addons:
   firefox: "latest"
 
+node_js: 
+  - "stable"
+
 branches:
   only:
     # Enable building pull requests.
@@ -28,6 +31,9 @@ before_install:
 
   # Install commands
   - command -v diesel || cargo install --debug diesel_cli --no-default-features --features sqlite-bundled
+  
+  # Test node version
+  - node -V
 
 script:
   # Prepare X service
