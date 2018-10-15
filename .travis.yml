@@ -33,7 +33,7 @@ before_install:
   - command -v diesel || cargo install --debug diesel_cli --no-default-features --features sqlite-bundled
   
   # Test node version
-  - node -V
+  - node -v
 
 script:
   # Prepare X service
