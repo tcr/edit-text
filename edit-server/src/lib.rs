@@ -1,5 +1,4 @@
-#![feature(crate_in_paths, extern_in_paths, nll)]
-#![feature(non_modrs_mods)]
+#![feature(extern_in_paths, nll)]
 #![feature(plugin)]
 
 extern crate colored;

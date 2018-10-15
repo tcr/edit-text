@@ -1,26 +1,30 @@
-#!/usr/bin/env run-cargo-script
-//! ```cargo
-//! [dependencies]
-//! commandspec = "0.10"
-//! failure = "0.1"
-//! structopt = "0.2"
-//! clap = "2.31"
-//! ```
-
-// Don't add additional noise to cargo-script.
+// Don't add additional noise to the build tools.
 #![deny(warnings)]
 
 extern crate commandspec;
 extern crate structopt;
 extern crate failure;
 extern crate clap;
+extern crate mdbook;
+extern crate notify;
+#[macro_use] extern crate log;
+extern crate env_logger;
+extern crate wasm_bindgen_cli_support;
+extern crate wasm_bindgen_shared;
 
+
+mod mdbook_bin;
+
+use mdbook::MDBook;
 use commandspec::*;
-use std::path::Path;
+use std::path::{Path};
 use std::env;
 use failure::Error;
 use structopt::StructOpt;
+use log::LevelFilter;
 use clap::Shell;
+use structopt::clap::AppSettings;
+use wasm_bindgen_cli_support::Bindgen;
 
 #[cfg(windows)]
 const WEBPACK_PATH: &str = ".\\node_modules\\.bin\\webpack.cmd";
@@ -32,6 +36,7 @@ fn abs_string_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
     Ok(Path::new(".")
         .canonicalize()?
         .join(path)
+        .canonicalize()?
         .to_string_lossy()
         .into_owned())
 }
@@ -39,6 +44,9 @@ fn abs_string_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
 // Thin wrapper around run()
 fn main() {
     commandspec::cleanup_on_ctrlc();
+    env_logger::Builder::from_default_env()
+        .filter_level(LevelFilter::Info)
+        .init();
 
     match run() {
         Ok(_) => {},
@@ -51,7 +59,7 @@ fn main() {
 
 /// edit-text build scripts
 #[derive(StructOpt)]
-#[structopt(name = "edit-text build scripts", about = "Build scripts for edit and oatie", author = "")]
+#[structopt(name = "./tools", about = "Build tools and commands for developing edit-text.", author = "")]
 enum Cli {
     #[structopt(name = "wasm-build", about = "Compile the WebAssembly bundle.")]
     Wasm {
@@ -71,7 +79,7 @@ enum Cli {
     #[structopt(name = "client-proxy-build", about = "Build the client proxy.")]
     ClientProxyBuild { args: Vec<String> },
 
-    #[structopt(name = "oatie-build", about = "Build the operational transform library.")]
+    #[structopt(name = "oatie-build", about = "Build the operational transform library.", raw(setting = "AppSettings::Hidden"))]
     OatieBuild { args: Vec<String> },
 
     #[structopt(name = "server", about = "Run the edit-text server.")]
@@ -84,7 +92,7 @@ enum Cli {
     #[structopt(name = "server-build", about = "Build the edit-text server.")]
     MercutioServerBuild { args: Vec<String> },
 
-    #[structopt(name = "replay", about = "Replay an edit-text log.")]
+    #[structopt(name = "replay", about = "Replay an edit-text log.", raw(setting = "AppSettings::Hidden"))]
     Replay { args: Vec<String> },
 
     #[structopt(name = "test")]
@@ -99,7 +107,7 @@ enum Cli {
     #[structopt(name = "frontend-watch", about = "Watch the frontend JavaScript code, building continuously.")]
     FrontendWatch { args: Vec<String> },
 
-    #[structopt(name = "deploy", about = "Deploy to sandbox.edit.io.")]
+    #[structopt(name = "deploy", about = "Deploy to sandbox.edit.io.", raw(setting = "AppSettings::Hidden"))]
     Deploy {
         #[structopt(long = "skip-download")]
         skip_download: bool,
@@ -111,7 +119,7 @@ enum Cli {
     #[structopt(name = "book-watch", about = "Watches and rebuilds the book.")]
     BookWatch,
 
-    #[structopt(name = "completions", about = "Generates completion scripts for your shell.")]
+    #[structopt(name = "completions", about = "Generates completion scripts for your shell.", raw(setting = "AppSettings::Hidden"))]
     Completions {
         #[structopt(name = "SHELL")]
         shell: Shell,
@@ -124,12 +132,12 @@ enum Cli {
 
 fn run() -> Result<(), Error> {
     #[allow(non_snake_case)]
-    let SELF_PATH = vec!["cargo", "script", "x.rs"];
+    let SELF_PATH = vec!["cargo", "run", "--bin", "build-tools", "--"];
 
     // Pass arguments directly to subcommands: don't capture -h, -v, or verification
     // Do this by adding "--" into the args flag after the subcommand.
     let mut args = ::std::env::args().collect::<Vec<_>>();
-    // TODO this is broken for ./x.rs server, or ./x.rs deploy, and
+    // TODO this is broken for {self_path} server, or {self_path} deploy, and
     // both require different behavior! why?
     if args.len() > 2 && args[1] != "help" {
         args.insert(2, "--".into());
@@ -154,7 +162,7 @@ fn run() -> Result<(), Error> {
             )?;
             execute!(
                 r"
-                    cargo watch -i edit-frontend/** -i x.rs -x 'script x.rs wasm-build {no_vendor}'
+                    cargo watch -i edit-frontend/** -i tools -x 'run --bin build-tools -- wasm-build {no_vendor}'
                 ",
                 no_vendor = if no_vendor { Some("--no-vendor") } else { None },
             )?;
@@ -184,13 +192,25 @@ fn run() -> Result<(), Error> {
 
                 ::std::fs::create_dir_all("./edit-frontend/src/bindgen")?;
 
-                execute!(
-                    r"
-                        wasm-bindgen ./target/wasm32-unknown-unknown/release/edit_client.wasm \
-                            --out-dir ./edit-frontend/src/bindgen \
-                            --typescript
-                    ",
-                )?;
+                let mut b = Bindgen::new();
+                b.input_path("./target/wasm32-unknown-unknown/release/edit_client.wasm")
+                    // .nodejs(false)
+                    // .browser(false)
+                    // .no_modules(args.flag_no_modules)
+                    // .debug(args.flag_debug)
+                    // .demangle(!args.flag_no_demangle)
+                    // .keep_debug(args.flag_keep_debug)
+                    .typescript(true);
+
+                b.generate("./edit-frontend/src/bindgen")?;
+
+                // execute!(
+                //     r"
+                //         wasm-bindgen ./target/wasm32-unknown-unknown/release/edit_client.wasm \
+                //             --out-dir ./edit-frontend/src/bindgen \
+                //             --typescript
+                //     ",
+                // )?;
 
                 // execute!(
                 //     r"
@@ -268,22 +288,21 @@ fn run() -> Result<(), Error> {
                 println!("Database path: edit-server/edit.sqlite3");
             }
 
-            // if !Path::new("edit-frontend/dist/edit.wasm").exists() {
-                // execute!(
-                //     r"
-                //         ./x.rs wasm-build
-                //     "
-                // )?;
-                // execute!(
-                //     r"
-                //         ./x.rs frontend-build
-                //     ",
-                // )?;
-            // }
-            // Don't print anything if it existed, because we might not have
-            // launched in --client-proxy mode.
-            // TODO if we can reliably check for --client-proxy or -c, we should
-            // not build on first launch.
+            // Build dist folder if it doesn't exist.
+            if !Path::new("edit-frontend/dist/edit.js").exists() {
+                execute!(
+                    r"
+                        {self_path} wasm-build
+                    ",
+                    self_path = SELF_PATH,
+                )?;
+                execute!(
+                    r"
+                        {self_path} frontend-build
+                    ",
+                    self_path = SELF_PATH,
+                )?;
+            }
 
             eprintln!("Starting server...");
 
@@ -310,11 +329,25 @@ fn run() -> Result<(), Error> {
         Cli::MercutioServerBuild { args } => {
             let release_flag = if release { Some("--release") } else { None };
 
+            // Build dist folder if it doesn't exist.
+            if !Path::new("edit-frontend/dist/edit.js").exists() {
+                execute!(
+                    r"
+                        {self_path} wasm-build
+                    ",
+                    self_path = SELF_PATH,
+                )?;
+                execute!(
+                    r"
+                        {self_path} frontend-build
+                    ",
+                    self_path = SELF_PATH,
+                )?;
+            }
+
             execute!(
                 r"
                     cd edit-server
-                    export MERCUTIO_WASM_LOG=0
-                    export RUST_BACKTRACE=1
                     cargo build {force_color_flag} {release_flag} \
                         --bin edit-server {args}
                 ",
@@ -339,7 +372,7 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::Test { args } => {
-            eprintln!("building ./x.rs server...");
+            eprintln!("building server...");
             execute!(
                 r"
                     {self_path} server-build
@@ -347,7 +380,7 @@ fn run() -> Result<(), Error> {
                 self_path = SELF_PATH,
             )?;
 
-            eprintln!("running ./x.rs server...");
+            eprintln!("running server...");
             let _server_guard = command!(
                 r"
                     {self_path} server {args}
@@ -362,7 +395,7 @@ fn run() -> Result<(), Error> {
             execute!(
                 r"
                     cd tests
-                    cargo run --features integration
+                    cargo test --features integration
                 ",
             )?;
         }
@@ -419,6 +452,14 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::FrontendBuild { args } => {
+            // Install latest Node dependencies
+            execute!(
+                r"
+                    cd edit-frontend
+                    yarn install
+                ",
+            )?;
+
             execute!(
                 r"
                     cd edit-frontend
@@ -431,9 +472,17 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::FrontendWatch { args } => {
+            // Install latest Node dependencies
+            execute!(
+                r"
+                    cd edit-frontend
+                    yarn install
+                ",
+            )?;
+
             let _cargo_watch_guard = command!(
                 r"
-                    cargo watch -i edit-frontend/** -i x.rs -x 'script x.rs wasm-build'
+                    cargo watch -i edit-frontend/** -i tools -x 'run --bin build-tools -- wasm-build'
                 ",
             )?.scoped_spawn()?;
 
@@ -559,27 +608,30 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::BookBuild => {
-            execute!(
-                r"
-                    cd docs
-                    mdbook build
-                ",
-            )?;
+            let docs_dir = Path::new("docs");
+            eprintln!("Building {:?}", docs_dir);
+
+            MDBook::load(&docs_dir)
+                .expect("Could not load mdbook")
+                .build()
+                .expect("Could not build mdbook");
         }
 
         Cli::BookWatch => {
-            execute!(
-                r"
-                    cd docs
-                    mdbook serve
-                ",
-            )?;
+            let docs_dir = Path::new("docs");
+            eprintln!("Building {:?}", docs_dir);
+
+            let args = mdbook_bin::serve::make_subcommand()
+                .get_matches_from(vec!["mdbook", "serve"]);
+            
+            mdbook_bin::serve::execute(&args, &docs_dir)
+                .expect("Could not serve mdbook");
         }
 
         Cli::Completions { shell } => {
             let mut app = Cli::clap();
             app.gen_completions_to(
-                "x.rs", 
+                "tools", 
                 shell,
                 &mut ::std::io::stdout()
             );

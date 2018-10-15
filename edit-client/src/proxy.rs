@@ -1,13 +1,13 @@
+extern crate crossbeam_channel;
+
 use crate::{
     Client,
     ClientImpl,
 };
 
-use extern::{
-    crossbeam_channel::Sender,
-    edit_common::commands::*,
-    failure::Error,
-};
+use self::crossbeam_channel::Sender;
+use edit_common::commands::*;
+use failure::Error;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub struct ProxyClient {

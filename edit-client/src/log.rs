@@ -1,9 +1,9 @@
+extern crate crossbeam_channel;
+
 use super::client;
-use extern::{
-    crossbeam_channel::Sender,
-    edit_common::commands::*,
-    std::cell::RefCell,
-};
+use self::crossbeam_channel::Sender;
+use edit_common::commands::*;
+use std::cell::RefCell;
 
 thread_local! {
     pub static CLIENT_LOG_ID: RefCell<Option<String>> = RefCell::new(None);

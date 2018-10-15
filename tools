@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Calling ./tools <COMMAND> is equivalent to cargo run --bin build-tools -- <COMMAND>.
+# This convenience script will build the tool binary if it does not yet exist;
+# otherwise it will quiety rebuild the binary and then run it with your arguments.
+
+if [ ! -e ./target/debug/build-tools ]; then cargo build --bin build-tools; fi
+exec cargo run --bin build-tools --quiet -- "$@"

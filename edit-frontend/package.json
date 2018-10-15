@@ -14,26 +14,27 @@
     "css-loader": "^0.28.11",
     "extract-text-webpack-plugin": "^4.0.0-beta",
     "file-loader": "^1.1.11",
+    "installed-check": "^2.2.0",
     "node-sass": "^4.9.3",
     "optimize-css-assets-webpack-plugin": "^3.0.0",
     "sass-loader": "^6.0.7",
     "style-loader": "^0.19.1",
-    "ts-loader": "^4.4.2",
+    "ts-loader": "^4.5.0",
     "typescript": "^2.9.2",
-    "webpack": "^4.16.5",
-    "webpack-cli": "^2.1.5"
+    "webpack": "^4.20.2",
+    "webpack-cli": "^3.1.2"
   },
   "dependencies": {
-    "@sentry/webpack-plugin": "^1.5.2",
+    "@sentry/webpack-plugin": "^1.6.1",
     "@types/raven-js": "^3.10.0",
-    "@types/react": "^16.4.10",
-    "@types/react-dom": "^16.0.7",
+    "@types/react": "^16.4.16",
+    "@types/react-dom": "^16.0.9",
     "axios": "^0.18.0",
-    "clipboard-copy": "^2.0.0",
-    "inferno": "^5.4.0",
-    "raven-js": "^3.26.4",
-    "react": "^16.4.2",
-    "react-dom": "^16.4.2",
+    "clipboard-copy": "^2.0.1",
+    "raven-js": "^3.27.0",
+    "react": "^16.5.2",
+    "react-dom": "^16.5.2",
+    "request": "^2.88.0",
     "uuid": "^3.3.2"
   }
 }
