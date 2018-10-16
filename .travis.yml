@@ -15,8 +15,8 @@ node_js:
 
 branches:
   only:
-    # Enable building cron jobs.
-    - master
+    # Don't auto build pull requests.
+    # - master
     # This is where pull requests from "bors r+" are built.
     - staging
     # This is where pull requests from "bors try" are built.
