@@ -6,16 +6,14 @@
 
 ```
 $ rustup show active-toolchain
-nightly-2018-09-25-x86_64-apple-darwin
+nightly-2018-09-25-x86_64-apple-darwin  # for example
 ```
 
-This result should be equivalent to the value contained in the `./rust-toolchain` file. This value indicates which version of the nightly Rust compiler the project depends on. `rustup` automatically manages downloading and using this compiler version for us.
+This command should print a rust version that is equivalent to the contents of the `./rust-toolchain` file. This is the version of the nightly Rust compiler the project currently depends on. This file is updated periodically; `rustup` will automatically manages downloading and using the correct compiler version for you.
 
 **Global build tools:** The build environment requires some Rust binary dependencies to be installed using `cargo install`. You can run the following commands to install these requirements one at a time:
 
 ```
-# This generates the bindings between Rust and JavaScript when compiling to WebAssembly.
-cargo install wasm-bindgen-cli
 # The diesel command creates database files and manages migrations.
 cargo install diesel_cli --no-default-features --features sqlite-bundled
 # Watch an entire directory for changes with cargo-watch
