@@ -2,6 +2,7 @@
 name = "build-tools"
 version = "0.1.0"
 authors = ["Tim Ryan <id@timryan.org>"]
+edition = "2018"
 
 [dependencies]
 commandspec = "0.11"

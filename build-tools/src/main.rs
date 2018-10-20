@@ -1,29 +1,19 @@
 // Don't add additional noise to the build tools.
 #![deny(warnings)]
 
-extern crate commandspec;
-extern crate structopt;
-extern crate failure;
-extern crate clap;
-extern crate mdbook;
-extern crate notify;
 #[macro_use] extern crate log;
-extern crate env_logger;
-extern crate wasm_bindgen_cli_support;
-extern crate wasm_bindgen_shared;
-
 
 mod mdbook_bin;
 
-use mdbook::MDBook;
-use commandspec::*;
-use std::path::{Path};
-use std::env;
-use failure::Error;
-use structopt::StructOpt;
-use log::LevelFilter;
 use clap::Shell;
+use commandspec::*;
+use failure::Error;
+use log::LevelFilter;
+use mdbook::MDBook;
+use std::env;
+use std::path::{Path};
 use structopt::clap::AppSettings;
+use structopt::StructOpt;
 use wasm_bindgen_cli_support::Bindgen;
 
 #[cfg(windows)]
@@ -127,6 +117,9 @@ enum Cli {
 
     #[structopt(name = "logs", about = "Dump database logs.")]
     Logs { args: Vec<String> },
+
+    #[structopt(name = "ci", about = "Executes testing for CI")]
+    Ci,
 }
 
 
@@ -154,6 +147,36 @@ fn run() -> Result<(), Error> {
     // Run the subcommand.
     let parsed_args = Cli::from_iter(args.iter());
     match parsed_args {
+        Cli::Ci => {
+            let output = command!(
+                "
+                    git --no-pager diff --name-only master
+                "
+            )?.output()?.stdout;
+
+            let only_docs = String::from_utf8_lossy(&output)
+                .lines()
+                .all(|item| Path::new(item).starts_with("docs/"));
+            
+            if only_docs {
+                eprintln!("ci: building only book");
+                execute!(
+                    r"
+                        {self_path} book-build
+                    ",
+                    self_path = SELF_PATH,
+                )?;
+            } else {
+                eprintln!("ci: building all");
+                execute!(
+                    r"
+                        {self_path} build
+                    ",
+                    self_path = SELF_PATH,
+                )?;
+            }
+        },
+
         Cli::WasmWatch { no_vendor } => {
             execute!(
                 "

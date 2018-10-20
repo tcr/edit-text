@@ -49,7 +49,7 @@ script:
   - sleep 3 # wait to start
 
   # Run test
-  - ./tools build
+  - ./tools ci
 
   # TODO consolidate these tests
   - cd oatie && cargo test && cd ..
