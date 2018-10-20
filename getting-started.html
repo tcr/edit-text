@@ -1,0 +1,255 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Getting Started - </title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body class="light">
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">var path_to_root = "";</script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { } 
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            document.body.className = theme;
+            document.querySelector('html').className = theme + ' js';
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html" class="active"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li><li><a href="intro-system.html"><strong aria-hidden="true">1.2.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">1.3.</strong> Build System ./x.rs</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.4.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="working-with-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">2.2.</strong> Working with Operations</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.3.</strong> Operational Transform</a></li><li><a href="markdown.html"><strong aria-hidden="true">2.4.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.5.</strong> [WIP] Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.6.</strong> [WIP] Carets and You</a></li><li><a href="deploying.html"><strong aria-hidden="true">2.7.</strong> [WIP] Deploying</a></li></ol></li></ol>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div id="menu-bar-sticky-container">
+                        <div class="left-buttons">
+                            <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                                <i class="fa fa-bars"></i>
+                            </button>
+                            <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                                <i class="fa fa-paint-brush"></i>
+                            </button>
+                            <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                                <li role="none"><button role="menuitem" class="theme" id="light">Light <span class="default">(default)</span></button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            </ul>
+                            
+                            <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                                <i class="fa fa-search"></i>
+                            </button>
+                            
+                            <a id="edit-toggle" class="icon-button" title="Edit page" aria-label="Edit page" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list" href="https://github.com/tcr/edit-text/edit/master/docs/src/getting-started.md?message=[ci skip] Updating docs for getting-started.md" style="text-decoration: none">
+                                <i class="fa fa-pencil"></i> EDIT
+                            </a>
+                        </div>
+
+                        <h1 class="menu-title"></h1> 
+
+                        <div class="right-buttons">
+                            <a href="print.html" title="Print this book" aria-label="Print this book">
+                                <i id="print-button" class="fa fa-print"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <a class="header" href="#getting-started" id="getting-started"><h1>Getting Started</h1></a>
+<a class="header" href="#requirements" id="requirements"><h1>Requirements</h1></a>
+<p><strong>rustup:</strong> <code>edit-text</code> is written in Rust, and so you will need a Rust compiler in order to serve the application. Rust may be installed using your system package manager, but the preferred way to download and install Rust is through the <a href="http://rustup.rs/"><code>rustup</code> toolchain</a> available at rustup.rs. To check if you have <code>rustup</code> installed, you can run the following command:</p>
+<pre><code>$ rustup show active-toolchain
+nightly-2018-09-25-x86_64-apple-darwin  # for example
+</code></pre>
+<p>This command should print a rust version that is equivalent to the contents of the <code>./rust-toolchain</code> file. This is the version of the nightly Rust compiler the project currently depends on. This file is updated periodically; <code>rustup</code> will automatically manages downloading and using the correct compiler version for you.</p>
+<p><strong>Global build tools:</strong> The build environment requires some Rust binary dependencies to be installed using <code>cargo install</code>. You can run the following commands to install these requirements one at a time:</p>
+<pre><code># The diesel command creates database files and manages migrations.
+cargo install diesel_cli --no-default-features --features sqlite-bundled
+# Watch an entire directory for changes with cargo-watch
+cargo install cargo-watch
+</code></pre>
+<p><strong>Node.js:</strong> You will also need to make sure you have <a href="http://nodejs.org/">Node.js</a> installed. The build tool uses <code>npm</code> to manage frontend dependencies by installing and managing JavaScript packages. To check if you have a recent version of Node, see if the output of this command is <code>&gt;= v6.0.0</code>:</p>
+<pre><code>$ node -v
+v9.5.0
+</code></pre>
+<a class="header" href="#usage" id="usage"><h2>Usage</h2></a>
+<p>Clone the repository from Github:</p>
+<pre><code>git clone https://github.com/tcr/edit-text
+</code></pre>
+<p>To build all components of edit-text (server, client, and frontend) at once, run this command from the root of the repository:</p>
+<pre><code>./tools build
+</code></pre>
+<p>Build commands are executed using the <code>./x.rs</code> script. (<a href="http://timryan.org/2018/07/02/moving-from-the-shell-to-rust-with-commandspec.html">Read more.</a>)  You can rebuild individual edit-text components with <code>./x.rs server-build</code>, <code>./x.rs frontend-build</code>, etc. Run <code>./x.rs help</code> for more information.</p>
+<a class="header" href="#running-edit-text-standard" id="running-edit-text-standard"><h3>Running edit-text (standard)</h3></a>
+<p>The production configuration of edit-text is a long-running server process, and one or many WebAssembly + TypeScript clients running in the browser that connect to it.</p>
+<p>In your terminal session, you can run this command to start the server (and optionally compile with release optimizations):</p>
+<pre><code>./tools server [--release]
+</code></pre>
+<p>Now open <a href="http://localhost:8000/">http://localhost:8000/</a> and you are brought to a welcome page to start editing text!</p>
+<p>Note that the server also serves WebAssembly code to the browser that contains the edit-text client. After you make changes are made to client or server code, you should re-run <code>./x.rs build</code> to recompile both and then restart the server process. (If only server changes were made, you can skip this step and just run <code>./x.rs server</code> directly.)</p>
+<a class="header" href="#running-edit-text-with-a-client-in-proxy-mode-for-debugging" id="running-edit-text-with-a-client-in-proxy-mode-for-debugging"><h3>Running edit-text with a client in proxy mode (for debugging)</h3></a>
+<p>Debugging WebAssembly code is harder (in most ways) than debugging a local Rust binary. edit-text supports running the client as an independent &quot;proxy&quot;. An edit-text server running in one terminal connects to a client proxy running in another terminal, and communicates with frontend code running in the browser (TypeScript) over WebSockets. This client proxy is all code that would normally be cross-compiled to WebAssembly, but runs locally in your terminal and supports the same backtrace and debugging support as a local binary.</p>
+<p>You'll need two terminal sessions to run in this mode. First, start the server, and specify that you want to connect to a client proxy using <code>--client-proxy</code>. Without this argument, the server will expect server connections from WebAssembly instead.</p>
+<pre><code>./tools server --client-proxy [--release]
+</code></pre>
+<p>In another terminal session, you can start the proxy. (It's recommended you compile in release mode, as client code is much slower in debug mode.)</p>
+<pre><code>./tools client-proxy [--release]
+</code></pre>
+<p>Then you can open http://localhost:8000/ as before in your browser, and monitor the <code>client-proxy</code> terminal for status of the clients that your browser is connected to.</p>
+<p>You will see any failures appear in the client-proxy code that would appear in the browser console when in WASM mode. If you encounter a panic or fatal error, this &quot;proxy&quot; mechanism of debugging usually gives much more information about where the error originated. Note that aside from running as a binary, there should be no differences in behavior between the client-proxy and the client in Webassembly.</p>
+<a class="header" href="#compiling-the-frontend" id="compiling-the-frontend"><h2>Compiling the frontend</h2></a>
+<p>If you're made changes to WebAssembly code in &quot;edit-client/&quot;, you can cross-compile the wasm binary including any <a href="https://github.com/rustwasm/wasm-bindgen">wasm-bindgen</a> with this command:</p>
+<pre><code class="language-sh">./tools wasm-build
+</code></pre>
+<p>The bundled frontend code (written in TypeScript) is tracked in git and can be run immediately after cloning the repository. You can also compile it yourself. Make sure you have Node installed first, then build the frontend:</p>
+<pre><code class="language-sh">./tools frontend-build
+</code></pre>
+<p>This cross-compiles all frontend code and pulls in the compiled WebAssembly binary. To watch and recompile frontend code whenever it's modified, run this command:</p>
+<pre><code class="language-sh">./tools frontend-watch
+</code></pre>
+<p>This command watches the edit-frontend directory and continuously builds its after each change. Note that you may need to run <code>./x.rs wasm-build</code> as well.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="intro.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="intro-system.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a href="intro.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a href="intro-system.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

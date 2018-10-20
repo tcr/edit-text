@@ -1,0 +1,270 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Operational Transform - </title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body class="light">
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">var path_to_root = "";</script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { } 
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            document.body.className = theme;
+            document.querySelector('html').className = theme + ' js';
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li><li><a href="intro-system.html"><strong aria-hidden="true">1.2.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">1.3.</strong> Build System ./x.rs</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.4.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="working-with-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">2.2.</strong> Working with Operations</a></li><li><a href="rtf-ot.html" class="active"><strong aria-hidden="true">2.3.</strong> Operational Transform</a></li><li><a href="markdown.html"><strong aria-hidden="true">2.4.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.5.</strong> [WIP] Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.6.</strong> [WIP] Carets and You</a></li><li><a href="deploying.html"><strong aria-hidden="true">2.7.</strong> [WIP] Deploying</a></li></ol></li></ol>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div id="menu-bar-sticky-container">
+                        <div class="left-buttons">
+                            <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                                <i class="fa fa-bars"></i>
+                            </button>
+                            <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                                <i class="fa fa-paint-brush"></i>
+                            </button>
+                            <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                                <li role="none"><button role="menuitem" class="theme" id="light">Light <span class="default">(default)</span></button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            </ul>
+                            
+                            <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                                <i class="fa fa-search"></i>
+                            </button>
+                            
+                            <a id="edit-toggle" class="icon-button" title="Edit page" aria-label="Edit page" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list" href="https://github.com/tcr/edit-text/edit/master/docs/src/rtf-ot.md?message=[ci skip] Updating docs for rtf-ot.md" style="text-decoration: none">
+                                <i class="fa fa-pencil"></i> EDIT
+                            </a>
+                        </div>
+
+                        <h1 class="menu-title"></h1> 
+
+                        <div class="right-buttons">
+                            <a href="print.html" title="Print this book" aria-label="Print this book">
+                                <i id="print-button" class="fa fa-print"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <a class="header" href="#operational-transform" id="operational-transform"><h1>Operational Transform</h1></a>
+<p>When two clients A and B make an operation concurrently, one way to get them back in sync is to determine what would operation B look like if operation A had happened first, and vice versa. If we can guarantee that this result on both clients produce the same output, meaning if we can guarantee the following (where &quot;:&quot; means &quot;composed with&quot;):</p>
+<pre><code> operation A : (operation B as if A had happened first)
+
+        the above composition is equivalent to
+
+ operation B : (operation A as if B had happened first)
+</code></pre>
+<p>Then we can guarantee both clients, which had different operations occur to their documents before this moment in time, can get back in sync. The algorithm used by <code>oatie</code> guarantees this operation will be commutative, which is makes other properties of this system simpler.</p>
+<p>Let's look at a race condition. Client A sends an operation to the server,</p>
+<p>Next, we need to work around the undesirable constraint each operation made by a client has to be transformed against another client's. We actually can generalize up to more than two clients—by transforming the results of the operation A x B with the results of B' &amp;mul; C, etc. But in practice, we are not going to have each operation have a corresponding and concurrent operation on each client at the same instant. Instead, we version the document, and use this to tell what operations an incoming operation should be transformed against. For instance, if operations A and B happen simultaneously, the server can do the following:</p>
+<ol>
+<li>Start with doc version 100.</li>
+<li>Apply operation A. The doc version is now 101.</li>
+<li>See that operation B says its version was set to 100. We need to bring it up to date. We store a history of all previous operations, and so we transform operation B &amp;mul; the operation to transition from version 100 → 101. The result is operation B as though it operated on version 101, which we can directly apply to our document and send out to all clients to perform.</li>
+</ol>
+<p>Client A becomes in sync easily:</p>
+<ol>
+<li>Start with doc version 100.</li>
+<li>Apply operation A. Also send operation A to the server.</li>
+<li>Receive an ACK from the server, and learn our version is now 101.</li>
+<li>Receive operation B, which transitions from version 101 → 102; our document is now at version 102.</li>
+</ol>
+<p>For client B, this is somewhat tricker; we already applied our operation! So we perform a transform locally against <em>our</em> history.</p>
+<ol>
+<li>Start with doc verison 100.</li>
+<li>Apply operation B. Also send operation B to the server. The network queue is synchronous; it only sends one operation at a time, waiting until an ACK to send the next.</li>
+<li>Receive operation A, which transitions from version 100 → 101; we didn't expect this. So we transform this incoming operation A &amp;mul; operation B, for which an ACK from the server is outstanding. We result in A' (operation A if operation B had happened already) which we apply to the document. We also result in B', which we transform against to operations which have accumulated behind operation B in the network queue.</li>
+<li>Receive an ACK from the server, and learn our version is now 102. Note that at this point the server state and the state of our local client are equivalent (A &amp;mul; A' == B &amp;mul; B').</li>
+<li>Because we received an ACK, we can send the next operation in our network queue (if any).</li>
+</ol>
+<p>Note that the strategies for server and client code to bring operations &quot;up to date&quot; differ in that the client only needs to transform against one operation, while the server needs to transform against all intervening operations in its history. The server only needs to store the history up to the client that is the most out of date, however, and can always boot off clients which are off too old a version.</p>
+<a class="header" href="#rules-for-transform" id="rules-for-transform"><h2>Rules for Transform</h2></a>
+<p>As a reminder, operational transform is commutative, which is to say that a result of transforming A &amp;mul; B should result in A' and B', and the property A composed with A' == B composed with B'. Or put another way, the transform function when given two operations will return two subsequent operations to bring both clients into an identical document state.</p>
+<p>Starting with a simple example, what happens when two documents type the same character simultaneously:</p>
+<pre><code>doc:       ed
+
+          bed
+client A: ^
+
+          red
+client B: ^
+</code></pre>
+<p>We can determine a hueristic, say, that when transforming we always know client A goes first and B second, and come up with the transformed operations:</p>
+<pre><code>           bred
+client A':  ^
+
+           bred
+client B': ^
+</code></pre>
+<p>Now both clients are synchronized again, and we can repeat this at any time as long as we use a stable client ordering. If we look at deleting characters, we actually discover we don't even need an order:</p>
+<pre><code>doc:      creditor
+
+            editor
+client A: XX
+
+          credit
+client B:       XX
+
+new doc:   edit
+</code></pre>
+<p>Deletions, as we'll call them, are commutative, and the result of transforming them should update both clients to have deleted their union. This holds true in even more complex scenarios.</p>
+<p>A harder consideration is when we introduce groups, which are similar to HTML elements. <code>oatie</code> doesn't operate on HTML tags, but acts more like the DOM: groups are strictly nested and can only contain text or other groups. Each group has a &quot;tag&quot; (like an HTML tag), but also can contain other attributes (for example, each user's cursor contains the attribute of its originating client).</p>
+<p>Transforming two operations which operate on groups in distinct ways offers some difficulty.</p>
+<p>TODO</p>
+<a class="header" href="#operations" id="operations"><h2>Operations</h2></a>
+<p>We need both a deletion and an addition to perform some atomic operations, for example, making sure there are only <code>&lt;li&gt;</code> elements inside of a <code>&lt;ul&gt;</code> element for all document versions.</p>
+<p>TODO</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="working-with-operations.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="markdown.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a href="working-with-operations.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a href="markdown.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

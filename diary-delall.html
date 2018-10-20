@@ -1,0 +1,365 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>[WIP] Delall Hack - </title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body class="light">
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">var path_to_root = "";</script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { } 
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            document.body.className = theme;
+            document.querySelector('html').className = theme + ' js';
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li><li><a href="intro-system.html"><strong aria-hidden="true">1.2.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">1.3.</strong> Build System ./x.rs</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.4.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="working-with-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">2.2.</strong> Working with Operations</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.3.</strong> Operational Transform</a></li><li><a href="markdown.html"><strong aria-hidden="true">2.4.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html" class="active"><strong aria-hidden="true">2.5.</strong> [WIP] Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.6.</strong> [WIP] Carets and You</a></li><li><a href="deploying.html"><strong aria-hidden="true">2.7.</strong> [WIP] Deploying</a></li></ol></li></ol>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div id="menu-bar-sticky-container">
+                        <div class="left-buttons">
+                            <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                                <i class="fa fa-bars"></i>
+                            </button>
+                            <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                                <i class="fa fa-paint-brush"></i>
+                            </button>
+                            <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                                <li role="none"><button role="menuitem" class="theme" id="light">Light <span class="default">(default)</span></button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            </ul>
+                            
+                            <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                                <i class="fa fa-search"></i>
+                            </button>
+                            
+                            <a id="edit-toggle" class="icon-button" title="Edit page" aria-label="Edit page" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list" href="https://github.com/tcr/edit-text/edit/master/docs/src/diary-delall.md?message=[ci skip] Updating docs for diary-delall.md" style="text-decoration: none">
+                                <i class="fa fa-pencil"></i> EDIT
+                            </a>
+                        </div>
+
+                        <h1 class="menu-title"></h1> 
+
+                        <div class="right-buttons">
+                            <a href="print.html" title="Print this book" aria-label="Print this book">
+                                <i id="print-button" class="fa fa-print"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <a class="header" href="#wip-delall-hack" id="wip-delall-hack"><h1>[WIP] Delall Hack</h1></a>
+<p>Grepping the codebase for &quot;Delall&quot; turns up this comment in <code>transform.rs</code>:</p>
+<pre><code>// &quot;Delall&quot; transform hack to avoid fully deleted elements that
+// leave their content unwrapped. Because one side deletes the
+// group, we can't recreate it (because we have no knowledge of
+// the document). Instead, we just delete all the newly added
+// content of the group.
+</code></pre>
+<p>Let me expand on some of these ideas here.</p>
+<a class="header" href="#operations-only-know-the-document-structure-implied-by-the-operation" id="operations-only-know-the-document-structure-implied-by-the-operation"><h2>Operations only know the document structure implied by the operation</h2></a>
+<p>You do a DelGroup on a Group, but when transformed against any of these elements, we can respond consistently even without knowing the other type of document.</p>
+<p>TODO: This section</p>
+<ul>
+<li>DelGroup x DelChars</li>
+<li>DelGroup x DelWithGroup</li>
+<li>DelGroup x DelGroup</li>
+</ul>
+<p>...</p>
+<a class="header" href="#example-transform" id="example-transform"><h2>Example Transform</h2></a>
+<p><strong>NOTE:</strong> This is a long, but realistic, example. Imagine every client connected that has a ton of lag, accuring operations until it waits for a server response.</p>
+<p>When transforming two operations, oatie (so far) does not need to know anything about the document the operation will eventually operate on in order to compose or transform two operations. In order to maintain this property, some pedantic cases arise where we need to think carefully what the result of a transform will be.</p>
+<p>Say two clients have the following document:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+&lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/h1&gt;
+&lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world!&lt;/p&gt;
+#}</code></pre></pre>
+<a class="header" href="#the-journey-of-client-a" id="the-journey-of-client-a"><h3>The journey of Client A</h3></a>
+<p>Client A hits backspace, which will collapse the two block-level elements (<code>h1</code> and <code>p</code>) into one. The document there will now look like this:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// This operation:
+Op([
+    DelGroup([DelSkip(7)]), DelGroup([DelSkip(8)]),
+], [
+    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddSkip(15)]),
+])
+
+// New Document
+&lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;caret client=&quot;A&quot; /&gt; world!&lt;/p&gt;
+#}</code></pre></pre>
+<p>Next, Client A forward-deletes everything that existed in the second paragraph (<code>&quot; world!&quot;</code>). So the document now looks like this:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// This operation:
+Op([
+    DelWithGroup([DelSkip(8), DelChars(7)]),
+], [
+])
+
+// Composed operations:
+Op([
+    DelGroup([DelSkip(7)]), DelGroup([DelSkip(1), DelChars(7)]),
+], [
+    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddSkip(15)]),
+])
+
+// New document
+&lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;caret client=&quot;A&quot; /&gt;&lt;/p&gt;
+#}</code></pre></pre>
+<p>Lastly (for good measure) Client A clicks at the beginning of the first paragraph to move its caret:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// This operation:
+Op([
+    DelWithGroup([DelSkip(7), DelGroup([])]),
+], [
+    AddWithGroup([AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;A&quot;})])
+])
+
+// Composed operations:
+Op([
+    DelGroup([DelSkip(7)]), DelGroup([DelGroup([]), DelChars(7)]),
+], [
+    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;A&quot;}), AddSkip(14)]),
+])
+
+// New document
+&lt;h1&gt;&lt;caret client=&quot;A&quot; /&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/p&gt;
+#}</code></pre></pre>
+<a class="header" href="#the-journey-of-client-b" id="the-journey-of-client-b"><h3>The journey of Client B</h3></a>
+<p>Client B is less active, has less lag, or just less to contribute. It simply moves its cursor to the second block...:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// This operation:
+Op([
+    DelGroup([DelGroup([]), DelSkip(7)]),
+], [
+    AddSkip(1), AddWithGroup([AddSkip(8), AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;B&quot;}, [])]),
+])
+
+// New Document
+&lt;h1&gt;Hello &lt;/h1&gt;
+&lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world!&lt;caret client=B&quot; /&gt;&lt;/p&gt;
+#}</code></pre></pre>
+<p>Then Client B hits backspace:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// This operation:
+Op([
+    DelSkip(1), DelWithGroup([DelSkip(7), DelChars(1)]),
+], [
+])
+
+// Cumulative operation:
+Op([
+    DelGroup([DelGroup([]), DelSkip(7)]), DelWithGroup([DelSkip(7), DelChars(1)]),
+], [
+    AddSkip(1), AddWithGroup([AddSkip(8), AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;B&quot;}, [])]),
+])
+
+// New Document
+&lt;h1&gt;Hello &lt;/h1&gt;
+&lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world&lt;caret client=B&quot; /&gt;&lt;/p&gt;
+#}</code></pre></pre>
+<a class="header" href="#transform" id="transform"><h3>Transform</h3></a>
+<p>In the end of this hypothetical, we are now transforming these two operations:</p>
+<pre><code>// Client A
+Op([
+    DelGroup([DelSkip(7)]), DelGroup([DelGroup([]), DelChars(7)]),
+], [
+    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;A&quot;}), AddSkip(14)]),
+])
+
+// Client B
+Op([
+    DelGroup([DelGroup([]), DelSkip(7)]), DelWithGroup([DelSkip(7), DelChars(1)]),
+], [
+    AddSkip(1), AddWithGroup([AddSkip(8), AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;B&quot;}, [])]),
+])
+</code></pre>
+<p>And we know exactly what each result is generated from applying each operation to our original document (first shown at the beginning of this document):</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// Original document
+&lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/h1&gt;
+&lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world!&lt;/p&gt;
+
+
+// Client A
+&lt;h1&gt;&lt;caret client=&quot;A&quot; /&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/p&gt;
+
+// Client B
+&lt;h1&gt;Hello &lt;/h1&gt;
+&lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world&lt;caret client=B&quot; /&gt;&lt;/p&gt;
+#}</code></pre></pre>
+<p>But when transforming, by design, we avoid needing knowledge of what the document looks like. So let's evaluate these operations as though we didn't know what the result was going to look like.</p>
+<p>In particular, we want to look at how the paragraph, <code>&quot; world!&quot;</code>, is modified. Client A has deleted it entirely, whereas Client B deleted a character and inserted its caret:</p>
+<pre><code>Op([DelGroup([DelGroup([]), DelChars(7)])], [])
+Op([DelWithGroup([DelSkip(7), DelChars(1)])], [AddWithGroup([AddSkip(8), AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;B&quot;}, [])])])
+</code></pre>
+<p>We can take the union of the deletions and since there is only one addition component, select it. When we transform the two, our result looks like this:</p>
+<pre><code>Op([DelGroup([DelGroup([]), DelChars(7)])], [AddGroup({&quot;tag&quot;: &quot;caret&quot;, &quot;client&quot;: &quot;B&quot;}, [])])
+</code></pre>
+<p>If you imagine a document consisting of only this element, and we see that one client has deleted the entire element, we accidentally wind up with a client's caret being in the root element (instead of block element). See [Splitting image](./diary-markdown.md].</p>
+<p>To avoid this problem, the Delall hack delets alls newly inserted elements from an insertion that is transformed against a deletion that delets all content. We can verify any arbitrary <code>DelGroup</code> delets all of its inner contents using a recursive check.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="markdown.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="diary-carets.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a href="markdown.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a href="diary-carets.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
