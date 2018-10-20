@@ -174,6 +174,24 @@ fn run() -> Result<(), Error> {
                     ",
                     self_path = SELF_PATH,
                 )?;
+                eprintln!();
+
+                if cfg!(windows) {
+                    eprintln!("ci: perform test (windows)");
+                    execute!(
+                        r"
+                            cargo test
+                        ",
+                    )?;
+                } else {
+                    eprintln!("ci: perform test (posix)");
+                    execute!(
+                        r"
+                            {self_path} test
+                        ",
+                        self_path = SELF_PATH,
+                    )?;
+                }
             }
         },
 
@@ -395,15 +413,18 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::Test { args } => {
-            eprintln!("building server...");
+            // Unit test
+            eprintln!("[unit tests]");
             execute!(
                 r"
-                    {self_path} server-build
+                    cargo test
                 ",
-                self_path = SELF_PATH,
             )?;
+            eprintln!();
 
-            eprintln!("running server...");
+            eprintln!("[integration tests]");
+
+            // Spawn the server for the integration test
             let _server_guard = command!(
                 r"
                     {self_path} server {args}
@@ -414,7 +435,7 @@ fn run() -> Result<(), Error> {
 
             ::std::thread::sleep(::std::time::Duration::from_millis(3000));
 
-            eprintln!("running tests...");
+            // Run the integration test
             execute!(
                 r"
                     cd tests

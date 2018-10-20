@@ -147,7 +147,7 @@ impl Checkpoint {
     }
 }
 
-
+#[cfg(feature = "integration")]
 #[test]
 fn main() {
     commandspec::forward_ctrlc();

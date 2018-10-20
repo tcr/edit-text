@@ -51,11 +51,6 @@ script:
   # Run test
   - ./tools ci
 
-  # TODO consolidate these tests
-  - cd oatie && cargo test && cd ..
-  - cd edit-common && cargo test && cd ..
-  - ./tools test
-
 deploy:
   provider: pages
   skip-cleanup: true
