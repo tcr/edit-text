@@ -150,9 +150,17 @@ fn run() -> Result<(), Error> {
         Cli::Ci => {
             let output = command!(
                 "
-                    git --no-pager diff --name-only master
+                    git --no-pager diff --name-only origin/master
                 "
             )?.output()?.stdout;
+
+            eprintln!("touched files:");
+            execute!(
+                "
+                    git --no-pager diff --name-only origin/master
+                "
+            )?;
+            eprintln!();
 
             let only_docs = String::from_utf8_lossy(&output)
                 .lines()
