@@ -149,7 +149,7 @@
 <pre><code>$ rustup show active-toolchain
 nightly-2018-09-25-x86_64-apple-darwin  # for example
 </code></pre>
-<p>This command should print a rust version that is equivalent to the contents of the <code>./rust-toolchain</code> file. This is the version of the nightly Rust compiler the project currently depends on. This file is updated periodically; <code>rustup</code> will automatically manages downloading and using the correct compiler version for you.</p>
+<p>This command should print a rust version that is equivalent to the contents of the <code>./rust-toolchain</code> file. This is the version of the nightly Rust compiler the project currently depends on. This file is updated periodically; <code>rustup</code> will automatically manage downloading and using the correct compiler version for you.</p>
 <p><strong>Global build tools:</strong> The build environment requires some Rust binary dependencies to be installed using <code>cargo install</code>. You can run the following commands to install these requirements one at a time:</p>
 <pre><code># The diesel command creates database files and manages migrations.
 cargo install diesel_cli --no-default-features --features sqlite-bundled
