@@ -1,5 +1,3 @@
-#![feature(crate_in_paths)]
-
 extern crate crossbeam_channel;
 extern crate edit_client;
 extern crate edit_common;
@@ -49,6 +47,7 @@ fn init_new_client(
         state: Client {
             client_id: client_id.to_owned(),
             client_doc: ClientDoc::new(),
+            last_controls: None,
 
             monkey: Arc::new(AtomicBool::new(false)),
             alive: Arc::new(AtomicBool::new(true)),

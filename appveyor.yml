@@ -93,4 +93,5 @@ build: false
 # environment variable.
 test_script:
 - git show-ref --head | grep refs/remotes/origin/master || true
-- .\tools build
+
+- .\tools ci
