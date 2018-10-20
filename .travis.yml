@@ -55,3 +55,12 @@ script:
   - cd oatie && cargo test && cd ..
   - cd edit-common && cargo test && cd ..
   - ./tools test
+
+deploy:
+  provider: pages
+  skip-cleanup: true
+  github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
+  keep-history: true
+  local-dir: docs/book/
+  on:
+    branch: staging
