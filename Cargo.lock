@@ -255,18 +255,6 @@ dependencies = [
 
 [[package]]
 name = "commandspec"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "ctrlc 3.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "failure 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "lazy_static 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.2.43 (registry+https://github.com/rust-lang/crates.io-index)",
- "shlex 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "commandspec"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
@@ -2489,7 +2477,7 @@ dependencies = [
 name = "tests"
 version = "0.1.0"
 dependencies = [
- "commandspec 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "commandspec 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "fantoccini 0.10.0 (git+http://github.com/tcr/fantoccini)",
  "futures 0.1.25 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3232,7 +3220,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum cloudabi 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "ddfc5b9aa5d4507acaf872de71051dfd0e309860e88966e1051e462a077aac4f"
 "checksum colored 1.6.1 (registry+https://github.com/rust-lang/crates.io-index)" = "dc0a60679001b62fb628c4da80e574b9645ab4646056d7c9018885efffe45533"
 "checksum commandspec 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7f6dc2331fc5a305e80f26e275a4e543cb1b3ef8d12a4777a1afa1c260c20fe8"
-"checksum commandspec 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "dcdf7145087881c690812ac4efd8adb2132217f3f0079bd673f871b44484e5e7"
 "checksum console_error_panic_hook 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "6c5dd2c094474ec60a6acaf31780af270275e3153bafff2db5995b715295762e"
 "checksum cookie 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)" = "746858cae4eae40fff37e1998320068df317bc247dc91a67c6cfa053afdc2abb"
 "checksum core-foundation 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "25bfd746d203017f7d5cbd31ee5d8e17f94b6521c7af77ece6c9e4b2d4b16c67"
