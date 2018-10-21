@@ -152,9 +152,13 @@ cargo install diesel_cli --no-default-features --features sqlite-bundled
 # Watch an entire directory for changes with cargo-watch
 cargo install cargo-watch
 </code></pre>
-<p><strong>Node.js:</strong> You will also need to make sure you have <a href="http://nodejs.org/">Node.js</a> installed. The build tool uses <code>npm</code> to manage frontend dependencies by installing and managing JavaScript packages. To check if you have a recent version of Node, see if the output of this command is <code>&gt;= v6.0.0</code>:</p>
+<p><strong>Node.js:</strong> To build the frontend you will need to install <a href="http://nodejs.org/">Node.js</a> and <a href="http://yarnpkg.com">Yarn</a>. To install Node.js, see <a href="https://nodejs.org/en/download/package-manager/">installation instructions for your OS</a>. To check if you have a recent version of Node.js installed, see if the output of this command is <code>&gt;= v6.0.0</code>:</p>
 <pre><code>$ node -v
-v9.5.0
+v10.12.0  # for example
+</code></pre>
+<p>The frontend is written partly in TypeScript, and the build tool uses Yarn to install and manage its JavaScript package dependencies. To install yarn, follow the <a href="https://yarnpkg.com/en/docs/install#mac-stable">installation instructions for your OS</a> or just run <code>npm i -g yarn</code>. To see if Yarn is installed and available:</p>
+<pre><code>$ yarn -v
+v1.10.1  # for example
 </code></pre>
 <a class="header" href="#usage" id="usage"><h2>Usage</h2></a>
 <p>Clone the repository from Github:</p>
