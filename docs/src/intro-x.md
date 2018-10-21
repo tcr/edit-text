@@ -1,66 +1,64 @@
-# Build Tool ./x.rs
+# Build Tool ./tools
 
-`./x.rs` is the build tool. In order to run it, you'll need to install [`cargo-script`](https://github.com/DanielKeep/cargo-script):
+`./tools` is the build tool. Invocation will be different if you are on Windows or a Linux or macOS system:
 
 ```
-cargo install cargo-script
+./tools help  # Linux, macOS, and Powershell
+tools help    # Windows (cmd.exe)
 ```
 
-Then while you're in the root of the `edit-text/` respository, from your command line you can run:
-
-```sh
-./x.rs help
-```
+Please substitute either `./tools` or `tools` in the examples below accordingly. Running the `help` should display a list of build steps that available for edit-text.
 
 ## Server building
 
 To launch the edit-text server:
 
 ```sh
-./x.rs server-build
+./tools server-build
 ```
 
 To run it on port `8000`:
 
 ```sh
-./x.rs server
+./tools server
 ```
 
 ## Frontend build
 
-The frontend is all the JavaScript code that runs in the browser, and optionally including the WASM build system. To build this, you should run `npm install` in the `edit-frontend/` directory:
+The frontend is all the JavaScript code that runs in the browser, and optionally including the WASM build system. To build the frontend, run this from the root directory:
 
 ```sh
-cd edit-frontend
-npm install
+./tools frontend-build
 ```
 
-This will locally install Webpack, Typescript, and all JavaScript dependencies required by the frontend. To then build the frontend, run this from the root directory:
+If you want to launch a long-lived script to build the frontend and rebuild each time a frontend file changes:
 
 ```sh
-./x.rs frontend-build
+./tools frontend-watch
 ```
 
-If you want to launch a long-lived script to build the frontend and rebuild each time a relevant file changes:
+### Building WASM
+
+Building *just* the frontend WebAssembly component generated from `edit-client` can be done using this command:
 
 ```sh
-./x.rs frontend-watch
+./tools wasm-build
 ```
 
-Building the frontend component may also require that you use build the WASM bundle from `edit-client`, which can be generated with this command:
-
-```sh
-./x.rs wasm-build
-```
-
-This will compile the wasm bundle and save it to `edit-frontend/src/bindgen`, which will be linked with the frontend code bundle (generated using `frontend-build` or `frontend-watch`).
+This will compile the wasm bundle and save it to `edit-frontend/src/bindgen`, which will be linked with the frontend code bundle. WASM is automatically compiled during the `frontend-build` or `frontend-watch` steps.
 
 ## Testing
 
-This command will run comprehensive end-to-end tests. It's used by CI to test all new pull requests:
+This command will run all unit tests as well as integration tests (end-to-end testing using a machine-controlled browser).
 
 ```sh
-./x.rs test
+./tools test
+```
+
+If you're in a continuous integration (CI) environment, you can perform all relevant test steps for your branch by running:
+
+```sh
+./tool sh
 ```
 
 ## Client Proxy
@@ -68,7 +66,7 @@ This command will run comprehensive end-to-end tests. It's used by CI to test al
 If you are testing changes to the `edit-client` library, you have the option of choosing between running client code in the browser (via WebAssembly) or running it in a local Rust process, having all commands proxied through websockets.
 
 ```sh
-./x.rs client-proxy
+./tools client-proxy
 ```
 
 ## Building the book
@@ -76,13 +74,13 @@ If you are testing changes to the `edit-client` library, you have the option of 
 You can build the book with the book-build command:
 
 ```sh
-./x.rs book-build
+./tools book-build
 ```
 
 Or watch for all changes as they are being made with book-watch.
 
 ```sh
-./x.rs book-watch
+./tools book-watch
 ```
 
 By navigating to <http://localhost:3000/>, you'll see the page refresh automatically as you edit markdown files under `docs-src/`.
