@@ -150,7 +150,7 @@ impl Checkpoint {
 #[cfg(feature = "integration")]
 #[test]
 fn main() {
-    commandspec::forward_ctrlc();
+    commandspec::cleanup_on_ctrlc();
 
     let test_id1 = format!("test{}", random_id());
     let test_id2 = test_id1.clone();
@@ -217,7 +217,7 @@ async fn bootstrap(
         // .stderr(Stdio::inherit())
         .stdout(Stdio::null())
         .stderr(Stdio::null())
-        .spawn_guard()?;
+        .scoped_spawn()?;
 
     // Wait for webdriver startup.
     await!(sleep_ms(3_000));

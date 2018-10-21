@@ -42,6 +42,11 @@ before_install:
   - if [ $TRAVIS_EVENT_TYPE = "cron" ]; then echo 'nightly' > rust-toolchain; fi
   - rustc -V
 
+  # Get access to origin/ branches
+  # https://stackoverflow.com/a/47441734/6728025
+  - git config remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
+  - git fetch --unshallow --tags
+
 script:
   # Prepare X service
   - export DISPLAY=:99.0
