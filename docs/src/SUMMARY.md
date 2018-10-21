@@ -3,7 +3,7 @@
 - [Introduction](./intro.md)
   - [Getting Started](./getting-started.md)
   - [System Overview](./intro-system.md)
-  - [Build System ./x.rs](./intro-x.md)
+  - [Build System ./tools](./intro-x.md)
   - [Testing](./intro-testing.md)
 - [Rich Text](./rtf.md)
   - [Working with Documents](./working-with-documents.md)
