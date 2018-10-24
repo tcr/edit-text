@@ -58,7 +58,7 @@ This command will run all unit tests as well as integration tests (end-to-end te
 If you're in a continuous integration (CI) environment, you can perform all relevant test steps for your branch by running:
 
 ```sh
-./tool sh
+./tool ci
 ```
 
 ## Client Proxy
