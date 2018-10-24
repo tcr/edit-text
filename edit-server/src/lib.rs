@@ -1,5 +1,5 @@
-#![feature(extern_in_paths, nll)]
-#![feature(plugin)]
+#![feature(extern_in_paths, nll, plugin)]
+#![allow(proc_macro_derive_resolution_fallback)]
 
 extern crate colored;
 extern crate crossbeam_channel;
