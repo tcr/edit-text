@@ -10,12 +10,14 @@ use self::cargo_watch::*;
 use clap::Shell;
 use commandspec::*;
 use failure::Error;
-// use log::LevelFilter;
+use log::LevelFilter;
 use mdbook::MDBook;
 use std::env;
 use std::path::{Path};
 use structopt::clap::AppSettings;
 use structopt::StructOpt;
+use diesel::connection::Connection;
+use diesel::sqlite::SqliteConnection;
 use wasm_bindgen_cli_support::Bindgen;
 
 #[cfg(windows)]
@@ -37,13 +39,12 @@ fn abs_string_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
 fn main() {
     // Only call commandspec cleanup on commands that don't invoke cargo-watch.
     // This is a crude but probably correct hueristic to predict when we'll do so.
-    if std::env::args().nth(1).map(|x| x.find("watch").is_some()).unwrap_or(false) {
+    if !std::env::args().nth(1).map(|x| x.find("watch").is_some()).unwrap_or(false) {
         commandspec::cleanup_on_ctrlc();
+        env_logger::Builder::from_default_env()
+            .filter_level(LevelFilter::Info)
+            .init();
     }
-    // TODO disabled because watchexec wants to set its own logger -.-
-    // env_logger::Builder::from_default_env()
-    //     .filter_level(LevelFilter::Info)
-    //     .init();
 
     match run() {
         Ok(_) => {},
@@ -58,17 +59,17 @@ fn main() {
 #[derive(StructOpt)]
 #[structopt(name = "./tools", about = "Build tools and commands for developing edit-text.", author = "")]
 enum Cli {
-    #[structopt(name = "wasm-build", about = "Compile the WebAssembly bundle.")]
-    Wasm {
-        #[structopt(name = "no-vendor")]
-        no_vendor: bool,
-    },
+    #[structopt(name = "build")]
+    Build { args: Vec<String> },
 
-    #[structopt(name = "wasm-watch", about = "Watch the WebAssembly bundle.")]
-    WasmWatch {
-        #[structopt(name = "no-vendor")]
-        no_vendor: bool,
-    },
+    #[structopt(name = "book-build", about = "Builds the book.")]
+    BookBuild,
+
+    #[structopt(name = "book-watch", about = "Watches and rebuilds the book.")]
+    BookWatch,
+
+    #[structopt(name = "ci", about = "Executes testing for CI")]
+    Ci,
 
     #[structopt(name = "client-proxy", about = "Run client code in your terminal.")]
     ClientProxy { args: Vec<String> },
@@ -76,8 +77,26 @@ enum Cli {
     #[structopt(name = "client-proxy-build", about = "Build the client proxy.")]
     ClientProxyBuild { args: Vec<String> },
 
-    #[structopt(name = "oatie-build", about = "Build the operational transform library.", raw(setting = "AppSettings::Hidden"))]
-    OatieBuild { args: Vec<String> },
+    #[structopt(name = "completions", about = "Generates completion scripts for your shell.", raw(setting = "AppSettings::Hidden"))]
+    Completions {
+        #[structopt(name = "SHELL")]
+        shell: Shell,
+    },
+
+    #[structopt(name = "deploy", about = "Deploy to sandbox.edit.io.", raw(setting = "AppSettings::Hidden"))]
+    Deploy {
+        #[structopt(long = "skip-download")]
+        skip_download: bool,
+    },
+
+    #[structopt(name = "frontend-build", about = "Bundle the frontend JavaScript code.")]
+    FrontendBuild { args: Vec<String> },
+
+    #[structopt(name = "frontend-watch", about = "Watch the frontend JavaScript code, building continuously.")]
+    FrontendWatch { args: Vec<String> },
+
+    #[structopt(name = "logs", about = "Dump database logs.")]
+    Logs { args: Vec<String> },
 
     #[structopt(name = "server", about = "Run the edit-text server.")]
     MercutioServerRun {
@@ -89,44 +108,31 @@ enum Cli {
     #[structopt(name = "server-build", about = "Build the edit-text server.")]
     MercutioServerBuild { args: Vec<String> },
 
+    #[structopt(name = "oatie-build", about = "Build the operational transform library.", raw(setting = "AppSettings::Hidden"))]
+    OatieBuild { args: Vec<String> },
+
     #[structopt(name = "replay", about = "Replay an edit-text log.", raw(setting = "AppSettings::Hidden"))]
     Replay { args: Vec<String> },
 
     #[structopt(name = "test")]
-    Test { args: Vec<String> },
+    Test {
+        #[structopt(long = "integration", help = "Run integration tests as well.")]
+        integration: bool,
 
-    #[structopt(name = "build")]
-    Build { args: Vec<String> },
-
-    #[structopt(name = "frontend-build", about = "Bundle the frontend JavaScript code.")]
-    FrontendBuild { args: Vec<String> },
-
-    #[structopt(name = "frontend-watch", about = "Watch the frontend JavaScript code, building continuously.")]
-    FrontendWatch { args: Vec<String> },
-
-    #[structopt(name = "deploy", about = "Deploy to sandbox.edit.io.", raw(setting = "AppSettings::Hidden"))]
-    Deploy {
-        #[structopt(long = "skip-download")]
-        skip_download: bool,
+        args: Vec<String>
     },
 
-    #[structopt(name = "book-build", about = "Builds the book.")]
-    BookBuild,
-
-    #[structopt(name = "book-watch", about = "Watches and rebuilds the book.")]
-    BookWatch,
-
-    #[structopt(name = "completions", about = "Generates completion scripts for your shell.", raw(setting = "AppSettings::Hidden"))]
-    Completions {
-        #[structopt(name = "SHELL")]
-        shell: Shell,
+    #[structopt(name = "wasm-build", about = "Compile the WebAssembly bundle.")]
+    Wasm {
+        #[structopt(name = "no-vendor")]
+        no_vendor: bool,
     },
 
-    #[structopt(name = "logs", about = "Dump database logs.")]
-    Logs { args: Vec<String> },
-
-    #[structopt(name = "ci", about = "Executes testing for CI")]
-    Ci,
+    #[structopt(name = "wasm-watch", about = "Watch the WebAssembly bundle.")]
+    WasmWatch {
+        #[structopt(name = "no-vendor")]
+        no_vendor: bool,
+    },
 }
 
 
@@ -137,11 +143,6 @@ fn run() -> Result<(), Error> {
     // Pass arguments directly to subcommands: don't capture -h, -v, or verification
     // Do this by adding "--" into the args flag after the subcommand.
     let mut args = ::std::env::args().collect::<Vec<_>>();
-    // TODO this is broken for {self_path} server, or {self_path} deploy, and
-    // both require different behavior! why?
-    if args.len() > 2 && args[1] != "help" {
-        args.insert(2, "--".into());
-    }
 
     // We interpret the --release flag at the build level.
     let release = args.iter().find(|x| *x == "--release").is_some();
@@ -331,14 +332,17 @@ fn run() -> Result<(), Error> {
                 eprintln!("Building and running edit-text server (debug mode)...");
             }
 
-            if !Path::new("edit-server/edit.sqlite3").exists() {
+            let db_url = "edit-server/edit.sqlite3";
+            if !Path::new(db_url).exists() {
                 eprintln!("Building database on first startup...");
-                execute!(
-                    r"
-                        cd edit-server
-                        diesel setup
-                    ",
-                )?;
+
+                SqliteConnection::establish(db_url)?;
+                // execute!(
+                //     r"
+                //         cd edit-server
+                //         diesel setup
+                //     ",
+                // )?;
             } else {
                 println!("Database path: edit-server/edit.sqlite3");
             }
@@ -426,36 +430,38 @@ fn run() -> Result<(), Error> {
             )?;
         }
 
-        Cli::Test { args } => {
+        Cli::Test { integration, args } => {
             // Unit test
-            eprintln!("[unit tests]");
+            eprintln!("[running unit tests]");
             execute!(
                 r"
                     cargo test
                 ",
             )?;
-            eprintln!();
 
-            eprintln!("[integration tests]");
+            if integration {
+                // Spawn the server for the integration test
+                let _server_guard = Some(command!(
+                    r"
+                        {self_path} server {args}
+                    ",
+                    self_path = SELF_PATH,
+                    args = args,
+                )?.scoped_spawn().unwrap());
 
-            // Spawn the server for the integration test
-            let _server_guard = command!(
-                r"
-                    {self_path} server {args}
-                ",
-                self_path = SELF_PATH,
-                args = args,
-            )?.scoped_spawn().unwrap();
+                // Sleep for 3s after server boots.
+                ::std::thread::sleep(::std::time::Duration::from_millis(3000));
 
-            ::std::thread::sleep(::std::time::Duration::from_millis(3000));
-
-            // Run the integration test
-            execute!(
-                r"
-                    cd tests
-                    cargo test --features integration
-                ",
-            )?;
+                // Unit test
+                eprintln!();
+                eprintln!("[running integration tests]");
+                execute!(
+                    r"
+                        cd tests
+                        cargo test --features integration
+                    ",
+                )?;
+            }
         }
 
         Cli::Build { args } => {
