@@ -207,6 +207,7 @@ async fn bootstrap(
         Driver::Gecko => {
             let mut cmd = command!("geckodriver")?;
             cmd.arg("-p").arg(port.to_string());
+            cmd.env("MOZ_HEADLESS", "1");
             cmd
         }
     };
