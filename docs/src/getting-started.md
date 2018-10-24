@@ -16,8 +16,6 @@ This command should print a rust version that is equivalent to the contents of t
 ```
 # The diesel command creates database files and manages migrations.
 cargo install diesel_cli --no-default-features --features sqlite-bundled
-# Watch an entire directory for changes with cargo-watch
-cargo install cargo-watch
 ```
 
 **Node.js:** To build the frontend you will need to install [Node.js](http://nodejs.org/) and [Yarn](http://yarnpkg.com). To install Node.js, see [installation instructions for your OS](https://nodejs.org/en/download/package-manager/). To check if you have a recent version of Node.js installed, see if the output of this command is `>= v6.0.0`:

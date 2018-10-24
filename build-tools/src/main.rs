@@ -1,14 +1,16 @@
 // Don't add additional noise to the build tools.
-#![deny(warnings)]
+// #![deny(warnings)]
 
 #[macro_use] extern crate log;
 
 mod mdbook_bin;
+mod cargo_watch;
 
+use self::cargo_watch::*;
 use clap::Shell;
 use commandspec::*;
 use failure::Error;
-use log::LevelFilter;
+// use log::LevelFilter;
 use mdbook::MDBook;
 use std::env;
 use std::path::{Path};
@@ -33,10 +35,15 @@ fn abs_string_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
 
 // Thin wrapper around run()
 fn main() {
-    commandspec::cleanup_on_ctrlc();
-    env_logger::Builder::from_default_env()
-        .filter_level(LevelFilter::Info)
-        .init();
+    // Only call commandspec cleanup on commands that don't invoke cargo-watch.
+    // This is a crude but probably correct hueristic to predict when we'll do so.
+    if std::env::args().nth(1).map(|x| x.find("watch").is_some()).unwrap_or(false) {
+        commandspec::cleanup_on_ctrlc();
+    }
+    // TODO disabled because watchexec wants to set its own logger -.-
+    // env_logger::Builder::from_default_env()
+    //     .filter_level(LevelFilter::Info)
+    //     .init();
 
     match run() {
         Ok(_) => {},
@@ -207,12 +214,13 @@ fn run() -> Result<(), Error> {
                     rustup target add wasm32-unknown-unknown
                 "
             )?;
-            execute!(
-                r"
-                    cargo watch -i edit-frontend/** -i tools -x 'run --bin build-tools -- wasm-build {no_vendor}'
-                ",
-                no_vendor = if no_vendor { Some("--no-vendor") } else { None },
-            )?;
+
+            let _ = no_vendor;
+
+            watchexec::run(watchexec_args(
+                "echo [Starting build.] && cargo run --bin build-tools --quiet -- wasm-build && echo [Build complete.]",
+                &["edit-frontend/**", "build-tools/**"],
+            ))?;
         },
 
         Cli::Wasm { no_vendor } => {
@@ -530,11 +538,13 @@ fn run() -> Result<(), Error> {
                 ",
             )?;
 
-            let _cargo_watch_guard = command!(
-                r"
-                    cargo watch -i edit-frontend/** -i tools -x 'run --bin build-tools -- wasm-build'
-                ",
-            )?.scoped_spawn()?;
+            std::thread::spawn(|| -> Result<(), Error> {
+                watchexec::run(watchexec_args(
+                    "echo [Starting build.] && cargo run --bin build-tools --quiet -- wasm-build && echo [Build complete.]",
+                    &["edit-frontend/**", "build-tools/**"],
+                ))?;
+                Ok(())
+            });
 
             execute!(
                 r"
