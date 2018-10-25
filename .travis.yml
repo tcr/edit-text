@@ -26,26 +26,25 @@ branches:
     - /^greenkeeper/.*$/
 
 before_install:
-  # Install geckodriver
-  - wget https://github.com/mozilla/geckodriver/releases/download/v0.23.0/geckodriver-v0.23.0-linux64.tar.gz
-  - mkdir geckodriver
-  - tar -xzf geckodriver-*.tar.gz -C geckodriver
-  - export PATH=$PATH:$PWD/geckodriver
-
-  # Install commands
-  - command -v diesel || cargo install --debug diesel_cli --no-default-features --features sqlite-bundled
-  
-  # Test node version
-  - node -v
-  
-  # Check travis mode type
-  - if [ $TRAVIS_EVENT_TYPE = "cron" ]; then echo 'nightly' > rust-toolchain; fi
-  - rustc -V
-
   # Get access to origin/ branches
   # https://stackoverflow.com/a/47441734/6728025
   - git config remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
   - git fetch --unshallow --tags
+
+  # Test node version
+  - node -v
+  
+  # Test Rust version
+  # - A daily cron job tests the latest nightly, to keep a running track record
+  #   of which nightly versions the repo is compatible without modification.
+  - if [ $TRAVIS_EVENT_TYPE = "cron" ]; then echo 'nightly' > rust-toolchain; fi
+  - rustc -V
+  
+  # Install geckodriver 0.23
+  - wget https://github.com/mozilla/geckodriver/releases/download/v0.23.0/geckodriver-v0.23.0-linux64.tar.gz
+  - mkdir geckodriver
+  - tar -xzf geckodriver-*.tar.gz -C geckodriver
+  - export PATH=$PATH:$PWD/geckodriver
 
 script:
   # Prepare X service

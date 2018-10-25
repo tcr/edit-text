@@ -332,17 +332,16 @@ fn run() -> Result<(), Error> {
                 eprintln!("Building and running edit-text server (debug mode)...");
             }
 
-            let db_url = "edit-server/edit.sqlite3";
-            if !Path::new(db_url).exists() {
+            let database_url = "edit-server/edit.sqlite3";
+            if !Path::new(database_url).exists() {
                 eprintln!("Building database on first startup...");
 
-                SqliteConnection::establish(db_url)?;
-                // execute!(
-                //     r"
-                //         cd edit-server
-                //         diesel setup
-                //     ",
-                // )?;
+                use migrations_internals as migrations;
+                use std::io::stdout;
+
+                let conn = SqliteConnection::establish(database_url)?;
+                migrations::setup_database(&conn)?;
+                migrations::run_pending_migrations_in_directory(&conn, Path::new("edit-server/migrations"), &mut stdout())?;
             } else {
                 println!("Database path: edit-server/edit.sqlite3");
             }
