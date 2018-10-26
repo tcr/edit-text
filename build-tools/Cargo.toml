@@ -9,9 +9,11 @@ commandspec = "<0.12.0"
 failure = "0.1"
 structopt = "0.2"
 clap = "2.32"
+taken = "0.1.1"
+rand = "0.4.2"
 
 # diesel-cli
-diesel = "1.3"
+diesel = { version = "1.3", features = ["sqlite"] }
 migrations_internals = "~1.3.0"
 
 # mdbook
@@ -29,3 +31,16 @@ wasm-bindgen-shared = { version = "0.2" }
 
 # cargo-watch
 watchexec = "1.9"
+
+# integration tests
+tokio-timer = "0.2"
+tokio = { version = "0.1.0", features = ["async-await-preview"] }
+tokio-async-await = "0.1.4"
+fantoccini = { git = "http://github.com/tcr/fantoccini" }
+futures = "0.1.20"
+serde_json = "*"
+rustc-serialize = "*"
+
+[features]
+integration = []
+default = []

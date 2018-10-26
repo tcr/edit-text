@@ -456,8 +456,8 @@ fn run() -> Result<(), Error> {
                 eprintln!("[running integration tests]");
                 execute!(
                     r"
-                        cd tests
-                        cargo test --features integration
+                        cd build-tools
+                        cargo test --features integration integration_
                     ",
                 )?;
             }
