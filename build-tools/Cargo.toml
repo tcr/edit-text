@@ -36,10 +36,9 @@ watchexec = "1.9"
 tokio-timer = "0.2"
 tokio = { version = "0.1.0", features = ["async-await-preview"] }
 tokio-async-await = "0.1.4"
-fantoccini = { git = "http://github.com/tcr/fantoccini" }
+fantoccini = "0.11"
 futures = "0.1.20"
 serde_json = "*"
-rustc-serialize = "*"
 
 [features]
 integration = []

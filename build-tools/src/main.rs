@@ -55,9 +55,9 @@ fn main() {
     }
 }
 
-/// edit-text build scripts
+/// edit-text build tools
 #[derive(StructOpt)]
-#[structopt(name = "./tools", about = "Build tools and commands for developing edit-text.", author = "")]
+#[structopt(name = "tools", bin_name = "tools", about = "Build tools and commands for developing edit-text.", author = "")]
 enum Cli {
     #[structopt(name = "build")]
     Build { args: Vec<String> },
@@ -114,9 +114,12 @@ enum Cli {
     #[structopt(name = "replay", about = "Replay an edit-text log.", raw(setting = "AppSettings::Hidden"))]
     Replay { args: Vec<String> },
 
-    #[structopt(name = "test")]
+    #[structopt(name = "test", about = "Build tools and commands for developing edit-text.", author = "")]
     Test {
-        #[structopt(long = "integration", help = "Run integration tests as well.")]
+        #[structopt(long = "no-unit", help = "Disable unit tests (which are run by default).")]
+        no_unit: bool,
+
+        #[structopt(long = "integration", help = "Enable integration tests.")]
         integration: bool,
 
         args: Vec<String>
@@ -137,8 +140,14 @@ enum Cli {
 
 
 fn run() -> Result<(), Error> {
+    // We want to set this to the executable directly, rather than cargo build,
+    // because we can't re-build the currently running executable on Windows.
     #[allow(non_snake_case)]
-    let SELF_PATH = vec!["cargo", "run", "--bin", "build-tools", "--"];
+    let SELF_PATH = if cfg!(windows) {
+        vec![".\\target\\debug\\build-tools.exe"]
+    } else {
+        vec!["./target/debug/build-tools"]
+    };
 
     // Pass arguments directly to subcommands: don't capture -h, -v, or verification
     // Do this by adding "--" into the args flag after the subcommand.
@@ -194,14 +203,15 @@ fn run() -> Result<(), Error> {
                     eprintln!("ci: perform test (windows)");
                     execute!(
                         r"
-                            cargo test
+                            {self_path} test
                         ",
+                        self_path = SELF_PATH,
                     )?;
                 } else {
                     eprintln!("ci: perform test (posix)");
                     execute!(
                         r"
-                            {self_path} test
+                            {self_path} test --integration
                         ",
                         self_path = SELF_PATH,
                     )?;
@@ -429,17 +439,35 @@ fn run() -> Result<(), Error> {
             )?;
         }
 
-        Cli::Test { integration, args } => {
-            // Unit test
-            eprintln!("[running unit tests]");
-            execute!(
-                r"
-                    cargo test
-                ",
-            )?;
+        Cli::Test {
+            no_unit,
+            integration,
+            args,
+        } => {
+            if !no_unit {
+                // Unit test
+                eprintln!("[running unit tests]");
+                execute!(
+                    r"
+                        cargo test
+                    ",
+                )?;
+            }
 
             if integration {
+                // Unit test
+                // eprintln!();
+                eprintln!("[building integration tests]");
+                execute!(
+                    r"
+                        cd build-tools
+                        cargo test --features integration integration_ --no-run
+                    ",
+                )?;
+
                 // Spawn the server for the integration test
+                eprintln!();
+                eprintln!("[launching persistent edit-text server]");
                 let _server_guard = Some(command!(
                     r"
                         {self_path} server {args}
