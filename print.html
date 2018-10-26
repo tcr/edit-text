@@ -150,10 +150,6 @@
 nightly-2018-09-25-x86_64-apple-darwin  # for example
 </code></pre>
 <p>This command should print a rust version that is equivalent to the contents of the <code>./rust-toolchain</code> file. This is the version of the nightly Rust compiler the project currently depends on. This file is updated periodically; <code>rustup</code> will automatically manage downloading and using the correct compiler version for you.</p>
-<p><strong>Global build tools:</strong> The build environment requires some Rust binary dependencies to be installed using <code>cargo install</code>. You can run the following commands to install these requirements one at a time:</p>
-<pre><code># The diesel command creates database files and manages migrations.
-cargo install diesel_cli --no-default-features --features sqlite-bundled
-</code></pre>
 <p><strong>Node.js:</strong> To build the frontend you will need to install <a href="http://nodejs.org/">Node.js</a> and <a href="http://yarnpkg.com">Yarn</a>. To install Node.js, see <a href="https://nodejs.org/en/download/package-manager/">installation instructions for your OS</a>. To check if you have a recent version of Node.js installed, see if the output of this command is <code>&gt;= v6.0.0</code>:</p>
 <pre><code>$ node -v
 v10.12.0  # for example
