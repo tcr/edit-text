@@ -5,7 +5,6 @@ members = [
     "edit-common",
     "edit-server",
     "edit-client",
-    "tests",
 ]
 
 [profile.dev]

@@ -1,22 +1,12 @@
 // The nightly features that are commonly needed with async / await
 #![recursion_limit="128"]
 #![feature(await_macro, async_await, futures_api)]
+
 #![feature(integer_atomics)]
 #![allow(unused)]
 
-extern crate fantoccini;
-extern crate futures;
-#[macro_use]
-extern crate commandspec;
-#[macro_use]
-extern crate taken;
-extern crate rand;
-#[macro_use]
-extern crate failure;
-extern crate rustc_serialize;
 #[macro_use]
 extern crate tokio;
-extern crate tokio_timer;
 
 use fantoccini::{
     Client,
@@ -36,6 +26,7 @@ use std::sync::atomic::{
     AtomicU16,
     Ordering,
 };
+use taken::*;
 use std::sync::{
     Arc,
     Barrier,
@@ -74,11 +65,11 @@ enum Driver {
 
 
 struct JsCode<'a> {
-    client: &'a Client,
+    client: &'a mut Client,
     value: String,
 }
 
-fn code<'a>(client: &'a Client) -> JsCode<'a> {
+fn code<'a>(client: &'a mut Client) -> JsCode<'a> {
     JsCode {
         client: client,
         value: "".to_string(),
@@ -114,11 +105,11 @@ document.querySelector('.edit-text').dispatchEvent(evt);
             "#, x, y))
     }
 
-    fn execute(self) -> impl Future<Item = ::rustc_serialize::json::Json, Error = error::CmdError> {
+    fn execute(self) -> impl Future<Item = serde_json::value::Value, Error = error::CmdError> {
         self.client.execute(&self.value, vec![])
     }
 
-    fn debug_end_of_line(self) -> impl Future<Item = ::rustc_serialize::json::Json, Error = error::CmdError> {
+    fn debug_end_of_line(self) -> impl Future<Item = serde_json::value::Value, Error = error::CmdError> {
         self
                 .js(r#"
 
@@ -135,6 +126,7 @@ let clientY = marker.getBoundingClientRect().top;
     }
 }
 
+// Sync barrier, optional sequential barrier.
 struct Checkpoint(Arc<Barrier>, Option<Arc<Barrier>>);
 
 impl Checkpoint {
@@ -145,11 +137,41 @@ impl Checkpoint {
         // Then synchronize both clients.
         self.0.wait();
     }
+
+    // // Sequential until next .sync()
+    // fn sequential() {
+    //      // TODO
+    // }
 }
 
-#[cfg(feature = "integration")]
-#[test]
-fn main() {
+
+
+
+
+
+
+
+async fn with_webdriver<T: ::std::future::Future<Output = U> + Send + 'static, U>(
+    callback: impl FnOnce(Client) -> T + Send + 'static,
+) -> U {
+    // Launch child.
+    let (port, _webdriver_guard) = webdriver().unwrap();
+
+    // Wait for webdriver startup.
+    await!(sleep_ms(3_000));
+
+    // Connect to the browser driver from Rust.
+    let client = await!(Client::new(
+        &format!("http://0.0.0.0:{}/", port),
+    )).unwrap();
+
+    eprintln!("Connected...");
+    await!(callback(client))
+}
+
+fn parallel<T: ::std::future::Future<Output = Result<bool, Error>> + Send + 'static>(
+    runner_test: fn(Client, String, Checkpoint) -> T,
+) {
     commandspec::cleanup_on_ctrlc();
 
     let test_id1 = format!("test{}", random_id());
@@ -161,19 +183,25 @@ fn main() {
     let j1 = ::std::thread::spawn({
         take!(=both_barrier, =seq_barrier);
         move || -> Result<bool, ()> {
+            let checkpoint = Checkpoint(both_barrier.clone(), Some(seq_barrier.clone()));
             tokio::run_async(async move {
-                await!(bootstrap(&test_id1, Checkpoint(both_barrier, Some(seq_barrier))));
+                await!(with_webdriver(async move |c| {
+                    await!(runner_test(c, test_id1.clone(), checkpoint));
+                }))
             });
             Ok(true)
         }
     });
+
     let j2 = ::std::thread::spawn({
         take!(=both_barrier, =seq_barrier);
         move || -> Result<bool, ()> {
             seq_barrier.wait();
-            println!("ok...");
+            let checkpoint = Checkpoint(both_barrier.clone(), None);
             tokio::run_async(async move {
-                await!(bootstrap(&test_id2, Checkpoint(both_barrier, None)));
+                await!(with_webdriver(async move |c| {
+                    await!(runner_test(c, test_id2.clone(), checkpoint));
+                }))
             });
             Ok(true)
         }
@@ -188,10 +216,7 @@ fn main() {
     eprintln!("test successful.");
 }
 
-async fn bootstrap(
-    test_id: &str,
-    checkpoint: Checkpoint,
-) -> Result<bool, Error> {
+fn webdriver() -> Result<(u16, SpawnGuard), Error> {
     // TODO accept port ID and alternative drivers.
     let port = DRIVER_PORT_COUNTER.fetch_add(1, Ordering::Relaxed);
     let driver = Driver::Gecko; // TODO do not hardcode this
@@ -213,84 +238,68 @@ async fn bootstrap(
     };
 
     // Launch child.
-    let _webdriver_guard = cmd
+    Ok((port, cmd
         // .stdout(Stdio::inherit())
         // .stderr(Stdio::inherit())
         .stdout(Stdio::null())
         .stderr(Stdio::null())
-        .scoped_spawn()?;
-
-    // Wait for webdriver startup.
-    await!(sleep_ms(3_000));
-
-    // Connect to the browser driver from Rust.
-    // TODO Pass in the current executor from the current runtime
-    // instead of creating one here.
-    let mut core = tokio::runtime::Runtime::new().unwrap();
-    let client = await!(Client::new(
-        &format!("http://0.0.0.0:{}/", port),
-        core.executor(),
-    ))?;
-
-    eprintln!("Connected...");
-
-    await!(spooky_test(client, test_id.to_owned(), checkpoint))
+        .scoped_spawn()?))
 }
-
-
 
 
 // Individual tests
 
-async fn spooky_test<'a>(
-    c: Client,
-    test_id: String,
-    checkpoint: Checkpoint,
-) -> Result<bool, Error> {
-    // Navigate to the test URL.
-    let test_url = format!("http://0.0.0.0:8000/{}", test_id);
-    await!(c.goto(&test_url));
+#[cfg(feature = "integration")]
+#[test]
+fn integration_spooky_test() {
+    parallel(async move |
+        mut c: Client,
+        test_id: String,
+        checkpoint: Checkpoint,
+    | {
+        // Navigate to the test URL.
+        let test_url = format!("http://0.0.0.0:8000/{}", test_id);
+        c = await!(c.goto(&test_url))?;
 
-    // Wait for the page to load.
-    await!(c.wait_for_find(Locator::Css(".edit-text")));
+        // Wait for the page to load.
+        c = await!(c.wait_for_find(Locator::Css(".edit-text")))?.client();
 
-    // Ensure all browsers have loaded before proceeding. Loading
-    // can be deferred or load sequentially, but this checkpoint
-    // will ensure all browsers are in the same editor state.
-    checkpoint.sync();
-    eprintln!("Synchronized.");
+        // Ensure all browsers have loaded before proceeding. Loading
+        // can be deferred or load sequentially, but this checkpoint
+        // will ensure all browsers are in the same editor state.
+        checkpoint.sync();
+        eprintln!("Synchronized.");
 
-    // Now wait until carets show up on the page.
-    await!(c.wait_for_find(Locator::Css(r#"div[data-tag="caret"]"#)));
+        // Now wait until carets show up on the page.
+        c = await!(c.wait_for_find(Locator::Css(r#"div[data-tag="caret"]"#)))?.client();
 
-    // Position the caret.
-    await!(sleep_ms(1_000));
-    await!(code(&c).debug_end_of_line());
+        // Position the caret.
+        await!(sleep_ms(1_000));
+        await!(code(&mut c).debug_end_of_line());
 
-    // Type the ghost character.
-    await!(sleep_ms(1_000));
-    await!(code(&c).keypress("0x1f47b").execute());
-    
-    // DEBUG.keypress();
+        // Type the ghost character.
+        await!(sleep_ms(1_000));
+        await!(code(&mut c).keypress("0x1f47b").execute());
+        
+        // DEBUG.keypress();
 
-    // Wait up 4s for both clients to synchronize.
-    await!(sleep_ms(4000));
-    
-    // Get the innerText of the header element.
-    let heading = await!(code(&c)
-        .js(r#"
-    
-    // DEBUG.asMarkdown().match(/\S.*$/m);
+        // Wait up 4s for both clients to synchronize.
+        await!(sleep_ms(4000));
+        
+        // Get the innerText of the header element.
+        let heading = await!(code(&mut c)
+            .js(r#"
+
+// DEBUG.asMarkdown().match(/\S.*$/m);
 
 let h1 = document.querySelector('.edit-text div[data-tag=h1]');
 return h1.innerText;
 
-        "#)
-        .execute())?
-        .as_string()
-        .unwrap()
-        .to_owned();
+            "#)
+            .execute())?
+            .to_string();
 
-    eprintln!("done: {:?}", heading);
-    Ok(heading.ends_with("👻👻"))
+        eprintln!("done: {:?}", heading);
+        Ok(heading.ends_with("👻👻"))
+    });
 }
