@@ -1,23 +1,24 @@
 // Don't add additional noise to the build tools.
 // #![deny(warnings)]
 
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
 
-mod mdbook_bin;
 mod cargo_watch;
+mod mdbook_bin;
 
 use self::cargo_watch::*;
 use clap::Shell;
 use commandspec::*;
+use diesel::connection::Connection;
+use diesel::sqlite::SqliteConnection;
 use failure::Error;
 use log::LevelFilter;
 use mdbook::MDBook;
 use std::env;
-use std::path::{Path};
+use std::path::Path;
 use structopt::clap::AppSettings;
 use structopt::StructOpt;
-use diesel::connection::Connection;
-use diesel::sqlite::SqliteConnection;
 use wasm_bindgen_cli_support::Bindgen;
 
 #[cfg(windows)]
@@ -39,7 +40,11 @@ fn abs_string_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
 fn main() {
     // Only call commandspec cleanup on commands that don't invoke cargo-watch.
     // This is a crude but probably correct hueristic to predict when we'll do so.
-    if !std::env::args().nth(1).map(|x| x.find("watch").is_some()).unwrap_or(false) {
+    if !std::env::args()
+        .nth(1)
+        .map(|x| x.find("watch").is_some())
+        .unwrap_or(false)
+    {
         commandspec::cleanup_on_ctrlc();
         env_logger::Builder::from_default_env()
             .filter_level(LevelFilter::Info)
@@ -47,7 +52,7 @@ fn main() {
     }
 
     match run() {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(ref err) => {
             eprintln!("Error: {}", err);
             ::std::process::exit(1);
@@ -57,7 +62,12 @@ fn main() {
 
 /// edit-text build tools
 #[derive(StructOpt)]
-#[structopt(name = "tools", bin_name = "tools", about = "Build tools and commands for developing edit-text.", author = "")]
+#[structopt(
+    name = "tools",
+    bin_name = "tools",
+    about = "Build tools and commands for developing edit-text.",
+    author = ""
+)]
 enum Cli {
     #[structopt(name = "build")]
     Build { args: Vec<String> },
@@ -65,34 +75,57 @@ enum Cli {
     #[structopt(name = "book-build", about = "Builds the book.")]
     BookBuild,
 
-    #[structopt(name = "book-watch", about = "Watches and rebuilds the book.")]
+    #[structopt(
+        name = "book-watch",
+        about = "Watches and rebuilds the book."
+    )]
     BookWatch,
 
     #[structopt(name = "ci", about = "Executes testing for CI")]
     Ci,
 
-    #[structopt(name = "client-proxy", about = "Run client code in your terminal.")]
+    #[structopt(
+        name = "client-proxy",
+        about = "Run client code in your terminal."
+    )]
     ClientProxy { args: Vec<String> },
 
-    #[structopt(name = "client-proxy-build", about = "Build the client proxy.")]
+    #[structopt(
+        name = "client-proxy-build",
+        about = "Build the client proxy."
+    )]
     ClientProxyBuild { args: Vec<String> },
 
-    #[structopt(name = "completions", about = "Generates completion scripts for your shell.", raw(setting = "AppSettings::Hidden"))]
+    #[structopt(
+        name = "completions",
+        about = "Generates completion scripts for your shell.",
+        raw(setting = "AppSettings::Hidden")
+    )]
     Completions {
         #[structopt(name = "SHELL")]
         shell: Shell,
     },
 
-    #[structopt(name = "deploy", about = "Deploy to sandbox.edit.io.", raw(setting = "AppSettings::Hidden"))]
+    #[structopt(
+        name = "deploy",
+        about = "Deploy to sandbox.edit.io.",
+        raw(setting = "AppSettings::Hidden")
+    )]
     Deploy {
         #[structopt(long = "skip-download")]
         skip_download: bool,
     },
 
-    #[structopt(name = "frontend-build", about = "Bundle the frontend JavaScript code.")]
+    #[structopt(
+        name = "frontend-build",
+        about = "Bundle the frontend JavaScript code."
+    )]
     FrontendBuild { args: Vec<String> },
 
-    #[structopt(name = "frontend-watch", about = "Watch the frontend JavaScript code, building continuously.")]
+    #[structopt(
+        name = "frontend-watch",
+        about = "Watch the frontend JavaScript code, building continuously."
+    )]
     FrontendWatch { args: Vec<String> },
 
     #[structopt(name = "logs", about = "Dump database logs.")]
@@ -108,24 +141,42 @@ enum Cli {
     #[structopt(name = "server-build", about = "Build the edit-text server.")]
     MercutioServerBuild { args: Vec<String> },
 
-    #[structopt(name = "oatie-build", about = "Build the operational transform library.", raw(setting = "AppSettings::Hidden"))]
+    #[structopt(
+        name = "oatie-build",
+        about = "Build the operational transform library.",
+        raw(setting = "AppSettings::Hidden")
+    )]
     OatieBuild { args: Vec<String> },
 
-    #[structopt(name = "replay", about = "Replay an edit-text log.", raw(setting = "AppSettings::Hidden"))]
+    #[structopt(
+        name = "replay",
+        about = "Replay an edit-text log.",
+        raw(setting = "AppSettings::Hidden")
+    )]
     Replay { args: Vec<String> },
 
-    #[structopt(name = "test", about = "Build tools and commands for developing edit-text.", author = "")]
+    #[structopt(
+        name = "test",
+        about = "Build tools and commands for developing edit-text.",
+        author = ""
+    )]
     Test {
-        #[structopt(long = "no-unit", help = "Disable unit tests (which are run by default).")]
+        #[structopt(
+            long = "no-unit",
+            help = "Disable unit tests (which are run by default)."
+        )]
         no_unit: bool,
 
         #[structopt(long = "integration", help = "Enable integration tests.")]
         integration: bool,
 
-        args: Vec<String>
+        args: Vec<String>,
     },
 
-    #[structopt(name = "wasm-build", about = "Compile the WebAssembly bundle.")]
+    #[structopt(
+        name = "wasm-build",
+        about = "Compile the WebAssembly bundle."
+    )]
     Wasm {
         #[structopt(name = "no-vendor")]
         no_vendor: bool,
@@ -137,7 +188,6 @@ enum Cli {
         no_vendor: bool,
     },
 }
-
 
 fn run() -> Result<(), Error> {
     // We want to set this to the executable directly, rather than cargo build,
@@ -158,8 +208,14 @@ fn run() -> Result<(), Error> {
     args = args.into_iter().filter(|x| *x != "--release").collect();
 
     // Respect the CLICOLOR env variable.
-    let force_color = ::std::env::var("CLICOLOR").map(|x| x == "1").unwrap_or(false);
-    let force_color_flag = if force_color { Some("--color=always") } else { None };
+    let force_color = ::std::env::var("CLICOLOR")
+        .map(|x| x == "1")
+        .unwrap_or(false);
+    let force_color_flag = if force_color {
+        Some("--color=always")
+    } else {
+        None
+    };
 
     // Run the subcommand.
     let parsed_args = Cli::from_iter(args.iter());
@@ -169,7 +225,9 @@ fn run() -> Result<(), Error> {
                 "
                     git --no-pager diff --name-only HEAD..origin/master
                 "
-            )?.output()?.stdout;
+            )?
+            .output()?
+            .stdout;
 
             eprintln!("touched files:");
             String::from_utf8_lossy(&output)
@@ -180,7 +238,7 @@ fn run() -> Result<(), Error> {
             let only_docs = String::from_utf8_lossy(&output)
                 .lines()
                 .all(|item| Path::new(item).starts_with("docs/"));
-            
+
             if only_docs {
                 eprintln!("ci: building only book");
                 execute!(
@@ -217,7 +275,7 @@ fn run() -> Result<(), Error> {
                     )?;
                 }
             }
-        },
+        }
 
         Cli::WasmWatch { no_vendor } => {
             execute!(
@@ -232,7 +290,7 @@ fn run() -> Result<(), Error> {
                 "echo [Starting build.] && cargo run --bin build-tools --quiet -- wasm-build && echo [Build complete.]",
                 &["edit-frontend/**", "build-tools/**"],
             ))?;
-        },
+        }
 
         Cli::Wasm { no_vendor } => {
             // wasm must always be --release
@@ -351,7 +409,11 @@ fn run() -> Result<(), Error> {
 
                 let conn = SqliteConnection::establish(database_url)?;
                 migrations::setup_database(&conn)?;
-                migrations::run_pending_migrations_in_directory(&conn, Path::new("edit-server/migrations"), &mut stdout())?;
+                migrations::run_pending_migrations_in_directory(
+                    &conn,
+                    Path::new("edit-server/migrations"),
+                    &mut stdout(),
+                )?;
             } else {
                 println!("Database path: edit-server/edit.sqlite3");
             }
@@ -468,13 +530,17 @@ fn run() -> Result<(), Error> {
                 // Spawn the server for the integration test
                 eprintln!();
                 eprintln!("[launching persistent edit-text server]");
-                let _server_guard = Some(command!(
-                    r"
+                let _server_guard = Some(
+                    command!(
+                        r"
                         {self_path} server {args}
                     ",
-                    self_path = SELF_PATH,
-                    args = args,
-                )?.scoped_spawn().unwrap());
+                        self_path = SELF_PATH,
+                        args = args,
+                    )?
+                    .scoped_spawn()
+                    .unwrap(),
+                );
 
                 // Sleep for 3s after server boots.
                 ::std::thread::sleep(::std::time::Duration::from_millis(3000));
@@ -591,7 +657,8 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::Deploy { skip_download } => {
-            let edit_deploy_url = env::var("EDIT_DEPLOY_URL").unwrap_or("sandbox.edit.io".to_string());
+            let edit_deploy_url =
+                env::var("EDIT_DEPLOY_URL").unwrap_or("sandbox.edit.io".to_string());
             let edit_dokku_name = env::var("EDIT_DOKKU_NAME").unwrap_or("edit-text".to_string());
 
             // WASM client code
@@ -714,20 +781,15 @@ fn run() -> Result<(), Error> {
             let docs_dir = Path::new("docs");
             eprintln!("Building {:?}", docs_dir);
 
-            let args = mdbook_bin::serve::make_subcommand()
-                .get_matches_from(vec!["mdbook", "serve"]);
-            
-            mdbook_bin::serve::execute(&args, &docs_dir)
-                .expect("Could not serve mdbook");
+            let args =
+                mdbook_bin::serve::make_subcommand().get_matches_from(vec!["mdbook", "serve"]);
+
+            mdbook_bin::serve::execute(&args, &docs_dir).expect("Could not serve mdbook");
         }
 
         Cli::Completions { shell } => {
             let mut app = Cli::clap();
-            app.gen_completions_to(
-                "tools", 
-                shell,
-                &mut ::std::io::stdout()
-            );
+            app.gen_completions_to("tools", shell, &mut ::std::io::stdout());
         }
 
         Cli::Logs { args } => {
@@ -738,7 +800,8 @@ fn run() -> Result<(), Error> {
                     export DATABASE_URL={database_url}
                     cargo run --bin edit-server-logs -- {args}
                 ",
-                database_url = env::var("DATABASE_URL").unwrap_or("edit-server/edit.sqlite3".to_string()),
+                database_url =
+                    env::var("DATABASE_URL").unwrap_or("edit-server/edit.sqlite3".to_string()),
                 // release_flag = release_flag,
                 args = args,
             )?;

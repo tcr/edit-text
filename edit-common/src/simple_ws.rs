@@ -90,21 +90,21 @@ impl<S: SimpleSocket> ws::Handler for SocketHandler<S> {
     }
 
     fn on_error(&mut self, _err: ws::Error) {
-        println!("Killing after error");
+        eprintln!("[ws] killing after error");
         self.obj
             .take()
             .map(|mut x| x.cleanup().expect("Failed to clean up socket"));
     }
 
     fn on_close(&mut self, _code: ws::CloseCode, _reason: &str) {
-        println!("Killing after close");
+        println!("[ws] killing after close");
         self.obj
             .take()
             .map(|mut x| x.cleanup().expect("Failed to clean up socket"));
     }
 
     fn on_shutdown(&mut self) {
-        println!("Killing after shutdown");
+        eprintln!("[ws] killing after shutdown");
         self.obj
             .take()
             .map(|mut x| x.cleanup().expect("Failed to clean up socket"));
@@ -116,7 +116,7 @@ impl<S: SimpleSocket> ws::Handler for SocketHandler<S> {
             out.ping(vec![])?;
             out.timeout(PING_INTERVAL, self.ping_event)
         } else if event == self.expire_event {
-            println!("----> Socket Expired {:?}", event);
+            eprintln!("[ws] socket Expired {:?}", event);
             self.out.lock().unwrap().close(CloseCode::Away)
         } else {
             Ok(())

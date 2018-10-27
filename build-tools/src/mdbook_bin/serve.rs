@@ -1,16 +1,28 @@
 /// Copied from https://raw.githubusercontent.com/rust-lang-nursery/mdBook/3688f73052454bf510a5acc85cf55aae450c6e46/src/cmd/serve.rs
 /// from commit 3688f73 on https://github.com/rust-lang-nursery/mdBook/
-
 extern crate iron;
 extern crate staticfile;
 extern crate ws;
 
 use self::iron::{
-    status, AfterMiddleware, Chain, Iron, IronError, IronResult, Request, Response, Set,
+    status,
+    AfterMiddleware,
+    Chain,
+    Iron,
+    IronError,
+    IronResult,
+    Request,
+    Response,
+    Set,
 };
 #[cfg(feature = "watch")]
 use super::watch;
-use clap::{App, Arg, ArgMatches, SubCommand};
+use clap::{
+    App,
+    Arg,
+    ArgMatches,
+    SubCommand,
+};
 use mdbook::errors::*;
 use mdbook::MDBook;
 use std;
@@ -122,7 +134,8 @@ pub fn execute(args: &ArgMatches, book_dir: &Path) -> Result<()> {
                 b.config
                     .set("output.html.livereload-url", &livereload_url)?;
                 Ok(b)
-            }).and_then(|b| b.build());
+            })
+            .and_then(|b| b.build());
 
         if let Err(_) = result {
             // error!("Unable to load the book");
