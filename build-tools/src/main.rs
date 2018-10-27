@@ -132,14 +132,14 @@ enum Cli {
     Logs { args: Vec<String> },
 
     #[structopt(name = "server", about = "Run the edit-text server.")]
-    MercutioServerRun {
+    ServerRun {
         #[structopt(long = "log", help = "Export a log")]
         log: bool,
         args: Vec<String>,
     },
 
     #[structopt(name = "server-build", about = "Build the edit-text server.")]
-    MercutioServerBuild { args: Vec<String> },
+    ServerBuild { args: Vec<String> },
 
     #[structopt(
         name = "oatie-build",
@@ -177,7 +177,7 @@ enum Cli {
         name = "wasm-build",
         about = "Compile the WebAssembly bundle."
     )]
-    Wasm {
+    WasmBuild {
         #[structopt(name = "no-vendor")]
         no_vendor: bool,
     },
@@ -292,16 +292,17 @@ fn run() -> Result<(), Error> {
             ))?;
         }
 
-        Cli::Wasm { no_vendor } => {
-            // wasm must always be --release
+        Cli::WasmBuild { no_vendor } => {
             let release_flag = Some("--release");
 
+            // Install wasm target
             execute!(
                 "
                     rustup target add wasm32-unknown-unknown
                 "
             )?;
 
+            // Compile edit-client to WebAssembly.
             eprintln!("Building...");
             execute!(
                 r"
@@ -311,40 +312,17 @@ fn run() -> Result<(), Error> {
                 release_flag = release_flag,
             )?;
 
+            // Compile the TypeScript bindings.
             if !no_vendor {
                 eprintln!("Vendoring...");
 
-                ::std::fs::create_dir_all("./edit-frontend/src/bindgen")?;
+                std::fs::create_dir_all("./edit-frontend/src/bindgen")?;
 
                 let mut b = Bindgen::new();
                 b.input_path("./target/wasm32-unknown-unknown/release/edit_client.wasm")
-                    // .nodejs(false)
-                    // .browser(false)
-                    // .no_modules(args.flag_no_modules)
                     // .debug(args.flag_debug)
-                    // .demangle(!args.flag_no_demangle)
-                    // .keep_debug(args.flag_keep_debug)
                     .typescript(true);
-
                 b.generate("./edit-frontend/src/bindgen")?;
-
-                // execute!(
-                //     r"
-                //         wasm-bindgen ./target/wasm32-unknown-unknown/release/edit_client.wasm \
-                //             --out-dir ./edit-frontend/src/bindgen \
-                //             --typescript
-                //     ",
-                // )?;
-
-                // execute!(
-                //     r"
-                //         cd ./edit-frontend/src/bindgen
-                //         wasm2es6js \
-                //             --base64 -o edit_client_bg.js edit_client_bg.wasm
-                //     ",
-                // )?;
-
-                // ::std::fs::remove_file("./edit-frontend/src/bindgen/edit_client_bg.wasm")?;
 
                 eprintln!("Done.");
             }
@@ -353,6 +331,7 @@ fn run() -> Result<(), Error> {
         Cli::ClientProxy { args } => {
             let release_flag = if release { Some("--release") } else { None };
 
+            // Compile and run edit-client-proxy.
             execute!(
                 r"
                     cd edit-client
@@ -393,7 +372,7 @@ fn run() -> Result<(), Error> {
             )?;
         }
 
-        Cli::MercutioServerRun { log, args } => {
+        Cli::ServerRun { log, args } => {
             if release {
                 eprintln!("Building and running edit-text server (release mode)...");
             } else {
@@ -456,7 +435,7 @@ fn run() -> Result<(), Error> {
             eprintln!("Server exited.");
         }
 
-        Cli::MercutioServerBuild { args } => {
+        Cli::ServerBuild { args } => {
             let release_flag = if release { Some("--release") } else { None };
 
             // Build dist folder if it doesn't exist.
@@ -567,7 +546,7 @@ fn run() -> Result<(), Error> {
                 args = args,
             )?;
 
-            eprintln!("");
+            eprintln!();
             eprintln!("[frontend-build]");
             execute!(
                 r"
@@ -577,7 +556,7 @@ fn run() -> Result<(), Error> {
                 args = args,
             )?;
 
-            eprintln!("");
+            eprintln!();
             eprintln!("[server-build]");
             execute!(
                 r"
@@ -587,7 +566,7 @@ fn run() -> Result<(), Error> {
                 args = args,
             )?;
 
-            eprintln!("");
+            eprintln!();
             eprintln!("[client-proxy-build]");
             execute!(
                 r"
@@ -597,7 +576,7 @@ fn run() -> Result<(), Error> {
                 args = args,
             )?;
 
-            eprintln!("");
+            eprintln!();
             eprintln!("[book-build]");
             execute!(
                 r"
@@ -609,7 +588,7 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::FrontendBuild { args } => {
-            // Install latest Node dependencies
+            // Install Node dependencies
             execute!(
                 r"
                     cd edit-frontend
@@ -617,6 +596,15 @@ fn run() -> Result<(), Error> {
                 ",
             )?;
 
+            // Compile WebAssembly
+            execute!(
+                r"
+                    {self_path} wasm-build
+                ",
+                self_path = SELF_PATH,
+            )?;
+
+            // Compile TypeScript
             execute!(
                 r"
                     cd edit-frontend
@@ -629,7 +617,7 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::FrontendWatch { args } => {
-            // Install latest Node dependencies
+            // Install Node dependencies
             execute!(
                 r"
                     cd edit-frontend
@@ -637,6 +625,7 @@ fn run() -> Result<(), Error> {
                 ",
             )?;
 
+            // Watch WebAssembly
             std::thread::spawn(|| -> Result<(), Error> {
                 watchexec::run(watchexec_args(
                     "echo [Starting build.] && cargo run --bin build-tools --quiet -- wasm-build && echo [Build complete.]",
@@ -644,7 +633,8 @@ fn run() -> Result<(), Error> {
                 ))?;
                 Ok(())
             });
-
+            
+            // Watch TypeScript
             execute!(
                 r"
                     cd edit-frontend
@@ -664,11 +654,6 @@ fn run() -> Result<(), Error> {
             // WASM client code
             eprintln!();
             eprintln!("Compiling WebAssembly...");
-            execute!(
-                "
-                    rustup target add wasm32-unknown-unknown
-                "
-            )?;
             execute!(
                 "
                     {self_path} wasm-build
