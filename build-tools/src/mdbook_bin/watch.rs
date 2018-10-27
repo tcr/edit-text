@@ -1,10 +1,13 @@
 /// Copied from https://raw.githubusercontent.com/rust-lang-nursery/mdBook/3688f73052454bf510a5acc85cf55aae450c6e46/src/cmd/watch.rs
 /// from commit 3688f73 on https://github.com/rust-lang-nursery/mdBook/
-
 extern crate notify;
 
 use self::notify::Watcher;
-use clap::{App, ArgMatches, SubCommand};
+use clap::{
+    App,
+    ArgMatches,
+    SubCommand,
+};
 use mdbook::errors::Result;
 use mdbook::utils;
 use mdbook::MDBook;
@@ -19,10 +22,12 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
         .arg_from_usage(
             "-d, --dest-dir=[dest-dir] 'Output directory for the book{n}\
              (If omitted, uses build.build-dir from book.toml or defaults to ./book)'",
-        ).arg_from_usage(
+        )
+        .arg_from_usage(
             "[dir] 'Root directory for the book{n}\
              (Defaults to the Current Directory when omitted)'",
-        ).arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
+        )
+        .arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
 }
 
 // Watch command implementation

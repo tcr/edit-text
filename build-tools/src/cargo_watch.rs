@@ -3,7 +3,7 @@ fn to_strings(input: &[&str]) -> Vec<String> {
 }
 
 pub fn watchexec_args(cmd: &str, ignores: &[&str]) -> watchexec::cli::Args {
-    let src_default_ignores = &["*/.DS_Store", "*/.git/**","*/.svn/**", "*/target/**"][..];
+    let src_default_ignores = &["*/.DS_Store", "*/.git/**", "*/.svn/**", "*/target/**"][..];
 
     watchexec::cli::Args {
         cmd: to_strings(&[cmd]),
