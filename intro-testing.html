@@ -142,9 +142,10 @@
                         <a class="header" href="#testing" id="testing"><h1>Testing</h1></a>
 <p>There are two types of tests, integration tests and unit tests.</p>
 <a class="header" href="#unit-tests" id="unit-tests"><h2>Unit Tests</h2></a>
-<p>To run unit tests, run <code>cargo test</code>.</p>
+<p>To run unit tests, run <code>./tools test</code>.</p>
 <a class="header" href="#integration-tests" id="integration-tests"><h2>Integration Tests</h2></a>
-<p>Run <code>./x.rs test</code> to run the integration test. It requires <code>geckodriver</code> to be installed.</p>
+<p>Run <code>./tools test --integration</code> to run the test suite with integrated tests.</p>
+<p>This runs simulated tests using headless browsers running concurrent editing operation. You should install a WebDriver implementation such as  <code>geckodriver</code>:</p>
 <pre><code>macOS:
   brew install geckodriver
 Ubuntu:
@@ -152,7 +153,7 @@ Ubuntu:
 Windows:
   choco install selenium-gecko-driver
 </code></pre>
-<p>(There is only one integration test so far.) This will launch a browser session with multiple clients connecting, to ensure that synchronization code still works.</p>
+<p>To run just the integrated tests, run './tools test --no-unit --integration'.</p>
 <!--
 <a class="header" href="#oatie-testing" id="oatie-testing"><h2>Oatie testing</h2></a>
 <ul>
