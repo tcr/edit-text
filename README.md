@@ -10,6 +10,7 @@ edit-text is a collaborative text editor that for Markdown. Both the server and 
 
 This is alpha-quality software.
 
+
 ## License
 
 Apache-2.0
