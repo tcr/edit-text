@@ -7,7 +7,9 @@
 tools help    # Windows (cmd.exe)
 ```
 
-Please substitute either `./tools` or `tools` in the examples below accordingly. Running the `help` should display a list of build steps that available for edit-text.
+Please substitute either `./tools` or `tools` in the examples below accordingly.
+
+Running `./tools help` displays a list of build commands.
 
 ## Server building
 
