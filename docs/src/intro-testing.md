@@ -4,11 +4,13 @@ There are two types of tests, integration tests and unit tests.
 
 ## Unit Tests
 
-To run unit tests, run `cargo test`.
+To run unit tests, run `./tools test`.
 
 ## Integration Tests
 
-Run `./x.rs test` to run the integration test. It requires `geckodriver` to be installed.
+Run `./tools test --integration` to run the test suite with integrated tests.
+
+This runs simulated tests using headless browsers running concurrent editing operation. You should install a WebDriver implementation such as  `geckodriver`:
 
 ```
 macOS:
@@ -19,7 +21,7 @@ Windows:
   choco install selenium-gecko-driver
 ```
 
-(There is only one integration test so far.) This will launch a browser session with multiple clients connecting, to ensure that synchronization code still works.
+To run just the integrated tests, run './tools test --no-unit --integration'.
 
 <!--
 
