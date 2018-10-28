@@ -2,11 +2,6 @@ language: rust
 rust:
   - nightly
 
-cache:
-  cargo: true
-  directories:
-    - edit-frontend/node_modules/
-
 addons:
   firefox: "latest"
 
@@ -31,6 +26,12 @@ before_install:
   - git config remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
   - git fetch --unshallow --tags
 
+  # cache-s3
+  - mkdir -p ~/.local/bin
+  - export CACHE_S3_VERSION="v0.1.5"
+  - curl -f -L https://github.com/fpco/cache-s3/releases/download/$CACHE_S3_VERSION/cache-s3-$CACHE_S3_VERSION-$TRAVIS_OS_NAME-x86_64.tar.gz | tar xz -C ~/.local/bin 'cache-s3'
+  - cache-s3 --version
+
   # Test node version
   - node -v
   
@@ -46,6 +47,10 @@ before_install:
   - tar -xzf geckodriver-*.tar.gz -C geckodriver
   - export PATH=$PATH:$PWD/geckodriver
 
+before_script:
+  # Restore
+  - cache-s3 restore --base-branch=staging
+
 script:
   # Prepare X service
   - export DISPLAY=:99.0
@@ -54,6 +59,11 @@ script:
 
   # Run test
   - ./tools ci
+
+after_success:
+  # Delete the cargo registry, then cache resulting files
+  - rm -rf /home/travis/.cargo/registry
+  - if [ $TRAVIS_EVENT_TYPE != "cron" ]; then cache-s3 save -p edit-frontend/node_modules/ -p ~/.cargo -p target; fi
 
 deploy:
   provider: pages

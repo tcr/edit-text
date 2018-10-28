@@ -15,17 +15,10 @@ branches:
 environment:
   matrix:
   # Stable 64-bit MSVC
-    - channel: stable
-      target: x86_64-pc-windows-msvc
+    - target: x86_64-pc-windows-msvc
 
   # Stable 32-bit MSVC
-  #  - channel: stable
-  #    target: i686-pc-windows-msvc
-
-cache:
-  - '%USERPROFILE%\.cargo'
-  - '%USERPROFILE%\.rustup'
-  - 'edit-frontend\node_modules'
+  #  - target: i686-pc-windows-msvc
 
 # Install Script
 
@@ -35,10 +28,19 @@ install:
 
   # Install rustup
   - appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
+  - "for /f %%i in (rust-toolchain) do set channel=%%i"
   - rustup-init -yv --default-toolchain %channel% --default-host %target%
   - set PATH=%PATH%;%USERPROFILE%\.cargo\bin
   - rustc -vV
   - cargo -vV
+
+  # Install cache-s3
+  - ps: |
+      $env:CACHE_S3_VERSION="v0.1.5"
+      $env:OS_NAME="windows"
+      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+      Invoke-WebRequest https://github.com/fpco/cache-s3/releases/download/$env:CACHE_S3_VERSION/cache-s3-$env:CACHE_S3_VERSION-windows-x86_64.zip -OutFile cache-s3.zip
+      Expand-Archive cache-s3.zip -Destination .
 
 # Test Script
 
@@ -46,5 +48,11 @@ install:
 # This prevents the "directory does not contain a project or solution file" error.
 build: false
 
+before_test:
+- ps: .\cache-s3 --prefix=edit-text-win32 restore
+
 test_script:
 - .\tools ci
+
+after_test:
+- ps: .\cache-s3 --prefix=edit-text-win32 save -p edit-frontend\node_modules -p %USERPROFILE%\.cargo -p target

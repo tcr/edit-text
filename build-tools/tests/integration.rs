@@ -11,17 +11,12 @@ extern crate tokio;
 mod common;
 
 use self::common::*;
-use failure::Error;
 
 /// Basic test that moves the cursor to the end of the line, types a Ghost emoji,
 /// waits for the dust to settle, then sees if we get two Ghost emoji on both clients.
 #[test]
 fn integration_spooky_test() {
-    concurrent_editing(async move |
-        mut debug: DebugClient,
-        test_id: String,
-        _checkpoint: Checkpoint,
-    | -> Result<bool, Error> {
+    concurrent_editing(async move |mut debug, test_id, _checkpoint| {
         // Position the caret at the end of the current line.
         await!(sleep_ms(1_000));
         await!(debug.debug_end_of_line());
@@ -29,8 +24,6 @@ fn integration_spooky_test() {
         // Type a ghost emoji.
         await!(sleep_ms(1_000));
         await!(debug.keypress("0x1f47b"));
-
-        // todo "DEBUG.keypress()""
 
         // Wait 4s for clients to receive all pending operations.
         await!(sleep_ms(4_000));
