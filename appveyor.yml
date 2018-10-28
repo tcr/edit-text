@@ -55,4 +55,5 @@ test_script:
 - .\tools ci
 
 after_test:
-- ps: .\cache-s3 --prefix=edit-text-win32 save -p edit-frontend\node_modules -p %USERPROFILE%\.cargo -p target
+- ps: Remove-Item -Recurse -Force $ENV:UserProfile\.cargo\registry
+- ps: .\cache-s3 --prefix=edit-text-win32 save -p edit-frontend\node_modules -p $ENV:UserProfile\.cargo -p target
