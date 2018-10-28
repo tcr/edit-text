@@ -9,6 +9,7 @@ pub struct DebugClient {
     client: Client
 }
 
+#[allow(unused)]
 impl DebugClient {
     pub fn from(client: Client) -> DebugClient {
         DebugClient {
