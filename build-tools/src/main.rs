@@ -490,7 +490,7 @@ fn run() -> Result<(), Error> {
                 eprintln!("[running unit tests]");
                 execute!(
                     r"
-                        cargo test
+                        cargo test -- --test-threads=1
                     ",
                 )?;
             }
@@ -530,7 +530,7 @@ fn run() -> Result<(), Error> {
                 execute!(
                     r"
                         cd build-tools
-                        cargo test --features integration integration_
+                        cargo test --features integration integration_ -- --test-threads=1
                     ",
                 )?;
             }

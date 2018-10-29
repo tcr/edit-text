@@ -1,3 +1,7 @@
+//! Debug interface custom to edit-text.
+//! 
+//! See debug.ts for client side impl of DEBUG global.
+
 use futures::future::Future;
 use fantoccini::{
     error::CmdError,

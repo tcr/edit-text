@@ -105,54 +105,48 @@ where
 async fn synchronize_clients(
     mut c: Client,
     test_id: String,
-    checkpoint: Checkpoint,
-) -> Result<Client, Error> {
+    mut checkpoint: Checkpoint,
+) -> Result<(Client, Checkpoint), Error> {
     // Navigate to the test URL and wait for the page to load.
     let test_url = format!("http://0.0.0.0:8000/{}", test_id);
     c = await!(c.goto(&test_url))?;
-    c = await!(c.wait_for_find(Locator::Css(".edit-text")))?.client();
-
-    // Ensure all browsers have reached this step before proceeding.
-    checkpoint.sync();
 
     // Wait until carets are rendered.
     c = await!(c.wait_for_find(Locator::Css(r#"div[data-tag="caret"]"#)))?.client();
 
-    // Notify user.
-    eprintln!("starting test: {:?}", test_id);
+    // Ensure all browsers have reached this step before proceeding.
+    checkpoint.sync();
 
-    Ok(c)
+    eprintln!("starting test: {:?}", test_id);
+    Ok((c, checkpoint))
 }
 
 fn spawn_test_thread<T>(
     test_id: String,
-    checkpoint: Checkpoint,
+    mut checkpoint: Checkpoint,
     runner_test: fn(DebugClient, String, Checkpoint) -> T,
 ) -> JoinHandle<Result<bool, ()>>
 where
     T: std::future::Future<Output = Result<bool, Error>> + Send + 'static,
 {
     std::thread::spawn(move || -> Result<bool, ()> {
-        checkpoint.sequential();
         let result = Arc::new(AtomicBool::new(false));
-        {
+        tokio::run_async({
             take!(=result);
-            tokio::run_async(async move {
-                take!(=result);
-                let success =
-                    await!(with_webdriver(async move |mut c| {
-                        c = await!(synchronize_clients(
-                            c,
-                            test_id.clone(),
-                            checkpoint.clone()
-                        ))?;
-                        let mut debug = DebugClient::from(c);
-                        await!(runner_test(debug, test_id.clone(), checkpoint))
-                    }))
-                    .unwrap();
-                result.store(success, Ordering::Relaxed);
-            });
-        }
+            async move {
+                checkpoint.sequential();
+                result.store(await!(with_webdriver(async move |mut c| {
+                    let (c, checkpoint) = await!(synchronize_clients(
+                        c,
+                        test_id.clone(),
+                        checkpoint,
+                    ))?;
+                    let mut debug = DebugClient::from(c);
+                    await!(runner_test(debug, test_id.clone(), checkpoint))
+                }))
+                .unwrap(), Ordering::Relaxed);
+            }
+        });
         Ok(result.load(Ordering::Relaxed))
     })
 }
@@ -163,7 +157,9 @@ pub fn concurrent_editing<T>(
 where
     T: std::future::Future<Output = Result<bool, Error>> + Send + 'static,
 {
-    commandspec::cleanup_on_ctrlc();
+    // TODO fix this in commandspec 0.12 to not throw MultipleHandler errors if re-set
+    // or unset it at the end of this function
+    // commandspec::cleanup_on_ctrlc();
 
     let test_id1 = format!("test{}", random_id());
     let test_id2 = test_id1.clone();
