@@ -2,7 +2,6 @@
 
 #![allow(deprecated)]
 
-use ws;
 use failure::Error;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
@@ -10,6 +9,7 @@ use std::sync::{
     Arc,
     Mutex,
 };
+use ws;
 use ws::util::{
     Timeout,
     Token,
@@ -66,7 +66,8 @@ impl<S: SimpleSocket> ws::Handler for SocketHandler<S> {
                 self.args.take().unwrap(),
                 shake.request.resource(),
                 self.out.clone(),
-            ).expect("Failed to start socket handler due to error"),
+            )
+            .expect("Failed to start socket handler due to error"),
         );
 
         {

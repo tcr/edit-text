@@ -214,18 +214,18 @@ impl ClientDoc {
         //                                  (combined_op)
 
         if cfg!(debug_assertions) {
-//              println!("---->
-// <apply_local_op>
-// original_doc={:?},
-// pending_op={:?},
-// local_op={:?},
-// {op}</apply_local_op>
-// ",
-//             self.original_doc, 
-//             self.pending_op, 
-//             self.local_op,
-//             op = op.as_ref().map(|x| format!("op = {:?},\n", x)).unwrap_or("".to_string()),
-//         );
+            //              println!("---->
+            // <apply_local_op>
+            // original_doc={:?},
+            // pending_op={:?},
+            // local_op={:?},
+            // {op}</apply_local_op>
+            // ",
+            //             self.original_doc,
+            //             self.pending_op,
+            //             self.local_op,
+            //             op = op.as_ref().map(|x| format!("op = {:?},\n", x)).unwrap_or("".to_string()),
+            //         );
 
             // Test matching against the local doc.
             let recreated_doc = Op::apply(

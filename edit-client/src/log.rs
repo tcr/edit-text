@@ -1,7 +1,7 @@
 extern crate crossbeam_channel;
 
-use super::client;
 use self::crossbeam_channel::Sender;
+use super::client;
 use edit_common::commands::*;
 use std::cell::RefCell;
 

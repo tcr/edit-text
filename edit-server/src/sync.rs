@@ -15,6 +15,8 @@ use extern::{
         Sender as CCSender,
     },
     edit_common::commands::*,
+    edit_common::simple_ws,
+    edit_common::simple_ws::*,
     failure::Error,
     oatie::doc::*,
     rand::{
@@ -22,8 +24,6 @@ use extern::{
         Rng,
     },
     serde_json,
-    edit_common::simple_ws::*,
-    edit_common::simple_ws,
     std::env,
     std::{
         collections::HashMap,
@@ -253,11 +253,8 @@ impl PageController {
                 let version = self.state.version;
 
                 // Initialize client state on outgoing websocket.
-                let command = ClientCommand::Init(
-                    client_id.to_string(),
-                    self.state.doc.0.clone(),
-                    version,
-                );
+                let command =
+                    ClientCommand::Init(client_id.to_string(), self.state.doc.0.clone(), version);
                 let _ = self.send_client_command(&out, &command);
 
                 // Register with clients list.

@@ -41,17 +41,17 @@ fn integration_sequential_test() {
     concurrent_editing(async move |mut debug, test_id, mut checkpoint| {
         // Type a character.
         checkpoint.sequential();
-        await!(debug.keypress(&format!(r#""{}".charCodeAt(0)"#, checkpoint.index)));
+        await!(debug.keypress_char(if checkpoint.index == 0 { '0' } else { '1' }));
         checkpoint.sync();
 
         // Type a character.
         checkpoint.sequential();
-        await!(debug.keypress(&format!(r#""{}".charCodeAt(0)"#, checkpoint.index)));
+        await!(debug.keypress_char(if checkpoint.index == 0 { '0' } else { '1' }));
         checkpoint.sync();
 
         // Type a character.
         checkpoint.sequential();
-        await!(debug.keypress(&format!(r#""{}".charCodeAt(0)"#, checkpoint.index)));
+        await!(debug.keypress_char(if checkpoint.index == 0 { '0' } else { '1' }));
         checkpoint.sync();
 
         // Wait an arbitrary 4s for clients to receive all pending operations.
@@ -64,4 +64,3 @@ fn integration_sequential_test() {
         Ok(markdown.find("000").is_some() && markdown.find("111").is_some())
     });
 }
-

@@ -147,16 +147,16 @@ fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
     ]
 }
 
-pub fn button_handlers<C: ClientImpl>(state: Option<(String, bool)>) -> (Vec<Box<Fn(&mut C) -> Result<(), Error>>>, Vec<Ui>) {
+pub fn button_handlers<C: ClientImpl>(
+    state: Option<(String, bool)>,
+) -> (Vec<Box<Fn(&mut C) -> Result<(), Error>>>, Vec<Ui>) {
     let mut callbacks: Vec<Box<Fn(&mut C) -> Result<(), Error>>> = vec![];
 
     macro_rules! callback {
-        ($t:expr) => {
-            {
-                callbacks.push(Box::new($t));
-                callbacks.len() - 1
-            }
-        }
+        ($t:expr) => {{
+            callbacks.push(Box::new($t));
+            callbacks.len() - 1
+        }};
     }
 
     let ui = vec![
@@ -233,7 +233,10 @@ pub fn button_handlers<C: ClientImpl>(state: Option<(String, bool)>) -> (Vec<Box
             ),
             Ui::Button(
                 "Clear".to_string(),
-                callback!(|client| client.client_op(|doc| remove_styles(doc, hashset![Style::Bold, Style::Italic, Style::Link]))),
+                callback!(|client| client.client_op(|doc| remove_styles(
+                    doc,
+                    hashset![Style::Bold, Style::Italic, Style::Link]
+                ))),
                 // state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
                 false, // TODO what?
             ),
@@ -250,7 +253,8 @@ fn native_command<C: ClientImpl>(client: &mut C, req: ControllerCommand) -> Resu
         }
         ControllerCommand::Button(index) => {
             // Find which button handler to respond to this command.
-            button_handlers(None).0
+            button_handlers(None)
+                .0
                 .get(index as usize)
                 .map(|handler| handler(client));
         }
@@ -306,7 +310,7 @@ fn native_command<C: ClientImpl>(client: &mut C, req: ControllerCommand) -> Resu
                 (None, Some(anchor)) => {
                     client.client_op(|doc| cur_to_caret(doc, &anchor, false))?;
                 }
-                (None, None) => {}, // ???
+                (None, None) => {} // ???
             }
         }
         ControllerCommand::Monkey(setting) => {
@@ -349,7 +353,7 @@ pub trait ClientImpl {
                 .into_iter()
                 .map(|x| (x.0, x.1, x.2))
                 .collect(),
-            buttons: button_handlers::<Self>(state).1
+            buttons: button_handlers::<Self>(state).1,
         };
 
         if Some(controls_object.clone()) != self.state().last_controls {
@@ -382,8 +386,7 @@ pub trait ClientImpl {
                 let delay_log = self.state().client_id == "$$$$$$";
 
                 // Rewrite random targets here.
-                if let Task::ControllerCommand(ControllerCommand::RandomTarget(pos)) = value
-                {
+                if let Task::ControllerCommand(ControllerCommand::RandomTarget(pos)) = value {
                     let cursors = random_cursor(&self.state().client_doc.doc)?;
                     let idx = (pos * (cursors.len() as f64)) as usize;
 
@@ -409,11 +412,7 @@ pub trait ClientImpl {
                     }
 
                     // Sync sent us an Update command with a new document version.
-                    Task::ClientCommand(ClientCommand::Init(
-                        new_client_id,
-                        doc_span,
-                        version,
-                    )) => {
+                    Task::ClientCommand(ClientCommand::Init(new_client_id, doc_span, version)) => {
                         self.state().client_id = new_client_id.clone();
                         self.state().client_doc.init(&Doc(doc_span), version);
 
@@ -446,11 +445,7 @@ pub trait ClientImpl {
                     }
 
                     // Sync sent us an Update command with a new document version.
-                    Task::ClientCommand(ClientCommand::Update(
-                        version,
-                        client_id,
-                        input_op,
-                    )) => {
+                    Task::ClientCommand(ClientCommand::Update(version, client_id, input_op)) => {
                         if self.state().client_id == "$$$$$$" {
                             return Ok(());
                         }
