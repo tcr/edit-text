@@ -177,7 +177,9 @@ fn run_http_server(port: u16, client_proxy: bool) {
     assert!(template_dir.exists(Path::new("presentation.hbs")));
     assert!(template_dir.exists(Path::new("favicon.png")));
 
-    println!("Listening on http://0.0.0.0:{}/", port);
+
+    println!("> Server listening for HTTP connections on http://0.0.0.0:{}/", port);
+    println!("  Talking to client proxy: {:?}", client_proxy);
 
     let reg = Handlebars::new();
 
@@ -459,8 +461,6 @@ fn main() {
     // let ron_in: Doc = ::ron::de::from_str(&ron_out).unwrap();
     // println!("---> ron: {:?}", ron_in);
     // ::std::process::exit(1);
-
-    println!("client proxy: {:?}", opt.client_proxy);
 
     let _ = spawn_sync_socket_server();
 

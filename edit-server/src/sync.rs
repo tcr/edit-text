@@ -184,6 +184,7 @@ pub struct PageController {
     clients: HashMap<String, simple_ws::Sender>,
 }
 
+#[allow(unused)]
 impl PageController {
     // This is just a commit across all operations, and forwarding it to
     // all listening clients. It also is the commit point for all new
@@ -421,7 +422,7 @@ pub fn sync_socket_server(port: u16) {
     // Websocket URL.
     let url = format!("0.0.0.0:{}", port);
     eprintln!(
-        "sync_socket_server is listening for ws connections on {}",
+        "  Sync server is listening for WebSocket connections on {}",
         url
     );
 
