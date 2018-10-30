@@ -48,11 +48,6 @@ use oatie::doc::*;
 use oatie::validate::validate_doc;
 use rand::thread_rng;
 use rouille::Response;
-use std::{
-    env,
-    collections::HashMap,
-    cell::RefCell,
-};
 use std::fs::File;
 use std::io::prelude::*;
 use std::panic;
@@ -62,10 +57,15 @@ use std::path::{
 };
 use std::thread;
 use std::thread::JoinHandle;
+use std::{
+    cell::RefCell,
+    collections::HashMap,
+    env,
+};
 use structopt::StructOpt;
 
 trait Dir: Sync + Send {
-    fn get(&self, &Path) -> Option<Vec<u8>>;
+    fn get(&self, path: &Path) -> Option<Vec<u8>>;
 
     fn exists(&self, path: &Path) -> bool {
         self.get(path).is_some()
@@ -191,11 +191,15 @@ fn run_http_server(port: u16, client_proxy: bool) {
             let input = String::from_utf8_lossy(data);
             let output = input.replace(
                 "CONFIG = {}",
-                &format!("CONFIG = {}", serde_json::to_string(&json!({
+                &format!(
+                    "CONFIG = {}",
+                    serde_json::to_string(&json!({
                     "configured": true,
                     "wasm": !client_proxy,
                     "title": &edit_title,
-                })).unwrap()),
+                }))
+                    .unwrap()
+                ),
             );
             output.into_bytes()
         };
@@ -439,7 +443,11 @@ struct Opt {
     #[structopt(long = "port", help = "Port", default_value = "8000")]
     port: u16,
 
-    #[structopt(help = "Enable client proxy", long = "client-proxy", short = "c")]
+    #[structopt(
+        help = "Enable client proxy",
+        long = "client-proxy",
+        short = "c"
+    )]
     client_proxy: bool,
 }
 

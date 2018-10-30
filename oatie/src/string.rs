@@ -5,7 +5,10 @@ use serde::{
         Visitor,
     },
     ser::SerializeSeq,
-    Deserialize, Deserializer, Serialize, Serializer,
+    Deserialize,
+    Deserializer,
+    Serialize,
+    Serializer,
 };
 use std::{
     collections::{
@@ -77,10 +80,12 @@ impl DocString {
     pub fn remove_styles(&mut self, styles: &StyleSet) {
         if let &mut Some(ref mut self_styles) = &mut self.2 {
             let mut new_styles: StyleMap = (**self_styles).clone();
-            *self_styles = Arc::new(new_styles
-                .drain()
-                .filter(|(ref x, _)| !styles.contains(x))
-                .collect());
+            *self_styles = Arc::new(
+                new_styles
+                    .drain()
+                    .filter(|(ref x, _)| !styles.contains(x))
+                    .collect(),
+            );
         } else {
             // no-op
         }

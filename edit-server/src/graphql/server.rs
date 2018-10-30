@@ -19,12 +19,13 @@ use extern::{
         FieldResult,
     },
     oatie::{
-        validate::validate_doc,
         doc::*,
+        validate::validate_doc,
     },
     r2d2,
     r2d2_diesel::ConnectionManager,
-    rouille, serde_json,
+    rouille,
+    serde_json,
     std::io::prelude::*,
 };
 

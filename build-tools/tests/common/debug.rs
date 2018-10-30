@@ -1,24 +1,22 @@
 //! Debug interface custom to edit-text.
-//! 
+//!
 //! See debug.ts for client side impl of DEBUG global.
 
-use futures::future::Future;
 use fantoccini::{
     error::CmdError,
     Client,
 };
+use futures::future::Future;
 use serde_json::value::Value;
 
 pub struct DebugClient {
-    client: Client
+    client: Client,
 }
 
 #[allow(unused)]
 impl DebugClient {
     pub fn from(client: Client) -> DebugClient {
-        DebugClient {
-            client: client,
-        }
+        DebugClient { client: client }
     }
 
     pub fn js(&mut self, input: &str) -> impl Future<Item = Value, Error = CmdError> {
@@ -36,7 +34,23 @@ var event = new KeyboardEvent("keypress", {{
 document.dispatchEvent(event);
             "#,
             key
-        )).map(|_| ())
+        ))
+        .map(|_| ())
+    }
+
+    pub fn keypress_char(&mut self, key: char) -> impl Future<Item = (), Error = CmdError> {
+        self.js(&format!(
+            r#"
+var event = new KeyboardEvent("keypress", {{
+    bubbles: true,
+    cancelable: true,
+    charCode: {},
+}});
+document.dispatchEvent(event);
+            "#,
+            key as usize,
+        ))
+        .map(|_| ())
     }
 
     pub fn mousedown(&mut self, x: &str, y: &str) -> impl Future<Item = (), Error = CmdError> {
@@ -51,7 +65,8 @@ var evt = new MouseEvent("mousedown", {{
 document.querySelector('.edit-text').dispatchEvent(evt);
             "#,
             x, y
-        )).map(|_| ())
+        ))
+        .map(|_| ())
     }
 
     pub fn debug_end_of_line(&mut self) -> impl Future<Item = (), Error = CmdError> {
@@ -71,7 +86,8 @@ var evt = new MouseEvent("mousedown", {
 });
 document.querySelector('.edit-text').dispatchEvent(evt);
 
-            "#).map(|_| ())
+            "#)
+            .map(|_| ())
     }
 
     pub fn as_markdown(&mut self) -> impl Future<Item = String, Error = CmdError> {

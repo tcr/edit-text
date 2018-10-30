@@ -40,7 +40,8 @@ pub fn create_page<'a>(conn: &SqliteConnection, id: &'a str, doc: &Doc) -> usize
         diesel::replace_into(posts::table)
             .values(&new_post)
             .execute(conn)
-    }).expect("Error saving new post")
+    })
+    .expect("Error saving new post")
 }
 
 pub fn all_posts(db: &SqliteConnection) -> HashMap<String, String> {
@@ -60,9 +61,7 @@ pub fn get_single_page(db: &SqliteConnection, input_id: &str) -> Option<Doc> {
 
     let post = lock_retry(|| posts.filter(id.eq(input_id)).first::<Post>(db));
 
-    post
-        .map_err::<Error, _>(|x| x.into())
-
+    post.map_err::<Error, _>(|x| x.into())
         // HACK strip null bytes that have snuck into the database
         .map(|x| {
             if x.body.find(r"\u{0}").is_some() {
@@ -72,7 +71,6 @@ pub fn get_single_page(db: &SqliteConnection, input_id: &str) -> Option<Doc> {
                 x.body.to_string()
             }
         })
-
         .and_then(|x| Ok(::ron::de::from_str::<DocSpan>(&x)?))
         .map(|d| Doc(d))
         .ok()

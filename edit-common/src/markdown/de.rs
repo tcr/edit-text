@@ -13,7 +13,8 @@ use pulldown_cmark::{
         Start,
         Text,
     },
-    Parser, Tag,
+    Parser,
+    Tag,
 };
 
 struct Ctx<'b, I> {
@@ -80,7 +81,7 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                     )));
                     self.body.close(hashmap! { "tag".into() => "html".into() });
                 }
-                
+
                 InlineHtml(..) | FootnoteReference(..) => {}
             }
         }

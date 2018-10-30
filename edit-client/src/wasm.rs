@@ -14,18 +14,18 @@ extern crate wbg_rand;
 use super::client::*;
 use super::monkey::*;
 use super::state::*;
+use edit_common::markdown::doc_to_markdown;
 use edit_common::{
-    doc_as_html,
     commands::*,
+    doc_as_html,
     markdown::markdown_to_doc,
 };
 use failure::Error;
+use serde_json::Value;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use wasm_bindgen::prelude::*;
-use serde_json::Value;
-use edit_common::markdown::doc_to_markdown;
 
 lazy_static! {
     static ref WASM_ALIVE: Arc<AtomicBool> = Arc::new(AtomicBool::new(true));
@@ -62,7 +62,6 @@ macro_rules! console_log {
 macro_rules! console_error {
     ($($t:tt)*) => ($crate::wasm::error(&format!($($t)*)))
 }
-
 
 #[wasm_bindgen]
 #[allow(non_snake_case)]
@@ -142,8 +141,7 @@ impl WasmClient {
         // }
 
         match self.handle_task(input.clone()) {
-            Ok(_) => {
-            }
+            Ok(_) => {}
             Err(err) => {
                 // We could panic here, but some errors are resumable
                 console_error!("Error handling task: {:?}\n{:?}", input, err);

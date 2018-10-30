@@ -8,8 +8,8 @@ use std::sync::{
 // Checkpoint::create(5) -> Vec<Checkpoint; 5> then map to create your threads
 pub struct Checkpoint {
     pub index: usize,
-    all: Arc<Barrier>, // joint
-    sequential: bool, // sequence active
+    all: Arc<Barrier>,               // joint
+    sequential: bool,                // sequence active
     seq_barriers: Arc<Vec<Barrier>>, // sequential
 }
 
@@ -22,10 +22,19 @@ impl Checkpoint {
 
     pub fn generate(count: usize) -> Vec<Checkpoint> {
         let all = Arc::new(Barrier::new(count));
-        let seq_barriers = Arc::new((0..count - 1).map(|index| Barrier::new(count - index)).collect::<Vec<_>>());
-        (0..count).map(|index| {
-            Checkpoint { index, all: all.clone(), sequential: false, seq_barriers: seq_barriers.clone(), }
-        }).collect()
+        let seq_barriers = Arc::new(
+            (0..count - 1)
+                .map(|index| Barrier::new(count - index))
+                .collect::<Vec<_>>(),
+        );
+        (0..count)
+            .map(|index| Checkpoint {
+                index,
+                all: all.clone(),
+                sequential: false,
+                seq_barriers: seq_barriers.clone(),
+            })
+            .collect()
     }
 
     pub fn sync(&mut self) {
@@ -57,20 +66,19 @@ impl Checkpoint {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
+    use super::*;
     use rand;
     use rand::Rng;
     use std::sync::mpsc::channel;
-    use super::*;
 
     #[test]
     fn it_works() {
         const COUNT: usize = 32;
 
         let (tx, rx) = channel();
-        
+
         Checkpoint::generate(COUNT)
             .into_iter()
             .enumerate()
@@ -97,8 +105,10 @@ mod tests {
             })
             .collect::<Vec<_>>()
             .into_iter()
-            .for_each(|handle| { handle.join().unwrap(); });
-        
+            .for_each(|handle| {
+                handle.join().unwrap();
+            });
+
         let results = (0..COUNT).map(|_| rx.recv().unwrap()).collect::<Vec<_>>();
         assert_eq!(results, (0..COUNT).collect::<Vec<_>>());
     }

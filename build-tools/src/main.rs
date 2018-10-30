@@ -189,6 +189,18 @@ enum Cli {
     },
 }
 
+fn expect_geckodriver() {
+    if let Err(_) = command!("geckodriver -V").unwrap().output() {
+        panic!("Abort: please ensure the program 'geckodriver' is installed globally.");
+    }
+}
+
+fn expect_yarn() {
+    if let Err(_) = command!("yarn --version").unwrap().output() {
+        panic!("Abort: please ensure the program 'yarn' is installed globally.");
+    }
+}
+
 fn run() -> Result<(), Error> {
     // We want to set this to the executable directly, rather than cargo build,
     // because we can't re-build the currently running executable on Windows.
@@ -485,6 +497,10 @@ fn run() -> Result<(), Error> {
             integration,
             args,
         } => {
+            if integration {
+                expect_geckodriver();
+            }
+
             if !no_unit {
                 // Unit test
                 eprintln!("[running unit tests]");
@@ -588,6 +604,8 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::FrontendBuild { args } => {
+            expect_yarn();
+
             // Install Node dependencies
             execute!(
                 r"
@@ -617,6 +635,8 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::FrontendWatch { args } => {
+            expect_yarn();
+
             // Install Node dependencies
             execute!(
                 r"
@@ -633,7 +653,7 @@ fn run() -> Result<(), Error> {
                 ))?;
                 Ok(())
             });
-            
+
             // Watch TypeScript
             execute!(
                 r"

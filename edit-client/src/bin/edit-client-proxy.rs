@@ -47,7 +47,10 @@ use structopt::StructOpt;
 use ws::CloseCode;
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "edit-client", about = "An example of StructOpt usage.")]
+#[structopt(
+    name = "edit-client",
+    about = "An example of StructOpt usage."
+)]
 struct Opt {
     #[structopt(long = "monkies", help = "Monkey count")]
     monkies: Option<usize>,
@@ -100,7 +103,8 @@ fn spawn_virtual_monkey(port: u16, key: usize) -> JoinHandle<()> {
 
                 Ok(())
             }
-        }).unwrap();
+        })
+        .unwrap();
     })
 }
 
@@ -194,7 +198,8 @@ fn spawn_sync_connection(
                     Ok(())
                 }
             }
-        }).unwrap();
+        })
+        .unwrap();
 
         // Client socket may have disconnected, and we closed
         // this connection via ServerCommand::TerminateProxy
@@ -321,7 +326,8 @@ pub fn server(url: &str, ws_port: u16) {
     ws::listen(url, |out| {
         // Websocket message handler.
         SocketHandler::<ProxySocket>::new(ws_port, out)
-    }).unwrap();
+    })
+    .unwrap();
 }
 
 pub fn start_websocket_server(port: u16) {

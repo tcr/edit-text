@@ -1,5 +1,3 @@
-// rustfmt-edition: 2018
-
 mod checkpoint;
 mod debug;
 
@@ -7,14 +5,16 @@ pub use self::{
     checkpoint::*,
     debug::*,
 };
+use commandspec::*;
+use failure::Error;
 use fantoccini::{
     Client,
     Locator,
 };
-use commandspec::*;
-use failure::Error;
 use rand::thread_rng;
+use serde_json::json;
 use std::process::Stdio;
+use std::sync::Arc;
 use std::{
     sync::atomic::{
         AtomicBool,
@@ -22,9 +22,6 @@ use std::{
         Ordering,
     },
     thread::JoinHandle,
-};
-use std::sync::{
-    Arc,
 };
 use taken::*;
 
@@ -62,13 +59,12 @@ fn launch_webdriver() -> Result<(u16, SpawnGuard), Error> {
     let mut cmd = match driver {
         Driver::Chrome => {
             let mut cmd = command!("chromedriver")?;
-            cmd.arg(format!("--port={}", port)).arg(port.to_string());
+            cmd.arg(format!("--port={}", port));
             cmd
         }
         Driver::Gecko => {
             let mut cmd = command!("geckodriver")?;
             cmd.arg("-p").arg(port.to_string());
-            cmd.env("MOZ_HEADLESS", "1");
             cmd
         }
     };
@@ -96,7 +92,17 @@ where
     await!(sleep_ms(3_000));
 
     // Connect to the browser driver from Rust.
-    let client = await!(Client::new(&format!("http://0.0.0.0:{}/", port),)).unwrap();
+    let client = await!(Client::with_capabilities(
+        &format!("http://0.0.0.0:{}/", port),
+        json!({
+            "moz:firefoxOptions": {"args": ["--headless"]},
+            "goog:chromeOptions": {"args": ["--headless"]}, // TODO this doesn't seem to work.
+        })
+        .as_object()
+        .unwrap()
+        .to_owned(),
+    ))
+    .unwrap();
 
     eprintln!("Connected...");
     await!(callback(client))
@@ -135,25 +141,23 @@ where
             take!(=result);
             async move {
                 checkpoint.sequential();
-                result.store(await!(with_webdriver(async move |mut c| {
-                    let (c, checkpoint) = await!(synchronize_clients(
-                        c,
-                        test_id.clone(),
-                        checkpoint,
-                    ))?;
-                    let mut debug = DebugClient::from(c);
-                    await!(runner_test(debug, test_id.clone(), checkpoint))
-                }))
-                .unwrap(), Ordering::Relaxed);
+                result.store(
+                    await!(with_webdriver(async move |mut c| {
+                        let (c, checkpoint) =
+                            await!(synchronize_clients(c, test_id.clone(), checkpoint,))?;
+                        let mut debug = DebugClient::from(c);
+                        await!(runner_test(debug, test_id.clone(), checkpoint))
+                    }))
+                    .unwrap(),
+                    Ordering::Relaxed,
+                );
             }
         });
         Ok(result.load(Ordering::Relaxed))
     })
 }
 
-pub fn concurrent_editing<T>(
-    runner_test: fn(DebugClient, String, Checkpoint) -> T,
-)
+pub fn concurrent_editing<T>(runner_test: fn(DebugClient, String, Checkpoint) -> T)
 where
     T: std::future::Future<Output = Result<bool, Error>> + Send + 'static,
 {

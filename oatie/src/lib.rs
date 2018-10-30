@@ -82,14 +82,14 @@ where
     type Doc;
 
     /// Applies an operation to a `Self::Doc`, returning the modified `Self::Doc`.
-    fn apply(&Self::Doc, &Self) -> Self::Doc;
+    fn apply(doc: &Doc, op: &Self) -> Self::Doc;
 
     /// Returns an empty operation.
     fn empty() -> Self;
 
     /// Composes two operations, returning a single operation encapsulating them
     /// both.
-    fn compose(&Self, &Self) -> Self;
+    fn compose(a: &Self, b: &Self) -> Self;
 
     /// Composes an iterator of operations into a single operation.
     /// If no operations are returned from the iterator, the Op::empty() should be
@@ -100,7 +100,7 @@ where
         Self: 'a;
 
     /// Transform a document given the corresponding Schema trait.
-    fn transform<S: Schema>(&Self, &Self) -> (Self, Self);
+    fn transform<S: Schema>(a: &Self, b: &Self) -> (Self, Self);
 
     /// Utility function to transform an operation against a competing one,
     /// returning the results of composing them both.

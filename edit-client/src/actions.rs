@@ -99,7 +99,11 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
 
     if let Some(walker2) = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, false) {
         // Detect other caret.
-        let last_walker = if walker.caret_pos() > walker2.caret_pos() { walker.clone() } else { walker2.clone() };
+        let last_walker = if walker.caret_pos() > walker2.caret_pos() {
+            walker.clone()
+        } else {
+            walker2.clone()
+        };
         let delta = (walker.caret_pos() - walker2.caret_pos()).abs();
         println!("delete delta: {:?}, is selection: {:?}", delta, delta != 0);
 
@@ -226,17 +230,8 @@ pub fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
             _ => unreachable!(),
         };
 
-        // TODO what is this? is it needed?
-        let last_doc_stack = block_walker.doc().stack.clone();
-
         // Move to prior block to join it, or abort.
         if !block_walker.back_block_or_block_object() {
-            return Ok(op_span!([], []));
-        }
-
-        // TODO what is this? is it needed?
-        let next_doc_stack = block_walker.doc().stack.clone();
-        if last_doc_stack != next_doc_stack {
             return Ok(op_span!([], []));
         }
 
@@ -327,7 +322,7 @@ pub fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
 
 pub fn add_string(ctx: ActionContext, input: &str) -> Result<Op, Error> {
     // @HEHEHE
-    
+
     let walker = Walker::to_caret_position(&ctx.doc, &ctx.client_id, Pos::Focus)?;
 
     // Style map.
@@ -371,7 +366,13 @@ pub fn apply_style(ctx: ActionContext, style: Style, value: Option<String>) -> R
 
 // TODO consider removing this and just use restyle
 pub fn remove_styles(ctx: ActionContext, mut styles: StyleSet) -> Result<Op, Error> {
-    restyle(ctx, styles.drain().map(|style| StyleOp::RemoveStyle(style)).collect())
+    restyle(
+        ctx,
+        styles
+            .drain()
+            .map(|style| StyleOp::RemoveStyle(style))
+            .collect(),
+    )
 }
 
 pub fn restyle(ctx: ActionContext, ops: Vec<StyleOp>) -> Result<Op, Error> {
@@ -536,7 +537,11 @@ pub fn has_bounding_carets(ctx: ActionContext) -> bool {
     has_caret(ctx, false)
 }
 
-pub fn caret_move(mut ctx: ActionContext, increase: bool, preserve_select: bool) -> Result<Op, Error> {
+pub fn caret_move(
+    mut ctx: ActionContext,
+    increase: bool,
+    preserve_select: bool,
+) -> Result<Op, Error> {
     let op_1 = if !preserve_select && has_bounding_carets(ctx.clone()) {
         // TODO caret_clear should take a position also
         let (_pos, op) = caret_clear(ctx.clone(), Pos::Anchor)?;
@@ -583,7 +588,10 @@ pub fn caret_move(mut ctx: ActionContext, increase: bool, preserve_select: bool)
     // Return composed operations. Select proper order or otherwise composition
     // will be invalid.
 
-    Ok(Op::compose(&op_1, &Op::transform_advance::<RtfSchema>(&op_2, &op_3)))
+    Ok(Op::compose(
+        &op_1,
+        &Op::transform_advance::<RtfSchema>(&op_2, &op_3),
+    ))
 }
 
 pub fn caret_word_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
@@ -801,7 +809,6 @@ pub fn caret_clear(ctx: ActionContext, position: Pos) -> Result<(isize, Op), Err
     caret_clear_inner(walker)
 }
 
-
 pub fn caret_clear_inner(walker: Walker) -> Result<(isize, Op), Error> {
     let pos = walker.caret_pos();
     let mut writer = walker.to_writer();
@@ -860,7 +867,6 @@ pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan, focus: bool) -> Result<Op
         "focus".to_string() => if focus { format!("true") } else { format!("false") },
     });
     writer.add.exit_all();
-
 
     let op_3 = writer.result();
 

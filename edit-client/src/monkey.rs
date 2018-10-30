@@ -16,8 +16,8 @@ use std::rc::Rc;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
-use wasm_bindgen::prelude::*;
 use wasm_bindgen::closure::Closure;
+use wasm_bindgen::prelude::*;
 use wbg_rand::Rng;
 
 #[cfg(target_arch = "wasm32")]
@@ -83,9 +83,8 @@ impl Scheduler {
 
                     if alive.load(Ordering::Relaxed) && monkey.load(Ordering::Relaxed) {
                         let task_object = task();
-                        let task_str = serde_json::to_string(&Task::ControllerCommand(
-                            task_object,
-                        )).unwrap();
+                        let task_str =
+                            serde_json::to_string(&Task::ControllerCommand(task_object)).unwrap();
                         forwardWasmTask(&task_str);
                     }
                 })
@@ -122,9 +121,9 @@ impl Scheduler {
         F: Fn() -> ControllerCommand + 'static + Send,
     {
         use ::failure::Error;
-        use ::rand;
         use ::std::thread;
         use ::std::time::Duration;
+        use rand;
 
         // Proxy impl
         let tx = self.tx.clone();
@@ -172,7 +171,7 @@ fn local_rng() -> impl Rng {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn local_rng() -> impl Rng {
-    use ::rand;
+    use rand;
     rand::thread_rng()
 }
 

@@ -1,9 +1,9 @@
+use failure::Error;
 use oatie::doc::*;
 use oatie::stepper::*;
 use oatie::transform::Schema;
 use oatie::writer::*;
 use take_mut;
-use failure::Error;
 
 fn is_block(attrs: &Attrs) -> bool {
     use oatie::schema::*;
@@ -17,11 +17,11 @@ fn is_block_object(attrs: &Attrs) -> bool {
 }
 
 fn is_caret(attrs: &Attrs, client_id: Option<&str>, focus: bool) -> bool {
-    attrs["tag"] == "caret" && client_id.map(|id| attrs.get("client") == Some(&id.to_string())).unwrap_or(false)
-        && attrs
-            .get("focus")
-            .map(|x| x == "true")
-            .unwrap_or(false) == focus
+    attrs["tag"] == "caret"
+        && client_id
+            .map(|id| attrs.get("client") == Some(&id.to_string()))
+            .unwrap_or(false)
+        && attrs.get("focus").map(|x| x == "true").unwrap_or(false) == focus
 }
 
 // Is any caret
@@ -88,12 +88,14 @@ impl CaretStepper {
                 self.doc.enter();
                 1
             }
-            None => if self.doc.is_done() {
-                return None;
-            } else {
-                self.doc.exit();
-                1
-            },
+            None => {
+                if self.doc.is_done() {
+                    return None;
+                } else {
+                    self.doc.exit();
+                    1
+                }
+            }
         };
 
         if self.is_valid_caret_pos() {
@@ -115,11 +117,13 @@ impl Iterator for CaretStepper {
             Some(DocGroup(..)) => {
                 self.doc.enter();
             }
-            None => if self.doc.is_done() {
-                return None;
-            } else {
-                self.doc.exit();
-            },
+            None => {
+                if self.doc.is_done() {
+                    return None;
+                } else {
+                    self.doc.exit();
+                }
+            }
         }
 
         if self.is_valid_caret_pos() {
@@ -278,7 +282,7 @@ impl Walker {
                 if stepper.next().is_none() {
                     break;
                 }
-            };
+            }
 
             last_stepper
         });
@@ -347,24 +351,35 @@ impl Walker {
         loop {
             if let Some(DocGroup(attrs, _)) = stepper.doc.head() {
                 match position {
-                    Pos::Focus => if is_caret(&attrs, Some(client_id), true) {
-                        result_stepper = Some(stepper);
-                        break;
-                    },
-                    Pos::Anchor => if is_caret(&attrs, Some(client_id), false) {
-                        result_stepper = Some(stepper);
-                        break;
-                    },
-                    Pos::Start => if is_caret(&attrs, Some(client_id), false) || is_caret(&attrs, Some(client_id), true) {
-                        result_stepper = Some(stepper);
-                        break;
-                    },
+                    Pos::Focus => {
+                        if is_caret(&attrs, Some(client_id), true) {
+                            result_stepper = Some(stepper);
+                            break;
+                        }
+                    }
+                    Pos::Anchor => {
+                        if is_caret(&attrs, Some(client_id), false) {
+                            result_stepper = Some(stepper);
+                            break;
+                        }
+                    }
+                    Pos::Start => {
+                        if is_caret(&attrs, Some(client_id), false)
+                            || is_caret(&attrs, Some(client_id), true)
+                        {
+                            result_stepper = Some(stepper);
+                            break;
+                        }
+                    }
                     // Continue until last match
-                    Pos::End => if is_caret(&attrs, Some(client_id), false) || is_caret(&attrs, Some(client_id), true) {
-                        result_stepper = Some(stepper.clone());
-                    },
+                    Pos::End => {
+                        if is_caret(&attrs, Some(client_id), false)
+                            || is_caret(&attrs, Some(client_id), true)
+                        {
+                            result_stepper = Some(stepper.clone());
+                        }
+                    }
                 }
-                
             }
             if stepper.next().is_none() {
                 break;
@@ -377,7 +392,10 @@ impl Walker {
                 stepper: result_stepper,
             })
         } else {
-            Err(format_err!("Could not find cursor at {:?} position.", position))
+            Err(format_err!(
+                "Could not find cursor at {:?} position.",
+                position
+            ))
         }
     }
 
@@ -404,12 +422,14 @@ impl Walker {
                     match_cur.enter();
                     match_doc.enter();
                 }
-                None => if match_cur.is_done() {
-                    break;
-                } else {
-                    match_cur.exit();
-                    match_doc.exit();
-                },
+                None => {
+                    if match_cur.is_done() {
+                        break;
+                    } else {
+                        match_cur.exit();
+                        match_doc.exit();
+                    }
+                }
             }
 
             while match_doc != stepper.doc {
