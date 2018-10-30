@@ -3,11 +3,11 @@
 `./tools` is the build tool. Invocation will be different if you are on Windows or a Linux or macOS system:
 
 ```
-./tools help  # Linux, macOS, and Powershell
-tools help    # Windows (cmd.exe)
+./tools help    # Linux, macOS, etc.
+.\tools help    # Windows
 ```
 
-Please substitute either `./tools` or `tools` in the examples below accordingly.
+Please substitute either `./tools` or `.\tools` in the examples below accordingly.
 
 Running `./tools help` displays a list of build commands.
 
