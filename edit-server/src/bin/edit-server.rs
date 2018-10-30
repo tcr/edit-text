@@ -177,7 +177,11 @@ fn run_http_server(port: u16, client_proxy: bool) {
     assert!(template_dir.exists(Path::new("presentation.hbs")));
     assert!(template_dir.exists(Path::new("favicon.png")));
 
-    println!("Listening on http://0.0.0.0:{}/", port);
+    println!(
+        "> Server listening for HTTP connections on http://0.0.0.0:{}/",
+        port
+    );
+    println!("  Talking to client proxy: {:?}", client_proxy);
 
     let reg = Handlebars::new();
 
@@ -204,7 +208,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
             output.into_bytes()
         };
 
-        fn random_id() -> String {
+        fn random_id_alpha() -> String {
             let mut rng = thread_rng();
             return ::rand::seq::sample_iter(&mut rng, 0..26u8, 8)
                 .unwrap()
@@ -225,29 +229,47 @@ fn run_http_server(port: u16, client_proxy: bool) {
 
                 // Upload files using /?from={url}
                 let load_doc = request.get_param("from")
-                    .ok_or(format_err!("no from parameter to download from"))
+                    .ok_or(format_err!("no from parameter to download from")) // TODO what is this line for
                     .and_then(|from| {
-                        // Create a randomly-named page ID for this downloaded file.
-                        id = random_id();
+                        // Create a randomly-named page ID for this page.
+                        id = random_id_alpha();
 
-                        let mut client = reqwest::Client::new();
-                        let mut res = client.get(&from).send()?;
-                        if !res.status().is_success() {
-                            bail!("Unsuccessful request")
-                        }
-                        let md = res.text()?;
-                        let doc = Doc(markdown_to_doc(&md)?);
-                        Ok(match validate_doc(&doc) {
-                            Ok(_) => doc,
-                            Err(err) => {
-                                eprintln!("Error decoding document: {:?}", err);
-                                Doc(doc_span![
-                                    DocGroup({"tag": "pre"}, [
-                                        DocChars("Error decoding document.", {Style::Normie => None}),
-                                    ]),
-                                ])
+                        // Download directly from URLs.
+                        // TODO is this irresponsible
+                        if from.starts_with("http") {
+                            let mut client = reqwest::Client::new();
+                            let mut res = client.get(&from).send()?;
+                            if !res.status().is_success() {
+                                bail!("Unsuccessful request")
                             }
-                        })
+                            let md = res.text()?;
+                            let doc = Doc(markdown_to_doc(&md)?);
+                            Ok(match validate_doc(&doc) {
+                                Ok(_) => doc,
+                                Err(err) => {
+                                    eprintln!("Error decoding document: {:?}", err);
+                                    Doc(doc_span![
+                                        DocGroup({"tag": "pre"}, [
+                                            DocChars("Error decoding document.", {Style::Normie => None}),
+                                        ]),
+                                    ])
+                                }
+                            })
+                        } else {
+                            // Interpret as a Markdown document
+                            let doc = Doc(markdown_to_doc(&from)?);
+                            Ok(match validate_doc(&doc) {
+                                Ok(_) => doc,
+                                Err(err) => {
+                                    eprintln!("Error decoding document: {:?}", err);
+                                    Doc(doc_span![
+                                        DocGroup({"tag": "pre"}, [
+                                            DocChars("Error decoding document.", {Style::Normie => None}),
+                                        ]),
+                                    ])
+                                }
+                            })
+                        }
                     })
                     .unwrap_or(default_doc());
 
@@ -459,8 +481,6 @@ fn main() {
     // let ron_in: Doc = ::ron::de::from_str(&ron_out).unwrap();
     // println!("---> ron: {:?}", ron_in);
     // ::std::process::exit(1);
-
-    println!("client proxy: {:?}", opt.client_proxy);
 
     let _ = spawn_sync_socket_server();
 

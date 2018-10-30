@@ -23,21 +23,6 @@ impl DebugClient {
         self.client.execute(input, vec![])
     }
 
-    pub fn keypress(&mut self, key: &str) -> impl Future<Item = (), Error = CmdError> {
-        self.js(&format!(
-            r#"
-var event = new KeyboardEvent("keypress", {{
-    bubbles: true,
-    cancelable: true,
-    charCode: {},
-}});
-document.dispatchEvent(event);
-            "#,
-            key
-        ))
-        .map(|_| ())
-    }
-
     pub fn keypress_char(&mut self, key: char) -> impl Future<Item = (), Error = CmdError> {
         self.js(&format!(
             r#"

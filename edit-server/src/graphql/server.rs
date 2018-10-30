@@ -178,7 +178,7 @@ pub fn sync_graphql_server(
     // Create a context object.
     let ctx = Ctx { db_pool, tx_master };
 
-    eprintln!("Graphql served on http://0.0.0.0:8003");
+    eprintln!("  GraphQL service listening on http://0.0.0.0:8003");
     rouille::start_server("0.0.0.0:8003", move |request| {
         let ctx = ctx.clone();
 
