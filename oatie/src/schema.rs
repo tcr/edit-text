@@ -88,7 +88,7 @@ impl Track for RtfTrack {
         }
     }
 
-    #[allow(match_same_arms)]
+    #[allow(clippy::match_same_arms)]
     fn parents(&self) -> Vec<Self> {
         use self::RtfTrack::*;
         match *self {
@@ -101,7 +101,7 @@ impl Track for RtfTrack {
     }
 
     // TODO extrapolate this from parents()
-    #[allow(match_same_arms)]
+    #[allow(clippy::match_same_arms)]
     fn ancestors(&self) -> Vec<Self> {
         use self::RtfTrack::*;
         match *self {
@@ -114,7 +114,6 @@ impl Track for RtfTrack {
     }
 }
 
-// TODO why are these attributes necessary?
 #[derive(Clone, Debug)]
 pub struct RtfSchema;
 
