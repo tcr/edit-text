@@ -32,6 +32,7 @@ wasm-bindgen-shared = { version = "0.2" }
 # cargo-watch
 watchexec = "1.9"
 
+[dev-dependencies]
 # integration tests
 tokio-timer = "0.2"
 tokio = { version = "0.1.0", features = ["async-await-preview"] }
@@ -39,6 +40,7 @@ tokio-async-await = "0.1.4"
 fantoccini = "0.11"
 futures = "0.1.20"
 serde_json = "*"
+reqwest = "0.9"
 
 [features]
 integration = []

@@ -16,14 +16,15 @@ use self::common::*;
 /// waits for the dust to settle, then sees if we get two Ghost emoji on both clients.
 #[test]
 fn integration_spooky_test() {
-    concurrent_editing(async move |mut debug, test_id, _checkpoint| {
+    let markdown = "# a cold freezing night";
+    concurrent_editing(markdown, async move |mut debug, test_id, _checkpoint| {
         // Position the caret at the end of the current line.
         await!(debug.debug_end_of_line());
         await!(sleep_ms(1_000));
 
         // Type a ghost emoji.
         // Wait an arbitrary 4s for clients to receive all pending operations.
-        await!(debug.keypress("0x1f47b"));
+        await!(debug.keypress_char('\u{01f47b}'));
         await!(sleep_ms(4_000));
 
         // Get the Markdown content.
@@ -31,14 +32,15 @@ fn integration_spooky_test() {
         eprintln!("[{}] markdown content: {:?}", test_id, markdown);
 
         // End condition: Did the two characters appear across all clients?
-        Ok(markdown.lines().next().unwrap().ends_with("👻👻"))
+        Ok(markdown.lines().next().unwrap().ends_with("\u{01f47b}\u{01f47b}"))
     });
 }
 
 /// Clients typing in a sequential order should have predictable results.
 #[test]
 fn integration_sequential_test() {
-    concurrent_editing(async move |mut debug, test_id, mut checkpoint| {
+    let markdown = "xxxxx";
+    concurrent_editing(markdown, async move |mut debug, test_id, mut checkpoint| {
         // Type a character.
         checkpoint.sequential();
         await!(debug.keypress_char(if checkpoint.index == 0 { '0' } else { '1' }));

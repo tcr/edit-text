@@ -114,8 +114,7 @@ async fn synchronize_clients(
     mut checkpoint: Checkpoint,
 ) -> Result<(Client, Checkpoint), Error> {
     // Navigate to the test URL and wait for the page to load.
-    let test_url = format!("http://0.0.0.0:8000/{}", test_id);
-    c = await!(c.goto(&test_url))?;
+    c = await!(c.goto(&test_id))?;
 
     // Wait until carets are rendered.
     c = await!(c.wait_for_find(Locator::Css(r#"div[data-tag="caret"]"#)))?.client();
@@ -157,7 +156,7 @@ where
     })
 }
 
-pub fn concurrent_editing<T>(runner_test: fn(DebugClient, String, Checkpoint) -> T)
+pub fn concurrent_editing<T>(markdown: &str, runner_test: fn(DebugClient, String, Checkpoint) -> T)
 where
     T: std::future::Future<Output = Result<bool, Error>> + Send + 'static,
 {
@@ -165,13 +164,19 @@ where
     // or unset it at the end of this function
     // commandspec::cleanup_on_ctrlc();
 
-    let test_id1 = format!("test{}", random_id());
-    let test_id2 = test_id1.clone();
+    // Make an HTTP request to load the document.
+    let client = reqwest::Client::new();
+    let response = client
+        .get("http://0.0.0.0:8000/")
+        .query(&[("from", markdown)])
+        .send()
+        .unwrap();
+    let target_url = response.url().to_string();
 
     let (checkpoint1, checkpoint2) = Checkpoint::new_pair();
 
-    let j1 = spawn_test_thread(test_id1, checkpoint1, runner_test);
-    let j2 = spawn_test_thread(test_id2, checkpoint2, runner_test);
+    let j1 = spawn_test_thread(target_url.clone(), checkpoint1, runner_test);
+    let j2 = spawn_test_thread(target_url.clone(), checkpoint2, runner_test);
 
     let ret1 = j1.join().unwrap().expect("Program failed:");
     let ret2 = j2.join().unwrap().expect("Program failed:");
