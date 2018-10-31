@@ -82,7 +82,6 @@ export class WasmClient implements ControllerImpl {
   clientBindings: WasmClientModule;
 
   sendCommand(command: Command) {
-    delete command.tag;
     if (forwardWasmTaskCallback != null) {
       this.clientBindings.command(JSON.stringify({
         ControllerCommand: command,

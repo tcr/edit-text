@@ -167,7 +167,6 @@ export class ProxyClient implements ControllerImpl {
   private socket: WebSocket;
 
   sendCommand(command: commands.Command) {
-    delete command.tag;
     this.socket.send(JSON.stringify(command));
   }
 

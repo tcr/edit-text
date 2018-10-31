@@ -367,7 +367,11 @@ export class Editor extends React.Component {
 
     // Send the command to the client.
     if (destCursor !== null) {
-      this.props.controller.sendCommand(commands.Cursor(destCursor, dropAnchor ? destCursor : null));
+      this.props.controller.sendCommand({
+        type: 'Cursor',
+        focus: destCursor,
+        anchor: dropAnchor ? destCursor : null,
+      });
     }
     
     return destCursor;
@@ -388,7 +392,10 @@ export class Editor extends React.Component {
       return;
     }
 
-    this.props.controller.sendCommand(commands.Character(e.charCode));
+    this.props.controller.sendCommand({
+      type: 'Character',
+      char_code: e.charCode,
+    });
 
     e.preventDefault();
   }
@@ -400,7 +407,10 @@ export class Editor extends React.Component {
 
     const text = e.clipboardData.getData('text/plain');
     console.info('(c) got pasted text: ', text);
-    this.props.controller.sendCommand(commands.InsertText(text));
+    this.props.controller.sendCommand({
+      type: 'InsertText',
+      text: text,
+    });
   }
 
   onGlobalKeydown(e: KeyboardEvent) {
@@ -458,12 +468,13 @@ export class Editor extends React.Component {
     }
 
     // Forward the keypress to the controller.
-    this.props.controller.sendCommand(commands.Keypress(
-      e.keyCode,
-      e.metaKey,
-      e.shiftKey,
-      e.altKey,
-    ));
+    this.props.controller.sendCommand({
+      type: 'Keypress',
+      key_code: e.keyCode,
+      meta_key: e.metaKey,
+      shift_key: e.shiftKey,
+      alt_key: e.altKey,
+    });
 
     e.preventDefault();
   }

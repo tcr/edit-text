@@ -21,18 +21,40 @@ pub enum ClientCommand {
 
 // Controller is the client interface that is exposed to the frnontend.
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+#[serde(tag = "type")]
 pub enum ControllerCommand {
-    // Connect(String),
-    Keypress(u32, bool, bool, bool), // code, meta, shift, alt
-    Button(u32),
-    Character(u32),
-    InsertText(String),
-    RenameGroup(String, CurSpan),
+    // Connect(String),ç
+    Keypress {
+        key_code: u32,
+        meta_key: bool,
+        shift_key: bool,
+        alt_key: bool,
+    },
+    Button {
+        button: u32
+    },
+    Character {
+        char_code: u32,
+    },
+    InsertText {
+        text: String,
+    },
+    RenameGroup {
+        tag: String,
+        curspan: CurSpan,
+    },
     // Load(DocSpan),
-    Cursor(Option<CurSpan>, Option<CurSpan>),
+    Cursor {
+        focus: Option<CurSpan>,
+        anchor: Option<CurSpan>,
+    },
     // Target(CurSpan),
-    RandomTarget(f64),
-    Monkey(bool),
+    RandomTarget {
+        position: f64,
+    },
+    Monkey {
+        enabled: bool,
+    },
 }
 
 // Frontend is the editor components in JavaScript.

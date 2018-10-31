@@ -2,106 +2,14 @@
 
 import {CurSpan} from './editor';
 
-export function RenameGroup(tag: string, curspan: CurSpan) {
-  return {
-    tag: 'RenameGroup' as 'RenameGroup',
-    'RenameGroup': [tag, curspan],
-  }
-}
-
-export function Keypress(
-  keyCode: number,
-  metaKey: boolean,
-  shiftKey: boolean,
-  altKey: boolean,
-) {
-  return {
-    tag: 'Keypress' as 'Keypress',
-    'Keypress': [keyCode, metaKey, shiftKey, altKey],
-  }
-}
-
-export function Character(
-  charCode: number,
-) {
-  return {
-    tag: 'Character' as 'Character',
-    'Character': charCode,
-  }
-}
-
-export function InsertText(
-  text: string,
-) {
-  return {
-    tag: 'InsertText' as 'InsertText',
-    'InsertText': text,
-  }
-}
-
-export function Cursor(
-  focus: Array<any> | null,
-  anchor: Array<any> | null,
-) {
-  return {
-    tag: 'Cursor' as 'Cursor',
-    'Cursor': [focus, anchor],
-  }
-}
-
-export function CursorTarget(
-  curspan: Array<any>,
-) {
-  return {
-    tag: 'CursorTarget' as 'CursorTarget',
-    'CursorTarget': curspan,
-  }
-}
-
-export function Button(
-  button: number,
-) {
-  return {
-    tag: 'Button' as 'Button',
-    'Button': button,
-  }
-}
-
-export function Load(
-  load: any,
-) {
-  return {
-    tag: 'Load' as 'Load',
-    'Load': load,
-  }
-}
-
-export function Monkey(
-  enabled: boolean,
-) {
-  return {
-    tag: 'Monkey' as 'Monkey',
-    'Monkey': enabled,
-  };
-}
-
-export function Connect(
-  client: string,
-) {
-  return {
-    tag: 'Connect' as 'Connect',
-    'Connect': client,
-  };
-}
-
 export type Command
-  = ReturnType<typeof Monkey>
-  | ReturnType<typeof RenameGroup>
-  | ReturnType<typeof Keypress>
-  | ReturnType<typeof Character>
-  | ReturnType<typeof Cursor>
-  | ReturnType<typeof Button>
-  | ReturnType<typeof Load>
-  | ReturnType<typeof Connect>
-  | ReturnType<typeof InsertText>
+  = {type: 'Monkey', enabled: boolean}
+  | {type: 'RenameGroup', tag: string, curspan: CurSpan}
+  | {type: 'Keypress', key_code: number, meta_key: boolean, shift_key: boolean, alt_key: boolean}
+  | {type: 'Character', char_code: number}
+  | {type: 'Cursor', focus: Array<any> | null, anchor: Array<any> | null}
+  | {type: 'Button', button: number}
+  | {type: 'Load', load: any}
+  | {type: 'Connect', client: string}
+  | {type: 'InsertText', text: string}
   ;
