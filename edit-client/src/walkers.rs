@@ -81,7 +81,7 @@ impl CaretStepper {
         let len = match self.doc.head() {
             Some(DocChars(val)) => {
                 let len = val.char_len();
-                self.doc.skip(len);
+                self.doc.next();
                 len
             }
             Some(DocGroup(..)) => {
@@ -164,7 +164,7 @@ impl ReverseCaretStepper {
         if let Some(DocChars(..)) = doc2.unhead() {
             return true;
         } else if doc2.unhead().is_none() {
-            if doc2.stack.is_empty() {
+            if doc2.at_root() {
                 // end of document, bail
                 return false;
             }
@@ -202,7 +202,7 @@ impl Iterator for ReverseCaretStepper {
                 self.doc.unexit();
             }
             None => {
-                if self.doc.stack.is_empty() {
+                if self.doc.at_root() {
                     return None;
                 } else {
                     self.doc.unenter();
@@ -212,7 +212,7 @@ impl Iterator for ReverseCaretStepper {
 
         if self.is_valid_caret_pos() {
             self.caret_pos -= 1;
-        } else if let (None, true) = (self.doc.unhead(), self.doc.stack.is_empty()) {
+        } else if let (None, true) = (self.doc.unhead(), self.doc.at_root()) {
             // Fix caret_pos to be -1 when we reach the end.
             // {edit.reset.caret_pos}
             self.caret_pos = -1;
@@ -288,61 +288,18 @@ impl Walker {
         });
     }
 
+    #[deprecated]
     pub fn to_caret(doc: &Doc, client_id: &str, focus: bool) -> Walker {
-        let mut stepper = CaretStepper::new(DocStepper::new(&doc.0));
-
-        // Iterate until we match the cursor.
-        let matched = loop {
-            if let Some(DocGroup(attrs, _)) = stepper.doc.head() {
-                if is_caret(&attrs, Some(client_id), focus) {
-                    break true;
-                }
-            }
-            if stepper.skip_element().is_none() {
-                break false;
-            }
-        };
-        if !matched {
-            panic!("Didn't find a (focus={:?}) caret.", focus);
-        }
-
-        Walker {
-            original_doc: doc.clone(),
-            stepper,
-        }
+        Walker::to_caret_safe(doc, client_id, focus)
+            .expect(&format!("Didn't find a (focus={:?}) caret.", focus))
     }
 
-    // TODO Have this be replaced with to_caret_position also
-    // Only difference is that above consumers
-    // haven't had an .unwrap() call added yet for this:
+    #[deprecated]
     pub fn to_caret_safe(doc: &Doc, client_id: &str, focus: bool) -> Option<Walker> {
-        let mut stepper = CaretStepper::new(DocStepper::new(&doc.0));
-
-        // Iterate until we match the cursor.
-        let matched = loop {
-            if let Some(DocGroup(attrs, _)) = stepper.doc.head() {
-                if is_caret(&attrs, Some(client_id), focus) {
-                    break true;
-                }
-            }
-            if stepper.next().is_none() {
-                break false;
-            }
-        };
-
-        if !matched {
-            None
-        } else {
-            Some(Walker {
-                original_doc: doc.clone(),
-                stepper,
-            })
-        }
+        Walker::to_caret_position(doc, client_id, if focus { Pos::Focus } else { Pos::Anchor }).ok()
     }
 
-    // TODO Have this replace the above and take its name.
-    // Only difference is that above consumers
-    // haven't had an .unwrap() call added yet for this:
+    // TODO Have this replace to_caret and take its name.
     pub fn to_caret_position(doc: &Doc, client_id: &str, position: Pos) -> Result<Walker, Error> {
         let mut stepper = CaretStepper::new(DocStepper::new(&doc.0));
 
@@ -381,12 +338,13 @@ impl Walker {
                     }
                 }
             }
-            if stepper.next().is_none() {
+            if stepper.skip_element().is_none() {
                 break;
             }
         }
 
-        if let Some(result_stepper) = result_stepper {
+        if let Some(mut result_stepper) = result_stepper {
+            result_stepper.caret_pos = 0;
             Ok(Walker {
                 original_doc: doc.clone(),
                 stepper: result_stepper,
@@ -651,13 +609,21 @@ impl Walker {
 
         // Walk the doc until we reach our current doc position.
         let mut doc_stepper = DocStepper::new(&self.original_doc.0);
+        let mut current_stepper = self.stepper.doc.clone();
 
-        while self.stepper.doc != doc_stepper {
+        let char_index = current_stepper.char_index();
+        current_stepper.char_cursor_update();
+
+        while doc_stepper != current_stepper {
+            // console_log!("head ----> {:?}", doc_stepper.head());
+            // console_log!("head stack len ---> {:?}", doc_stepper.stack().len());
+            // console_log!("head stack ---> {:?}", doc_stepper.stack());
             match doc_stepper.head() {
-                Some(DocChars(..)) => {
-                    del.place(&DelSkip(1));
-                    add.place(&AddSkip(1));
-                    doc_stepper.skip(1);
+                Some(DocChars(ref text)) => {
+                    let text_len = text.char_len();
+                    del.place(&DelSkip(text_len));
+                    add.place(&AddSkip(text_len));
+                    doc_stepper.next();
                 }
                 Some(DocGroup(..)) => {
                     del.begin();
@@ -674,6 +640,14 @@ impl Walker {
                         doc_stepper.exit();
                     }
                 }
+            }
+        }
+
+
+        if let Some(index) = char_index {
+            if index > 0 {
+                del.place(&DelSkip(index));
+                add.place(&AddSkip(index));
             }
         }
 
