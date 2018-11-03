@@ -12,3 +12,7 @@ debug = true
 
 [profile.release]
 debug = true
+
+[patch.crates-io]
+wasm-bindgen = { path = "../wasm-bindgen" }
+wasm-bindgen-cli-support = { path = "../wasm-bindgen/crates/cli-support" }

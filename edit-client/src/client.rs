@@ -293,17 +293,17 @@ fn native_command<C: ClientImpl>(client: &mut C, req: ControllerCommand) -> Resu
             match (focus, anchor) {
                 (Some(focus), Some(anchor)) => {
                     client.client_op(|mut ctx| {
-                        let op = cur_to_caret(ctx.clone(), &focus, true)?;
+                        let op = cur_to_caret(ctx.clone(), &focus.0, true)?;
                         ctx.doc = Op::apply(&ctx.doc, &op);
-                        let op2 = cur_to_caret(ctx, &anchor, false)?;
+                        let op2 = cur_to_caret(ctx, &anchor.0, false)?;
                         Ok(Op::compose(&op, &op2))
                     })?;
                 }
                 (Some(focus), None) => {
-                    client.client_op(|doc| cur_to_caret(doc, &focus, true))?;
+                    client.client_op(|doc| cur_to_caret(doc, &focus.0, true))?;
                 }
                 (None, Some(anchor)) => {
-                    client.client_op(|doc| cur_to_caret(doc, &anchor, false))?;
+                    client.client_op(|doc| cur_to_caret(doc, &anchor.0, false))?;
                 }
                 (None, None) => {} // ???
             }
@@ -386,7 +386,7 @@ pub trait ClientImpl {
                     let idx = (pos * (cursors.len() as f64)) as usize;
 
                     value = Task::ControllerCommand(ControllerCommand::Cursor {
-                        focus: Some(cursors[idx].clone()),
+                        focus: Some(JsonEncodable(cursors[idx].clone())),
                         anchor: None
                     });
                 }

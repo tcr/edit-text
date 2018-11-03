@@ -1,4 +1,5 @@
 use oatie::doc::*;
+use wasm_bindgen::prelude::*;
 
 // The server is the synchronization server.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -19,11 +20,23 @@ pub enum ClientCommand {
     Update(usize, String, Op),
 }
 
+use wasm_bindgen::describe::WasmDescribe;
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
+pub struct JsonEncodable<T>(pub T);
+
+impl<T> WasmDescribe for JsonEncodable<T> {
+    fn describe() {
+        JsValue::describe()
+    }
+}
+
 // Controller is the client interface that is exposed to the frnontend.
+#[wasm_bindgen(tagged_union)]
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 #[serde(tag = "type")]
 pub enum ControllerCommand {
-    // Connect(String),ç
+    // Connect(String),
     Keypress {
         key_code: u32,
         meta_key: bool,
@@ -41,12 +54,12 @@ pub enum ControllerCommand {
     },
     RenameGroup {
         tag: String,
-        curspan: CurSpan,
+        curspan: JsonEncodable<CurSpan>,
     },
     // Load(DocSpan),
     Cursor {
-        focus: Option<CurSpan>,
-        anchor: Option<CurSpan>,
+        focus: Option<JsonEncodable<CurSpan>>,
+        anchor: Option<JsonEncodable<CurSpan>>,
     },
     // Target(CurSpan),
     RandomTarget {
