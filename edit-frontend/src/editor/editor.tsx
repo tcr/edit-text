@@ -338,8 +338,8 @@ export class Editor extends React.Component {
     // Get the boundaries of the root element. Any coordinate we're looking at that exist
     // outside of those boundaries, we snap back to the closest edge of the boundary.
     let boundary = this.el.getBoundingClientRect();
-    console.info('(m) Snapping x', x, 'y', y, 'to boundary');
-    console.info('(m)', boundary);
+    // console.info('(m) Snapping x', x, 'y', y, 'to boundary');
+    // console.info('(m)', boundary);
     if (x < boundary.left) {
       x = boundary.left;
     }
@@ -352,7 +352,7 @@ export class Editor extends React.Component {
     if (y > boundary.bottom) {
       y = boundary.bottom - 1;
     }
-    console.info('(m) Snapped x', x, 'y', y, 'to boundary. Done.');
+    // console.info('(m) Snapped x', x, 'y', y, 'to boundary. Done.');
 
     // Check whether we selected a text node or a block element, and create a cursor for it. 
     // Only select blocks which are empty.
@@ -489,6 +489,8 @@ export class Editor extends React.Component {
   }
   
   componentDidUpdate() {
+    this.el.innerHTML = this.props.content;
+
     // Highlight our own caret.
     document.querySelectorAll(
       `div[data-tag="caret"][data-client=${JSON.stringify(this.props.editorID)}]`,
@@ -508,6 +510,8 @@ export class Editor extends React.Component {
     document.addEventListener('keydown', (e) => {
       this.onGlobalKeydown(e);
     });
+
+    this.el.innerHTML = this.props.content;
   }
 
   render() {
@@ -520,9 +524,6 @@ export class Editor extends React.Component {
         onMouseDown={this.onMouseDown.bind(this)}
         onMouseUp={this.onMouseUp.bind(this)}
         onMouseMove={this.onMouseMove.bind(this)}
-        dangerouslySetInnerHTML={{
-          __html: this.props.content,
-        }}
       />
     );
   }
