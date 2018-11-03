@@ -1,5 +1,6 @@
 .DS_Store
 target/
+docs/book
 edit/test.txt
 edit/log
 edit/log2
