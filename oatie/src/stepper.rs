@@ -385,8 +385,9 @@ impl DocStepper {
             Some(&DocChars(ref text)) => {
                 // Expect cursor is at a string of length 1 at least
                 // (meaning cursor has not passed to the end of the string)
-                Some(DocChars(self.char_cursor_expect().right()
-                    .expect("Encountered empty DocString").clone()))
+                let cce = self.char_cursor_expect();
+                Some(DocChars(cce.right()
+                    .expect(&format!("Encountered empty DocString: {:?}", cce)).clone()))
             }
             Some(value) => Some(value.clone()),
             None => None,
@@ -439,7 +440,7 @@ impl DocStepper {
 
     pub fn skip(&mut self, mut skip: usize) {
         if let Some(ref char_cursor) = &self.cursor.suffix().char_cursor {
-            let remaining = char_cursor.index_from_end();
+            let remaining = char_cursor.right().unwrap().char_len();
             if remaining == skip {
                 self.next();
                 return;

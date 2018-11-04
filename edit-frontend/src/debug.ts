@@ -91,11 +91,25 @@ const DEBUG = {
         return globalClientBindings.asMarkdown();
     },
 
+    typeChar: (charCode: number) => {
+        let event = new (KeyboardEvent as any)("keypress", {
+            bubbles: true,
+            cancelable: true,
+            charCode: charCode,
+        });
+        document.dispatchEvent(event);
+    },
+
+    // Bindings to global ref for client module
+    // NOTE: only for debugging!
+
     setGlobalClientBindings: (
         bindings: WasmClientModule,
     ) => {
         globalClientBindings = bindings;
     },
+
+    // Timings
 
     times: ({} as any),
 

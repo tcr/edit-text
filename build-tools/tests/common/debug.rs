@@ -24,18 +24,8 @@ impl DebugClient {
     }
 
     pub fn keypress_char(&mut self, key: char) -> impl Future<Item = (), Error = CmdError> {
-        self.js(&format!(
-            r#"
-var event = new KeyboardEvent("keypress", {{
-    bubbles: true,
-    cancelable: true,
-    charCode: {},
-}});
-document.dispatchEvent(event);
-            "#,
-            key as usize,
-        ))
-        .map(|_| ())
+        self.js(&format!("return DEBUG.typeChar({})", key as usize))
+            .map(|_| ())
     }
 
     pub fn mousedown(&mut self, x: &str, y: &str) -> impl Future<Item = (), Error = CmdError> {

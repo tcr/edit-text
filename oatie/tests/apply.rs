@@ -157,3 +157,24 @@ fn test_lib_op() {
         ]
     );
 }
+
+
+#[test]
+fn apply_ghost() {
+    test_start();
+
+    assert_eq!(
+        apply_operation(
+            &doc_span![
+                DocChars(" stop crying, little hip hop")
+            ],
+            &op_span![
+                [],
+                [AddChars("\u{01f47b}")]
+            ],
+        ),
+        doc_span![
+            DocChars("\u{01f47b} stop crying, little hip hop")
+        ]
+    );
+}

@@ -82,7 +82,13 @@ enum Cli {
     BookWatch,
 
     #[structopt(name = "ci", about = "Executes testing for CI")]
-    Ci,
+    Ci {
+        #[structopt(
+            long = "no-headless",
+            help = "Do not run in headless mode."
+        )]
+        no_headless: bool,
+    },
 
     #[structopt(
         name = "client-proxy",
@@ -232,7 +238,10 @@ fn run() -> Result<(), Error> {
     // Run the subcommand.
     let parsed_args = Cli::from_iter(args.iter());
     match parsed_args {
-        Cli::Ci => {
+        Cli::Ci {
+            // TODO make this actually disable headless mode
+            no_headless: _no_headless,
+        }=> {
             let output = command!(
                 "
                     git --no-pager diff --name-only HEAD..origin/master
