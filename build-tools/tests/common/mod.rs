@@ -33,15 +33,6 @@ pub async fn sleep_ms(val: u64) -> Result<(), Error> {
     Ok(())
 }
 
-fn random_id() -> String {
-    let mut rng = thread_rng();
-    return ::rand::seq::sample_iter(&mut rng, 0..26u8, 8)
-        .unwrap()
-        .into_iter()
-        .map(|x| (b'a' + x) as char)
-        .collect::<String>();
-}
-
 #[allow(unused)]
 #[derive(Debug)]
 enum Driver {
@@ -113,8 +104,15 @@ async fn synchronize_clients(
     test_id: String,
     mut checkpoint: Checkpoint,
 ) -> Result<(Client, Checkpoint), Error> {
+    // We enter this function with threads running sequentially.
+
     // Navigate to the test URL and wait for the page to load.
     c = await!(c.goto(&test_id))?;
+    c = await!(c.wait_for_find(Locator::Css(r#".edit-text"#)))?.client();
+
+    // Ensure all browsers have reached this step before proceeding.
+    // From here on out, the threads run in parallel.
+    checkpoint.sync();
 
     // Wait until carets are rendered.
     c = await!(c.wait_for_find(Locator::Css(r#"div[data-tag="caret"]"#)))?.client();
