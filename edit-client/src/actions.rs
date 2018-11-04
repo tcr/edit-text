@@ -93,64 +93,20 @@ pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
     Ok(writer.result())
 }
 
-pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
-    let walker = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, true)
-        .ok_or(format_err!("Expected one caret for our client"))?;
-
-    if let Some(walker2) = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, false) {
-        // Detect other caret.
-        let last_walker = if walker.caret_pos() > walker2.caret_pos() {
-            walker.clone()
-        } else {
-            walker2.clone()
-        };
-        let delta = (walker.caret_pos() - walker2.caret_pos()).abs();
-        println!("delete delta: {:?}, is selection: {:?}", delta, delta != 0);
-
-        // If we found a selection, delete every character in the selection.
-        // We implement this by looping until the caret distance between our
-        // cursors is 0.
-        // TODO: This is incredibly inefficient.
-        //  1. Dont' recurse infinitely, do this in a loop.
-        //  2. Skip entire DocChars components instead of one character at a time.
-        if delta != 0 {
-            // Get real weird with it.
-            let op = delete_char_inner(last_walker)?;
-            if delta > 1 {
-                // Apply next op and compose.
-                let ctx2 = ActionContext {
-                    doc: Op::apply(&ctx.doc, &op),
-                    client_id: ctx.client_id.to_owned(),
-                };
-                let op_next = delete_char(ctx2)?;
-                return Ok(Op::compose(&op, &op_next));
-            } else {
-                return Ok(op);
-            }
-        }
-    }
-
-    // Delete from unfocused caret.
-    delete_char_inner(walker)
-}
-
-pub fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
-    let caret_pos = walker.caret_pos();
-    if caret_pos == 0 {
-        return Ok(Op::empty());
-    }
-
+fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
     // Check if caret is at the start of a block.
     let mut block_walker = walker.clone();
     assert!(block_walker.back_block());
     // console_log!("before at start of block {:?} vs {:?}", walker.caret_pos(), block_walker.caret_pos());
     block_walker.stepper.doc.enter();
     // block_walker.stepper.next(); // re-enter the block to first caret position
-    let at_start_of_block = caret_pos == block_walker.caret_pos();
+    let at_start_of_block = walker.caret_pos() == block_walker.caret_pos();
+    // console_log!("at start of block {:?} vs {:?}", walker.caret_pos(), block_walker.caret_pos());
 
     // See if we can collapse this and the previous block or list item.
     if at_start_of_block {
         // console_log!("at_start {:?} {:?}", caret_pos, block_walker.caret_pos());
+        // console_log!("1");
 
         // Check for first block in a list item.
         let mut parent_walker = walker.clone();
@@ -167,6 +123,8 @@ pub fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
                 }
             }
         }
+
+        // console_log!("2");
 
         // Check if previous sibling is a list item too.
         if let Some(DocGroup(ref attrs_1, ref span_1)) = parent_walker.doc().unhead() {
@@ -210,7 +168,13 @@ pub fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
 
                 return Ok(res);
             }
+        } else {
+            // console_log!("3");
+            // We think we're at the start of the document, so do nothing.
+            return Ok(Op::empty());
         }
+
+        // console_log!("4");
 
         if is_list_item {
             // We are a list item, but we want to unindent ourselves.
@@ -228,12 +192,16 @@ pub fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
             return Ok(res);
         }
 
+        // console_log!("5");
+
         // Return to block parent.
         assert!(block_walker.back_block());
         let span_2 = match block_walker.stepper().head() {
             Some(DocGroup(.., span)) => span.skip_len(),
             _ => unreachable!(),
         };
+
+        // console_log!("6");
 
         // Move to prior block to join it, or abort.
         if !block_walker.back_block_or_block_object() {
@@ -256,6 +224,8 @@ pub fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
         } else {
             unreachable!();
         }
+
+        // console_log!("8");
 
         // Surround block.
         let (attrs, span_1) = match block_walker.stepper().head() {
@@ -286,10 +256,14 @@ pub fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
 
         let res = writer.result();
 
+        // console_log!("9");
+
         return Ok(res);
     }
 
     walker.back_char();
+
+    // console_log!("back char {:?}", walker);
 
     // Skip past adjacent carets in between cursor and the next char.
     // TODO is there a more elegant way to do this:
@@ -314,6 +288,8 @@ pub fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
         }
     }
 
+    // console_log!("precede char");
+
     let mut writer = walker.to_writer();
 
     // Delete the character.
@@ -322,12 +298,56 @@ pub fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
 
     writer.add.exit_all();
 
+
+    // console_log!("delITE {:?}", walker);
+
     Ok(writer.result())
 }
 
-pub fn add_string(ctx: ActionContext, input: &str) -> Result<Op, Error> {
-    // @HEHEHE
+pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
+    let walker = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, true)
+        .ok_or(format_err!("Expected one caret for our client"))?;
 
+    // See if we have an anchor caret, indicating we have made a selection.
+    if let Some(walker2) = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, false) {
+        // Detect other caret.
+        let last_walker = if walker.caret_pos() > walker2.caret_pos() {
+            walker.clone()
+        } else {
+            walker2.clone()
+        };
+        let delta = (walker.caret_pos() - walker2.caret_pos()).abs();
+        // console_log!("delete delta: {:?}, is selection: {:?}", delta, delta != 0);
+
+        // If we found a selection, delete every character in the selection.
+        // We implement this by looping until the caret distance between our
+        // cursors is 0.
+        // TODO: This is incredibly inefficient.
+        //  1. Dont' recurse infinitely, do this in a loop.
+        //  2. Skip entire DocChars components instead of one character at a time.
+        if delta != 0 {
+            // Get real weird with it.
+            let op = delete_char_inner(last_walker)?;
+            if delta > 1 {
+                // Apply next op and compose.
+                let ctx2 = ActionContext {
+                    doc: Op::apply(&ctx.doc, &op),
+                    client_id: ctx.client_id.to_owned(),
+                };
+                let op_next = delete_char(ctx2)?;
+                return Ok(Op::compose(&op, &op_next));
+            } else {
+                return Ok(op);
+            }
+        }
+    }
+
+    // Fallback; delete backward from unfocused caret.
+    // console_log!("--------> money: {:?}", walker.caret_pos());
+    delete_char_inner(walker)
+}
+
+pub fn add_string(ctx: ActionContext, input: &str) -> Result<Op, Error> {
     let walker = Walker::to_caret_position(&ctx.doc, &ctx.client_id, Pos::Focus)?;
 
     // Style map.
