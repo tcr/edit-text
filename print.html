@@ -27,6 +27,9 @@
 
         <!-- Custom theme stylesheets -->
         
+        <style>
+            a[href="#.html"] { opacity: 0.5; pointer-events: none; }
+        </style>
 
         
     </head>
@@ -72,7 +75,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li><li><a href="intro-system.html"><strong aria-hidden="true">1.2.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">1.3.</strong> Build System ./tools</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">1.4.</strong> Testing</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">2.</strong> Rich Text</a></li><li><ol class="section"><li><a href="working-with-documents.html"><strong aria-hidden="true">2.1.</strong> Working with Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">2.2.</strong> Working with Operations</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">2.3.</strong> Operational Transform</a></li><li><a href="markdown.html"><strong aria-hidden="true">2.4.</strong> Documents and Markdown</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">2.5.</strong> [WIP] Delall Hack</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">2.6.</strong> [WIP] Carets and You</a></li><li><a href="deploying.html"><strong aria-hidden="true">2.7.</strong> [WIP] Deploying</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li><li><a href="#.html"><strong aria-hidden="true">1.2.</strong> Code Overview</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">2.</strong> Development</a></li><li><ol class="section"><li><a href="intro-system.html"><strong aria-hidden="true">2.1.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">2.2.</strong> Build System ./tools</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">2.3.</strong> Testing</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">2.3.1.</strong> Writing an integration test</a></li></ol></li></ol></li><li><a href="#.html"><strong aria-hidden="true">3.</strong> Working with Documents</a></li><li><ol class="section"><li><a href="working-with-documents.html"><strong aria-hidden="true">3.1.</strong> Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">3.2.</strong> Operations</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">3.3.</strong> Operational Transform</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">3.4.</strong> Delall Hack</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">4.</strong> Rich Text</a></li><li><ol class="section"><li><a href="markdown.html"><strong aria-hidden="true">4.1.</strong> Markdown</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">4.2.</strong> Carets</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">5.</strong> Deployment and Usage</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">5.1.</strong> Locally</a></li><li><a href="#.html"><strong aria-hidden="true">5.2.</strong> Hosted Sandbox</a></li><li><a href="deploying.html"><strong aria-hidden="true">5.3.</strong> Dokku</a></li><li><a href="#.html"><strong aria-hidden="true">5.4.</strong> npm module</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -194,6 +197,8 @@ v1.10.1  # for example
 <pre><code class="language-sh">./tools frontend-watch
 </code></pre>
 <p>This command watches the edit-frontend directory and continuously builds its after each change. Note that you may need to run <code>./x.rs wasm-build</code> as well.</p>
+<a class="header" href="#deployment-and-usage" id="deployment-and-usage"><h1>Deployment and Usage</h1></a>
+<a class="header" href="#deployment-and-usage-1" id="deployment-and-usage-1"><h1>Deployment and Usage</h1></a>
 <a class="header" href="#system-overview" id="system-overview"><h1>System Overview</h1></a>
 <p>edit-text is built from the ground up as a collaborative text editor. It uses operational transform to merge updates from multiple clients, so it requires a synchronizing server. The server is also in charge of storing page content, so that every page can be shared via its URL.</p>
 <p>A client runs in a browser: text editing and synchronization code is written in Rust and cross-compiled to WebAssembly, and frontend code is written in TypeScript.</p>
@@ -362,8 +367,8 @@ Windows:
 <li>Unit tests</li>
 </ul>
 <p>--&gt;</p>
-<a class="header" href="#rich-text" id="rich-text"><h1>Rich Text</h1></a>
-<p>This section describes the rich text format used by edit-text.</p>
+<a class="header" href="#deployment-and-usage-2" id="deployment-and-usage-2"><h1>Deployment and Usage</h1></a>
+<a class="header" href="#deployment-and-usage-3" id="deployment-and-usage-3"><h1>Deployment and Usage</h1></a>
 <a class="header" href="#working-with-documents" id="working-with-documents"><h1>Working with Documents</h1></a>
 <p>The basic structure that Oatie operates on is a Document:</p>
 <pre><pre class="playpen"><code class="language-rust">
@@ -531,64 +536,6 @@ new doc:   edit
 <a class="header" href="#operations" id="operations"><h2>Operations</h2></a>
 <p>We need both a deletion and an addition to perform some atomic operations, for example, making sure there are only <code>&lt;li&gt;</code> elements inside of a <code>&lt;ul&gt;</code> element for all document versions.</p>
 <p>TODO</p>
-<a class="header" href="#documents-and-markdown" id="documents-and-markdown"><h1>Documents and Markdown</h1></a>
-<p>A document in edit-text is built with <em>groups</em> and <em>characters</em>.</p>
-<p>The document model that edit-text uses is similar to HTML. We can trivially define a mapping from edit-text's document model to HTML:</p>
-<pre><code>&lt;ul&gt;
-  &lt;li&gt;&lt;p&gt;Item 1&lt;/p&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;p&gt;Item 2&lt;/p&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;p&gt;Item 3...&lt;/p&gt;&lt;/li&gt;
-&lt;/ul&gt;
-</code></pre>
-<p>Becomes when converted to edit-text's document structure (expressed in RON):</p>
-<pre><code>DocGroup({&quot;tag&quot;: &quot;bullet&quot;, [
-    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 1&quot;)]),
-]})
-DocGroup({&quot;tag&quot;: &quot;bullet&quot;, [
-    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 2&quot;)]),
-]})
-DocGroup({&quot;tag&quot;: &quot;bullet&quot;, [
-    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 3...&quot;)]),
-]})
-</code></pre>
-<p>(Conversion from a doc group to HTML can be done with <code>doc_as_html</code> in <code>edit-common/lib.rs</code>. There's no inverse method.)</p>
-<p>Some conversions are straightforward: aside from all non-significant whitespace, all text nodes are converted into the DocChars(...) struct. To simplify other logic, there are some invariants that should be true about DocChars: DocChars(...) must not be empty, and there must not be two successive DocChars(...) components. This isn't validated anywhere (yet) but is expected to be true in all operations.</p>
-<p>For groups, the first argument is a hashmap of <code>String</code> =&gt; <code>String</code> containing the &quot;attributes&quot;. These are similar to HTML attributes and can contain any data. The one attribute required by all groups is the &quot;tag&quot; attribute, which usually maps to the name of its HTML equivalent.</p>
-<p><strong>O/T:</strong> The use of &quot;tag&quot; or even any HTML semantics are not required by the operational transform library, Oatie. References to the &quot;tag&quot; attribute are almost entirely contained in <code>schema.rs</code>. In theory, every document/transform schema could use its own way of distinguishing between group kinds.</p>
-<p>Of interest in the above conversion is that quasi-<code>&lt;bullet&gt;</code> tag has different semantics than its HTML counterpart, <code>&lt;ul&gt;&lt;li&gt;...&lt;/li&gt;&lt;/ul&gt;</code>. This is a deliberate simplification for operational transform (that I should detail elsewhere), but essentially our goal is to better represent Markdown's semantics, not HTML's. Take the following example:</p>
-<pre><code class="language-md">* Item 1
-* Item 2
-
-Interstitial paragraph
-
-* Item 3...
-</code></pre>
-<p>And the middle paragraph, <code>Interstitial paragraph</code> is deleted. The document then becomes:</p>
-<pre><code class="language-md">* Item 1
-* Item 2
-* Item 3...
-</code></pre>
-<p>Because edit-text converts directly from its document representation into Markdown, we can bypass the logic of joining common <code>&lt;ul&gt;</code> parents in this case and also lean more heavily on Markdown-to-html conversion to perform this for us.</p>
-<a class="header" href="#markdown-serialization--deserialization" id="markdown-serialization--deserialization"><h2>Markdown serialization + deserialization</h2></a>
-<p>The module that controls markdown lives at <code>edit-common/src/markdown</code>.</p>
-<ul>
-<li><a href="https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/ser.rs">ser.rs</a></li>
-<li><a href="https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/de.rs">de.rs</a></li>
-</ul>
-<p>edit-text's document schema should allow conversion losslessly into Markdown, while the deserialization code takes into account (or should) that Markdown's possible output is a superset of what edit-text supports, and thus all non-supported content should be stripped out.</p>
-<a class="header" href="#document-elements" id="document-elements"><h2>Document Elements</h2></a>
-<p>This are the current elements supported by edit-text:</p>
-<pre><code>bullet =&gt; Bulleted item
-p =&gt; Paragraph
-h1/h2/h3/h4/h5/h6 =&gt; Header
-pre =&gt; Code block
-html =&gt; Inline HTML content (a raw string, as it would appear in Markdown)
-caret =&gt; Caret position
-hr =&gt; Horizontal rule
-</code></pre>
-<a class="header" href="#splitting-image" id="splitting-image"><h1>Splitting Image</h1></a>
-<p>The entire document editing process is built on splitting a single origin block element into a series of sub-elements.</p>
-<p>All editing steps you can take in the frontend editor preserve this quality.</p>
 <a class="header" href="#wip-delall-hack" id="wip-delall-hack"><h1>[WIP] Delall Hack</h1></a>
 <p>Grepping the codebase for &quot;Delall&quot; turns up this comment in <code>transform.rs</code>:</p>
 <pre><code>// &quot;Delall&quot; transform hack to avoid fully deleted elements that
@@ -752,7 +699,70 @@ Op([DelWithGroup([DelSkip(7), DelChars(1)])], [AddWithGroup([AddSkip(8), AddGrou
 </code></pre>
 <p>If you imagine a document consisting of only this element, and we see that one client has deleted the entire element, we accidentally wind up with a client's caret being in the root element (instead of block element). See [Splitting image](./diary-markdown.md].</p>
 <p>To avoid this problem, the Delall hack delets alls newly inserted elements from an insertion that is transformed against a deletion that delets all content. We can verify any arbitrary <code>DelGroup</code> delets all of its inner contents using a recursive check.</p>
+<a class="header" href="#rich-text" id="rich-text"><h1>Rich Text</h1></a>
+<p>This section describes the rich text format used by edit-text.</p>
+<a class="header" href="#documents-and-markdown" id="documents-and-markdown"><h1>Documents and Markdown</h1></a>
+<p>A document in edit-text is built with <em>groups</em> and <em>characters</em>.</p>
+<p>The document model that edit-text uses is similar to HTML. We can trivially define a mapping from edit-text's document model to HTML:</p>
+<pre><code>&lt;ul&gt;
+  &lt;li&gt;&lt;p&gt;Item 1&lt;/p&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;p&gt;Item 2&lt;/p&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;p&gt;Item 3...&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</code></pre>
+<p>Becomes when converted to edit-text's document structure (expressed in RON):</p>
+<pre><code>DocGroup({&quot;tag&quot;: &quot;bullet&quot;, [
+    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 1&quot;)]),
+]})
+DocGroup({&quot;tag&quot;: &quot;bullet&quot;, [
+    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 2&quot;)]),
+]})
+DocGroup({&quot;tag&quot;: &quot;bullet&quot;, [
+    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 3...&quot;)]),
+]})
+</code></pre>
+<p>(Conversion from a doc group to HTML can be done with <code>doc_as_html</code> in <code>edit-common/lib.rs</code>. There's no inverse method.)</p>
+<p>Some conversions are straightforward: aside from all non-significant whitespace, all text nodes are converted into the DocChars(...) struct. To simplify other logic, there are some invariants that should be true about DocChars: DocChars(...) must not be empty, and there must not be two successive DocChars(...) components. This isn't validated anywhere (yet) but is expected to be true in all operations.</p>
+<p>For groups, the first argument is a hashmap of <code>String</code> =&gt; <code>String</code> containing the &quot;attributes&quot;. These are similar to HTML attributes and can contain any data. The one attribute required by all groups is the &quot;tag&quot; attribute, which usually maps to the name of its HTML equivalent.</p>
+<p><strong>O/T:</strong> The use of &quot;tag&quot; or even any HTML semantics are not required by the operational transform library, Oatie. References to the &quot;tag&quot; attribute are almost entirely contained in <code>schema.rs</code>. In theory, every document/transform schema could use its own way of distinguishing between group kinds.</p>
+<p>Of interest in the above conversion is that quasi-<code>&lt;bullet&gt;</code> tag has different semantics than its HTML counterpart, <code>&lt;ul&gt;&lt;li&gt;...&lt;/li&gt;&lt;/ul&gt;</code>. This is a deliberate simplification for operational transform (that I should detail elsewhere), but essentially our goal is to better represent Markdown's semantics, not HTML's. Take the following example:</p>
+<pre><code class="language-md">* Item 1
+* Item 2
+
+Interstitial paragraph
+
+* Item 3...
+</code></pre>
+<p>And the middle paragraph, <code>Interstitial paragraph</code> is deleted. The document then becomes:</p>
+<pre><code class="language-md">* Item 1
+* Item 2
+* Item 3...
+</code></pre>
+<p>Because edit-text converts directly from its document representation into Markdown, we can bypass the logic of joining common <code>&lt;ul&gt;</code> parents in this case and also lean more heavily on Markdown-to-html conversion to perform this for us.</p>
+<a class="header" href="#markdown-serialization--deserialization" id="markdown-serialization--deserialization"><h2>Markdown serialization + deserialization</h2></a>
+<p>The module that controls markdown lives at <code>edit-common/src/markdown</code>.</p>
+<ul>
+<li><a href="https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/ser.rs">ser.rs</a></li>
+<li><a href="https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/de.rs">de.rs</a></li>
+</ul>
+<p>edit-text's document schema should allow conversion losslessly into Markdown, while the deserialization code takes into account (or should) that Markdown's possible output is a superset of what edit-text supports, and thus all non-supported content should be stripped out.</p>
+<a class="header" href="#document-elements" id="document-elements"><h2>Document Elements</h2></a>
+<p>This are the current elements supported by edit-text:</p>
+<pre><code>bullet =&gt; Bulleted item
+p =&gt; Paragraph
+h1/h2/h3/h4/h5/h6 =&gt; Header
+pre =&gt; Code block
+html =&gt; Inline HTML content (a raw string, as it would appear in Markdown)
+caret =&gt; Caret position
+hr =&gt; Horizontal rule
+</code></pre>
+<a class="header" href="#splitting-image" id="splitting-image"><h1>Splitting Image</h1></a>
+<p>The entire document editing process is built on splitting a single origin block element into a series of sub-elements.</p>
+<p>All editing steps you can take in the frontend editor preserve this quality.</p>
 <a class="header" href="#wip-carets-and-you" id="wip-carets-and-you"><h1>[WIP] Carets and You</h1></a>
+<a class="header" href="#deployment-and-usage-4" id="deployment-and-usage-4"><h1>Deployment and Usage</h1></a>
+<a class="header" href="#deployment-and-usage-5" id="deployment-and-usage-5"><h1>Deployment and Usage</h1></a>
+<a class="header" href="#deployment-and-usage-6" id="deployment-and-usage-6"><h1>Deployment and Usage</h1></a>
 <a class="header" href="#wip-deploying" id="wip-deploying"><h1>[WIP] Deploying</h1></a>
 <p>[macOS Instructions] To deploy to a Dokku instance, you'll have to install a linux cross-compiler. This will cross-compile the Linux binary locally and then package it in a Docker container for distribution.</p>
 <p>First, to install the cross compiler:</p>
@@ -770,6 +780,7 @@ Op([DelWithGroup([DelSkip(7), DelChars(1)])], [AddWithGroup([AddSkip(8), AddGrou
 <li>You can configure the dokku URL using the <code>EDIT_DEPLOY_URL</code> environment variable.</li>
 <li>You can configure the dokku application name using the <code>EDIT_DOKKU_NAME</code> environment variable.</li>
 </ul>
+<a class="header" href="#deployment-and-usage-7" id="deployment-and-usage-7"><h1>Deployment and Usage</h1></a>
 
                     </main>
 
