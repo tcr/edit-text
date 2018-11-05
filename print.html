@@ -763,7 +763,7 @@ hr =&gt; Horizontal rule
 <a class="header" href="#deployment-and-usage-4" id="deployment-and-usage-4"><h1>Deployment and Usage</h1></a>
 <a class="header" href="#deployment-and-usage-5" id="deployment-and-usage-5"><h1>Deployment and Usage</h1></a>
 <a class="header" href="#deployment-and-usage-6" id="deployment-and-usage-6"><h1>Deployment and Usage</h1></a>
-<a class="header" href="#wip-deploying" id="wip-deploying"><h1>[WIP] Deploying</h1></a>
+<a class="header" href="#deploying-to-dokku" id="deploying-to-dokku"><h1>Deploying to Dokku</h1></a>
 <p>[macOS Instructions] To deploy to a Dokku instance, you'll have to install a linux cross-compiler. This will cross-compile the Linux binary locally and then package it in a Docker container for distribution.</p>
 <p>First, to install the cross compiler:</p>
 <pre><code>brew install qinyao-he/homebrew-gcc_cross_compilers/x64-elf-gcc
@@ -772,7 +772,7 @@ hr =&gt; Horizontal rule
 <pre><code>rustup target add x86_64-unknown-linux-gnu
 </code></pre>
 <p>You can deploy edit-text to a Dokku server using <code>./x.rs deploy</code>.</p>
-<pre><code>./x.rs deploy
+<pre><code>./tools deploy
 </code></pre>
 <ul>
 <li>This first cross-compiles the edit-server binary using a local Docker image.</li>
