@@ -29,6 +29,9 @@
         {{#each additional_css}}
         <link rel="stylesheet" href="{{ ../path_to_root }}{{ this }}">
         {{/each}}
+        <style>
+            a[href="#.html"] { opacity: 0.5; pointer-events: none; }
+        </style>
 
         {{#if mathjax_support}}
         <!-- MathJax -->
