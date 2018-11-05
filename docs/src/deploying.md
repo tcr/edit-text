@@ -1,4 +1,4 @@
-# [WIP] Deploying
+# Deploying to Dokku
 
 [macOS Instructions] To deploy to a Dokku instance, you'll have to install a linux cross-compiler. This will cross-compile the Linux binary locally and then package it in a Docker container for distribution.
 
@@ -17,7 +17,7 @@ rustup target add x86_64-unknown-linux-gnu
 You can deploy edit-text to a Dokku server using `./x.rs deploy`.
 
 ```
-./x.rs deploy
+./tools deploy
 ```
 
 * This first cross-compiles the edit-server binary using a local Docker image.
