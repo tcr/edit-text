@@ -9,7 +9,7 @@ use std::io::prelude::*;
 
 use super::compose;
 use super::doc::*;
-use super::normalize;
+use super::normalize::*;
 use super::parse::debug_pretty;
 use super::transform::*;
 use super::validate::{

@@ -3,6 +3,7 @@ import * as React from 'react';
 import * as commands from './commands';
 import * as util from './util';
 import { ControllerImpl } from './network';
+import {vm} from './vm';
 
 const copy = require('clipboard-copy');
 
@@ -487,9 +488,17 @@ export class Editor extends React.Component {
       console.info('(c) clipboard unsuccessful copy:', err);
     });
   }
+
+  _setHTML(html: string) {
+    this.el.innerHTML = html;
+  }
+
+  _runProgram(program: any) {
+    vm(this.el).run(program);
+  }
   
   componentDidUpdate() {
-    this.el.innerHTML = this.props.content;
+    // this.el.innerHTML = this.props.content;
 
     // Highlight our own caret.
     document.querySelectorAll(

@@ -394,6 +394,15 @@ body.theme-column {
         background: #349;
     }
 
+    div[data-tag="caret"] ~ span {
+        color: white;
+        background: #349;
+    }
+
+    div[data-tag="caret"] ~ div[data-tag="caret"] ~ span {
+        color: inherit;
+        background: inherit;
+    }
     span.Link {
         color: #05d;
         text-decoration: underline;
@@ -552,3 +561,17 @@ body#multi {
 // body.editing-blurred div[data-tag="caret"]::before {
 //     filter: grayscale(100%);
 // }
+
+// Debugging
+
+.edit-text {
+    // exclusionary set of adjacent spans that should NOT be adjacent
+
+    span.Normie:not(.Link):not(.Bold):not(.Italic) + span.Normie:not(.Link):not(.Bold):not(.Italic),
+    span.Normie.Link:not(.Bold):not(.Italic) + span.Normie.Link:not(.Bold):not(.Italic),
+    span.Normie:not(.Link).Bold:not(.Italic) + span.Normie:not(.Link).Bold:not(.Italic),
+    span.Normie:not(.Link):not(.Bold).Italic + span.Normie:not(.Link):not(.Bold).Italic {
+        outline: 1px orange dashed;
+        background: #f55;
+    }
+}

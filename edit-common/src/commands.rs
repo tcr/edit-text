@@ -41,7 +41,8 @@ pub enum FrontendCommand {
     Init(String),
     Controls(Controls),
     PromptString(String, String, ControllerCommand),
-    Update(String, String, Option<Op>),
+    Update(String, String, Op),
+    UpdateFull(String, String),
     Error(String),
     ServerCommand(ServerCommand),
 }

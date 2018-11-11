@@ -1,5 +1,30 @@
 use super::doc::*;
 
+pub(crate) fn can_element_join(left: &DocElement, right: &DocElement) -> bool {
+    match (left, right) {
+        (&DocChars(ref prefix), &DocChars(ref suffix)) => {
+            if prefix.styles() == suffix.styles() {
+                return true;
+            }
+        }
+        _ => {},
+    }
+    false
+}
+
+pub(crate) fn try_element_join(left: &mut DocElement, right: &DocElement) -> bool {
+    match (left, right) {
+        (&mut DocChars(ref mut prefix), &DocChars(ref suffix)) => {
+            if prefix.styles() == suffix.styles() {
+                prefix.push_str(suffix.as_str());
+                return true
+            }
+        }
+        _ => {},
+    }
+    false
+}
+
 pub trait DocPlaceable {
     fn skip_len(&self) -> usize;
     fn place_all(&mut self, all: &[DocElement]);
@@ -14,12 +39,15 @@ impl DocPlaceable for DocSpan {
 
                 // If the most recent element is text, we may want to just
                 // append our text to it to cut down on new elements.
-                if let Some(&mut DocChars(ref mut prefix)) = self.last_mut() {
-                    // Check if they're equal and we can push it directly.
-                    if prefix.styles() == text.styles() {
-                        prefix.push_str(text.as_str());
+                if let Some(element) = self.last_mut() {
+                    if try_element_join(element, elem) {
                         return;
                     }
+                    // // Check if they're equal and we can push it directly.
+                    // if prefix.styles() == text.styles() {
+                    //     prefix.push_str(text.as_str());
+                    //     return;
+                    // }
                 }
 
                 // Otherwise, push the new entry

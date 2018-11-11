@@ -14,6 +14,7 @@ import { AppServer, ProxyClient } from './sync';
 import { NullServer, ControllerImpl, ServerImpl } from '../editor/network';
 import { WasmClient, convertMarkdownToHtml, convertMarkdownToDoc } from '../editor/wasm';
 import * as index from '../index';
+import {vm} from '../editor/vm';
 
 import DEBUG from '../debug';
 
@@ -253,6 +254,8 @@ export class EditorFrame extends React.Component {
   client: ControllerImpl;
   markdown: string;
 
+  editor: Editor | null;
+
   constructor(
     props: EditorFrameProps,
   ) {
@@ -294,7 +297,6 @@ export class EditorFrame extends React.Component {
   render(): React.ReactNode {
     let modalClass = this.state.modal == null ? '' : 'modal-active';
     let editBoundary = null;
-    let editor: Editor | null = null;
     return (
       <div className="fullpage">
         {this.state.modal}
@@ -321,13 +323,13 @@ export class EditorFrame extends React.Component {
               id="edit-outer"
               ref={r => editBoundary = r}
               onMouseDown={e => {
-                editor!.onMouseDown(e as any);
+                this.editor!.onMouseDown(e as any);
               }}
               onMouseUp={e => {
-                editor!.onMouseUp(e as any);
+                this.editor!.onMouseUp(e as any);
               }}
               onMouseMove={e => {
-                editor!.onMouseMove(e as any);
+                this.editor!.onMouseMove(e as any);
               }}
             >
               <Editor 
@@ -336,7 +338,7 @@ export class EditorFrame extends React.Component {
                 content={this.state.body}
                 editorID={this.state.editorID}
                 disabled={!!this.state.modal}
-                ref={r => editor = r}
+                ref={r => this.editor = r}
               />
             </div>
           </div>
@@ -384,12 +386,48 @@ export class EditorFrame extends React.Component {
     }
 
     else if (parse.Update) {
+      // Update page content
+      // console.groupCollapsed('Parse Update');
+      // console.log(JSON.stringify(parse.Update[2]));
+      let programs = JSON.parse(parse.Update[0]);
+      programs.forEach((program: any) => {
+        // console.log('🚗🚗🚗🚗', program, '\n');
+        this.editor!._runProgram(program);
+
+        // Corrections
+        // while (true) {
+        //   let unjoinedSpans = document.querySelector('.edit-text span.Normie + span.Normie');
+        //   if (unjoinedSpans === null) {
+        //     break;
+        //   }
+        //   let right = unjoinedSpans;
+        //   let left = right.previousSibling;
+        //   while (right.childNodes.length) {
+        //     left!.appendChild(right.firstChild!);
+        //   }
+        //   right!.parentNode!.removeChild(right);
+        //   left!.normalize();
+        // }
+
+        // console.log('👿👿👿👿👿👿', document.querySelector('.edit-text')!.innerHTML);
+      });
+      // console.log(parse.Update[0]);
+      // console.log(document.querySelector('.edit-text')!.innerHTML);
+      // console.groupEnd();
+      // this.setState({
+      //   body: JSON.stringify(parse.Update[0], null, '  '),
+      // });
+    }
+
+    else if (parse.UpdateFull) {
       DEBUG.measureTime('first-update');
 
+
+      this.editor!._setHTML(parse.UpdateFull[0]);
       // Update page content
-      this.setState({
-        body: parse.Update[0],
-      });
+      // this.setState({
+      //   body: parse.UpdateFull[0],
+      // });
     }
 
     else if (parse.Controls) {
@@ -496,6 +534,17 @@ class EditText extends React.Component {
 
         if (this.props.onChange !== null) {
           this.props.onChange(parse.Update[1]);
+        }
+      }
+  
+      else if (parse.UpdateFull) {
+        // Update page content
+        this.setState({
+          content: parse.UpdateFull[0],
+        });
+
+        if (this.props.onChange !== null) {
+          this.props.onChange(parse.UpdateFull[1]);
         }
       }
 
