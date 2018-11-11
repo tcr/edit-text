@@ -143,6 +143,7 @@ pub fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
     // Check if caret is at the start of a block.
     let mut block_walker = walker.clone();
     assert!(block_walker.back_block());
+    // console_log!("before at start of block {:?} vs {:?}", walker.caret_pos(), block_walker.caret_pos());
     block_walker.stepper.doc.enter();
     // block_walker.stepper.next(); // re-enter the block to first caret position
     let at_start_of_block = caret_pos == block_walker.caret_pos();

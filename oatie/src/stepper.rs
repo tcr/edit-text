@@ -387,7 +387,7 @@ impl DocStepper {
                 // (meaning cursor has not passed to the end of the string)
                 let cce = self.char_cursor_expect();
                 Some(DocChars(cce.right()
-                    .expect(&format!("Encountered empty DocString: {:?}", cce)).clone()))
+                    .unwrap_or_else(|| panic!("Encountered empty DocString: {:?}", cce)).clone()))
             }
             Some(value) => Some(value.clone()),
             None => None,
