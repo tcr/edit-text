@@ -2,10 +2,14 @@
 
 use super::doc::*;
 use std::collections::HashMap;
+// use super::wasm::*;
+use crate::normalize::*;
+use crate::stepper::*;
 
-fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan) {
+
+fn apply_add_inner<M: Mutator>(bc: &mut M, spanvec: &DocSpan, addvec: &AddSpan) -> (DocSpan, DocSpan) {
     let mut span = &spanvec[..];
-    let mut del = &delvec[..];
+    let mut del = &addvec[..];
 
     let mut first = None;
     if !span.is_empty() {
@@ -27,7 +31,7 @@ fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan) {
     trace!("ABOUT TO APPLY ADD {:?} {:?}", first, span);
 
     loop {
-        // Flags for whether we have partially or fully consumed an atom.
+        // Flags for whether we have partially or fully consumed an element.
         let mut nextdel = true;
         let mut nextfirst = true;
 
@@ -48,16 +52,25 @@ fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan) {
                     if value.char_len() < count {
                         d = AddStyles(count - value.char_len(), styles.clone());
                         value.extend_styles(&styles);
+                            bc.delete(1);
+                            bc.InsertDocString(value.clone());
+                            // partial = false;
                         res.place(&DocChars(value));
                         nextdel = false;
                     } else if value.char_len() > count {
                         let (mut left, right) = value.split_at(count);
                         left.extend_styles(&styles);
+                            bc.delete(1);
+                            bc.InsertDocString(left.clone());
+                            // partial = false;
                         res.place(&DocChars(left));
                         first = Some(DocChars(right));
                         nextfirst = false;
                     } else {
                         value.extend_styles(&styles);
+                            bc.delete(1);
+                            bc.InsertDocString(value.clone());
+                            // partial = false;
                         res.place(&DocChars(value));
                     }
                 }
@@ -68,20 +81,26 @@ fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan) {
             AddSkip(count) => match first.clone().unwrap() {
                 DocChars(value) => {
                     if value.char_len() < count {
+                        // Consume and advance
                         d = AddSkip(count - value.char_len());
+                                bc.AdvanceElements(1);
                         res.place(&DocChars(value));
                         nextdel = false;
                     } else if value.char_len() > count {
                         let (left, right) = value.split_at(count);
+                            // Split text element, we assume
+                            bc.skip(count);
                         res.place(&DocChars(left));
                         first = Some(DocChars(right));
                         nextfirst = false;
                     } else {
+                                bc.AdvanceElements(1);
                         res.place(&DocChars(value));
                     }
                 }
                 DocGroup(..) => {
                     res.push(first.clone().unwrap());
+                        bc.AdvanceElements(1);
                     if count > 1 {
                         d = AddSkip(count - 1);
                         nextdel = false;
@@ -90,13 +109,18 @@ fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan) {
             },
             AddWithGroup(ref delspan) => match first.clone().unwrap() {
                 DocGroup(ref attrs, ref span) => {
-                    res.push(DocGroup(attrs.clone(), apply_add(span, delspan)));
+                        bc.Enter();
+                    res.push(DocGroup(attrs.clone(), apply_add_outer(bc, span, delspan)));
+                        bc.Exit();
                 }
                 _ => {
                     panic!("Invalid AddWithGroup");
                 }
             },
             AddChars(value) => {
+                    // TODO where do you skip anything, exactly
+                    // need to manifest the place issue externally as well
+                    bc.InsertDocString(value.clone());
                 res.place(&DocChars(value));
                 nextfirst = false;
             }
@@ -108,13 +132,26 @@ fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan) {
                 }
                 trace!("CALLING INNER {:?} {:?}", subdoc, innerspan);
 
-                let (inner, rest) = apply_add_inner(&subdoc, &innerspan);
-                res.place(&DocGroup(attrs, inner));
+                // Apply the inner AddSpan inside the group...
+                let (inner, rest) = apply_add_inner(bc, &subdoc, &innerspan);
+                res.place(&DocGroup(attrs.clone(), inner));
+
+                // console_log!("partial A {:?}", partial);
+                // console_log!("partial B {:?}", partial_inner);
 
                 trace!("REST OF INNER {:?} {:?}", rest, del);
 
-                let (inner, rest) = apply_add_inner(&rest, &del.to_vec());
+                    // TODO not hardcode a random number.
+                    // Wrap previous elements in the inner span.
+                    bc.WrapPrevious(0, attrs);
+
+                // Then apply it outside of the group.
+                //TODO partial inner should be... something else
+                let (mut inner, rest) = apply_add_inner(bc, &rest, &del.to_vec());
+                    // console_log!("partial B {:?} {:?}", inner, rest);
                 res.place_all(&inner);
+                // console_log!("partial C {:?}", partial);
+
                 return (res, rest);
             }
         }
@@ -146,20 +183,57 @@ fn apply_add_inner(spanvec: &DocSpan, delvec: &AddSpan) -> (DocSpan, DocSpan) {
     }
 }
 
-pub fn apply_add(spanvec: &DocSpan, delvec: &AddSpan) -> DocSpan {
-    let (mut res, remaining) = apply_add_inner(spanvec, delvec);
+// TODO replace all occurances of this with apply_add_inner 
+fn apply_add_outer<M: Mutator>(bc: &mut M, spanvec: &DocSpan, addvec: &AddSpan) -> DocSpan {
+    let (mut res, mut remaining) = apply_add_inner(bc, spanvec, addvec);
 
     // TODO never accept unbalanced components?
     if !remaining.is_empty() {
+        // if partial {
+        //     let text = remaining.remove(0);
+        //     bc.DeleteElements(1));
+        //     match text {
+        //         DocChars(text) => {
+        //             console_log!("adding {:?}", text);
+        //             bc.InsertDocString(text);
+        //         }
+        //         _ => unreachable!(),
+        //     }
+        // }
         res.place_all(&remaining);
         // panic!("Unbalanced apply_add");
     }
     res
 }
 
-pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
+pub fn apply_add(spanvec: &DocSpan, add: &AddSpan) -> DocSpan {
+    let mut mutator = EmptyDocMutator { };
+    let ret = apply_add_outer(&mut mutator, spanvec, add);
+    ret
+}
+
+// TODO what does this do, why doe sit exist, for creating BC for frontend??
+pub fn apply_add_bc(spanvec: &DocSpan, addvec: &AddSpan) -> (Doc, Program) {
+    let mut mutator = DocMutator::new(DocStepper::new(spanvec));
+    let output_doc = apply_add_outer(&mut mutator, spanvec, addvec);
+
+    // Compare results.
+    // let actual = ret.clone();
+    let (_compare, bc) = mutator.result().unwrap();
+    // if actual != compare {
+    //     console_log!("\n\n\n✅✅✅ ADDITION: {:?}", add);
+    //     for item in &bc.0 {
+    //         console_log!("      -> {:?}", item);
+    //     }
+    //     console_log!("\ntest =====> [ {} ]\n\nactual:\n  {:?}\n\ncompare:\n  {:?}\n\n", actual == compare, actual, compare);
+    // }
+
+    (Doc(output_doc), bc)
+}
+
+fn apply_del_inner<M: Mutator>(bc: &mut M, spanvec: &DocSpan, addvec: &DelSpan) -> DocSpan {
     let mut span = &spanvec[..];
-    let mut del = &delvec[..];
+    let mut del = &addvec[..];
 
     let mut res: DocSpan = Vec::with_capacity(span.len());
 
@@ -185,16 +259,22 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
                     if value.char_len() < count {
                         d = DelStyles(count - value.char_len(), styles.clone());
                         value.remove_styles(&styles);
+                            bc.delete(1);
+                            bc.InsertDocString(value.clone());
                         res.place(&DocChars(value));
                         nextdel = false;
                     } else if value.char_len() > count {
                         let (mut left, right) = value.split_at(count);
                         left.remove_styles(&styles);
+                            bc.delete(1);
+                            bc.InsertDocString(left.clone());
                         res.place(&DocChars(left));
                         first = DocChars(right);
                         nextfirst = false;
                     } else {
                         value.remove_styles(&styles);
+                            bc.delete(1);
+                            bc.InsertDocString(value.clone());
                         res.place(&DocChars(value));
                     }
                 }
@@ -206,20 +286,25 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
                 DocChars(value) => {
                     if value.char_len() < count {
                         d = DelSkip(count - value.char_len());
+                            bc.AdvanceElements(1);
                         res.place(&DocChars(value));
                         nextdel = false;
                     } else if value.char_len() > count {
                         let (left, right) = value.split_at(count);
+                            // Assume this should be deleted from the left
+                            bc.skip(count);
                         res.place(&DocChars(left));
                         first = DocChars(right);
                         nextfirst = false;
                     } else {
+                            bc.AdvanceElements(1);
                         res.place(&DocChars(value));
                         nextdel = true;
                     }
                 }
                 DocGroup(..) => {
                     res.push(first.clone());
+                        bc.AdvanceElements(1);
                     if count > 1 {
                         d = DelSkip(count - 1);
                         nextdel = false;
@@ -228,7 +313,9 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
             },
             DelWithGroup(ref delspan) => match first.clone() {
                 DocGroup(ref attrs, ref span) => {
-                    res.push(DocGroup(attrs.clone(), apply_delete(span, delspan)));
+                        bc.Enter();
+                    res.push(DocGroup(attrs.clone(), apply_del_inner(bc, span, delspan)));
+                        bc.Exit();
                 }
                 _ => {
                     panic!("Invalid DelWithGroup");
@@ -236,7 +323,9 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
             },
             DelGroup(ref delspan) => match first.clone() {
                 DocGroup(ref attrs, ref span) => {
-                    res.place_all(&apply_delete(span, delspan)[..]);
+                        bc.Enter();
+                    res.place_all(&apply_del_inner(bc, span, delspan)[..]);
+                        bc.UnwrapSelf();
                 }
                 _ => {
                     panic!("Invalid DelGroup");
@@ -258,45 +347,14 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
                 _ => {
                     panic!("Invalid DelChars");
                 }
-            }, // DelObject => {
-               //     unimplemented!();
-               // }
-               // DelMany(count) => {
-               //     match first.clone() {
-               //         DocChars(ref value) => {
-               //             let len = value.chars().count();
-               //             if len > count {
-               //                 first = DocChars(value.chars().skip(count).collect());
-               //                 nextfirst = false;
-               //             } else if len < count {
-               //                 d = DelMany(count - len);
-               //                 nextdel = false;
-               //             }
-               //         }
-               //         DocGroup(..) => {
-               //             if count > 1 {
-               //                 d = DelMany(count - 1);
-               //                 nextdel = false;
-               //             } else {
-               //                 nextdel = true;
-               //             }
-               //         }
-               //     }
-               // }
-               // DelGroupAll => {
-               //     match first.clone() {
-               //         DocGroup(..) => {}
-               //         _ => {
-               //             panic!("Invalid DelGroupAll");
-               //         }
-               //     }
-               // }
+            },
         }
 
         if nextdel {
             if del.is_empty() {
                 if !nextfirst {
                     res.place(&first)
+                    // TODO res place
                 }
                 if !span.is_empty() {
                     res.place(&span[0]);
@@ -325,6 +383,44 @@ pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
     res
 }
 
+pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
+    let mut mutator = EmptyDocMutator { };
+    let ret = apply_del_inner(&mut mutator, spanvec, delvec);
+    ret
+}
+
+// TODO what does this do, why doe sit exist, for creating BC for frontend??
+pub fn apply_del_bc(spanvec: &DocSpan, del: &DelSpan) -> (DocSpan, Program) {
+    let mut mutator = DocMutator::new(DocStepper::new(spanvec));
+    let output_doc = apply_del_inner(&mut mutator, spanvec, del);
+
+    // Compare results.
+    // let actual = ret.clone();
+    let (_compare, bc) = mutator.result().unwrap();
+    // if actual != compare {
+    //     console_log!("\n\n\n🚫🚫🚫 DELETION: {:?}", del);
+    //     for item in &bc.0 {
+    //         console_log!("      -> {:?}", item);
+    //     }
+    //     console_log!("\ntest =====> [ {} ]\n\nactual:\n  {:?}\n\ncompare:\n  {:?}\n\n", actual == compare, actual, compare);
+    // }
+
+    // console_log!("🏆🏆🏆 {:?}", bc);
+    (output_doc, bc)
+}
+
+pub fn apply_op_bc(spanvec: &DocSpan, op: &Op) -> Vec<Program> {
+    // console_log!("\n\n\n\n\naaaaaaa\n\n\n\n\n\n\n");
+    let &(ref delvec, ref addvec) = op;
+    // console_log!("👻👻  1  👻👻");
+    let (postdel, del_program) = apply_del_bc(spanvec, delvec);
+    // console_log!("👻👻  2  👻👻");
+    let (postadd, add_program) = apply_add_bc(&postdel, addvec);
+    // console_log!("👻👻  3  👻👻");
+    // console_log!("👻👻👻👻👻 {:?}", del_program);
+    vec![del_program, add_program]
+}
+
 pub fn apply_operation(spanvec: &DocSpan, op: &Op) -> DocSpan {
     let &(ref delvec, ref addvec) = op;
     // println!("------> @1 {:?}", spanvec);
@@ -333,78 +429,4 @@ pub fn apply_operation(spanvec: &DocSpan, op: &Op) -> DocSpan {
     // println!("------> @3 {:?}", postdel);
     // println!("------> @4 {:?}", addvec);
     apply_add(&postdel, addvec)
-}
-
-fn normalize_add_element(elem: AddElement) -> AddElement {
-    match elem {
-        AddGroup(attrs, span) => {
-            let span = normalize_add_span(span, false);
-            AddGroup(attrs, span)
-        }
-        AddWithGroup(span) => {
-            let span = normalize_add_span(span, true);
-
-            // Shortcut if the inner span is nothing but skips
-            if span.is_empty() {
-                AddSkip(1)
-            } else {
-                AddWithGroup(span)
-            }
-        }
-        _ => elem,
-    }
-}
-
-fn normalize_add_span(add: AddSpan, trim_last: bool) -> AddSpan {
-    let mut ret: AddSpan = vec![];
-    for elem in add.into_iter() {
-        ret.place(&normalize_add_element(elem));
-    }
-    if trim_last {
-        if let Some(&AddSkip(..)) = ret.last() {
-            ret.pop();
-        }
-    }
-    ret
-}
-
-fn normalize_del_element(elem: DelElement) -> DelElement {
-    match elem {
-        DelGroup(span) => {
-            let span = normalize_del_span(span, false);
-            DelGroup(span)
-        }
-        DelWithGroup(span) => {
-            let span = normalize_del_span(span, true);
-
-            // Shortcut if the inner span is nothing but skips
-            if span.is_empty() {
-                DelSkip(1)
-            } else {
-                DelWithGroup(span)
-            }
-        }
-        _ => elem,
-    }
-}
-
-fn normalize_del_span(del: DelSpan, trim_last: bool) -> DelSpan {
-    let mut ret: DelSpan = vec![];
-    for elem in del.into_iter() {
-        ret.place(&normalize_del_element(elem));
-    }
-    if trim_last {
-        if let Some(&DelSkip(..)) = ret.last() {
-            ret.pop();
-        }
-    }
-    ret
-}
-
-pub fn normalize(op: Op) -> Op {
-    // TODO all
-    (
-        normalize_del_span(op.0, true),
-        normalize_add_span(op.1, true),
-    )
 }

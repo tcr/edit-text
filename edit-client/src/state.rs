@@ -72,9 +72,11 @@ impl ClientDoc {
 
     /// Sync gave us an operation not originating from us.
     // TODO we can determine new_doc without needing it passed in
-    pub fn sync_sent_new_version(&mut self, new_doc: &Doc, version: usize, input_op: &Op) {
+    pub fn sync_sent_new_version(&mut self, new_doc: &Doc, version: usize, input_op: &Op) -> (Doc, Op) {
         // log_wasm!(SyncNew("new_op".into()));
         self.assert_compose_correctness(None);
+
+        let current_doc = self.doc.clone();
 
         // Optimization
         if self.pending_op.is_none() && self.local_op == Op::empty() {
@@ -82,7 +84,7 @@ impl ClientDoc {
             self.doc = new_doc.clone();
             self.version = version;
             self.original_doc = new_doc.clone();
-            return;
+            return (current_doc, Op::empty());
         }
 
         println!("\n----> TRANSFORMING");
@@ -108,13 +110,6 @@ impl ClientDoc {
         let (pending_transform, input_transform) =
             Op::transform::<RtfSchema>(&input_op, &pending_op);
 
-        // let correction = correct_op(&pending_transform).unwrap();
-        // let input_correction = correct_op(&input_transform).unwrap();
-        // let correction_transform = Op::transform_advance::<RtfSchema>(&pending_correction, &input_correction);
-        // let correction = Op::compose(&pending_correction, &correction_transform);
-
-        // println!("\n^^^^^\nCORRECTION\n{:?}\n^^^^^\n\n", correction);
-        //
         // let pending_final = Op::compose(&pending_transform, &correction);
         // let input_final = Op::compose(&input_transform, &correction);
 
@@ -160,13 +155,6 @@ impl ClientDoc {
 
         // Reattach to doc.
         self.doc = Op::apply(&new_doc, &pending_transform);
-        // get corrections1
-        // println!("\n^^^^^\nCORRECTION2\n{:?}\n\n{:?}\n^^^^^\n\n", new_doc, pending_final);
-        // transform with local_op_transform
-        // apply  local_op_transform' to self.doc
-        // get corrections2
-        // self.pending_op = Some(pending_op_transform : corrections1)
-        // self.local_op = local_op_transform : corrections2
         validate_doc(&self.doc).expect("Validation error after pending_op transform");
         self.doc = Op::apply(&self.doc, &local_transform);
         validate_doc(&self.doc).expect("Validation error after local_op transform");
@@ -189,6 +177,8 @@ impl ClientDoc {
         // println!("{}", format!("\n----> result {:?}\n{:?}\n{:?}\n\n{:?}\n\n", self.original_doc, self.pending_op, self.local_op, self.doc).red());
 
         self.assert_compose_correctness(None);
+
+        (current_doc, input_transform)
     }
 
     /// When there are no payloads queued, queue a next one.

@@ -436,10 +436,8 @@ pub trait ClientImpl {
 
                         // Native drives client state.
                         let state = self.state();
-                        let res = FrontendCommand::Update(
+                        let res = FrontendCommand::UpdateFull(
                             doc_as_html(&state.client_doc.doc.0),
-                            doc_to_markdown(&state.client_doc.doc.0).unwrap(),
-                            None,
                         );
                         self.send_client(&res).unwrap();
                     }
@@ -451,10 +449,12 @@ pub trait ClientImpl {
                         }
 
                         // Generated from original_doc transformed with input_op
+                        // let mut bc = vec![];
                         let doc = Op::apply(&self.state().client_doc.original_doc, &input_op);
 
                         // If this operation is an acknowledgment...
                         if self.state().client_id == client_id {
+                            // Confirm pending op, send out next if one is available.
                             if let Some(local_op) = self
                                 .state()
                                 .client_doc
@@ -464,11 +464,23 @@ pub trait ClientImpl {
                                 self.upload(local_op)?;
                             }
                         } else {
-                            // Update with new version.
+                            // bc = ::oatie::apply::apply_op_bc(&self.state().client_doc.original_doc, &input_op);
+
+                            // A new operation was sent, transform and update our client.
                             println!("---> sync sent new version");
-                            self.state()
+                            let (last_doc, input_op) = self.state()
                                 .client_doc
                                 .sync_sent_new_version(&doc, version, &input_op);
+
+                            // Native drives client state.
+                            let state = self.state();
+                            let res = FrontendCommand::Update(
+                                ::serde_json::to_string(
+                                    &::oatie::apply::apply_op_bc(&last_doc.0, &input_op)
+                                ).unwrap(),
+                                input_op,
+                            );
+                            self.send_client(&res).unwrap();
                         }
 
                         // Announce.
@@ -483,15 +495,6 @@ pub trait ClientImpl {
                             // console_log!("adding caret after last op");
                             self.client_op(|doc| init_caret(doc)).unwrap();
                         }
-
-                        // Native drives client state.
-                        let state = self.state();
-                        let res = FrontendCommand::Update(
-                            doc_as_html(&state.client_doc.doc.0),
-                            doc_to_markdown(&state.client_doc.doc.0).unwrap(),
-                            None,
-                        );
-                        self.send_client(&res).unwrap();
                     }
                 }
 
@@ -554,6 +557,7 @@ pub trait ClientImpl {
 
         // Apply new operation.
         // eprintln!("apply to (d) {:?}", self.state().client_doc.doc);
+        let bc = ::oatie::apply::apply_op_bc(&self.state().client_doc.doc.0, &op);
         self.state().client_doc.apply_local_op(&op);
 
         eprintln!("-----> {:?}", op);
@@ -582,9 +586,8 @@ pub trait ClientImpl {
         // Render the update.
         let state = self.state();
         let res = FrontendCommand::Update(
-            doc_as_html(&state.client_doc.doc.0),
-            doc_to_markdown(&state.client_doc.doc.0).unwrap(),
-            Some(op),
+            ::serde_json::to_string(&bc).unwrap(),
+            op,
         );
         self.send_client(&res)?;
 

@@ -1,3 +1,5 @@
+#![feature(crate_in_paths, nll)]
+
 extern crate failure;
 #[macro_use]
 extern crate maplit;

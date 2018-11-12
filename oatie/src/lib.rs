@@ -30,6 +30,10 @@ extern crate ron;
 extern crate rental;
 extern crate serde;
 extern crate core;
+#[macro_use]
+extern crate wasm_bindgen;
+#[macro_use]
+extern crate smallvec;
 
 /* logging */
 
@@ -49,12 +53,17 @@ macro_rules! log_compose {
 
 /* /logging */
 
+#[cfg(target_arch = "wasm32")]
+#[macro_use]
+pub mod wasm;
+
 pub mod compose;
 pub mod doc;
 //pub mod random;
 pub mod apply;
 #[macro_use]
 pub mod macros;
+pub mod normalize;
 mod parse;
 mod place;
 pub mod schema;

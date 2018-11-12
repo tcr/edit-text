@@ -173,6 +173,10 @@ pub fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
             if attrs_1["tag"] == "bullet" {
                 // The previous sibling is a list item.
 
+                // TODO IDK wer'e working around ownership issues here
+                let attrs_1 = attrs_1.to_owned();
+                let span_1 = span_1.to_owned();
+
                 parent_walker.stepper.doc.prev();
                 let mut writer = parent_walker.to_writer();
 
@@ -277,7 +281,7 @@ pub fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
         if span_1 + span_2 > 0 {
             writer.add.place(&AddSkip(span_1 + span_2));
         }
-        writer.add.close(attrs);
+        writer.add.close(attrs.to_owned());
         writer.add.exit_all();
 
         let res = writer.result();
@@ -331,7 +335,8 @@ pub fn add_string(ctx: ActionContext, input: &str) -> Result<Op, Error> {
 
     // Identify previous styles.
     let mut char_walker = walker.clone();
-    if let Some(DocChars(ref prefix)) = char_walker.back_char().doc().head() {
+    char_walker.back_char();
+    if let Some(DocChars(ref prefix)) = char_walker.doc().head() {
         if let Some(prefix_styles) = prefix.styles() {
             styles.extend(
                 prefix_styles

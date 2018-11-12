@@ -210,7 +210,7 @@ impl CurWriter {
 
 #[derive(Clone, Debug)]
 pub struct DocWriter {
-    pub past: Vec<DocElement>,
+    pub(crate) past: Vec<DocElement>, // TODO not public
     stack: Vec<Vec<DocElement>>,
 }
 
@@ -248,5 +248,18 @@ impl DocWriter {
             bail!("cannot get result when stack is still full");
         }
         Ok(self.past)
+    }
+
+    pub(crate) fn unwrap_self(&mut self) {
+        while !self.past.is_empty() {
+            self.stack.last_mut().unwrap().push(self.past.remove(0));
+        }
+        self.past = self.stack.pop().unwrap();
+    }
+
+    pub(crate) fn wrap_previous(&mut self, count: usize, attrs: Attrs) {
+        let start = self.past.len() - count;
+        let group = self.past.split_off(start);
+        self.past.push(DocGroup(attrs, group));
     }
 }

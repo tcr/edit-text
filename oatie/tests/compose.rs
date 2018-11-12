@@ -11,6 +11,7 @@ use oatie::apply::*;
 use oatie::compose::*;
 use oatie::doc::*;
 use oatie::*;
+use oatie::normalize::*;
 use std::collections::HashMap;
 
 fn test_start() {
