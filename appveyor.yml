@@ -49,11 +49,11 @@ install:
 build: false
 
 before_test:
-- ps: .\cache-s3 --prefix=edit-text-win32 restore
+- ps: .\cache-s3 --prefix=edit-text_win32_$(cat rust-toolchain) restore --max-size 3GiB
 
 test_script:
 - .\tools ci
 
 after_test:
 - ps: Remove-Item -Recurse -Force $ENV:UserProfile\.cargo\registry
-- ps: .\cache-s3 --prefix=edit-text-win32 save -p edit-frontend\node_modules -p $ENV:UserProfile\.cargo -p target
+- ps: .\cache-s3 --prefix=edit-text_win32_$(cat rust-toolchain) save -p edit-frontend\node_modules -p $ENV:UserProfile\.cargo -p target
