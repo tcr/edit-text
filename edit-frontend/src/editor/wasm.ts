@@ -5,7 +5,7 @@ import * as index from '..';
 import { WasmClient as WasmClientModule } from '../bindgen/edit_client';
 import { getWasmModule } from '../index';
 
-import {Command} from './commands';
+import {ControllerCommand} from '../bindgen/edit_client';
 import {ControllerImpl, ServerImpl} from './network';
 import DEBUG from '../debug';
 
@@ -81,7 +81,7 @@ export class WasmClient implements ControllerImpl {
   Module: any;
   clientBindings: WasmClientModule;
 
-  sendCommand(command: Command) {
+  sendCommand(command: ControllerCommand) {
     if (forwardWasmTaskCallback != null) {
       this.clientBindings.command(JSON.stringify({
         ControllerCommand: command,

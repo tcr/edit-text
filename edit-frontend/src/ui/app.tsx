@@ -39,8 +39,9 @@ function UiElement(
         key={i}
         onClick={
           () => props.editor.client.sendCommand({
-            type: 'Button',
-            button: button[1],
+            'Button': {
+              button: button[1],
+            },
           })
         }
         className={button[2] ? 'active' : ''}
@@ -482,8 +483,9 @@ function multiConnect(client: ControllerImpl) {
     if ('Monkey' in msg) {
       // TODO reflect this in the app
       client.sendCommand({
-        type: 'Monkey',
-        enabled: msg.Monkey,
+        'Monkey': {
+          enabled: msg.Monkey,
+        },
       });
     }
   };

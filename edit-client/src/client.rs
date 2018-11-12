@@ -290,20 +290,20 @@ fn native_command<C: ClientImpl>(client: &mut C, req: ControllerCommand) -> Resu
             unreachable!();
         }
         ControllerCommand::Cursor { focus, anchor } => {
-            match (focus, anchor) {
+            match (focus.inner(), anchor.inner()) {
                 (Some(focus), Some(anchor)) => {
                     client.client_op(|mut ctx| {
-                        let op = cur_to_caret(ctx.clone(), &focus.0, true)?;
+                        let op = cur_to_caret(ctx.clone(), focus, true)?;
                         ctx.doc = Op::apply(&ctx.doc, &op);
-                        let op2 = cur_to_caret(ctx, &anchor.0, false)?;
+                        let op2 = cur_to_caret(ctx, anchor, false)?;
                         Ok(Op::compose(&op, &op2))
                     })?;
                 }
                 (Some(focus), None) => {
-                    client.client_op(|doc| cur_to_caret(doc, &focus.0, true))?;
+                    client.client_op(|doc| cur_to_caret(doc, focus, true))?;
                 }
                 (None, Some(anchor)) => {
-                    client.client_op(|doc| cur_to_caret(doc, &anchor.0, false))?;
+                    client.client_op(|doc| cur_to_caret(doc, anchor, false))?;
                 }
                 (None, None) => {} // ???
             }
@@ -386,8 +386,8 @@ pub trait ClientImpl {
                     let idx = (pos * (cursors.len() as f64)) as usize;
 
                     value = Task::ControllerCommand(ControllerCommand::Cursor {
-                        focus: Some(JsonEncodable(cursors[idx].clone())),
-                        anchor: None
+                        focus: JsonEncodable::new(Some(cursors[idx].clone())),
+                        anchor: JsonEncodable::new(None),
                     });
                 }
 

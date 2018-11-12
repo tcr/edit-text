@@ -1,5 +1,4 @@
-#![feature(crate_in_paths, nll)]
-#![feature(custom_attribute)]
+#![feature(custom_attribute, nll)]
 
 extern crate failure;
 #[macro_use]

@@ -23,18 +23,28 @@ pub enum ClientCommand {
 use wasm_bindgen::describe::WasmDescribe;
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
-pub struct JsonEncodable<T>(pub T);
+pub struct JsonEncodable<T>(T);
 
 impl<T> WasmDescribe for JsonEncodable<T> {
     fn describe() {
-        JsValue::describe()
+        JsValue::describe();
     }
 }
+
+impl<T> JsonEncodable<T> {
+    pub fn inner(&self) -> &T {
+        &self.0
+    }
+
+    pub fn new(inner: T) -> Self {
+        JsonEncodable(inner)
+    }
+}
+
 
 // Controller is the client interface that is exposed to the frnontend.
 #[wasm_bindgen(tagged_union)]
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
-#[serde(tag = "type")]
 pub enum ControllerCommand {
     // Connect(String),
     Keypress {
@@ -58,8 +68,8 @@ pub enum ControllerCommand {
     },
     // Load(DocSpan),
     Cursor {
-        focus: Option<JsonEncodable<CurSpan>>,
-        anchor: Option<JsonEncodable<CurSpan>>,
+        focus: JsonEncodable<Option<CurSpan>>,
+        anchor: JsonEncodable<Option<CurSpan>>,
     },
     // Target(CurSpan),
     RandomTarget {
