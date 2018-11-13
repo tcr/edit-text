@@ -120,6 +120,9 @@ enum Cli {
     Deploy {
         #[structopt(long = "skip-download")]
         skip_download: bool,
+
+        #[structopt(long = "build-only")]
+        build_only: bool,
     },
 
     #[structopt(
@@ -256,6 +259,8 @@ fn run() -> Result<(), Error> {
                 .for_each(|value| eprintln!(" - {}", value));
             eprintln!();
 
+            // If only the docs/ folder has been modified, we only need
+            // to test if ./tools book-build is successful to merge.
             let only_docs = String::from_utf8_lossy(&output)
                 .lines()
                 .all(|item| Path::new(item).starts_with("docs/"));
@@ -269,6 +274,7 @@ fn run() -> Result<(), Error> {
                     self_path = SELF_PATH,
                 )?;
             } else {
+                // Build all targets.
                 eprintln!("ci: building all");
                 execute!(
                     r"
@@ -279,6 +285,7 @@ fn run() -> Result<(), Error> {
                 eprintln!();
 
                 if cfg!(windows) {
+                    // Only perform unit tests on Windows.
                     eprintln!("ci: perform test (windows)");
                     execute!(
                         r"
@@ -287,6 +294,7 @@ fn run() -> Result<(), Error> {
                         self_path = SELF_PATH,
                     )?;
                 } else {
+                    // Perform integration tests on Posix.
                     eprintln!("ci: perform test (posix)");
                     execute!(
                         r"
@@ -294,6 +302,17 @@ fn run() -> Result<(), Error> {
                         ",
                         self_path = SELF_PATH,
                     )?;
+                    eprintln!();
+
+                    // Test cross-compilation.
+                    eprintln!("ci: package binary");
+                    execute!(
+                        r"
+                            {self_path} deploy --build-only
+                        ",
+                        self_path = SELF_PATH,
+                    )?;
+                    eprintln!();
                 }
             }
         }
@@ -675,7 +694,10 @@ fn run() -> Result<(), Error> {
             )?;
         }
 
-        Cli::Deploy { skip_download } => {
+        Cli::Deploy {
+            skip_download,
+            build_only,
+        } => {
             let edit_deploy_url =
                 env::var("EDIT_DEPLOY_URL").unwrap_or("sandbox.edit.io".to_string());
             let edit_dokku_name = env::var("EDIT_DOKKU_NAME").unwrap_or("edit-text".to_string());
@@ -699,16 +721,24 @@ fn run() -> Result<(), Error> {
                 self_path = SELF_PATH,
             )?;
 
-            // Linux binary
-            eprintln!();
-            eprintln!("Building Linux server binary...");
-            execute!(
-                "
-                    rustup target add x86_64-unknown-linux-gnu
-                "
-            )?;
+            // Install Linux toolchain.
+            // NOTE: This seems to error out if it's already installed,
+            // so we only perform this check on non-Linux targets.
+            if !cfg!(target_os = "linux") {
+                eprintln!();
+                eprintln!("[installing linux target]");
+                execute!(
+                    "
+                        rustup target add x86_64-unknown-linux-gnu
+                    "
+                )?;
+            }
+
             // TODO replace --skip-download with a smarter heuristic
             if !skip_download {
+                eprintln!();
+                eprintln!("[downloading linux dependencies]");
+
                 // TODO replace this with discrete execute! commands.
                 sh_execute!(
                     r#"
@@ -725,25 +755,28 @@ fn run() -> Result<(), Error> {
                         cd $LINKROOT
 
                         export URL=http://security.debian.org/debian-security/pool/updates/main/o/openssl/libssl-dev_1.1.0f-3+deb9u2_amd64.deb
-                        curl -O $URL
-                        ar p $(basename $URL) data.tar.xz | tar xvf -
+                        curl -L -O $URL
+                        ar p $(basename $URL) data.tar.xz | tar xvJf -
 
                         export URL=http://security.debian.org/debian-security/pool/updates/main/o/openssl/libssl1.1_1.1.0f-3+deb9u2_amd64.deb
-                        curl -O $URL
-                        ar p $(basename $URL) data.tar.xz | tar xvf -
+                        curl -L -O $URL
+                        ar p $(basename $URL) data.tar.xz | tar xvJf -
 
                         export URL=http://ftp.us.debian.org/debian/pool/main/g/glibc/libc6_2.24-11+deb9u3_amd64.deb
-                        curl -O $URL
-                        ar p $(basename $URL) data.tar.xz | tar xvf -
+                        curl -L -O $URL
+                        ar p $(basename $URL) data.tar.xz | tar xvJf -
                     "#,
                     dir_self = abs_string_path(".")?,
                 );
             }
+
+            eprintln!();
+            eprintln!("[cross-compiling server binary]");
             execute!(
                 r#"
                     cd edit-server
 
-                    export LD_LIBRARY_PATH="{dir_link}/usr/lib/x86_64-linux-gnu;{dir_link}/lib/x86_64-linux-gnu"
+                    export LIBRARY_PATH="{dir_link}/usr/lib/x86_64-linux-gnu;{dir_link}/lib/x86_64-linux-gnu"
                     export OPENSSL_LIB_DIR="{dir_link}/usr/lib/x86_64-linux-gnu/"
                     export OPENSSL_DIR="{dir_link}/usr/"
                     export TARGET_CC="x86_64-unknown-linux-gnu-gcc"
@@ -765,20 +798,22 @@ fn run() -> Result<(), Error> {
             )?;
 
             // Shell out for uploading the file to dokku.
-            eprintln!();
-            eprintln!("Uploading...");
-            sh_execute!(
-                r#"
-                    cd dist/deploy
+            if !build_only {
+                eprintln!();
+                eprintln!("Uploading...");
+                sh_execute!(
+                    r#"
+                        cd dist/deploy
 
-                    # Doing these two commands as one pipe may cause dokku to hang
-                    # (from experience) so first, upload the tarball, then load it.
-                    tar c . | bzip2 | ssh root@{dokku_url} "bunzip2 > /tmp/edit.tar"
-                    ssh root@{dokku_url} 'cat /tmp/edit.tar | dokku tar:in {dokku_name}'
-                "#,
-                dokku_url = edit_deploy_url,
-                dokku_name = edit_dokku_name,
-            )?;
+                        # Doing these two commands as one pipe may cause dokku to hang
+                        # (from experience) so first, upload the tarball, then load it.
+                        tar c . | bzip2 | ssh root@{dokku_url} "bunzip2 > /tmp/edit.tar"
+                        ssh root@{dokku_url} 'cat /tmp/edit.tar | dokku tar:in {dokku_name}'
+                    "#,
+                    dokku_url = edit_deploy_url,
+                    dokku_name = edit_dokku_name,
+                )?;
+            }
         }
 
         Cli::BookBuild => {

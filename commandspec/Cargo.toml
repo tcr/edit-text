@@ -1,0 +1,20 @@
+[package]
+authors = ["Tim Ryan <tim@timryan.org>"]
+description = "Rust macro to build std::process::Command objects with shell syntax. Uses macro_rules! and works on stable."
+license = "MIT OR Apache-2.0"
+name = "commandspec"
+repository = "http://github.com/tcr/commandspec"
+version = "0.12.1"
+
+[dependencies]
+failure = "0.1.1"
+shlex = "0.1.1"
+lazy_static = "1.0.0"
+log = "0.4.4"
+
+[target.'cfg(unix)'.dependencies]
+nix = "0.11.0"
+
+[target.'cfg(windows)'.dependencies]
+winapi = "0.2.8"
+kernel32-sys = "0.2.2"
