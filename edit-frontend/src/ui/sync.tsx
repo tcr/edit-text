@@ -9,6 +9,7 @@ import * as commands from '../editor/commands';
 import {ServerImpl, ControllerImpl } from '../editor/network';
 import {WasmClient, WasmError, getForwardWasmTaskCallback, setForwardWasmTaskCallback} from '../editor/wasm';
 import DEBUG from '../debug';
+import {ControllerCommand} from '../bindgen/edit_client';
 
 class DeferredSocket {
   socket: WebSocket;
@@ -166,8 +167,7 @@ export class ProxyClient implements ControllerImpl {
 
   private socket: WebSocket;
 
-  sendCommand(command: commands.Command) {
-    delete command.tag;
+  sendCommand(command: ControllerCommand) {
     this.socket.send(JSON.stringify(command));
   }
 

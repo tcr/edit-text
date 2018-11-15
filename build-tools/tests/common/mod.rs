@@ -133,6 +133,10 @@ where
     T: std::future::Future<Output = Result<bool, Error>> + Send + 'static,
 {
     std::thread::spawn(move || -> Result<bool, ()> {
+        // This value gets shared with the tokio::run_async closure, which is
+        // run sequentially, and then we can read the value out after it's done.
+        // This is just a workaround for not being able to return values from
+        // tokio::run_async directly (for some reason)
         let result = Arc::new(AtomicBool::new(false));
         tokio::run_async({
             take!(=result);

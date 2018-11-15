@@ -2,14 +2,14 @@
 
 import 'react';
 
-import {Command} from './commands';
+import {ControllerCommand} from '../bindgen/edit_client';
 
 export interface ControllerImpl {
   onMessage: (msg: any) => void | null;
   onClose: () => void | null;
 
   connect(onError: () => void): Promise<void>;
-  sendCommand(command: Command): void;
+  sendCommand(command: ControllerCommand): void;
 }
 
 export interface ServerImpl {

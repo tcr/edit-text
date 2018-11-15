@@ -182,7 +182,7 @@ pub fn setup_monkey<C: ClientImpl + Sized>(mut scheduler: Scheduler) {
     scheduler.schedule_random(MONKEY_BUTTON, || {
         let mut rng = local_rng();
         let index = rng.gen_range(0, button_handlers::<C>(None).0.len() as u32);
-        ControllerCommand::Button(index)
+        ControllerCommand::Button { button: index }
     });
 
     scheduler.schedule_random(MONKEY_LETTER, || {
@@ -194,25 +194,25 @@ pub fn setup_monkey<C: ClientImpl + Sized>(mut scheduler: Scheduler) {
             b' ',
         ];
         let c = *rng.choose(&char_list).unwrap() as u32;
-        ControllerCommand::Character(c)
+        ControllerCommand::Character { char_code: c }
     });
 
     scheduler.schedule_random(MONKEY_ARROW, || {
         let mut rng = local_rng();
-        let key = *rng.choose(&[37, 39, 37, 39, 37, 39, 38, 40]).unwrap();
-        ControllerCommand::Keypress(key, false, false, false)
+        let key_code = *rng.choose(&[37, 39, 37, 39, 37, 39, 38, 40]).unwrap();
+        ControllerCommand::Keypress { key_code, meta_key: false, shift_key: false, alt_key: false }
     });
 
     scheduler.schedule_random(MONKEY_BACKSPACE, || {
-        ControllerCommand::Keypress(8, false, false, false)
+        ControllerCommand::Keypress { key_code: 8, meta_key: false, shift_key: false, alt_key: false }
     });
 
     scheduler.schedule_random(MONKEY_ENTER, || {
-        ControllerCommand::Keypress(13, false, false, false)
+        ControllerCommand::Keypress { key_code: 13, meta_key: false, shift_key: false, alt_key: false }
     });
 
     scheduler.schedule_random(MONKEY_CLICK, || {
         let mut rng = local_rng();
-        ControllerCommand::RandomTarget(rng.gen::<f64>())
+        ControllerCommand::RandomTarget { position: rng.gen::<f64>() }
     });
 }

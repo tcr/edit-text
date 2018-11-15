@@ -95,7 +95,7 @@ fn spawn_virtual_monkey(port: u16, key: usize) -> JoinHandle<()> {
                     serde_json::from_slice(&msg.into_data());
 
                 if let Ok(FrontendCommand::Init(..)) = req_parse {
-                    let command = ControllerCommand::Monkey(true);
+                    let command = ControllerCommand::Monkey { enabled: true };
                     let json = serde_json::to_string(&command).unwrap();
                     out.send(json.as_str()).unwrap();
                     // monkey_started.store(true, Ordering::Relaxed);

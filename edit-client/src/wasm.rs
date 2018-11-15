@@ -164,7 +164,7 @@ impl WasmClient {
                 }
             }
             Err(err) => {
-                console_log!("error parsing task: {:?}", err);
+                console_log!("error parsing task:\n  task: {:?}\n  error: {:?}", input, err);
                 return 1;
             }
         }

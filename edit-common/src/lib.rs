@@ -1,4 +1,4 @@
-#![feature(crate_in_paths, nll)]
+#![feature(custom_attribute, nll)]
 
 extern crate failure;
 #[macro_use]
@@ -19,6 +19,7 @@ extern crate serde_json;
 extern crate take_mut;
 #[cfg(not(target_arch = "wasm32"))]
 extern crate ws;
+extern crate wasm_bindgen;
 
 pub mod commands;
 pub mod markdown;

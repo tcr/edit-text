@@ -248,17 +248,17 @@ pub fn button_handlers<C: ClientImpl>(
 
 fn native_command<C: ClientImpl>(client: &mut C, req: ControllerCommand) -> Result<(), Error> {
     match req {
-        ControllerCommand::RenameGroup(tag, _) => {
+        ControllerCommand::RenameGroup { tag, curspan: _ } => {
             client.client_op(|doc| replace_block(doc, &tag))?;
         }
-        ControllerCommand::Button(index) => {
+        ControllerCommand::Button { button: index } => {
             // Find which button handler to respond to this command.
             button_handlers(None)
                 .0
                 .get(index as usize)
                 .map(|handler| handler(client));
         }
-        ControllerCommand::Keypress(key_code, meta_key, shift_key, alt_key) => {
+        ControllerCommand::Keypress { key_code, meta_key, shift_key, alt_key } => {
             println!(
                 "key: {:?} {:?} {:?} {:?}",
                 key_code, meta_key, shift_key, alt_key
@@ -272,7 +272,7 @@ fn native_command<C: ClientImpl>(client: &mut C, req: ControllerCommand) -> Resu
                 }
             }
         }
-        ControllerCommand::Character(char_code) => {
+        ControllerCommand::Character { char_code } => {
             client.client_op(|doc| {
                 let c: char = from_u32(char_code).unwrap_or('?');
                 if c == '\0' {
@@ -282,38 +282,33 @@ fn native_command<C: ClientImpl>(client: &mut C, req: ControllerCommand) -> Resu
                 add_string(doc, &format!("{}", c))
             })?;
         }
-        ControllerCommand::InsertText(text) => {
+        ControllerCommand::InsertText { text } => {
             client.client_op(|doc| add_string(doc, &text))?;
         }
-        ControllerCommand::RandomTarget(pos) => {
-            // TODO this should never happen, because we clarify RandomTarget
-            // beforehand
-
-            let cursors = random_cursor(&client.state().client_doc.doc)?;
-            let idx = (pos * (cursors.len() as f64)) as usize;
-
-            client.client_op(|doc| cur_to_caret(doc, &cursors[idx], true))?;
+        ControllerCommand::RandomTarget { .. } => {
+            // TODO this should never happen, because we rewrite RandomTarget beforehand
+            unreachable!();
         }
-        ControllerCommand::Cursor(focus, anchor) => {
-            match (focus, anchor) {
+        ControllerCommand::Cursor { focus, anchor } => {
+            match (focus.inner(), anchor.inner()) {
                 (Some(focus), Some(anchor)) => {
                     client.client_op(|mut ctx| {
-                        let op = cur_to_caret(ctx.clone(), &focus, true)?;
+                        let op = cur_to_caret(ctx.clone(), focus, true)?;
                         ctx.doc = Op::apply(&ctx.doc, &op);
-                        let op2 = cur_to_caret(ctx, &anchor, false)?;
+                        let op2 = cur_to_caret(ctx, anchor, false)?;
                         Ok(Op::compose(&op, &op2))
                     })?;
                 }
                 (Some(focus), None) => {
-                    client.client_op(|doc| cur_to_caret(doc, &focus, true))?;
+                    client.client_op(|doc| cur_to_caret(doc, focus, true))?;
                 }
                 (None, Some(anchor)) => {
-                    client.client_op(|doc| cur_to_caret(doc, &anchor, false))?;
+                    client.client_op(|doc| cur_to_caret(doc, anchor, false))?;
                 }
                 (None, None) => {} // ???
             }
         }
-        ControllerCommand::Monkey(setting) => {
+        ControllerCommand::Monkey { enabled: setting }  => {
             println!("received monkey setting: {:?}", setting);
             client.state().monkey.store(setting, Ordering::Relaxed);
         }
@@ -386,14 +381,14 @@ pub trait ClientImpl {
                 let delay_log = self.state().client_id == "$$$$$$";
 
                 // Rewrite random targets here.
-                if let Task::ControllerCommand(ControllerCommand::RandomTarget(pos)) = value {
+                if let Task::ControllerCommand(ControllerCommand::RandomTarget { position: pos }) = value {
                     let cursors = random_cursor(&self.state().client_doc.doc)?;
                     let idx = (pos * (cursors.len() as f64)) as usize;
 
-                    value = Task::ControllerCommand(ControllerCommand::Cursor(
-                        Some(cursors[idx].clone()),
-                        None,
-                    ));
+                    value = Task::ControllerCommand(ControllerCommand::Cursor {
+                        focus: JsonEncodable::new(Some(cursors[idx].clone())),
+                        anchor: JsonEncodable::new(None),
+                    });
                 }
 
                 if !delay_log {

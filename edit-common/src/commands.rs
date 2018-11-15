@@ -1,4 +1,5 @@
 use oatie::doc::*;
+use wasm_bindgen::prelude::*;
 
 // The server is the synchronization server.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -19,20 +20,64 @@ pub enum ClientCommand {
     Update(usize, String, Op),
 }
 
+use wasm_bindgen::describe::WasmDescribe;
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
+pub struct JsonEncodable<T>(T);
+
+impl<T> WasmDescribe for JsonEncodable<T> {
+    fn describe() {
+        JsValue::describe();
+    }
+}
+
+impl<T> JsonEncodable<T> {
+    pub fn inner(&self) -> &T {
+        &self.0
+    }
+
+    pub fn new(inner: T) -> Self {
+        JsonEncodable(inner)
+    }
+}
+
+
 // Controller is the client interface that is exposed to the frnontend.
+#[wasm_bindgen(tagged_union)]
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub enum ControllerCommand {
     // Connect(String),
-    Keypress(u32, bool, bool, bool), // code, meta, shift, alt
-    Button(u32),
-    Character(u32),
-    InsertText(String),
-    RenameGroup(String, CurSpan),
+    Keypress {
+        key_code: u32,
+        meta_key: bool,
+        shift_key: bool,
+        alt_key: bool,
+    },
+    Button {
+        button: u32
+    },
+    Character {
+        char_code: u32,
+    },
+    InsertText {
+        text: String,
+    },
+    RenameGroup {
+        tag: String,
+        curspan: JsonEncodable<CurSpan>,
+    },
     // Load(DocSpan),
-    Cursor(Option<CurSpan>, Option<CurSpan>),
+    Cursor {
+        focus: JsonEncodable<Option<CurSpan>>,
+        anchor: JsonEncodable<Option<CurSpan>>,
+    },
     // Target(CurSpan),
-    RandomTarget(f64),
-    Monkey(bool),
+    RandomTarget {
+        position: f64,
+    },
+    Monkey {
+        enabled: bool,
+    },
 }
 
 // Frontend is the editor components in JavaScript.

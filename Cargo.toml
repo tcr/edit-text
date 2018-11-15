@@ -12,3 +12,8 @@ debug = true
 
 [profile.release]
 debug = true
+
+[patch.crates-io]
+wasm-bindgen = { git = "http://github.com/tcr/wasm-bindgen" }
+wasm-bindgen-cli-support = { git = "http://github.com/tcr/wasm-bindgen" }
+wasm-bindgen-shared = { git = "http://github.com/tcr/wasm-bindgen" }
