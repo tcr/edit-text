@@ -468,7 +468,6 @@ pub trait ClientImpl {
                                 .sync_sent_new_version(&doc, version, &input_op);
 
                             // Native drives client state.
-                            let state = self.state();
                             let res = FrontendCommand::Update(
                                 ::serde_json::to_string(
                                     &::oatie::apply::apply_op_bc(&last_doc.0, &input_op)
@@ -579,7 +578,6 @@ pub trait ClientImpl {
         validate_doc(&self.state().client_doc.doc).expect("Local op was malformed");
 
         // Render the update.
-        let state = self.state();
         let res = FrontendCommand::Update(
             ::serde_json::to_string(&bc).unwrap(),
             op,

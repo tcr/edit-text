@@ -1,4 +1,5 @@
 use super::*;
+use wasm_bindgen::prelude::*;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "tag", content = "fields")] // Since serde(tag = "type") fails
@@ -12,6 +13,22 @@ pub enum Bytecode {
     UnwrapSelf,
     JoinTextLeft,
 }
+
+#[wasm_bindgen(typescript_custom_section)]
+const TS_BYTECODE: &str = r#"
+
+export type Bytecode =
+    | {"tag": "Enter", fields: []}
+    | {"tag": "Exit", fields: []}
+    | {"tag": "AdvanceElements", fields: number}
+    | {"tag": "DeleteElements", fields: number}
+    | {"tag": "InsertDocString", fields: any}
+    | {"tag": "WrapPrevious", fields: [number, any]}
+    | {"tag": "UnwrapSelf", fields: []}
+    | {"tag": "JoinTextLeft", fields: []}
+    ;
+
+"#;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Program(pub Vec<Bytecode>);

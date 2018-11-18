@@ -14,6 +14,7 @@ WrapPrevious(n, Attrs)
 
 */
 
+import {Bytecode} from '../bindgen/edit_client';
 import * as util from './util';
 
 function assert(condition: boolean) {
@@ -160,14 +161,14 @@ export function vm(el: Node) {
                     return handlers[tag]!();
             }
         },
-        run(program: Array<any>) {
+        run(program: Array<Bytecode>) {
             // console.group('VM group: %d opcodes', program.length)
-            // console.log('\n(vm) 🔜');
-            program.forEach((opcode: any) => {
-                // console.log('(vm)', JSON.stringify(opcode));
-                this.handle(opcode.tag, opcode.fields);
+            // console.log('\n[vm] 🔜');
+            program.forEach((opcode: Bytecode) => {
+                console.debug('[vm]', JSON.stringify(opcode));
+                this.handle(opcode.tag, 'fields' in opcode ? opcode.fields : opcode);
             });
-            // console.log('(vm) 🔚\n\n');
+            // console.log('[vm] 🔚\n\n');
             // console.groupEnd()
         }
     };

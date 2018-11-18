@@ -270,7 +270,7 @@ export class EditorFrame extends React.Component {
     this.network = props.network;
     this.client = props.client;
 
-    this.client.onMessage = this.onClientToFrontendCommand.bind(this);
+    this.client.onMessage = this.onFrontendCommand.bind(this);
 
     // Background colors.
     // TODO make these actionable on this object right?
@@ -309,7 +309,7 @@ export class EditorFrame extends React.Component {
             <a href="/" id="logo">{CONFIG.title}</a>
             <NativeButtons
               editor={this}
-              buttons={this.state.buttons} 
+              buttons={this.state.buttons}
             />
             <LocalButtons
               editor={this}
@@ -370,9 +370,11 @@ export class EditorFrame extends React.Component {
     );
   }
 
-  // Received message on native socket
-  onClientToFrontendCommand(parse: any) {
+  // Controller has sent us (the frontend) a command.
+  onFrontendCommand(parse: any) {
     const editor = this;
+
+    console.debug('[command]', parse);
 
     if (parse.Init) {
       let editorID = parse.Init;
