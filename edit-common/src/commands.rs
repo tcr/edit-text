@@ -1,5 +1,6 @@
 use oatie::doc::*;
 use wasm_bindgen::prelude::*;
+use wasm_typescript_definition::*;
 
 // The server is the synchronization server.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -43,7 +44,7 @@ impl<T> JsonEncodable<T> {
 
 
 // Controller is the client interface that is exposed to the frnontend.
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, TypescriptDefinition)]
 pub enum ControllerCommand {
     // Connect(String),
     Keypress {
@@ -78,44 +79,6 @@ pub enum ControllerCommand {
         enabled: bool,
     },
 }
-
-
-#[wasm_bindgen(typescript_custom_section)]
-const TS_CONTROLLER_COMMAND: &str = r#"
-
-export type ControllerCommand =
-    | {"Keypress": {
-        "key_code": number,
-        "meta_key": boolean,
-        "shift_key": boolean,
-        "alt_key": boolean,
-    }}
-    | {"Button": {
-        button: number,
-    }}
-    | {"Character": {
-        char_code: number,
-    }}
-    | {"InsertText": {
-        text: string,
-    }}
-    | {"RenameGroup": {
-        tag: string,
-        curspan: any,
-    }}
-    | {"Cursor": {
-        focus: any,
-        anchor: any,
-    }}
-    | {"RandomTarget": {
-        position: number,
-    }}
-    | {"Monkey": {
-        enabled: boolean,
-    }}
-    ;
-
-"#;
 
 
 // Frontend is the editor components in JavaScript.
