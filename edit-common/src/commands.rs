@@ -48,6 +48,8 @@ impl<T> JsonEncodable<T> {
 #[serde(tag = "tag", content = "fields")]
 pub enum ControllerCommand {
     // Connect(String),
+    // Load(DocSpan),
+    // Target(CurSpan),
     Keypress {
         key_code: u32,
         meta_key: bool,
@@ -67,12 +69,10 @@ pub enum ControllerCommand {
         tag: String,
         curspan: CurSpan,
     },
-    // Load(DocSpan),
     Cursor {
-        focus: JsonEncodable<Option<CurSpan>>,
-        anchor: JsonEncodable<Option<CurSpan>>,
+        focus: Option<CurSpan>,
+        anchor: Option<CurSpan>,
     },
-    // Target(CurSpan),
     RandomTarget {
         position: f64,
     },
@@ -83,7 +83,8 @@ pub enum ControllerCommand {
 
 
 // Frontend is the editor components in JavaScript.
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, TypescriptDefinition)]
+#[serde(tag = "tag", content = "fields")]
 pub enum FrontendCommand {
     Init(String),
     Controls(Controls),

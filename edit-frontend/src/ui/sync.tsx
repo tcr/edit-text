@@ -7,7 +7,7 @@ import * as app from './app';
 import {EditorFrame} from './app';
 import * as commands from '../editor/commands';
 import {ServerImpl, ControllerImpl } from '../editor/network';
-import {WasmClient, WasmError, getForwardWasmTaskCallback, setForwardWasmTaskCallback} from '../editor/wasm';
+import {WasmController, WasmError, getForwardWasmTaskCallback, setForwardWasmTaskCallback} from '../editor/wasm';
 import DEBUG from '../debug';
 import {ControllerCommand} from '../bindgen/edit_client';
 
@@ -64,7 +64,7 @@ let syncSocket = new DeferredSocket(
 );
 
 export class AppServer implements ServerImpl {
-  client: WasmClient | null;
+  client: WasmController | null;
   
   onClose: () => void;
 
@@ -158,7 +158,7 @@ export class AppServer implements ServerImpl {
   }
 }
 
-export class ProxyClient implements ControllerImpl {
+export class ProxyController implements ControllerImpl {
   // TODO shouldn't these be nullable?
   onMessage: (msg: any) => void | null;
   onClose: () => void | null;

@@ -7,7 +7,7 @@ extern crate ron;
 extern crate maplit;
 extern crate colored;
 #[macro_use]
-extern crate quicli;
+// extern crate quicli;
 extern crate structopt;
 #[macro_use]
 extern crate structopt_derive;

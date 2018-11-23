@@ -10,14 +10,14 @@ import * as Raven from 'raven-js';
 import * as commands from '../editor/commands';
 import * as route from './route';
 import { Editor } from '../editor/editor';
-import { AppServer, ProxyClient } from './sync';
+import { AppServer, ProxyController } from './sync';
 import { NullServer, ControllerImpl, ServerImpl } from '../editor/network';
-import { WasmClient, convertMarkdownToHtml, convertMarkdownToDoc } from '../editor/wasm';
+import { WasmController, convertMarkdownToHtml, convertMarkdownToDoc } from '../editor/wasm';
 import * as index from '../index';
 import {vm} from '../editor/vm';
+import {FrontendCommand} from '../bindgen/edit_client';
 
 import DEBUG from '../debug';
-import { Z_BLOCK } from 'zlib';
 
 declare var CONFIG: any;
 
@@ -379,92 +379,102 @@ export class EditorFrame extends React.Component {
   }
 
   // Controller has sent us (the frontend) a command.
-  onFrontendCommand(parse: any) {
+  onFrontendCommand(command: FrontendCommand) {
     const editor = this;
 
-    console.debug('[command]', parse);
+    switch (command.tag) {
+      case 'Init': {
+        let editorID = command.fields;
 
-    if (parse.Init) {
-      let editorID = parse.Init;
+        this.setState({
+          editorID,
+        });
 
-      this.setState({
-        editorID,
-      });
+        console.info('Editor "%s" connected.', editorID);
 
-      console.info('Editor "%s" connected.', editorID);
+        // Log the editor ID.
+        Raven.setExtraContext({
+          editor_id: editorID,
+        });
 
-      // Log the editor ID.
-      Raven.setExtraContext({
-        editor_id: editorID,
-      });
-    }
+        break;
+      }
 
-    else if (parse.Update) {
-      // Update page content
-      // console.groupCollapsed('Parse Update');
-      // console.log(parse.Update);
-      let programs = JSON.parse(parse.Update[0]);
-      programs.forEach((program: any) => {
-        // console.log('🚗🚗🚗🚗', program, '\n');
-        this.editor!._runProgram(program);
+      case 'Update': {
+        // Update page content
+        // console.groupCollapsed('Parse Update');
+        // console.log(parse.Update);
+        let programs = JSON.parse(command.fields[0]);
+        programs.forEach((program: any) => {
+          // console.log('🚗🚗🚗🚗', program, '\n');
+          this.editor!._runProgram(program);
 
-        // Corrections
-        // while (true) {
-        //   let unjoinedSpans = document.querySelector('.edit-text span.Normie + span.Normie');
-        //   if (unjoinedSpans === null) {
-        //     break;
-        //   }
-        //   let right = unjoinedSpans;
-        //   let left = right.previousSibling;
-        //   while (right.childNodes.length) {
-        //     left!.appendChild(right.firstChild!);
-        //   }
-        //   right!.parentNode!.removeChild(right);
-        //   left!.normalize();
-        // }
+          // Corrections
+          // while (true) {
+          //   let unjoinedSpans = document.querySelector('.edit-text span.Normie + span.Normie');
+          //   if (unjoinedSpans === null) {
+          //     break;
+          //   }
+          //   let right = unjoinedSpans;
+          //   let left = right.previousSibling;
+          //   while (right.childNodes.length) {
+          //     left!.appendChild(right.firstChild!);
+          //   }
+          //   right!.parentNode!.removeChild(right);
+          //   left!.normalize();
+          // }
 
-        // console.log('👿👿👿👿👿👿', document.querySelector('.edit-text')!.innerHTML);
-      });
-      // console.log(parse.Update[0]);
-      // console.log(document.querySelector('.edit-text')!.innerHTML);
-      // console.groupEnd();
-      // this.setState({
-      //   body: JSON.stringify(parse.Update[0], null, '  '),
-      // });
-    }
+          // console.log('👿👿👿👿👿👿', document.querySelector('.edit-text')!.innerHTML);
+        });
+        // console.log(parse.Update[0]);
+        // console.log(document.querySelector('.edit-text')!.innerHTML);
+        // console.groupEnd();
+        // this.setState({
+        //   body: JSON.stringify(parse.Update[0], null, '  '),
+        // });
 
-    else if (parse.UpdateFull) {
-      DEBUG.measureTime('first-update');
+        break;
+      }
 
-      this.editor!._setHTML(parse.UpdateFull);
-      // Update page content
-      // this.setState({
-      //   body: parse.UpdateFull[0],
-      // });
-    }
+      case 'UpdateFull': {
+        DEBUG.measureTime('first-update');
 
-    else if (parse.Controls) {
-      // console.log('SETUP CONTROLS', parse.Controls);
+        this.editor!._setHTML(command.fields);
+        // Update page content
+        // this.setState({
+        //   body: parse.UpdateFull[0],
+        // });
 
-      // Update the key list in-place.
-      editor.KEY_WHITELIST.splice.apply(editor.KEY_WHITELIST,
-        [0, 0].concat(parse.Controls.keys.map((x: any) => ({
-          keyCode: x[0],
-          metaKey: x[1],
-          shiftKey: x[2],
-        })))
-      );
+        break;
+      }
 
-      // Update buttons view
-      this.setState({
-        buttons: parse.Controls.buttons,
-      });
+      case 'Controls': {
+        // console.log('SETUP CONTROLS', parse.Controls);
 
-      DEBUG.measureTime('interactive');
-    }
+        // Update the key list in-place.
+        editor.KEY_WHITELIST.splice.apply(editor.KEY_WHITELIST,
+          [0, 0].concat(command.fields.keys.map((x: any) => ({
+            keyCode: x[0],
+            metaKey: x[1],
+            shiftKey: x[2],
+          })))
+        );
 
-    else {
-      console.error('Unknown packet:', parse);
+        // Update buttons view
+        this.setState({
+          buttons: command.fields.buttons,
+        });
+
+        DEBUG.measureTime('interactive');
+
+        break;
+      }
+
+      default: {
+        console.error('Unknown packet:', command);
+
+        break;
+      }
     }
   }
 }
@@ -505,7 +515,7 @@ function multiConnect(client: ControllerImpl) {
 
 class EditText extends React.Component {
   props: {
-    client: WasmClient,
+    client: WasmController,
     markdown: string,
     onChange: Function | null,
   };
@@ -599,7 +609,7 @@ class EditText extends React.Component {
 export function start_standalone() {
   index.getWasmModule()
   .then(() => {
-    let client = new WasmClient();
+    let client = new WasmController();
 
     // Create the editor frame.
     ReactDOM.render(
@@ -631,7 +641,7 @@ export function start() {
 
   // Wasm and Proxy implementations
   if (CONFIG.wasm) {
-    let wasmClient = new WasmClient();
+    let wasmClient = new WasmController();
     let wasmServer = new AppServer();
 
     // Link them.
@@ -641,7 +651,7 @@ export function start() {
     client = wasmClient;
     server = wasmServer;
   } else {
-    client = new ProxyClient();
+    client = new ProxyController();
     server = new NullServer();
   }
 
