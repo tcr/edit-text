@@ -17,6 +17,7 @@ import * as index from '../index';
 import {vm} from '../editor/vm';
 
 import DEBUG from '../debug';
+import { Z_BLOCK } from 'zlib';
 
 declare var CONFIG: any;
 
@@ -39,7 +40,8 @@ function UiElement(
         key={i}
         onClick={
           () => props.editor.client.sendCommand({
-            'Button': {
+            'tag': 'Button',
+            'fields': {
               button: button[1],
             },
           })
@@ -347,8 +349,14 @@ export class EditorFrame extends React.Component {
             </div>
           </div>
         </div>
-        <div id="footer">{
-          this.state.notices.map((x, key) => {
+        <div id="footer">
+          <div id="debug-row">
+            <div id="debug-content" onClick={(e) => (e.target as any).classList.toggle('expanded')}>
+              <div id="debug-button">🐞</div>
+              <div id="debug-buttons">DEBUG OPTIONS <button onClick={() => alert('good job')}>alert</button></div>
+              </div>
+          </div>
+          {this.state.notices.map((x, key) => {
             return (
               <FooterNotice 
                 key={key}
@@ -364,8 +372,8 @@ export class EditorFrame extends React.Component {
                 {x.element}
               </FooterNotice>
             );
-          })
-        }</div>
+          })}
+        </div>
       </div>
     );
   }
@@ -485,7 +493,8 @@ function multiConnect(client: ControllerImpl) {
     if ('Monkey' in msg) {
       // TODO reflect this in the app
       client.sendCommand({
-        'Monkey': {
+        'tag': 'Monkey',
+        'fields': {
           enabled: msg.Monkey,
         },
       });

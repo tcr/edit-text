@@ -45,6 +45,7 @@ impl<T> JsonEncodable<T> {
 
 // Controller is the client interface that is exposed to the frnontend.
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, TypescriptDefinition)]
+#[serde(tag = "tag", content = "fields")]
 pub enum ControllerCommand {
     // Connect(String),
     Keypress {
@@ -64,7 +65,7 @@ pub enum ControllerCommand {
     },
     RenameGroup {
         tag: String,
-        curspan: JsonEncodable<CurSpan>,
+        curspan: CurSpan,
     },
     // Load(DocSpan),
     Cursor {

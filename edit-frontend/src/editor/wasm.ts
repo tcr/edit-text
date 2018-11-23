@@ -21,7 +21,6 @@ export function convertMarkdownToDoc(input: string): any {
   return JSON.parse(_convertMarkdownToDoc!(input));
 }
 
-
 export function convertMarkdownToHtml(input: string): string {
   return _convertMarkdownToHtml!(input);
 }

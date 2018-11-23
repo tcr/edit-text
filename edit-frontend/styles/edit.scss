@@ -575,3 +575,60 @@ body#multi {
         background: #f55;
     }
 }
+
+#debug-row {
+    display: flex;
+    padding: 20px;
+    justify-content: flex-end;
+}
+
+#debug-content {
+    display: block;
+    padding: 10px;
+    box-sizing: border-box;
+    transition: all 0.3s linear, background-color 0.1s linear, border 0.1s linear;
+    border: 1px solid transparent;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    box-shadow: 0 0 0px rgba(0, 0, 0, 0.0);
+
+    #debug-button {
+        pointer-events: none;
+        filter: grayscale(1.0);
+        opacity: 0.5;
+        width: 1.4em;
+        height: 1.4em;
+    }
+
+    &.expanded, &:hover {
+        background: #fff;
+        border: 1px solid #888;
+        box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
+        filter: grayscale(0.0);
+
+        #debug-button {
+            filter: grayscale(0.0);
+            opacity: 1.0;
+        }
+    }
+
+    #debug-buttons {
+        flex: 1;
+        overflow: hidden;
+        white-space: pre;
+        flex-basis: 0px;
+        width: 0;
+        transition: all 0.3s linear;
+        margin-left: 10px;
+        box-sizing: border-box;
+    }
+
+    &.expanded {
+        flex: 1;
+
+        // #debug-buttons {
+        //     width: auto;
+        // }
+    }
+}
