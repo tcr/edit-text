@@ -17,4 +17,3 @@ debug = true
 wasm-bindgen = { git = "http://github.com/tcr/wasm-bindgen", branch = "tcr-tscustom" }
 wasm-bindgen-cli-support = { git = "http://github.com/tcr/wasm-bindgen", branch = "tcr-tscustom" }
 wasm-bindgen-shared = { git = "http://github.com/tcr/wasm-bindgen", branch = "tcr-tscustom" }
-commandspec = { path = "./commandspec" }

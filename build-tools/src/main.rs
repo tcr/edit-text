@@ -674,16 +674,7 @@ fn run() -> Result<(), Error> {
             )?;
 
             // Watch WebAssembly
-            std::thread::spawn(|| -> Result<(), Error> {
-                watchexec::run(watchexec_args(
-                    "echo [Starting build.] && cargo run --bin build-tools --quiet -- wasm-build && echo [Build complete.]",
-                    &["edit-frontend/**", "build-tools/**"],
-                ))?;
-                Ok(())
-            });
-
-            // Watch TypeScript
-            execute!(
+            let _handle = command!(
                 r"
                     cd edit-frontend
                     {webpack_path} --watch \
@@ -691,7 +682,12 @@ fn run() -> Result<(), Error> {
                 ",
                 webpack_path = WEBPACK_PATH,
                 args = args,
-            )?;
+            )?.scoped_spawn();
+
+            watchexec::run(watchexec_args(
+                "echo [Starting build.] && cargo run --bin build-tools --quiet -- wasm-build && echo [Build complete.]",
+                &["edit-frontend/**", "build-tools/**"],
+            ))?;
         }
 
         Cli::Deploy {
@@ -740,7 +736,7 @@ fn run() -> Result<(), Error> {
                 eprintln!("[downloading linux dependencies]");
 
                 // TODO replace this with discrete execute! commands.
-                sh_execute!(
+                let _ = sh_execute!(
                     r#"
                         cd {dir_self}
 
