@@ -1,7 +1,8 @@
 use super::*;
+use wasm_bindgen::prelude::*;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(tag = "tag", content = "fields")] // Since serde(tag = "type") fails
+#[derive(Clone, Debug, Serialize, Deserialize, TypescriptDefinition)]
+#[serde(tag = "tag", content = "fields")]
 pub enum Bytecode {
     Enter,
     Exit,
@@ -74,7 +75,7 @@ pub trait Mutator {
     }
 
     /// TODO rename to advance
-    fn AdvanceElements(&mut self, mut count: usize) {
+    fn AdvanceElements(&mut self, count: usize) {
         unimplemented!();
     }
 
@@ -98,7 +99,7 @@ pub trait Mutator {
         unimplemented!();
     }
 
-    fn skip(&mut self, mut count: usize) {
+    fn skip(&mut self, count: usize) {
         unimplemented!();
     }
 }
@@ -174,7 +175,7 @@ impl Mutator for EmptyDocMutator {
     }
 
     /// TODO rename to advance
-    fn AdvanceElements(&mut self, mut count: usize) {
+    fn AdvanceElements(&mut self, count: usize) {
         // no-op
     }
 
@@ -198,7 +199,7 @@ impl Mutator for EmptyDocMutator {
         // no-op
     }
 
-    fn skip(&mut self, mut count: usize) {
+    fn skip(&mut self, count: usize) {
         // no-op
     }
 }
@@ -299,7 +300,7 @@ impl<'a> Mutator for DocMutator<'a> {
         self.writer.wrap_previous(count, attrs);
     }
 
-    fn skip(&mut self, mut count: usize) {
+    fn skip(&mut self, count: usize) {
         let last_index = self.stepper.head_index();
         
         self.stepper.skip(count);

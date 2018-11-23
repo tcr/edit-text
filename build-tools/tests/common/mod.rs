@@ -11,7 +11,6 @@ use fantoccini::{
     Client,
     Locator,
 };
-use rand::thread_rng;
 use serde_json::json;
 use std::process::Stdio;
 use std::sync::Arc;
@@ -60,14 +59,16 @@ fn launch_webdriver() -> Result<(u16, SpawnGuard), Error> {
         }
     };
 
+    cmd
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+
     // Launch child.
     Ok((
         port as u16,
         cmd
             // .stdout(Stdio::inherit())
             // .stderr(Stdio::inherit())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
             .scoped_spawn()?,
     ))
 }

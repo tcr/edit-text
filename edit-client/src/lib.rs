@@ -1,7 +1,5 @@
 #![feature(nll)]
 #![allow(unused_imports)]
-// Required to replace the global allocator.
-#![feature(global_allocator)]
 
 #[cfg(target_arch = "wasm32")]
 extern crate wee_alloc;

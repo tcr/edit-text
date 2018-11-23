@@ -147,7 +147,7 @@ fn apply_add_inner<M: Mutator>(bc: &mut M, spanvec: &DocSpan, addvec: &AddSpan) 
 
                 // Then apply it outside of the group.
                 //TODO partial inner should be... something else
-                let (mut inner, rest) = apply_add_inner(bc, &rest, &del.to_vec());
+                let (inner, rest) = apply_add_inner(bc, &rest, &del.to_vec());
                     // console_log!("partial B {:?} {:?}", inner, rest);
                 res.place_all(&inner);
                 // console_log!("partial C {:?}", partial);
@@ -185,7 +185,7 @@ fn apply_add_inner<M: Mutator>(bc: &mut M, spanvec: &DocSpan, addvec: &AddSpan) 
 
 // TODO replace all occurances of this with apply_add_inner 
 fn apply_add_outer<M: Mutator>(bc: &mut M, spanvec: &DocSpan, addvec: &AddSpan) -> DocSpan {
-    let (mut res, mut remaining) = apply_add_inner(bc, spanvec, addvec);
+    let (mut res, remaining) = apply_add_inner(bc, spanvec, addvec);
 
     // TODO never accept unbalanced components?
     if !remaining.is_empty() {

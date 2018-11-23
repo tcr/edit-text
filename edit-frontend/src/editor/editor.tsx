@@ -368,7 +368,8 @@ export class Editor extends React.Component {
     // Send the command to the client.
     if (destCursor !== null) {
       this.props.controller.sendCommand({
-        'Cursor': {
+        'tag': 'Cursor',
+        'fields': {
           focus: destCursor,
           anchor: dropAnchor ? destCursor : null,
         },
@@ -394,7 +395,8 @@ export class Editor extends React.Component {
     }
 
     this.props.controller.sendCommand({
-      'Character': {
+      'tag': 'Character',
+      'fields': {
         char_code: e.charCode,
       },
     });
@@ -410,7 +412,8 @@ export class Editor extends React.Component {
     const text = e.clipboardData.getData('text/plain');
     console.info('(c) got pasted text: ', text);
     this.props.controller.sendCommand({
-      'InsertText': {
+      'tag': 'InsertText',
+      'fields': {
         text: text,
       },
     });
@@ -472,7 +475,8 @@ export class Editor extends React.Component {
 
     // Forward the keypress to the controller.
     this.props.controller.sendCommand({
-      'Keypress': {
+      'tag': 'Keypress',
+      'fields': {
         key_code: e.keyCode,
         meta_key: e.metaKey,
         shift_key: e.shiftKey,

@@ -17,6 +17,7 @@ import * as index from '../index';
 import {vm} from '../editor/vm';
 
 import DEBUG from '../debug';
+import { Z_BLOCK } from 'zlib';
 
 declare var CONFIG: any;
 
@@ -39,7 +40,8 @@ function UiElement(
         key={i}
         onClick={
           () => props.editor.client.sendCommand({
-            'Button': {
+            'tag': 'Button',
+            'fields': {
               button: button[1],
             },
           })
@@ -270,7 +272,7 @@ export class EditorFrame extends React.Component {
     this.network = props.network;
     this.client = props.client;
 
-    this.client.onMessage = this.onClientToFrontendCommand.bind(this);
+    this.client.onMessage = this.onFrontendCommand.bind(this);
 
     // Background colors.
     // TODO make these actionable on this object right?
@@ -309,7 +311,7 @@ export class EditorFrame extends React.Component {
             <a href="/" id="logo">{CONFIG.title}</a>
             <NativeButtons
               editor={this}
-              buttons={this.state.buttons} 
+              buttons={this.state.buttons}
             />
             <LocalButtons
               editor={this}
@@ -347,8 +349,14 @@ export class EditorFrame extends React.Component {
             </div>
           </div>
         </div>
-        <div id="footer">{
-          this.state.notices.map((x, key) => {
+        <div id="footer">
+          <div id="debug-row">
+            <div id="debug-content" onClick={(e) => (e.target as any).classList.toggle('expanded')}>
+              <div id="debug-button">🐞</div>
+              <div id="debug-buttons">DEBUG OPTIONS <button onClick={() => alert('good job')}>alert</button></div>
+              </div>
+          </div>
+          {this.state.notices.map((x, key) => {
             return (
               <FooterNotice 
                 key={key}
@@ -364,15 +372,17 @@ export class EditorFrame extends React.Component {
                 {x.element}
               </FooterNotice>
             );
-          })
-        }</div>
+          })}
+        </div>
       </div>
     );
   }
 
-  // Received message on native socket
-  onClientToFrontendCommand(parse: any) {
+  // Controller has sent us (the frontend) a command.
+  onFrontendCommand(parse: any) {
     const editor = this;
+
+    console.debug('[command]', parse);
 
     if (parse.Init) {
       let editorID = parse.Init;
@@ -483,7 +493,8 @@ function multiConnect(client: ControllerImpl) {
     if ('Monkey' in msg) {
       // TODO reflect this in the app
       client.sendCommand({
-        'Monkey': {
+        'tag': 'Monkey',
+        'fields': {
           enabled: msg.Monkey,
         },
       });

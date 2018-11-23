@@ -34,6 +34,8 @@ extern crate core;
 extern crate wasm_bindgen;
 #[macro_use]
 extern crate smallvec;
+#[macro_use]
+extern crate wasm_typescript_definition;
 
 /* logging */
 

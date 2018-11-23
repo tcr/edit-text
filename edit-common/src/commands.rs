@@ -1,5 +1,6 @@
 use oatie::doc::*;
 use wasm_bindgen::prelude::*;
+use wasm_typescript_definition::*;
 
 // The server is the synchronization server.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -43,8 +44,8 @@ impl<T> JsonEncodable<T> {
 
 
 // Controller is the client interface that is exposed to the frnontend.
-#[wasm_bindgen(tagged_union)]
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, TypescriptDefinition)]
+#[serde(tag = "tag", content = "fields")]
 pub enum ControllerCommand {
     // Connect(String),
     Keypress {
@@ -64,7 +65,7 @@ pub enum ControllerCommand {
     },
     RenameGroup {
         tag: String,
-        curspan: JsonEncodable<CurSpan>,
+        curspan: CurSpan,
     },
     // Load(DocSpan),
     Cursor {
@@ -79,6 +80,7 @@ pub enum ControllerCommand {
         enabled: bool,
     },
 }
+
 
 // Frontend is the editor components in JavaScript.
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]

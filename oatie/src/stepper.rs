@@ -3,9 +3,7 @@
 mod doc_mutator;
 mod doc_stepper;
 
-#[macro_use]
 use macros;
-
 use doc::*;
 use std::cmp;
 use std::collections::HashMap;

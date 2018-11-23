@@ -20,6 +20,8 @@ extern crate take_mut;
 #[cfg(not(target_arch = "wasm32"))]
 extern crate ws;
 extern crate wasm_bindgen;
+#[macro_use]
+extern crate wasm_typescript_definition;
 
 pub mod commands;
 pub mod markdown;
