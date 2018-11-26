@@ -2,6 +2,7 @@ use crate::{
     actions::*,
     random::*,
     state::*,
+    walkers::Pos,
 };
 
 use edit_common::{
@@ -418,7 +419,7 @@ pub trait ClientImpl {
 
                         // If the caret doesn't exist or was deleted, reinitialize it.
                         if !self
-                            .with_action_context(|ctx| Ok(has_caret(ctx, true)))
+                            .with_action_context(|ctx| Ok(has_caret(ctx, Pos::Focus)))
                             .ok()
                             .unwrap_or(true)
                         {
@@ -482,7 +483,7 @@ pub trait ClientImpl {
 
                         // If the caret doesn't exist or was deleted, reinitialize it.
                         if !self
-                            .with_action_context(|ctx| Ok(has_caret(ctx, true)))
+                            .with_action_context(|ctx| Ok(has_caret(ctx, Pos::Focus)))
                             .ok()
                             .unwrap_or(true)
                         {

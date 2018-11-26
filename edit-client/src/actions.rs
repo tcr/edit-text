@@ -16,7 +16,8 @@ pub struct ActionContext {
 }
 
 pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, true);
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus)
+        .expect("Expected a Focus caret");
     assert!(walker.back_block());
 
     let mut parent_walker = walker.clone();
@@ -53,7 +54,7 @@ pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
 
 // Return a "caret state"
 pub fn identify_block(ctx: ActionContext) -> Result<(String, bool), Error> {
-    let mut walker = Walker::to_caret_position(&ctx.doc, &ctx.client_id, Pos::Focus)?;
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus)?;
     assert!(walker.back_block());
     if let Some(DocGroup(ref attrs, _)) = walker.doc().head() {
         let tag = attrs["tag"].clone();
@@ -70,7 +71,8 @@ pub fn identify_block(ctx: ActionContext) -> Result<(String, bool), Error> {
 }
 
 pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, true);
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus)
+        .expect("Expected a Focus caret");
     assert!(walker.back_block());
 
     let len = if let Some(DocGroup(_, ref span)) = walker.doc().head() {
@@ -305,11 +307,10 @@ fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
 }
 
 pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
-    let walker = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, true)
-        .ok_or(format_err!("Expected one caret for our client"))?;
+    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus)?;
 
     // See if we have an anchor caret, indicating we have made a selection.
-    if let Some(walker2) = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, false) {
+    if let Ok(walker2) = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Anchor) {
         // Detect other caret.
         let last_walker = if walker.caret_pos() > walker2.caret_pos() {
             walker.clone()
@@ -348,7 +349,7 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
 }
 
 pub fn add_string(ctx: ActionContext, input: &str) -> Result<Op, Error> {
-    let walker = Walker::to_caret_position(&ctx.doc, &ctx.client_id, Pos::Focus)?;
+    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus)?;
 
     // Style map.
     let mut styles = hashmap!{ Style::Normie => None };
@@ -402,10 +403,10 @@ pub fn remove_styles(ctx: ActionContext, mut styles: StyleSet) -> Result<Op, Err
 }
 
 pub fn restyle(ctx: ActionContext, ops: Vec<StyleOp>) -> Result<Op, Error> {
-    let walker1 = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, false);
-    let walker2 = Walker::to_caret_safe(&ctx.doc, &ctx.client_id, true);
+    let walker1 = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Anchor);
+    let walker2 = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus);
 
-    let (walker1, walker2) = if let (Some(walker1), Some(walker2)) = (walker1, walker2) {
+    let (walker1, walker2) = if let (Ok(walker1), Ok(walker2)) = (walker1, walker2) {
         if walker1.caret_pos() == walker2.caret_pos() {
             return Ok(Op::empty());
         } else if walker1.caret_pos() <= walker2.caret_pos() {
@@ -491,7 +492,8 @@ pub fn restyle(ctx: ActionContext, ops: Vec<StyleOp>) -> Result<Op, Error> {
 }
 
 pub fn split_block(ctx: ActionContext, add_hr: bool) -> Result<Op, Error> {
-    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, true);
+    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus)
+        .expect("Expected a Focus caret");
     let skip = walker.doc().skip_len();
 
     // Identify the tag of the block we're splitting.
@@ -559,8 +561,8 @@ pub fn split_block(ctx: ActionContext, add_hr: bool) -> Result<Op, Error> {
 }
 
 pub fn has_bounding_carets(ctx: ActionContext) -> bool {
-    // At the moment, having a caret focused: false indicates that both carets exist
-    has_caret(ctx, false)
+    // At the moment, having an Anchor caret indicates that both carets exist
+    has_caret(ctx, Pos::Anchor)
 }
 
 pub fn caret_move(
@@ -577,7 +579,7 @@ pub fn caret_move(
         Op::empty()
     };
 
-    let mut walker = Walker::to_caret_position(&ctx.doc, &ctx.client_id, Pos::Focus)?;
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus)?;
 
     // First operation removes the caret.
     let mut writer = walker.to_writer();
@@ -621,7 +623,8 @@ pub fn caret_move(
 }
 
 pub fn caret_word_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, true);
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus)
+        .expect("Expected a Focus caret");
 
     // First operation removes the caret.
     let mut writer = walker.to_writer();
@@ -760,8 +763,8 @@ pub fn caret_select_all(ctx: ActionContext) -> Result<Op, Error> {
     Ok(op_1_2_3_4)
 }
 
-pub fn has_caret(ctx: ActionContext, focus: bool) -> bool {
-    Walker::to_caret_safe(&ctx.doc, &ctx.client_id, focus).is_some()
+pub fn has_caret(ctx: ActionContext, pos: Pos) -> bool {
+    Walker::to_caret(&ctx.doc, &ctx.client_id, pos).is_ok()
 }
 
 pub fn init_caret(ctx: ActionContext) -> Result<Op, Error> {
@@ -786,7 +789,8 @@ pub fn init_caret(ctx: ActionContext) -> Result<Op, Error> {
 }
 
 pub fn caret_block_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, true);
+    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus)
+        .expect("Expected a Focus caret");
 
     // First operation removes the caret.
     let mut writer = walker.to_writer();
@@ -831,7 +835,7 @@ pub fn caret_block_move(ctx: ActionContext, increase: bool) -> Result<Op, Error>
 
 // Returns new caret position
 pub fn caret_clear(ctx: ActionContext, position: Pos) -> Result<(isize, Op), Error> {
-    let walker = Walker::to_caret_position(&ctx.doc, &ctx.client_id, position)?;
+    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, position)?;
     caret_clear_inner(walker)
 }
 

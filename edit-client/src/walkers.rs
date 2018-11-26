@@ -300,19 +300,7 @@ impl<'a> Walker<'a> {
         });
     }
 
-    #[deprecated]
-    pub fn to_caret(doc: &'a Doc, client_id: &str, focus: bool) -> Walker<'a> {
-        Walker::to_caret_safe(doc, client_id, focus)
-            .expect(&format!("Didn't find a (focus={:?}) caret.", focus))
-    }
-
-    #[deprecated]
-    pub fn to_caret_safe(doc: &'a Doc, client_id: &str, focus: bool) -> Option<Walker<'a>> {
-        Walker::to_caret_position(doc, client_id, if focus { Pos::Focus } else { Pos::Anchor }).ok()
-    }
-
-    // TODO Have this replace to_caret and take its name.
-    pub fn to_caret_position(doc: &'a Doc, client_id: &str, position: Pos) -> Result<Walker<'a>, Error> {
+    pub fn to_caret(doc: &'a Doc, client_id: &str, position: Pos) -> Result<Walker<'a>, Error> {
         let mut stepper = CaretStepper::new(DocStepper::new(&doc.0));
 
         // Iterate until we match the cursor.
