@@ -2,6 +2,7 @@ use crate::{
     actions::*,
     random::*,
     state::*,
+    walkers::Pos,
 };
 
 use edit_common::{
@@ -290,20 +291,20 @@ fn native_command<C: ClientImpl>(client: &mut C, req: ControllerCommand) -> Resu
             unreachable!();
         }
         ControllerCommand::Cursor { focus, anchor } => {
-            match (focus.inner(), anchor.inner()) {
+            match (focus, anchor) {
                 (Some(focus), Some(anchor)) => {
                     client.client_op(|mut ctx| {
-                        let op = cur_to_caret(ctx.clone(), focus, true)?;
+                        let op = cur_to_caret(ctx.clone(), &focus, true)?;
                         ctx.doc = Op::apply(&ctx.doc, &op);
-                        let op2 = cur_to_caret(ctx, anchor, false)?;
+                        let op2 = cur_to_caret(ctx, &anchor, false)?;
                         Ok(Op::compose(&op, &op2))
                     })?;
                 }
                 (Some(focus), None) => {
-                    client.client_op(|doc| cur_to_caret(doc, focus, true))?;
+                    client.client_op(|doc| cur_to_caret(doc, &focus, true))?;
                 }
                 (None, Some(anchor)) => {
-                    client.client_op(|doc| cur_to_caret(doc, anchor, false))?;
+                    client.client_op(|doc| cur_to_caret(doc, &anchor, false))?;
                 }
                 (None, None) => {} // ???
             }
@@ -386,8 +387,8 @@ pub trait ClientImpl {
                     let idx = (pos * (cursors.len() as f64)) as usize;
 
                     value = Task::ControllerCommand(ControllerCommand::Cursor {
-                        focus: JsonEncodable::new(Some(cursors[idx].clone())),
-                        anchor: JsonEncodable::new(None),
+                        focus: Some(cursors[idx].clone()),
+                        anchor: None,
                     });
                 }
 
@@ -418,7 +419,7 @@ pub trait ClientImpl {
 
                         // If the caret doesn't exist or was deleted, reinitialize it.
                         if !self
-                            .with_action_context(|ctx| Ok(has_caret(ctx, true)))
+                            .with_action_context(|ctx| Ok(has_caret(ctx, Pos::Focus)))
                             .ok()
                             .unwrap_or(true)
                         {
@@ -482,7 +483,7 @@ pub trait ClientImpl {
 
                         // If the caret doesn't exist or was deleted, reinitialize it.
                         if !self
-                            .with_action_context(|ctx| Ok(has_caret(ctx, true)))
+                            .with_action_context(|ctx| Ok(has_caret(ctx, Pos::Focus)))
                             .ok()
                             .unwrap_or(true)
                         {

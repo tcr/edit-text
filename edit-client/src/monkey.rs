@@ -135,7 +135,7 @@ impl Scheduler {
                 thread::sleep(Duration::from_millis(rng.gen_range(bounds.0, bounds.1)));
                 if monkey.load(Ordering::Relaxed) {
                     let task_object = task();
-                    tx.send(Task::ControllerCommand(task_object))?;
+                    tx.send(Task::ControllerCommand(task_object));
                 }
             }
             Ok(())

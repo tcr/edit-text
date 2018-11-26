@@ -163,12 +163,12 @@ export function vm(el: Node) {
         },
         run(program: Array<Bytecode>) {
             // console.group('VM group: %d opcodes', program.length)
-            // console.log('\n[vm] 🔜');
+            console.groupCollapsed('[vm] Script length:', program.length);
             program.forEach((opcode: Bytecode) => {
                 console.debug('[vm]', JSON.stringify(opcode));
                 this.handle(opcode.tag, 'fields' in opcode ? opcode.fields : opcode);
             });
-            // console.log('[vm] 🔚\n\n');
+            console.groupEnd();
             // console.groupEnd()
         }
     };

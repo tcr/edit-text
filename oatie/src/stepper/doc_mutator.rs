@@ -1,22 +1,6 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 
-#[derive(Clone, Debug, Serialize, Deserialize, TypescriptDefinition)]
-#[serde(tag = "tag", content = "fields")]
-pub enum Bytecode {
-    Enter,
-    Exit,
-    AdvanceElements(usize),
-    DeleteElements(usize),
-    InsertDocString(DocString),
-    WrapPrevious(usize, Attrs),
-    UnwrapSelf,
-    JoinTextLeft,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Program(pub Vec<Bytecode>);
-
 impl Program {
     pub fn new() -> Program {
         Program(vec![])
@@ -49,15 +33,8 @@ impl Program {
     // }
 }
 
-#[derive(Clone, Debug)]
-pub struct DocMutator<'a> {
-    bc: Program,
-    stepper: DocStepper<'a>,
-    writer: DocWriter,
-}
-
 #[allow(non_snake_case)]
-pub trait Mutator {
+pub trait DocMutator {
     fn flush_chars(&mut self) -> bool {
         unimplemented!();
     }
@@ -104,7 +81,74 @@ pub trait Mutator {
     }
 }
 
-impl<'a> DocMutator<'a> {
+pub struct NullDocMutator {
+}
+
+impl DocMutator for NullDocMutator {
+    fn Enter(&mut self) {
+        // no-op
+    }
+
+    fn Exit(&mut self) {
+        // no-op
+    }
+
+    /// TODO rename to advance
+    fn AdvanceElements(&mut self, count: usize) {
+        // no-op
+    }
+
+    fn delete(&mut self, count: usize) {
+        // no-op
+    }
+
+    fn DeleteElements(&mut self, count: usize) {
+        // no-op
+    }
+
+    fn InsertDocString(&mut self, docstring: DocString) {
+        // no-op
+    }
+
+    fn UnwrapSelf(&mut self) {
+        // no-op
+    }
+
+    fn WrapPrevious(&mut self, count: usize, attrs: Attrs) {
+        // no-op
+    }
+
+    fn skip(&mut self, count: usize) {
+        // no-op
+    }
+}
+
+
+#[derive(Clone, Debug, Serialize, Deserialize, TypescriptDefinition)]
+#[serde(tag = "tag", content = "fields")]
+pub enum Bytecode {
+    Enter,
+    Exit,
+    AdvanceElements(usize),
+    DeleteElements(usize),
+    InsertDocString(DocString),
+    WrapPrevious(usize, Attrs),
+    UnwrapSelf,
+    JoinTextLeft,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Program(pub Vec<Bytecode>);
+
+
+#[derive(Clone, Debug)]
+pub struct RecordingDocMutator<'a> {
+    bc: Program,
+    stepper: DocStepper<'a>,
+    writer: DocWriter,
+}
+
+impl<'a> RecordingDocMutator<'a> {
     pub fn stepper(&'a self) -> &'a DocStepper {
         &self.stepper
     }
@@ -112,13 +156,12 @@ impl<'a> DocMutator<'a> {
     pub fn result(mut self) -> Result<(DocSpan, Program), Error> {
         self.flush();
 
-        let DocMutator { writer, bc, .. } = self;
+        let RecordingDocMutator { writer, bc, .. } = self;
         (writer.result().map(|doc| (doc, bc)))
     }
 
-    pub fn new(stepper: DocStepper) -> DocMutator {
-        // console_log!("💈💈💈");
-        DocMutator {
+    pub fn new(stepper: DocStepper) -> RecordingDocMutator {
+        RecordingDocMutator {
             bc: Program(vec![]),
             stepper,
             writer: DocWriter::new(),
@@ -150,7 +193,6 @@ impl<'a> DocMutator<'a> {
     }
 
     fn flush(&mut self) {
-        // console_log!("🏟 {:?}", self.stepper.char_index());
         self.flush_chars();
 
         // console_log!("🎚 self.stepper.head => {:?}", self.stepper.head());
@@ -162,51 +204,8 @@ impl<'a> DocMutator<'a> {
     }
 }
 
-pub struct EmptyDocMutator {
-}
-
-impl Mutator for EmptyDocMutator {
-    fn Enter(&mut self) {
-        // no-op
-    }
-
-    fn Exit(&mut self) {
-        // no-op
-    }
-
-    /// TODO rename to advance
-    fn AdvanceElements(&mut self, count: usize) {
-        // no-op
-    }
-
-    fn delete(&mut self, count: usize) {
-        // no-op
-    }
-
-    fn DeleteElements(&mut self, count: usize) {
-        // no-op
-    }
-
-    fn InsertDocString(&mut self, docstring: DocString) {
-        // no-op
-    }
-
-    fn UnwrapSelf(&mut self) {
-        // no-op
-    }
-
-    fn WrapPrevious(&mut self, count: usize, attrs: Attrs) {
-        // no-op
-    }
-
-    fn skip(&mut self, count: usize) {
-        // no-op
-    }
-}
-
-
 #[allow(non_snake_case)]
-impl<'a> Mutator for DocMutator<'a> {
+impl<'a> DocMutator for RecordingDocMutator<'a> {
     fn Enter(&mut self) {
         self.bc.place(Bytecode::Enter);
 
@@ -216,7 +215,6 @@ impl<'a> Mutator for DocMutator<'a> {
     }
 
     fn Exit(&mut self) {
-        // console_log!("🏟🏟🏟🏟🏟🏟🏟🏟🏟🏟");
         self.flush();
 
         self.bc.place(Bytecode::Exit);

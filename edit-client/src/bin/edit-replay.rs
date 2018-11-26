@@ -77,7 +77,7 @@ main!(|opts: Opt| {
             if let Ok(line) = line {
                 if line.trim().len() != 0 {
                     let hi: LogWasm = ron::de::from_str(&line)?;
-                    tx_line.try_send(hi)?;
+                    tx_line.send(hi);
                 }
             }
         }
@@ -93,7 +93,7 @@ main!(|opts: Opt| {
         println!("\n!!! Using filter {:?}\n", filter_id);
     }
 
-    while let Ok(hi) = rx_line.recv() {
+    while let Some(hi) = rx_line.recv() {
         i += 1;
         println!("TASK ~~~~ {:?} ~~~~", i);
         match hi {

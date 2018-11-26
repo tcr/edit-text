@@ -5,7 +5,7 @@ authors = ["Tim Ryan <id@timryan.org>"]
 edition = "2018"
 
 [dependencies]
-commandspec = "0.12"
+commandspec = "0.12.2"
 failure = "0.1"
 structopt = "0.2"
 clap = "2.32"

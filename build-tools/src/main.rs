@@ -38,19 +38,6 @@ fn abs_string_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
 
 // Thin wrapper around run()
 fn main() {
-    // Only call commandspec cleanup on commands that don't invoke cargo-watch.
-    // This is a crude but probably correct hueristic to predict when we'll do so.
-    if !std::env::args()
-        .nth(1)
-        .map(|x| x.find("watch").is_some())
-        .unwrap_or(false)
-    {
-        commandspec::cleanup_on_ctrlc();
-        env_logger::Builder::from_default_env()
-            .filter_level(LevelFilter::Info)
-            .init();
-    }
-
     match run() {
         Ok(_) => {}
         Err(ref err) => {
@@ -242,9 +229,23 @@ fn run() -> Result<(), Error> {
         None
     };
 
+    // Parse arguments.
+    let cli = Cli::from_iter(args.iter());
+
+    // Commands that invoke cargo-watch interfere with commandspec cleanup
+    // or env_logger.
+    match cli {
+        Cli::WasmWatch { .. } => {},
+        _ => {
+            commandspec::cleanup_on_ctrlc();
+            env_logger::Builder::from_default_env()
+                .filter_level(LevelFilter::Info)
+                .init();
+        }
+    }
+
     // Run the subcommand.
-    let parsed_args = Cli::from_iter(args.iter());
-    match parsed_args {
+    match cli {
         Cli::Ci {
             // TODO make this actually disable headless mode
             no_headless: _no_headless,
@@ -322,13 +323,7 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::WasmWatch { no_vendor } => {
-            execute!(
-                "
-                    rustup target add wasm32-unknown-unknown
-                "
-            )?;
-
-            let _ = no_vendor;
+            let _ = no_vendor; // TODO
 
             watchexec::run(watchexec_args(
                 "echo [Starting build.] && cargo run --bin build-tools --quiet -- wasm-build && echo [Build complete.]",
@@ -690,10 +685,12 @@ fn run() -> Result<(), Error> {
                 args = args,
             )?.scoped_spawn();
 
-            watchexec::run(watchexec_args(
-                "echo [Starting build.] && cargo run --bin build-tools --quiet -- wasm-build && echo [Build complete.]",
-                &["edit-frontend/**", "build-tools/**"],
-            ))?;
+            execute!(
+                r"
+                    {self_path} wasm-watch
+                ",
+                self_path = SELF_PATH,
+            )?;
         }
 
         Cli::Deploy {

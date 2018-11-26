@@ -7,7 +7,7 @@ import * as app from './app';
 import {EditorFrame} from './app';
 import * as commands from '../editor/commands';
 import {ServerImpl, ControllerImpl } from '../editor/network';
-import {WasmClient, WasmError, getForwardWasmTaskCallback, setForwardWasmTaskCallback} from '../editor/wasm';
+import {WasmController, WasmError, getForwardWasmTaskCallback, setForwardWasmTaskCallback} from '../editor/wasm';
 import DEBUG from '../debug';
 import {ControllerCommand} from '../bindgen/edit_client';
 
@@ -64,7 +64,7 @@ let syncSocket = new DeferredSocket(
 );
 
 export class AppServer implements ServerImpl {
-  client: WasmClient | null;
+  client: WasmController | null;
   
   onClose: () => void;
 
@@ -106,8 +106,12 @@ export class AppServer implements ServerImpl {
           try {
             if (getForwardWasmTaskCallback() != null) {
               if (server.client != null) {
+                let command = JSON.parse(event.data);
+                console.groupCollapsed('[client]', command.tag);
+                console.debug(command);
+                console.groupEnd();
                 server.client.clientBindings.command(JSON.stringify({
-                  ClientCommand: JSON.parse(event.data),
+                  ClientCommand: command,
                 }));
               }
             }
@@ -158,7 +162,7 @@ export class AppServer implements ServerImpl {
   }
 }
 
-export class ProxyClient implements ControllerImpl {
+export class ProxyController implements ControllerImpl {
   // TODO shouldn't these be nullable?
   onMessage: (msg: any) => void | null;
   onClose: () => void | null;
@@ -168,6 +172,10 @@ export class ProxyClient implements ControllerImpl {
   private socket: WebSocket;
 
   sendCommand(command: ControllerCommand) {
+    console.groupCollapsed('[controller]', command.tag);
+    console.debug(command);
+    console.groupEnd();
+
     this.socket.send(JSON.stringify(command));
   }
 
