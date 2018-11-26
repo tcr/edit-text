@@ -115,8 +115,9 @@ async fn synchronize_clients(
     // From here on out, the threads run in parallel.
     checkpoint.sync();
 
-    // Wait until carets are rendered.
+    // Wait until controls and carets are rendered.
     c = await!(c.wait_for_find(Locator::Css(r#"div[data-tag="caret"]"#)))?.client();
+    c = await!(c.wait_for_find(Locator::Css(r#"#native-buttons .menu-buttongroup"#)))?.client();
 
     // Ensure all browsers have reached this step before proceeding.
     checkpoint.sync();

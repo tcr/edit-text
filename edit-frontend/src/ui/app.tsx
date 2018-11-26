@@ -456,9 +456,9 @@ export class EditorFrame extends React.Component {
       );
 
       // Update buttons view
-      // this.setState({
-      //   buttons: parse.Controls.buttons,
-      // });
+      this.setState({
+        buttons: parse.Controls.buttons,
+      });
 
       DEBUG.measureTime('interactive');
     }

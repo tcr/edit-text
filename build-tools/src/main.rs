@@ -170,14 +170,8 @@ enum Cli {
         author = ""
     )]
     Test {
-        #[structopt(
-            long = "no-unit",
-            help = "Disable unit tests (which are run by default)."
-        )]
-        no_unit: bool,
-
-        #[structopt(long = "integration", help = "Enable integration tests.")]
-        integration: bool,
+        #[structopt(subcommand)]
+        target: TestTarget,
 
         args: Vec<String>,
     },
@@ -196,6 +190,16 @@ enum Cli {
         #[structopt(name = "no-vendor")]
         no_vendor: bool,
     },
+}
+
+#[derive(StructOpt)]
+enum TestTarget {
+    #[structopt(name = "integration")]
+    Integration,
+    #[structopt(name = "unit")]
+    Unit,
+    #[structopt(name = "all")]
+    All,
 }
 
 fn expect_geckodriver() {
@@ -289,7 +293,7 @@ fn run() -> Result<(), Error> {
                     eprintln!("ci: perform test (windows)");
                     execute!(
                         r"
-                            {self_path} test
+                            {self_path} test unit
                         ",
                         self_path = SELF_PATH,
                     )?;
@@ -298,7 +302,7 @@ fn run() -> Result<(), Error> {
                     eprintln!("ci: perform test (posix)");
                     execute!(
                         r"
-                            {self_path} test --integration
+                            {self_path} test all
                         ",
                         self_path = SELF_PATH,
                     )?;
@@ -521,62 +525,64 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::Test {
-            no_unit,
-            integration,
+            target,
             args,
         } => {
-            if integration {
-                expect_geckodriver();
-            }
+            match target {
+                TestTarget::All => {
+                    execute!("{self_path} test unit", self_path = SELF_PATH)?;
+                    execute!("{self_path} test integration", self_path = SELF_PATH)?;
+                }
+                TestTarget::Integration => {
+                    expect_geckodriver();
 
-            if !no_unit {
-                // Unit test
-                eprintln!("[running unit tests]");
-                execute!(
-                    r"
-                        cargo test -- --test-threads=1
-                    ",
-                )?;
-            }
-
-            if integration {
-                // Unit test
-                // eprintln!();
-                eprintln!("[building integration tests]");
-                execute!(
-                    r"
-                        cd build-tools
-                        cargo test --features integration integration_ --no-run
-                    ",
-                )?;
-
-                // Spawn the server for the integration test
-                eprintln!();
-                eprintln!("[launching persistent edit-text server]");
-                let _server_guard = Some(
-                    command!(
+                    // Unit test
+                    // eprintln!();
+                    eprintln!("[building integration tests]");
+                    execute!(
                         r"
-                        {self_path} server {args}
-                    ",
-                        self_path = SELF_PATH,
-                        args = args,
-                    )?
-                    .scoped_spawn()
-                    .unwrap(),
-                );
+                            cd build-tools
+                            cargo test --features integration integration_ --no-run
+                        ",
+                    )?;
 
-                // Sleep for 3s after server boots.
-                ::std::thread::sleep(::std::time::Duration::from_millis(3000));
+                    // Spawn the server for the integration test
+                    eprintln!();
+                    eprintln!("[launching persistent edit-text server]");
+                    let _server_guard = Some(
+                        command!(
+                            r"
+                            {self_path} server {args}
+                        ",
+                            self_path = SELF_PATH,
+                            args = args,
+                        )?
+                        .scoped_spawn()
+                        .unwrap(),
+                    );
 
-                // Unit test
-                eprintln!();
-                eprintln!("[running integration tests]");
-                execute!(
-                    r"
-                        cd build-tools
-                        cargo test --features integration integration_ -- --test-threads=1
-                    ",
-                )?;
+                    // Sleep for 3s after server boots.
+                    ::std::thread::sleep(::std::time::Duration::from_millis(3000));
+
+                    // Unit test
+                    eprintln!();
+                    eprintln!("[running integration tests]");
+                    execute!(
+                        r"
+                            cd build-tools
+                            cargo test --features integration integration_ -- --test-threads=1
+                        ",
+                    )?;
+                }
+                TestTarget::Unit => {
+                    // Unit test
+                    eprintln!("[running unit tests]");
+                    execute!(
+                        r"
+                            cargo test -- --test-threads=1
+                        ",
+                    )?;
+                }
             }
         }
 
