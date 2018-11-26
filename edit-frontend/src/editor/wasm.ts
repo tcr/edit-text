@@ -33,8 +33,6 @@ let sendCommandToJSList: Array<(value: any) => void> = [];
 
 export function sendCommandToJS(msg: any) {
   // Called from wasm.
-  console.debug('[frontend]', JSON.parse(msg).tag);
-  console.dir(JSON.parse(msg));
   sendCommandToJSList.forEach(handler => handler(msg));
 }
 
@@ -85,6 +83,10 @@ export class WasmController implements ControllerImpl {
 
   sendCommand(command: ControllerCommand) {
     if (forwardWasmTaskCallback != null) {
+      console.groupCollapsed('%c[controller] %s', 'border-top: 2px solid #c63; padding-top: 3px; display: block;', command.tag);
+      console.debug(command);
+      console.groupEnd();
+
       this.clientBindings.command(JSON.stringify({
         ControllerCommand: command,
       }));
@@ -107,6 +109,10 @@ export class WasmController implements ControllerImpl {
           if (parse.tag == 'ServerCommand' && client.server != null) {
             client.server.sendCommand(parse.fields);
           } else {
+            console.groupCollapsed('[frontend]', parse.tag);
+            console.debug(parse);
+            console.groupEnd();
+
             if (client.onMessage != null) {
               client.onMessage(parse);
             }

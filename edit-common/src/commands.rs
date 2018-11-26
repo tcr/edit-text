@@ -4,6 +4,7 @@ use wasm_typescript_definition::*;
 
 // The server is the synchronization server.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(tag = "tag", content = "fields")]
 pub enum ServerCommand {
     // Connect(String),
     Commit(String, Op, usize),
@@ -13,6 +14,7 @@ pub enum ServerCommand {
 
 // Client is an individual user / machine.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(tag = "tag", content = "fields")]
 pub enum ClientCommand {
     // Client id assignment, initial doc, initial version
     Init(String, DocSpan, usize),
@@ -20,28 +22,6 @@ pub enum ClientCommand {
     // New document, version, client-id, operation
     Update(usize, String, Op),
 }
-
-use wasm_bindgen::describe::WasmDescribe;
-
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
-pub struct JsonEncodable<T>(T);
-
-impl<T> WasmDescribe for JsonEncodable<T> {
-    fn describe() {
-        JsValue::describe();
-    }
-}
-
-impl<T> JsonEncodable<T> {
-    pub fn inner(&self) -> &T {
-        &self.0
-    }
-
-    pub fn new(inner: T) -> Self {
-        JsonEncodable(inner)
-    }
-}
-
 
 // Controller is the client interface that is exposed to the frnontend.
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, TypescriptDefinition)]

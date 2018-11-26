@@ -106,8 +106,12 @@ export class AppServer implements ServerImpl {
           try {
             if (getForwardWasmTaskCallback() != null) {
               if (server.client != null) {
+                let command = JSON.parse(event.data);
+                console.groupCollapsed('[client]', command.tag);
+                console.debug(command);
+                console.groupEnd();
                 server.client.clientBindings.command(JSON.stringify({
-                  ClientCommand: JSON.parse(event.data),
+                  ClientCommand: command,
                 }));
               }
             }
@@ -168,6 +172,10 @@ export class ProxyController implements ControllerImpl {
   private socket: WebSocket;
 
   sendCommand(command: ControllerCommand) {
+    console.groupCollapsed('[controller]', command.tag);
+    console.debug(command);
+    console.groupEnd();
+
     this.socket.send(JSON.stringify(command));
   }
 
