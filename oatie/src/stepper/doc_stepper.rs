@@ -308,8 +308,6 @@ impl<'a> DocStepper<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[macro_use]
     use crate::macros;
 
     fn test_doc_0() -> DocSpan {

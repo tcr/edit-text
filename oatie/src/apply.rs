@@ -7,7 +7,7 @@ use crate::normalize::*;
 use crate::stepper::*;
 
 
-fn apply_add_inner<M: Mutator>(bc: &mut M, spanvec: &DocSpan, addvec: &AddSpan) -> (DocSpan, DocSpan) {
+fn apply_add_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &AddSpan) -> (DocSpan, DocSpan) {
     let mut span = &spanvec[..];
     let mut del = &addvec[..];
 
@@ -184,7 +184,7 @@ fn apply_add_inner<M: Mutator>(bc: &mut M, spanvec: &DocSpan, addvec: &AddSpan) 
 }
 
 // TODO replace all occurances of this with apply_add_inner 
-fn apply_add_outer<M: Mutator>(bc: &mut M, spanvec: &DocSpan, addvec: &AddSpan) -> DocSpan {
+fn apply_add_outer<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &AddSpan) -> DocSpan {
     let (mut res, remaining) = apply_add_inner(bc, spanvec, addvec);
 
     // TODO never accept unbalanced components?
@@ -207,14 +207,14 @@ fn apply_add_outer<M: Mutator>(bc: &mut M, spanvec: &DocSpan, addvec: &AddSpan) 
 }
 
 pub fn apply_add(spanvec: &DocSpan, add: &AddSpan) -> DocSpan {
-    let mut mutator = EmptyDocMutator { };
+    let mut mutator = NullDocMutator { };
     let ret = apply_add_outer(&mut mutator, spanvec, add);
     ret
 }
 
 // TODO what does this do, why doe sit exist, for creating BC for frontend??
 pub fn apply_add_bc(spanvec: &DocSpan, addvec: &AddSpan) -> (Doc, Program) {
-    let mut mutator = DocMutator::new(DocStepper::new(spanvec));
+    let mut mutator = RecordingDocMutator::new(DocStepper::new(spanvec));
     let output_doc = apply_add_outer(&mut mutator, spanvec, addvec);
 
     // Compare results.
@@ -231,7 +231,7 @@ pub fn apply_add_bc(spanvec: &DocSpan, addvec: &AddSpan) -> (Doc, Program) {
     (Doc(output_doc), bc)
 }
 
-fn apply_del_inner<M: Mutator>(bc: &mut M, spanvec: &DocSpan, addvec: &DelSpan) -> DocSpan {
+fn apply_del_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &DelSpan) -> DocSpan {
     let mut span = &spanvec[..];
     let mut del = &addvec[..];
 
@@ -384,14 +384,14 @@ fn apply_del_inner<M: Mutator>(bc: &mut M, spanvec: &DocSpan, addvec: &DelSpan) 
 }
 
 pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
-    let mut mutator = EmptyDocMutator { };
+    let mut mutator = NullDocMutator { };
     let ret = apply_del_inner(&mut mutator, spanvec, delvec);
     ret
 }
 
 // TODO what does this do, why doe sit exist, for creating BC for frontend??
 pub fn apply_del_bc(spanvec: &DocSpan, del: &DelSpan) -> (DocSpan, Program) {
-    let mut mutator = DocMutator::new(DocStepper::new(spanvec));
+    let mut mutator = RecordingDocMutator::new(DocStepper::new(spanvec));
     let output_doc = apply_del_inner(&mut mutator, spanvec, del);
 
     // Compare results.

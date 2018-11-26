@@ -24,13 +24,13 @@ impl ClientImpl for ProxyClient {
 
     fn send_client(&self, req: &FrontendCommand) -> Result<(), Error> {
         log_wasm!(SendClient(req.clone()));
-        self.tx_client.send(req.clone())?;
+        self.tx_client.send(req.clone());
         Ok(())
     }
 
     fn send_sync(&self, req: ServerCommand) -> Result<(), Error> {
         log_wasm!(SendSync(req.clone()));
-        self.tx_sync.send(req)?;
+        self.tx_sync.send(req);
         Ok(())
     }
 }

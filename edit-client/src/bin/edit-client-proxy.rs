@@ -135,7 +135,7 @@ fn spawn_send_to_client(
 ) -> JoinHandle<Result<(), Error>> {
     thread::spawn(|| -> Result<(), Error> {
         take!(rx_client, out);
-        while let Ok(req) = rx_client.recv() {
+        while let Some(req) = rx_client.recv() {
             let json = serde_json::to_string(&req).unwrap();
             out.lock().unwrap().send(json)?;
         }
@@ -150,7 +150,7 @@ fn spawn_client_to_sync(
     sentinel: Arc<AtomicBool>,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
-        while let Ok(command) = rx.recv() {
+        while let Some(command) = rx.recv() {
             if let ServerCommand::TerminateProxy = command {
                 let _ = out.close(CloseCode::Away);
                 sentinel.store(false, Ordering::SeqCst);
@@ -271,7 +271,7 @@ fn setup_client(
             // TODO can we inherit thread locals??
             crate::log::log_init(tx_sync_2.clone());
 
-            while let Ok(task) = rx_task.recv() {
+            while let Some(task) = rx_task.recv() {
                 client.handle_task(task)?;
             }
             Ok(())
@@ -309,14 +309,14 @@ impl SimpleSocket for ProxySocket {
 
     fn handle_message(&mut self, data: &[u8]) -> Result<(), Error> {
         let msg = serde_json::from_slice(&data)?;
-        Ok(self.tx_task.send(Task::ControllerCommand(msg))?)
+        Ok(self.tx_task.send(Task::ControllerCommand(msg)))
     }
 
     fn cleanup(&mut self) -> Result<(), Error> {
         self.monkey.store(false, Ordering::Relaxed);
         self.alive.store(false, Ordering::Relaxed);
 
-        self.tx_sync.send(ServerCommand::TerminateProxy)?;
+        self.tx_sync.send(ServerCommand::TerminateProxy);
 
         Ok(())
     }
