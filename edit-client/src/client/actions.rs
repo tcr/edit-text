@@ -1,4 +1,4 @@
-use super::walkers::*;
+use crate::walkers::*;
 use failure::Error;
 use oatie::doc::*;
 use oatie::schema::RtfSchema;
@@ -306,6 +306,7 @@ fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
     Ok(writer.result())
 }
 
+/// Backspace.
 pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
     let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus)?;
 

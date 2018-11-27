@@ -55,7 +55,6 @@ macro_rules! log_compose {
 
 /* /logging */
 
-#[cfg(target_arch = "wasm32")]
 #[macro_use]
 pub mod wasm;
 

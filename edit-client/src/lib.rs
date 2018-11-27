@@ -37,20 +37,16 @@ pub mod log;
 #[macro_use]
 pub mod wasm;
 
-pub mod actions;
 pub mod client;
 pub mod monkey;
 pub mod random;
-pub mod state;
 pub mod walkers;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub mod proxy;
 
-pub use self::actions::*;
 pub use self::client::*;
 pub use self::random::*;
-pub use self::state::*;
 
 // Use `wee_alloc` as the global allocator.
 // #[cfg(target_arch = "wasm32")]

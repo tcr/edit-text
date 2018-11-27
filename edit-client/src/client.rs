@@ -1,10 +1,13 @@
+mod actions;
+mod state;
+
+pub use self::actions::*;
+pub use self::state::*;
+
 use crate::{
-    actions::*,
     random::*,
-    state::*,
     walkers::Pos,
 };
-
 use edit_common::{
     commands::*,
     doc_as_html,
@@ -24,6 +27,7 @@ use std::{
     },
     sync::Arc,
 };
+use serde_json;
 
 // Shorthandler
 // code, meta, shift, alt, callback
@@ -432,7 +436,7 @@ pub trait ClientImpl {
 
                         // Native drives client state.
                         let state = self.state();
-                        let res = FrontendCommand::UpdateFull(
+                        let res = FrontendCommand::RenderFull(
                             doc_as_html(&state.client_doc.doc.0),
                         );
                         self.send_client(&res).unwrap();
@@ -468,9 +472,9 @@ pub trait ClientImpl {
                                 .client_doc
                                 .sync_sent_new_version(&doc, version, &input_op);
 
-                            // Native drives client state.
-                            let res = FrontendCommand::Update(
-                                ::serde_json::to_string(
+                            // Client drives frontend frontend state.
+                            let res = FrontendCommand::RenderDelta(
+                                serde_json::to_string(
                                     &::oatie::apply::apply_op_bc(&last_doc.0, &input_op)
                                 ).unwrap(),
                                 input_op,
@@ -578,11 +582,19 @@ pub trait ClientImpl {
         // Validate local changes.
         validate_doc(&self.state().client_doc.doc).expect("Local op was malformed");
 
-        // Render the update.
-        let res = FrontendCommand::Update(
-            ::serde_json::to_string(&bc).unwrap(),
-            op,
-        );
+        // Render the update.RenderDelta
+        let res = if cfg!(feature = "DEBUG_full_client_updates") {
+            // Fully refresh the client.
+            FrontendCommand::RenderFull(
+                doc_as_html(&self.state().client_doc.doc.0),
+            )
+        } else {
+            // Send a delta update.
+            FrontendCommand::RenderDelta(
+                serde_json::to_string(&bc).unwrap(),
+                op,
+            )
+        };
         self.send_client(&res)?;
 
         // Send any queued payloads.

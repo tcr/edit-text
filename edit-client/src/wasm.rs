@@ -13,7 +13,6 @@ extern crate wbg_rand;
 
 use super::client::*;
 use super::monkey::*;
-use super::state::*;
 use edit_common::markdown::doc_to_markdown;
 use edit_common::{
     commands::*,
@@ -131,6 +130,10 @@ pub fn wasm_setup() -> WasmClient {
 #[wasm_bindgen]
 #[allow(non_snake_case)]
 impl WasmClient {
+    pub fn client_id(&self) -> String {
+        self.state.client_id.clone()
+    }
+
     /// Send a command *from* the frontend *to* the client.
     fn client_task(&mut self, input: Task) -> Result<(), Error> {
         // Do a random roll to see how we react when panicking.
