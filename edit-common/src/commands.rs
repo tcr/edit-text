@@ -75,6 +75,8 @@ pub enum FrontendCommand {
     RenderFull(String),
     Error(String),
     ServerCommand(ServerCommand),
+
+    ServerDisconnect,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]

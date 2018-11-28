@@ -158,7 +158,6 @@ class MarkdownModal extends React.Component {
 
 class LocalButtons extends React.Component {
   props: {
-    editorID: string,
     editor: any,
     onModal: (modal: React.ReactNode) => void,
   };
@@ -199,10 +198,6 @@ class LocalButtons extends React.Component {
         <button onClick={() => this.onMarkdownClick()}>Load/Save</button>
 
         <button id="width" onClick={() => this.toggleWidth()}>Page Width</button>
-
-        <b style={{marginLeft: 10, whiteSpace: 'nowrap'}}>
-          Client: <kbd tabIndex={0}>{this.props.editorID}</kbd>
-        </b>
       </div>
     );
   }
@@ -242,6 +237,12 @@ type EditorFrameProps = {
   client: ControllerImpl,
   body: string,
 };
+
+// https://www.typescriptlang.org/docs/handbook/advanced-types.html
+function assertNever(x: never): never {
+  throw new Error("Unexpected object: " + x);
+}
+
 
 // Initialize child editor.
 export class EditorFrame extends React.Component {
@@ -315,7 +316,6 @@ export class EditorFrame extends React.Component {
             />
             <LocalButtons
               editor={this}
-              editorID={this.state.editorID}
               onModal={(modal) => {
                 this.setState({
                   modal
@@ -353,8 +353,16 @@ export class EditorFrame extends React.Component {
           <div id="debug-row">
             <div id="debug-content" onClick={(e) => (e.target as any).classList.toggle('expanded')}>
               <div id="debug-button">🐞</div>
-              <div id="debug-buttons">DEBUG OPTIONS <button onClick={() => alert('good job')}>alert</button></div>
+              <div id="debug-buttons">
+                <b>DEBUG MENU</b>
+                &nbsp;
+                <span style={{background: '#6f9', borderRadius: '3px'}}>
+                  Client: <kbd tabIndex={0}>{this.state.editorID}</kbd>
+                </span>
+                &nbsp;
+                <span><button onClick={() => alert('good job')}>test alert()</button></span>
               </div>
+            </div>
           </div>
           {this.state.notices.map((x, key) => {
             return (
@@ -383,6 +391,9 @@ export class EditorFrame extends React.Component {
     const editor = this;
 
     switch (command.tag) {
+      // https://www.typescriptlang.org/docs/handbook/advanced-types.html
+      default: assertNever(command);
+
       case 'Init': {
         let editorID = command.fields;
 
@@ -470,9 +481,41 @@ export class EditorFrame extends React.Component {
         break;
       }
 
-      default: {
-        console.error('Unknown packet:', command);
+      case 'Error': {
+        let unsafeHtmlMessage = command.fields;
+        this.showNotification({
+          element: <div dangerouslySetInnerHTML={{__html: unsafeHtmlMessage}} />,
+          level: 'error',
+        });
 
+        break;
+      }
+
+      case 'ServerDisconnect': {
+        this.showNotification({
+          element: <div>The editor has disconnected from the server. We're sorry. You can <a href="?">refresh your browser</a>, or we'll refresh once the server is reachable.</div>,
+          level: 'error',
+        });
+
+        // Start refresh poller.
+        setTimeout(() => {
+          setInterval(() => {
+            graphqlPage('home').then(() => {
+              // Can access server, continue
+              window.location.reload();
+            });
+          }, 2000);
+        }, 3000);
+
+        break;
+      }
+
+      case 'ServerCommand': {
+        throw new Error('Unexpected server command');
+      }
+
+      case 'PromptString': {
+        // unsure what these should do, if anything
         break;
       }
     }

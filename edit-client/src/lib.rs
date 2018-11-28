@@ -24,6 +24,7 @@ extern crate pulldown_cmark;
 extern crate pulldown_cmark_to_cmark;
 extern crate ron;
 extern crate wbg_rand;
+extern crate web_sys;
 
 #[allow(unused)]
 #[macro_use]

@@ -25,7 +25,7 @@ class DeferredSocket {
 
     let self = this;
     this.socket = new WebSocket(
-      route.syncUrl()
+      route.serverUrl()
     );
     this.socket.onopen = function () {
       DEBUG.measureTime('websocket-defer-open');
@@ -60,7 +60,7 @@ class DeferredSocket {
 }
 
 let syncSocket = new DeferredSocket(
-  route.syncUrl()
+  route.serverUrl()
 );
 
 export class AppServer implements ServerImpl {
@@ -92,72 +92,45 @@ export class AppServer implements ServerImpl {
   connect(onError: (message: React.ReactNode) => void): Promise<void> {
     let server = this;
 
+    // TODO this whole block needs to move into Wasm itself, since it's just calling back to wasm!!
+    this.client!.clientBindings.subscribeServer(route.serverUrl(), (commandString: string) => {
+      // console.log('Got message from server:', event.data);
+      try {
+        if (getForwardWasmTaskCallback() != null) {
+          if (server.client != null) {
+            let command = JSON.parse(commandString);
+            console.groupCollapsed('[client]', command.tag);
+            console.debug(command);
+            console.groupEnd();
+            server.client.clientBindings.command(JSON.stringify({
+              ClientCommand: command,
+            }));
+          }
+        }
+      } catch (e) {
+        // Kill the current process, we triggered an exception.
+        setForwardWasmTaskCallback(null);
+        if (server.client != null) {
+          server.client.Module.wasm_close();
+        }
+        // syncSocket.close();
+
+        // TODO this is the wrong place to put this
+        (document as any).body.background = 'red';
+
+        if (server.editorFrame) {
+          onError(
+            <div>The client experienced an error talking to the server and you are now disconnected. We're sorry. You can <a href="?">refresh your browser</a> to continue.</div>
+          );
+        }
+
+        throw new WasmError(e, `Error during sync command: ${e.message}`);
+      }
+    });
+
     return Promise.resolve()
     .then(() => {
       DEBUG.measureTime('connect-server');
-
-      syncSocket.handle({
-        onopen: (event: any) => {
-          console.debug('server socket opened.');
-          DEBUG.measureTime('connect-ready');
-        },
-        onmessage: (event: any) => {
-          // console.log('Got message from sync:', event.data);
-          try {
-            if (getForwardWasmTaskCallback() != null) {
-              if (server.client != null) {
-                let command = JSON.parse(event.data);
-                console.groupCollapsed('[client]', command.tag);
-                console.debug(command);
-                console.groupEnd();
-                server.client.clientBindings.command(JSON.stringify({
-                  ClientCommand: command,
-                }));
-              }
-            }
-          } catch (e) {
-            // Kill the current process, we triggered an exception.
-            setForwardWasmTaskCallback(null);
-            if (server.client != null) {
-              server.client.Module.wasm_close();
-            }
-            // syncSocket.close();
-
-            // TODO this is the wrong place to put this
-            (document as any).body.background = 'red';
-
-            if (server.editorFrame) {
-              onError(
-                <div>The client experienced an error talking to the server and you are now disconnected. We're sorry. You can <a href="?">refresh your browser</a> to continue.</div>
-              );
-            }
-
-            throw new WasmError(e, `Error during sync command: ${e.message}`);
-          }
-        },
-        onclose: () => {
-          if (server.editorFrame) { 
-            onError(
-              <div>The editor has disconnected from the server. We're sorry. You can <a href="?">refresh your browser</a>, or we'll refresh once the server is reachable.</div>
-            );
-          }
-
-          setTimeout(() => {
-            setInterval(() => {
-              app.graphqlPage('home').then(() => {
-                // Can access server, continue
-                window.location.reload();
-              });
-            }, 2000);
-          }, 3000);
-
-          server.onClose();
-        },
-      });
-
-      if (this.deferSyncResolve !== null) {
-        this.deferSyncResolve(syncSocket.socket);
-      }
     });
   }
 }

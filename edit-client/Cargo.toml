@@ -3,6 +3,9 @@ authors = ["Tim Ryan <id@timryan.org>"]
 name = "edit-client"
 version = "0.1.0"
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 [dependencies]
 colored = "1.6.0"
 console_error_panic_hook = "0.1.5"
@@ -21,7 +24,7 @@ serde_derive = "^1.0.27"
 serde_json = "^1.0.6"
 take_mut = "0.2.0"
 taken = "0.1.1"
-wasm-bindgen = { version = "0.2", features = ["nightly"] }
+wasm-bindgen = { version = "0.2", features = ["nightly", "serde-serialize"] }
 wbg-rand = "0.4.1"
 wee_alloc = "*"
 wasm-typescript-definition = "0.1"
@@ -30,6 +33,26 @@ include-dir-macro = { git = "https://github.com/jcdyer/include-dir-macro" }
 edit-common = { path = "../edit-common" }
 oatie = { path = "../oatie" }
 
+# wasm target
+[target."cfg(target_arch=\"wasm32\")".dependencies.web-sys]
+version = "0.3"
+features = [
+    "Document",
+    "Element",
+    "EventTarget",
+    "HtmlElement",
+    "Node",
+    "Window",
+    "CloseEvent",
+    "Event",
+    "MessageEvent",
+    "WebSocket",
+]
+
+[target."cfg(target_arch=\"wasm32\")".dependencies]
+js-sys = "0.3"
+
+# non-wasm targets
 [target."cfg(not(target_arch=\"wasm32\"))".dependencies]
 bus = "1.3.2"
 quicli = "0.3"
@@ -39,9 +62,6 @@ tiny_http = "0.5.8"
 url = "1.6.0"
 ws = "0.7.3"
 uuid = { features = ["v4"], version = "0.5" }
-
-[lib]
-crate-type = ["cdylib", "rlib"]
 
 [features]
 DEBUG_full_client_updates = []
