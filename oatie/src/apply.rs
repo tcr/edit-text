@@ -1,8 +1,8 @@
 //! Methods to apply an operation to a document.
 
-use super::doc::*;
+use crate::doc::*;
 use std::collections::HashMap;
-// use super::wasm::*;
+use crate::wasm::*;
 use crate::normalize::*;
 use crate::stepper::*;
 
@@ -342,6 +342,7 @@ fn apply_del_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &DelSpa
                         nextdel = false;
                     } else {
                         // noop
+                            bc.delete(count);
                     }
                 }
                 _ => {
@@ -394,18 +395,20 @@ pub fn apply_del_bc(spanvec: &DocSpan, del: &DelSpan) -> (DocSpan, Program) {
     let mut mutator = RecordingDocMutator::new(DocStepper::new(spanvec));
     let output_doc = apply_del_inner(&mut mutator, spanvec, del);
 
-    // Compare results.
-    // let actual = ret.clone();
-    let (_compare, bc) = mutator.result().unwrap();
-    // if actual != compare {
-    //     console_log!("\n\n\n🚫🚫🚫 DELETION: {:?}", del);
-    //     for item in &bc.0 {
-    //         console_log!("      -> {:?}", item);
-    //     }
-    //     console_log!("\ntest =====> [ {} ]\n\nactual:\n  {:?}\n\ncompare:\n  {:?}\n\n", actual == compare, actual, compare);
-    // }
+    let (compare, bc) = mutator.result().unwrap();
 
-    // console_log!("🏆🏆🏆 {:?}", bc);
+    // Compare results.
+    if cfg!(feature = "DEBUG_verify_bytecode") {
+        let actual = output_doc.clone();
+        if actual != compare {
+            console_log!("\n\n\n🚫🚫🚫 DELETION: {:?}", del);
+            for item in &bc.0 {
+                console_log!("      -> {:?}", item);
+            }
+            console_log!("\ntest =====> [ {} ]\n\nactual:\n  {:?}\n\ncompare:\n  {:?}\n\n", actual == compare, actual, compare);
+        }
+    }
+
     (output_doc, bc)
 }
 

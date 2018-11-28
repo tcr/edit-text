@@ -29,3 +29,7 @@ env_logger = "0.3"
 
 [lib]
 name = "oatie"
+
+[features]
+DEBUG_verify_bytecode = []
+default = ['DEBUG_verify_bytecode']

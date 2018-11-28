@@ -400,13 +400,13 @@ export class EditorFrame extends React.Component {
         break;
       }
 
-      case 'Update': {
+      case 'RenderDelta': {
         // Update page content
         // console.groupCollapsed('Parse Update');
         // console.log(parse.Update);
         let programs = JSON.parse(command.fields[0]);
         programs.forEach((program: any) => {
-          // console.log('🚗🚗🚗🚗', program, '\n');
+          // console.log(program, '\n');
           this.editor!._runProgram(program);
 
           // Corrections
@@ -424,7 +424,7 @@ export class EditorFrame extends React.Component {
           //   left!.normalize();
           // }
 
-          // console.log('👿👿👿👿👿👿', document.querySelector('.edit-text')!.innerHTML);
+          // console.log(document.querySelector('.edit-text')!.innerHTML);
         });
         // console.log(parse.Update[0]);
         // console.log(document.querySelector('.edit-text')!.innerHTML);
@@ -436,13 +436,13 @@ export class EditorFrame extends React.Component {
         break;
       }
 
-      case 'UpdateFull': {
+      case 'RenderFull': {
         DEBUG.measureTime('first-update');
 
         this.editor!._setHTML(command.fields);
         // Update page content
         // this.setState({
-        //   body: parse.UpdateFull[0],
+        //   body: parse.RenderFull[0],
         // });
 
         break;
@@ -566,15 +566,15 @@ class EditText extends React.Component {
         // }
       }
   
-      else if (parse.UpdateFull) {
+      else if (parse.RenderFull) {
         // Update page content
         this.setState({
-          content: parse.UpdateFull,
+          content: parse.RenderFull,
         });
 
         // TODO generate markdown from client now
         // if (this.props.onChange !== null) {
-        //   this.props.onChange(parse.UpdateFull[1]);
+        //   this.props.onChange(parse.RenderFull[1]);
         // }
       }
 

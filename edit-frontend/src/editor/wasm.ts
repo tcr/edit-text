@@ -83,7 +83,7 @@ export class WasmController implements ControllerImpl {
 
   sendCommand(command: ControllerCommand) {
     if (forwardWasmTaskCallback != null) {
-      console.groupCollapsed('%c[controller] %s', 'border-top: 2px solid #c63; padding-top: 3px; display: block;', command.tag);
+      console.groupCollapsed('%c[controller] %s', 'background: #c63; padding: 3px 5px; display: block; color: white;', command.tag);
       console.debug(command);
       console.groupEnd();
 

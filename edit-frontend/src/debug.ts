@@ -100,8 +100,19 @@ const DEBUG = {
         document.dispatchEvent(event);
     },
 
+    userCarets: (): Array<Attr> => {
+        return Array.from(document.querySelectorAll('.edit-text [data-tag=caret]'))
+            .map(x => x as HTMLElement)
+            .filter(x => x.getAttribute('data-client') == DEBUG.clientID())
+            .map((x): Attr => x.getAttributeNode('data-focus')!);
+    },
+
+    clientID: (): String => {
+        return globalClientBindings!.client_id();
+    },
+
     // Bindings to global ref for client module
-    // NOTE: only for debugging!
+    // NOTE: only for debugging! bindings should not be referenced globally.
 
     setGlobalClientBindings: (
         bindings: WasmClientModule,

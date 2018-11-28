@@ -20,8 +20,8 @@ use crossbeam_channel::{
 };
 use edit_client::{
     log::*,
+    client::ClientDoc,
     proxy::ProxyClient,
-    state::ClientDoc,
     Client,
     ClientImpl,
 };

@@ -42,3 +42,7 @@ uuid = { features = ["v4"], version = "0.5" }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
+
+[features]
+DEBUG_full_client_updates = []
+default = []

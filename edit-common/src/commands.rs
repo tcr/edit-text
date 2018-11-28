@@ -70,9 +70,9 @@ pub enum FrontendCommand {
     Controls(Controls),
     PromptString(String, String, ControllerCommand),
     // Bytecode, Op
-    Update(String, Op),
+    RenderDelta(String, Op),
     // HTML
-    UpdateFull(String),
+    RenderFull(String),
     Error(String),
     ServerCommand(ServerCommand),
 }
