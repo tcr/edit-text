@@ -138,7 +138,7 @@ impl WasmClient {
         self.state.client_id.clone()
     }
 
-    /// Send a command *from* the frontend *to* the client.
+    /// Handle a Client or Controller command. [sic]
     fn client_task(&mut self, input: Task) -> Result<(), Error> {
         // Do a random roll to see how we react when panicking.
         // use wbg_rand::Rng;
@@ -160,7 +160,7 @@ impl WasmClient {
         Ok(())
     }
 
-    /// Send a command *from* the frontend *to* the client.
+    /// Send a command *from* the frontend *or* server *to* the client *or* controller. [sic]
     pub fn command(&mut self, input: &str) -> u32 {
         let req_parse: Result<Task, _> = serde_json::from_slice(&input.as_bytes());
 
@@ -190,11 +190,10 @@ impl WasmClient {
         let ws = Rc::new(web_sys::WebSocket::new(&ws_url)?);
 
         {
+            let _command_callback = command_callback.clone();
             let closure = Closure::wrap(Box::new(move |event: web_sys::Event| {
-
                 // console.debug('server socket opened.');
                 // DEBUG.measureTime('connect-ready');
-
                 console_log!("####### SERVER SOCKET OPENED");
 
             }) as Box<FnMut(_)>);
@@ -202,47 +201,30 @@ impl WasmClient {
             closure.forget();
         }
 
+        // let client = self.clone();
         {
             let command_callback = command_callback.clone();
             let closure = Closure::wrap(Box::new(move |event: web_sys::MessageEvent| {
                 // console_log!("message {:?}", event.data().as_string().unwrap());
 
-                command_callback.call1(&JsValue::NULL, &event.data());
+                // let client_command = js_sys::JSON::parse(&event.data().as_string().unwrap()).unwrap();
+                // client.client_task(Task::ClientCommand(...));
+                command_callback.call1(&JsValue::NULL, &js_sys::JSON::parse(&event.data().as_string().unwrap()).unwrap());
 
-                // command_callback.call1(&JsValue::NULL, &JsValue::from(r##"{"tag": "Error", "fields": "Big error today boys"}"##));
 
-                // // console.log('Got message from sync:', event.data);
-                // try {
-                //     if (getForwardWasmTaskCallback() != null) {
-                //     if (server.client != null) {
-                //         let command = JSON.parse(event.data);
-                //         console.groupCollapsed('[client]', command.tag);
-                //         console.debug(command);
-                //         console.groupEnd();
-                //         server.client.clientBindings.command(JSON.stringify({
-                //         ClientCommand: command,
-                //         }));
-                //     }
-                //     }
-                // } catch (e) {
-                //     // Kill the current process, we triggered an exception.
-                //     setForwardWasmTaskCallback(null);
-                //     if (server.client != null) {
-                //     server.client.Module.wasm_close();
-                //     }
-                //     // syncSocket.close();
 
-                //     // TODO this is the wrong place to put this
-                //     (document as any).body.background = 'red';
+                // vvvvvvvv
 
-                //     if (server.editorFrame) {
-                //     onError(
-                //         <div>The client experienced an error talking to the server and you are now disconnected. We're sorry. You can <a href="?">refresh your browser</a> to continue.</div>
-                //     );
-                //     }
+                
+                // TODO replace this with the SELF-REFERENTIAL rc<Client> that htis client holds,
+                // so that we don't have to change the state() interface at all but can get the benefits of sharing
+                // this client with child js closures. untangle this mess later.
 
-                //     throw new WasmError(e, `Error during sync command: ${e.message}`);
-                // }
+
+
+                //^^^^
+
+
 
             }) as Box<FnMut(_)>);
             ws.add_event_listener_with_callback("message", closure.as_ref().unchecked_ref())?;
@@ -252,29 +234,8 @@ impl WasmClient {
         {
             let command_callback = command_callback.clone();
             let closure = Closure::wrap(Box::new(move |event: web_sys::CloseEvent| {
-
                 let command = FrontendCommand::ServerDisconnect;
-
                 command_callback.call1(&JsValue::NULL, &JsValue::from_serde(&command).unwrap());
-
-
-                // if (server.editorFrame) { 
-                //     onError(
-                //     <div>The editor has disconnected from the server. We're sorry. You can <a href="?">refresh your browser</a>, or we'll refresh once the server is reachable.</div>
-                //     );
-                // }
-
-                // setTimeout(() => {
-                //     setInterval(() => {
-                //     app.graphqlPage('home').then(() => {
-                //         // Can access server, continue
-                //         window.location.reload();
-                //     });
-                //     }, 2000);
-                // }, 3000);
-
-                // server.onClose();
-                
             }) as Box<FnMut(_)>);
             ws.add_event_listener_with_callback("close", closure.as_ref().unchecked_ref())?;
             closure.forget();

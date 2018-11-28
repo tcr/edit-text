@@ -9,7 +9,7 @@ import * as commands from '../editor/commands';
 import {ServerImpl, ControllerImpl } from '../editor/network';
 import {WasmController, WasmError, getForwardWasmTaskCallback, setForwardWasmTaskCallback} from '../editor/wasm';
 import DEBUG from '../debug';
-import {ControllerCommand} from '../bindgen/edit_client';
+import {ControllerCommand, FrontendCommand} from '../bindgen/edit_client';
 
 class DeferredSocket {
   socket: WebSocket;
@@ -93,12 +93,11 @@ export class AppServer implements ServerImpl {
     let server = this;
 
     // TODO this whole block needs to move into Wasm itself, since it's just calling back to wasm!!
-    this.client!.clientBindings.subscribeServer(route.serverUrl(), (commandString: string) => {
+    this.client!.clientBindings.subscribeServer(route.serverUrl(), (command: FrontendCommand) => {
       // console.log('Got message from server:', event.data);
       try {
         if (getForwardWasmTaskCallback() != null) {
           if (server.client != null) {
-            let command = JSON.parse(commandString);
             console.groupCollapsed('[client]', command.tag);
             console.debug(command);
             console.groupEnd();

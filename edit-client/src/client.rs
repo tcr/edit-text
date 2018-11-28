@@ -401,17 +401,17 @@ pub trait ClientImpl {
                 }
 
                 match value.clone() {
-                    // Handle commands from Native.
+                    // Handle all commands from Frontend.
                     Task::ControllerCommand(command) => {
                         if self.state().client_id == "$$$$$$" {
-                            println!("NATIVE COMMAND TOO EARLY");
+                            println!("FRONTEND COMMAND ARRIVED TOO EARLY");
                             return Ok(());
                         }
 
                         native_command(self, command)?;
                     }
 
-                    // Sync sent us an Update command with a new document version.
+                    // Server sent the client the initial document.
                     Task::ClientCommand(ClientCommand::Init(new_client_id, doc_span, version)) => {
                         self.state().client_id = new_client_id.clone();
                         self.state().client_doc.init(&Doc(doc_span), version);
@@ -442,7 +442,7 @@ pub trait ClientImpl {
                         self.send_client(&res).unwrap();
                     }
 
-                    // Sync sent us an Update command with a new document version.
+                    // Server sent us a new document version.
                     Task::ClientCommand(ClientCommand::Update(version, client_id, input_op)) => {
                         if self.state().client_id == "$$$$$$" {
                             return Ok(());
@@ -496,18 +496,6 @@ pub trait ClientImpl {
                         }
                     }
                 }
-
-                // fn average(numbers: &[i64]) -> f32 {
-                //     numbers.iter().sum::<i64>() as f32 / numbers.len() as f32
-                // }
-
-                // BAR.with(|bar| {
-                //     let mut b = bar.borrow_mut();
-
-                //     b.push(start.elapsed().num_milliseconds());
-
-                //     println!("{} ms per task.", average(b.as_slice()));
-                // });
 
                 if delay_log {
                     log_wasm!(Task(self.state().client_id.clone(), value.clone()));

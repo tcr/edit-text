@@ -33,8 +33,11 @@ include-dir-macro = { git = "https://github.com/jcdyer/include-dir-macro" }
 edit-common = { path = "../edit-common" }
 oatie = { path = "../oatie" }
 
+# [target."cfg(target_arch=\"wasm32\")".dependencies]
+js-sys = "0.3"
+
 # wasm target
-[target."cfg(target_arch=\"wasm32\")".dependencies.web-sys]
+[dependencies.web-sys]
 version = "0.3"
 features = [
     "Document",
@@ -49,8 +52,6 @@ features = [
     "WebSocket",
 ]
 
-[target."cfg(target_arch=\"wasm32\")".dependencies]
-js-sys = "0.3"
 
 # non-wasm targets
 [target."cfg(not(target_arch=\"wasm32\"))".dependencies]
