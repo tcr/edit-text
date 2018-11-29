@@ -3,17 +3,15 @@ use crate::db::{
     DbPool,
 };
 
-use extern::{
-    crossbeam_channel::{
-        unbounded,
-        Sender,
-    },
-    edit_common::commands::*,
-    std::mem,
-    std::sync::{
-        Arc,
-        Mutex,
-    },
+use crossbeam_channel::{
+    unbounded,
+    Sender,
+};
+use edit_common::commands::*;
+use std::mem;
+use std::sync::{
+    Arc,
+    Mutex,
 };
 
 pub struct Logger {

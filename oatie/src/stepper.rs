@@ -3,8 +3,8 @@
 mod doc_mutator;
 mod doc_stepper;
 
-use macros;
-use doc::*;
+use crate::macros;
+use crate::doc::*;
 use std::cmp;
 use std::collections::HashMap;
 use std::sync::Arc;

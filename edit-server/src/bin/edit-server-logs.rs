@@ -4,12 +4,10 @@
 extern crate quicli;
 extern crate edit_server;
 extern crate serde_json;
+extern crate diesel;
 
-use extern::{
-    diesel::connection::Connection,
-    edit_server::db::*,
-    quicli::prelude::*,
-};
+use edit_server::db::*;
+use quicli::prelude::*;
 
 #[derive(Debug, StructOpt)]
 enum Cli {
@@ -24,6 +22,8 @@ enum Cli {
 }
 
 main!(|args: Cli| {
+    use diesel::connection::Connection;
+
     let db = db_connection();
 
     match args {

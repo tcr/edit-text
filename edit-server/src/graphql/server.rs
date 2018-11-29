@@ -8,26 +8,24 @@ use crate::{
     },
 };
 
-use extern::{
-    crossbeam_channel::Sender as CCSender,
-    diesel::sqlite::SqliteConnection,
-    edit_common::markdown::*,
-    juniper::{
-        self,
-        http::GraphQLRequest,
-        FieldError,
-        FieldResult,
-    },
-    oatie::{
-        doc::*,
-        validate::validate_doc,
-    },
-    r2d2,
-    r2d2_diesel::ConnectionManager,
-    rouille,
-    serde_json,
-    std::io::prelude::*,
+use crossbeam_channel::Sender as CCSender;
+use diesel::sqlite::SqliteConnection;
+use edit_common::markdown::*;
+use juniper::{
+    self,
+    http::GraphQLRequest,
+    FieldError,
+    FieldResult,
 };
+use oatie::{
+    doc::*,
+    validate::validate_doc,
+};
+use r2d2;
+use r2d2_diesel::ConnectionManager;
+use rouille;
+use serde_json;
+use std::io::prelude::*;
 
 struct Page {
     doc: String,

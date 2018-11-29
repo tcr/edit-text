@@ -37,7 +37,7 @@ use edit_common::{
         markdown_to_doc,
     },
 };
-use extern::edit_server::{
+use edit_server::{
     graphql::client::*,
     sync::*,
 };

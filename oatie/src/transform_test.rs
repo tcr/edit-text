@@ -18,7 +18,7 @@ use super::validate::{
 };
 use super::OT;
 use failure::Error;
-use parse::*;
+use crate::parse::*;
 use regex::Regex;
 use serde_json;
 use yansi::Paint;

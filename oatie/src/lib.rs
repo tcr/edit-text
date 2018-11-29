@@ -75,13 +75,13 @@ pub mod transform_test;
 pub mod validate;
 pub mod writer;
 
-use apply::*;
-use compose::*;
-use doc::*;
+use crate::apply::*;
+use crate::compose::*;
+use crate::doc::*;
 use std::collections::HashMap;
 use std::fmt::Debug;
-use transform::transform;
-pub use transform::{
+use crate::transform::transform;
+pub use crate::transform::{
     Schema,
     Track,
 };
