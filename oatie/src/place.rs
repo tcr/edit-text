@@ -7,7 +7,7 @@ pub(crate) fn can_element_join(left: &DocElement, right: &DocElement) -> bool {
                 return true;
             }
         }
-        _ => {},
+        _ => {}
     }
     false
 }
@@ -17,10 +17,10 @@ pub(crate) fn try_element_join(left: &mut DocElement, right: &DocElement) -> boo
         (&mut DocChars(ref mut prefix), &DocChars(ref suffix)) => {
             if prefix.styles() == suffix.styles() {
                 prefix.push_str(suffix.as_str());
-                return true
+                return true;
             }
         }
-        _ => {},
+        _ => {}
     }
     false
 }

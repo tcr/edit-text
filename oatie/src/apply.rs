@@ -1,13 +1,16 @@
 //! Methods to apply an operation to a document.
 
 use crate::doc::*;
-use std::collections::HashMap;
-use crate::wasm::*;
 use crate::normalize::*;
 use crate::stepper::*;
+use crate::wasm::*;
+use std::collections::HashMap;
 
-
-fn apply_add_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &AddSpan) -> (DocSpan, DocSpan) {
+fn apply_add_inner<M: DocMutator>(
+    bc: &mut M,
+    spanvec: &DocSpan,
+    addvec: &AddSpan,
+) -> (DocSpan, DocSpan) {
     let mut span = &spanvec[..];
     let mut del = &addvec[..];
 
@@ -52,25 +55,25 @@ fn apply_add_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &AddSpa
                     if value.char_len() < count {
                         d = AddStyles(count - value.char_len(), styles.clone());
                         value.extend_styles(&styles);
-                            bc.delete(1);
-                            bc.InsertDocString(value.clone());
-                            // partial = false;
+                        bc.delete(1);
+                        bc.InsertDocString(value.clone());
+                        // partial = false;
                         res.place(&DocChars(value));
                         nextdel = false;
                     } else if value.char_len() > count {
                         let (mut left, right) = value.split_at(count);
                         left.extend_styles(&styles);
-                            bc.delete(1);
-                            bc.InsertDocString(left.clone());
-                            // partial = false;
+                        bc.delete(1);
+                        bc.InsertDocString(left.clone());
+                        // partial = false;
                         res.place(&DocChars(left));
                         first = Some(DocChars(right));
                         nextfirst = false;
                     } else {
                         value.extend_styles(&styles);
-                            bc.delete(1);
-                            bc.InsertDocString(value.clone());
-                            // partial = false;
+                        bc.delete(1);
+                        bc.InsertDocString(value.clone());
+                        // partial = false;
                         res.place(&DocChars(value));
                     }
                 }
@@ -83,24 +86,24 @@ fn apply_add_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &AddSpa
                     if value.char_len() < count {
                         // Consume and advance
                         d = AddSkip(count - value.char_len());
-                                bc.AdvanceElements(1);
+                        bc.AdvanceElements(1);
                         res.place(&DocChars(value));
                         nextdel = false;
                     } else if value.char_len() > count {
                         let (left, right) = value.split_at(count);
-                            // Split text element, we assume
-                            bc.skip(count);
+                        // Split text element, we assume
+                        bc.skip(count);
                         res.place(&DocChars(left));
                         first = Some(DocChars(right));
                         nextfirst = false;
                     } else {
-                                bc.AdvanceElements(1);
+                        bc.AdvanceElements(1);
                         res.place(&DocChars(value));
                     }
                 }
                 DocGroup(..) => {
                     res.push(first.clone().unwrap());
-                        bc.AdvanceElements(1);
+                    bc.AdvanceElements(1);
                     if count > 1 {
                         d = AddSkip(count - 1);
                         nextdel = false;
@@ -109,18 +112,18 @@ fn apply_add_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &AddSpa
             },
             AddWithGroup(ref delspan) => match first.clone().unwrap() {
                 DocGroup(ref attrs, ref span) => {
-                        bc.Enter();
+                    bc.Enter();
                     res.push(DocGroup(attrs.clone(), apply_add_outer(bc, span, delspan)));
-                        bc.Exit();
+                    bc.Exit();
                 }
                 _ => {
                     panic!("Invalid AddWithGroup");
                 }
             },
             AddChars(value) => {
-                    // TODO where do you skip anything, exactly
-                    // need to manifest the place issue externally as well
-                    bc.InsertDocString(value.clone());
+                // TODO where do you skip anything, exactly
+                // need to manifest the place issue externally as well
+                bc.InsertDocString(value.clone());
                 res.place(&DocChars(value));
                 nextfirst = false;
             }
@@ -141,14 +144,14 @@ fn apply_add_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &AddSpa
 
                 trace!("REST OF INNER {:?} {:?}", rest, del);
 
-                    // TODO not hardcode a random number.
-                    // Wrap previous elements in the inner span.
-                    bc.WrapPrevious(0, attrs);
+                // TODO not hardcode a random number.
+                // Wrap previous elements in the inner span.
+                bc.WrapPrevious(0, attrs);
 
                 // Then apply it outside of the group.
                 //TODO partial inner should be... something else
                 let (inner, rest) = apply_add_inner(bc, &rest, &del.to_vec());
-                    // console_log!("partial B {:?} {:?}", inner, rest);
+                // console_log!("partial B {:?} {:?}", inner, rest);
                 res.place_all(&inner);
                 // console_log!("partial C {:?}", partial);
 
@@ -183,7 +186,7 @@ fn apply_add_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &AddSpa
     }
 }
 
-// TODO replace all occurances of this with apply_add_inner 
+// TODO replace all occurances of this with apply_add_inner
 fn apply_add_outer<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &AddSpan) -> DocSpan {
     let (mut res, remaining) = apply_add_inner(bc, spanvec, addvec);
 
@@ -207,7 +210,7 @@ fn apply_add_outer<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &AddSpa
 }
 
 pub fn apply_add(spanvec: &DocSpan, add: &AddSpan) -> DocSpan {
-    let mut mutator = NullDocMutator { };
+    let mut mutator = NullDocMutator {};
     let ret = apply_add_outer(&mut mutator, spanvec, add);
     ret
 }
@@ -259,22 +262,22 @@ fn apply_del_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &DelSpa
                     if value.char_len() < count {
                         d = DelStyles(count - value.char_len(), styles.clone());
                         value.remove_styles(&styles);
-                            bc.delete(1);
-                            bc.InsertDocString(value.clone());
+                        bc.delete(1);
+                        bc.InsertDocString(value.clone());
                         res.place(&DocChars(value));
                         nextdel = false;
                     } else if value.char_len() > count {
                         let (mut left, right) = value.split_at(count);
                         left.remove_styles(&styles);
-                            bc.delete(1);
-                            bc.InsertDocString(left.clone());
+                        bc.delete(1);
+                        bc.InsertDocString(left.clone());
                         res.place(&DocChars(left));
                         first = DocChars(right);
                         nextfirst = false;
                     } else {
                         value.remove_styles(&styles);
-                            bc.delete(1);
-                            bc.InsertDocString(value.clone());
+                        bc.delete(1);
+                        bc.InsertDocString(value.clone());
                         res.place(&DocChars(value));
                     }
                 }
@@ -286,25 +289,25 @@ fn apply_del_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &DelSpa
                 DocChars(value) => {
                     if value.char_len() < count {
                         d = DelSkip(count - value.char_len());
-                            bc.AdvanceElements(1);
+                        bc.AdvanceElements(1);
                         res.place(&DocChars(value));
                         nextdel = false;
                     } else if value.char_len() > count {
                         let (left, right) = value.split_at(count);
-                            // Assume this should be deleted from the left
-                            bc.skip(count);
+                        // Assume this should be deleted from the left
+                        bc.skip(count);
                         res.place(&DocChars(left));
                         first = DocChars(right);
                         nextfirst = false;
                     } else {
-                            bc.AdvanceElements(1);
+                        bc.AdvanceElements(1);
                         res.place(&DocChars(value));
                         nextdel = true;
                     }
                 }
                 DocGroup(..) => {
                     res.push(first.clone());
-                        bc.AdvanceElements(1);
+                    bc.AdvanceElements(1);
                     if count > 1 {
                         d = DelSkip(count - 1);
                         nextdel = false;
@@ -313,9 +316,9 @@ fn apply_del_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &DelSpa
             },
             DelWithGroup(ref delspan) => match first.clone() {
                 DocGroup(ref attrs, ref span) => {
-                        bc.Enter();
+                    bc.Enter();
                     res.push(DocGroup(attrs.clone(), apply_del_inner(bc, span, delspan)));
-                        bc.Exit();
+                    bc.Exit();
                 }
                 _ => {
                     panic!("Invalid DelWithGroup");
@@ -323,9 +326,9 @@ fn apply_del_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &DelSpa
             },
             DelGroup(ref delspan) => match first.clone() {
                 DocGroup(ref attrs, ref span) => {
-                        bc.Enter();
+                    bc.Enter();
                     res.place_all(&apply_del_inner(bc, span, delspan)[..]);
-                        bc.UnwrapSelf();
+                    bc.UnwrapSelf();
                 }
                 _ => {
                     panic!("Invalid DelGroup");
@@ -342,7 +345,7 @@ fn apply_del_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &DelSpa
                         nextdel = false;
                     } else {
                         // noop
-                            bc.delete(count);
+                        bc.delete(count);
                     }
                 }
                 _ => {
@@ -385,7 +388,7 @@ fn apply_del_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &DelSpa
 }
 
 pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
-    let mut mutator = NullDocMutator { };
+    let mut mutator = NullDocMutator {};
     let ret = apply_del_inner(&mut mutator, spanvec, delvec);
     ret
 }
@@ -405,7 +408,12 @@ pub fn apply_del_bc(spanvec: &DocSpan, del: &DelSpan) -> (DocSpan, Program) {
             for item in &bc.0 {
                 console_log!("      -> {:?}", item);
             }
-            console_log!("\ntest =====> [ {} ]\n\nactual:\n  {:?}\n\ncompare:\n  {:?}\n\n", actual == compare, actual, compare);
+            console_log!(
+                "\ntest =====> [ {} ]\n\nactual:\n  {:?}\n\ncompare:\n  {:?}\n\n",
+                actual == compare,
+                actual,
+                compare
+            );
         }
     }
 

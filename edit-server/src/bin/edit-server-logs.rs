@@ -2,9 +2,8 @@
 
 #[macro_use]
 extern crate quicli;
-extern crate edit_server;
-extern crate serde_json;
-extern crate diesel;
+
+use serde_json;
 
 use edit_server::db::*;
 use quicli::prelude::*;

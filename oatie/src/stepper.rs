@@ -3,14 +3,14 @@
 mod doc_mutator;
 mod doc_stepper;
 
-use crate::macros;
 use crate::doc::*;
+use crate::macros;
+use crate::place::can_element_join;
+use crate::writer::DocWriter;
+use failure::Error;
 use std::cmp;
 use std::collections::HashMap;
 use std::sync::Arc;
-use failure::Error;
-use crate::writer::DocWriter;
-use crate::place::can_element_join;
 
 pub use self::doc_mutator::*;
 pub use self::doc_stepper::*;

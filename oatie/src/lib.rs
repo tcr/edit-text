@@ -18,18 +18,13 @@ extern crate maplit;
 // extern crate rand;
 #[macro_use]
 extern crate serde_derive;
-extern crate serde_json;
-extern crate term_painter;
-extern crate yansi;
+
 #[macro_use]
 extern crate failure;
-extern crate either;
-extern crate regex;
-extern crate ron;
+
 #[macro_use]
 extern crate rental;
-extern crate serde;
-extern crate core;
+
 #[macro_use]
 extern crate wasm_bindgen;
 #[macro_use]
@@ -78,13 +73,13 @@ pub mod writer;
 use crate::apply::*;
 use crate::compose::*;
 use crate::doc::*;
-use std::collections::HashMap;
-use std::fmt::Debug;
 use crate::transform::transform;
 pub use crate::transform::{
     Schema,
     Track,
 };
+use std::collections::HashMap;
+use std::fmt::Debug;
 
 /// A type that can have operational transform applied to it.
 /// The `OT` trait is implemented on an operation object, and its

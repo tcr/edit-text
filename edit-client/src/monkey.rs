@@ -1,6 +1,6 @@
 #![allow(unused_imports)]
 
-extern crate crossbeam_channel;
+use crossbeam_channel;
 
 use crate::{
     button_handlers,
@@ -60,7 +60,7 @@ impl Scheduler {
         let monkey = self.monkey.clone();
 
         let task = Rc::new(task);
-        let load_it: Rc<RefCell<Option<Box<Fn()>>>> = Rc::new(RefCell::new(None));
+        let load_it: Rc<RefCell<Option<Box<dyn Fn()>>>> = Rc::new(RefCell::new(None));
         let load_it_clone = load_it.clone();
         *load_it.borrow_mut() = Some(Box::new(move || {
             // let tx = tx.clone();
@@ -200,19 +200,32 @@ pub fn setup_monkey<C: ClientImpl + Sized>(mut scheduler: Scheduler) {
     scheduler.schedule_random(MONKEY_ARROW, || {
         let mut rng = local_rng();
         let key_code = *rng.choose(&[37, 39, 37, 39, 37, 39, 38, 40]).unwrap();
-        ControllerCommand::Keypress { key_code, meta_key: false, shift_key: false, alt_key: false }
+        ControllerCommand::Keypress {
+            key_code,
+            meta_key: false,
+            shift_key: false,
+            alt_key: false,
+        }
     });
 
-    scheduler.schedule_random(MONKEY_BACKSPACE, || {
-        ControllerCommand::Keypress { key_code: 8, meta_key: false, shift_key: false, alt_key: false }
+    scheduler.schedule_random(MONKEY_BACKSPACE, || ControllerCommand::Keypress {
+        key_code: 8,
+        meta_key: false,
+        shift_key: false,
+        alt_key: false,
     });
 
-    scheduler.schedule_random(MONKEY_ENTER, || {
-        ControllerCommand::Keypress { key_code: 13, meta_key: false, shift_key: false, alt_key: false }
+    scheduler.schedule_random(MONKEY_ENTER, || ControllerCommand::Keypress {
+        key_code: 13,
+        meta_key: false,
+        shift_key: false,
+        alt_key: false,
     });
 
     scheduler.schedule_random(MONKEY_CLICK, || {
         let mut rng = local_rng();
-        ControllerCommand::RandomTarget { position: rng.gen::<f64>() }
+        ControllerCommand::RandomTarget {
+            position: rng.gen::<f64>(),
+        }
     });
 }

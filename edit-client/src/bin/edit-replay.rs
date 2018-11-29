@@ -1,16 +1,9 @@
-extern crate crossbeam_channel;
-extern crate edit_client;
-extern crate edit_common;
-extern crate failure;
-extern crate ron;
+use ron;
 #[macro_use]
 extern crate maplit;
-extern crate colored;
+
 #[macro_use]
 extern crate quicli;
-extern crate structopt;
-#[macro_use]
-extern crate structopt_derive;
 
 // use quicli::prelude::*;
 use colored::Colorize;
@@ -19,8 +12,8 @@ use crossbeam_channel::{
     Receiver,
 };
 use edit_client::{
-    log::*,
     client::ClientDoc,
+    log::*,
     proxy::ProxyClient,
     Client,
     ClientImpl,
@@ -33,6 +26,8 @@ use std::sync::{
     Arc,
 };
 use structopt::StructOpt;
+use std::rc::Rc;
+use std::cell::RefCell;
 
 fn init_new_client(
     client_id: &str,
@@ -44,7 +39,7 @@ fn init_new_client(
     let (tx_client, rx_client) = unbounded();
     let (tx_sync, rx_sync) = unbounded();
     let client = ProxyClient {
-        state: Client {
+        state: Rc::new(RefCell::new(Client {
             client_id: client_id.to_owned(),
             client_doc: ClientDoc::new(),
             last_controls: None,
@@ -52,7 +47,7 @@ fn init_new_client(
             monkey: Arc::new(AtomicBool::new(false)),
             alive: Arc::new(AtomicBool::new(true)),
             task_count: 0,
-        },
+        })),
 
         tx_client,
         tx_sync,

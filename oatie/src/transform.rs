@@ -177,13 +177,14 @@ where
         log_transform!("dump all {:?}", self.tracks);
 
         if let Some(last) = self.tracks.last() {
-            if S::track_type_from_attrs(b) == S::track_type_from_attrs(
-                last.tag_a
-                    .as_ref()
-                    .or(last.tag_real.as_ref())
-                    .or(last.tag_b.as_ref())
-                    .unwrap(),
-            ) {
+            if S::track_type_from_attrs(b)
+                == S::track_type_from_attrs(
+                    last.tag_a
+                        .as_ref()
+                        .or(last.tag_real.as_ref())
+                        .or(last.tag_b.as_ref())
+                        .unwrap(),
+                ) {
                 log_transform!("-----> UGH {:?}", last);
                 panic!("Should not have consecutive similar tracks.");
             }
@@ -724,13 +725,14 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                         b.exit();
                         t.close();
                     } else if a_tag.is_some()
-                        && (b_tag.is_none() || S::track_type_from_attrs(a_tag.as_ref().unwrap())
-                            .unwrap()
-                            .ancestors()
-                            .iter()
-                            .any(|x| {
-                                *x == S::track_type_from_attrs(b_tag.as_ref().unwrap()).unwrap()
-                            })) {
+                        && (b_tag.is_none()
+                            || S::track_type_from_attrs(a_tag.as_ref().unwrap())
+                                .unwrap()
+                                .ancestors()
+                                .iter()
+                                .any(|x| {
+                                    *x == S::track_type_from_attrs(b_tag.as_ref().unwrap()).unwrap()
+                                })) {
                         // t.interrupt(a_tag);
                         a.exit();
                         t.close_a();

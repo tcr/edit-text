@@ -19,16 +19,16 @@ use edit_common::simple_ws::*;
 use failure::Error;
 use oatie::doc::*;
 use rand::{
-        thread_rng,
-        Rng,
-    };
+    thread_rng,
+    Rng,
+};
 use serde_json;
 use std::env;
 use std::{
-        collections::HashMap,
-        thread,
-        time::Duration,
-    };
+    collections::HashMap,
+    thread,
+    time::Duration,
+};
 use url::Url;
 use ws;
 

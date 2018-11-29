@@ -5,7 +5,10 @@ use serde::{
         Visitor,
     },
     ser::SerializeSeq,
-    Deserialize, Deserializer, Serialize, Serializer,
+    Deserialize,
+    Deserializer,
+    Serialize,
+    Serializer,
 };
 use std::{
     collections::{
@@ -31,7 +34,7 @@ pub enum Style {
 }
 
 impl fmt::Display for Style {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Debug::fmt(self, f)
     }
 }
@@ -77,10 +80,12 @@ impl DocString {
     pub fn remove_styles(&mut self, styles: &StyleSet) {
         if let &mut Some(ref mut self_styles) = &mut self.2 {
             let mut new_styles: StyleMap = (**self_styles).clone();
-            *self_styles = Arc::new(new_styles
-                .drain()
-                .filter(|(ref x, _)| !styles.contains(x))
-                .collect());
+            *self_styles = Arc::new(
+                new_styles
+                    .drain()
+                    .filter(|(ref x, _)| !styles.contains(x))
+                    .collect(),
+            );
         } else {
             // no-op
         }
@@ -103,8 +108,6 @@ impl DocString {
         self.0 = Arc::new(value);
         self.1 = None;
     }
-
-    
 
     // TODO consume self?
     pub fn split_at(&self, char_boundary: usize) -> (DocString, DocString) {
@@ -227,7 +230,7 @@ impl<'de> Deserialize<'de> for DocString {
         impl<'de> Visitor<'de> for FieldVisitor {
             type Value = DocString;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 formatter.write_str("docstring")
             }
 
@@ -262,7 +265,7 @@ impl<'de> Deserialize<'de> for DocString {
 use crate::doc::DocElement;
 
 /// Indexes into a DocString, tracking two owned DocStrings left() and right() which
-/// can be retrieved by reference. Because indexing into the string is 
+/// can be retrieved by reference. Because indexing into the string is
 /// performed on DocString internals, this makes scanning a Unicode string
 /// much faster than split_at().
 #[derive(Clone, Debug, PartialEq)]
@@ -282,9 +285,7 @@ impl CharCursor {
 
     pub fn left<'a>(&'a self) -> Option<&'a DocString> {
         if let DocElement::DocChars(ref left_text) = &self.left_string {
-            if unsafe {
-                left_text.try_byte_range().unwrap().len() == 0
-            } {
+            if unsafe { left_text.try_byte_range().unwrap().len() == 0 } {
                 None
             } else {
                 Some(left_text)
@@ -296,9 +297,7 @@ impl CharCursor {
 
     pub fn right<'a>(&'a self) -> Option<&'a DocString> {
         if let DocElement::DocChars(ref right_text) = &self.right_string {
-            if unsafe {
-                right_text.try_byte_range().unwrap().len() == 0
-            } {
+            if unsafe { right_text.try_byte_range().unwrap().len() == 0 } {
                 None
             } else {
                 Some(right_text)
@@ -310,9 +309,7 @@ impl CharCursor {
 
     pub fn left_element<'a>(&'a self) -> Option<&'a DocElement> {
         if let DocElement::DocChars(ref left_text) = &self.left_string {
-            if unsafe {
-                left_text.try_byte_range().unwrap().len() == 0
-            } {
+            if unsafe { left_text.try_byte_range().unwrap().len() == 0 } {
                 None
             } else {
                 Some(&self.left_string)
@@ -324,9 +321,7 @@ impl CharCursor {
 
     pub fn right_element<'a>(&'a self) -> Option<&'a DocElement> {
         if let DocElement::DocChars(ref right_text) = &self.right_string {
-            if unsafe {
-                right_text.try_byte_range().unwrap().len() == 0
-            } {
+            if unsafe { right_text.try_byte_range().unwrap().len() == 0 } {
                 None
             } else {
                 Some(&self.right_string)
@@ -362,7 +357,10 @@ impl CharCursor {
             // TODO this is incorrect (unwrap_or should be str len),
             // try_byte_range really needs to be replaced
             // with something that guarantees a range
-            self.right().and_then(|text| text.try_byte_range()).map(|x| x.len()).unwrap_or(0)
+            self.right()
+                .and_then(|text| text.try_byte_range())
+                .map(|x| x.len())
+                .unwrap_or(0)
         }
     }
 
@@ -370,7 +368,8 @@ impl CharCursor {
         self.index += add;
         unsafe {
             self.right_text_mut().seek_start_forward(add);
-            self.left_text_mut().byte_range_mut().end = self.right_text_mut().byte_range_mut().start;
+            self.left_text_mut().byte_range_mut().end =
+                self.right_text_mut().byte_range_mut().start;
         }
     }
 
@@ -378,7 +377,8 @@ impl CharCursor {
         self.index -= sub;
         unsafe {
             self.right_text_mut().seek_start_backward(sub);
-            self.left_text_mut().byte_range_mut().end = self.right_text_mut().byte_range_mut().start;
+            self.left_text_mut().byte_range_mut().end =
+                self.right_text_mut().byte_range_mut().start;
         }
     }
 

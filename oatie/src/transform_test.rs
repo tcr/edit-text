@@ -1,6 +1,6 @@
 //! Helper methods for performing transform tests.
 
-extern crate ron;
+use ron;
 
 use serde_json::Value;
 use std::collections::HashMap;
@@ -17,8 +17,8 @@ use super::validate::{
     ValidateContext,
 };
 use super::OT;
-use failure::Error;
 use crate::parse::*;
+use failure::Error;
 use regex::Regex;
 use serde_json;
 use yansi::Paint;

@@ -2,7 +2,7 @@
 
 import 'react';
 
-import {ControllerCommand} from '../bindgen/edit_client';
+import {ControllerCommand, ServerCommand} from '../bindgen/edit_client';
 
 export interface ControllerImpl {
   onMessage: (msg: any) => void | null;
@@ -15,7 +15,7 @@ export interface ControllerImpl {
 export interface ServerImpl {
   onClose: () => void | null;
   connect(onError: (message: React.ReactNode) => void): Promise<void>;
-  sendCommand(command: any): Promise<void>;
+  sendCommand(command: ServerCommand): void;
 }
 
 export class NullServer implements ServerImpl {

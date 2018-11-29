@@ -1,5 +1,3 @@
-extern crate oatie;
-
 use oatie::schema::RtfSchema;
 use oatie::transform_test::*;
 use std::io;

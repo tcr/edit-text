@@ -59,9 +59,7 @@ fn launch_webdriver() -> Result<(u16, SpawnGuard), Error> {
         }
     };
 
-    cmd
-        .stdout(Stdio::null())
-        .stderr(Stdio::null());
+    cmd.stdout(Stdio::null()).stderr(Stdio::null());
 
     // Launch child.
     Ok((

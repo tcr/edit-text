@@ -3,30 +3,19 @@
 #![feature(extern_in_paths)]
 #![feature(proc_macro_hygiene)]
 
-extern crate include_dir_macro;
-
-extern crate crossbeam_channel;
-extern crate edit_common;
-extern crate edit_server;
-extern crate maplit;
 #[macro_use]
 extern crate oatie;
-extern crate rand;
+
 #[macro_use]
 extern crate rouille;
-extern crate serde;
-extern crate structopt;
-extern crate structopt_derive;
-extern crate take_mut;
-extern crate url;
+
 #[macro_use]
 extern crate failure;
-extern crate handlebars;
-extern crate md5;
-extern crate mime_guess;
-extern crate reqwest;
-extern crate ron;
-extern crate ws;
+
+use md5;
+
+use reqwest;
+
 #[macro_use]
 extern crate serde_json;
 
@@ -71,7 +60,7 @@ trait Dir: Sync + Send {
         self.get(path).is_some()
     }
 
-    fn clone(&self) -> Box<Dir>;
+    fn clone(&self) -> Box<dyn Dir>;
 
     fn md5(&self, path: &Path) -> Option<String>;
 }
@@ -84,7 +73,7 @@ impl Dir for InlineDir {
         self.0.get(path).map(|x| x.to_vec())
     }
 
-    fn clone(&self) -> Box<Dir> {
+    fn clone(&self) -> Box<dyn Dir> {
         Box::new(InlineDir(self.0.clone()))
     }
 
@@ -119,7 +108,7 @@ impl Dir for LocalDir {
         }
     }
 
-    fn clone(&self) -> Box<Dir> {
+    fn clone(&self) -> Box<dyn Dir> {
         Box::new(LocalDir(self.0.clone()))
     }
 
@@ -158,9 +147,9 @@ Developer: [@trimryan](http://twitter.com/trimryan)
 }
 
 fn run_http_server(port: u16, client_proxy: bool) {
-    let dist_dir: Box<Dir>;
-    let template_dir: Box<Dir>;
-    let static_dir: Box<Dir>;
+    let dist_dir: Box<dyn Dir>;
+    let template_dir: Box<dyn Dir>;
+    let static_dir: Box<dyn Dir>;
     if cfg!(feature = "standalone") {
         dist_dir = Box::new(InlineDir(include_dir!("edit-frontend/dist")));
         template_dir = Box::new(InlineDir(include_dir!("edit-frontend/templates")));
@@ -465,11 +454,7 @@ struct Opt {
     #[structopt(long = "port", help = "Port", default_value = "8000")]
     port: u16,
 
-    #[structopt(
-        help = "Enable client proxy",
-        long = "client-proxy",
-        short = "c"
-    )]
+    #[structopt(help = "Enable client proxy", long = "client-proxy", short = "c")]
     client_proxy: bool,
 }
 

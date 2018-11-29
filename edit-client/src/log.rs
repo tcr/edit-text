@@ -1,4 +1,4 @@
-extern crate crossbeam_channel;
+use crossbeam_channel;
 
 use self::crossbeam_channel::Sender;
 use super::client;

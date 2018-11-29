@@ -6,6 +6,7 @@ license = "MIT OR Apache-2.0"
 name = "oatie"
 repository = "https://github.com/tcr/edit-text"
 version = "0.3.0"
+edition = "2018"
 
 [dependencies]
 either = "1.4.0"

@@ -76,7 +76,6 @@ impl<'a, 'b> Iterator for DocToMarkdown<'a, 'b> {
                 res
             }
             Some(DocChars(ref text)) => {
-
                 // Styling.
                 let text_event = Event::Text(text.to_string().replace("\n", "  \n").into());
                 let res = if let Some(styles) = text.styles() {

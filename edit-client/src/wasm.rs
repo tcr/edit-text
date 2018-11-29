@@ -1,19 +1,8 @@
 //! Contains the bindings needed for WASM.
 
-extern crate console_error_panic_hook;
-extern crate edit_common;
-extern crate failure;
-extern crate maplit;
-extern crate oatie;
-extern crate rand;
-extern crate serde;
-extern crate serde_json;
-extern crate take_mut;
-extern crate wbg_rand;
-extern crate js_sys;
-
 use super::client::*;
 use super::monkey::*;
+use console_error_panic_hook;
 use edit_common::markdown::doc_to_markdown;
 use edit_common::{
     commands::*,
@@ -21,14 +10,17 @@ use edit_common::{
     markdown::markdown_to_doc,
 };
 use failure::Error;
+use js_sys;
+use serde_json;
 use serde_json::Value;
+use std::rc::Rc;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
-use std::rc::Rc;
 use wasm_bindgen::prelude::*;
-use web_sys;
 use wasm_bindgen::JsCast;
+use std::cell::{RefCell, RefMut};
+use web_sys;
 
 lazy_static! {
     static ref WASM_ALIVE: Arc<AtomicBool> = Arc::new(AtomicBool::new(true));
@@ -53,7 +45,7 @@ extern "C" {
     #[wasm_bindgen(js_namespace = console)]
     pub fn error(msg: &str);
 
-    pub fn setTimeout(closure: &Closure<FnMut()>, time: u32);
+    pub fn setTimeout(closure: &Closure<dyn FnMut()>, time: u32);
 }
 
 // A macro to provide `println!(..)`-style syntax for `console.log` logging.
@@ -82,12 +74,12 @@ pub fn convertMarkdownToDoc(input: &str) -> String {
 
 #[wasm_bindgen]
 pub struct WasmClient {
-    state: Client,
+    state: Rc<RefCell<Client>>,
 }
 
 impl ClientImpl for WasmClient {
-    fn state(&mut self) -> &mut Client {
-        &mut self.state
+    fn state(&mut self) -> RefMut<Client> {
+        self.state.borrow_mut()
     }
 
     fn send_client(&self, req: &FrontendCommand) -> Result<(), Error> {
@@ -115,7 +107,7 @@ pub fn wasm_setup() -> WasmClient {
     // setup_monkey::<WasmClient>(Scheduler::new(WASM_ALIVE.clone(), WASM_MONKEY.clone()));
 
     let mut client = WasmClient {
-        state: Client {
+        state: Rc::new(RefCell::new(Client {
             client_id: editor_id,
             client_doc: ClientDoc::new(),
             last_controls: None,
@@ -123,7 +115,7 @@ pub fn wasm_setup() -> WasmClient {
             monkey: WASM_MONKEY.clone(),
             alive: WASM_ALIVE.clone(),
             task_count: 0,
-        },
+        })),
     };
 
     client.setup_controls(None);
@@ -132,10 +124,22 @@ pub fn wasm_setup() -> WasmClient {
 }
 
 #[wasm_bindgen]
+pub struct WebsocketSend {
+    closure: Box<FnMut(String)>,
+}
+
+#[wasm_bindgen]
+impl WebsocketSend {
+    pub fn call(&mut self, value: String) {
+        (self.closure)(value);
+    }
+}
+
+#[wasm_bindgen]
 #[allow(non_snake_case)]
 impl WasmClient {
     pub fn client_id(&self) -> String {
-        self.state.client_id.clone()
+        self.state.borrow().client_id.clone()
     }
 
     /// Handle a Client or Controller command. [sic]
@@ -171,7 +175,11 @@ impl WasmClient {
                 }
             }
             Err(err) => {
-                console_log!("error parsing task:\n  task: {:?}\n  error: {:?}", input, err);
+                console_log!(
+                    "error parsing task:\n  task: {:?}\n  error: {:?}",
+                    input,
+                    err
+                );
                 return 1;
             }
         }
@@ -184,64 +192,68 @@ impl WasmClient {
         doc_to_markdown(&self.state().client_doc.doc.0).unwrap()
     }
 
-    pub fn subscribeServer(&mut self, ws_url: String, command_callback: js_sys::Function) -> Result<(), JsValue> {
+    pub fn subscribeServer(
+        &mut self,
+        ws_url: String,
+        command_callback: js_sys::Function,
+    ) -> Result<WebsocketSend, JsValue> {
         let command_callback = Rc::new(command_callback);
 
         let ws = Rc::new(web_sys::WebSocket::new(&ws_url)?);
 
         {
             let _command_callback = command_callback.clone();
-            let closure = Closure::wrap(Box::new(move |event: web_sys::Event| {
+            let closure = Closure::wrap(Box::new(move |_event: web_sys::Event| {
                 // console.debug('server socket opened.');
                 // DEBUG.measureTime('connect-ready');
                 console_log!("####### SERVER SOCKET OPENED");
-
-            }) as Box<FnMut(_)>);
+            }) as Box<dyn FnMut(_)>);
             ws.add_event_listener_with_callback("open", closure.as_ref().unchecked_ref())?;
             closure.forget();
         }
+
+        let client = self.state.clone();
 
         // let client = self.clone();
         {
             let command_callback = command_callback.clone();
             let closure = Closure::wrap(Box::new(move |event: web_sys::MessageEvent| {
-                // console_log!("message {:?}", event.data().as_string().unwrap());
+                let data = event.data().as_string().unwrap();
+                let command: ClientCommand = serde_json::from_str(&data).unwrap();
 
-                // let client_command = js_sys::JSON::parse(&event.data().as_string().unwrap()).unwrap();
-                // client.client_task(Task::ClientCommand(...));
-                command_callback.call1(&JsValue::NULL, &js_sys::JSON::parse(&event.data().as_string().unwrap()).unwrap());
+                // Notify client to do client logging
+                command_callback.call1(
+                    &JsValue::NULL,
+                    &js_sys::JSON::parse(&event.data().as_string().unwrap()).unwrap(),
+                ).unwrap();
 
-
-
-                // vvvvvvvv
-
-                
-                // TODO replace this with the SELF-REFERENTIAL rc<Client> that htis client holds,
-                // so that we don't have to change the state() interface at all but can get the benefits of sharing
-                // this client with child js closures. untangle this mess later.
-
-
-
-                //^^^^
-
-
-
-            }) as Box<FnMut(_)>);
+                // TODO why do we have to create a whole wasmclient clone exactly
+                // Handle the client command.
+                (WasmClient {
+                    state: client.clone(),
+                }).handle_task(Task::ClientCommand(command)).expect("Client task failed");
+            }) as Box<dyn FnMut(_)>);
             ws.add_event_listener_with_callback("message", closure.as_ref().unchecked_ref())?;
             closure.forget();
         }
 
         {
             let command_callback = command_callback.clone();
-            let closure = Closure::wrap(Box::new(move |event: web_sys::CloseEvent| {
+            let closure = Closure::wrap(Box::new(move |_event: web_sys::CloseEvent| {
                 let command = FrontendCommand::ServerDisconnect;
                 command_callback.call1(&JsValue::NULL, &JsValue::from_serde(&command).unwrap());
-            }) as Box<FnMut(_)>);
+            }) as Box<dyn FnMut(_)>);
             ws.add_event_listener_with_callback("close", closure.as_ref().unchecked_ref())?;
             closure.forget();
         }
 
-        Ok(())
+        Ok({
+            WebsocketSend {
+                closure: Box::new(move |value: String| {
+                    ws.send_with_str(&value);
+                }),
+            }
+        })
     }
 }
 

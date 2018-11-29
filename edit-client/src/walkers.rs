@@ -149,7 +149,7 @@ impl<'a> ReverseCaretStepper<'a> {
     pub fn is_valid_caret_pos(&self) -> bool {
         // Skip over all preceding carets so we can identify the previous node
         // more easily.
-        
+
         // Fast-path
         if let Some(DocChars(..)) = self.doc.unhead() {
             return true;
@@ -173,8 +173,8 @@ impl<'a> ReverseCaretStepper<'a> {
                 break;
             }
         }
-        
-        // Identically repeat fast-path logic 
+
+        // Identically repeat fast-path logic
         if let Some(DocChars(..)) = doc2.unhead() {
             return true;
         } else if doc2.unhead().is_none() {
@@ -248,7 +248,7 @@ impl<'a> Walker<'a> {
         }
     }
 
-    pub fn doc(&self) -> &'a DocStepper {
+    pub fn doc(&self) -> &'a DocStepper<'_> {
         &self.stepper.doc
     }
 
@@ -650,7 +650,7 @@ impl<'a> Walker<'a> {
         OpWriter { del, add }
     }
 
-    pub fn stepper(&self) -> &'a DocStepper {
+    pub fn stepper(&self) -> &'a DocStepper<'_> {
         &self.stepper.doc
     }
 }
