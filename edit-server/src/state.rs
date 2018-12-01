@@ -1,15 +1,13 @@
 //! Sync state. This is a candidate file to be moved into Oatie.
 
-use extern::{
-    failure::Error,
-    oatie::{
-        doc::*,
-        schema::RtfSchema,
-        validate::validate_doc,
-        OT,
-    },
-    std::collections::HashMap,
+use failure::Error;
+use oatie::{
+    doc::*,
+    schema::RtfSchema,
+    validate::validate_doc,
+    OT,
 };
+use std::collections::HashMap;
 
 pub struct SyncState {
     pub version: usize,

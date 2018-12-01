@@ -72,7 +72,12 @@ impl ClientDoc {
 
     /// Sync gave us an operation not originating from us.
     // TODO we can determine new_doc without needing it passed in
-    pub fn sync_sent_new_version(&mut self, new_doc: &Doc, version: usize, input_op: &Op) -> (Doc, Op) {
+    pub fn sync_sent_new_version(
+        &mut self,
+        new_doc: &Doc,
+        version: usize,
+        input_op: &Op,
+    ) -> (Doc, Op) {
         // log_wasm!(SyncNew("new_op".into()));
         self.assert_compose_correctness(None);
 

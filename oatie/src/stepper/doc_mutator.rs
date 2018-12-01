@@ -81,8 +81,7 @@ pub trait DocMutator {
     }
 }
 
-pub struct NullDocMutator {
-}
+pub struct NullDocMutator {}
 
 impl DocMutator for NullDocMutator {
     fn Enter(&mut self) {
@@ -123,7 +122,6 @@ impl DocMutator for NullDocMutator {
     }
 }
 
-
 #[derive(Clone, Debug, Serialize, Deserialize, TypescriptDefinition)]
 #[serde(tag = "tag", content = "fields")]
 pub enum Bytecode {
@@ -140,7 +138,6 @@ pub enum Bytecode {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Program(pub Vec<Bytecode>);
 
-
 #[derive(Clone, Debug)]
 pub struct RecordingDocMutator<'a> {
     bc: Program,
@@ -149,7 +146,7 @@ pub struct RecordingDocMutator<'a> {
 }
 
 impl<'a> RecordingDocMutator<'a> {
-    pub fn stepper(&'a self) -> &'a DocStepper {
+    pub fn stepper(&'a self) -> &'a DocStepper<'_> {
         &self.stepper
     }
 
@@ -160,7 +157,7 @@ impl<'a> RecordingDocMutator<'a> {
         (writer.result().map(|doc| (doc, bc)))
     }
 
-    pub fn new(stepper: DocStepper) -> RecordingDocMutator {
+    pub fn new(stepper: DocStepper<'_>) -> RecordingDocMutator<'_> {
         RecordingDocMutator {
             bc: Program(vec![]),
             stepper,
@@ -179,7 +176,9 @@ impl<'a> RecordingDocMutator<'a> {
                 self.writer.place(&DocChars(partial.clone()));
                 self.stepper.next();
                 return true;
-            } else if let (Some(ref previous), Some(ref head)) = (self.writer.past.last(), self.stepper.head())  {
+            } else if let (Some(ref previous), Some(ref head)) =
+                (self.writer.past.last(), self.stepper.head())
+            {
                 // Full string, but last written state was a doc string.
                 if can_element_join(previous, head) {
                     self.bc.place(Bytecode::JoinTextLeft);
@@ -300,16 +299,17 @@ impl<'a> DocMutator for RecordingDocMutator<'a> {
 
     fn skip(&mut self, count: usize) {
         let last_index = self.stepper.head_index();
-        
+
         self.stepper.skip(count);
 
         let new_index = self.stepper.head_index();
-        self.writer.place_all(&self.stepper.current().1[last_index..new_index].to_owned());
+        self.writer
+            .place_all(&self.stepper.current().1[last_index..new_index].to_owned());
         if new_index - last_index > 0 {
             self.AdvanceElements(new_index - last_index);
         } else {
             // We're on the same element, possibly a text node.
-        
+
             // console_log!(" -----> post skip {:?} is {:?}", count, self.stepper.cursor.suffix().char_cursor.clone());
             // TODO don't address char_cursor directly?
             if let Some(ref cursor) = &self.stepper.char_cursor.clone() {
@@ -318,7 +318,7 @@ impl<'a> DocMutator for RecordingDocMutator<'a> {
                     if left.char_len() == count {
                         self.bc.place(Bytecode::DeleteElements(1)); // It's over, delete time
                         self.InsertDocString(left.clone()); // Insert the left part of string
-                        // The right part of the string is added WHEN
+                                                            // The right part of the string is added WHEN
                         return;
                     } else {
                         // Partial advancement

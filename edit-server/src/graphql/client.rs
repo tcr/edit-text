@@ -1,9 +1,7 @@
-use extern::{
-    failure::Error,
-    oatie::doc::*,
-    reqwest,
-    serde_json,
-};
+use failure::Error;
+use oatie::doc::*;
+use reqwest;
+use serde_json;
 
 pub fn get_all_pages_graphql() -> Option<Vec<String>> {
     let client = reqwest::Client::new();

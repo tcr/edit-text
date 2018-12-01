@@ -37,7 +37,7 @@ impl<'a> DocStepper<'a> {
     /// cursor if we've reached a group.
     //TODO rename char_cursor_reset ?
     //TODO pub(crate) plz?
-    pub fn char_cursor_update(&mut self) { 
+    pub fn char_cursor_update(&mut self) {
         let cursor = if let Some(&DocChars(ref text)) = self.head_raw() {
             Some(CharCursor::from_docstring(text))
         } else {
@@ -47,9 +47,9 @@ impl<'a> DocStepper<'a> {
     }
 
     pub fn char_index(&self) -> Option<usize> {
-        self.char_cursor.as_ref().map(
-            |cc| cc.left().map(|s| s.char_len()).unwrap_or(0)
-        )
+        self.char_cursor
+            .as_ref()
+            .map(|cc| cc.left().map(|s| s.char_len()).unwrap_or(0))
     }
 
     /// Move to the last character - 1 of the current string, or clear the
@@ -67,18 +67,21 @@ impl<'a> DocStepper<'a> {
     }
 
     pub fn char_cursor_expect(&self) -> &CharCursor {
-        self.char_cursor.as_ref()
+        self.char_cursor
+            .as_ref()
             .expect("Expected a generated char cursor")
     }
 
     fn char_cursor_expect_add(&mut self, add: usize) {
-        self.char_cursor.as_mut()
+        self.char_cursor
+            .as_mut()
             .expect("Expected a generated char cursor")
             .value_add(add);
     }
 
     fn char_cursor_expect_sub(&mut self, sub: usize) {
-        self.char_cursor.as_mut()
+        self.char_cursor
+            .as_mut()
             .expect("Expected a generated char cursor")
             .value_sub(sub);
     }
@@ -128,9 +131,12 @@ impl<'a> DocStepper<'a> {
 
     pub(crate) fn unhead_raw<'h>(&'h self) -> Option<&'a DocElement> {
         // If we've split a string, don't modify the index.
-        if self.char_cursor.as_ref()
+        if self
+            .char_cursor
+            .as_ref()
             .map(|c| c.value() > 0)
-            .unwrap_or(false) {
+            .unwrap_or(false)
+        {
             return self.head_raw();
         }
 
@@ -155,7 +161,11 @@ impl<'a> DocStepper<'a> {
             Some(&DocChars(ref text)) => {
                 // Expect cursor is at a string of length 1 at least
                 // (meaning cursor has not passed to the end of the string)
-                Some(self.char_cursor_expect().right_element().expect("Encountered empty DocString"))
+                Some(
+                    self.char_cursor_expect()
+                        .right_element()
+                        .expect("Encountered empty DocString"),
+                )
             }
             Some(ref value) => Some(value),
             None => None,
@@ -202,7 +212,7 @@ impl<'a> DocStepper<'a> {
                 }
             }
         }
-    } 
+    }
 
     pub fn skip(&mut self, mut skip: usize) {
         if let Some(ref char_cursor) = &self.char_cursor {
@@ -263,7 +273,7 @@ impl<'a> DocStepper<'a> {
     pub fn is_done(&self) -> bool {
         self.at_root() && self.head_raw().is_none()
     }
-    
+
     pub fn unenter(&mut self) -> &mut Self {
         self.stack.pop();
         self.char_cursor_update();
@@ -302,7 +312,6 @@ impl<'a> DocStepper<'a> {
         self.next();
         attrs
     }
-
 }
 
 #[cfg(test)]
@@ -324,7 +333,10 @@ mod tests {
         let mut stepper = DocStepper::new(&doc);
         stepper.enter();
         stepper.skip(2);
-        assert_eq!(stepper.head().unwrap(), &DocChars(DocString::from_str("ol")));
+        assert_eq!(
+            stepper.head().unwrap(),
+            &DocChars(DocString::from_str("ol"))
+        );
     }
 
     #[test]

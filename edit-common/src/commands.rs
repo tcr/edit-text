@@ -3,7 +3,7 @@ use wasm_bindgen::prelude::*;
 use wasm_typescript_definition::*;
 
 // The server is the synchronization server.
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, TypescriptDefinition)]
 #[serde(tag = "tag", content = "fields")]
 pub enum ServerCommand {
     // Connect(String),
@@ -13,7 +13,7 @@ pub enum ServerCommand {
 }
 
 // Client is an individual user / machine.
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, TypescriptDefinition)]
 #[serde(tag = "tag", content = "fields")]
 pub enum ClientCommand {
     // Client id assignment, initial doc, initial version
@@ -37,7 +37,7 @@ pub enum ControllerCommand {
         alt_key: bool,
     },
     Button {
-        button: u32
+        button: u32,
     },
     Character {
         char_code: u32,
@@ -61,7 +61,6 @@ pub enum ControllerCommand {
     },
 }
 
-
 // Frontend is the editor components in JavaScript.
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, TypescriptDefinition)]
 #[serde(tag = "tag", content = "fields")]
@@ -75,6 +74,8 @@ pub enum FrontendCommand {
     RenderFull(String),
     Error(String),
     ServerCommand(ServerCommand),
+
+    ServerDisconnect,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]

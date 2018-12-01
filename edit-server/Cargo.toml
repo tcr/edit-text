@@ -2,6 +2,7 @@
 authors = ["Tim Ryan <id@timryan.org>"]
 name = "edit-server"
 version = "0.1.0"
+edition = "2018"
 
 [dependencies]
 colored = "1.6.0"

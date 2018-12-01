@@ -1,17 +1,16 @@
 #![allow(unused_imports)]
 
-extern crate env_logger;
+use env_logger;
 #[macro_use]
 extern crate log;
 #[macro_use]
 extern crate oatie;
-extern crate term_painter;
 
 use oatie::apply::*;
 use oatie::compose::*;
 use oatie::doc::*;
-use oatie::*;
 use oatie::normalize::*;
+use oatie::*;
 use std::collections::HashMap;
 
 fn test_start() {

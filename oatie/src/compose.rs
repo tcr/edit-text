@@ -1,15 +1,15 @@
 //! Composes two operations together.
 
-use doc::*;
+use crate::doc::*;
 use std::borrow::ToOwned;
 use std::cmp;
 use std::collections::HashMap;
 
-use apply_add;
-use apply_delete;
-use apply_operation;
-use normalize;
-use stepper::*;
+use crate::apply_add;
+use crate::apply_delete;
+use crate::apply_operation;
+use crate::normalize;
+use crate::stepper::*;
 
 fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepper) {
     while !a.is_done() && !b.is_done() {

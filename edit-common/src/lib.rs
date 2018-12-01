@@ -1,25 +1,13 @@
 #![feature(custom_attribute, nll)]
 
-extern crate failure;
 #[macro_use]
 extern crate maplit;
-extern crate oatie;
-extern crate rand;
-extern crate regex;
-extern crate serde;
-extern crate taken;
+
 #[macro_use]
 extern crate serde_derive;
-extern crate colored;
-extern crate htmlescape;
-extern crate pulldown_cmark;
-extern crate pulldown_cmark_to_cmark;
-extern crate ron;
-extern crate serde_json;
-extern crate take_mut;
-#[cfg(not(target_arch = "wasm32"))]
-extern crate ws;
-extern crate wasm_bindgen;
+
+use serde_json;
+
 #[macro_use]
 extern crate wasm_typescript_definition;
 

@@ -19,6 +19,7 @@ use oatie::{
     validate::validate_doc,
     OT,
 };
+use serde_json;
 use std::{
     char::from_u32,
     sync::atomic::{
@@ -27,11 +28,16 @@ use std::{
     },
     sync::Arc,
 };
-use serde_json;
 
 // Shorthandler
 // code, meta, shift, alt, callback
-struct KeyHandler<C: ClientImpl>(u32, bool, bool, bool, Box<Fn(&mut C) -> Result<(), Error>>);
+struct KeyHandler<C: ClientImpl>(
+    u32,
+    bool,
+    bool,
+    bool,
+    Box<dyn Fn(&mut C) -> Result<(), Error>>,
+);
 
 impl<C: ClientImpl> KeyHandler<C> {
     fn matches(&self, code: u32, meta_key: bool, shift_key: bool, alt_key: bool) -> bool {
@@ -154,8 +160,8 @@ fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
 
 pub fn button_handlers<C: ClientImpl>(
     state: Option<(String, bool)>,
-) -> (Vec<Box<Fn(&mut C) -> Result<(), Error>>>, Vec<Ui>) {
-    let mut callbacks: Vec<Box<Fn(&mut C) -> Result<(), Error>>> = vec![];
+) -> (Vec<Box<dyn Fn(&mut C) -> Result<(), Error>>>, Vec<Ui>) {
+    let mut callbacks: Vec<Box<dyn Fn(&mut C) -> Result<(), Error>>> = vec![];
 
     macro_rules! callback {
         ($t:expr) => {{
@@ -263,7 +269,12 @@ fn native_command<C: ClientImpl>(client: &mut C, req: ControllerCommand) -> Resu
                 .get(index as usize)
                 .map(|handler| handler(client));
         }
-        ControllerCommand::Keypress { key_code, meta_key, shift_key, alt_key } => {
+        ControllerCommand::Keypress {
+            key_code,
+            meta_key,
+            shift_key,
+            alt_key,
+        } => {
             println!(
                 "key: {:?} {:?} {:?} {:?}",
                 key_code, meta_key, shift_key, alt_key
@@ -313,7 +324,7 @@ fn native_command<C: ClientImpl>(client: &mut C, req: ControllerCommand) -> Resu
                 (None, None) => {} // ???
             }
         }
-        ControllerCommand::Monkey { enabled: setting }  => {
+        ControllerCommand::Monkey { enabled: setting } => {
             println!("received monkey setting: {:?}", setting);
             client.state().monkey.store(setting, Ordering::Relaxed);
         }
@@ -337,10 +348,12 @@ pub struct Client {
     pub task_count: usize,
 }
 
+use std::cell::RefMut;
+
 /// Trait shared by the "wasm" and "client proxy" implementations.
 /// Most methods are implemented on this trait, not its implementors.
 pub trait ClientImpl {
-    fn state(&mut self) -> &mut Client;
+    fn state(&mut self) -> RefMut<Client>;
     fn send_client(&self, req: &FrontendCommand) -> Result<(), Error>;
     fn send_sync(&self, req: ServerCommand) -> Result<(), Error>;
 
@@ -386,7 +399,9 @@ pub trait ClientImpl {
                 let delay_log = self.state().client_id == "$$$$$$";
 
                 // Rewrite random targets here.
-                if let Task::ControllerCommand(ControllerCommand::RandomTarget { position: pos }) = value {
+                if let Task::ControllerCommand(ControllerCommand::RandomTarget { position: pos }) =
+                    value
+                {
                     let cursors = random_cursor(&self.state().client_doc.doc)?;
                     let idx = (pos * (cursors.len() as f64)) as usize;
 
@@ -401,17 +416,17 @@ pub trait ClientImpl {
                 }
 
                 match value.clone() {
-                    // Handle commands from Native.
+                    // Handle all commands from Frontend.
                     Task::ControllerCommand(command) => {
                         if self.state().client_id == "$$$$$$" {
-                            println!("NATIVE COMMAND TOO EARLY");
+                            println!("FRONTEND COMMAND ARRIVED TOO EARLY");
                             return Ok(());
                         }
 
                         native_command(self, command)?;
                     }
 
-                    // Sync sent us an Update command with a new document version.
+                    // Server sent the client the initial document.
                     Task::ClientCommand(ClientCommand::Init(new_client_id, doc_span, version)) => {
                         self.state().client_id = new_client_id.clone();
                         self.state().client_doc.init(&Doc(doc_span), version);
@@ -436,13 +451,12 @@ pub trait ClientImpl {
 
                         // Native drives client state.
                         let state = self.state();
-                        let res = FrontendCommand::RenderFull(
-                            doc_as_html(&state.client_doc.doc.0),
-                        );
+                        let res = FrontendCommand::RenderFull(doc_as_html(&state.client_doc.doc.0));
+                        drop(state);
                         self.send_client(&res).unwrap();
                     }
 
-                    // Sync sent us an Update command with a new document version.
+                    // Server sent us a new document version.
                     Task::ClientCommand(ClientCommand::Update(version, client_id, input_op)) => {
                         if self.state().client_id == "$$$$$$" {
                             return Ok(());
@@ -455,10 +469,11 @@ pub trait ClientImpl {
                         // If this operation is an acknowledgment...
                         if self.state().client_id == client_id {
                             // Confirm pending op, send out next if one is available.
-                            if let Some(local_op) = self
+                            let local_op = self
                                 .state()
                                 .client_doc
-                                .sync_confirmed_pending_op(&doc, version)
+                                .sync_confirmed_pending_op(&doc, version);
+                            if let Some(local_op) = local_op
                             {
                                 // Send our next operation.
                                 self.upload(local_op)?;
@@ -468,15 +483,18 @@ pub trait ClientImpl {
 
                             // A new operation was sent, transform and update our client.
                             println!("---> sync sent new version");
-                            let (last_doc, input_op) = self.state()
+                            let (last_doc, input_op) = self
+                                .state()
                                 .client_doc
                                 .sync_sent_new_version(&doc, version, &input_op);
 
                             // Client drives frontend frontend state.
                             let res = FrontendCommand::RenderDelta(
-                                serde_json::to_string(
-                                    &::oatie::apply::apply_op_bc(&last_doc.0, &input_op)
-                                ).unwrap(),
+                                serde_json::to_string(&::oatie::apply::apply_op_bc(
+                                    &last_doc.0,
+                                    &input_op,
+                                ))
+                                .unwrap(),
                                 input_op,
                             );
                             self.send_client(&res).unwrap();
@@ -496,18 +514,6 @@ pub trait ClientImpl {
                         }
                     }
                 }
-
-                // fn average(numbers: &[i64]) -> f32 {
-                //     numbers.iter().sum::<i64>() as f32 / numbers.len() as f32
-                // }
-
-                // BAR.with(|bar| {
-                //     let mut b = bar.borrow_mut();
-
-                //     b.push(start.elapsed().num_milliseconds());
-
-                //     println!("{} ms per task.", average(b.as_slice()));
-                // });
 
                 if delay_log {
                     log_wasm!(Task(self.state().client_id.clone(), value.clone()));
@@ -540,9 +546,12 @@ pub trait ClientImpl {
     where
         C: Fn(ActionContext) -> Result<T, Error>,
     {
+        let doc = self.state().client_doc.doc.clone();
+        let client_id = self.state().client_id.clone();
+
         callback(ActionContext {
-            doc: self.state().client_doc.doc.clone(),
-            client_id: self.state().client_id.clone(),
+            doc,
+            client_id,
         })
     }
 
@@ -585,20 +594,16 @@ pub trait ClientImpl {
         // Render the update.RenderDelta
         let res = if cfg!(feature = "DEBUG_full_client_updates") {
             // Fully refresh the client.
-            FrontendCommand::RenderFull(
-                doc_as_html(&self.state().client_doc.doc.0),
-            )
+            FrontendCommand::RenderFull(doc_as_html(&self.state().client_doc.doc.0))
         } else {
             // Send a delta update.
-            FrontendCommand::RenderDelta(
-                serde_json::to_string(&bc).unwrap(),
-                op,
-            )
+            FrontendCommand::RenderDelta(serde_json::to_string(&bc).unwrap(), op)
         };
         self.send_client(&res)?;
 
         // Send any queued payloads.
-        if let Some(local_op) = self.state().client_doc.next_payload() {
+        let local_op = self.state().client_doc.next_payload();
+        if let Some(local_op) = local_op {
             self.upload(local_op)?;
         }
 

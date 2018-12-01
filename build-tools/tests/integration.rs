@@ -32,7 +32,11 @@ fn integration_spooky_test() {
         eprintln!("[{}] markdown content: {:?}", test_id, markdown);
 
         // End condition: Did the two characters appear across all clients?
-        Ok(markdown.lines().next().unwrap().ends_with("\u{01f47b}\u{01f47b}"))
+        Ok(markdown
+            .lines()
+            .next()
+            .unwrap()
+            .ends_with("\u{01f47b}\u{01f47b}"))
     });
 }
 

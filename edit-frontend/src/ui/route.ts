@@ -10,7 +10,7 @@ export function clientProxyUrl(): string {
     pageId();
 }
 
-export function syncUrl(): string {
+export function serverUrl(): string {
   return '' +
     (window.location.protocol.match(/^https/) ? 'wss://' : 'ws://') +
     (window.location.host.match(/localhost|0.0.0.0/) ?

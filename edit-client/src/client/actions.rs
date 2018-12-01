@@ -16,8 +16,8 @@ pub struct ActionContext {
 }
 
 pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus)
-        .expect("Expected a Focus caret");
+    let mut walker =
+        Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus).expect("Expected a Focus caret");
     assert!(walker.back_block());
 
     let mut parent_walker = walker.clone();
@@ -71,8 +71,8 @@ pub fn identify_block(ctx: ActionContext) -> Result<(String, bool), Error> {
 }
 
 pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus)
-        .expect("Expected a Focus caret");
+    let mut walker =
+        Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus).expect("Expected a Focus caret");
     assert!(walker.back_block());
 
     let len = if let Some(DocGroup(_, ref span)) = walker.doc().head() {
@@ -95,7 +95,7 @@ pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
     Ok(writer.result())
 }
 
-fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
+fn delete_char_inner(mut walker: Walker<'_>) -> Result<Op, Error> {
     // Check if caret is at the start of a block.
     let mut block_walker = walker.clone();
     assert!(block_walker.back_block());
@@ -300,7 +300,6 @@ fn delete_char_inner(mut walker: Walker) -> Result<Op, Error> {
 
     writer.add.exit_all();
 
-
     // console_log!("delITE {:?}", walker);
 
     Ok(writer.result())
@@ -493,8 +492,8 @@ pub fn restyle(ctx: ActionContext, ops: Vec<StyleOp>) -> Result<Op, Error> {
 }
 
 pub fn split_block(ctx: ActionContext, add_hr: bool) -> Result<Op, Error> {
-    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus)
-        .expect("Expected a Focus caret");
+    let walker =
+        Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus).expect("Expected a Focus caret");
     let skip = walker.doc().skip_len();
 
     // Identify the tag of the block we're splitting.
@@ -624,8 +623,8 @@ pub fn caret_move(
 }
 
 pub fn caret_word_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus)
-        .expect("Expected a Focus caret");
+    let mut walker =
+        Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus).expect("Expected a Focus caret");
 
     // First operation removes the caret.
     let mut writer = walker.to_writer();
@@ -790,8 +789,8 @@ pub fn init_caret(ctx: ActionContext) -> Result<Op, Error> {
 }
 
 pub fn caret_block_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
-    let mut walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus)
-        .expect("Expected a Focus caret");
+    let mut walker =
+        Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus).expect("Expected a Focus caret");
 
     // First operation removes the caret.
     let mut writer = walker.to_writer();
@@ -840,7 +839,7 @@ pub fn caret_clear(ctx: ActionContext, position: Pos) -> Result<(isize, Op), Err
     caret_clear_inner(walker)
 }
 
-pub fn caret_clear_inner(walker: Walker) -> Result<(isize, Op), Error> {
+pub fn caret_clear_inner(walker: Walker<'_>) -> Result<(isize, Op), Error> {
     let pos = walker.caret_pos();
     let mut writer = walker.to_writer();
 

@@ -17,3 +17,5 @@ debug = true
 wasm-bindgen = { git = "http://github.com/tcr/wasm-bindgen", rev = "90193ea" }
 wasm-bindgen-cli-support = { git = "http://github.com/tcr/wasm-bindgen", rev = "90193ea" }
 wasm-bindgen-shared = { git = "http://github.com/tcr/wasm-bindgen", rev = "90193ea" }
+web-sys = { git = "http://github.com/tcr/wasm-bindgen", rev = "90193ea" }
+js-sys = { git = "http://github.com/tcr/wasm-bindgen", rev = "90193ea" }

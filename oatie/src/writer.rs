@@ -4,10 +4,10 @@ use std::borrow::ToOwned;
 use std::cmp;
 use std::collections::HashMap;
 
-use compose;
-use doc::*;
-use normalize;
-use stepper::*;
+use crate::compose;
+use crate::doc::*;
+use crate::normalize;
+use crate::stepper::*;
 
 use failure::Error;
 use term_painter::Attr::*;

@@ -137,7 +137,7 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
         }
     }
 
-    fn end_tag(&mut self, tag: Tag) {
+    fn end_tag(&mut self, tag: Tag<'_>) {
         match tag {
             // Blocks
             Tag::Paragraph => {

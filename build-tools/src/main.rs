@@ -62,31 +62,19 @@ enum Cli {
     #[structopt(name = "book-build", about = "Builds the book.")]
     BookBuild,
 
-    #[structopt(
-        name = "book-watch",
-        about = "Watches and rebuilds the book."
-    )]
+    #[structopt(name = "book-watch", about = "Watches and rebuilds the book.")]
     BookWatch,
 
     #[structopt(name = "ci", about = "Executes testing for CI")]
     Ci {
-        #[structopt(
-            long = "no-headless",
-            help = "Do not run in headless mode."
-        )]
+        #[structopt(long = "no-headless", help = "Do not run in headless mode.")]
         no_headless: bool,
     },
 
-    #[structopt(
-        name = "client-proxy",
-        about = "Run client code in your terminal."
-    )]
+    #[structopt(name = "client-proxy", about = "Run client code in your terminal.")]
     ClientProxy { args: Vec<String> },
 
-    #[structopt(
-        name = "client-proxy-build",
-        about = "Build the client proxy."
-    )]
+    #[structopt(name = "client-proxy-build", about = "Build the client proxy.")]
     ClientProxyBuild { args: Vec<String> },
 
     #[structopt(
@@ -163,10 +151,7 @@ enum Cli {
         args: Vec<String>,
     },
 
-    #[structopt(
-        name = "wasm-build",
-        about = "Compile the WebAssembly bundle."
-    )]
+    #[structopt(name = "wasm-build", about = "Compile the WebAssembly bundle.")]
     WasmBuild {
         #[structopt(name = "no-vendor")]
         no_vendor: bool,
@@ -235,7 +220,7 @@ fn run() -> Result<(), Error> {
     // Commands that invoke cargo-watch interfere with commandspec cleanup
     // or env_logger.
     match cli {
-        Cli::WasmWatch { .. } => {},
+        Cli::WasmWatch { .. } => {}
         _ => {
             commandspec::cleanup_on_ctrlc();
             env_logger::Builder::from_default_env()
@@ -249,7 +234,7 @@ fn run() -> Result<(), Error> {
         Cli::Ci {
             // TODO make this actually disable headless mode
             no_headless: _no_headless,
-        }=> {
+        } => {
             let output = command!(
                 "
                     git --no-pager diff --name-only HEAD..origin/master
@@ -519,10 +504,7 @@ fn run() -> Result<(), Error> {
             )?;
         }
 
-        Cli::Test {
-            target,
-            args,
-        } => {
+        Cli::Test { target, args } => {
             match target {
                 TestTarget::All => {
                     execute!("{self_path} test unit", self_path = SELF_PATH)?;
@@ -683,7 +665,8 @@ fn run() -> Result<(), Error> {
                 ",
                 webpack_path = WEBPACK_PATH,
                 args = args,
-            )?.scoped_spawn();
+            )?
+            .scoped_spawn();
 
             execute!(
                 r"

@@ -8,31 +8,29 @@ use crate::{
     state::*,
 };
 
-use extern::{
-    crossbeam_channel::{
-        unbounded,
-        Receiver as CCReceiver,
-        Sender as CCSender,
-    },
-    edit_common::commands::*,
-    edit_common::simple_ws,
-    edit_common::simple_ws::*,
-    failure::Error,
-    oatie::doc::*,
-    rand::{
-        thread_rng,
-        Rng,
-    },
-    serde_json,
-    std::env,
-    std::{
-        collections::HashMap,
-        thread,
-        time::Duration,
-    },
-    url::Url,
-    ws,
+use crossbeam_channel::{
+    unbounded,
+    Receiver as CCReceiver,
+    Sender as CCSender,
 };
+use edit_common::commands::*;
+use edit_common::simple_ws;
+use edit_common::simple_ws::*;
+use failure::Error;
+use oatie::doc::*;
+use rand::{
+    thread_rng,
+    Rng,
+};
+use serde_json;
+use std::env;
+use std::{
+    collections::HashMap,
+    thread,
+    time::Duration,
+};
+use url::Url;
+use ws;
 
 fn debug_sync_delay() -> Option<u64> {
     env::var("EDIT_DEBUG_SYNC_DELAY")

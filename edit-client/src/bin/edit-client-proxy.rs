@@ -1,17 +1,8 @@
-extern crate edit_client;
-extern crate edit_common;
-extern crate serde_json;
-extern crate structopt;
-extern crate structopt_derive;
-extern crate ws;
+use serde_json;
+
+use ws;
 #[macro_use]
 extern crate taken;
-extern crate bus;
-extern crate crossbeam_channel;
-extern crate failure;
-extern crate rand;
-extern crate ron;
-extern crate url;
 
 use crossbeam_channel::{
     unbounded,
@@ -47,10 +38,7 @@ use structopt::StructOpt;
 use ws::CloseCode;
 
 #[derive(StructOpt, Debug)]
-#[structopt(
-    name = "edit-client",
-    about = "An example of StructOpt usage."
-)]
+#[structopt(name = "edit-client", about = "An example of StructOpt usage.")]
 struct Opt {
     #[structopt(long = "monkies", help = "Monkey count")]
     monkies: Option<usize>,
@@ -210,6 +198,9 @@ fn spawn_sync_connection(
     })
 }
 
+use std::cell::{RefCell, RefMut};
+use std::rc::Rc;
+
 fn setup_client(
     name: &str,
     page_id: &str,
@@ -233,7 +224,7 @@ fn setup_client(
     spawn_send_to_client(rx_client, out);
 
     let mut client = ProxyClient {
-        state: Client {
+        state: Rc::new(RefCell::new(Client {
             client_id: name.to_owned(),
             client_doc: ClientDoc::new(),
             last_controls: None,
@@ -241,7 +232,7 @@ fn setup_client(
             monkey: monkey.clone(),
             alive: alive.clone(),
             task_count: 0,
-        },
+        })),
 
         tx_client,
         tx_sync: tx_sync.clone(),
@@ -262,20 +253,22 @@ fn setup_client(
     // Connect to the sync server.
     spawn_sync_connection(ws_port, page_id.to_owned(), tx_task.clone(), rx_sync);
 
-    // Operate on all incoming tasks.
-    //TODO possible to delay naming or spawning until init was handled?
-    let tx_sync_2 = tx_sync.clone();
-    let _ = thread::Builder::new()
-        .name(format!("setup_client({})", name))
-        .spawn::<_, Result<(), Error>>(move || {
-            // TODO can we inherit thread locals??
-            crate::log::log_init(tx_sync_2.clone());
+    unimplemented!("Disabled until ClientImpl is shareable between threads");
 
-            while let Some(task) = rx_task.recv() {
-                client.handle_task(task)?;
-            }
-            Ok(())
-        });
+    // // Operate on all incoming tasks.
+    // //TODO possible to delay naming or spawning until init was handled?
+    // let tx_sync_2 = tx_sync.clone();
+    // let _ = thread::Builder::new()
+    //     .name(format!("setup_client({})", name))
+    //     .spawn::<_, Result<(), Error>>(move || {
+    //         // TODO can we inherit thread locals??
+    //         crate::log::log_init(tx_sync_2.clone());
+
+    //         while let Some(task) = rx_task.recv() {
+    //             client.handle_task(task)?;
+    //         }
+    //         Ok(())
+    //     });
 
     (alive, monkey, tx_task, tx_sync)
 }

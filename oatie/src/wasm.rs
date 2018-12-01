@@ -8,7 +8,7 @@ macro_rules! console_log {
 
 #[cfg(not(target_arch = "wasm32"))]
 macro_rules! console_log {
-    ($($t:tt)*) => ()
+    ($($t:tt)*) => {};
 }
 
 #[wasm_bindgen]
