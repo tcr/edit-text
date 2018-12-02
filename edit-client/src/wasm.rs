@@ -128,6 +128,9 @@ extern "C" {
     #[wasm_bindgen(js_namespace = console, js_name = "debug")]
     fn console_debug_jsvalue(a: JsValue);
 
+    #[wasm_bindgen(js_namespace = console, js_name = "debug")]
+    fn console_debug_str(a: &str);
+
     #[wasm_bindgen(js_namespace = console, js_name = "groupEnd")]
     fn console_group_end();
 }
@@ -192,6 +195,9 @@ impl WasmClient {
         doc_to_markdown(&self.state().client_doc.doc.0).unwrap()
     }
 
+    /// Creates a websocket connection to the server, forwarding server-received
+    /// messages to the Client implementation and returning a method to write
+    /// commands to the server.
     #[wasm_bindgen(js_name = "subscribeServer")]
     pub fn subscribe_server(
         &mut self,
@@ -209,10 +215,9 @@ impl WasmClient {
             closure.forget();
         }
 
-        let client = self.state.clone();
-
         // let client = self.clone();
         {
+            let client = self.state.clone();
             let ws2 = ws.clone();
             let closure = Closure::wrap(Box::new(move |event: web_sys::MessageEvent| {
                 let command_data = event.data().as_string().unwrap();
@@ -221,6 +226,7 @@ impl WasmClient {
                 let command_jsvalue = js_sys::JSON::parse(&command_data).unwrap();
                 
                 console_group_collapsed_str_str("[client]", command_json.as_object().unwrap().get("tag").unwrap().as_str().unwrap());
+                console_debug_str(&command_data);
                 console_debug_jsvalue(command_jsvalue);
                 console_group_end();
 
@@ -236,13 +242,14 @@ impl WasmClient {
         }
 
         {
+            let client = self.state.clone();
             let ws2 = ws.clone();
             let closure = Closure::wrap(Box::new(move |_event: web_sys::CloseEvent| {
-                let command = FrontendCommand::ServerDisconnect;
-                // command_callback.call1(&JsValue::NULL, &JsValue::from_serde(&command).unwrap());
-
-                // TODO send up serverdisconnect
-                ws2.send_with_str(&serde_json::to_string(&command).unwrap());
+                console_log!("#### SERVER DISCONNECT");
+                (WasmClient {
+                    state: client.clone(),
+                    ws: Some(ws2.clone()),
+                }).handle_task(Task::ClientCommand(ClientCommand::ServerDisconnect)).expect("Client task failed");
             }) as Box<dyn FnMut(_)>);
             ws.add_event_listener_with_callback("close", closure.as_ref().unchecked_ref())?;
             closure.forget();

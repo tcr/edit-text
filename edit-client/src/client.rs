@@ -513,6 +513,11 @@ pub trait ClientImpl {
                             self.client_op(|doc| init_caret(doc)).unwrap();
                         }
                     }
+
+                    Task::ClientCommand(ClientCommand::ServerDisconnect) => {
+                        // Notify frontend.
+                        self.send_frontend(&FrontendCommand::ServerDisconnect).unwrap();
+                    }
                 }
 
                 if delay_log {

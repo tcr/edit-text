@@ -112,6 +112,7 @@ export class WasmController implements ControllerImpl {
           } else {
             console.groupCollapsed('[frontend]', parse.tag);
             console.debug(parse);
+            console.debug(data);
             console.groupEnd();
 
             if (client.onMessage != null) {
