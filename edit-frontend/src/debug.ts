@@ -108,7 +108,7 @@ const DEBUG = {
     },
 
     clientID: (): String => {
-        return globalClientBindings!.client_id();
+        return globalClientBindings!.clientID();
     },
 
     // Bindings to global ref for client module

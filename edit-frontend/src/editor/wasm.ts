@@ -1,8 +1,9 @@
 
 import 'react';
 
+import * as route from '../ui/route';
 import * as index from '..';
-import { WasmClient as WasmClientModule } from '../bindgen/edit_client';
+import { WasmClient as WasmClientModule, FrontendCommand } from '../bindgen/edit_client';
 import { getWasmModule } from '../index';
 
 import {ControllerCommand} from '../bindgen/edit_client';
@@ -69,7 +70,6 @@ export class WasmError extends Error {
 
 export class WasmController implements ControllerImpl {
   // public
-  server: ServerImpl | null;
   onMessage: (msg: any) => void | null;
   onClose: () => void | null; // unused
 
@@ -96,6 +96,7 @@ export class WasmController implements ControllerImpl {
   // Wasm connector.
   connect(onError: () => void): Promise<void> {
     const client = this;
+
     return new Promise((resolve, reject) => {
       sendCommandToJSList.push((data) => {
         
@@ -104,10 +105,10 @@ export class WasmController implements ControllerImpl {
         // Make this async so we don't have deeply nested call stacks from Rust<->JS interop.
         // setImmediate(() => {
           // Parse the packet.
-          let parse = JSON.parse(data);
+          let parse: FrontendCommand = JSON.parse(data);
 
-          if (parse.tag == 'ServerCommand' && client.server != null) {
-            client.server.sendCommand(parse.fields);
+          if (parse.tag == 'ServerCommand') {
+            console.error('Did not expect server command:', parse);
           } else {
             console.groupCollapsed('[frontend]', parse.tag);
             console.debug(parse);
@@ -122,9 +123,9 @@ export class WasmController implements ControllerImpl {
 
       index.getWasmModule()
       .then(Module => {
-        let clientBindings = Module.wasm_setup();
+        let clientBindings = Module.wasm_setup(route.serverUrl());
         DEBUG.setGlobalClientBindings(clientBindings);
-  
+
         setImmediate(() => {
           // Websocket port
           client.Module = Module;
@@ -141,6 +142,9 @@ export class WasmController implements ControllerImpl {
               throw new WasmError(e, `Error during client command: ${e.message}`);
             }
           };
+
+          // Connect to server.
+          // TODO This might be moved somewhere else
 
           resolve();
         });

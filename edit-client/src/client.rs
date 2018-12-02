@@ -354,8 +354,8 @@ use std::cell::RefMut;
 /// Most methods are implemented on this trait, not its implementors.
 pub trait ClientImpl {
     fn state(&mut self) -> RefMut<Client>;
-    fn send_client(&self, req: &FrontendCommand) -> Result<(), Error>;
-    fn send_sync(&self, req: ServerCommand) -> Result<(), Error>;
+    fn send_frontend(&self, req: &FrontendCommand) -> Result<(), Error>;
+    fn send_server(&self, req: &ServerCommand) -> Result<(), Error>;
 
     fn setup_controls(&mut self, state: Option<(String, bool)>)
     where
@@ -370,7 +370,7 @@ pub trait ClientImpl {
         };
 
         if Some(controls_object.clone()) != self.state().last_controls {
-            self.send_client(&FrontendCommand::Controls(controls_object.clone()))
+            self.send_frontend(&FrontendCommand::Controls(controls_object.clone()))
                 .expect("Could not send initial state");
 
             self.state().last_controls = Some(controls_object);
@@ -447,13 +447,13 @@ pub trait ClientImpl {
                         }
 
                         let res = FrontendCommand::Init(new_client_id);
-                        self.send_client(&res).unwrap();
+                        self.send_frontend(&res).unwrap();
 
                         // Native drives client state.
                         let state = self.state();
                         let res = FrontendCommand::RenderFull(doc_as_html(&state.client_doc.doc.0));
                         drop(state);
-                        self.send_client(&res).unwrap();
+                        self.send_frontend(&res).unwrap();
                     }
 
                     // Server sent us a new document version.
@@ -497,7 +497,7 @@ pub trait ClientImpl {
                                 .unwrap(),
                                 input_op,
                             );
-                            self.send_client(&res).unwrap();
+                            self.send_frontend(&res).unwrap();
                         }
 
                         // Announce.
@@ -538,7 +538,7 @@ pub trait ClientImpl {
         log_wasm!(Debug("CLIENTOP".to_string()));
         let client_id = self.state().client_id.clone();
         let version = self.state().client_doc.version;
-        Ok(self.send_sync(ServerCommand::Commit(client_id, local_op, version))?)
+        Ok(self.send_server(&ServerCommand::Commit(client_id, local_op, version))?)
     }
 
     // TODO combine with client_op?
@@ -599,7 +599,7 @@ pub trait ClientImpl {
             // Send a delta update.
             FrontendCommand::RenderDelta(serde_json::to_string(&bc).unwrap(), op)
         };
-        self.send_client(&res)?;
+        self.send_frontend(&res)?;
 
         // Send any queued payloads.
         let local_op = self.state().client_doc.next_payload();

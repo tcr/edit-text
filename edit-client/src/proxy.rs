@@ -30,7 +30,7 @@ impl ClientImpl for ProxyClient {
         Ok(())
     }
 
-    fn send_sync(&self, req: ServerCommand) -> Result<(), Error> {
+    fn send_sync(&self, req: &ServerCommand) -> Result<(), Error> {
         log_wasm!(SendSync(req.clone()));
         self.tx_sync.send(req);
         Ok(())
