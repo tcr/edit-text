@@ -24,15 +24,15 @@ impl ClientImpl for ProxyClient {
         self.state.borrow_mut()
     }
 
-    fn send_client(&self, req: &FrontendCommand) -> Result<(), Error> {
+    fn send_frontend(&self, req: &FrontendCommand) -> Result<(), Error> {
         log_wasm!(SendClient(req.clone()));
         self.tx_client.send(req.clone());
         Ok(())
     }
 
-    fn send_sync(&self, req: &ServerCommand) -> Result<(), Error> {
+    fn send_server(&self, req: &ServerCommand) -> Result<(), Error> {
         log_wasm!(SendSync(req.clone()));
-        self.tx_sync.send(req);
+        self.tx_sync.send(req.clone());
         Ok(())
     }
 }

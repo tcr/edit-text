@@ -36,6 +36,8 @@ use std::{
 };
 use structopt::StructOpt;
 use ws::CloseCode;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "edit-client", about = "An example of StructOpt usage.")]
@@ -197,9 +199,6 @@ fn spawn_sync_connection(
         }
     })
 }
-
-use std::cell::{RefCell, RefMut};
-use std::rc::Rc;
 
 fn setup_client(
     name: &str,

@@ -130,9 +130,11 @@ export function vm(el: Node) {
         stack,
         cur,
         curNode,
+        
         is_done() {
             return (stack.length == 1 && cur()[0] >= cur()[1].childNodes.length) || stack.length == 0;
         },
+
         handle(tag: string, fields: any) {
             if (!handlers[tag]) {
                 throw new Error(`Unknown opcode ${tag}`)
@@ -161,6 +163,7 @@ export function vm(el: Node) {
                     return handlers[tag]!();
             }
         },
+
         run(program: Array<Bytecode>) {
             // console.group('VM group: %d opcodes', program.length)
             console.groupCollapsed('[vm] Script length:', program.length);

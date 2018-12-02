@@ -127,6 +127,7 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
+    pointer-events: none;
 
     .footer-bar {
         box-sizing: border-box;
@@ -580,6 +581,7 @@ body#multi {
     display: flex;
     padding: 20px;
     justify-content: flex-end;
+    pointer-events: none;
 }
 
 #debug-content {

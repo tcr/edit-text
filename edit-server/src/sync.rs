@@ -138,7 +138,7 @@ impl SimpleSocket for ClientSocket {
 
         // TODO don't log client Log(...)
         // log_sync!("SERVER", ClientPacket(command.clone()));
-        println!("-----> {:?}", command);
+        // println!("-----> {:?}", command);
 
         match command {
             ServerCommand::Commit(client_id, op, version) => {

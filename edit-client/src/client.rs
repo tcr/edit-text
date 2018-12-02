@@ -4,6 +4,7 @@ mod state;
 pub use self::actions::*;
 pub use self::state::*;
 
+use oatie;
 use crate::{
     random::*,
     walkers::Pos,
@@ -489,14 +490,20 @@ pub trait ClientImpl {
                                 .sync_sent_new_version(&doc, version, &input_op);
 
                             // Client drives frontend frontend state.
-                            let res = FrontendCommand::RenderDelta(
-                                serde_json::to_string(&::oatie::apply::apply_op_bc(
-                                    &last_doc.0,
-                                    &input_op,
-                                ))
-                                .unwrap(),
-                                input_op,
-                            );
+                            let res = if cfg!(feature = "DEBUG_full_client_updates") {
+                                // Fully refresh the client.
+                                FrontendCommand::RenderFull(doc_as_html(&self.state().client_doc.doc.0))
+                            } else {
+                                // Render delta.
+                                FrontendCommand::RenderDelta(
+                                    serde_json::to_string(&oatie::apply::apply_op_bc(
+                                        &last_doc.0,
+                                        &input_op,
+                                    ))
+                                    .unwrap(),
+                                    input_op,
+                                )
+                            };
                             self.send_frontend(&res).unwrap();
                         }
 
@@ -596,7 +603,7 @@ pub trait ClientImpl {
         // Validate local changes.
         validate_doc(&self.state().client_doc.doc).expect("Local op was malformed");
 
-        // Render the update.RenderDelta
+        // Render our local update.
         let res = if cfg!(feature = "DEBUG_full_client_updates") {
             // Fully refresh the client.
             FrontendCommand::RenderFull(doc_as_html(&self.state().client_doc.doc.0))
