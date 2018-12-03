@@ -222,7 +222,7 @@ fn setup_client(
     let (tx_client, rx_client) = unbounded();
     spawn_send_to_client(rx_client, out);
 
-    let mut client = ProxyClient {
+    let mut client = ProxyClientController {
         state: Rc::new(RefCell::new(Client {
             client_id: name.to_owned(),
             client_doc: ClientDoc::new(),
@@ -243,7 +243,7 @@ fn setup_client(
     let (tx_task, rx_task) = unbounded();
 
     // Setup monkey tasks.
-    setup_monkey::<ProxyClient>(Scheduler::new(
+    setup_monkey::<ProxyClientController>(Scheduler::new(
         tx_task.clone(),
         alive.clone(),
         monkey.clone(),

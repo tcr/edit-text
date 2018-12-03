@@ -4,7 +4,7 @@ use crossbeam_channel;
 
 use crate::{
     button_handlers,
-    ClientImpl,
+    ClientController,
     Task,
 };
 
@@ -176,7 +176,7 @@ fn local_rng() -> impl Rng {
 }
 
 #[allow(unused)]
-pub fn setup_monkey<C: ClientImpl + Sized>(mut scheduler: Scheduler) {
+pub fn setup_monkey<C: ClientController + Sized>(mut scheduler: Scheduler) {
     // let mut scheduler = Scheduler::new(alive, monkey);
 
     scheduler.schedule_random(MONKEY_BUTTON, || {

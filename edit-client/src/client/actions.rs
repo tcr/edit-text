@@ -609,6 +609,12 @@ pub fn caret_move(
         "client".to_string() => ctx.client_id.clone(),
         "focus".to_string() => "true".to_string(),
     });
+    writer.add.begin();
+    writer.add.close(hashmap! {
+        "tag".to_string() => "caret".to_string(),
+        "client".to_string() => ctx.client_id.clone(),
+        "focus".to_string() => "false".to_string(),
+    });
     writer.add.exit_all();
 
     let op_3 = writer.result();
@@ -697,6 +703,12 @@ pub fn caret_word_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> 
         "client".to_string() => ctx.client_id.clone(),
         "focus".to_string() => "true".to_string(),
     });
+    writer.add.begin();
+    writer.add.close(hashmap! {
+        "tag".to_string() => "caret".to_string(),
+        "client".to_string() => ctx.client_id.clone(),
+        "focus".to_string() => "false".to_string(),
+    });
     writer.add.exit_all();
 
     let op_2 = writer.result();
@@ -782,6 +794,12 @@ pub fn init_caret(ctx: ActionContext) -> Result<Op, Error> {
         "tag".to_string() => "caret".to_string(),
         "client".to_string() => ctx.client_id.clone(),
         "focus".to_string() => "true".to_string(),
+    });
+    writer.add.begin();
+    writer.add.close(hashmap! {
+        "tag".to_string() => "caret".to_string(),
+        "client".to_string() => ctx.client_id.clone(),
+        "focus".to_string() => "false".to_string(),
     });
     writer.add.exit_all();
 

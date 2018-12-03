@@ -73,12 +73,12 @@ pub fn convertMarkdownToDoc(input: &str) -> String {
 // WebAssembly client.
 
 #[wasm_bindgen]
-pub struct WasmClient {
+pub struct WasmClientController {
     state: Rc<RefCell<Client>>,
     ws: Option<Rc<web_sys::WebSocket>>,
 }
 
-impl ClientImpl for WasmClient {
+impl ClientController for WasmClientController {
     fn state(&mut self) -> RefMut<Client> {
         self.state.borrow_mut()
     }
@@ -137,8 +137,7 @@ extern "C" {
 
 
 #[wasm_bindgen]
-#[allow(non_snake_case)]
-impl WasmClient {
+impl WasmClientController {
     #[wasm_bindgen(js_name = "clientID")]
     pub fn client_id(&self) -> String {
         self.state.borrow().client_id.clone()
@@ -195,6 +194,11 @@ impl WasmClient {
         doc_to_markdown(&self.state().client_doc.doc.0).unwrap()
     }
 
+    #[wasm_bindgen(js_name = "asJSON")]
+    pub fn as_json(&mut self) -> JsValue {
+        JsValue::from_serde(&self.state().client_doc.doc).unwrap()
+    }
+
     /// Creates a websocket connection to the server, forwarding server-received
     /// messages to the Client implementation and returning a method to write
     /// commands to the server.
@@ -232,7 +236,7 @@ impl WasmClient {
 
                 // TODO why do we have to create a whole wasmclient clone exactly
                 // Handle the client command.
-                (WasmClient {
+                (WasmClientController {
                     state: client.clone(),
                     ws: Some(ws2.clone()),
                 }).handle_task(Task::ClientCommand(command)).expect("Client task failed");
@@ -246,7 +250,7 @@ impl WasmClient {
             let ws2 = ws.clone();
             let closure = Closure::wrap(Box::new(move |_event: web_sys::CloseEvent| {
                 console_log!("#### SERVER DISCONNECT");
-                (WasmClient {
+                (WasmClientController {
                     state: client.clone(),
                     ws: Some(ws2.clone()),
                 }).handle_task(Task::ClientCommand(ClientCommand::ServerDisconnect)).expect("Client task failed");
@@ -270,7 +274,7 @@ impl WasmClient {
 // Wasm free functions.
 
 #[wasm_bindgen]
-pub fn wasm_setup(server_url: String) -> WasmClient {
+pub fn wasm_setup(server_url: String) -> WasmClientController {
     // Set the panic hook to log to console.error.
     console_error_panic_hook::set_once();
 
@@ -279,7 +283,7 @@ pub fn wasm_setup(server_url: String) -> WasmClient {
     // Setup monkey tasks.
     // setup_monkey::<WasmClient>(Scheduler::new(WASM_ALIVE.clone(), WASM_MONKEY.clone()));
 
-    let mut client = WasmClient {
+    let mut client = WasmClientController {
         state: Rc::new(RefCell::new(Client {
             client_id: editor_id,
             client_doc: ClientDoc::new(),
@@ -292,15 +296,11 @@ pub fn wasm_setup(server_url: String) -> WasmClient {
         ws: None,
     };
 
-    console_log!("--------------[ 1 ]");
-
+    // Subscriber to server via websockets.
     let _ = client.subscribe_server(server_url);
 
-    console_log!("--------------[ 2 ]");
-
+    // Initialize controls.
     client.setup_controls(None);
-
-    console_log!("--------------[ 3 ]");
 
     client
 }

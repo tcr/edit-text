@@ -32,7 +32,7 @@ use std::{
 
 // Shorthandler
 // code, meta, shift, alt, callback
-struct KeyHandler<C: ClientImpl>(
+struct KeyHandler<C: ClientController>(
     u32,
     bool,
     bool,
@@ -40,7 +40,7 @@ struct KeyHandler<C: ClientImpl>(
     Box<dyn Fn(&mut C) -> Result<(), Error>>,
 );
 
-impl<C: ClientImpl> KeyHandler<C> {
+impl<C: ClientController> KeyHandler<C> {
     fn matches(&self, code: u32, meta_key: bool, shift_key: bool, alt_key: bool) -> bool {
         self.0 == code && self.1 == meta_key && self.2 == shift_key && self.3 == alt_key
     }
@@ -50,7 +50,7 @@ impl<C: ClientImpl> KeyHandler<C> {
     }
 }
 
-fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
+fn key_handlers<C: ClientController>() -> Vec<KeyHandler<C>> {
     vec![
         // backspace
         KeyHandler(
@@ -159,7 +159,7 @@ fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
     ]
 }
 
-pub fn button_handlers<C: ClientImpl>(
+pub fn button_handlers<C: ClientController>(
     state: Option<(String, bool)>,
 ) -> (Vec<Box<dyn Fn(&mut C) -> Result<(), Error>>>, Vec<Ui>) {
     let mut callbacks: Vec<Box<dyn Fn(&mut C) -> Result<(), Error>>> = vec![];
@@ -258,7 +258,7 @@ pub fn button_handlers<C: ClientImpl>(
     (callbacks, ui)
 }
 
-fn native_command<C: ClientImpl>(client: &mut C, req: ControllerCommand) -> Result<(), Error> {
+fn controller_command<C: ClientController>(client: &mut C, req: ControllerCommand) -> Result<(), Error> {
     match req {
         ControllerCommand::RenameGroup { tag, curspan: _ } => {
             client.client_op(|doc| replace_block(doc, &tag))?;
@@ -353,7 +353,7 @@ use std::cell::RefMut;
 
 /// Trait shared by the "wasm" and "client proxy" implementations.
 /// Most methods are implemented on this trait, not its implementors.
-pub trait ClientImpl {
+pub trait ClientController {
     fn state(&mut self) -> RefMut<Client>;
     fn send_frontend(&self, req: &FrontendCommand) -> Result<(), Error>;
     fn send_server(&self, req: &ServerCommand) -> Result<(), Error>;
@@ -424,7 +424,7 @@ pub trait ClientImpl {
                             return Ok(());
                         }
 
-                        native_command(self, command)?;
+                        controller_command(self, command)?;
                     }
 
                     // Server sent the client the initial document.
@@ -510,7 +510,8 @@ pub trait ClientImpl {
                         // Announce.
                         println!("new version is {:?}", version);
 
-                        // If the caret doesn't exist or was deleted, reinitialize it.
+                        // If the caret doesn't exist or was deleted by this update,
+                        // reinitialize it.
                         if !self
                             .with_action_context(|ctx| Ok(has_caret(ctx, Pos::Focus)))
                             .ok()
@@ -579,8 +580,6 @@ pub trait ClientImpl {
         // eprintln!("apply to (d) {:?}", self.state().client_doc.doc);
         let bc = ::oatie::apply::apply_op_bc(&self.state().client_doc.doc.0, &op);
         self.state().client_doc.apply_local_op(&op);
-
-        eprintln!("-----> {:?}", op);
 
         // Check that our operations can compose well.
         // if cfg!(not(target_arch = "wasm32")) {

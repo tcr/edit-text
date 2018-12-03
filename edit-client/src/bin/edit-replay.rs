@@ -14,9 +14,9 @@ use crossbeam_channel::{
 use edit_client::{
     client::ClientDoc,
     log::*,
-    proxy::ProxyClient,
+    proxy::ProxyClientController,
     Client,
-    ClientImpl,
+    ClientController,
 };
 use edit_common::commands::*;
 use failure::Error;
@@ -32,13 +32,13 @@ use std::cell::RefCell;
 fn init_new_client(
     client_id: &str,
 ) -> (
-    ProxyClient,
+    ProxyClientController,
     Receiver<FrontendCommand>,
     Receiver<ServerCommand>,
 ) {
     let (tx_client, rx_client) = unbounded();
     let (tx_sync, rx_sync) = unbounded();
-    let client = ProxyClient {
+    let client = ProxyClientController {
         state: Rc::new(RefCell::new(Client {
             client_id: client_id.to_owned(),
             client_doc: ClientDoc::new(),

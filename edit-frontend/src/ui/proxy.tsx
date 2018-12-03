@@ -5,11 +5,8 @@ import { ControllerImpl } from '../editor/network';
 import {ControllerCommand} from '../bindgen/edit_client';
 
 export class ProxyController implements ControllerImpl {
-  // TODO shouldn't these be nullable?
   onMessage: (msg: any) => void | null;
   onClose: () => void | null;
-
-  private editorID: string;
 
   private socket: WebSocket;
 

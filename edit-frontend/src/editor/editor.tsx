@@ -35,7 +35,7 @@ function isBlock(
 function isEmptyBlock(
   el: Node | null
 ) {
-  return isBlock(el) && (el as Element).querySelector('span') === null;
+  return isBlock(el) && (el as Element).querySelector('span') == null;
 }
 
 function isSpan(
@@ -81,7 +81,7 @@ function curto(
   }
 
   // Normalize leading spans to be their predecessor text node...
-  // while (el !== null && textOffset === null) {
+  // while (el !== null && textOffset == null) {
   //   if (isElement(el) && isBlock(el)) {
   //     break;
   //   }
@@ -92,7 +92,7 @@ function curto(
   //   }
 
   //   let prev: Node | null = el!.previousSibling;
-  //   if (prev === null) {
+  //   if (prev == null) {
   //     el = el!.parentNode!;
   //   } else if (isSpan(prev)) {
   //     el = prev.firstChild!;
@@ -150,7 +150,7 @@ function curto(
     } else {
       // Move to parent node.
       el = el.parentNode;
-      if (el === null) {
+      if (el == null) {
         throw new Error('Unexpectedly reached root');
       }
       if (!isSpan(el)) {
@@ -177,7 +177,7 @@ function resolveCursorFromPositionInner(
   node: Node | null,
   parent: Node,
 ): Cursor {
-  if (node === null) {
+  if (node == null) {
     // Text node is first in element, so select parent node.
     return curto(parent);
   } else if (isTextNode(node)) {
@@ -257,7 +257,7 @@ function caretScan(
 
       let el = document.elementFromPoint(x, y);
       // console.log('locating element at %d, %d:', x, y, el);
-      if (!root.contains(el) || el === null) { // Off the page!
+      if (!root.contains(el) || el == null) { // Off the page!
         break;
       }
       // Don't do anything if the scanned element is the root element.
@@ -353,17 +353,21 @@ export class Editor extends React.Component {
     if (y > boundary.bottom) {
       y = boundary.bottom - 1;
     }
-    // console.info('(m) Snapped x', x, 'y', y, 'to boundary. Done.');
+    // console.info('(m) Snapped x', x, 'y', y, 'to boundary.');
 
     // Check whether we selected a text node or a block element, and create a cursor for it. 
     // Only select blocks which are empty.
+    // TODO merge textNodeAtPoint and caretPositionFromPoint !
     let text = util.textNodeAtPoint(x, y);
+    let element = util.caretPositionFromPoint(x, y);
     let target = document.elementFromPoint(x, y);
     let destCursor = text !== null
       ? resolveCursorFromPosition(text.textNode, text.offset)
-      : (isEmptyBlock(target)
-        ? curto(target as any)
-        : null);
+      : (element !== null
+        ? resolveCursorFromPositionInner(element.textNode.childNodes[element.offset - 1], element.textNode)
+        : (isEmptyBlock(target)
+          ? curto(target as any)
+          : null));
 
     // Send the command to the client.
     if (destCursor !== null) {
@@ -510,17 +514,17 @@ export class Editor extends React.Component {
 
   _setHTML(html: string) {
     this.el.innerHTML = html;
+    this._highlightOwnCarets();
   }
 
   _runProgram(program: any) {
     vm(this.el).run(program);
+    this._highlightOwnCarets();
   }
   
-  componentDidUpdate() {
-    // this.el.innerHTML = this.props.content;
-
+  _highlightOwnCarets() {
     // Highlight our own caret.
-    document.querySelectorAll(
+    this.el.querySelectorAll(
       `div[data-tag="caret"][data-client=${JSON.stringify(this.props.editorID)}]`,
     ).forEach(caret => {
       caret.classList.add("current");
@@ -539,7 +543,7 @@ export class Editor extends React.Component {
       this.onGlobalKeydown(e);
     });
 
-    this.el.innerHTML = this.props.content;
+    this._setHTML(this.props.content);
   }
 
   render() {

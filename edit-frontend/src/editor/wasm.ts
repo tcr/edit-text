@@ -3,7 +3,7 @@ import 'react';
 
 import * as route from '../ui/route';
 import * as index from '..';
-import { WasmClient as WasmClientModule, FrontendCommand } from '../bindgen/edit_client';
+import { WasmClientController as WasmClientModule, FrontendCommand } from '../bindgen/edit_client';
 import { getWasmModule } from '../index';
 
 import {ControllerCommand} from '../bindgen/edit_client';
@@ -73,10 +73,6 @@ export class WasmController implements ControllerImpl {
   onMessage: (msg: any) => void | null;
   onClose: () => void | null; // unused
 
-  // Private
-
-  editorID: string;
-
   // TODO refactor wasmClient, remove Module
   Module: any;
   clientBindings: WasmClientModule;
@@ -99,27 +95,21 @@ export class WasmController implements ControllerImpl {
 
     return new Promise((resolve, reject) => {
       sendCommandToJSList.push((data) => {
-        
-        // console.log('----> js_command:', data);
+        // Parse the packet.
+        let parse: FrontendCommand = JSON.parse(data);
 
-        // Make this async so we don't have deeply nested call stacks from Rust<->JS interop.
-        // setImmediate(() => {
-          // Parse the packet.
-          let parse: FrontendCommand = JSON.parse(data);
+        if (parse.tag == 'ServerCommand') {
+          console.error('Did not expect server command:', parse);
+        } else {
+          console.groupCollapsed('[frontend]', parse.tag);
+          console.debug(parse);
+          console.debug(data);
+          console.groupEnd();
 
-          if (parse.tag == 'ServerCommand') {
-            console.error('Did not expect server command:', parse);
-          } else {
-            console.groupCollapsed('[frontend]', parse.tag);
-            console.debug(parse);
-            console.debug(data);
-            console.groupEnd();
-
-            if (client.onMessage != null) {
-              client.onMessage(parse);
-            }
+          if (client.onMessage != null) {
+            client.onMessage(parse);
           }
-        // });
+        }
       });
 
       index.getWasmModule()
@@ -143,9 +133,6 @@ export class WasmController implements ControllerImpl {
               throw new WasmError(e, `Error during client command: ${e.message}`);
             }
           };
-
-          // Connect to server.
-          // TODO This might be moved somewhere else
 
           resolve();
         });

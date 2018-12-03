@@ -2,7 +2,7 @@ use crossbeam_channel;
 
 use crate::{
     Client,
-    ClientImpl,
+    ClientController,
 };
 
 use self::crossbeam_channel::Sender;
@@ -12,14 +12,14 @@ use std::rc::Rc;
 use std::cell::{RefCell, RefMut};
 
 #[cfg(not(target_arch = "wasm32"))]
-pub struct ProxyClient {
+pub struct ProxyClientController {
     pub state: Rc<RefCell<Client>>,
     pub tx_client: Sender<FrontendCommand>,
     pub tx_sync: Sender<ServerCommand>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl ClientImpl for ProxyClient {
+impl ClientController for ProxyClientController {
     fn state(&mut self) -> RefMut<Client> {
         self.state.borrow_mut()
     }
