@@ -232,56 +232,6 @@ dev: 0.0.0.0:8003/  prod: /$/graphql   GraphQL
 <li>edit-server, the server crate</li>
 <li>edit-frontend, the TypeScript module using webpack</li>
 </ul>
-<!--
-# API
-<p>The API between two layers is defined in several enums representing payloads across RPC boundaries.</p>
-<a class="header" href="#interop-sync---user" id="interop-sync---user"><h2>Interop Sync &lt;-&gt; User</h2></a>
-<p>Defined in <code>edit-client/src/client.rs</code>.</p>
-<p>From Sync -&gt; User:</p>
-<pre><code>pub enum ClientCommand {
-    // Client id assignment, initial doc, initial version
-    Init(String, DocSpan, usize),
-
-    // New document, version, client-id, operation
-    Update(DocSpan, usize, String, Op),
-}
-</code></pre>
-<p>And from User -&gt; Sync:</p>
-<pre><code>pub enum ServerCommand {
-    // Connect(String),
-    Commit(String, Op, usize),
-    TerminateProxy,
-}
-</code></pre>
-<a class="header" href="#intop-user---frontend" id="intop-user---frontend"><h2>Intop: User &lt;-&gt; Frontend</h2></a>
-<p>Defined in <code>edit-client/src/client.rs</code>.</p>
-<p>From User -&gt; Frontend:</p>
-<pre><code>pub enum FrontendCommand {
-    Init(String),
-    Controls {
-        keys: Vec&lt;(u32, bool, bool)&gt;,
-        buttons: Vec&lt;(usize, String, bool)&gt;,
-    },
-    PromptString(String, String, ControllerCommand),
-    Update(String, Option&lt;Op&gt;),
-    Error(String),
-    ServerCommand(ServerCommand),
-}
-</code></pre>
-<p>And from Frontend -&gt; User:</p>
-<pre><code>pub enum ControllerCommand {
-    // Connect(String),
-    Keypress(u32, bool, bool, bool), // code, meta, shift, alt
-    Button(u32),
-    Character(u32),
-    RenameGroup(String, CurSpan),
-    // Load(DocSpan),
-    Target(CurSpan),
-    RandomTarget(f64),
-    Monkey(bool),
-}
-</code></pre>
-<p>--&gt;</p>
 <a class="header" href="#build-tool-tools" id="build-tool-tools"><h1>Build Tool ./tools</h1></a>
 <p><code>./tools</code> is the build tool. Invocation will be different if you are on Windows or a Linux or macOS system:</p>
 <pre><code>./tools help    # Linux, macOS, etc.
