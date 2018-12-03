@@ -79,7 +79,7 @@ impl<'a, 'b> Iterator for DocToMarkdown<'a, 'b> {
                 // Styling.
                 let text_event = Event::Text(text.to_string().replace("\n", "  \n").into());
                 let res = if let Some(styles) = text.styles() {
-                    if styles.contains_key(&Style::Bold) {
+                    if styles.contains(Style::Bold) {
                         self.queue.push(text_event);
                         self.queue.push(Event::End(Tag::Strong));
                         Some(Event::Start(Tag::Strong))

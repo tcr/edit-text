@@ -67,4 +67,5 @@ uuid = { features = ["v4"], version = "0.5" }
 
 [features]
 DEBUG_full_client_updates = []
-default = ["DEBUG_full_client_updates"]
+# default = ['DEBUG_full_client_updates']
+default = []

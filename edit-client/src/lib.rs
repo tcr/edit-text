@@ -40,6 +40,6 @@ pub use self::client::*;
 pub use self::random::*;
 
 // Use `wee_alloc` as the global allocator.
-#[cfg(target_arch = "wasm32")]
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+// #[cfg(target_arch = "wasm32")]
+// #[global_allocator]
+// static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;

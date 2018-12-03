@@ -106,10 +106,10 @@ pub fn doc_as_html_inner(
             }
             &DocChars(ref text) => {
                 if let &Some(ref styles) = &text.styles() {
-                    let mut classes = styles.keys().cloned().collect::<Vec<Style>>();
+                    let mut classes = styles.styles();
                     // TODO Style::Selected could be selected here directly
                     if !remote_select_active.is_empty() {
-                        classes.push(Style::Selected);
+                        classes.insert(Style::Selected);
                     }
 
                     out.push_str(&format!(
