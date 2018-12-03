@@ -104,129 +104,125 @@ impl OpaqueStyleMap {
 /// Abstraction for String that has better performance by restricting its API.
 /// It can also be styled using the Style enum.
 #[derive(Clone, Debug)]
-pub struct DocString(Arc<String>, pub Option<Range<usize>>, Option<OpaqueStyleMap>);
+pub struct DocString {
+    string: Arc<String>,
+    range: Option<Range<usize>>,
+    styles: OpaqueStyleMap,
+}
 
 impl DocString {
     pub fn from_string(input: String) -> DocString {
-        DocString(Arc::new(input), None, None)
+        DocString{ string: Arc::new(input), range: None, styles: OpaqueStyleMap::new() }
     }
 
     pub fn from_str(input: &str) -> DocString {
-        DocString(Arc::new(input.to_owned()), None, None)
+        DocString { string: Arc::new(input.to_owned()), range: None, styles: OpaqueStyleMap::new() }
     }
 
     pub fn from_string_styled(input: String, styles: StyleMap) -> DocString {
-        DocString(Arc::new(input), None, Some(OpaqueStyleMap::from(styles)))
+        DocString{ string: Arc::new(input), range: None, styles: OpaqueStyleMap::from(styles) }
     }
 
     pub fn from_str_styled(input: &str, styles: StyleMap) -> DocString {
-        DocString(Arc::new(input.to_owned()), None, Some(OpaqueStyleMap::from(styles)))
+        DocString { string: Arc::new(input.to_owned()), range: None, styles: OpaqueStyleMap::from(styles) }
     }
 
     // TODO audit use of this
     pub fn as_str(&self) -> &str {
-        if let Some(ref range) = self.1 {
-            &self.0[range.clone()]
+        if let Some(ref range) = self.range {
+            &self.string[range.clone()]
         } else {
-            &self.0
+            &self.string
         }
     }
 
     pub fn styles(&self) -> Option<OpaqueStyleMap> {
-        self.2.clone()
+        Some(self.styles.clone())
     }
 
     pub fn remove_styles(&mut self, styles: &StyleSet) {
-        if let &mut Some(ref mut self_styles) = &mut self.2 {
-            self_styles.remove(styles);
-        } else {
-            // no-op
-        }
+        self.styles.remove(styles);
     }
 
     pub fn extend_styles(&mut self, styles: &StyleMap) {
-        if let &mut Some(ref mut self_styles) = &mut self.2 {
-            self_styles.insert(styles);
-        } else {
-            self.2 = Some(OpaqueStyleMap::from(styles.to_owned()));
-        }
+        self.styles.insert(styles);
     }
 
     // Add text (with the same styling) to the end of this string.
     pub fn push_str(&mut self, input: &str) {
         let mut value = self.to_string();
         value.push_str(input);
-        self.0 = Arc::new(value);
-        self.1 = None;
+        self.string = Arc::new(value);
+        self.range = None;
     }
 
     // TODO Should DocString::split_at consume self instead of &mut self?
     pub fn split_at(&self, char_boundary: usize) -> (DocString, DocString) {
         let mut start = 0;
-        let mut end = self.0.len();
-        if let Some(ref range) = self.1 {
+        let mut end = self.string.len();
+        if let Some(ref range) = self.range {
             start = range.start;
             end = range.end;
         }
 
-        let byte_index = &self.0[start..].char_indices().nth(char_boundary).unwrap().0;
+        let byte_index = &self.string[start..].char_indices().nth(char_boundary).unwrap().0;
 
         (
-            DocString(
-                self.0.clone(),
-                Some((start + 0)..(start + byte_index)),
-                self.2.clone(),
-            ),
-            DocString(
-                self.0.clone(),
-                Some((start + byte_index)..end),
-                self.2.clone(),
-            ),
+            DocString {
+                string: self.string.clone(),
+                range: Some((start + 0)..(start + byte_index)),
+                styles: self.styles.clone(),
+            },
+            DocString {
+                string: self.string.clone(),
+                range: Some((start + byte_index)..end),
+                styles: self.styles.clone(),
+            },
         )
     }
 
     pub unsafe fn seek_start_forward(&mut self, add: usize) {
-        let (start, end) = if let Some(ref range) = self.1 {
+        let (start, end) = if let Some(ref range) = self.range {
             (range.start, range.end)
         } else {
-            (0, self.0.len())
+            (0, self.string.len())
         };
-        let add_bytes = self.0[start..]
+        let add_bytes = self.string[start..]
             .char_indices()
             .map(|(index, _)| index)
             .chain(::std::iter::once(end))
             .nth(add)
             .expect("Moved beyond end of string");
-        self.1 = Some(start + add_bytes..end);
+        self.range = Some(start + add_bytes..end);
     }
 
     pub unsafe fn seek_start_backward(&mut self, sub: usize) {
-        let (start, end) = if let Some(ref range) = self.1 {
+        let (start, end) = if let Some(ref range) = self.range {
             (range.start, range.end)
         } else {
-            (0, self.0.len())
+            (0, self.string.len())
         };
         let mut start_bytes = start;
         if sub > 0 {
-            start_bytes = self.0[..start]
+            start_bytes = self.string[..start]
                 .char_indices()
                 .map(|(index, _)| index)
                 .rev()
                 .nth(sub - 1)
                 .expect("Moved beyond start of string");
         }
-        self.1 = Some(start_bytes..end);
+        self.range = Some(start_bytes..end);
     }
 
     pub unsafe fn try_byte_range(&self) -> Option<&Range<usize>> {
-        self.1.as_ref()
+        self.range.as_ref()
     }
 
     pub unsafe fn byte_range_mut(&mut self) -> &mut Range<usize> {
-        if self.1.is_none() {
-            self.1 = Some(0..(self.0.len()));
+        if self.range.is_none() {
+            self.range = Some(0..(self.string.len()));
         }
-        self.1.as_mut().unwrap()
+        self.range.as_mut().unwrap()
     }
 
     pub fn to_string(&self) -> String {
@@ -256,18 +252,19 @@ impl PartialEq for DocString {
 impl Eq for DocString {}
 
 impl Serialize for DocString {
+    #[inline(never)]
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        if let &Some(ref styles) = &self.2 {
+        // if let &Some(ref styles) = &self.styles {
             let mut s = serializer.serialize_seq(Some(2))?;
             s.serialize_element(self.as_str())?;
-            s.serialize_element(&styles.to_map())?;
+            s.serialize_element(&self.styles.to_map())?;
             s.end()
-        } else {
-            serializer.serialize_str(self.as_str())
-        }
+        // } else {
+        //     serializer.serialize_str(self.as_str())
+        // }
     }
 }
 

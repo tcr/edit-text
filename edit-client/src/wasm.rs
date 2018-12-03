@@ -97,18 +97,18 @@ impl ClientController for WasmClientController {
         let command_data = serde_json::to_string(command).unwrap();
         let command_json: serde_json::Value = serde_json::from_str(&command_data).unwrap();
         let command_jsvalue = js_sys::JSON::parse(&command_data).unwrap();
-        console_group_collapsed_str_str(
-            "[server]",
-            command_json
-                .as_object()
-                .unwrap()
-                .get("tag")
-                .unwrap()
-                .as_str()
-                .unwrap(),
-        );
-        console_debug_jsvalue(command_jsvalue);
-        console_group_end();
+        // console_group_collapsed_str_str(
+        //     "[server]",
+        //     command_json
+        //         .as_object()
+        //         .unwrap()
+        //         .get("tag")
+        //         .unwrap()
+        //         .as_str()
+        //         .unwrap(),
+        // );
+        // console_debug_jsvalue(command_jsvalue);
+        // console_group_end();
 
         if let Some(ws) = self.ws.as_ref() {
             ws.send_with_str(&command_data);
@@ -132,20 +132,20 @@ impl WebsocketSend {
     }
 }
 
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = console, js_name = "groupCollapsed")]
-    fn console_group_collapsed_str_str(a: &str, b: &str);
+// #[wasm_bindgen]
+// extern "C" {
+//     #[wasm_bindgen(js_namespace = console, js_name = "groupCollapsed")]
+//     fn console_group_collapsed_str_str(a: &str, b: &str);
 
-    #[wasm_bindgen(js_namespace = console, js_name = "debug")]
-    fn console_debug_jsvalue(a: JsValue);
+//     #[wasm_bindgen(js_namespace = console, js_name = "debug")]
+//     fn console_debug_jsvalue(a: JsValue);
 
-    #[wasm_bindgen(js_namespace = console, js_name = "debug")]
-    fn console_debug_str(a: &str);
+//     #[wasm_bindgen(js_namespace = console, js_name = "debug")]
+//     fn console_debug_str(a: &str);
 
-    #[wasm_bindgen(js_namespace = console, js_name = "groupEnd")]
-    fn console_group_end();
-}
+//     #[wasm_bindgen(js_namespace = console, js_name = "groupEnd")]
+//     fn console_group_end();
+// }
 
 #[wasm_bindgen]
 impl WasmClientController {
@@ -237,19 +237,19 @@ impl WasmClientController {
                 let command_json: serde_json::Value = serde_json::from_str(&command_data).unwrap();
                 let command_jsvalue = js_sys::JSON::parse(&command_data).unwrap();
 
-                console_group_collapsed_str_str(
-                    "[client]",
-                    command_json
-                        .as_object()
-                        .unwrap()
-                        .get("tag")
-                        .unwrap()
-                        .as_str()
-                        .unwrap(),
-                );
-                console_debug_str(&command_data);
-                console_debug_jsvalue(command_jsvalue);
-                console_group_end();
+                // console_group_collapsed_str_str(
+                //     "[client]",
+                //     command_json
+                //         .as_object()
+                //         .unwrap()
+                //         .get("tag")
+                //         .unwrap()
+                //         .as_str()
+                //         .unwrap(),
+                // );
+                // console_debug_str(&command_data);
+                // console_debug_jsvalue(command_jsvalue);
+                // console_group_end();
 
                 // TODO why do we have to create a whole wasmclient clone exactly
                 // Handle the client command.

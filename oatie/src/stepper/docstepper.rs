@@ -37,7 +37,7 @@ impl<'a> DocStepper<'a> {
     /// If head is a group, clear the char_cursor.
     // TODO rename char_cursor_reset ?
     // TODO Make this pub(crate) once walkers.rs doesn't repend on it.
-    #[no_mangle]
+    #[inline(never)]
     pub fn char_cursor_update(&mut self) {
         let cursor = if let Some(&DocChars(ref text)) = self.head_raw() {
             Some(CharCursor::from_docstring(text))

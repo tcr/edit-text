@@ -11,9 +11,9 @@ export class ProxyController implements ControllerImpl {
   private socket: WebSocket;
 
   sendCommand(command: ControllerCommand) {
-    console.groupCollapsed('[controller]', command.tag);
-    console.debug(command);
-    console.groupEnd();
+    // console.groupCollapsed('[controller]', command.tag);
+    // console.debug(command);
+    // console.groupEnd();
 
     this.socket.send(JSON.stringify(command));
   }

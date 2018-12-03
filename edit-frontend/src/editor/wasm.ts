@@ -79,9 +79,9 @@ export class WasmController implements ControllerImpl {
 
   sendCommand(command: ControllerCommand) {
     if (forwardWasmTaskCallback != null) {
-      console.groupCollapsed('%c[controller] %s', 'background: #c63; padding: 3px 5px; display: block; color: white;', command.tag);
-      console.debug(command);
-      console.groupEnd();
+      // console.groupCollapsed('%c[controller] %s', 'background: #c63; padding: 3px 5px; display: block; color: white;', command.tag);
+      // console.debug(command);
+      // console.groupEnd();
 
       this.clientBindings.command(JSON.stringify({
         ControllerCommand: command,
@@ -101,10 +101,10 @@ export class WasmController implements ControllerImpl {
         if (parse.tag == 'ServerCommand') {
           console.error('Did not expect server command:', parse);
         } else {
-          console.groupCollapsed('[frontend]', parse.tag);
-          console.debug(parse);
-          console.debug(data);
-          console.groupEnd();
+          // console.groupCollapsed('[frontend]', parse.tag);
+          // console.debug(parse);
+          // console.debug(data);
+          // console.groupEnd();
 
           if (client.onMessage != null) {
             client.onMessage(parse);

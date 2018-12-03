@@ -166,9 +166,9 @@ export function vm(el: Node) {
 
         run(program: Array<Bytecode>) {
             // console.group('VM group: %d opcodes', program.length)
-            console.groupCollapsed('[vm] Script length:', program.length);
+            // console.groupCollapsed('[vm] Script length:', program.length);
             program.forEach((opcode: Bytecode) => {
-                console.debug('[vm]', JSON.stringify(opcode));
+                // console.debug('[vm]', JSON.stringify(opcode));
                 this.handle(opcode.tag, 'fields' in opcode ? opcode.fields : opcode);
             });
             console.groupEnd();
