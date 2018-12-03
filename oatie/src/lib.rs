@@ -3,32 +3,15 @@
 //! See the book for more details: http://tcr.github.io/edit-text/
 
 #![feature(nll, range_is_empty)]
-// TODO clean these up
-#![allow(unknown_lints)]
-#![allow(single_char_pattern)]
-#![allow(ptr_arg)]
-#![allow(unused_variables)]
-#![allow(dead_code)]
-#![allow(unused_imports)]
 
 #[macro_use]
 extern crate log;
 #[macro_use]
 extern crate maplit;
-// extern crate rand;
 #[macro_use]
 extern crate serde_derive;
-
 #[macro_use]
 extern crate failure;
-
-#[macro_use]
-extern crate rental;
-
-#[macro_use]
-extern crate wasm_bindgen;
-#[macro_use]
-extern crate smallvec;
 #[macro_use]
 extern crate wasm_typescript_definition;
 
@@ -78,8 +61,6 @@ pub use crate::transform::{
     Schema,
     Track,
 };
-use std::collections::HashMap;
-use std::fmt::Debug;
 
 /// A type that can have operational transform applied to it.
 /// The `OT` trait is implemented on an operation object, and its
@@ -147,9 +128,9 @@ impl OT for Op {
     }
 
     fn transform_advance<S: Schema>(a: &Self, b: &Self) -> Self {
-        let (a_transform, b_transform) = Self::transform::<S>(a, b);
+        let (a_transform, _b_transform) = Self::transform::<S>(a, b);
         let a_res = Self::compose(a, &a_transform);
-        let b_res = Self::compose(a, &a_transform);
+        // let b_res = Self::compose(b, &b_transform);
         // assert_eq!(a_res, b_res);
         a_res
     }

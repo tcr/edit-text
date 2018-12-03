@@ -1,25 +1,13 @@
 //! Validates a document matches a given Schema.
 
-use super::compose;
 use super::doc::*;
-use super::normalize;
 use super::schema::*;
-use super::stepper::*;
-use super::writer::*;
 use super::{
     Schema,
     Track,
 };
 use failure::Error;
-use std::borrow::ToOwned;
-use std::cmp;
-use std::collections::{
-    HashMap,
-    HashSet,
-};
-use term_painter::Attr::*;
-use term_painter::Color::*;
-use term_painter::ToStyle;
+use std::collections::HashSet;
 
 #[derive(Clone)]
 pub struct ValidateContext {

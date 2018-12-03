@@ -33,5 +33,5 @@ env_logger = "0.3"
 name = "oatie"
 
 [features]
-DEBUG_verify_bytecode = []
-default = ['DEBUG_verify_bytecode']
+verify_bytecode = []
+default = ['verify_bytecode']

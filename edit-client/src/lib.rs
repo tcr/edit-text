@@ -1,5 +1,4 @@
 #![feature(nll)]
-#![allow(unused_imports)]
 
 #[macro_use]
 extern crate failure;
@@ -7,18 +6,11 @@ extern crate failure;
 extern crate maplit;
 #[macro_use]
 extern crate oatie;
-
 #[macro_use]
 extern crate serde_derive;
-#[macro_use]
-extern crate serde_json;
-
-#[macro_use]
-extern crate lazy_static;
-
 #[allow(unused)]
 #[macro_use]
-extern crate wasm_bindgen;
+extern crate lazy_static;
 
 // Macros has to come first
 #[macro_use]
@@ -40,6 +32,6 @@ pub use self::client::*;
 pub use self::random::*;
 
 // Use `wee_alloc` as the global allocator.
-// #[cfg(target_arch = "wasm32")]
-// #[global_allocator]
-// static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+#[cfg(all(target_arch = "wasm32", feature = "use_wee_alloc"))]
+#[global_allocator]
+static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;

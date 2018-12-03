@@ -52,19 +52,19 @@ pub trait DocMutator {
     }
 
     /// TODO rename to advance
-    fn AdvanceElements(&mut self, count: usize) {
+    fn AdvanceElements(&mut self, _count: usize) {
         unimplemented!();
     }
 
-    fn delete(&mut self, count: usize) {
+    fn delete(&mut self, _count: usize) {
         unimplemented!();
     }
 
-    fn DeleteElements(&mut self, count: usize) {
+    fn DeleteElements(&mut self, _count: usize) {
         unimplemented!();
     }
 
-    fn InsertDocString(&mut self, docstring: DocString) {
+    fn InsertDocString(&mut self, _docstring: DocString) {
         unimplemented!();
     }
 
@@ -72,11 +72,11 @@ pub trait DocMutator {
         unimplemented!();
     }
 
-    fn WrapPrevious(&mut self, count: usize, attrs: Attrs) {
+    fn WrapPrevious(&mut self, _count: usize, _attrs: Attrs) {
         unimplemented!();
     }
 
-    fn skip(&mut self, count: usize) {
+    fn skip(&mut self, _count: usize) {
         unimplemented!();
     }
 }
@@ -93,19 +93,19 @@ impl DocMutator for NullDocMutator {
     }
 
     /// TODO rename to advance
-    fn AdvanceElements(&mut self, count: usize) {
+    fn AdvanceElements(&mut self, _count: usize) {
         // no-op
     }
 
-    fn delete(&mut self, count: usize) {
+    fn delete(&mut self, _count: usize) {
         // no-op
     }
 
-    fn DeleteElements(&mut self, count: usize) {
+    fn DeleteElements(&mut self, _count: usize) {
         // no-op
     }
 
-    fn InsertDocString(&mut self, docstring: DocString) {
+    fn InsertDocString(&mut self, _docstring: DocString) {
         // no-op
     }
 
@@ -113,11 +113,11 @@ impl DocMutator for NullDocMutator {
         // no-op
     }
 
-    fn WrapPrevious(&mut self, count: usize, attrs: Attrs) {
+    fn WrapPrevious(&mut self, _count: usize, _attrs: Attrs) {
         // no-op
     }
 
-    fn skip(&mut self, count: usize) {
+    fn skip(&mut self, _count: usize) {
         // no-op
     }
 }

@@ -13,9 +13,7 @@ dist/link
 *.sqlite3
 *.sqlite3-journal
 ubuntu*.log
-edit-frontend/dist/edit.wasm
-edit-frontend/dist/edit.js.map
-edit.js.map
+edit-frontend/dist/
 .cargo
 x.d
 x.bash

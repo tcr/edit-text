@@ -1,12 +1,7 @@
 //! Helper methods for performing transform tests.
 
 use ron;
-
-use serde_json::Value;
 use std::collections::HashMap;
-use std::io;
-use std::io::prelude::*;
-
 use super::compose;
 use super::doc::*;
 use super::normalize::*;
@@ -17,10 +12,8 @@ use super::validate::{
     ValidateContext,
 };
 use super::OT;
-use crate::parse::*;
 use failure::Error;
 use regex::Regex;
-use serde_json;
 use yansi::Paint;
 
 fn op_transform_compare<T: Schema>(a: &Op, b: &Op) -> (Op, Op, Op, Op) {
@@ -133,7 +126,7 @@ pub fn run_transform_test<T: Schema>(input: &str) -> Result<(), Error> {
         "{}",
         Paint::red("(!) comparing transform operation results...")
     );
-    let (a_, b_, a_res, b_res) = op_transform_compare::<T>(&a, &b);
+    let (a_, b_, a_res, _b_res) = op_transform_compare::<T>(&a, &b);
     println!("ok");
     println!();
 

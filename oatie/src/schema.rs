@@ -1,25 +1,12 @@
 //! Performs operational transform.
 
-use super::compose;
 use super::doc::*;
-use super::normalize;
-use super::stepper::*;
 use super::transform::{
     Schema,
     Track,
 };
-use super::writer::*;
-use failure::Error;
 use std::borrow::ToOwned;
-use std::cmp;
-use std::collections::{
-    HashMap,
-    HashSet,
-};
-use std::fmt::Debug;
-use term_painter::Attr::*;
-use term_painter::Color::*;
-use term_painter::ToStyle;
+use std::collections::HashSet;
 
 fn parse_classes(input: &str) -> HashSet<String> {
     input
@@ -46,15 +33,14 @@ pub enum RtfTrack {
 }
 
 impl Track for RtfTrack {
-    // Rename this do close split? if applicable?
+    // TODO Rename this do close split? if applicable? When is this used?
     fn do_split(&self) -> bool {
-        use self::RtfTrack::*;
         match *self {
             _ => true,
         }
     }
 
-    // Unsure about this naming
+    // TODO Unsure about this naming
     fn do_open_split(&self) -> bool {
         use self::RtfTrack::*;
         match *self {

@@ -1,23 +1,6 @@
 //! Parse doc_span, add_span, del_span like strings.
 
-use super::compose;
-use super::doc::*;
-use super::normalize;
-use super::transform::*;
-use super::validate::{
-    validate_doc_span,
-    ValidateContext,
-};
-use super::OT;
-use failure::Error;
-use regex::Regex;
-use serde_json;
-use serde_json::Value;
-use std::collections::HashMap;
 use std::fmt::Debug;
-use std::io;
-use std::io::prelude::*;
-use yansi::Paint;
 
 // TODO move this somewhere better
 pub fn debug_pretty<D: Debug>(input: &D) -> String {

@@ -4,31 +4,20 @@ mod state;
 pub use self::actions::*;
 pub use self::state::*;
 
-use crate::{
-    random::*,
-    walkers::Pos,
-};
+use crate::random::*;
+use crate::walkers::Pos;
 use edit_common::{
     commands::*,
     doc_as_html,
-    markdown::doc_to_markdown,
 };
 use failure::Error;
-use oatie;
-use oatie::{
-    doc::*,
-    validate::validate_doc,
-    OT,
-};
+use oatie::{self, OT};
+use oatie::doc::*;
+use oatie::validate::validate_doc;
 use serde_json;
-use std::{
-    char::from_u32,
-    sync::atomic::{
-        AtomicBool,
-        Ordering,
-    },
-    sync::Arc,
-};
+use std::char::from_u32;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 // Shorthandler
 // code, meta, shift, alt, callback
@@ -492,7 +481,7 @@ pub trait ClientController {
                                 .sync_sent_new_version(&doc, version, &input_op);
 
                             // Client drives frontend frontend state.
-                            let res = if cfg!(feature = "DEBUG_full_client_updates") {
+                            let res = if cfg!(feature = "full_client_updates") {
                                 // Fully refresh the client.
                                 FrontendCommand::RenderFull(doc_as_html(
                                     &self.state().client_doc.doc.0,
@@ -605,7 +594,7 @@ pub trait ClientController {
         validate_doc(&self.state().client_doc.doc).expect("Local op was malformed");
 
         // Render our local update.
-        let res = if cfg!(feature = "DEBUG_full_client_updates") {
+        let res = if cfg!(feature = "full_client_updates") {
             // Fully refresh the client.
             FrontendCommand::RenderFull(doc_as_html(&self.state().client_doc.doc.0))
         } else {

@@ -1,10 +1,7 @@
 //! Methods to apply an operation to a document.
 
 use crate::doc::*;
-use crate::normalize::*;
 use crate::stepper::*;
-use crate::wasm::*;
-use std::collections::HashMap;
 
 fn apply_add_inner<M: DocMutator>(
     bc: &mut M,
@@ -325,7 +322,7 @@ fn apply_del_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &DelSpa
                 }
             },
             DelGroup(ref delspan) => match first.clone() {
-                DocGroup(ref attrs, ref span) => {
+                DocGroup(_, ref span) => {
                     bc.Enter();
                     res.place_all(&apply_del_inner(bc, span, delspan)[..]);
                     bc.UnwrapSelf();
@@ -401,7 +398,7 @@ pub fn apply_del_bc(spanvec: &DocSpan, del: &DelSpan) -> (DocSpan, Program) {
     let (compare, bc) = mutator.result().unwrap();
 
     // Compare results.
-    if cfg!(feature = "DEBUG_verify_bytecode") {
+    if cfg!(feature = "verify_bytecode") {
         let actual = output_doc.clone();
         if actual != compare {
             console_log!("\n\n\n🚫🚫🚫 DELETION: {:?}", del);
@@ -426,7 +423,7 @@ pub fn apply_op_bc(spanvec: &DocSpan, op: &Op) -> Vec<Program> {
     // console_log!("👻👻  1  👻👻");
     let (postdel, del_program) = apply_del_bc(spanvec, delvec);
     // console_log!("👻👻  2  👻👻");
-    let (postadd, add_program) = apply_add_bc(&postdel, addvec);
+    let (_postadd, add_program) = apply_add_bc(&postdel, addvec);
     // console_log!("👻👻  3  👻👻");
     // console_log!("👻👻👻👻👻 {:?}", del_program);
     vec![del_program, add_program]

@@ -1,21 +1,12 @@
 //! Performs operational transform on a Doc.
 
-use std::borrow::ToOwned;
 use std::cmp;
-use std::collections::HashMap;
-
 use super::compose;
 use super::doc::*;
-use super::normalize;
 use super::stepper::*;
 use super::writer::*;
-
-use std::collections::HashSet;
 use std::fmt::Debug;
 use std::marker::PhantomData;
-use term_painter::Attr::*;
-use term_painter::Color::*;
-use term_painter::ToStyle;
 
 pub trait Track: Copy + Debug + PartialEq + Sized {
     // Rename this do close split? if applicable?
@@ -588,9 +579,9 @@ where
         )
     }
 
-    fn current_type(&self) -> Option<S::Track> {
-        S::track_type_from_attrs(self.tracks.last().unwrap().tag_real.as_ref().unwrap())
-    }
+    // fn current_type(&self) -> Option<S::Track> {
+    //     S::track_type_from_attrs(self.tracks.last().unwrap().tag_real.as_ref().unwrap())
+    // }
 
     fn supports_text(&self) -> bool {
         self.top_track_real()
@@ -1147,7 +1138,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                     }
                     b.next();
                 }
-                (Some(AddWithGroup(a_inner)), Some(AddChars(b_chars))) => {
+                (Some(AddWithGroup(_a_inner)), Some(AddChars(b_chars))) => {
                     t.regenerate(); // caret-35
 
                     t.b_del.place(&DelSkip(b_chars.char_len()));
@@ -1855,7 +1846,7 @@ pub fn transform_add_del_inner(
                                         &AddWithGroup(ref ins_span) => {
                                             del.place(&DelWithGroup(unadd(ins_span)));
                                         }
-                                        &AddGroup(ref attrs, ref ins_span) => {
+                                        &AddGroup(ref _attrs, ref ins_span) => {
                                             del.place(&DelGroup(unadd(ins_span)));
                                         }
                                     }
@@ -2070,8 +2061,6 @@ pub fn transform_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
 
 /// Transform two operations according to a schema.
 pub fn transform<S: Schema>(a: &Op, b: &Op) -> (Op, Op) {
-    use super::schema::*;
-
     // Transform deletions A and B against each other to get delA` and delB`.
     log_transform!(" # transform[1] transform_deletions");
     log_transform!(" a_del   {:?}", a.0);

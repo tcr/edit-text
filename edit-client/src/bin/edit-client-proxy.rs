@@ -252,6 +252,7 @@ fn setup_client(
     // Connect to the sync server.
     spawn_sync_connection(ws_port, page_id.to_owned(), tx_task.clone(), rx_sync);
 
+    // TODO Re-enable edit-client-proxy after Client became an Rc.
     unimplemented!("Disabled until ClientImpl is shareable between threads");
 
     // // Operate on all incoming tasks.

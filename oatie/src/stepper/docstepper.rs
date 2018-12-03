@@ -1,6 +1,4 @@
 use crate::stepper::*;
-use crate::string::*;
-use smallvec::SmallVec;
 
 // DocStepper
 
@@ -39,12 +37,11 @@ impl<'a> DocStepper<'a> {
     // TODO Make this pub(crate) once walkers.rs doesn't repend on it.
     #[inline(never)]
     pub fn char_cursor_update(&mut self) {
-        let cursor = if let Some(&DocChars(ref text)) = self.head_raw() {
+        self.char_cursor = if let Some(&DocChars(ref text)) = self.head_raw() {
             Some(CharCursor::from_docstring(text))
         } else {
             None
         };
-        self.char_cursor = cursor;
     }
 
     pub fn char_index(&self) -> Option<usize> {
@@ -159,7 +156,7 @@ impl<'a> DocStepper<'a> {
 
     pub fn head<'h>(&'h self) -> Option<&'h DocElement> {
         match self.head_raw() {
-            Some(&DocChars(ref text)) => {
+            Some(&DocChars(..)) => {
                 // Expect cursor is at a string of length 1 at least
                 // (meaning cursor has not passed to the end of the string)
                 Some(
@@ -318,7 +315,6 @@ impl<'a> DocStepper<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::macros;
 
     fn test_doc_0() -> DocSpan {
         doc_span![

@@ -4,13 +4,9 @@ mod docmutator;
 mod docstepper;
 
 use crate::doc::*;
-use crate::macros;
 use crate::place::can_element_join;
 use crate::writer::DocWriter;
 use failure::Error;
-use std::cmp;
-use std::collections::HashMap;
-use std::sync::Arc;
 
 pub use self::docmutator::*;
 pub use self::docstepper::*;
@@ -155,8 +151,6 @@ pub struct CurStepper {
     pub rest: Vec<CurElement>,
     pub stack: Vec<Vec<CurElement>>,
 }
-
-use self::CurElement::*;
 
 impl CurStepper {
     pub fn new(span: &CurSpan) -> CurStepper {

@@ -14,6 +14,7 @@ pub struct CharCursor {
 }
 
 impl CharCursor {
+    #[inline(always)]
     pub fn from_docstring(text: &DocString) -> CharCursor {
         let mut left_string = text.clone();
         let mut right_string = text.clone();
@@ -33,6 +34,7 @@ impl CharCursor {
         }
     }
 
+    #[inline(always)]
     pub fn from_docstring_end(text: &DocString) -> CharCursor {
         let left_string = text.clone();
         let mut right_string = text.clone();

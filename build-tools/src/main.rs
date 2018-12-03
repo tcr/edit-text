@@ -199,6 +199,26 @@ fn run() -> Result<(), Error> {
         vec!["./target/debug/build-tools"]
     };
 
+    // Load configuration file, convert it to a features list.
+    #[allow(non_snake_case)]
+    let CONFIGURATION: toml::Value = std::fs::read_to_string("./Configure.toml")?.parse()?;
+    #[allow(non_snake_case)]
+    let FEATURE_ARGUMENTS: Vec<String> = CONFIGURATION
+        .as_table()
+        .and_then(|list| {
+            // TODO support all feature configurations
+            list.get("edit-client").unwrap().as_table()
+        })
+        .map(|table| {
+            table.into_iter()
+                .filter(|(_k, v)| v.as_bool().unwrap_or(false))
+                .map(|(k, _v)| k.to_owned())
+                .collect::<Vec<String>>()
+                .join(" ")
+        })
+        .and_then(|argument| if argument.is_empty() { None } else { Some(vec!["--features".to_string(), argument]) } )
+        .unwrap_or(vec![]);
+
     // Pass arguments directly to subcommands: don't capture -h, -v, or verification
     // Do this by adding "--" into the args flag after the subcommand.
     let mut args = ::std::env::args().collect::<Vec<_>>();
@@ -334,9 +354,10 @@ fn run() -> Result<(), Error> {
             execute!(
                 r"
                     cd edit-client
-                    cargo build {release_flag} --lib --target wasm32-unknown-unknown
+                    cargo build {release_flag} --lib --target wasm32-unknown-unknown {features}
                 ",
                 release_flag = release_flag,
+                features = FEATURE_ARGUMENTS,
             )?;
 
             // Compile the TypeScript bindings.
@@ -364,9 +385,10 @@ fn run() -> Result<(), Error> {
                     cd edit-client
                     export MERCUTIO_WASM_LOG=0
                     export RUST_BACKTRACE=1
-                    cargo run {release_flag} --bin edit-client-proxy -- {args}
+                    cargo run {release_flag} --bin edit-client-proxy {features} -- {args}
                 ",
                 release_flag = release_flag,
+                features = FEATURE_ARGUMENTS,
                 args = args,
             )?;
         }
@@ -379,9 +401,10 @@ fn run() -> Result<(), Error> {
                     cd edit-client
                     export MERCUTIO_WASM_LOG=0
                     export RUST_BACKTRACE=1
-                    cargo build {release_flag} --bin edit-client-proxy -- {args}
+                    cargo build {release_flag} --bin edit-client-proxy {features} -- {args}
                 ",
                 release_flag = release_flag,
+                features = FEATURE_ARGUMENTS,
                 args = args,
             )?;
         }
@@ -500,9 +523,10 @@ fn run() -> Result<(), Error> {
                 r"
                     cd edit-client
                     export RUST_BACKTRACE=1
-                    cargo run --release --bin edit-replay -- {args}
+                    cargo run --release --bin edit-replay {features} -- {args}
                 ",
                 // release_flag = release_flag,
+                features = FEATURE_ARGUMENTS,
                 args = args,
             )?;
         }

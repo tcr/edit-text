@@ -1,4 +1,3 @@
-use super::*;
 use serde::de::{
     self,
     SeqAccess,
@@ -14,10 +13,7 @@ use serde::{
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::ops::Range;
-use std::sync::{
-    atomic::AtomicUsize,
-    Arc,
-};
+use std::sync::Arc;
 use enumset::*;
 
 // Possible model for moving this out of core: provide an API for a resident "style service" or just
@@ -106,34 +102,34 @@ impl OpaqueStyleMap {
 #[derive(Clone, Debug)]
 pub struct DocString {
     string: Arc<String>,
-    range: Option<Range<usize>>,
+    range: Range<usize>,
     styles: OpaqueStyleMap,
 }
 
 impl DocString {
     pub fn from_string(input: String) -> DocString {
-        DocString{ string: Arc::new(input), range: None, styles: OpaqueStyleMap::new() }
+        let range = 0..input.len();
+        DocString{ string: Arc::new(input), range, styles: OpaqueStyleMap::new() }
     }
 
     pub fn from_str(input: &str) -> DocString {
-        DocString { string: Arc::new(input.to_owned()), range: None, styles: OpaqueStyleMap::new() }
+        let range = 0..input.len();
+        DocString { string: Arc::new(input.to_owned()), range, styles: OpaqueStyleMap::new() }
     }
 
     pub fn from_string_styled(input: String, styles: StyleMap) -> DocString {
-        DocString{ string: Arc::new(input), range: None, styles: OpaqueStyleMap::from(styles) }
+        let range = 0..input.len();
+        DocString{ string: Arc::new(input), range, styles: OpaqueStyleMap::from(styles) }
     }
 
     pub fn from_str_styled(input: &str, styles: StyleMap) -> DocString {
-        DocString { string: Arc::new(input.to_owned()), range: None, styles: OpaqueStyleMap::from(styles) }
+        let range = 0..input.len();
+        DocString { string: Arc::new(input.to_owned()), range, styles: OpaqueStyleMap::from(styles) }
     }
 
     // TODO audit use of this
     pub fn as_str(&self) -> &str {
-        if let Some(ref range) = self.range {
-            &self.string[range.clone()]
-        } else {
-            &self.string
-        }
+        &self.string[self.range.clone()]
     }
 
     pub fn styles(&self) -> Option<OpaqueStyleMap> {
@@ -152,56 +148,44 @@ impl DocString {
     pub fn push_str(&mut self, input: &str) {
         let mut value = self.to_string();
         value.push_str(input);
+        self.range = 0..value.len();
         self.string = Arc::new(value);
-        self.range = None;
     }
 
     // TODO Should DocString::split_at consume self instead of &mut self?
     pub fn split_at(&self, char_boundary: usize) -> (DocString, DocString) {
-        let mut start = 0;
-        let mut end = self.string.len();
-        if let Some(ref range) = self.range {
-            start = range.start;
-            end = range.end;
-        }
+        let start = self.range.start;
+        let end = self.range.end;
 
         let byte_index = &self.string[start..].char_indices().nth(char_boundary).unwrap().0;
 
         (
             DocString {
                 string: self.string.clone(),
-                range: Some((start + 0)..(start + byte_index)),
+                range: (start + 0)..(start + byte_index),
                 styles: self.styles.clone(),
             },
             DocString {
                 string: self.string.clone(),
-                range: Some((start + byte_index)..end),
+                range: (start + byte_index)..end,
                 styles: self.styles.clone(),
             },
         )
     }
 
     pub unsafe fn seek_start_forward(&mut self, add: usize) {
-        let (start, end) = if let Some(ref range) = self.range {
-            (range.start, range.end)
-        } else {
-            (0, self.string.len())
-        };
+        let (start, end) = (self.range.start, self.range.end);
         let add_bytes = self.string[start..]
             .char_indices()
             .map(|(index, _)| index)
             .chain(::std::iter::once(end))
             .nth(add)
             .expect("Moved beyond end of string");
-        self.range = Some(start + add_bytes..end);
+        self.range = start + add_bytes..end;
     }
 
     pub unsafe fn seek_start_backward(&mut self, sub: usize) {
-        let (start, end) = if let Some(ref range) = self.range {
-            (range.start, range.end)
-        } else {
-            (0, self.string.len())
-        };
+        let (start, end) = (self.range.start, self.range.end);
         let mut start_bytes = start;
         if sub > 0 {
             start_bytes = self.string[..start]
@@ -211,18 +195,15 @@ impl DocString {
                 .nth(sub - 1)
                 .expect("Moved beyond start of string");
         }
-        self.range = Some(start_bytes..end);
+        self.range = start_bytes..end;
     }
 
     pub unsafe fn try_byte_range(&self) -> Option<&Range<usize>> {
-        self.range.as_ref()
+        Some(&self.range)
     }
 
     pub unsafe fn byte_range_mut(&mut self) -> &mut Range<usize> {
-        if self.range.is_none() {
-            self.range = Some(0..(self.string.len()));
-        }
-        self.range.as_mut().unwrap()
+        &mut self.range
     }
 
     pub fn to_string(&self) -> String {
