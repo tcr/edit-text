@@ -4,6 +4,7 @@ mod state;
 pub use self::actions::*;
 pub use self::state::*;
 
+use oatie;
 use crate::{
     random::*,
     walkers::Pos,
@@ -31,7 +32,7 @@ use std::{
 
 // Shorthandler
 // code, meta, shift, alt, callback
-struct KeyHandler<C: ClientImpl>(
+struct KeyHandler<C: ClientController>(
     u32,
     bool,
     bool,
@@ -39,7 +40,7 @@ struct KeyHandler<C: ClientImpl>(
     Box<dyn Fn(&mut C) -> Result<(), Error>>,
 );
 
-impl<C: ClientImpl> KeyHandler<C> {
+impl<C: ClientController> KeyHandler<C> {
     fn matches(&self, code: u32, meta_key: bool, shift_key: bool, alt_key: bool) -> bool {
         self.0 == code && self.1 == meta_key && self.2 == shift_key && self.3 == alt_key
     }
@@ -49,7 +50,7 @@ impl<C: ClientImpl> KeyHandler<C> {
     }
 }
 
-fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
+fn key_handlers<C: ClientController>() -> Vec<KeyHandler<C>> {
     vec![
         // backspace
         KeyHandler(
@@ -158,7 +159,7 @@ fn key_handlers<C: ClientImpl>() -> Vec<KeyHandler<C>> {
     ]
 }
 
-pub fn button_handlers<C: ClientImpl>(
+pub fn button_handlers<C: ClientController>(
     state: Option<(String, bool)>,
 ) -> (Vec<Box<dyn Fn(&mut C) -> Result<(), Error>>>, Vec<Ui>) {
     let mut callbacks: Vec<Box<dyn Fn(&mut C) -> Result<(), Error>>> = vec![];
@@ -257,7 +258,7 @@ pub fn button_handlers<C: ClientImpl>(
     (callbacks, ui)
 }
 
-fn native_command<C: ClientImpl>(client: &mut C, req: ControllerCommand) -> Result<(), Error> {
+fn controller_command<C: ClientController>(client: &mut C, req: ControllerCommand) -> Result<(), Error> {
     match req {
         ControllerCommand::RenameGroup { tag, curspan: _ } => {
             client.client_op(|doc| replace_block(doc, &tag))?;
@@ -352,10 +353,10 @@ use std::cell::RefMut;
 
 /// Trait shared by the "wasm" and "client proxy" implementations.
 /// Most methods are implemented on this trait, not its implementors.
-pub trait ClientImpl {
+pub trait ClientController {
     fn state(&mut self) -> RefMut<Client>;
-    fn send_client(&self, req: &FrontendCommand) -> Result<(), Error>;
-    fn send_sync(&self, req: ServerCommand) -> Result<(), Error>;
+    fn send_frontend(&self, req: &FrontendCommand) -> Result<(), Error>;
+    fn send_server(&self, req: &ServerCommand) -> Result<(), Error>;
 
     fn setup_controls(&mut self, state: Option<(String, bool)>)
     where
@@ -370,7 +371,7 @@ pub trait ClientImpl {
         };
 
         if Some(controls_object.clone()) != self.state().last_controls {
-            self.send_client(&FrontendCommand::Controls(controls_object.clone()))
+            self.send_frontend(&FrontendCommand::Controls(controls_object.clone()))
                 .expect("Could not send initial state");
 
             self.state().last_controls = Some(controls_object);
@@ -423,7 +424,7 @@ pub trait ClientImpl {
                             return Ok(());
                         }
 
-                        native_command(self, command)?;
+                        controller_command(self, command)?;
                     }
 
                     // Server sent the client the initial document.
@@ -447,13 +448,13 @@ pub trait ClientImpl {
                         }
 
                         let res = FrontendCommand::Init(new_client_id);
-                        self.send_client(&res).unwrap();
+                        self.send_frontend(&res).unwrap();
 
                         // Native drives client state.
                         let state = self.state();
                         let res = FrontendCommand::RenderFull(doc_as_html(&state.client_doc.doc.0));
                         drop(state);
-                        self.send_client(&res).unwrap();
+                        self.send_frontend(&res).unwrap();
                     }
 
                     // Server sent us a new document version.
@@ -489,21 +490,28 @@ pub trait ClientImpl {
                                 .sync_sent_new_version(&doc, version, &input_op);
 
                             // Client drives frontend frontend state.
-                            let res = FrontendCommand::RenderDelta(
-                                serde_json::to_string(&::oatie::apply::apply_op_bc(
-                                    &last_doc.0,
-                                    &input_op,
-                                ))
-                                .unwrap(),
-                                input_op,
-                            );
-                            self.send_client(&res).unwrap();
+                            let res = if cfg!(feature = "DEBUG_full_client_updates") {
+                                // Fully refresh the client.
+                                FrontendCommand::RenderFull(doc_as_html(&self.state().client_doc.doc.0))
+                            } else {
+                                // Render delta.
+                                FrontendCommand::RenderDelta(
+                                    serde_json::to_string(&oatie::apply::apply_op_bc(
+                                        &last_doc.0,
+                                        &input_op,
+                                    ))
+                                    .unwrap(),
+                                    input_op,
+                                )
+                            };
+                            self.send_frontend(&res).unwrap();
                         }
 
                         // Announce.
                         println!("new version is {:?}", version);
 
-                        // If the caret doesn't exist or was deleted, reinitialize it.
+                        // If the caret doesn't exist or was deleted by this update,
+                        // reinitialize it.
                         if !self
                             .with_action_context(|ctx| Ok(has_caret(ctx, Pos::Focus)))
                             .ok()
@@ -512,6 +520,11 @@ pub trait ClientImpl {
                             // console_log!("adding caret after last op");
                             self.client_op(|doc| init_caret(doc)).unwrap();
                         }
+                    }
+
+                    Task::ClientCommand(ClientCommand::ServerDisconnect) => {
+                        // Notify frontend.
+                        self.send_frontend(&FrontendCommand::ServerDisconnect).unwrap();
                     }
                 }
 
@@ -538,7 +551,7 @@ pub trait ClientImpl {
         log_wasm!(Debug("CLIENTOP".to_string()));
         let client_id = self.state().client_id.clone();
         let version = self.state().client_doc.version;
-        Ok(self.send_sync(ServerCommand::Commit(client_id, local_op, version))?)
+        Ok(self.send_server(&ServerCommand::Commit(client_id, local_op, version))?)
     }
 
     // TODO combine with client_op?
@@ -568,8 +581,6 @@ pub trait ClientImpl {
         let bc = ::oatie::apply::apply_op_bc(&self.state().client_doc.doc.0, &op);
         self.state().client_doc.apply_local_op(&op);
 
-        eprintln!("-----> {:?}", op);
-
         // Check that our operations can compose well.
         // if cfg!(not(target_arch = "wasm32")) {
         //     // println!("ORIGINAL: {:?}", client.original_doc);
@@ -591,7 +602,7 @@ pub trait ClientImpl {
         // Validate local changes.
         validate_doc(&self.state().client_doc.doc).expect("Local op was malformed");
 
-        // Render the update.RenderDelta
+        // Render our local update.
         let res = if cfg!(feature = "DEBUG_full_client_updates") {
             // Fully refresh the client.
             FrontendCommand::RenderFull(doc_as_html(&self.state().client_doc.doc.0))
@@ -599,7 +610,7 @@ pub trait ClientImpl {
             // Send a delta update.
             FrontendCommand::RenderDelta(serde_json::to_string(&bc).unwrap(), op)
         };
-        self.send_client(&res)?;
+        self.send_frontend(&res)?;
 
         // Send any queued payloads.
         let local_op = self.state().client_doc.next_payload();

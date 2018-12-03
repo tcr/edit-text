@@ -1,9 +1,9 @@
 mod checkpoint;
-mod debug;
+mod debug_bindings;
 
 pub use self::{
     checkpoint::*,
-    debug::*,
+    debug_bindings::*,
 };
 use commandspec::*;
 use failure::Error;

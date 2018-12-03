@@ -43,20 +43,20 @@ pub enum LogWasm {
 #[cfg(target_arch = "wasm32")]
 macro_rules! log_wasm {
     ($x:expr) => {{
-        // Load the logging enum variants locally.
-        use $crate::log::LogWasm::*;
+        // // Load the logging enum variants locally.
+        // use $crate::log::LogWasm::*;
 
-        // Serialize body.
-        let data = ::ron::ser::to_string(&$x).unwrap();
+        // // Serialize body.
+        // let data = ::ron::ser::to_string(&$x).unwrap();
 
-        // console_log!("[WASM_LOG] {}", ron);
+        // // console_log!("[WASM_LOG] {}", ron);
 
-        let req = ::edit_common::commands::FrontendCommand::ServerCommand(
-            ::edit_common::commands::ServerCommand::Log(data.to_string()),
-        );
-        let data = ::serde_json::to_string(&req).unwrap();
-        use $crate::wasm::sendCommandToJS;
-        let _ = sendCommandToJS(&data);
+        // let req = ::edit_common::commands::FrontendCommand::ServerCommand(
+        //     ::edit_common::commands::ServerCommand::Log(data.to_string()),
+        // );
+        // let data = ::serde_json::to_string(&req).unwrap();
+        // use $crate::wasm::sendCommandToJS;
+        // let _ = sendCommandToJS(&data);
     }};
 }
 

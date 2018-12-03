@@ -73,54 +73,39 @@ pub fn convertMarkdownToDoc(input: &str) -> String {
 // WebAssembly client.
 
 #[wasm_bindgen]
-pub struct WasmClient {
+pub struct WasmClientController {
     state: Rc<RefCell<Client>>,
+    ws: Option<Rc<web_sys::WebSocket>>,
 }
 
-impl ClientImpl for WasmClient {
+impl ClientController for WasmClientController {
     fn state(&mut self) -> RefMut<Client> {
         self.state.borrow_mut()
     }
 
-    fn send_client(&self, req: &FrontendCommand) -> Result<(), Error> {
-        let data = serde_json::to_string(&req)?;
+    fn send_frontend(&self, command: &FrontendCommand) -> Result<(), Error> {
+        let data = serde_json::to_string(&command)?;
         let _ = sendCommandToJS(&data);
 
         Ok(())
     }
 
-    fn send_sync(&self, req: ServerCommand) -> Result<(), Error> {
-        self.send_client(&FrontendCommand::ServerCommand(req))
+    fn send_server(&self, command: &ServerCommand) -> Result<(), Error> {
+        let command_data = serde_json::to_string(command).unwrap();
+        let command_json: serde_json::Value = serde_json::from_str(&command_data).unwrap();
+        let command_jsvalue = js_sys::JSON::parse(&command_data).unwrap();
+        console_group_collapsed_str_str("[server]", command_json.as_object().unwrap().get("tag").unwrap().as_str().unwrap());
+        console_debug_jsvalue(command_jsvalue);
+        console_group_end();
+        
+        if let Some(ws) = self.ws.as_ref() {
+            ws.send_with_str(&command_data);
+        } else {
+            console_log!("THIS IS A FATAL ERROR SERVER COMMAND BEFORE CONNECTION");
+        }
+        Ok(())
+        // self.send_client(&FrontendCommand::ServerCommand(req))
     }
-}
-
-// Entry point.
-
-#[wasm_bindgen]
-pub fn wasm_setup() -> WasmClient {
-    // Set the panic hook to log to console.error.
-    console_error_panic_hook::set_once();
-
-    let editor_id = "$$$$$$".to_string();
-
-    // Setup monkey tasks.
-    // setup_monkey::<WasmClient>(Scheduler::new(WASM_ALIVE.clone(), WASM_MONKEY.clone()));
-
-    let mut client = WasmClient {
-        state: Rc::new(RefCell::new(Client {
-            client_id: editor_id,
-            client_doc: ClientDoc::new(),
-            last_controls: None,
-
-            monkey: WASM_MONKEY.clone(),
-            alive: WASM_ALIVE.clone(),
-            task_count: 0,
-        })),
-    };
-
-    client.setup_controls(None);
-
-    client
 }
 
 #[wasm_bindgen]
@@ -136,8 +121,24 @@ impl WebsocketSend {
 }
 
 #[wasm_bindgen]
-#[allow(non_snake_case)]
-impl WasmClient {
+extern "C" {
+    #[wasm_bindgen(js_namespace = console, js_name = "groupCollapsed")]
+    fn console_group_collapsed_str_str(a: &str, b: &str);
+
+    #[wasm_bindgen(js_namespace = console, js_name = "debug")]
+    fn console_debug_jsvalue(a: JsValue);
+
+    #[wasm_bindgen(js_namespace = console, js_name = "debug")]
+    fn console_debug_str(a: &str);
+
+    #[wasm_bindgen(js_namespace = console, js_name = "groupEnd")]
+    fn console_group_end();
+}
+
+
+#[wasm_bindgen]
+impl WasmClientController {
+    #[wasm_bindgen(js_name = "clientID")]
     pub fn client_id(&self) -> String {
         self.state.borrow().client_id.clone()
     }
@@ -188,21 +189,27 @@ impl WasmClient {
         0
     }
 
-    pub fn asMarkdown(&mut self) -> String {
+    #[wasm_bindgen(js_name = "asMarkdown")]
+    pub fn as_markdown(&mut self) -> String {
         doc_to_markdown(&self.state().client_doc.doc.0).unwrap()
     }
 
-    pub fn subscribeServer(
+    #[wasm_bindgen(js_name = "asJSON")]
+    pub fn as_json(&mut self) -> JsValue {
+        JsValue::from_serde(&self.state().client_doc.doc).unwrap()
+    }
+
+    /// Creates a websocket connection to the server, forwarding server-received
+    /// messages to the Client implementation and returning a method to write
+    /// commands to the server.
+    #[wasm_bindgen(js_name = "subscribeServer")]
+    pub fn subscribe_server(
         &mut self,
         ws_url: String,
-        command_callback: js_sys::Function,
     ) -> Result<WebsocketSend, JsValue> {
-        let command_callback = Rc::new(command_callback);
-
         let ws = Rc::new(web_sys::WebSocket::new(&ws_url)?);
 
         {
-            let _command_callback = command_callback.clone();
             let closure = Closure::wrap(Box::new(move |_event: web_sys::Event| {
                 // console.debug('server socket opened.');
                 // DEBUG.measureTime('connect-ready');
@@ -212,25 +219,26 @@ impl WasmClient {
             closure.forget();
         }
 
-        let client = self.state.clone();
-
         // let client = self.clone();
         {
-            let command_callback = command_callback.clone();
+            let client = self.state.clone();
+            let ws2 = ws.clone();
             let closure = Closure::wrap(Box::new(move |event: web_sys::MessageEvent| {
-                let data = event.data().as_string().unwrap();
-                let command: ClientCommand = serde_json::from_str(&data).unwrap();
-
-                // Notify client to do client logging
-                command_callback.call1(
-                    &JsValue::NULL,
-                    &js_sys::JSON::parse(&event.data().as_string().unwrap()).unwrap(),
-                ).unwrap();
+                let command_data = event.data().as_string().unwrap();
+                let command: ClientCommand = serde_json::from_str(&command_data).unwrap();
+                let command_json: serde_json::Value = serde_json::from_str(&command_data).unwrap();
+                let command_jsvalue = js_sys::JSON::parse(&command_data).unwrap();
+                
+                console_group_collapsed_str_str("[client]", command_json.as_object().unwrap().get("tag").unwrap().as_str().unwrap());
+                console_debug_str(&command_data);
+                console_debug_jsvalue(command_jsvalue);
+                console_group_end();
 
                 // TODO why do we have to create a whole wasmclient clone exactly
                 // Handle the client command.
-                (WasmClient {
+                (WasmClientController {
                     state: client.clone(),
+                    ws: Some(ws2.clone()),
                 }).handle_task(Task::ClientCommand(command)).expect("Client task failed");
             }) as Box<dyn FnMut(_)>);
             ws.add_event_listener_with_callback("message", closure.as_ref().unchecked_ref())?;
@@ -238,14 +246,20 @@ impl WasmClient {
         }
 
         {
-            let command_callback = command_callback.clone();
+            let client = self.state.clone();
+            let ws2 = ws.clone();
             let closure = Closure::wrap(Box::new(move |_event: web_sys::CloseEvent| {
-                let command = FrontendCommand::ServerDisconnect;
-                command_callback.call1(&JsValue::NULL, &JsValue::from_serde(&command).unwrap());
+                console_log!("#### SERVER DISCONNECT");
+                (WasmClientController {
+                    state: client.clone(),
+                    ws: Some(ws2.clone()),
+                }).handle_task(Task::ClientCommand(ClientCommand::ServerDisconnect)).expect("Client task failed");
             }) as Box<dyn FnMut(_)>);
             ws.add_event_listener_with_callback("close", closure.as_ref().unchecked_ref())?;
             closure.forget();
         }
+
+        self.ws = Some(ws.clone());
 
         Ok({
             WebsocketSend {
@@ -255,6 +269,40 @@ impl WasmClient {
             }
         })
     }
+}
+
+// Wasm free functions.
+
+#[wasm_bindgen]
+pub fn wasm_setup(server_url: String) -> WasmClientController {
+    // Set the panic hook to log to console.error.
+    console_error_panic_hook::set_once();
+
+    let editor_id = "$$$$$$".to_string();
+
+    // Setup monkey tasks.
+    // setup_monkey::<WasmClient>(Scheduler::new(WASM_ALIVE.clone(), WASM_MONKEY.clone()));
+
+    let mut client = WasmClientController {
+        state: Rc::new(RefCell::new(Client {
+            client_id: editor_id,
+            client_doc: ClientDoc::new(),
+            last_controls: None,
+
+            monkey: WASM_MONKEY.clone(),
+            alive: WASM_ALIVE.clone(),
+            task_count: 0,
+        })),
+        ws: None,
+    };
+
+    // Subscriber to server via websockets.
+    let _ = client.subscribe_server(server_url);
+
+    // Initialize controls.
+    client.setup_controls(None);
+
+    client
 }
 
 #[wasm_bindgen]

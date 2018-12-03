@@ -580,6 +580,7 @@ body#multi {
     display: flex;
     padding: 20px;
     justify-content: flex-end;
+    pointer-events: none;
 }
 
 #debug-content {

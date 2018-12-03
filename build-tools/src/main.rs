@@ -167,7 +167,10 @@ enum Cli {
 #[derive(StructOpt)]
 enum TestTarget {
     #[structopt(name = "integration")]
-    Integration,
+    Integration {
+        #[structopt(long = "no-headless", help = "Do not run in headless mode.")]
+        no_headless: bool,
+    },
     #[structopt(name = "unit")]
     Unit,
     #[structopt(name = "all")]
@@ -510,7 +513,7 @@ fn run() -> Result<(), Error> {
                     execute!("{self_path} test unit", self_path = SELF_PATH)?;
                     execute!("{self_path} test integration", self_path = SELF_PATH)?;
                 }
-                TestTarget::Integration => {
+                TestTarget::Integration { no_headless }=> {
                     expect_geckodriver();
 
                     // Unit test
@@ -541,7 +544,7 @@ fn run() -> Result<(), Error> {
                     // Sleep for 3s after server boots.
                     ::std::thread::sleep(::std::time::Duration::from_millis(3000));
 
-                    // Unit test
+                    // Run integration tests
                     eprintln!();
                     eprintln!("[running integration tests]");
                     execute!(

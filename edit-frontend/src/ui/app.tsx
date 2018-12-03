@@ -6,17 +6,13 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import axios from 'axios';
 import * as Raven from 'raven-js';
-
-import * as commands from '../editor/commands';
 import * as route from './route';
 import { Editor } from '../editor/editor';
-import { AppServer, ProxyController } from './sync';
-import { NullServer, ControllerImpl, ServerImpl } from '../editor/network';
+import { ProxyController } from './proxy';
+import { ControllerImpl } from '../editor/network';
 import { WasmController, convertMarkdownToHtml, convertMarkdownToDoc } from '../editor/wasm';
 import * as index from '../index';
-import {vm} from '../editor/vm';
 import {FrontendCommand} from '../bindgen/edit_client';
-
 import DEBUG from '../debug';
 
 declare var CONFIG: any;
@@ -233,7 +229,6 @@ function FooterNotice(props: {
 }
 
 type EditorFrameProps = {
-  network: ServerImpl,
   client: ControllerImpl,
   body: string,
 };
@@ -257,7 +252,6 @@ export class EditorFrame extends React.Component {
   };
 
   KEY_WHITELIST: any;
-  network: ServerImpl;
   client: ControllerImpl;
   markdown: string;
 
@@ -270,7 +264,6 @@ export class EditorFrame extends React.Component {
 
     this.KEY_WHITELIST = [];
 
-    this.network = props.network;
     this.client = props.client;
 
     this.client.onMessage = this.onFrontendCommand.bind(this);
@@ -280,10 +273,6 @@ export class EditorFrame extends React.Component {
     this.client.onClose = function () {
       document.body.style.background = 'red';
       console.error('!!! client close');
-    };
-    this.network.onClose = function () {
-      document.body.style.background = 'red';
-      console.error('!!! server close');
     };
 
     this.state = {
@@ -679,23 +668,13 @@ export function start_standalone() {
 
 export function start() {
 // export function start_app() {
-  let server: ServerImpl;
   let client: ControllerImpl;
 
   // Wasm and Proxy implementations
   if (CONFIG.wasm) {
-    let wasmClient = new WasmController();
-    let wasmServer = new AppServer();
-
-    // Link them.
-    wasmClient.server = wasmServer;
-    wasmServer.client = wasmClient;
-
-    client = wasmClient;
-    server = wasmServer;
+    client = new WasmController();
   } else {
     client = new ProxyController();
-    server = new NullServer();
   }
 
   // Connect to parent window (if exists).
@@ -723,7 +702,6 @@ export function start() {
   let editorFrame: EditorFrame | null;
   ReactDOM.render(
     <EditorFrame
-      network={server}
       client={client}
       body={document.querySelector('.edit-text')!.innerHTML}
       ref={c => editorFrame = c}
@@ -741,20 +719,11 @@ export function start() {
         sessionStorage.setItem("its-only-funny-once", 'true');
       }
 
-      // Connect to remote sockets.
-      // TODO why is nativeConnect an error?
+      // Connect client.
       DEBUG.measureTime('connect-client');
       client
         .connect(() => {
-          // TODO
-        })
-        .then(() => {
-          server.connect((message: React.ReactNode) => {
-            editorFrame!.showNotification({
-              element: message,
-              level: 'error',
-            });
-          });
+          // TODO all set
         });
     }
   );

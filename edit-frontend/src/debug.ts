@@ -1,4 +1,4 @@
-import { WasmClient as WasmClientModule } from './bindgen/edit_client';
+import { WasmClientController as WasmClientModule } from './bindgen/edit_client';
 
 declare var window: any;
 
@@ -91,6 +91,14 @@ const DEBUG = {
         return globalClientBindings.asMarkdown();
     },
 
+    asJSON: () => {
+        if (globalClientBindings == null) {
+            throw new Error('Bindings not assigned');
+        }
+
+        return globalClientBindings.asJSON();
+    },
+
     typeChar: (charCode: number) => {
         let event = new (KeyboardEvent as any)("keypress", {
             bubbles: true,
@@ -108,7 +116,30 @@ const DEBUG = {
     },
 
     clientID: (): String => {
-        return globalClientBindings!.client_id();
+        return globalClientBindings!.clientID();
+    },
+
+    mousedown: (x: number, y: number) => {
+        let evt = new MouseEvent("mousedown", {
+            bubbles: true,
+            cancelable: true,
+            clientX: x,
+            clientY: y,
+        });
+        document.querySelector('.edit-text')!.dispatchEvent(evt);
+    },
+
+    caretToEndOfLine: () => {
+        let caret = document.querySelector(`.edit-text [data-tag=caret][data-client=${JSON.stringify(DEBUG.clientID())}][data-focus=true]`);
+        if (caret) {
+            let edit = document.querySelector('.edit-text')!;
+            let clientY = (caret.getBoundingClientRect().top + caret.getBoundingClientRect().bottom) / 2;
+            let clientX = edit.getBoundingClientRect().right - 1;
+            console.log('#####', clientX, clientY);
+            DEBUG.mousedown(clientX, clientY);
+        } else {
+            throw new Error('No caret found.');
+        }
     },
 
     // Bindings to global ref for client module

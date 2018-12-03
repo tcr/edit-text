@@ -49,7 +49,7 @@ before_install:
 
 before_script:
   # Restore
-  - cache-s3 --prefix="edit-text_linux_$(cat rust-toolchain)" restore --base-branch=staging
+  - cache-s3 --prefix="edit-text_linux_$(cat rust-toolchain)" restore --max-size=3GiB
 
 script:
   # Run test

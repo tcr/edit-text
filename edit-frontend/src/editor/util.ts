@@ -1,10 +1,10 @@
 // Web utilities
 
 // x and y are relative to the viewport
-export function textNodeAtPoint(
+export function caretPositionFromPoint(
   x: number,
   y: number,
-): {textNode: Text, offset: number} | null {
+): {textNode: Node, offset: number} | null {
   let textNode, offset;
   if ((<any>document).caretPositionFromPoint) {
     let range = (<any>document).caretPositionFromPoint(x, y);
@@ -25,8 +25,7 @@ export function textNodeAtPoint(
     return null;
   }
 
-  // TODO: can textNode ever be an element?
-  if (textNode === null || textNode.nodeType !== 3) {
+  if (textNode === null) {
     return null;
   }
 
@@ -34,6 +33,20 @@ export function textNodeAtPoint(
     textNode,
     offset,
   };
+}
+  
+export function textNodeAtPoint(
+  x: number,
+  y: number,
+): {textNode: Text, offset: number} | null {
+  let result = caretPositionFromPoint(x, y);
+
+  // Filter out all non-element positions.
+  if (result != null && result.textNode.nodeType !== 3) {
+    return null;
+  }
+
+  return result as any;
 }
 
 export function matchesSelector(

@@ -19,7 +19,7 @@ fn integration_spooky_test() {
     let markdown = "# a cold freezing night";
     concurrent_editing(markdown, async move |mut debug, test_id, _checkpoint| {
         // Position the caret at the end of the current line.
-        await!(debug.debug_end_of_line());
+        await!(debug.caret_to_end_of_line());
         await!(sleep_ms(1_000));
 
         // Type a ghost emoji.
@@ -47,21 +47,21 @@ fn integration_sequential_test() {
     concurrent_editing(markdown, async move |mut debug, test_id, mut checkpoint| {
         // Type a character.
         checkpoint.sequential();
-        await!(debug.keypress_char(if checkpoint.index == 0 { '0' } else { '1' }));
+        await!(debug.keypress_char(if checkpoint.index == 0 { '0' } else { '1' }))?;
         checkpoint.sync();
 
         // Type a character.
         checkpoint.sequential();
-        await!(debug.keypress_char(if checkpoint.index == 0 { '0' } else { '1' }));
+        await!(debug.keypress_char(if checkpoint.index == 0 { '0' } else { '1' }))?;
         checkpoint.sync();
 
         // Type a character.
         checkpoint.sequential();
-        await!(debug.keypress_char(if checkpoint.index == 0 { '0' } else { '1' }));
+        await!(debug.keypress_char(if checkpoint.index == 0 { '0' } else { '1' }))?;
         checkpoint.sync();
 
         // Wait an arbitrary 4s for clients to receive all pending operations.
-        await!(sleep_ms(4_000));
+        await!(sleep_ms(4_000))?;
 
         // Get the Markdown content.
         let markdown = await!(debug.as_markdown())?;

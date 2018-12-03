@@ -21,6 +21,8 @@ pub enum ClientCommand {
 
     // New document, version, client-id, operation
     Update(usize, String, Op),
+
+    ServerDisconnect,
 }
 
 // Controller is the client interface that is exposed to the frnontend.

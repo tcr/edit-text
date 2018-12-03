@@ -272,8 +272,8 @@ use crate::doc::DocElement;
 pub struct CharCursor {
     left_string: DocElement,
     right_string: DocElement,
-    index: usize,
-    //TODO add str_len: usize, and do more checking that index doesn't go out of range
+    index: usize, // in chars
+    str_len: usize, // in chars
 }
 
 impl CharCursor {
@@ -353,15 +353,7 @@ impl CharCursor {
     }
 
     pub fn index_from_end(&self) -> usize {
-        unsafe {
-            // TODO this is incorrect (unwrap_or should be str len),
-            // try_byte_range really needs to be replaced
-            // with something that guarantees a range
-            self.right()
-                .and_then(|text| text.try_byte_range())
-                .map(|x| x.len())
-                .unwrap_or(0)
-        }
+        self.str_len - self.index
     }
 
     pub fn value_add(&mut self, add: usize) {
@@ -397,6 +389,7 @@ impl CharCursor {
             left_string: DocElement::DocChars(left_string),
             right_string: DocElement::DocChars(right_string),
             index: 0,
+            str_len: text.char_len(),
         }
     }
 
@@ -415,6 +408,7 @@ impl CharCursor {
             left_string: DocElement::DocChars(left_string),
             right_string: DocElement::DocChars(right_string),
             index: text.char_len(),
+            str_len: text.char_len(),
         }
     }
 }
