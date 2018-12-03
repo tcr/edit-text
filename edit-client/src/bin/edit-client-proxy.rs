@@ -19,6 +19,8 @@ use edit_common::{
     simple_ws::*,
 };
 use failure::Error;
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::{
     panic,
     process,
@@ -36,8 +38,6 @@ use std::{
 };
 use structopt::StructOpt;
 use ws::CloseCode;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "edit-client", about = "An example of StructOpt usage.")]

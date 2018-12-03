@@ -162,9 +162,7 @@ pub fn concurrent_editing<T>(markdown: &str, runner_test: fn(DebugClient, String
 where
     T: std::future::Future<Output = Result<bool, Error>> + Send + 'static,
 {
-    // TODO fix this in commandspec 0.12 to not throw MultipleHandler errors if re-set
-    // or unset it at the end of this function
-    // commandspec::cleanup_on_ctrlc();
+    commandspec::cleanup_on_ctrlc();
 
     // Make an HTTP request to load the document.
     let client = reqwest::Client::new();

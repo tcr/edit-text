@@ -1,7 +1,7 @@
 //! Enables stepping through a span operation.
 
-mod doc_mutator;
-mod doc_stepper;
+mod docmutator;
+mod docstepper;
 
 use crate::doc::*;
 use crate::macros;
@@ -12,8 +12,8 @@ use std::cmp;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-pub use self::doc_mutator::*;
-pub use self::doc_stepper::*;
+pub use self::docmutator::*;
+pub use self::docstepper::*;
 
 #[derive(Clone, Debug)]
 pub struct DelStepper {

@@ -1,4 +1,5 @@
-use super::*;
+use crate::stepper::*;
+use crate::string::*;
 use smallvec::SmallVec;
 
 // DocStepper
@@ -31,12 +32,11 @@ impl<'a> DocStepper<'a> {
         stepper
     }
 
-    // Managing the char cursor, created each time we reach a DocChars.
-
-    /// Move to the first character of the current string, or clear the
-    /// cursor if we've reached a group.
-    //TODO rename char_cursor_reset ?
-    //TODO pub(crate) plz?
+    /// After an internal method changes what head will return, this method should be called.
+    /// If head is a string, create a char_cursor on the first character of the string.
+    /// If head is a group, clear the char_cursor.
+    // TODO rename char_cursor_reset ?
+    // TODO Make this pub(crate) once walkers.rs doesn't repend on it.
     pub fn char_cursor_update(&mut self) {
         let cursor = if let Some(&DocChars(ref text)) = self.head_raw() {
             Some(CharCursor::from_docstring(text))

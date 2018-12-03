@@ -607,7 +607,7 @@ impl<'a> Walker<'a> {
         let mut current_stepper = self.stepper.doc.clone();
 
         let char_index = current_stepper.char_index();
-        current_stepper.char_cursor_update();
+        current_stepper.char_cursor_update(); // why? because we might have a reversed stepper?
 
         let mut doc_stepper = DocStepper::new(&self.original_doc.0);
         // TODO added raw_index since raw partialeq operation breaks. see DocStepper:raw_index

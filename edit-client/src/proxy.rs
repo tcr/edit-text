@@ -8,8 +8,11 @@ use crate::{
 use self::crossbeam_channel::Sender;
 use edit_common::commands::*;
 use failure::Error;
+use std::cell::{
+    RefCell,
+    RefMut,
+};
 use std::rc::Rc;
-use std::cell::{RefCell, RefMut};
 
 #[cfg(not(target_arch = "wasm32"))]
 pub struct ProxyClientController {

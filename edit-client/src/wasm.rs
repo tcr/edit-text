@@ -13,13 +13,16 @@ use failure::Error;
 use js_sys;
 use serde_json;
 use serde_json::Value;
+use std::cell::{
+    RefCell,
+    RefMut,
+};
 use std::rc::Rc;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use std::cell::{RefCell, RefMut};
 use web_sys;
 
 lazy_static! {
@@ -94,10 +97,19 @@ impl ClientController for WasmClientController {
         let command_data = serde_json::to_string(command).unwrap();
         let command_json: serde_json::Value = serde_json::from_str(&command_data).unwrap();
         let command_jsvalue = js_sys::JSON::parse(&command_data).unwrap();
-        console_group_collapsed_str_str("[server]", command_json.as_object().unwrap().get("tag").unwrap().as_str().unwrap());
+        console_group_collapsed_str_str(
+            "[server]",
+            command_json
+                .as_object()
+                .unwrap()
+                .get("tag")
+                .unwrap()
+                .as_str()
+                .unwrap(),
+        );
         console_debug_jsvalue(command_jsvalue);
         console_group_end();
-        
+
         if let Some(ws) = self.ws.as_ref() {
             ws.send_with_str(&command_data);
         } else {
@@ -134,7 +146,6 @@ extern "C" {
     #[wasm_bindgen(js_namespace = console, js_name = "groupEnd")]
     fn console_group_end();
 }
-
 
 #[wasm_bindgen]
 impl WasmClientController {
@@ -203,10 +214,7 @@ impl WasmClientController {
     /// messages to the Client implementation and returning a method to write
     /// commands to the server.
     #[wasm_bindgen(js_name = "subscribeServer")]
-    pub fn subscribe_server(
-        &mut self,
-        ws_url: String,
-    ) -> Result<WebsocketSend, JsValue> {
+    pub fn subscribe_server(&mut self, ws_url: String) -> Result<WebsocketSend, JsValue> {
         let ws = Rc::new(web_sys::WebSocket::new(&ws_url)?);
 
         {
@@ -228,8 +236,17 @@ impl WasmClientController {
                 let command: ClientCommand = serde_json::from_str(&command_data).unwrap();
                 let command_json: serde_json::Value = serde_json::from_str(&command_data).unwrap();
                 let command_jsvalue = js_sys::JSON::parse(&command_data).unwrap();
-                
-                console_group_collapsed_str_str("[client]", command_json.as_object().unwrap().get("tag").unwrap().as_str().unwrap());
+
+                console_group_collapsed_str_str(
+                    "[client]",
+                    command_json
+                        .as_object()
+                        .unwrap()
+                        .get("tag")
+                        .unwrap()
+                        .as_str()
+                        .unwrap(),
+                );
                 console_debug_str(&command_data);
                 console_debug_jsvalue(command_jsvalue);
                 console_group_end();
@@ -239,7 +256,9 @@ impl WasmClientController {
                 (WasmClientController {
                     state: client.clone(),
                     ws: Some(ws2.clone()),
-                }).handle_task(Task::ClientCommand(command)).expect("Client task failed");
+                })
+                .handle_task(Task::ClientCommand(command))
+                .expect("Client task failed");
             }) as Box<dyn FnMut(_)>);
             ws.add_event_listener_with_callback("message", closure.as_ref().unchecked_ref())?;
             closure.forget();
@@ -253,7 +272,9 @@ impl WasmClientController {
                 (WasmClientController {
                     state: client.clone(),
                     ws: Some(ws2.clone()),
-                }).handle_task(Task::ClientCommand(ClientCommand::ServerDisconnect)).expect("Client task failed");
+                })
+                .handle_task(Task::ClientCommand(ClientCommand::ServerDisconnect))
+                .expect("Client task failed");
             }) as Box<dyn FnMut(_)>);
             ws.add_event_listener_with_callback("close", closure.as_ref().unchecked_ref())?;
             closure.forget();

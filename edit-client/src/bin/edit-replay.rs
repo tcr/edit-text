@@ -20,14 +20,14 @@ use edit_client::{
 };
 use edit_common::commands::*;
 use failure::Error;
+use std::cell::RefCell;
 use std::io::prelude::*;
+use std::rc::Rc;
 use std::sync::{
     atomic::AtomicBool,
     Arc,
 };
 use structopt::StructOpt;
-use std::rc::Rc;
-use std::cell::RefCell;
 
 fn init_new_client(
     client_id: &str,
