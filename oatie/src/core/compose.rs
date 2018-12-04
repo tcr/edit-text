@@ -1,6 +1,6 @@
 //! Composes two operations together.
 
-use crate::doc::*;
+use super::doc::*;
 use std::cmp;
 use crate::stepper::*;
 

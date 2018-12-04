@@ -3,8 +3,8 @@
 use std::cmp;
 use super::compose;
 use super::doc::*;
-use super::stepper::*;
-use super::writer::*;
+use crate::stepper::*;
+use crate::writer::*;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
