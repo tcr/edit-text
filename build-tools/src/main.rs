@@ -123,6 +123,10 @@ enum Cli {
     ServerRun {
         #[structopt(long = "log", help = "Export a log")]
         log: bool,
+        
+        #[structopt(long = "open", help = "Opens the server in your browser")]
+        open: bool,
+
         args: Vec<String>,
     },
 
@@ -486,7 +490,7 @@ fn run() -> Result<(), Error> {
             )?;
         }
 
-        Cli::ServerRun { log, args } => {
+        Cli::ServerRun { log, args, open } => {
             if release {
                 eprintln!("Building and running edit-text server (release mode)...");
             } else {
@@ -538,11 +542,12 @@ fn run() -> Result<(), Error> {
                     export RUST_BACKTRACE=1
                     export DATABASE_URL=edit-server/edit.sqlite3
                     cargo run {force_color_flag} {release_flag} \
-                        --bin edit-server -- {args}
+                        --bin edit-server -- {open} {args}
                 ",
                 use_log = if log { 1 } else { 0 },
                 release_flag = release_flag,
                 force_color_flag = force_color_flag,
+                open = if open { Some("--open") } else { None },
                 args = args,
             )?;
 
