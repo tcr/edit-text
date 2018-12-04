@@ -398,7 +398,7 @@ pub fn apply_del_bc(spanvec: &DocSpan, del: &DelSpan) -> (DocSpan, Program) {
     let (compare, bc) = mutator.result().unwrap();
 
     // Compare results.
-    if cfg!(feature = "verify_bytecode") {
+    if cfg!(feature = "validate_bytecode") {
         let actual = output_doc.clone();
         if actual != compare {
             console_log!("\n\n\n🚫🚫🚫 DELETION: {:?}", del);

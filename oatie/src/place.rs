@@ -249,7 +249,7 @@ impl AddPlaceable for AddSpan {
         for item in self {
             ret += match *item {
                 AddSkip(len) | AddStyles(len, _) => len,
-                AddChars(ref chars) => 0,
+                AddChars(ref _chars) => 0,
                 AddGroup(_, ref span) => span.skip_pre_len(),
                 AddWithGroup(..) => 1,
             };

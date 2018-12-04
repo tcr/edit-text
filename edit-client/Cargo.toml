@@ -68,4 +68,4 @@ uuid = { features = ["v4"], version = "0.5" }
 [features]
 full_client_updates = []
 use_wee_alloc = []
-default = []
+console_command_log = []
