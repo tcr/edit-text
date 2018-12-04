@@ -15,6 +15,7 @@ use diesel::sqlite::SqliteConnection;
 use failure::Error;
 use log::LevelFilter;
 use mdbook::MDBook;
+use std::collections::HashSet;
 use std::env;
 use std::path::Path;
 use structopt::clap::AppSettings;
@@ -199,8 +200,69 @@ fn run() -> Result<(), Error> {
         vec!["./target/debug/build-tools"]
     };
 
+    // Load configuration file, convert it to a features list.
+    #[allow(non_snake_case)]
+    let CONFIGURATION: toml::Value = std::fs::read_to_string("./Configure.toml")?.parse()?;
+    #[allow(non_snake_case)]
+    let WORKSPACE_FEATURES: HashSet<String> = CONFIGURATION
+        .as_table()
+        .map(|table| {
+            table
+                .into_iter()
+                .filter(|(_k, v)| v.as_bool().unwrap_or(false))
+                .map(|(k, _v)| k.to_owned())
+                .collect::<HashSet<String>>()
+        })
+        .unwrap_or(HashSet::new());
+
+    let features_for_crate = |name: &str| -> Result<HashSet<String>, Error> {
+        let cargo_toml: toml::Value =
+            std::fs::read_to_string(Path::new(name).join("Cargo.toml"))?.parse()?;
+        let crate_features = cargo_toml
+            .get("features")
+            .and_then(|key| key.as_table())
+            .map(|table| {
+                table
+                    .into_iter()
+                    .map(|(k, _v)| k.to_owned())
+                    .collect::<HashSet<String>>()
+            })
+            .unwrap_or(HashSet::new());
+        Ok(WORKSPACE_FEATURES
+            .intersection(&crate_features)
+            .cloned()
+            .collect())
+    };
+
+    let cargo_args_for_crate = |name: &str, deps: &[&str]| -> Result<Vec<String>, Error> {
+        let mut enabled_features = features_for_crate(name)?;
+        for dep in deps {
+            enabled_features.extend(
+                features_for_crate(dep)?
+                    .into_iter()
+                    .map(|feature| format!("{}/{}", dep, feature))
+                    .collect::<Vec<String>>(),
+            );
+        }
+
+        Ok(if enabled_features.is_empty() {
+            vec![]
+        } else {
+            vec![
+                "--features".to_string(),
+                enabled_features.into_iter().collect::<Vec<_>>().join(","),
+            ]
+        })
+    };
+
+    #[allow(non_snake_case)]
+    let CARGO_ARGS_EDIT_CLIENT = cargo_args_for_crate("edit-client", &["oatie"])?;
+    #[allow(non_snake_case)]
+    let CARGO_ARGS_OATIE = cargo_args_for_crate("oatie", &[])?;
+
     // Pass arguments directly to subcommands: don't capture -h, -v, or verification
     // Do this by adding "--" into the args flag after the subcommand.
+    // TODO merge this into cargo_args_for_crate
     let mut args = ::std::env::args().collect::<Vec<_>>();
 
     // We interpret the --release flag at the build level.
@@ -334,9 +396,10 @@ fn run() -> Result<(), Error> {
             execute!(
                 r"
                     cd edit-client
-                    cargo build {release_flag} --lib --target wasm32-unknown-unknown
+                    cargo build {release_flag} --lib --target wasm32-unknown-unknown {cargo_args}
                 ",
                 release_flag = release_flag,
+                cargo_args = CARGO_ARGS_EDIT_CLIENT,
             )?;
 
             // Compile the TypeScript bindings.
@@ -364,9 +427,10 @@ fn run() -> Result<(), Error> {
                     cd edit-client
                     export MERCUTIO_WASM_LOG=0
                     export RUST_BACKTRACE=1
-                    cargo run {release_flag} --bin edit-client-proxy -- {args}
+                    cargo run {release_flag} --bin edit-client-proxy {cargo_args} -- {args}
                 ",
                 release_flag = release_flag,
+                cargo_args = CARGO_ARGS_EDIT_CLIENT,
                 args = args,
             )?;
         }
@@ -379,9 +443,10 @@ fn run() -> Result<(), Error> {
                     cd edit-client
                     export MERCUTIO_WASM_LOG=0
                     export RUST_BACKTRACE=1
-                    cargo build {release_flag} --bin edit-client-proxy -- {args}
+                    cargo build {release_flag} --bin edit-client-proxy {cargo_args} -- {args}
                 ",
                 release_flag = release_flag,
+                cargo_args = CARGO_ARGS_EDIT_CLIENT,
                 args = args,
             )?;
         }
@@ -392,9 +457,10 @@ fn run() -> Result<(), Error> {
             execute!(
                 r"
                     cd oatie
-                    cargo build {release_flag} {args}
+                    cargo build {release_flag} {cargo_args} {args}
                 ",
                 release_flag = release_flag,
+                cargo_args = CARGO_ARGS_OATIE,
                 args = args,
             )?;
         }
@@ -500,9 +566,10 @@ fn run() -> Result<(), Error> {
                 r"
                     cd edit-client
                     export RUST_BACKTRACE=1
-                    cargo run --release --bin edit-replay -- {args}
+                    cargo run --release --bin edit-replay {cargo_args} -- {args}
                 ",
                 // release_flag = release_flag,
+                cargo_args = CARGO_ARGS_EDIT_CLIENT,
                 args = args,
             )?;
         }
@@ -513,7 +580,7 @@ fn run() -> Result<(), Error> {
                     execute!("{self_path} test unit", self_path = SELF_PATH)?;
                     execute!("{self_path} test integration", self_path = SELF_PATH)?;
                 }
-                TestTarget::Integration { no_headless }=> {
+                TestTarget::Integration { no_headless } => {
                     expect_geckodriver();
 
                     // Unit test

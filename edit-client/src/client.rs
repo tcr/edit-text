@@ -4,31 +4,20 @@ mod state;
 pub use self::actions::*;
 pub use self::state::*;
 
-use oatie;
-use crate::{
-    random::*,
-    walkers::Pos,
-};
+use crate::random::*;
+use crate::walkers::Pos;
 use edit_common::{
     commands::*,
     doc_as_html,
-    markdown::doc_to_markdown,
 };
 use failure::Error;
-use oatie::{
-    doc::*,
-    validate::validate_doc,
-    OT,
-};
+use oatie::{self, OT};
+use oatie::doc::*;
+use oatie::validate::validate_doc;
 use serde_json;
-use std::{
-    char::from_u32,
-    sync::atomic::{
-        AtomicBool,
-        Ordering,
-    },
-    sync::Arc,
-};
+use std::char::from_u32;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 // Shorthandler
 // code, meta, shift, alt, callback
@@ -258,7 +247,10 @@ pub fn button_handlers<C: ClientController>(
     (callbacks, ui)
 }
 
-fn controller_command<C: ClientController>(client: &mut C, req: ControllerCommand) -> Result<(), Error> {
+fn controller_command<C: ClientController>(
+    client: &mut C,
+    req: ControllerCommand,
+) -> Result<(), Error> {
     match req {
         ControllerCommand::RenameGroup { tag, curspan: _ } => {
             client.client_op(|doc| replace_block(doc, &tag))?;
@@ -474,8 +466,7 @@ pub trait ClientController {
                                 .state()
                                 .client_doc
                                 .sync_confirmed_pending_op(&doc, version);
-                            if let Some(local_op) = local_op
-                            {
+                            if let Some(local_op) = local_op {
                                 // Send our next operation.
                                 self.upload(local_op)?;
                             }
@@ -490,9 +481,11 @@ pub trait ClientController {
                                 .sync_sent_new_version(&doc, version, &input_op);
 
                             // Client drives frontend frontend state.
-                            let res = if cfg!(feature = "DEBUG_full_client_updates") {
+                            let res = if cfg!(feature = "full_client_updates") {
                                 // Fully refresh the client.
-                                FrontendCommand::RenderFull(doc_as_html(&self.state().client_doc.doc.0))
+                                FrontendCommand::RenderFull(doc_as_html(
+                                    &self.state().client_doc.doc.0,
+                                ))
                             } else {
                                 // Render delta.
                                 FrontendCommand::RenderDelta(
@@ -524,7 +517,8 @@ pub trait ClientController {
 
                     Task::ClientCommand(ClientCommand::ServerDisconnect) => {
                         // Notify frontend.
-                        self.send_frontend(&FrontendCommand::ServerDisconnect).unwrap();
+                        self.send_frontend(&FrontendCommand::ServerDisconnect)
+                            .unwrap();
                     }
                 }
 
@@ -562,10 +556,7 @@ pub trait ClientController {
         let doc = self.state().client_doc.doc.clone();
         let client_id = self.state().client_id.clone();
 
-        callback(ActionContext {
-            doc,
-            client_id,
-        })
+        callback(ActionContext { doc, client_id })
     }
 
     fn client_op<C>(&mut self, callback: C) -> Result<(), Error>
@@ -603,7 +594,7 @@ pub trait ClientController {
         validate_doc(&self.state().client_doc.doc).expect("Local op was malformed");
 
         // Render our local update.
-        let res = if cfg!(feature = "DEBUG_full_client_updates") {
+        let res = if cfg!(feature = "full_client_updates") {
             // Fully refresh the client.
             FrontendCommand::RenderFull(doc_as_html(&self.state().client_doc.doc.0))
         } else {

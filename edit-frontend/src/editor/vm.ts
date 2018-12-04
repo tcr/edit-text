@@ -14,8 +14,11 @@ WrapPrevious(n, Attrs)
 
 */
 
-import {Bytecode} from '../bindgen/edit_client';
+import { Bytecode } from '../bindgen/edit_client';
 import * as util from './util';
+
+
+declare var CONFIG: any;
 
 function assert(condition: boolean) {
     if (!condition) {
@@ -165,14 +168,18 @@ export function vm(el: Node) {
         },
 
         run(program: Array<Bytecode>) {
-            // console.group('VM group: %d opcodes', program.length)
-            console.groupCollapsed('[vm] Script length:', program.length);
+            if (CONFIG.console_command_log) {
+                console.groupCollapsed('[vm] Script length:', program.length);
+            }
             program.forEach((opcode: Bytecode) => {
-                console.debug('[vm]', JSON.stringify(opcode));
+                if (CONFIG.console_command_log) {
+                    console.debug('[vm]', JSON.stringify(opcode));
+                }
                 this.handle(opcode.tag, 'fields' in opcode ? opcode.fields : opcode);
             });
-            console.groupEnd();
-            // console.groupEnd()
+            if (CONFIG.console_command_log) {
+                console.groupEnd();
+            }
         }
     };
 }

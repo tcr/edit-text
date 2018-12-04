@@ -19,6 +19,8 @@ use edit_common::{
     simple_ws::*,
 };
 use failure::Error;
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::{
     panic,
     process,
@@ -36,8 +38,6 @@ use std::{
 };
 use structopt::StructOpt;
 use ws::CloseCode;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "edit-client", about = "An example of StructOpt usage.")]
@@ -252,6 +252,7 @@ fn setup_client(
     // Connect to the sync server.
     spawn_sync_connection(ws_port, page_id.to_owned(), tx_task.clone(), rx_sync);
 
+    // TODO Re-enable edit-client-proxy after Client became an Rc.
     unimplemented!("Disabled until ClientImpl is shareable between threads");
 
     // // Operate on all incoming tasks.

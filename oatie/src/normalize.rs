@@ -1,5 +1,4 @@
 use super::doc::*;
-use std::collections::HashMap;
 
 fn normalize_add_element(elem: AddElement) -> AddElement {
     match elem {

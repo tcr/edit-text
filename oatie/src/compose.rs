@@ -1,14 +1,7 @@
 //! Composes two operations together.
 
 use crate::doc::*;
-use std::borrow::ToOwned;
 use std::cmp;
-use std::collections::HashMap;
-
-use crate::apply_add;
-use crate::apply_delete;
-use crate::apply_operation;
-use crate::normalize;
 use crate::stepper::*;
 
 fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepper) {
@@ -161,7 +154,7 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
                         a.next();
                         b.next();
                     }
-                    Some(DelChars(bcount)) => {
+                    Some(DelChars(..)) => {
                         panic!("DelWithGroup vs DelChars is bad");
                     }
                     None => {
@@ -250,7 +243,7 @@ pub fn compose_del_del(avec: &DelSpan, bvec: &DelSpan) -> DelSpan {
 fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddStepper, b: &mut AddStepper) {
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
-            AddChars(value) => {
+            AddChars(..) => {
                 res.place(&b.next().unwrap());
             }
             AddStyles(b_count, b_styles) => match a.get_head() {
@@ -301,7 +294,7 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddStepper, b: &mut AddStepp
                         b.next();
                     }
                 }
-                AddWithGroup(span) => {
+                AddWithGroup(..) => {
                     res.push(a.next().unwrap());
                     if b_count == 1 {
                         b.next();
@@ -360,7 +353,7 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddStepper, b: &mut AddStepp
                         b.next();
                     }
                 }
-                AddWithGroup(span) => {
+                AddWithGroup(_span) => {
                     res.push(a.next().unwrap());
                     if bcount == 1 {
                         b.next();
@@ -389,7 +382,7 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddStepper, b: &mut AddStepp
                 b.next();
             }
             AddWithGroup(ref bspan) => match a.get_head() {
-                AddChars(value) => {
+                AddChars(..) => {
                     panic!("Cannot compose AddWithGroup with AddChars");
                 }
                 AddStyles(..) => {
@@ -478,7 +471,7 @@ fn compose_add_del_inner(
             DelChars(bcount) => match a.get_head() {
                 AddChars(avalue) => {
                     if bcount < avalue.char_len() {
-                        let (a_left, a_right) = avalue.split_at(bcount);
+                        let (_a_left, a_right) = avalue.split_at(bcount);
                         a.head = Some(AddChars(a_right));
                         b.next();
                     } else if bcount > avalue.char_len() {
@@ -719,7 +712,7 @@ fn compose_add_del_inner(
                         //     addres.place(&AddSkip(b_stepper.into_span().skip_post_len()));
                         // }
                     }
-                    AddGroup(attr, insspan) => {
+                    AddGroup(_, insspan) => {
                         a.next();
                         b.next();
 

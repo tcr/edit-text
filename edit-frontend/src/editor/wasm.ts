@@ -3,12 +3,12 @@ import 'react';
 
 import * as route from '../ui/route';
 import * as index from '..';
-import { WasmClientController as WasmClientModule, FrontendCommand } from '../bindgen/edit_client';
+import { WasmClientController as WasmClientModule, FrontendCommand, ControllerCommand } from '../bindgen/edit_client';
 import { getWasmModule } from '../index';
-
-import {ControllerCommand} from '../bindgen/edit_client';
 import {ControllerImpl, ServerImpl} from './network';
 import DEBUG from '../debug';
+
+declare var CONFIG: any;
 
 let _convertMarkdownToDoc: ((x: string) => any) | null = null;
 let _convertMarkdownToHtml: ((x: string) => any) | null = null;
@@ -79,9 +79,11 @@ export class WasmController implements ControllerImpl {
 
   sendCommand(command: ControllerCommand) {
     if (forwardWasmTaskCallback != null) {
-      console.groupCollapsed('%c[controller] %s', 'background: #c63; padding: 3px 5px; display: block; color: white;', command.tag);
-      console.debug(command);
-      console.groupEnd();
+      if (CONFIG.console_command_log) {
+        console.groupCollapsed('%c[controller] %s', 'background: #c63; padding: 3px 5px; display: block; color: white;', command.tag);
+        console.debug(command);
+        console.groupEnd();
+      }
 
       this.clientBindings.command(JSON.stringify({
         ControllerCommand: command,
@@ -101,10 +103,12 @@ export class WasmController implements ControllerImpl {
         if (parse.tag == 'ServerCommand') {
           console.error('Did not expect server command:', parse);
         } else {
-          console.groupCollapsed('[frontend]', parse.tag);
-          console.debug(parse);
-          console.debug(data);
-          console.groupEnd();
+          if (CONFIG.console_command_log) {
+            console.groupCollapsed('[frontend]', parse.tag);
+            console.debug(parse);
+            console.debug(data);
+            console.groupEnd();
+          }
 
           if (client.onMessage != null) {
             client.onMessage(parse);

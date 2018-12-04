@@ -2,7 +2,9 @@
 
 import * as route from './route';
 import { ControllerImpl } from '../editor/network';
-import {ControllerCommand} from '../bindgen/edit_client';
+import { ControllerCommand } from '../bindgen/edit_client';
+
+declare var CONFIG: any;
 
 export class ProxyController implements ControllerImpl {
   onMessage: (msg: any) => void | null;
@@ -11,9 +13,11 @@ export class ProxyController implements ControllerImpl {
   private socket: WebSocket;
 
   sendCommand(command: ControllerCommand) {
-    console.groupCollapsed('[controller]', command.tag);
-    console.debug(command);
-    console.groupEnd();
+    if (CONFIG.console_command_log) {
+      console.groupCollapsed('[controller]', command.tag);
+      console.debug(command);
+      console.groupEnd();
+    }
 
     this.socket.send(JSON.stringify(command));
   }

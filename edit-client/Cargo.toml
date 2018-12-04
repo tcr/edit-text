@@ -66,5 +66,6 @@ ws = "0.7.3"
 uuid = { features = ["v4"], version = "0.5" }
 
 [features]
-DEBUG_full_client_updates = []
-default = ["DEBUG_full_client_updates"]
+full_client_updates = []
+use_wee_alloc = []
+console_command_log = []

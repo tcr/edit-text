@@ -1,18 +1,9 @@
 //! Classes for generating operation steps (add / del).
 
-use std::borrow::ToOwned;
-use std::cmp;
 use std::collections::HashMap;
-
-use crate::compose;
 use crate::doc::*;
-use crate::normalize;
-use crate::stepper::*;
 
 use failure::Error;
-use term_painter::Attr::*;
-use term_painter::Color::*;
-use term_painter::ToStyle;
 
 #[derive(Clone, Debug, Default)]
 pub struct DelWriter {

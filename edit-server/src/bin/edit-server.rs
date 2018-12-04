@@ -190,6 +190,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                     "configured": true,
                     "wasm": !client_proxy,
                     "title": &edit_title,
+                    "console_command_log": cfg!(feature = "console_command_log"),
                 }))
                     .unwrap()
                 ),
