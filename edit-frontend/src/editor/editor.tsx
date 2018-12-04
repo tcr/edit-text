@@ -1,11 +1,10 @@
 import * as React from 'react';
 
+import copy from './copy';
 import * as commands from './commands';
 import * as util from './util';
 import { ControllerImpl } from './network';
 import {vm} from './vm';
-
-const copy = require('clipboard-copy');
 
 const ROOT_SELECTOR = '.edit-text';
 

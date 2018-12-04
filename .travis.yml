@@ -54,7 +54,7 @@ before_script:
 script:
   # Run test
   - which x86_64-unknown-linux-gnu-gcc || true
-  - ./tools ci
+  - if [ $TRAVIS_EVENT_TYPE = "cron" ]; then ./tools ci --update; else ./tools ci; fi
 
 after_success:
   # Delete the cargo registry, then cache resulting files

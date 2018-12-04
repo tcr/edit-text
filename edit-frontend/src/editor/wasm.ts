@@ -121,25 +121,23 @@ export class WasmController implements ControllerImpl {
         let clientBindings = Module.wasm_setup(route.serverUrl());
         DEBUG.setGlobalClientBindings(clientBindings);
 
-        setImmediate(() => {
-          // Websocket port
-          client.Module = Module;
-          client.clientBindings = clientBindings;
+        // Websocket port
+        client.Module = Module;
+        client.clientBindings = clientBindings;
 
-          forwardWasmTaskCallback = (msg: any) => {
-            try {
-              clientBindings.command(msg);
-            } catch (e) {
-              forwardWasmTaskCallback = null;
+        forwardWasmTaskCallback = (msg: any) => {
+          try {
+            clientBindings.command(msg);
+          } catch (e) {
+            forwardWasmTaskCallback = null;
 
-              onError();
+            onError();
 
-              throw new WasmError(e, `Error during client command: ${e.message}`);
-            }
-          };
+            throw new WasmError(e, `Error during client command: ${e.message}`);
+          }
+        };
 
-          resolve();
-        });
+        resolve();
       });
     });
   }
