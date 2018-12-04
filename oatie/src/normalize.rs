@@ -1,4 +1,4 @@
-use super::doc::*;
+use crate::doc::*;
 
 fn normalize_add_element(elem: AddElement) -> AddElement {
     match elem {

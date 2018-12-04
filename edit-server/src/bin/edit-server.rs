@@ -457,6 +457,9 @@ struct Opt {
 
     #[structopt(help = "Enable client proxy", long = "client-proxy", short = "c")]
     client_proxy: bool,
+
+    #[structopt(help = "Open in browser.", long = "open")]
+    open: bool,
 }
 
 fn main() {
@@ -469,6 +472,14 @@ fn main() {
     // ::std::process::exit(1);
 
     let _ = spawn_sync_socket_server();
+
+    let port = opt.port;
+    std::thread::spawn(move || {
+        #[allow(deprecated)]
+        std::thread::sleep_ms(1_000);
+        // TODO use actual url generation bindings to --open browser
+        open::that(&format!("http://localhost:{}", port));
+    });
 
     run_http_server(opt.port, opt.client_proxy)
 }

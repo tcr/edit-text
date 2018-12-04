@@ -70,6 +70,9 @@ enum Cli {
     Ci {
         #[structopt(long = "no-headless", help = "Do not run in headless mode.")]
         no_headless: bool,
+
+        #[structopt(long = "update", help = "Updates all packages before running CI.")]
+        update: bool,
     },
 
     #[structopt(name = "client-proxy", about = "Run client code in your terminal.")]
@@ -120,6 +123,10 @@ enum Cli {
     ServerRun {
         #[structopt(long = "log", help = "Export a log")]
         log: bool,
+        
+        #[structopt(long = "open", help = "Opens the server in your browser")]
+        open: bool,
+
         args: Vec<String>,
     },
 
@@ -299,7 +306,24 @@ fn run() -> Result<(), Error> {
         Cli::Ci {
             // TODO make this actually disable headless mode
             no_headless: _no_headless,
+            update,
         } => {
+            if update {
+                eprintln!("--update provided, updating all cargo and npm packages.");
+                execute!(
+                    "
+                        cargo update
+                    "
+                )?;
+                execute!(
+                    "
+                        cd edit-frontend
+                        yarn upgrade
+                    "
+                )?;
+                eprintln!();
+            }
+
             let output = command!(
                 "
                     git --no-pager diff --name-only HEAD..origin/master
@@ -321,6 +345,7 @@ fn run() -> Result<(), Error> {
                 .all(|item| Path::new(item).starts_with("docs/"));
 
             if only_docs {
+                // If only docs/ was modified, just build the book.
                 eprintln!("ci: building only book");
                 execute!(
                     r"
@@ -329,7 +354,7 @@ fn run() -> Result<(), Error> {
                     self_path = SELF_PATH,
                 )?;
             } else {
-                // Build all targets.
+                // Build all ./tools targets.
                 eprintln!("ci: building all");
                 execute!(
                     r"
@@ -340,7 +365,7 @@ fn run() -> Result<(), Error> {
                 eprintln!();
 
                 if cfg!(windows) {
-                    // Only perform unit tests on Windows.
+                    // Don't perform integration tests on Windows.
                     eprintln!("ci: perform test (windows)");
                     execute!(
                         r"
@@ -359,7 +384,7 @@ fn run() -> Result<(), Error> {
                     )?;
                     eprintln!();
 
-                    // Test cross-compilation.
+                    // Test cross-compilation to a Linux binary.
                     eprintln!("ci: package binary");
                     execute!(
                         r"
@@ -465,7 +490,7 @@ fn run() -> Result<(), Error> {
             )?;
         }
 
-        Cli::ServerRun { log, args } => {
+        Cli::ServerRun { log, args, open } => {
             if release {
                 eprintln!("Building and running edit-text server (release mode)...");
             } else {
@@ -517,11 +542,12 @@ fn run() -> Result<(), Error> {
                     export RUST_BACKTRACE=1
                     export DATABASE_URL=edit-server/edit.sqlite3
                     cargo run {force_color_flag} {release_flag} \
-                        --bin edit-server -- {args}
+                        --bin edit-server -- {open} {args}
                 ",
                 use_log = if log { 1 } else { 0 },
                 release_flag = release_flag,
                 force_color_flag = force_color_flag,
+                open = if open { Some("--open") } else { None },
                 args = args,
             )?;
 
@@ -607,7 +633,6 @@ fn run() -> Result<(), Error> {
                         .scoped_spawn()
                         .unwrap(),
                     );
-
                     // Sleep for 3s after server boots.
                     ::std::thread::sleep(::std::time::Duration::from_millis(3000));
 

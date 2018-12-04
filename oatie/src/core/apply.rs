@@ -1,6 +1,6 @@
 //! Methods to apply an operation to a document.
 
-use crate::doc::*;
+use super::doc::*;
 use crate::stepper::*;
 
 fn apply_add_inner<M: DocMutator>(

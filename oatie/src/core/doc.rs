@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 // Re-exports
 pub use super::place::*;
-pub use super::string::*;
+pub use crate::string::*;
 
 pub type Attrs = HashMap<String, String>;
 

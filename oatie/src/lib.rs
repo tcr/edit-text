@@ -33,22 +33,20 @@ macro_rules! log_compose {
 
 /* /logging */
 
+// First enable macros.
+#[macro_use]
+pub mod macros;
 #[macro_use]
 pub mod wasm;
 
-pub mod compose;
-pub mod doc;
-//pub mod random;
-pub mod apply;
-#[macro_use]
-pub mod macros;
+// Then import & re-export core items.
+mod core;
+pub use self::core::*;
+
 pub mod normalize;
 mod parse;
-mod place;
-pub mod schema;
 pub mod stepper;
 mod string;
-pub mod transform;
 pub mod transform_test;
 pub mod validate;
 pub mod writer;
