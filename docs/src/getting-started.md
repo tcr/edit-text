@@ -1,6 +1,6 @@
 # Getting Started
 
-# Requirements
+## Requirements
 
 **rustup:** `edit-text` is written in Rust, and so you will need a Rust compiler in order to serve the application. Rust may be installed using your system package manager, but the preferred way to download and install Rust is through the [`rustup` toolchain](http://rustup.rs/) available at rustup.rs. To check if you have `rustup` installed, you can run the following command:
 
