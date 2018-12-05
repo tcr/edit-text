@@ -817,7 +817,7 @@ fn run() -> Result<(), Error> {
                 eprintln!("[downloading linux dependencies]");
 
                 // TODO replace this with discrete execute! commands.
-                let _ = sh_execute!(
+                sh_execute!(
                     r#"
                         cd {dir_self}
 
@@ -831,20 +831,20 @@ fn run() -> Result<(), Error> {
 
                         cd $LINKROOT
 
-                        export URL=http://security.debian.org/debian-security/pool/updates/main/o/openssl/libssl-dev_1.1.0f-3+deb9u2_amd64.deb
-                        curl -L -O $URL
+                        export URL=http://security-cdn.debian.org/debian-security/pool/updates/main/o/openssl/libssl-dev_1.1.0j-1~deb9u1_amd64.deb
+                        curl -f -L -O $URL
                         ar p $(basename $URL) data.tar.xz | tar xvJf -
 
-                        export URL=http://security.debian.org/debian-security/pool/updates/main/o/openssl/libssl1.1_1.1.0f-3+deb9u2_amd64.deb
-                        curl -L -O $URL
+                        export URL=http://security-cdn.debian.org/debian-security/pool/updates/main/o/openssl/libssl1.1_1.1.0j-1~deb9u1_amd64.deb
+                        curl -f -L -O $URL
                         ar p $(basename $URL) data.tar.xz | tar xvJf -
 
                         export URL=http://ftp.us.debian.org/debian/pool/main/g/glibc/libc6_2.24-11+deb9u3_amd64.deb
-                        curl -L -O $URL
+                        curl -f -L -O $URL
                         ar p $(basename $URL) data.tar.xz | tar xvJf -
                     "#,
                     dir_self = abs_string_path(".")?,
-                );
+                )?;
             }
 
             eprintln!();
