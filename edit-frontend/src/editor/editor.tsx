@@ -1,7 +1,6 @@
 import * as React from 'react';
 
 import copy from './copy';
-import * as commands from './commands';
 import * as util from './util';
 import { ControllerImpl } from './network';
 import {vm} from './vm';
@@ -343,11 +342,11 @@ export class Editor extends React.Component {
     if (x < boundary.left) {
       x = boundary.left;
     }
-    if (x > boundary.right) {
-      x = boundary.right - 1;
-    }
     if (y < boundary.top) {
       y = boundary.top;
+    }
+    if (x > boundary.right) {
+      x = boundary.right - 1;
     }
     if (y > boundary.bottom) {
       y = boundary.bottom - 1;
@@ -467,7 +466,7 @@ export class Editor extends React.Component {
         let coords = caretScan(x, y, UP);
         if (coords !== null) {
           // Move the cursor and prevent the event from bubbling.
-          this.moveCursorToPoint(coords.x, coords.y, false);
+          this.moveCursorToPoint(coords.x, coords.y, true);
           e.preventDefault();
         }
       }
