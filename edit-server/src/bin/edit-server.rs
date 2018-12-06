@@ -473,13 +473,15 @@ fn main() {
 
     let _ = spawn_sync_socket_server();
 
-    let port = opt.port;
-    std::thread::spawn(move || {
-        #[allow(deprecated)]
-        std::thread::sleep_ms(1_000);
-        // TODO use actual url generation bindings to --open browser
-        open::that(&format!("http://localhost:{}", port));
-    });
+    if opt.open {
+        let port = opt.port;
+        std::thread::spawn(move || {
+            #[allow(deprecated)]
+            std::thread::sleep_ms(1_000);
+            // TODO use actual url generation bindings to --open browser
+            open::that(&format!("http://localhost:{}", port));
+        });
+    }
 
     run_http_server(opt.port, opt.client_proxy)
 }
