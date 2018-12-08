@@ -42,7 +42,7 @@ impl<'a, 'b> Iterator for DocToMarkdown<'a, 'b> {
                         let mut out = String::new();
                         for child in body {
                             match *child {
-                                DocChars(ref text) => {
+                                DocChars(ref text, _) => {
                                     out.push_str(text.as_str());
                                 }
                                 _ => {}
@@ -75,17 +75,13 @@ impl<'a, 'b> Iterator for DocToMarkdown<'a, 'b> {
                 self.doc_stepper.enter();
                 res
             }
-            Some(DocChars(ref text)) => {
+            Some(DocChars(ref text, ref styles)) => {
                 // Styling.
                 let text_event = Event::Text(text.to_string().replace("\n", "  \n").into());
-                let res = if let Some(styles) = text.styles() {
-                    if styles.contains(Style::Bold) {
-                        self.queue.push(text_event);
-                        self.queue.push(Event::End(Tag::Strong));
-                        Some(Event::Start(Tag::Strong))
-                    } else {
-                        Some(text_event)
-                    }
+                let res = if styles.contains(Style::Bold) {
+                    self.queue.push(text_event);
+                    self.queue.push(Event::End(Tag::Strong));
+                    Some(Event::Start(Tag::Strong))
                 } else {
                     Some(text_event)
                 };

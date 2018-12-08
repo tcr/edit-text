@@ -48,30 +48,31 @@ fn apply_add_inner<M: DocMutator>(
 
         match d.clone() {
             AddStyles(count, styles) => match first.clone().unwrap() {
-                DocChars(mut value) => {
+                DocChars(value, mut chars_styles) => {
                     if value.char_len() < count {
                         d = AddStyles(count - value.char_len(), styles.clone());
-                        value.extend_styles(&styles);
+                        chars_styles.extend(&styles);
                         bc.delete(1);
                         bc.InsertDocString(value.clone());
                         // partial = false;
-                        res.place(&DocChars(value));
+                        res.place(&DocChars(value, chars_styles));
                         nextdel = false;
                     } else if value.char_len() > count {
-                        let (mut left, right) = value.split_at(count);
-                        left.extend_styles(&styles);
+                        let (left, right) = value.split_at(count);
+                        let mut left_styles = chars_styles.clone();
+                        left_styles.extend(&styles);
                         bc.delete(1);
                         bc.InsertDocString(left.clone());
                         // partial = false;
-                        res.place(&DocChars(left));
-                        first = Some(DocChars(right));
+                        res.place(&DocChars(left, left_styles));
+                        first = Some(DocChars(right, chars_styles));
                         nextfirst = false;
                     } else {
-                        value.extend_styles(&styles);
+                        chars_styles.extend(&styles);
                         bc.delete(1);
                         bc.InsertDocString(value.clone());
                         // partial = false;
-                        res.place(&DocChars(value));
+                        res.place(&DocChars(value, chars_styles));
                     }
                 }
                 DocGroup(..) => {
@@ -79,23 +80,23 @@ fn apply_add_inner<M: DocMutator>(
                 }
             },
             AddSkip(count) => match first.clone().unwrap() {
-                DocChars(value) => {
+                DocChars(value, chars_styles) => {
                     if value.char_len() < count {
                         // Consume and advance
                         d = AddSkip(count - value.char_len());
                         bc.AdvanceElements(1);
-                        res.place(&DocChars(value));
+                        res.place(&DocChars(value, chars_styles));
                         nextdel = false;
                     } else if value.char_len() > count {
                         let (left, right) = value.split_at(count);
                         // Split text element, we assume
                         bc.skip(count);
-                        res.place(&DocChars(left));
-                        first = Some(DocChars(right));
+                        res.place(&DocChars(left, chars_styles.clone()));
+                        first = Some(DocChars(right, chars_styles));
                         nextfirst = false;
                     } else {
                         bc.AdvanceElements(1);
-                        res.place(&DocChars(value));
+                        res.place(&DocChars(value, chars_styles));
                     }
                 }
                 DocGroup(..) => {
@@ -117,11 +118,11 @@ fn apply_add_inner<M: DocMutator>(
                     panic!("Invalid AddWithGroup");
                 }
             },
-            AddChars(value) => {
+            AddChars(value, styles) => {
                 // TODO where do you skip anything, exactly
                 // need to manifest the place issue externally as well
                 bc.InsertDocString(value.clone());
-                res.place(&DocChars(value));
+                res.place(&DocChars(value, styles));
                 nextfirst = false;
             }
             AddGroup(attrs, innerspan) => {
@@ -255,27 +256,28 @@ fn apply_del_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &DelSpa
 
         match d.clone() {
             DelStyles(count, styles) => match first.clone() {
-                DocChars(mut value) => {
+                DocChars(value, mut chars_styles) => {
                     if value.char_len() < count {
                         d = DelStyles(count - value.char_len(), styles.clone());
-                        value.remove_styles(&styles);
+                        chars_styles.remove(&styles);
                         bc.delete(1);
                         bc.InsertDocString(value.clone());
-                        res.place(&DocChars(value));
+                        res.place(&DocChars(value, chars_styles));
                         nextdel = false;
                     } else if value.char_len() > count {
-                        let (mut left, right) = value.split_at(count);
-                        left.remove_styles(&styles);
+                        let (left, right) = value.split_at(count);
+                        let mut left_styles = chars_styles.clone();
+                        left_styles.remove(&styles);
                         bc.delete(1);
                         bc.InsertDocString(left.clone());
-                        res.place(&DocChars(left));
-                        first = DocChars(right);
+                        res.place(&DocChars(left, chars_styles.clone()));
+                        first = DocChars(right, chars_styles);
                         nextfirst = false;
                     } else {
-                        value.remove_styles(&styles);
+                        chars_styles.remove(&styles);
                         bc.delete(1);
                         bc.InsertDocString(value.clone());
-                        res.place(&DocChars(value));
+                        res.place(&DocChars(value, chars_styles));
                     }
                 }
                 _ => {
@@ -283,22 +285,22 @@ fn apply_del_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &DelSpa
                 }
             },
             DelSkip(count) => match first.clone() {
-                DocChars(value) => {
+                DocChars(value, chars_styles) => {
                     if value.char_len() < count {
                         d = DelSkip(count - value.char_len());
                         bc.AdvanceElements(1);
-                        res.place(&DocChars(value));
+                        res.place(&DocChars(value, chars_styles));
                         nextdel = false;
                     } else if value.char_len() > count {
                         let (left, right) = value.split_at(count);
                         // Assume this should be deleted from the left
                         bc.skip(count);
-                        res.place(&DocChars(left));
-                        first = DocChars(right);
+                        res.place(&DocChars(left, chars_styles.clone()));
+                        first = DocChars(right, chars_styles);
                         nextfirst = false;
                     } else {
                         bc.AdvanceElements(1);
-                        res.place(&DocChars(value));
+                        res.place(&DocChars(value, chars_styles));
                         nextdel = true;
                     }
                 }
@@ -332,10 +334,10 @@ fn apply_del_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &DelSpa
                 }
             },
             DelChars(count) => match first.clone() {
-                DocChars(ref value) => {
+                DocChars(value, chars_styles) => {
                     if value.char_len() > count {
                         let (_, right) = value.split_at(count);
-                        first = DocChars(right);
+                        first = DocChars(right, chars_styles);
                         nextfirst = false;
                     } else if value.char_len() < count {
                         d = DelChars(count - value.char_len());

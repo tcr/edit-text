@@ -2,8 +2,8 @@ use super::doc::*;
 
 pub(crate) fn can_element_join(left: &DocElement, right: &DocElement) -> bool {
     match (left, right) {
-        (&DocChars(ref prefix), &DocChars(ref suffix)) => {
-            if prefix.styles() == suffix.styles() {
+        (&DocChars(ref prefix, ref prefix_styles), &DocChars(ref suffix, ref suffix_styles)) => {
+            if prefix_styles == suffix_styles {
                 return true;
             }
         }
@@ -14,8 +14,8 @@ pub(crate) fn can_element_join(left: &DocElement, right: &DocElement) -> bool {
 
 pub(crate) fn try_element_join(left: &mut DocElement, right: &DocElement) -> bool {
     match (left, right) {
-        (&mut DocChars(ref mut prefix), &DocChars(ref suffix)) => {
-            if prefix.styles() == suffix.styles() {
+        (&mut DocChars(ref mut prefix, ref prefix_styles), &DocChars(ref suffix, ref suffix_styles)) => {
+            if prefix_styles.styles() == suffix_styles.styles() {
                 prefix.push_str(suffix.as_str());
                 return true;
             }
@@ -34,7 +34,7 @@ pub trait DocPlaceable {
 impl DocPlaceable for DocSpan {
     fn place(&mut self, elem: &DocElement) {
         match *elem {
-            DocChars(ref text) => {
+            DocChars(ref text, ref _styles) => {
                 assert!(text.char_len() > 0);
 
                 // If the most recent element is text, we may want to just
@@ -51,7 +51,7 @@ impl DocPlaceable for DocSpan {
                 }
 
                 // Otherwise, push the new entry
-                self.push(DocChars(text.to_owned()));
+                self.push(elem.clone());
             }
             DocGroup(..) => {
                 self.push(elem.clone());
@@ -69,7 +69,7 @@ impl DocPlaceable for DocSpan {
         let mut ret = 0;
         for item in self {
             ret += match *item {
-                DocChars(ref value) => value.char_len(),
+                DocChars(ref value, _) => value.char_len(),
                 DocGroup(..) => 1,
             };
         }
@@ -201,21 +201,21 @@ impl AddPlaceable for AddSpan {
 
     fn place(&mut self, elem: &AddElement) {
         match *elem {
-            AddChars(ref text) => {
+            AddChars(ref text, ref styles) => {
                 assert!(text.char_len() > 0);
 
                 // If the most recent element is text, we may want to just
                 // append our text to it to cut down on new elements.
-                if let Some(&mut AddChars(ref mut prefix)) = self.last_mut() {
+                if let Some(&mut AddChars(ref mut prefix, ref prefix_styles)) = self.last_mut() {
                     // Check if they're equal and we can push it directly.
-                    if prefix.styles() == text.styles() {
+                    if styles == prefix_styles {
                         prefix.push_str(text.as_str());
                         return;
                     }
                 }
 
                 // Otherwise, push the new entry
-                self.push(AddChars(text.to_owned()));
+                self.push(AddChars(text.to_owned(), styles.clone()));
             }
             AddStyles(count, ref styles) => {
                 assert!(count > 0);
@@ -249,7 +249,7 @@ impl AddPlaceable for AddSpan {
         for item in self {
             ret += match *item {
                 AddSkip(len) | AddStyles(len, _) => len,
-                AddChars(ref _chars) => 0,
+                AddChars(ref _chars, _) => 0,
                 AddGroup(_, ref span) => span.skip_pre_len(),
                 AddWithGroup(..) => 1,
             };
@@ -262,7 +262,7 @@ impl AddPlaceable for AddSpan {
         for item in self {
             ret += match *item {
                 AddSkip(len) | AddStyles(len, _) => len,
-                AddChars(ref chars) => chars.char_len(),
+                AddChars(ref chars, _) => chars.char_len(),
                 AddGroup(..) | AddWithGroup(..) => 1,
             };
         }

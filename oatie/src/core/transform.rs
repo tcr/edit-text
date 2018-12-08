@@ -3,10 +3,12 @@
 use std::cmp;
 use super::compose;
 use super::doc::*;
+use super::style::StyleMap;
 use crate::stepper::*;
 use crate::writer::*;
 use std::fmt::Debug;
 use std::marker::PhantomData;
+use crate::style::OpaqueStyleMap;
 
 pub trait Track: Copy + Debug + PartialEq + Sized {
     // Rename this do close split? if applicable?
@@ -261,12 +263,12 @@ where
         self.b_add.place(&AddGroup(attrs.clone(), span.clone()));
     }
 
-    fn chars_a(&mut self, chars: DocString) {
-        self.a_add.place(&AddChars(chars));
+    fn chars_a(&mut self, chars: DocString, styles: OpaqueStyleMap) {
+        self.a_add.place(&AddChars(chars, styles));
     }
 
-    fn chars_b(&mut self, chars: DocString) {
-        self.b_add.place(&AddChars(chars));
+    fn chars_b(&mut self, chars: DocString, styles: OpaqueStyleMap) {
+        self.b_add.place(&AddChars(chars, styles));
     }
 
     fn current(&self) -> Option<TrackState<S>> {
@@ -630,9 +632,9 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                     t.with_group_a(span);
                     b.next();
                 }
-                Some(AddChars(b_chars)) => {
+                Some(AddChars(b_chars, b_styles)) => {
                     t.skip_b(b_chars.char_len());
-                    t.chars_a(b_chars);
+                    t.chars_a(b_chars, b_styles);
                     b.next();
                 }
                 Some(AddSkip(b_count)) => {
@@ -668,9 +670,9 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                     t.with_group_b(span);
                     a.next();
                 }
-                Some(AddChars(a_chars)) => {
+                Some(AddChars(a_chars, a_styles)) => {
                     t.skip_a(a_chars.char_len());
-                    t.chars_b(a_chars);
+                    t.chars_b(a_chars, a_styles);
                     a.next();
                 }
                 Some(AddSkip(a_count)) => {
@@ -737,10 +739,10 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                 // TODO don't like that this isn't a pattern match;
                 // This case should handle AddWithGroup and AddGroup (I believe)
                 (None, compare) => {
-                    let ok = if let Some(AddChars(ref b_chars)) = compare {
+                    let ok = if let Some(AddChars(ref b_chars, ref b_styles)) = compare {
                         if t.supports_text() {
                             t.skip_b(b_chars.char_len());
-                            t.chars_a(b_chars.clone());
+                            t.chars_a(b_chars.clone(), b_styles.clone());
                             b.next();
                             true
                         } else {
@@ -886,12 +888,12 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                     // TODO if they are different tags THEN WHAT
                 }
                 (compare, None) => {
-                    let is_char = if let Some(AddChars(a_chars)) = compare.clone() {
+                    let is_char = if let Some(AddChars(a_chars, a_styles)) = compare.clone() {
                         if t.supports_text() {
                             t.regenerate();
 
                             t.skip_a(a_chars.char_len());
-                            t.chars_b(a_chars);
+                            t.chars_b(a_chars, a_styles);
                             a.next();
                             true
                         } else {
@@ -1072,19 +1074,19 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                     t.skip_a(cmp::min(a_count, b_count));
                     t.style_b(cmp::min(a_count, b_count), a_styles);
                 }
-                (Some(AddSkip(_)), Some(AddChars(b_chars)))
-                | (Some(AddStyles(..)), Some(AddChars(b_chars))) => {
+                (Some(AddSkip(..)), Some(AddChars(b_chars, b_styles)))
+                | (Some(AddStyles(..)), Some(AddChars(b_chars, b_styles))) => {
                     t.regenerate();
 
                     b.next();
                     t.skip_b(b_chars.char_len());
-                    t.chars_a(b_chars);
+                    t.chars_a(b_chars, b_styles);
                 }
-                (Some(AddChars(a_chars)), _) => {
+                (Some(AddChars(a_chars, a_styles)), _) => {
                     t.regenerate();
 
                     t.skip_a(a_chars.char_len());
-                    t.chars_b(a_chars);
+                    t.chars_b(a_chars, a_styles);
                     a.next();
                 }
 
@@ -1138,13 +1140,13 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                     }
                     b.next();
                 }
-                (Some(AddWithGroup(_a_inner)), Some(AddChars(b_chars))) => {
+                (Some(AddWithGroup(_a_inner)), Some(AddChars(b_chars, b_styles))) => {
                     t.regenerate(); // caret-35
 
                     t.b_del.place(&DelSkip(b_chars.char_len()));
                     t.b_add.place(&AddSkip(b_chars.char_len()));
 
-                    t.chars_a(b_chars);
+                    t.chars_a(b_chars, b_styles);
 
                     b.next();
                 }
@@ -1615,9 +1617,9 @@ pub fn transform_add_del_inner(
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
             DelChars(bcount) => match a.get_head() {
-                AddChars(avalue) => {
+                AddChars(avalue, a_styles) => {
                     delres.place(&DelSkip(avalue.char_len()));
-                    addres.place(&AddChars(avalue));
+                    addres.place(&AddChars(avalue, a_styles));
                     a.next();
                 }
                 AddSkip(acount) => {
@@ -1652,9 +1654,9 @@ pub fn transform_add_del_inner(
                 }
             },
             DelSkip(bcount) => match a.get_head() {
-                AddChars(avalue) => {
+                AddChars(avalue, a_styles) => {
                     delres.place(&DelSkip(avalue.char_len()));
-                    addres.place(&AddChars(avalue));
+                    addres.place(&AddChars(avalue, a_styles));
                     a.next();
                 }
                 AddStyles(a_count, a_styles) => {
@@ -1709,9 +1711,9 @@ pub fn transform_add_del_inner(
                 }
             },
             DelStyles(b_count, b_styles) => match a.get_head() {
-                AddChars(a_value) => {
+                AddChars(a_value, a_styles) => {
                     delres.place(&DelSkip(a_value.char_len()));
-                    addres.place(&AddChars(a_value));
+                    addres.place(&AddChars(a_value, a_styles));
                     a.next();
                 }
                 AddStyles(a_count, a_styles) => {
@@ -1768,7 +1770,7 @@ pub fn transform_add_del_inner(
                 AddStyles(..) => {
                     panic!("invalid transform DelWithGroup with AddStyles");
                 }
-                AddChars(avalue) => {
+                AddChars(avalue, _) => {
                     delres.place(&DelSkip(avalue.char_len()));
                     addres.place(&a.next().unwrap());
                 }
@@ -1808,7 +1810,7 @@ pub fn transform_add_del_inner(
                     AddStyles(..) => {
                         panic!("invalid transform DelGroup with AddStyles");
                     }
-                    AddChars(avalue) => {
+                    AddChars(avalue, _) => {
                         delres.place(&DelSkip(avalue.char_len()));
                         addres.place(&a.next().unwrap());
                     }
@@ -1834,7 +1836,7 @@ pub fn transform_add_del_inner(
                                 let mut del: DelSpan = vec![];
                                 for elem in add {
                                     match elem {
-                                        &AddChars(ref value) => {
+                                        &AddChars(ref value, _) => {
                                             del.place(&DelChars(value.char_len()));
                                         }
                                         &AddStyles(count, _) => {

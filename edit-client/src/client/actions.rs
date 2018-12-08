@@ -3,6 +3,7 @@ use failure::Error;
 use oatie::doc::*;
 use oatie::schema::RtfSchema;
 use oatie::OT;
+use oatie::style::OpaqueStyleMap;
 
 fn is_boundary_char(c: char) -> bool {
     c.is_whitespace() || c == '-' || c == '_'
@@ -357,14 +358,12 @@ pub fn add_string(ctx: ActionContext, input: &str) -> Result<Op, Error> {
     // Identify previous styles.
     let mut char_walker = walker.clone();
     char_walker.back_char();
-    if let Some(DocChars(ref prefix)) = char_walker.doc().head() {
-        if let Some(prefix_styles) = prefix.styles() {
-            styles.extend(
-                prefix_styles
-                    .iter()
-                    .map(|(a, b)| (a.to_owned(), b.to_owned())),
-            );
-        }
+    if let Some(DocChars(_, ref prefix_styles)) = char_walker.doc().head() {
+        styles.extend(
+            prefix_styles
+                .iter()
+                .map(|(a, b)| (a.to_owned(), b.to_owned())),
+        );
     }
 
     let mut writer = walker.to_writer();
@@ -374,7 +373,7 @@ pub fn add_string(ctx: ActionContext, input: &str) -> Result<Op, Error> {
     // Insert new character.
     writer
         .add
-        .place(&AddChars(DocString::from_str_styled(input, styles)));
+        .place(&AddChars(DocString::from_str(input), OpaqueStyleMap::from(styles)));
     writer.add.exit_all();
 
     Ok(writer.result())
@@ -445,7 +444,7 @@ pub fn restyle(ctx: ActionContext, ops: Vec<StyleOp>) -> Result<Op, Error> {
                     writer.del.begin();
                     doc1.enter();
                 }
-                Some(DocChars(ref text)) => {
+                Some(DocChars(ref text, _)) => {
                     writer
                         .del
                         .place(&DelStyles(text.char_len(), remove_styles.clone()));
@@ -470,7 +469,7 @@ pub fn restyle(ctx: ActionContext, ops: Vec<StyleOp>) -> Result<Op, Error> {
                     writer.add.begin();
                     doc1.enter();
                 }
-                Some(DocChars(ref text)) => {
+                Some(DocChars(ref text, _)) => {
                     writer
                         .add
                         .place(&AddStyles(text.char_len(), add_styles.clone()));
@@ -648,7 +647,7 @@ pub fn caret_word_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> 
         walker.next_char();
         loop {
             match walker.doc().head() {
-                Some(DocChars(ref text)) => {
+                Some(DocChars(ref text, _)) => {
                     if is_boundary_char(text.as_str().chars().next().unwrap()) {
                         break;
                     } else {
@@ -672,7 +671,7 @@ pub fn caret_word_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> 
         walker.back_char();
         loop {
             match walker.doc().unhead() {
-                Some(DocChars(ref text)) => {
+                Some(DocChars(ref text, _)) => {
                     if is_boundary_char(text.as_str().chars().rev().next().unwrap()) {
                         break;
                     } else {

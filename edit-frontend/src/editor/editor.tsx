@@ -19,8 +19,6 @@ function isTextNode(
 function isBlock(
   el: Node | null,
 ) {
-  //window.getComputedStyle((el as HTMLElement), null).display === 'block'
-
   if (el !== null && el.nodeType == 1 && (el as Element).tagName.toLowerCase() == 'div') {
     if ((el as HTMLElement).dataset['tag'] === 'caret') {
       return false;

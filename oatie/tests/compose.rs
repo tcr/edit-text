@@ -12,6 +12,7 @@ use oatie::doc::*;
 use oatie::normalize::*;
 use oatie::*;
 use std::collections::HashMap;
+use oatie::style::OpaqueStyleMap;
 
 fn test_start() {
     let _ = env_logger::init();
@@ -65,65 +66,65 @@ fn test_compose_del_del() {
 fn test_compose_add_add() {
     assert_eq!(
         compose_add_add(
-            &vec![AddChars(DocString::from_str("World!"))],
-            &vec![AddChars(DocString::from_str("Hello "))],
+            &vec![AddChars(DocString::from_str("World!"), OpaqueStyleMap::new())],
+            &vec![AddChars(DocString::from_str("Hello "), OpaqueStyleMap::new())],
         ),
-        vec![AddChars(DocString::from_str("Hello World!"))],
+        vec![AddChars(DocString::from_str("Hello World!"), OpaqueStyleMap::new())],
     );
 
     assert_eq!(
         compose_add_add(
-            &vec![AddChars(DocString::from_str("edef"))],
+            &vec![AddChars(DocString::from_str("edef"), OpaqueStyleMap::new())],
             &vec![
-                AddChars(DocString::from_str("d")),
+                AddChars(DocString::from_str("d"), OpaqueStyleMap::new()),
                 AddSkip(1),
-                AddChars(DocString::from_str("a")),
+                AddChars(DocString::from_str("a"), OpaqueStyleMap::new()),
                 AddSkip(1),
-                AddChars(DocString::from_str("b")),
+                AddChars(DocString::from_str("b"), OpaqueStyleMap::new()),
                 AddSkip(1),
-                AddChars(DocString::from_str("e")),
+                AddChars(DocString::from_str("e"), OpaqueStyleMap::new()),
                 AddSkip(1),
             ],
         ),
-        vec![AddChars(DocString::from_str("deadbeef"))],
+        vec![AddChars(DocString::from_str("deadbeef"), OpaqueStyleMap::new())],
     );
 
     assert_eq!(
         compose_add_add(
-            &vec![AddSkip(10), AddChars(DocString::from_str("h"))],
-            &vec![AddSkip(11), AddChars(DocString::from_str("i"))],
+            &vec![AddSkip(10), AddChars(DocString::from_str("h"), OpaqueStyleMap::new())],
+            &vec![AddSkip(11), AddChars(DocString::from_str("i"), OpaqueStyleMap::new())],
         ),
-        vec![AddSkip(10), AddChars(DocString::from_str("hi"))],
+        vec![AddSkip(10), AddChars(DocString::from_str("hi"), OpaqueStyleMap::new())],
     );
 
     assert_eq!(
         compose_add_add(
             &vec![
                 AddSkip(5),
-                AddChars(DocString::from_str("yEH")),
+                AddChars(DocString::from_str("yEH"), OpaqueStyleMap::new()),
                 AddSkip(1),
-                AddChars(DocString::from_str("GlG5")),
+                AddChars(DocString::from_str("GlG5"), OpaqueStyleMap::new()),
                 AddSkip(4),
-                AddChars(DocString::from_str("nnG")),
+                AddChars(DocString::from_str("nnG"), OpaqueStyleMap::new()),
                 AddSkip(1),
-                AddChars(DocString::from_str("ra8c")),
+                AddChars(DocString::from_str("ra8c"), OpaqueStyleMap::new()),
                 AddSkip(1),
             ],
             &vec![
                 AddSkip(10),
-                AddChars(DocString::from_str("Eh")),
+                AddChars(DocString::from_str("Eh"), OpaqueStyleMap::new()),
                 AddSkip(16),
             ],
         ),
         vec![
             AddSkip(5),
-            AddChars(DocString::from_str("yEH")),
+            AddChars(DocString::from_str("yEH"), OpaqueStyleMap::new()),
             AddSkip(1),
-            AddChars(DocString::from_str("GEhlG5")),
+            AddChars(DocString::from_str("GEhlG5"), OpaqueStyleMap::new()),
             AddSkip(4),
-            AddChars(DocString::from_str("nnG")),
+            AddChars(DocString::from_str("nnG"), OpaqueStyleMap::new()),
             AddSkip(1),
-            AddChars(DocString::from_str("ra8c")),
+            AddChars(DocString::from_str("ra8c"), OpaqueStyleMap::new()),
             AddSkip(1),
         ]
     );
@@ -137,11 +138,11 @@ fn test_compose_add_del() {
         compose_add_del(
             &vec![
                 AddSkip(4),
-                AddChars(DocString::from_str("0O")),
+                AddChars(DocString::from_str("0O"), OpaqueStyleMap::new()),
                 AddSkip(5),
-                AddChars(DocString::from_str("mnc")),
+                AddChars(DocString::from_str("mnc"), OpaqueStyleMap::new()),
                 AddSkip(3),
-                AddChars(DocString::from_str("gbL")),
+                AddChars(DocString::from_str("gbL"), OpaqueStyleMap::new()),
             ],
             &vec![
                 DelSkip(1),
@@ -165,9 +166,9 @@ fn test_compose_add_del() {
             ],
             vec![
                 AddSkip(3),
-                AddChars(DocString::from_str("0")),
+                AddChars(DocString::from_str("0"), OpaqueStyleMap::new()),
                 AddSkip(2),
-                AddChars(DocString::from_str("b")),
+                AddChars(DocString::from_str("b"), OpaqueStyleMap::new()),
             ],
         )
     );

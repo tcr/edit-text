@@ -173,9 +173,11 @@ impl<'a> RecordingDocMutator<'a> {
                 let partial = self.stepper.char_cursor_expect().right().expect("hey now");
                 // console_log!("🏟 {:?}", partial);
                 self.bc.place(Bytecode::InsertDocString(partial.clone()));
-                self.writer.place(&DocChars(partial.clone()));
-                self.stepper.next();
-                return true;
+                unimplemented!();
+                // FIXME this is broken
+                // self.writer.place(&DocChars(partial.clone()));
+                // self.stepper.next();
+                // return true;
             } else if let (Some(ref previous), Some(ref head)) =
                 (self.writer.past.last(), self.stepper.head())
             {
@@ -272,7 +274,8 @@ impl<'a> DocMutator for RecordingDocMutator<'a> {
 
         // No-op stepper
 
-        self.writer.place(&DocChars(docstring));
+        // FIXME 
+        // self.writer.place(&DocChars(docstring));
     }
 
     fn UnwrapSelf(&mut self) {

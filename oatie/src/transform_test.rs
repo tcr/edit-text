@@ -145,6 +145,8 @@ pub fn run_transform_test<T: Schema>(input: &str) -> Result<(), Error> {
     if let Some(doc) = test.get("doc") {
         println!("{}", Paint::red("(!) validating docs..."));
 
+        println!("\n\n\n{:?}\n\n\n", doc);
+
         let doc = Doc(ron::de::from_str::<DocSpan>(doc)?);
         println!("original document: {:?}", doc);
         validate_doc_span(&mut ValidateContext::new(), &doc.0)?;

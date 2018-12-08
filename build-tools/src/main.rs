@@ -606,7 +606,7 @@ fn run() -> Result<(), Error> {
                     execute!("{self_path} test unit", self_path = SELF_PATH)?;
                     execute!("{self_path} test integration", self_path = SELF_PATH)?;
                 }
-                TestTarget::Integration { no_headless } => {
+                TestTarget::Integration { no_headless: _ } => {
                     expect_geckodriver();
 
                     // Unit test
