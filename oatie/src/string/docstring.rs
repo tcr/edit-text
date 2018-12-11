@@ -4,7 +4,6 @@ use serde::de::{
     Visitor,
 };
 use serde::{
-    ser::SerializeSeq,
     Deserialize,
     Deserializer,
     Serialize,
@@ -125,14 +124,11 @@ impl PartialEq for DocString {
 impl Eq for DocString {}
 
 impl Serialize for DocString {
-    #[inline(never)]
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        let mut s = serializer.serialize_seq(Some(1))?;
-        s.serialize_element(self.as_str())?;
-        s.end()
+        serializer.serialize_str(self.as_str())
     }
 }
 
@@ -150,26 +146,26 @@ impl<'de> Deserialize<'de> for DocString {
                 formatter.write_str("docstring")
             }
 
+            fn visit_seq<V>(self, mut seq: V) -> Result<Self::Value, V::Error>
+            where
+                V: SeqAccess<'de>,
+            {
+                // Deserialize the one we care about.
+                let ret: String = seq.next_element()?
+                            .ok_or_else(|| de::Error::invalid_length(1, &self))?;
+                
+
+                Ok(DocString::from_string(ret))
+            }
+
             fn visit_str<E>(self, value: &str) -> Result<DocString, E>
             where
                 E: de::Error,
             {
                 Ok(DocString::from_str(value))
             }
-
-            fn visit_seq<A>(self, mut seq: A) -> Result<DocString, A::Error>
-            where
-                A: SeqAccess<'de>,
-            {
-                if let Some(inner) = seq.next_element::<String>()? {
-                    Ok(DocString::from_string(inner))
-                } else {
-                    Err(de::Error::unknown_field("0", FIELDS))
-                }
-            }
         }
 
-        const FIELDS: &'static [&'static str] = &["docstring"];
         deserializer.deserialize_any(FieldVisitor)
     }
 }

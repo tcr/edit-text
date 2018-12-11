@@ -1,5 +1,4 @@
 use crate::stepper::*;
-use crate::style::OpaqueStyleMap;
 
 // DocStepper
 
@@ -36,7 +35,6 @@ impl<'a> DocStepper<'a> {
     /// If head is a group, clear the char_cursor.
     // TODO rename char_cursor_reset ?
     // TODO Make this pub(crate) once walkers.rs doesn't repend on it.
-    #[inline(never)]
     pub fn char_cursor_update(&mut self) {
         self.char_cursor = if let Some(&DocChars(ref text, ref styles)) = self.head_raw() {
             Some(CharCursor::from_docstring(text, styles.to_owned()))
@@ -316,6 +314,7 @@ impl<'a> DocStepper<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::style::*;
 
     fn test_doc_0() -> DocSpan {
         doc_span![

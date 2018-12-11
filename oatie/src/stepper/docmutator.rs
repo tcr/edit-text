@@ -1,5 +1,6 @@
 use super::*;
 use wasm_bindgen::prelude::*;
+use crate::style::*;
 
 impl Program {
     pub fn new() -> Program {
@@ -64,7 +65,7 @@ pub trait DocMutator {
         unimplemented!();
     }
 
-    fn InsertDocString(&mut self, _docstring: DocString) {
+    fn InsertDocString(&mut self, _docstring: DocString, _styles: OpaqueStyleMap) {
         unimplemented!();
     }
 
@@ -105,7 +106,7 @@ impl DocMutator for NullDocMutator {
         // no-op
     }
 
-    fn InsertDocString(&mut self, _docstring: DocString) {
+    fn InsertDocString(&mut self, _docstring: DocString, _style: OpaqueStyleMap) {
         // no-op
     }
 
@@ -129,7 +130,7 @@ pub enum Bytecode {
     Exit,
     AdvanceElements(usize),
     DeleteElements(usize),
-    InsertDocString(DocString),
+    InsertDocString(DocString, OpaqueStyleMap),
     WrapPrevious(usize, Attrs),
     UnwrapSelf,
     JoinTextLeft,
@@ -172,12 +173,14 @@ impl<'a> RecordingDocMutator<'a> {
                 // Partial string.
                 let partial = self.stepper.char_cursor_expect().right().expect("hey now");
                 // console_log!("🏟 {:?}", partial);
-                self.bc.place(Bytecode::InsertDocString(partial.clone()));
-                unimplemented!();
-                // FIXME this is broken
-                // self.writer.place(&DocChars(partial.clone()));
-                // self.stepper.next();
-                // return true;
+                if let Some(&DocChars(ref text, ref styles)) = self.stepper.head_raw() {
+                    self.bc.place(Bytecode::InsertDocString(partial.clone(), styles.clone()));
+                    self.writer.place(&DocChars(partial.clone(), styles.clone()));
+                } else {
+                    unreachable!();
+                }
+                self.stepper.next();
+                return true;
             } else if let (Some(ref previous), Some(ref head)) =
                 (self.writer.past.last(), self.stepper.head())
             {
@@ -269,13 +272,12 @@ impl<'a> DocMutator for RecordingDocMutator<'a> {
         }
     }
 
-    fn InsertDocString(&mut self, docstring: DocString) {
-        self.bc.place(Bytecode::InsertDocString(docstring.clone()));
+    fn InsertDocString(&mut self, docstring: DocString, styles: OpaqueStyleMap) {
+        self.bc.place(Bytecode::InsertDocString(docstring.clone(), styles.clone()));
 
         // No-op stepper
 
-        // FIXME 
-        // self.writer.place(&DocChars(docstring));
+        self.writer.place(&DocChars(docstring, styles));
     }
 
     fn UnwrapSelf(&mut self) {
@@ -320,7 +322,11 @@ impl<'a> DocMutator for RecordingDocMutator<'a> {
                 if let Some(left) = cursor.left() {
                     if left.char_len() == count {
                         self.bc.place(Bytecode::DeleteElements(1)); // It's over, delete time
-                        self.InsertDocString(left.clone()); // Insert the left part of string
+                        if let Some(&DocChars(_, ref styles)) = self.stepper.head_raw() {
+                            self.InsertDocString(left.clone(), styles.to_owned()); // Insert the left part of string
+                        } else {
+                            unreachable!();
+                        }
                                                             // The right part of the string is added WHEN
                         return;
                     } else {
@@ -331,7 +337,11 @@ impl<'a> DocMutator for RecordingDocMutator<'a> {
                             text.seek_start_forward(count);
                         }
                         // console_log!("\n\n\nPARTIAL ADVANEMENET {:?}\n\n\n", text);
-                        self.InsertDocString(text);
+                        if let Some(&DocChars(_, ref styles)) = self.stepper.head_raw() {
+                            self.InsertDocString(text, styles.clone());
+                        } else {
+                            unreachable!();
+                        }
                     }
                 }
             }

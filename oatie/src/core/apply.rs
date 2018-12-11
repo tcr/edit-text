@@ -2,6 +2,7 @@
 
 use super::doc::*;
 use crate::stepper::*;
+use crate::style::*;
 
 fn apply_add_inner<M: DocMutator>(
     bc: &mut M,
@@ -53,7 +54,7 @@ fn apply_add_inner<M: DocMutator>(
                         d = AddStyles(count - value.char_len(), styles.clone());
                         chars_styles.extend(&styles);
                         bc.delete(1);
-                        bc.InsertDocString(value.clone());
+                        bc.InsertDocString(value.clone(), OpaqueStyleMap::from(styles.clone()));
                         // partial = false;
                         res.place(&DocChars(value, chars_styles));
                         nextdel = false;
@@ -62,7 +63,7 @@ fn apply_add_inner<M: DocMutator>(
                         let mut left_styles = chars_styles.clone();
                         left_styles.extend(&styles);
                         bc.delete(1);
-                        bc.InsertDocString(left.clone());
+                        bc.InsertDocString(left.clone(), OpaqueStyleMap::from(styles.clone()));
                         // partial = false;
                         res.place(&DocChars(left, left_styles));
                         first = Some(DocChars(right, chars_styles));
@@ -70,7 +71,7 @@ fn apply_add_inner<M: DocMutator>(
                     } else {
                         chars_styles.extend(&styles);
                         bc.delete(1);
-                        bc.InsertDocString(value.clone());
+                        bc.InsertDocString(value.clone(), OpaqueStyleMap::from(styles.clone()));
                         // partial = false;
                         res.place(&DocChars(value, chars_styles));
                     }
@@ -121,7 +122,7 @@ fn apply_add_inner<M: DocMutator>(
             AddChars(value, styles) => {
                 // TODO where do you skip anything, exactly
                 // need to manifest the place issue externally as well
-                bc.InsertDocString(value.clone());
+                bc.InsertDocString(value.clone(), styles.clone());
                 res.place(&DocChars(value, styles));
                 nextfirst = false;
             }
@@ -261,7 +262,7 @@ fn apply_del_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &DelSpa
                         d = DelStyles(count - value.char_len(), styles.clone());
                         chars_styles.remove(&styles);
                         bc.delete(1);
-                        bc.InsertDocString(value.clone());
+                        bc.InsertDocString(value.clone(), chars_styles.clone());
                         res.place(&DocChars(value, chars_styles));
                         nextdel = false;
                     } else if value.char_len() > count {
@@ -269,14 +270,14 @@ fn apply_del_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &DelSpa
                         let mut left_styles = chars_styles.clone();
                         left_styles.remove(&styles);
                         bc.delete(1);
-                        bc.InsertDocString(left.clone());
+                        bc.InsertDocString(left.clone(), chars_styles.clone());
                         res.place(&DocChars(left, chars_styles.clone()));
                         first = DocChars(right, chars_styles);
                         nextfirst = false;
                     } else {
                         chars_styles.remove(&styles);
                         bc.delete(1);
-                        bc.InsertDocString(value.clone());
+                        bc.InsertDocString(value.clone(), chars_styles.clone());
                         res.place(&DocChars(value, chars_styles));
                     }
                 }

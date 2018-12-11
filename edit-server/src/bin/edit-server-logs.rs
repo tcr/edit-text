@@ -1,12 +1,8 @@
-#![feature(extern_in_paths)]
-
-#[macro_use]
-extern crate quicli;
-
 use serde_json;
-
+use failure::*;
 use edit_server::db::*;
-use quicli::prelude::*;
+use structopt::*;
+use diesel::connection::Connection;
 
 #[derive(Debug, StructOpt)]
 enum Cli {
@@ -20,8 +16,8 @@ enum Cli {
     Clear,
 }
 
-main!(|args: Cli| {
-    use diesel::connection::Connection;
+fn main() -> Result<(), Error> {
+    let args = Cli::from_args();
 
     let db = db_connection();
 
@@ -46,4 +42,6 @@ main!(|args: Cli| {
             }
         }
     }
-});
+
+    Ok(())
+}

@@ -52,7 +52,7 @@ impl<'de> Deserialize<'de> for OpaqueStyleMap {
     where
         D: Deserializer<'de>,
     {
-        Ok(OpaqueStyleMap::from(StyleMap::deserialize(deserializer)?))
+        Ok(OpaqueStyleMap::from(StyleSet::deserialize(deserializer)?.into_iter().map(|k| (k, None)).collect()))
     }
 }
 
