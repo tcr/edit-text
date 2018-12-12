@@ -1,8 +1,8 @@
 mod actions;
-mod state;
+mod clientdoc;
 
 pub use self::actions::*;
-pub use self::state::*;
+pub use self::clientdoc::*;
 
 use crate::random::*;
 use crate::walkers::Pos;
