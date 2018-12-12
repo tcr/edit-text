@@ -262,21 +262,22 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddStepper, b: &mut AddStepp
                         b.next();
                     }
                 }
-                AddChars(mut value) => {
+                AddChars(value, mut styles) => {
                     if b_count < value.char_len() {
-                        let (mut a_left, a_right) = value.split_at(b_count);
-                        a_left.extend_styles(&b_styles);
-                        res.place(&AddChars(a_left));
-                        a.head = Some(AddChars(a_right));
+                        let (a_left, a_right) = value.split_at(b_count);
+                        let mut left_styles = styles.clone();
+                        left_styles.extend(&b_styles);
+                        res.place(&AddChars(a_left, left_styles));
+                        a.head = Some(AddChars(a_right, styles));
                         b.next();
                     } else if b_count > value.char_len() {
-                        value.extend_styles(&b_styles);
+                        styles.extend(&b_styles);
                         b.head = Some(AddStyles(b_count - value.char_len(), b_styles));
-                        res.place(&AddChars(value));
+                        res.place(&AddChars(value, styles));
                         a.next();
                     } else {
-                        value.extend_styles(&b_styles);
-                        res.place(&AddChars(value));
+                        styles.extend(&b_styles);
+                        res.place(&AddChars(value, styles));
                         a.next();
                         b.next();
                     }
@@ -325,11 +326,11 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddStepper, b: &mut AddStepp
                         b.next();
                     }
                 }
-                AddChars(value) => {
+                AddChars(value, styles) => {
                     if bcount < value.char_len() {
                         let (a_left, a_right) = value.split_at(bcount);
-                        res.place(&AddChars(a_left));
-                        a.head = Some(AddChars(a_right));
+                        res.place(&AddChars(a_left, styles.clone()));
+                        a.head = Some(AddChars(a_right, styles));
                         b.next();
                     } else if bcount > value.char_len() {
                         res.place(&a.next().unwrap());
@@ -469,10 +470,10 @@ fn compose_add_del_inner(
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
             DelChars(bcount) => match a.get_head() {
-                AddChars(avalue) => {
+                AddChars(avalue, a_styles) => {
                     if bcount < avalue.char_len() {
                         let (_a_left, a_right) = avalue.split_at(bcount);
-                        a.head = Some(AddChars(a_right));
+                        a.head = Some(AddChars(a_right, a_styles));
                         b.next();
                     } else if bcount > avalue.char_len() {
                         a.next();
@@ -500,20 +501,21 @@ fn compose_add_del_inner(
                 }
             },
             DelStyles(b_count, b_styles) => match a.get_head() {
-                AddChars(mut a_value) => {
+                AddChars(a_value, mut a_styles) => {
                     if b_count < a_value.char_len() {
-                        let (mut a_left, a_right) = a_value.split_at(b_count);
-                        a_left.remove_styles(&b_styles);
-                        addres.place(&AddChars(a_left));
-                        a.head = Some(AddChars(a_right));
+                        let (a_left, a_right) = a_value.split_at(b_count);
+                        let mut a_left_styles = a_styles.clone();
+                        a_left_styles.remove(&b_styles);
+                        addres.place(&AddChars(a_left, a_left_styles));
+                        a.head = Some(AddChars(a_right, a_styles));
                         b.next();
                     } else if b_count > a_value.char_len() {
-                        a_value.remove_styles(&b_styles);
+                        a_styles.remove(&b_styles);
                         b.head = Some(DelSkip(b_count - a_value.char_len()));
-                        addres.place(&AddChars(a_value));
+                        addres.place(&AddChars(a_value, a_styles));
                     } else {
-                        a_value.remove_styles(&b_styles);
-                        addres.place(&AddChars(a_value));
+                        a_styles.remove(&b_styles);
+                        addres.place(&AddChars(a_value, a_styles));
                         a.next();
                         b.next();
                     }
@@ -564,11 +566,11 @@ fn compose_add_del_inner(
                 }
             },
             DelSkip(bcount) => match a.get_head() {
-                AddChars(avalue) => {
+                AddChars(avalue, a_styles) => {
                     if bcount < avalue.char_len() {
                         let (a_left, a_right) = avalue.split_at(bcount);
-                        addres.place(&AddChars(a_left));
-                        a.head = Some(AddChars(a_right));
+                        addres.place(&AddChars(a_left, a_styles.clone()));
+                        a.head = Some(AddChars(a_right, a_styles));
                         b.next();
                     } else if bcount > avalue.char_len() {
                         addres.place(&a.next().unwrap());

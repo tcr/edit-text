@@ -13,8 +13,8 @@ fn remove_carets_span(span: &DocSpan) -> Result<DocSpan, Error> {
                     ret.place(&DocGroup(attrs.clone(), res));
                 }
             }
-            DocChars(ref text) => {
-                ret.place(&DocChars(text.clone()));
+            DocChars(..) => {
+                ret.place(elem);
             }
         }
     }
@@ -45,7 +45,7 @@ fn remove_carets_op_span(
                     writer.exit();
                 }
             }
-            DocChars(ref text) => {
+            DocChars(ref text, _) => {
                 writer.place(&DelSkip(text.char_len()));
             }
         }

@@ -35,10 +35,9 @@ impl<'a> DocStepper<'a> {
     /// If head is a group, clear the char_cursor.
     // TODO rename char_cursor_reset ?
     // TODO Make this pub(crate) once walkers.rs doesn't repend on it.
-    #[inline(never)]
     pub fn char_cursor_update(&mut self) {
-        self.char_cursor = if let Some(&DocChars(ref text)) = self.head_raw() {
-            Some(CharCursor::from_docstring(text))
+        self.char_cursor = if let Some(&DocChars(ref text, ref styles)) = self.head_raw() {
+            Some(CharCursor::from_docstring(text, styles.to_owned()))
         } else {
             None
         };
@@ -54,8 +53,8 @@ impl<'a> DocStepper<'a> {
     /// cursor if we've reached a group.
     pub(crate) fn char_cursor_update_prev(&mut self) {
         let cursor = match self.head() {
-            Some(DocChars(ref text)) => {
-                let mut cursor = CharCursor::from_docstring_end(text);
+            Some(DocChars(ref text, ref styles)) => {
+                let mut cursor = CharCursor::from_docstring_end(text, styles.to_owned());
                 cursor.value_sub(1);
                 Some(cursor)
             }
@@ -183,9 +182,9 @@ impl<'a> DocStepper<'a> {
 
     pub fn peek(&self) -> Option<DocElement> {
         match self.current().1.get((self.head_index() + 1) as usize) {
-            Some(&DocChars(ref text)) => {
+            Some(text @ &DocChars(..)) => {
                 // Pass along new text node
-                Some(DocChars(text.clone()))
+                Some(text.clone())
             }
             Some(value) => Some(value.clone()),
             None => None,
@@ -234,7 +233,7 @@ impl<'a> DocStepper<'a> {
             };
 
             match head {
-                DocChars(ref text) => {
+                DocChars(ref text, _) => {
                     let remaining = text.char_len();
                     if skip >= remaining {
                         skip -= remaining;
@@ -315,6 +314,7 @@ impl<'a> DocStepper<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::style::*;
 
     fn test_doc_0() -> DocSpan {
         doc_span![
@@ -332,7 +332,7 @@ mod tests {
         stepper.skip(2);
         assert_eq!(
             stepper.head().unwrap(),
-            &DocChars(DocString::from_str("ol"))
+            &DocChars(DocString::from_str("ol"), OpaqueStyleMap::new())
         );
     }
 

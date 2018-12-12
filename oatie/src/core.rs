@@ -4,3 +4,4 @@ pub mod doc;
 pub mod place;
 pub mod schema;
 pub mod transform;
+pub mod style;

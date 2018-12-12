@@ -46,7 +46,7 @@ pub fn doc_as_html(doc: &DocSpan) -> String {
                 }
                 stepper.enter();
             }
-            Some(DocChars(ref text)) => {
+            Some(DocChars(ref text, _)) => {
                 stepper.skip(text.char_len());
             }
             None => {
@@ -104,35 +104,31 @@ pub fn doc_as_html_inner(
                 out.push_str(&doc_as_html_inner(span, caret_index, remote_select_active));
                 out.push_str(r"</div>");
             }
-            &DocChars(ref text) => {
-                if let &Some(ref styles) = &text.styles() {
-                    let mut classes = styles.styles();
-                    // TODO Style::Selected could be selected here directly
-                    if !remote_select_active.is_empty() {
-                        classes.insert(Style::Selected);
-                    }
-
-                    out.push_str(&format!(
-                        r#"<span class="{}" {}>"#,
-                        classes
-                            .into_iter()
-                            .map(|e| e.to_string())
-                            .collect::<Vec<_>>()
-                            .join(" "),
-                        styles
-                            .iter()
-                            .filter(|(_, v)| v.is_some())
-                            .map(|(k, v)| format!(
-                                "data-style-{k}={v}",
-                                k = k,
-                                v = serde_json::to_string(&v).unwrap()
-                            ))
-                            .collect::<Vec<String>>()
-                            .join(" "),
-                    ));
-                } else {
-                    out.push_str(r"<span>");
+            &DocChars(ref text, ref styles) => {
+                let mut classes = styles.styles();
+                // TODO Style::Selected could be selected here directly
+                if !remote_select_active.is_empty() {
+                    classes.insert(Style::Selected);
                 }
+
+                out.push_str(&format!(
+                    r#"<span class="{}" {}>"#,
+                    classes
+                        .into_iter()
+                        .map(|e| e.to_string())
+                        .collect::<Vec<_>>()
+                        .join(" "),
+                    styles
+                        .iter()
+                        .filter(|(_, v)| v.is_some())
+                        .map(|(k, v)| format!(
+                            "data-style-{k}={v}",
+                            k = k,
+                            v = serde_json::to_string(&v).unwrap()
+                        ))
+                        .collect::<Vec<String>>()
+                        .join(" "),
+                ));
                 out.push_str(&encode_minimal(text.as_str()));
                 out.push_str(r"</span>");
             }

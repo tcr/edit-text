@@ -1,5 +1,6 @@
 use failure::Error;
 use oatie::doc::*;
+use oatie::style::OpaqueStyleMap;
 use oatie::writer::DocWriter;
 use pulldown_cmark::{
     Event::{
@@ -43,10 +44,10 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                     if self.bare_text {
                         self.body.begin();
                     }
-                    self.body.place(&DocChars(DocString::from_str_styled(
-                        text.as_ref(),
-                        self.styles.clone(),
-                    )));
+                    self.body.place(&DocChars(
+                        DocString::from_str(text.as_ref()),
+                        OpaqueStyleMap::from(self.styles.clone()),
+                    ));
                     if self.bare_text {
                         self.body.close(hashmap! { "tag".into() => "p".into() });
                     }
@@ -59,26 +60,25 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                     if self.bare_text {
                         self.body.begin();
                     }
-                    self.body.place(&DocChars(DocString::from_str_styled(
-                        " ",
-                        self.styles.clone(),
-                    )));
+                    self.body.place(&DocChars(DocString::from_str(" "),
+                        OpaqueStyleMap::from(self.styles.clone()),
+                    ));
                     if self.bare_text {
                         self.body.close(hashmap! { "tag".into() => "p".into() });
                     }
                 }
                 HardBreak => {
-                    self.body.place(&DocChars(DocString::from_str_styled(
-                        "\n",
-                        self.styles.clone(),
-                    )));
+                    self.body.place(&DocChars(DocString::from_str(
+                        "\n"),
+                        OpaqueStyleMap::from(self.styles.clone()),
+                    ));
                 }
                 Html(html) => {
                     self.body.begin();
-                    self.body.place(&DocChars(DocString::from_str_styled(
-                        &html,
-                        hashmap!{ Style::Normie => None },
-                    )));
+                    self.body.place(&DocChars(DocString::from_str(
+                        &html),
+                        OpaqueStyleMap::from(hashmap!{ Style::Normie => None }),
+                    ));
                     self.body.close(hashmap! { "tag".into() => "html".into() });
                 }
 

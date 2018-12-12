@@ -77,7 +77,7 @@ impl<'a> CaretStepper<'a> {
     // but is it the best name or interface
     fn skip_element(&mut self) -> Option<()> {
         let len = match self.doc.head() {
-            Some(DocChars(val)) => {
+            Some(DocChars(val, _)) => {
                 let len = val.char_len();
                 self.doc.next();
                 len
@@ -616,7 +616,7 @@ impl<'a> Walker<'a> {
             // console_log!("head stack len ---> {:?}", doc_stepper.stack().len());
             // console_log!("head stack ---> {:?}", doc_stepper.stack());
             match doc_stepper.head() {
-                Some(DocChars(ref text)) => {
+                Some(DocChars(ref text, _)) => {
                     let text_len = text.char_len();
                     del.place(&DelSkip(text_len));
                     add.place(&AddSkip(text_len));

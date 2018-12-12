@@ -385,7 +385,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                     &get_or_create_page_graphql(
                         &id,
                         &Doc(doc_span![DocGroup({"tag": "h1"}, [DocChars(&id)])]),
-                    ).unwrap().0
+                    ).expect("Received malformed content from db, aborting").0
                 ).unwrap();
 
                 let payload = reg.render_template(&template, &json!({
@@ -479,7 +479,7 @@ fn main() {
             #[allow(deprecated)]
             std::thread::sleep_ms(1_000);
             // TODO use actual url generation bindings to --open browser
-            open::that(&format!("http://localhost:{}", port));
+            let _ = open::that(&format!("http://localhost:{}", port));
         });
     }
 

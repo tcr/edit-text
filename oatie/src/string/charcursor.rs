@@ -1,4 +1,5 @@
 use super::DocString;
+use crate::style::*;
 use crate::doc::DocElement;
 
 /// Indexes into a DocString, tracking two owned DocStrings left() and right() which
@@ -15,7 +16,7 @@ pub struct CharCursor {
 
 impl CharCursor {
     #[inline(always)]
-    pub fn from_docstring(text: &DocString) -> CharCursor {
+    pub fn from_docstring(text: &DocString, styles: OpaqueStyleMap) -> CharCursor {
         let mut left_string = text.clone();
         let mut right_string = text.clone();
 
@@ -27,15 +28,15 @@ impl CharCursor {
         }
 
         CharCursor {
-            left_string: DocElement::DocChars(left_string),
-            right_string: DocElement::DocChars(right_string),
+            left_string: DocElement::DocChars(left_string, styles.clone()),
+            right_string: DocElement::DocChars(right_string, styles),
             index: 0,
             str_len: text.char_len(),
         }
     }
 
     #[inline(always)]
-    pub fn from_docstring_end(text: &DocString) -> CharCursor {
+    pub fn from_docstring_end(text: &DocString, styles: OpaqueStyleMap) -> CharCursor {
         let left_string = text.clone();
         let mut right_string = text.clone();
 
@@ -47,21 +48,29 @@ impl CharCursor {
         }
 
         CharCursor {
-            left_string: DocElement::DocChars(left_string),
-            right_string: DocElement::DocChars(right_string),
+            left_string: DocElement::DocChars(left_string, styles.clone()),
+            right_string: DocElement::DocChars(right_string, styles),
             index: text.char_len(),
             str_len: text.char_len(),
         }
     }
 
-    pub fn update_from_docstring(&mut self, text: &DocString) {
-        self.left_string = DocElement::DocChars(text.clone());
-        self.right_string = DocElement::DocChars(text.clone());
+    pub fn update_from_docstring(&mut self, text: &DocString, styles: OpaqueStyleMap) {
+        self.left_string = DocElement::DocChars(text.clone(), styles.clone());
+        self.right_string = DocElement::DocChars(text.clone(), styles);
         self.index = text.char_len();
     }
 
+    pub fn style<'a>(&'a self) -> &'a OpaqueStyleMap {
+        if let DocElement::DocChars(_, ref styles) = &self.left_string {
+            styles
+        } else {
+            unreachable!();
+        }
+    }
+
     pub fn left<'a>(&'a self) -> Option<&'a DocString> {
-        if let DocElement::DocChars(ref left_text) = &self.left_string {
+        if let DocElement::DocChars(ref left_text, _) = &self.left_string {
             if unsafe { left_text.try_byte_range().unwrap().len() == 0 } {
                 None
             } else {
@@ -73,7 +82,7 @@ impl CharCursor {
     }
 
     pub fn right<'a>(&'a self) -> Option<&'a DocString> {
-        if let DocElement::DocChars(ref right_text) = &self.right_string {
+        if let DocElement::DocChars(ref right_text, _) = &self.right_string {
             if unsafe { right_text.try_byte_range().unwrap().len() == 0 } {
                 None
             } else {
@@ -85,7 +94,7 @@ impl CharCursor {
     }
 
     pub fn left_element<'a>(&'a self) -> Option<&'a DocElement> {
-        if let DocElement::DocChars(ref left_text) = &self.left_string {
+        if let DocElement::DocChars(ref left_text, _) = &self.left_string {
             if unsafe { left_text.try_byte_range().unwrap().len() == 0 } {
                 None
             } else {
@@ -97,7 +106,7 @@ impl CharCursor {
     }
 
     pub fn right_element<'a>(&'a self) -> Option<&'a DocElement> {
-        if let DocElement::DocChars(ref right_text) = &self.right_string {
+        if let DocElement::DocChars(ref right_text, _) = &self.right_string {
             if unsafe { right_text.try_byte_range().unwrap().len() == 0 } {
                 None
             } else {
@@ -109,7 +118,7 @@ impl CharCursor {
     }
 
     fn left_text_mut<'a>(&'a mut self) -> &'a mut DocString {
-        if let DocElement::DocChars(ref mut left_text) = self.left_string {
+        if let DocElement::DocChars(ref mut left_text, _) = self.left_string {
             left_text
         } else {
             unreachable!();
@@ -117,7 +126,7 @@ impl CharCursor {
     }
 
     fn right_text_mut<'a>(&'a mut self) -> &'a mut DocString {
-        if let DocElement::DocChars(ref mut right_text) = self.right_string {
+        if let DocElement::DocChars(ref mut right_text, _) = self.right_string {
             right_text
         } else {
             unreachable!();
@@ -158,7 +167,7 @@ mod tests {
 
     #[test]
     fn basic() {
-        let mut ds = CharCursor::from_docstring(&DocString::from_str("Welcome!"));
+        let mut ds = CharCursor::from_docstring(&DocString::from_str("Welcome!"), OpaqueStyleMap::new());
         ds.value_add(6);
         assert_eq!(ds.right().unwrap().as_str(), "e!");
     }
@@ -166,21 +175,21 @@ mod tests {
     #[test]
     #[should_panic]
     fn seek_too_far() {
-        let mut ds = CharCursor::from_docstring(&DocString::from_str("Welcome!"));
+        let mut ds = CharCursor::from_docstring(&DocString::from_str("Welcome!"), OpaqueStyleMap::new());
         ds.value_add(11);
     }
 
     #[test]
     #[should_panic]
     fn seek_negative() {
-        let mut ds = CharCursor::from_docstring(&DocString::from_str("Welcome!"));
+        let mut ds = CharCursor::from_docstring(&DocString::from_str("Welcome!"), OpaqueStyleMap::new());
         ds.value_add(4);
         ds.value_sub(10);
     }
 
     #[test]
     fn option_ends() {
-        let mut ds = CharCursor::from_docstring(&DocString::from_str("Welcome!"));
+        let mut ds = CharCursor::from_docstring(&DocString::from_str("Welcome!"), OpaqueStyleMap::new());
         assert_eq!(ds.left(), None);
         assert_eq!(ds.right().is_some(), true);
         ds.value_add("Welcome!".len());

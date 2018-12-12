@@ -5,6 +5,7 @@ use serde::{
     Serialize,
 };
 use std::collections::HashMap;
+use crate::style::OpaqueStyleMap;
 
 // Re-exports
 pub use super::place::*;
@@ -19,9 +20,14 @@ pub type CurSpan = Vec<CurElement>;
 
 pub type Op = (DelSpan, AddSpan);
 
+/// Returns true if the style map can be omitted.
+fn is_stylemap_empty(map: &OpaqueStyleMap) -> bool {
+    map.iter().count() == 0
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum DocElement {
-    DocChars(DocString),
+    DocChars(DocString, #[serde(default, skip_serializing_if = "is_stylemap_empty")] OpaqueStyleMap),
     DocGroup(Attrs, DocSpan),
 }
 
@@ -29,6 +35,10 @@ pub use self::DocElement::*;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Doc(pub Vec<DocElement>);
+
+
+
+// [DocChars("birds snakes and aeroplanes",[Bold,],),]
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum DelElement {
@@ -45,11 +55,12 @@ pub enum DelElement {
 
 pub use self::DelElement::*;
 
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum AddElement {
     AddSkip(usize),
     AddWithGroup(AddSpan),
-    AddChars(DocString),
+    AddChars(DocString, #[serde(default, skip_serializing_if = "is_stylemap_empty")] OpaqueStyleMap),
     AddGroup(Attrs, AddSpan),
     AddStyles(usize, StyleMap),
 }
