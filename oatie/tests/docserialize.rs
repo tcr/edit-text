@@ -32,6 +32,9 @@ fn test_docserialize_ron() {
 
     let input = r#"[DocChars("dsdfsdno"),]"#;
     let res: Vec<DocElement>  = ron::de::from_str(&input).unwrap();
+
+    let input = r#"[DocGroup({"tag":"h1",},[DocChars("home"),],),DocGroup({"tag":"p",},[DocChars("SANDBOX"),],),]"#;
+    let res: Vec<DocElement>  = ron::de::from_str(&input).unwrap();
 }
 
 #[test]
