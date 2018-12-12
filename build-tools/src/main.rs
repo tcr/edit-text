@@ -241,8 +241,10 @@ fn run() -> Result<(), Error> {
             .collect())
     };
 
-    let cargo_args_for_crate = |name: &str, deps: &[&str]| -> Result<Vec<String>, Error> {
-        let mut enabled_features = features_for_crate(name)?;
+    let cargo_args_for_crate = |name: &str, deps: &[&str], additional_features: &[&str]| -> Result<Vec<String>, Error> {
+        let mut enabled_features = additional_features.iter().map(|x| x.to_string()).collect::<Vec<_>>();
+
+        enabled_features.extend(features_for_crate(name)?);
         for dep in deps {
             enabled_features.extend(
                 features_for_crate(dep)?
@@ -263,11 +265,13 @@ fn run() -> Result<(), Error> {
     };
 
     #[allow(non_snake_case)]
-    let CARGO_ARGS_EDIT_CLIENT = cargo_args_for_crate("edit-client", &["oatie"])?;
+    let CARGO_ARGS_EDIT_CLIENT = cargo_args_for_crate("edit-client", &["oatie"], &[])?;
     #[allow(non_snake_case)]
-    let CARGO_ARGS_EDIT_SERVER = cargo_args_for_crate("edit-server", &["oatie"])?;
+    let CARGO_ARGS_EDIT_SERVER = cargo_args_for_crate("edit-server", &["oatie"], &[])?;
     #[allow(non_snake_case)]
-    let CARGO_ARGS_OATIE = cargo_args_for_crate("oatie", &[])?;
+    let CARGO_ARGS_EDIT_SERVER_STANDALONE = cargo_args_for_crate("edit-server", &["oatie"], &["standalone"])?;
+    #[allow(non_snake_case)]
+    let CARGO_ARGS_OATIE = cargo_args_for_crate("oatie", &[], &[])?;
 
     // Pass arguments directly to subcommands: don't capture -h, -v, or verification
     // Do this by adding "--" into the args flag after the subcommand.
@@ -864,12 +868,12 @@ fn run() -> Result<(), Error> {
                     export TARGET_CFLAGS="-I {dir_link}/usr/include/x86_64-linux-gnu -isystem {dir_link}/usr/include"
 
                     cargo build --release --target=x86_64-unknown-linux-gnu \
-                        --bin edit-server --features 'standalone' {cargo_args}
+                        --bin edit-server {cargo_args}
 
                 "#,
                 // Must expand absolute path for linking
                 dir_link = format!("{}/dist/link", abs_string_path(".")?),
-                cargo_args = CARGO_ARGS_EDIT_SERVER,
+                cargo_args = CARGO_ARGS_EDIT_SERVER_STANDALONE,
             )?;
             eprintln!();
             eprintln!("Copying directories...");

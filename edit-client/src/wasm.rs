@@ -154,7 +154,7 @@ extern "C" {
 impl WasmClientController {
     #[wasm_bindgen(js_name = "clientID")]
     pub fn client_id(&self) -> String {
-        self.state.borrow().client_id.clone()
+        self.state.borrow().client_doc.client_id.clone()
     }
 
     /// Handle a Client or Controller command. [sic]
@@ -311,8 +311,7 @@ pub fn wasm_setup(server_url: String) -> WasmClientController {
 
     let mut client = WasmClientController {
         state: Rc::new(RefCell::new(Client {
-            client_id: editor_id,
-            client_doc: ClientDoc::new(),
+            client_doc: ClientDoc::new(editor_id.clone()),
             last_controls: None,
 
             monkey: WASM_MONKEY.clone(),

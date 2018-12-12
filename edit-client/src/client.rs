@@ -111,7 +111,7 @@ fn key_handlers<C: ClientController>() -> Vec<KeyHandler<C>> {
             false,
             true,
             false,
-            Box::new(|client| client.client_op(|doc| add_string(doc, "\n"))),
+            Box::new(|client| client.client_op(|doc| add_string(doc, "\n").map(|ctx| ctx.result()))),
         ),
         // tab
         KeyHandler(
@@ -288,11 +288,11 @@ fn controller_command<C: ClientController>(
                     bail!("expected non-null character");
                 }
 
-                add_string(doc, &format!("{}", c))
+                add_string(doc, &format!("{}", c)).map(|ctx| ctx.result())
             })?;
         }
         ControllerCommand::InsertText { text } => {
-            client.client_op(|doc| add_string(doc, &text))?;
+            client.client_op(|doc| add_string(doc, &text).map(|ctx| ctx.result()))?;
         }
         ControllerCommand::RandomTarget { .. } => {
             // TODO this should never happen, because we rewrite RandomTarget beforehand
@@ -332,7 +332,6 @@ pub enum Task {
 }
 
 pub struct Client {
-    pub client_id: String,
     pub client_doc: ClientDoc,
     pub last_controls: Option<Controls>,
 
@@ -389,7 +388,7 @@ pub trait ClientController {
         // TODO Also is it possible to correct the use of AssertUnwindSafe? So it's correct?
         let res = ::std::panic::catch_unwind(::std::panic::AssertUnwindSafe(
             move || -> Result<(), Error> {
-                let delay_log = self.state().client_id == "$$$$$$";
+                let delay_log = self.state().client_doc.client_id == "$$$$$$";
 
                 // Rewrite random targets here.
                 if let Task::ControllerCommand(ControllerCommand::RandomTarget { position: pos }) =
@@ -405,13 +404,13 @@ pub trait ClientController {
                 }
 
                 if !delay_log {
-                    log_wasm!(Task(self.state().client_id.clone(), value.clone()));
+                    log_wasm!(Task(self.state().client_doc.client_id.clone(), value.clone()));
                 }
 
                 match value.clone() {
                     // Handle all commands from Frontend.
                     Task::ControllerCommand(command) => {
-                        if self.state().client_id == "$$$$$$" {
+                        if self.state().client_doc.client_id == "$$$$$$" {
                             println!("FRONTEND COMMAND ARRIVED TOO EARLY");
                             return Ok(());
                         }
@@ -421,13 +420,13 @@ pub trait ClientController {
 
                     // Server sent the client the initial document.
                     Task::ClientCommand(ClientCommand::Init(new_client_id, doc_span, version)) => {
-                        self.state().client_id = new_client_id.clone();
+                        self.state().client_doc.client_id = new_client_id.clone();
                         self.state().client_doc.init(&Doc(doc_span), version);
 
                         // Announce.
                         println!("inital version is {:?}", version);
 
-                        log_wasm!(Setup(self.state().client_id.clone()));
+                        log_wasm!(Setup(self.state().client_doc.client_id.clone()));
 
                         // If the caret doesn't exist or was deleted, reinitialize it.
                         if !self
@@ -451,7 +450,7 @@ pub trait ClientController {
 
                     // Server sent us a new document version.
                     Task::ClientCommand(ClientCommand::Update(version, client_id, input_op)) => {
-                        if self.state().client_id == "$$$$$$" {
+                        if self.state().client_doc.client_id == "$$$$$$" {
                             return Ok(());
                         }
 
@@ -460,7 +459,7 @@ pub trait ClientController {
                         let doc = Op::apply(&self.state().client_doc.original_doc, &input_op);
 
                         // If this operation is an acknowledgment...
-                        if self.state().client_id == client_id {
+                        if self.state().client_doc.client_id == client_id {
                             // Confirm pending op, send out next if one is available.
                             let local_op = self
                                 .state()
@@ -523,7 +522,7 @@ pub trait ClientController {
                 }
 
                 if delay_log {
-                    log_wasm!(Task(self.state().client_id.clone(), value.clone()));
+                    log_wasm!(Task(self.state().client_doc.client_id.clone(), value.clone()));
                 }
 
                 Ok(())
@@ -543,7 +542,7 @@ pub trait ClientController {
 
     fn upload(&mut self, local_op: Op) -> Result<(), Error> {
         log_wasm!(Debug("CLIENTOP".to_string()));
-        let client_id = self.state().client_id.clone();
+        let client_id = self.state().client_doc.client_id.clone();
         let version = self.state().client_doc.version;
         Ok(self.send_server(&ServerCommand::Commit(client_id, local_op, version))?)
     }
@@ -554,9 +553,9 @@ pub trait ClientController {
         C: Fn(ActionContext) -> Result<T, Error>,
     {
         let doc = self.state().client_doc.doc.clone();
-        let client_id = self.state().client_id.clone();
+        let client_id = self.state().client_doc.client_id.clone();
 
-        callback(ActionContext { doc, client_id })
+        callback(ActionContext::new(doc, client_id))
     }
 
     fn client_op<C>(&mut self, callback: C) -> Result<(), Error>

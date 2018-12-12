@@ -224,8 +224,7 @@ fn setup_client(
 
     let mut client = ProxyClientController {
         state: Rc::new(RefCell::new(Client {
-            client_id: name.to_owned(),
-            client_doc: ClientDoc::new(),
+            client_doc: ClientDoc::new(name.to_owned()),
             last_controls: None,
 
             monkey: monkey.clone(),

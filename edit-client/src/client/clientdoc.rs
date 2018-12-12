@@ -10,6 +10,7 @@ use std::mem;
 pub struct ClientDoc {
     pub doc: Doc,
     pub version: usize,
+    pub client_id: String,
 
     pub original_doc: Doc,
     pub pending_op: Option<Op>,
@@ -18,10 +19,11 @@ pub struct ClientDoc {
 
 impl ClientDoc {
     // Default
-    pub fn new() -> ClientDoc {
+    pub fn new(client_id: String) -> ClientDoc {
         ClientDoc {
             doc: Doc(vec![]),
             version: 100,
+            client_id,
 
             original_doc: Doc(vec![]),
             pending_op: None,

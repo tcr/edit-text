@@ -9,11 +9,71 @@ fn is_boundary_char(c: char) -> bool {
     c.is_whitespace() || c == '-' || c == '_'
 }
 
-// TODO don't require ActionContext to be owned everywhere
 #[derive(Clone)]
 pub struct ActionContext {
     pub doc: Doc,
     pub client_id: String,
+    op_result: Op,
+}
+
+impl ActionContext {
+    pub fn new(doc: Doc, client_id: String) -> ActionContext {
+        ActionContext {
+            doc,
+            client_id,
+            op_result: Op::empty(),
+        }
+    }
+
+    fn apply(mut self, op: &Op) -> Result<ActionContext, Error> {
+        // update self with the op, update self doc, return new self
+        self.doc = Op::apply(&self.doc, op);
+        self.op_result = Op::compose(&self.op_result, op);
+        Ok(self)
+    }
+
+    fn get_walker<'a>(&'a self, pos: Pos) -> Result<Walker<'a>, Error> {
+        Walker::to_caret(&self.doc, &self.client_id, pos)
+    }
+
+    pub fn result(self) -> Op {
+        self.op_result
+    }
+}
+
+pub fn add_string(mut ctx: ActionContext, input: &str) -> Result<ActionContext, Error> {
+    Ok(ctx)
+        .and_then(delete_selection)
+        .and_then(|(_success, ctx)| {
+            // Insert before start caret (given the carets are now collapsed).
+            let walker = ctx.get_walker(Pos::Start)?;
+
+            // Style map.
+            let mut styles = hashmap!{ Style::Normie => None };
+
+            // Identify previous styles.
+            let mut char_walker = walker.clone();
+            char_walker.back_char();
+            if let Some(DocChars(_, ref prefix_styles)) = char_walker.doc().head() {
+                styles.extend(
+                    prefix_styles
+                        .iter()
+                        .map(|(a, b)| (a.to_owned(), b.to_owned())),
+                );
+            }
+
+            let mut writer = walker.to_writer();
+
+            writer.del.exit_all(); // ANCHOR next up is to remove need for exit_all
+
+            // Insert new character.
+            writer
+                .add
+                .place(&AddChars(DocString::from_str(input), OpaqueStyleMap::from(styles)));
+            writer.add.exit_all();
+
+            ctx.apply(&writer.result())
+        })
 }
 
 pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
@@ -306,82 +366,52 @@ fn delete_char_inner(mut walker: Walker<'_>) -> Result<Op, Error> {
     Ok(writer.result())
 }
 
-pub fn delete_selection(ctx: &ActionContext) -> Result<Option<Op>, Error> {
-    let start = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Start)?;
-    let end = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::End)?;
-    let delta = end.delta(&start).unwrap_or(0) as usize;
+fn delete_selection(ctx: ActionContext) -> Result<(bool, ActionContext), Error> {
+    Ok(ctx)
+        .and_then(|mut ctx| {
+            let start = ctx.get_walker(Pos::Start)?;
+            let end = ctx.get_walker(Pos::End)?;
+            let delta = end.delta(&start).unwrap_or(0) as usize;
 
-    console_log!("delta between chars: {:?}", delta);
-
-    // If we found a selection, delete every character in the selection.
-    // We implement this by looping until the caret distance between our
-    // cursors is 0.
-    // TODO: This is incredibly inefficient.
-    //  1. Dont' recurse infinitely, do this in a loop.
-    //  2. Skip entire DocChars components instead of one character at a time.
-    if delta != 0 {
-        // Get real weird with it.
-        let op = delete_char_inner(end)?;
-        if delta > 1 {
-            // Apply next op and compose.
-            let ctx2 = ActionContext {
-                doc: Op::apply(&ctx.doc, &op),
-                client_id: ctx.client_id.to_owned(),
-            };
-            let op_next = delete_char(ctx2)?;
-            return Ok(Some(Op::compose(&op, &op_next)));
-        } else {
-            return Ok(Some(op));
-        }
-    }
-
-    Ok(None)
+            // If we found a selection, delete every character in the selection.
+            // We implement this by looping until the caret distance between our
+            // cursors is 0.
+            // TODO: This is incredibly inefficient.
+            //  1. Dont' recurse infinitely, do this in a loop.
+            //  2. Skip entire DocChars components instead of one character at a time.
+            Ok(
+                if delta != 0 {
+                    // Get real weird with it.
+                    let op = delete_char_inner(end)?;
+                    if delta > 1 {
+                        // Apply next op and compose.
+                        let ctx2 = ActionContext::new(
+                            Op::apply(&ctx.doc, &op),
+                            ctx.client_id.to_owned(),
+                        );
+                        let op_next = delete_char(ctx2)?;
+                        (true, ctx.apply(&op_next)?)
+                    } else {
+                        (true, ctx.apply(&op)?)
+                    }
+                } else {
+                    (false, ctx)
+                }
+            )
+        })
 }
 
 /// Backspace.
 pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
-    if let Some(op) = delete_selection(&ctx)? {
-        return Ok(op);
+    // Bail early if we delete a selection.
+    let (success, ctx) = delete_selection(ctx)?;
+    if success {
+        return Ok(ctx.result());
     }
 
     // Fallback; delete backward from start caret (given the carets are collapsed).
     let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Start)?;
     delete_char_inner(walker)
-}
-
-pub fn add_string(ctx: ActionContext, input: &str) -> Result<Op, Error> {
-    let delete_selection_op = &delete_selection(&ctx)?.unwrap_or(Op::empty());
-    Ok(Op::compose(&delete_selection_op, &{
-        // Insert before start caret (given the carets are now collapsed).
-        let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Start)?;
-
-        // Style map.
-        let mut styles = hashmap!{ Style::Normie => None };
-
-        // Identify previous styles.
-        let mut char_walker = walker.clone();
-        char_walker.back_char();
-        if let Some(DocChars(_, ref prefix_styles)) = char_walker.doc().head() {
-            styles.extend(
-                prefix_styles
-                    .iter()
-                    .map(|(a, b)| (a.to_owned(), b.to_owned())),
-            );
-        }
-
-        let mut writer = walker.to_writer();
-
-        writer.del.exit_all();
-
-        // Insert new character.
-        writer
-            .add
-            .place(&AddChars(DocString::from_str(input), OpaqueStyleMap::from(styles)));
-        writer.add.exit_all();
-
-        writer.result()
-    }))
-
 }
 
 // For function reuse
