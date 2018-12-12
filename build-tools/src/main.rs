@@ -265,6 +265,8 @@ fn run() -> Result<(), Error> {
     #[allow(non_snake_case)]
     let CARGO_ARGS_EDIT_CLIENT = cargo_args_for_crate("edit-client", &["oatie"])?;
     #[allow(non_snake_case)]
+    let CARGO_ARGS_EDIT_SERVER = cargo_args_for_crate("edit-server", &["oatie"])?;
+    #[allow(non_snake_case)]
     let CARGO_ARGS_OATIE = cargo_args_for_crate("oatie", &[])?;
 
     // Pass arguments directly to subcommands: don't capture -h, -v, or verification
@@ -541,9 +543,10 @@ fn run() -> Result<(), Error> {
                     export MERCUTIO_WASM_LOG={use_log}
                     export RUST_BACKTRACE=1
                     export DATABASE_URL=edit-server/edit.sqlite3
-                    cargo run {force_color_flag} {release_flag} \
+                    cargo run {force_color_flag} {release_flag} {cargo_args} \
                         --bin edit-server -- {open} {args}
                 ",
+                cargo_args = CARGO_ARGS_EDIT_SERVER,
                 use_log = if log { 1 } else { 0 },
                 release_flag = release_flag,
                 force_color_flag = force_color_flag,
@@ -576,9 +579,10 @@ fn run() -> Result<(), Error> {
             execute!(
                 r"
                     cd edit-server
-                    cargo build {force_color_flag} {release_flag} \
+                    cargo build {force_color_flag} {release_flag} {cargo_args} \
                         --bin edit-server {args}
                 ",
+                cargo_args = CARGO_ARGS_EDIT_SERVER,
                 release_flag = release_flag,
                 force_color_flag = force_color_flag,
                 args = args,
@@ -860,11 +864,12 @@ fn run() -> Result<(), Error> {
                     export TARGET_CFLAGS="-I {dir_link}/usr/include/x86_64-linux-gnu -isystem {dir_link}/usr/include"
 
                     cargo build --release --target=x86_64-unknown-linux-gnu \
-                        --bin edit-server --features 'standalone'
+                        --bin edit-server --features 'standalone' {cargo_args}
 
                 "#,
                 // Must expand absolute path for linking
                 dir_link = format!("{}/dist/link", abs_string_path(".")?),
+                cargo_args = CARGO_ARGS_EDIT_SERVER,
             )?;
             eprintln!();
             eprintln!("Copying directories...");
@@ -924,11 +929,11 @@ fn run() -> Result<(), Error> {
                     cd edit-server
                     export RUST_BACKTRACE=1
                     export DATABASE_URL={database_url}
-                    cargo run --bin edit-server-logs -- {args}
+                    cargo run --bin edit-server-logs {cargo_args} -- {args}
                 ",
                 database_url =
                     env::var("DATABASE_URL").unwrap_or("edit-server/edit.sqlite3".to_string()),
-                // release_flag = release_flag,
+                cargo_args = CARGO_ARGS_EDIT_SERVER,
                 args = args,
             )?;
         }

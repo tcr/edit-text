@@ -11,4 +11,4 @@ use_wee_alloc = false
 validate_bytecode = true
 
 # Print out pretty logs to the console.
-console_command_log = true
+console_command_log = false
