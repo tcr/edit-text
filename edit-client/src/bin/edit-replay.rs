@@ -40,8 +40,7 @@ fn init_new_client(
     let (tx_sync, rx_sync) = unbounded();
     let client = ProxyClientController {
         state: Rc::new(RefCell::new(Client {
-            client_id: client_id.to_owned(),
-            client_doc: ClientDoc::new(),
+            client_doc: ClientDoc::new(client_id.to_owned()),
             last_controls: None,
 
             monkey: Arc::new(AtomicBool::new(false)),

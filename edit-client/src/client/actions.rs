@@ -9,11 +9,71 @@ fn is_boundary_char(c: char) -> bool {
     c.is_whitespace() || c == '-' || c == '_'
 }
 
-// TODO don't require ActionContext to be owned everywhere
 #[derive(Clone)]
 pub struct ActionContext {
     pub doc: Doc,
     pub client_id: String,
+    op_result: Op,
+}
+
+impl ActionContext {
+    pub fn new(doc: Doc, client_id: String) -> ActionContext {
+        ActionContext {
+            doc,
+            client_id,
+            op_result: Op::empty(),
+        }
+    }
+
+    fn apply(mut self, op: &Op) -> Result<ActionContext, Error> {
+        // update self with the op, update self doc, return new self
+        self.doc = Op::apply(&self.doc, op);
+        self.op_result = Op::compose(&self.op_result, op);
+        Ok(self)
+    }
+
+    fn get_walker<'a>(&'a self, pos: Pos) -> Result<Walker<'a>, Error> {
+        Walker::to_caret(&self.doc, &self.client_id, pos)
+    }
+
+    pub fn result(self) -> Op {
+        self.op_result
+    }
+}
+
+pub fn add_string(mut ctx: ActionContext, input: &str) -> Result<ActionContext, Error> {
+    Ok(ctx)
+        .and_then(delete_selection)
+        .and_then(|(_success, ctx)| {
+            // Insert before start caret (given the carets are now collapsed).
+            let walker = ctx.get_walker(Pos::Start)?;
+
+            // Style map.
+            let mut styles = hashmap!{ Style::Normie => None };
+
+            // Identify previous styles.
+            let mut char_walker = walker.clone();
+            char_walker.back_char();
+            if let Some(DocChars(_, ref prefix_styles)) = char_walker.doc().head() {
+                styles.extend(
+                    prefix_styles
+                        .iter()
+                        .map(|(a, b)| (a.to_owned(), b.to_owned())),
+                );
+            }
+
+            let mut writer = walker.to_writer();
+
+            writer.del.exit_all(); // ANCHOR next up is to remove need for exit_all
+
+            // Insert new character.
+            writer
+                .add
+                .place(&AddChars(DocString::from_str(input), OpaqueStyleMap::from(styles)));
+            writer.add.exit_all();
+
+            ctx.apply(&writer.result())
+        })
 }
 
 pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
@@ -306,77 +366,52 @@ fn delete_char_inner(mut walker: Walker<'_>) -> Result<Op, Error> {
     Ok(writer.result())
 }
 
-/// Backspace.
-pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
-    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus)?;
+fn delete_selection(ctx: ActionContext) -> Result<(bool, ActionContext), Error> {
+    Ok(ctx)
+        .and_then(|mut ctx| {
+            let start = ctx.get_walker(Pos::Start)?;
+            let end = ctx.get_walker(Pos::End)?;
+            let delta = end.delta(&start).unwrap_or(0) as usize;
 
-    // See if we have an anchor caret, indicating we have made a selection.
-    if let Ok(walker2) = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Anchor) {
-        // Detect other caret.
-        let last_walker = if walker.caret_pos() > walker2.caret_pos() {
-            walker.clone()
-        } else {
-            walker2.clone()
-        };
-        let delta = (walker.caret_pos() - walker2.caret_pos()).abs();
-        // console_log!("delete delta: {:?}, is selection: {:?}", delta, delta != 0);
-
-        // If we found a selection, delete every character in the selection.
-        // We implement this by looping until the caret distance between our
-        // cursors is 0.
-        // TODO: This is incredibly inefficient.
-        //  1. Dont' recurse infinitely, do this in a loop.
-        //  2. Skip entire DocChars components instead of one character at a time.
-        if delta != 0 {
-            // Get real weird with it.
-            let op = delete_char_inner(last_walker)?;
-            if delta > 1 {
-                // Apply next op and compose.
-                let ctx2 = ActionContext {
-                    doc: Op::apply(&ctx.doc, &op),
-                    client_id: ctx.client_id.to_owned(),
-                };
-                let op_next = delete_char(ctx2)?;
-                return Ok(Op::compose(&op, &op_next));
-            } else {
-                return Ok(op);
-            }
-        }
-    }
-
-    // Fallback; delete backward from unfocused caret.
-    // console_log!("--------> money: {:?}", walker.caret_pos());
-    delete_char_inner(walker)
+            // If we found a selection, delete every character in the selection.
+            // We implement this by looping until the caret distance between our
+            // cursors is 0.
+            // TODO: This is incredibly inefficient.
+            //  1. Dont' recurse infinitely, do this in a loop.
+            //  2. Skip entire DocChars components instead of one character at a time.
+            Ok(
+                if delta != 0 {
+                    // Get real weird with it.
+                    let op = delete_char_inner(end)?;
+                    if delta > 1 {
+                        // Apply next op and compose.
+                        let ctx2 = ActionContext::new(
+                            Op::apply(&ctx.doc, &op),
+                            ctx.client_id.to_owned(),
+                        );
+                        let op_next = delete_char(ctx2)?;
+                        (true, ctx.apply(&op_next)?)
+                    } else {
+                        (true, ctx.apply(&op)?)
+                    }
+                } else {
+                    (false, ctx)
+                }
+            )
+        })
 }
 
-pub fn add_string(ctx: ActionContext, input: &str) -> Result<Op, Error> {
-    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Focus)?;
-
-    // Style map.
-    let mut styles = hashmap!{ Style::Normie => None };
-
-    // Identify previous styles.
-    let mut char_walker = walker.clone();
-    char_walker.back_char();
-    if let Some(DocChars(_, ref prefix_styles)) = char_walker.doc().head() {
-        styles.extend(
-            prefix_styles
-                .iter()
-                .map(|(a, b)| (a.to_owned(), b.to_owned())),
-        );
+/// Backspace.
+pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
+    // Bail early if we delete a selection.
+    let (success, ctx) = delete_selection(ctx)?;
+    if success {
+        return Ok(ctx.result());
     }
 
-    let mut writer = walker.to_writer();
-
-    writer.del.exit_all();
-
-    // Insert new character.
-    writer
-        .add
-        .place(&AddChars(DocString::from_str(input), OpaqueStyleMap::from(styles)));
-    writer.add.exit_all();
-
-    Ok(writer.result())
+    // Fallback; delete backward from start caret (given the carets are collapsed).
+    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Start)?;
+    delete_char_inner(walker)
 }
 
 // For function reuse
@@ -570,7 +605,6 @@ pub fn caret_move(
     preserve_select: bool,
 ) -> Result<Op, Error> {
     let op_1 = if !preserve_select && has_bounding_carets(ctx.clone()) {
-        // TODO caret_clear should take a position also
         let (_pos, op) = caret_clear(ctx.clone(), Pos::Anchor)?;
         ctx.doc = Op::apply(&ctx.doc.clone(), &op);
         op
@@ -723,18 +757,18 @@ pub fn caret_select_all(ctx: ActionContext) -> Result<Op, Error> {
     let mut end = Walker::new(&ctx.doc);
     end.goto_end();
 
-    // First operation removes the caret.
-    let op_1 = caret_clear(ctx.clone(), Pos::Focus)
-        .map(|(_pos_1, op_1)| op_1)
-        .unwrap_or_else(|_| Op::empty());
-
-    // Second operation removes the focus caret if needed.
-    let op_2 = caret_clear(ctx.clone(), Pos::Anchor)
-        .map(|(_pos_1, op_1)| op_1)
-        .unwrap_or_else(|_| Op::empty());
-
-    // Combine two starting ops.
-    let op_1_2 = Op::transform_advance::<RtfSchema>(&op_1, &op_2);
+    // Delete both carets.
+    let op_1_2 = Op::transform_advance::<RtfSchema>(&{
+        // First operation removes the caret.
+        caret_clear(ctx.clone(), Pos::Focus)
+            .map(|(_pos_1, op_1)| op_1)
+            .unwrap_or_else(|_| Op::empty())
+    }, &{
+        // Second operation removes the focus caret if needed.
+        caret_clear(ctx.clone(), Pos::Anchor)
+            .map(|(_pos_1, op_1)| op_1)
+            .unwrap_or_else(|_| Op::empty())
+    });
 
     // Second operation inserts a new caret.
 
