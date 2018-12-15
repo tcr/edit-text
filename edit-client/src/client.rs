@@ -149,7 +149,7 @@ fn key_handlers<C: ClientController>() -> Vec<KeyHandler<C>> {
 }
 
 pub fn button_handlers<C: ClientController>(
-    state: Option<(String, bool)>,
+    state: Option<CaretState>,
 ) -> (Vec<Box<dyn Fn(&mut C) -> Result<(), Error>>>, Vec<Ui>) {
     let mut callbacks: Vec<Box<dyn Fn(&mut C) -> Result<(), Error>>> = vec![];
 
@@ -160,59 +160,62 @@ pub fn button_handlers<C: ClientController>(
         }};
     }
 
+    let is_bold = state.as_ref().map(|x| x.styles.contains(&Style::Bold)).unwrap_or(false);
+    let is_italic = state.as_ref().map(|x| x.styles.contains(&Style::Italic)).unwrap_or(false);
+
     let ui = vec![
         Ui::ButtonGroup(vec![
             Ui::Button(
                 "Text".to_string(),
                 callback!(|client| client.client_op(|doc| replace_block(doc, "p"))),
-                state.as_ref().map(|x| x.0 == "p").unwrap_or(false),
+                state.as_ref().map(|x| x.block == "p").unwrap_or(false),
             ),
             Ui::Button(
                 "H1".to_string(),
                 callback!(|client| client.client_op(|doc| replace_block(doc, "h1"))),
                 // TODO i wish we could match on strings, use matches! here
-                state.as_ref().map(|x| x.0 == "h1").unwrap_or(false),
+                state.as_ref().map(|x| x.block == "h1").unwrap_or(false),
             ),
             Ui::Button(
                 "H2".to_string(),
                 callback!(|client| client.client_op(|doc| replace_block(doc, "h2"))),
-                state.as_ref().map(|x| x.0 == "h2").unwrap_or(false),
+                state.as_ref().map(|x| x.block == "h2").unwrap_or(false),
             ),
             Ui::Button(
                 "H3".to_string(),
                 callback!(|client| client.client_op(|doc| replace_block(doc, "h3"))),
-                state.as_ref().map(|x| x.0 == "h3").unwrap_or(false),
+                state.as_ref().map(|x| x.block == "h3").unwrap_or(false),
             ),
             Ui::Button(
                 "H4".to_string(),
                 callback!(|client| client.client_op(|doc| replace_block(doc, "h4"))),
-                state.as_ref().map(|x| x.0 == "h4").unwrap_or(false),
+                state.as_ref().map(|x| x.block == "h4").unwrap_or(false),
             ),
             Ui::Button(
                 "H5".to_string(),
                 callback!(|client| client.client_op(|doc| replace_block(doc, "h5"))),
-                state.as_ref().map(|x| x.0 == "h5").unwrap_or(false),
+                state.as_ref().map(|x| x.block == "h5").unwrap_or(false),
             ),
             Ui::Button(
                 "H6".to_string(),
                 callback!(|client| client.client_op(|doc| replace_block(doc, "h6"))),
-                state.as_ref().map(|x| x.0 == "h6").unwrap_or(false),
+                state.as_ref().map(|x| x.block == "h6").unwrap_or(false),
             ),
             Ui::Button(
                 "Code".to_string(),
                 callback!(|client| client.client_op(|doc| replace_block(doc, "pre"))),
-                state.as_ref().map(|x| x.0 == "pre").unwrap_or(false),
+                state.as_ref().map(|x| x.block == "pre").unwrap_or(false),
             ),
             Ui::Button(
                 "HTML".to_string(),
                 callback!(|client| client.client_op(|doc| replace_block(doc, "html"))),
-                state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
+                state.as_ref().map(|x| x.block == "html").unwrap_or(false),
             ),
         ]),
         Ui::Button(
             "List".to_string(),
             callback!(|client| client.client_op(|doc| toggle_list(doc))),
-            state.as_ref().map(|x| x.1).unwrap_or(false),
+            state.as_ref().map(|x| x.in_list).unwrap_or(false),
         ),
         Ui::Button(
             "HR".to_string(),
@@ -222,24 +225,25 @@ pub fn button_handlers<C: ClientController>(
         Ui::ButtonGroup(vec![
             Ui::Button(
                 "Bold".to_string(),
-                callback!(|client| client.client_op(|doc| apply_style(doc, Style::Bold, None))),
-                // state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
-                false, // TODO what?
+                callback!(move |client| client.client_op(|doc| {
+                    if is_bold {
+                        remove_styles(doc, hashset![Style::Bold])
+                    } else {
+                        apply_style(doc, Style::Bold, None)
+                    }
+                })),
+                is_bold,
             ),
             Ui::Button(
                 "Italic".to_string(),
-                callback!(|client| client.client_op(|doc| apply_style(doc, Style::Italic, None))),
-                // state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
-                false, // TODO what?
-            ),
-            Ui::Button(
-                "Clear".to_string(),
-                callback!(|client| client.client_op(|doc| remove_styles(
-                    doc,
-                    hashset![Style::Bold, Style::Italic, Style::Link]
-                ))),
-                // state.as_ref().map(|x| x.0 == "html").unwrap_or(false),
-                false, // TODO what?
+                callback!(move |client| client.client_op(|doc| {
+                    if is_italic {
+                        remove_styles(doc, hashset![Style::Italic])
+                    } else {
+                        apply_style(doc, Style::Italic, None)
+                    }
+                })),
+                is_italic,
             ),
         ]),
     ];
@@ -257,7 +261,8 @@ fn controller_command<C: ClientController>(
         }
         ControllerCommand::Button { button: index } => {
             // Find which button handler to respond to this command.
-            button_handlers(None)
+            let caret_state = client.state().last_caret_state.clone();
+            button_handlers(caret_state)
                 .0
                 .get(index as usize)
                 .map(|handler| handler(client));
@@ -333,6 +338,7 @@ pub enum Task {
 
 pub struct Client {
     pub client_doc: ClientDoc,
+    pub last_caret_state: Option<CaretState>,
     pub last_controls: Option<Controls>,
 
     pub monkey: Arc<AtomicBool>,
@@ -349,16 +355,18 @@ pub trait ClientController {
     fn send_frontend(&self, req: &FrontendCommand) -> Result<(), Error>;
     fn send_server(&self, req: &ServerCommand) -> Result<(), Error>;
 
-    fn setup_controls(&mut self, state: Option<(String, bool)>)
+    fn setup_controls(&mut self, caret_state: Option<CaretState>)
     where
         Self: Sized,
     {
+        self.state().last_caret_state = caret_state.clone();
+
         let controls_object = Controls {
             keys: key_handlers::<Self>()
                 .into_iter()
                 .map(|x| (x.0, x.1, x.2))
                 .collect(),
-            buttons: button_handlers::<Self>(state).1,
+            buttons: button_handlers::<Self>(caret_state).1,
         };
 
         if Some(controls_object.clone()) != self.state().last_controls {
@@ -610,11 +618,8 @@ pub trait ClientController {
 
         // Update the controls state.
         // TODO should optimize this to not always send this out.
-        // console_log!("CUR DOC {:?}", doc);
-        let (cur_block, in_list) = self.with_action_context(|doc| identify_block(doc))?;
-        println!("current block: {:?}", cur_block);
-        println!("in list: {:?}", in_list);
-        self.setup_controls(Some((cur_block, in_list)));
+        let caret_state = self.with_action_context(|doc| identify_block(doc))?;
+        self.setup_controls(Some(caret_state));
 
         Ok(())
     }

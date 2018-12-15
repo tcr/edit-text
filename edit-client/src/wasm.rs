@@ -1,7 +1,6 @@
 //! Contains the bindings needed for WASM.
 
 use super::client::*;
-use super::monkey::*;
 use console_error_panic_hook;
 use edit_common::markdown::doc_to_markdown;
 use edit_common::{
@@ -12,7 +11,6 @@ use edit_common::{
 use failure::Error;
 use js_sys;
 use serde_json;
-use serde_json::Value;
 use std::cell::{
     RefCell,
     RefMut,
@@ -114,7 +112,7 @@ impl ClientController for WasmClientController {
         }
 
         if let Some(ws) = self.ws.as_ref() {
-            ws.send_with_str(&command_data);
+            let _ = ws.send_with_str(&command_data);
         } else {
             console_log!("THIS IS A FATAL ERROR SERVER COMMAND BEFORE CONNECTION");
         }
@@ -290,7 +288,7 @@ impl WasmClientController {
         Ok({
             WebsocketSend {
                 closure: Box::new(move |value: String| {
-                    ws.send_with_str(&value);
+                    let _ = ws.send_with_str(&value);
                 }),
             }
         })
@@ -313,6 +311,7 @@ pub fn wasm_setup(server_url: String) -> WasmClientController {
         state: Rc::new(RefCell::new(Client {
             client_doc: ClientDoc::new(editor_id.clone()),
             last_controls: None,
+            last_caret_state: None,
 
             monkey: WASM_MONKEY.clone(),
             alive: WASM_ALIVE.clone(),

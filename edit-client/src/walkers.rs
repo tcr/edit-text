@@ -3,7 +3,6 @@ mod caretstepper;
 use failure::Error;
 use oatie::doc::*;
 use oatie::stepper::*;
-use oatie::transform::Schema;
 use oatie::writer::*;
 use take_mut;
 pub use self::caretstepper::*;

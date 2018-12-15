@@ -154,6 +154,10 @@ body {
             }
         }
 
+        button {
+            font: inherit;
+        }
+
         text-shadow: none;
 
         &.error {
