@@ -49,6 +49,7 @@ fn key_handlers<C: ClientController>() -> Vec<KeyHandler<C>> {
             false,
             Box::new(|client| client.client_op(|doc| delete_char(doc))),
         ),
+
         // left
         KeyHandler(
             37,
@@ -65,6 +66,7 @@ fn key_handlers<C: ClientController>() -> Vec<KeyHandler<C>> {
             false,
             Box::new(|client| client.client_op(|doc| caret_move(doc, true, false))),
         ),
+
         // shift + left
         KeyHandler(
             37,
@@ -81,6 +83,7 @@ fn key_handlers<C: ClientController>() -> Vec<KeyHandler<C>> {
             false,
             Box::new(|client| client.client_op(|doc| caret_move(doc, true, true))),
         ),
+
         // up
         KeyHandler(
             38,
@@ -438,7 +441,7 @@ pub trait ClientController {
 
                         // If the caret doesn't exist or was deleted, reinitialize it.
                         if !self
-                            .with_action_context(|ctx| Ok(has_caret(ctx, Pos::Focus)))
+                            .with_action_context(|ctx| Ok(ctx.get_walker(Pos::Focus).is_ok()))
                             .ok()
                             .unwrap_or(true)
                         {
@@ -513,7 +516,7 @@ pub trait ClientController {
                         // If the caret doesn't exist or was deleted by this update,
                         // reinitialize it.
                         if !self
-                            .with_action_context(|ctx| Ok(has_caret(ctx, Pos::Focus)))
+                            .with_action_context(|ctx| Ok(ctx.get_walker(Pos::Focus).is_ok()))
                             .ok()
                             .unwrap_or(true)
                         {

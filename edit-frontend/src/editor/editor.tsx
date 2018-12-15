@@ -2,7 +2,7 @@ import * as React from 'react';
 
 import copy from './copy';
 import * as util from './util';
-import { ControllerImpl } from './network';
+import { ControllerImpl } from './controller';
 import {vm} from './vm';
 
 const ROOT_SELECTOR = '.edit-text';

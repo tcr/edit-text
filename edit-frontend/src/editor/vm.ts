@@ -1,22 +1,5 @@
-/*
-SeekForward(n),
-// Error when cursor exceeds either boundary more than [0, len] inclusive
-// Counts elements, including whole spans.
-
-Enter() 
-Unenter()
-
-DeleteElements(n) // Deletes elements
-InsertDocString(DocString),
-
-UnwrapSelf()
-WrapPrevious(n, Attrs)
-
-*/
-
 import { Bytecode } from '../bindgen/edit_client';
 import * as util from './util';
-
 
 declare var CONFIG: any;
 
@@ -25,7 +8,6 @@ function assert(condition: boolean) {
         throw new Error('Condition failed.');
     }
 }
-
 
 export function vm(el: Node) {
     let stack: Array<[number, Node]> = [[0, el]];
@@ -183,20 +165,3 @@ export function vm(el: Node) {
         }
     };
 }
-
-/*
-let root = document.querySelector('#app');
-let B = vm(root);
-let program = [
-	['Enter'],
-  ['DeleteElements', 1],
-  ['InsertDocString', 'Goodbye, '],
-  ['UnwrapSelf'],
-  ['WrapPrevious', 2, {'class': 'cool'}],
-];
-program.forEach(item => {
-	B[item[0]].apply(B, item.slice(1));
-})
-assert(B.is_done());
-console.log('Done');
-*/

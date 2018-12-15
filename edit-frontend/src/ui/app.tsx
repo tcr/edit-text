@@ -9,7 +9,7 @@ import * as Raven from 'raven-js';
 import * as route from './route';
 import { Editor } from '../editor/editor';
 import { ProxyController } from './proxy';
-import { ControllerImpl } from '../editor/network';
+import { ControllerImpl } from '../editor/controller';
 import { WasmController, convertMarkdownToHtml, convertMarkdownToDoc } from '../editor/wasm';
 import * as index from '../index';
 import {FrontendCommand} from '../bindgen/edit_client';
@@ -278,6 +278,7 @@ export class EditorFrame extends React.Component {
     // Update watcher.
     // TODO move this to a better location.
     let cachedEtag: null | string = null;
+    let refreshNotification = false;
     let intervalId = setInterval(() => {
       fetch(new Request('/$/edit.js'), {
         method: 'GET',
@@ -291,10 +292,13 @@ export class EditorFrame extends React.Component {
               cachedEtag = etag;
             } else {
               if (cachedEtag != etag) {
-                this.showNotification({
-                  level: 'notice',
-                  element: <div>A newer version of edit-text is available. <button onClick={() => window.location.reload()}>Refresh the page</button></div>,
-                });
+                if (!refreshNotification) {
+                  refreshNotification = true;
+                  this.showNotification({
+                    level: 'notice',
+                    element: <div>A newer version of edit-text is available. <button onClick={() => window.location.reload()}>Refresh the page</button></div>,
+                  });
+                }
                 clearInterval(intervalId);
               }
             }

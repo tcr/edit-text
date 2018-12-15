@@ -13,11 +13,6 @@ fn is_boundary_char(c: char) -> bool {
     c.is_whitespace() || c == '-' || c == '_'
 }
 
-pub fn has_bounding_carets(ctx: ActionContext) -> bool {
-    // At the moment, having an Anchor caret indicates that both carets exist
-    has_caret(ctx, Pos::Anchor)
-}
-
 #[derive(Clone)]
 pub struct ActionContext {
     pub doc: Doc,
@@ -34,20 +29,42 @@ impl ActionContext {
         }
     }
 
-    fn apply(mut self, op: &Op) -> Result<ActionContext, Error> {
+    pub fn apply(mut self, op: &Op) -> Result<ActionContext, Error> {
         // update self with the op, update self doc, return new self
         self.doc = Op::apply(&self.doc, op);
         self.op_result = Op::compose(&self.op_result, op);
         Ok(self)
     }
 
-    fn get_walker<'a>(&'a self, pos: Pos) -> Result<Walker<'a>, Error> {
+    pub fn get_walker<'a>(&'a self, pos: Pos) -> Result<Walker<'a>, Error> {
         Walker::to_caret(&self.doc, &self.client_id, pos)
     }
 
     pub fn result(self) -> Op {
         self.op_result
     }
+}
+
+pub fn init_caret(ctx: ActionContext) -> Result<Op, Error> {
+    let mut walker = Walker::new(&ctx.doc);
+    if !walker.goto_pos(0) {
+        bail!("Could not insert first caret");
+    }
+
+    let mut writer = walker.to_writer();
+    writer.add.begin();
+    writer.add.close(hashmap! {
+        "tag".to_string() => "caret".to_string(),
+        "client".to_string() => ctx.client_id.clone(),
+        "focus".to_string() => "true".to_string(),
+    });
+    writer.add.begin();
+    writer.add.close(hashmap! {
+        "tag".to_string() => "caret".to_string(),
+        "client".to_string() => ctx.client_id.clone(),
+        "focus".to_string() => "false".to_string(),
+    });
+    Ok(writer.exit_result())
 }
 
 pub fn add_string(ctx: ActionContext, input: &str) -> Result<ActionContext, Error> {
@@ -357,8 +374,6 @@ fn delete_char_inner(mut walker: Walker<'_>) -> Result<Op, Error> {
         }
     }
 
-    // console_log!("precede char");
-    
     // Delete the character.
     let mut writer = walker.to_writer();
     writer.del.place(&DelChars(1));
@@ -406,7 +421,7 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
     }
 
     // Fallback; delete backward from start caret (given the carets are collapsed).
-    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Start)?;
+    let walker = ctx.get_walker(Pos::Start)?;
     delete_char_inner(walker)
 }
 
@@ -435,176 +450,190 @@ pub fn split_block(ctx: ActionContext, add_hr: bool) -> Result<Op, Error> {
         }
     }
 
-    let mut writer = walker.to_writer();
+    Ok({
+        let mut writer = walker.to_writer();
 
-    if skip > 0 {
-        writer.del.place(&DelSkip(skip));
-    }
-    writer.del.close();
-    if nested_bullet {
+        if skip > 0 {
+            writer.del.place(&DelSkip(skip));
+        }
         writer.del.close();
-    }
+        if nested_bullet {
+            writer.del.close();
+        }
 
-    writer
-        .add
-        .close(hashmap! { "tag".into() => previous_block });
-    if nested_bullet {
         writer
             .add
-            .close(hashmap! { "tag".into() => "bullet".into() });
+            .close(hashmap! { "tag".into() => previous_block });
+        if nested_bullet {
+            writer
+                .add
+                .close(hashmap! { "tag".into() => "bullet".into() });
+            writer.add.begin();
+        }
+        if add_hr {
+            writer.add.begin();
+            writer.add.close(hashmap! { "tag".into() => "hr".into() });
+        }
         writer.add.begin();
-    }
-    if add_hr {
-        writer.add.begin();
-        writer.add.close(hashmap! { "tag".into() => "hr".into() });
-    }
-    writer.add.begin();
-    if skip > 0 {
-        writer.add.place(&AddSkip(skip));
-    }
-    writer.add.close(hashmap! { "tag".into() => "p".into() });
-    if nested_bullet {
-        writer
-            .add
-            .close(hashmap! { "tag".into() => "bullet".into() });
-    }
+        if skip > 0 {
+            writer.add.place(&AddSkip(skip));
+        }
+        writer.add.close(hashmap! { "tag".into() => "p".into() });
+        if nested_bullet {
+            writer
+                .add
+                .close(hashmap! { "tag".into() => "bullet".into() });
+        }
 
-    Ok(writer.exit_result())
+        writer.exit_result()
+    })
 }
 
 /// Arrow keys move the caret.
 pub fn caret_move(
-    mut ctx: ActionContext,
+    ctx: ActionContext,
     increase: bool,
     preserve_select: bool,
 ) -> Result<Op, Error> {
-    // Collapse the carets wherever they are to wher ethe focus is.
-    let op_1 = if !preserve_select && has_bounding_carets(ctx.clone()) {
-        let (_pos, op) = caret_clear(ctx.clone(), Pos::Anchor)?;
-        ctx.doc = Op::apply(&ctx.doc.clone(), &op);
-        op
-    } else {
-        Op::empty()
-    };
+    Ok(ctx)
+        .and_then(|ctx| {
+            // If we aren't preserving the selection, collapse the anchor caret
+            // to where the focus caret is.
+            if !preserve_select {
+                let op = caret_clear_optional(&ctx, Pos::Anchor);
+                ctx.apply(&op)
+            } else {
+                Ok(ctx)
+            }
+        })
+        .and_then(|ctx| {
+            let mut walker = ctx.get_walker(Pos::Focus)?;
 
-    let mut walker = ctx.get_walker(Pos::Focus)?;
+            // Remove focus caret and move it to next position.
+            let op = Op::transform_advance::<RtfSchema>(&{
+                // First operation removes the caret.
+                let mut writer = walker.to_writer();
+                writer.del.begin();
+                writer.del.close();
+                writer.exit_result()
+            }, &{
+                // Move the walker to the new position.
+                if increase {
+                    walker.next_char();
+                } else {
+                    walker.back_char();
+                }
 
-    // First operation removes the caret.
-    let mut writer = walker.to_writer();
-    writer.del.begin();
-    writer.del.close();
-    let op_2 = writer.exit_result();
+                // Insert the carets.
+                let mut writer = walker.to_writer();
+                if !preserve_select {
+                    writer.add.begin();
+                    writer.add.close(hashmap! {
+                        "tag".to_string() => "caret".to_string(),
+                        "client".to_string() => ctx.client_id.clone(),
+                        "focus".to_string() => "false".to_string(),
+                    });
+                }
+                writer.add.begin();
+                writer.add.close(hashmap! {
+                    "tag".to_string() => "caret".to_string(),
+                    "client".to_string() => ctx.client_id.clone(),
+                    "focus".to_string() => "true".to_string(),
+                });
+                writer.exit_result()
+            });
 
-    // Move the walker to the new position.
-    if increase {
-        walker.next_char();
-    } else {
-        walker.back_char();
-    }
-
-    // Insert the carets.
-    let mut writer = walker.to_writer();
-    writer.add.begin();
-    writer.add.close(hashmap! {
-        "tag".to_string() => "caret".to_string(),
-        "client".to_string() => ctx.client_id.clone(),
-        "focus".to_string() => "true".to_string(),
-    });
-    writer.add.begin();
-    writer.add.close(hashmap! {
-        "tag".to_string() => "caret".to_string(),
-        "client".to_string() => ctx.client_id.clone(),
-        "focus".to_string() => "false".to_string(),
-    });
-    let op_3 = writer.exit_result();
-
-    // Return composed operations. Select proper order or otherwise composition
-    // will be invalid.
-
-    Ok(Op::compose(
-        &op_1,
-        &Op::transform_advance::<RtfSchema>(&op_2, &op_3),
-    ))
+            ctx.apply(&op)
+        })
+        .map(|ctx| ctx.result())
 }
 
 pub fn caret_word_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
-    let mut walker = ctx.get_walker(Pos::Focus).expect("Expected a Focus caret");
+    Ok(ctx)
+        .and_then(|ctx| {
+            let op = caret_clear_optional(&ctx, Pos::Anchor);
+            ctx.apply(&op)
+        })
+        .and_then(|ctx| {
+            let mut walker = ctx.get_walker(Pos::Focus).expect("Expected a Focus caret");
 
-    // First operation removes the caret.
-    let mut writer = walker.to_writer();
-    writer.del.begin();
-    writer.del.close();
-    let op_1 = writer.exit_result();
+            // First operation removes the caret.
+            let mut writer = walker.to_writer();
+            writer.del.begin();
+            writer.del.close();
+            let op_1 = writer.exit_result();
 
-    // Find the next walker position after the current word.
-    if increase {
-        walker.next_char();
-        loop {
-            match walker.doc().head() {
-                Some(DocChars(ref text, _)) => {
-                    if is_boundary_char(text.as_str().chars().next().unwrap()) {
-                        break;
-                    } else {
-                        walker.next_char();
+            // Find the next walker position after the current word.
+            if increase {
+                walker.next_char();
+                loop {
+                    match walker.doc().head() {
+                        Some(DocChars(ref text, _)) => {
+                            if is_boundary_char(text.as_str().chars().next().unwrap()) {
+                                break;
+                            } else {
+                                walker.next_char();
+                            }
+                        }
+                        Some(DocGroup(ref attrs, _)) => {
+                            if attrs["tag"] == "caret" {
+                                // guess we'll stop
+                                break;
+                            }
+                        }
+                        None => {
+                            // guess we'll stop
+                            break;
+                        }
                     }
                 }
-                Some(DocGroup(ref attrs, _)) => {
-                    if attrs["tag"] == "caret" {
-                        // guess we'll stop
-                        break;
+            } else {
+                // Move backward.
+                walker.back_char();
+                loop {
+                    match walker.doc().unhead() {
+                        Some(DocChars(ref text, _)) => {
+                            if is_boundary_char(text.as_str().chars().rev().next().unwrap()) {
+                                break;
+                            } else {
+                                walker.back_char();
+                            }
+                        }
+                        Some(DocGroup(ref attrs, _)) => {
+                            if attrs["tag"] == "caret" {
+                                // guess we'll stop
+                                break;
+                            }
+                        }
+                        None => {
+                            // guess we'll stop
+                            break;
+                        }
                     }
-                }
-                None => {
-                    // guess we'll stop
-                    break;
                 }
             }
-        }
-    } else {
-        // Move backward.
-        walker.back_char();
-        loop {
-            match walker.doc().unhead() {
-                Some(DocChars(ref text, _)) => {
-                    if is_boundary_char(text.as_str().chars().rev().next().unwrap()) {
-                        break;
-                    } else {
-                        walker.back_char();
-                    }
-                }
-                Some(DocGroup(ref attrs, _)) => {
-                    if attrs["tag"] == "caret" {
-                        // guess we'll stop
-                        break;
-                    }
-                }
-                None => {
-                    // guess we'll stop
-                    break;
-                }
-            }
-        }
-    }
 
-    // Second operation inserts the new caret.
-    let mut writer = walker.to_writer();
-    writer.add.begin();
-    writer.add.close(hashmap! {
-        "tag".to_string() => "caret".to_string(),
-        "client".to_string() => ctx.client_id.clone(),
-        "focus".to_string() => "true".to_string(),
-    });
-    writer.add.begin();
-    writer.add.close(hashmap! {
-        "tag".to_string() => "caret".to_string(),
-        "client".to_string() => ctx.client_id.clone(),
-        "focus".to_string() => "false".to_string(),
-    });
-    let op_2 = writer.exit_result();
+            // Second operation inserts the new caret.
+            let mut writer = walker.to_writer();
+            writer.add.begin();
+            writer.add.close(hashmap! {
+                "tag".to_string() => "caret".to_string(),
+                "client".to_string() => ctx.client_id.clone(),
+                "focus".to_string() => "true".to_string(),
+            });
+            writer.add.begin();
+            writer.add.close(hashmap! {
+                "tag".to_string() => "caret".to_string(),
+                "client".to_string() => ctx.client_id.clone(),
+                "focus".to_string() => "false".to_string(),
+            });
+            let op_2 = writer.exit_result();
 
-    // Return composed operations. Select proper order or otherwise composition
-    // will be invalid.
-    Ok(Op::transform_advance::<RtfSchema>(&op_1, &op_2))
+            // Return composed operations. Select proper order or otherwise composition
+            // will be invalid.
+            ctx.apply(&Op::transform_advance::<RtfSchema>(&op_1, &op_2))
+        })
+        .map(|ctx| ctx.result())
 }
 
 pub fn caret_select_all(ctx: ActionContext) -> Result<Op, Error> {
@@ -651,32 +680,6 @@ pub fn caret_select_all(ctx: ActionContext) -> Result<Op, Error> {
     }))
 }
 
-pub fn has_caret(ctx: ActionContext, pos: Pos) -> bool {
-    Walker::to_caret(&ctx.doc, &ctx.client_id, pos).is_ok()
-}
-
-pub fn init_caret(ctx: ActionContext) -> Result<Op, Error> {
-    let mut walker = Walker::new(&ctx.doc);
-    if !walker.goto_pos(0) {
-        bail!("Could not insert first caret");
-    }
-
-    let mut writer = walker.to_writer();
-    writer.add.begin();
-    writer.add.close(hashmap! {
-        "tag".to_string() => "caret".to_string(),
-        "client".to_string() => ctx.client_id.clone(),
-        "focus".to_string() => "true".to_string(),
-    });
-    writer.add.begin();
-    writer.add.close(hashmap! {
-        "tag".to_string() => "caret".to_string(),
-        "client".to_string() => ctx.client_id.clone(),
-        "focus".to_string() => "false".to_string(),
-    });
-    Ok(writer.exit_result())
-}
-
 pub fn caret_block_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
     let mut walker = ctx.get_walker(Pos::Focus).expect("Expected a Focus caret");
 
@@ -716,18 +719,25 @@ pub fn caret_block_move(ctx: ActionContext, increase: bool) -> Result<Op, Error>
     Ok(Op::transform_advance::<RtfSchema>(&op_1, &op_2))
 }
 
-// Returns new caret position
-pub fn caret_clear(ctx: ActionContext, position: Pos) -> Result<(isize, Op), Error> {
-    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, position)?;
-    caret_clear_inner(walker)
-}
-
+// Delete a caret, return its position.
 pub fn caret_clear_inner(walker: Walker<'_>) -> Result<(isize, Op), Error> {
     let pos = walker.caret_pos();
     let mut writer = walker.to_writer();
     writer.del.begin();
     writer.del.close();
     Ok((pos, writer.exit_result()))
+}
+
+// Deletes a caret, returning its position.
+pub fn caret_clear(ctx: ActionContext, position: Pos) -> Result<(isize, Op), Error> {
+    let walker = ctx.get_walker(position)?;
+    caret_clear_inner(walker)
+}
+
+fn caret_clear_optional(ctx: &ActionContext, pos: Pos) -> Op {
+    caret_clear(ctx.clone(), pos)
+        .map(|(_pos, op)| op)
+        .unwrap_or(Op::empty())
 }
 
 pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan, focus: bool) -> Result<Op, Error> {

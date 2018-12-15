@@ -400,15 +400,16 @@ body.theme-column {
         background: #349;
     }
 
-    div[data-tag="caret"] ~ span {
-        color: white;
-        background: #349;
-    }
+    // div[data-tag="caret"] ~ span {
+    //     color: white;
+    //     background: #349;
+    // }
 
-    div[data-tag="caret"] ~ div[data-tag="caret"] ~ span {
-        color: inherit;
-        background: inherit;
-    }
+    // div[data-tag="caret"] ~ div[data-tag="caret"] ~ span {
+    //     color: inherit;
+    //     background: inherit;
+    // }
+
     span.Link {
         color: #05d;
         text-decoration: underline;
