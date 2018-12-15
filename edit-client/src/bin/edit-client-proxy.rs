@@ -226,6 +226,7 @@ fn setup_client(
         state: Rc::new(RefCell::new(Client {
             client_doc: ClientDoc::new(name.to_owned()),
             last_controls: None,
+            last_caret_state: None,
 
             monkey: monkey.clone(),
             alive: alive.clone(),

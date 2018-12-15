@@ -7,6 +7,7 @@ edition = "2018"
 [dependencies]
 colored = "1.6.0"
 crossbeam-channel = "0.2"
+rust-crypto = "^0.2"
 dotenv = "^0.13"
 env_logger = "0.4.3"
 failure = "0.1"

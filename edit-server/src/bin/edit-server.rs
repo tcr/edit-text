@@ -13,8 +13,9 @@ extern crate rouille;
 extern crate failure;
 
 use md5;
-
 use reqwest;
+use crypto::md5::Md5;
+use crypto::digest::Digest;
 
 #[macro_use]
 extern crate serde_json;
@@ -112,8 +113,25 @@ impl Dir for LocalDir {
         Box::new(LocalDir(self.0.clone()))
     }
 
-    fn md5(&self, _path: &Path) -> Option<String> {
-        None
+    fn md5(&self, path: &Path) -> Option<String> {
+        let mut buffer = vec![0; 1024 * 1024 * 10];
+        if let Ok(mut f) = File::open(self.0.join(path)) {
+            let mut hasher = Md5::new();
+            loop {
+                if let Ok(v) = f.read(&mut buffer) {
+                    if v == 0 {
+                        break;
+                    }
+                    hasher.input(&buffer[0..v]);
+                } else {
+                    return None;
+                }
+            }
+            Some(hasher.result_str())
+        } else {
+            eprintln!("warn: cannot open {:?}", path);
+            None
+        }
     }
 }
 
@@ -299,6 +317,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 return Response::redirect_302("/$/multi");
             },
 
+            // React element preview.
             (GET) ["/$/react"] => {
                 // Inline the stylesheet.
                 let stylesheet = dist_dir.get(Path::new("edit.css")).unwrap();
@@ -349,7 +368,6 @@ fn run_http_server(port: u16, client_proxy: bool) {
                         data.clone(),
                     );
                     if let Some(md5) = static_dir.md5(Path::new(&target)) {
-                        eprintln!("md5 {:?}", md5);
                         res = res.with_etag(request, md5);
                     }
                     res
@@ -366,7 +384,6 @@ fn run_http_server(port: u16, client_proxy: bool) {
                         data.clone(),
                     );
                     if let Some(md5) = dist_dir.md5(Path::new(&target)) {
-                        eprintln!("md5 {:?}", md5);
                         res = res.with_etag(request, md5);
                     }
                     res

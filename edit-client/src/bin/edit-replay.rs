@@ -42,6 +42,7 @@ fn init_new_client(
         state: Rc::new(RefCell::new(Client {
             client_doc: ClientDoc::new(client_id.to_owned()),
             last_controls: None,
+            last_caret_state: None,
 
             monkey: Arc::new(AtomicBool::new(false)),
             alive: Arc::new(AtomicBool::new(true)),

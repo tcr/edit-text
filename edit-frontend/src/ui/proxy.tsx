@@ -1,7 +1,7 @@
 // Proxy controller.
 
 import * as route from './route';
-import { ControllerImpl } from '../editor/network';
+import { ControllerImpl } from '../editor/controller';
 import { ControllerCommand } from '../bindgen/edit_client';
 
 declare var CONFIG: any;
