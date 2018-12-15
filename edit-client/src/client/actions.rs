@@ -366,6 +366,19 @@ fn delete_char_inner(mut walker: Walker<'_>) -> Result<Op, Error> {
     Ok(writer.result())
 }
 
+/// Backspace.
+pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
+    // Bail early if we delete a selection.
+    let (success, ctx) = delete_selection(ctx)?;
+    if success {
+        return Ok(ctx.result());
+    }
+
+    // Fallback; delete backward from start caret (given the carets are collapsed).
+    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Start)?;
+    delete_char_inner(walker)
+}
+
 fn delete_selection(ctx: ActionContext) -> Result<(bool, ActionContext), Error> {
     Ok(ctx)
         .and_then(|mut ctx| {
@@ -383,35 +396,17 @@ fn delete_selection(ctx: ActionContext) -> Result<(bool, ActionContext), Error> 
                 if delta != 0 {
                     // Get real weird with it.
                     let op = delete_char_inner(end)?;
+                    let ctx = ctx.apply(&op)?;
                     if delta > 1 {
-                        // Apply next op and compose.
-                        let ctx2 = ActionContext::new(
-                            Op::apply(&ctx.doc, &op),
-                            ctx.client_id.to_owned(),
-                        );
-                        let op_next = delete_char(ctx2)?;
-                        (true, ctx.apply(&op_next)?)
+                        delete_selection(ctx)?
                     } else {
-                        (true, ctx.apply(&op)?)
+                        (true, ctx)
                     }
                 } else {
                     (false, ctx)
                 }
             )
         })
-}
-
-/// Backspace.
-pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
-    // Bail early if we delete a selection.
-    let (success, ctx) = delete_selection(ctx)?;
-    if success {
-        return Ok(ctx.result());
-    }
-
-    // Fallback; delete backward from start caret (given the carets are collapsed).
-    let walker = Walker::to_caret(&ctx.doc, &ctx.client_id, Pos::Start)?;
-    delete_char_inner(walker)
 }
 
 // For function reuse

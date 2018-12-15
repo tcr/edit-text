@@ -145,6 +145,12 @@ pub struct OpWriter {
 }
 
 impl OpWriter {
+    pub fn exit_result(mut self) -> Op {
+        self.del.exit_all();
+        self.add.exit_all();
+        self.result()
+    }
+
     pub fn result(self) -> Op {
         (self.del.result(), self.add.result())
     }
