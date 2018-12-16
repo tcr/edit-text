@@ -15,15 +15,6 @@ macro_rules! doc_span {
             DocChars($crate::doc::DocString::from_str($b), $crate::style::OpaqueStyleMap::from(map))
         }
     };
-    ( @kind DocGroup { $( $e:tt : $b:expr ),+  $(,)* } , [ $( $v:tt )* ] $(,)* ) => {
-        {
-            let mut map = ::std::collections::HashMap::<String, String>::new();
-            $(
-                map.insert(doc_span!(@str_literal $e).to_owned(), ($b).to_owned());
-            )*
-            DocGroup(map, doc_span![ $( $v )* ])
-        }
-    };
     ( @kind DocGroup $b:expr , [ $( $v:tt )* ] $(,)* ) => {
         {
             DocGroup($b, doc_span![ $( $v )* ])
@@ -59,15 +50,6 @@ macro_rules! add_span {
     };
     ( @kind AddWithGroup [ $( $v:tt )* ] $(,)* ) => {
         AddWithGroup(add_span![ $( $v )* ])
-    };
-    ( @kind AddGroup { $( $e:tt : $b:expr ),+  $(,)* } , [ $( $v:tt )* ] $(,)* ) => {
-        {
-            let mut map = ::std::collections::HashMap::<String, String>::new();
-            $(
-                map.insert(add_span!(@str_literal $e).to_owned(), ($b).to_owned());
-            )*
-            AddGroup(map, add_span![ $( $v )* ])
-        }
     };
     ( @kind AddGroup $b:expr , [ $( $v:tt )* ] $(,)* ) => {
         {

@@ -276,7 +276,7 @@ fn controller_command<C: ClientController>(
     req: ControllerCommand,
 ) -> Result<(), Error> {
     match req {
-        ControllerCommand::RenameGroup { tag, curspan: _ } => {
+        ControllerCommand::RenameGroup { tag: _, curspan: _ } => {
             unimplemented!();
             // client.client_op(|doc| replace_block(doc, &tag))?;
         }

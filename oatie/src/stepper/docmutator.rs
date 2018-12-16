@@ -173,7 +173,7 @@ impl<'a> RecordingDocMutator<'a> {
                 // Partial string.
                 let partial = self.stepper.char_cursor_expect().right().expect("hey now");
                 // console_log!("🏟 {:?}", partial);
-                if let Some(&DocChars(ref text, ref styles)) = self.stepper.head_raw() {
+                if let Some(&DocChars(ref _text, ref styles)) = self.stepper.head_raw() {
                     self.bc.place(Bytecode::InsertDocString(partial.clone(), styles.clone()));
                     self.writer.place(&DocChars(partial.clone(), styles.clone()));
                 } else {

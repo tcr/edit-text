@@ -1,25 +1,41 @@
 //! Performs operational transform.
 
-use super::doc::*;
 use super::transform::{
     Schema,
     Track,
 };
-use std::borrow::ToOwned;
-use std::collections::HashSet;
+use std::fmt;
+use enumset::EnumSetType;
 
-fn parse_classes(input: &str) -> HashSet<String> {
-    input
-        .split_whitespace()
-        .filter(|x| !x.is_empty())
-        .map(|x| x.to_owned())
-        .collect()
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
+pub enum Attrs {
+    Header(u8),
+    Text,
+    Code,
+    Html,
+    ListItem,
+    Rule,
+    Caret {
+        client_id: String,
+        focus: bool,
+    },
 }
 
-fn format_classes(set: &HashSet<String>) -> String {
-    let mut classes: Vec<String> = set.iter().cloned().collect();
-    classes.sort();
-    classes.join(" ")
+#[repr(u8)]
+#[derive(Debug, Serialize, Deserialize, EnumSetType)]
+pub enum Style {
+    Normie,   // Sentinel (if this isn't present on a DocString, something went wrong somewhere)
+    Selected, // Never used in server, added on client to show selected text
+    Bold,
+    Italic,
+    Link,     // Needs attached link data
+}
+
+impl fmt::Display for Style {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // Use the Debug implementation for Display.
+        fmt::Debug::fmt(self, f)
+    }
 }
 
 #[derive(PartialEq, Copy, Clone, Debug)]
@@ -111,7 +127,7 @@ impl Schema for RtfSchema {
         a == b
     }
 
-    fn merge_attrs(a: &Attrs, b: &Attrs) -> Option<Attrs> {
+    fn merge_attrs(_a: &Attrs, _b: &Attrs) -> Option<Attrs> {
         None
     }
 

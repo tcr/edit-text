@@ -65,11 +65,11 @@ impl<'a, 'b> Iterator for DocToMarkdown<'a, 'b> {
                         return self.next();
                     }
                     Attrs::Rule => Event::Start(Tag::Rule),
-                    _ => {
-                        eprintln!("Unexpected tag {:?}!", attrs);
-                        self.doc_stepper.next();
-                        return self.next();
-                    }
+                    // _ => {
+                    //     eprintln!("Unexpected tag {:?}!", attrs);
+                    //     self.doc_stepper.next();
+                    //     return self.next();
+                    // }
                 });
                 self.doc_stepper.enter();
                 res

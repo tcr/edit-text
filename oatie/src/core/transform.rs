@@ -604,8 +604,8 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
 
     while !(a.is_done() && b.is_done()) {
         log_transform!("{}", Green.bold().paint("Tracks:"));
-        for t in &t.tracks {
-            log_transform!("{}", BrightGreen.paint(format!(" - {:?}", t)));
+        for _t in &t.tracks {
+            log_transform!("{}", BrightGreen.paint(format!(" - {:?}", _t)));
         }
 
         log_transform!("{}", BrightGreen.paint(format!(" @ a_del: {:?}", t.a_del)));
@@ -1648,8 +1648,8 @@ pub fn transform_add_del_inner(
                     delres.place(&DelWithGroup(delres_inner));
                     a.next();
                 }
-                unknown => {
-                    log_transform!("Compare: {:?} {:?}", DelChars(bcount), unknown);
+                _unknown => {
+                    log_transform!("Compare: {:?} {:?}", DelChars(bcount), _unknown);
                     panic!("Unimplemented or Unexpected");
                 }
             },

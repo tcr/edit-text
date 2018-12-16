@@ -1,8 +1,6 @@
 //! Classes for generating operation steps (add / del).
 
-use std::collections::HashMap;
 use crate::doc::*;
-
 use failure::Error;
 
 #[derive(Clone, Debug, Default)]

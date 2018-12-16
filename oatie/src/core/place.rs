@@ -2,7 +2,7 @@ use super::doc::*;
 
 pub(crate) fn can_element_join(left: &DocElement, right: &DocElement) -> bool {
     match (left, right) {
-        (&DocChars(ref prefix, ref prefix_styles), &DocChars(ref suffix, ref suffix_styles)) => {
+        (&DocChars(ref _prefix, ref prefix_styles), &DocChars(ref _suffix, ref suffix_styles)) => {
             if prefix_styles == suffix_styles {
                 return true;
             }

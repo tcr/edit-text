@@ -2,12 +2,9 @@
 
 #[macro_use]
 extern crate maplit;
-
 #[macro_use]
 extern crate serde_derive;
-
-use serde_json;
-
+#[allow(unused)]
 #[macro_use]
 extern crate wasm_typescript_definition;
 
@@ -16,6 +13,7 @@ pub mod markdown;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod simple_ws;
 
+use serde_json;
 use htmlescape::encode_minimal;
 use oatie::doc::*;
 use std::collections::{
@@ -25,16 +23,6 @@ use std::collections::{
 
 type CaretIndex = HashMap<String, usize>;
 type SelectionActive = HashSet<String>;
-
-// TODO unify with its counterpart in edit-client/src/walkers.rs?
-fn is_caret(attrs: &Attrs, client_id: Option<&str>) -> bool {
-    if let Attrs::Caret { client_id: caret_client_id, .. } = attrs {
-        client_id.is_none() || caret_client_id == client_id.unwrap()
-    } else {
-        false
-    }
-    // && attrs.get("focus").unwrap_or(&"false".to_string()).parse::<bool>().map(|x| x == focus).unwrap_or(false)
-}
 
 fn html_start_tag(tag: &str, attrs: HashMap<String, String>) -> String {
     format!("<{} {}>", tag, attrs.into_iter().map(|(k, v)| {

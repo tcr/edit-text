@@ -5,26 +5,9 @@ use serde::{
 use serde::de::Deserializer;
 use serde::ser::Serializer;
 use std::collections::{HashMap, HashSet};
-use std::fmt;
 use std::sync::Arc;
 use enumset::*;
-
-#[repr(u8)]
-#[derive(Debug, Serialize, Deserialize, EnumSetType)]
-pub enum Style {
-    Normie,   // Sentinel (if this isn't present on a DocString, something went wrong somewhere)
-    Selected, // Never used in server, added on client to show selected text
-    Bold,
-    Italic,
-    Link,     // Needs attached link data
-}
-
-impl fmt::Display for Style {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // Use the Debug implementation for Display.
-        fmt::Debug::fmt(self, f)
-    }
-}
+pub use crate::core::schema::*;
 
 pub type StyleMap = HashMap<Style, Option<String>>;
 pub type StyleSet = HashSet<Style>;
@@ -90,6 +73,10 @@ impl OpaqueStyleMap {
     pub fn iter(&self) -> impl Iterator<Item=(Style, Option<String>)> {
         // TODO OpaqueStyleMap::iter needs to support Link values (self.1)
         self.0.iter().map(|k| (k, None))
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.iter().count() == 0
     }
 
     pub fn extend(&mut self, map: &StyleMap) {
