@@ -14,6 +14,7 @@ extern crate failure;
 
 use md5;
 use reqwest;
+use regex::Regex;
 use crypto::md5::Md5;
 use crypto::digest::Digest;
 use yansi::Paint;

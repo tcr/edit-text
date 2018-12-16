@@ -405,8 +405,8 @@ pub fn apply_del_bc(spanvec: &DocSpan, del: &DelSpan) -> (DocSpan, Program) {
         let actual = output_doc.clone();
         if actual != compare {
             console_log!("\n\n\n🚫🚫🚫 DELETION: {:?}", del);
-            for item in &bc.0 {
-                console_log!("      -> {:?}", item);
+            for _item in &bc.0 {
+                console_log!("      -> {:?}", _item);
             }
             console_log!(
                 "\ntest =====> [ {} ]\n\nactual:\n  {:?}\n\ncompare:\n  {:?}\n\n",

@@ -233,11 +233,16 @@ impl<'a> DocMutator for RecordingDocMutator<'a> {
         if self.flush_chars() {
             count -= 1;
         }
+        
+        console_log!("advance elements: {:?}", count);
 
         for _ in 0..count {
             self.bc.place(Bytecode::AdvanceElements(1));
 
-            self.writer.place(&self.stepper.head_raw().expect("oh god"));
+            self.writer.place(match self.stepper.head_raw() {
+                Some(head) => head,
+                _ => panic!("no head element"),
+            });
 
             self.stepper.next();
         }

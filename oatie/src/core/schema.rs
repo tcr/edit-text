@@ -1,4 +1,7 @@
-//! Performs operational transform.
+//! Contains types that define the different groups and styles the document
+//! tree can contain. This code should live outside of `oatie`, once all of
+//! DocSpan and Op are made generic over a <S: Schema> trait. Until then,
+//! oatie is hard-coded to this Markdown-like schema.
 
 use super::transform::{
     Schema,

@@ -185,6 +185,15 @@ const DEBUG = {
         return div;
     },
 
+    randomCaretPosition: () => {
+        globalClientBindings!.command(JSON.stringify({
+            ControllerCommand: {
+                "tag" : "RandomTarget" ,
+                "fields" : { "position" : Math.random() , } ,
+            },
+        }));
+    },
+
     // Bindings to global ref for client module
     // NOTE: only for debugging! bindings should not be referenced globally.
 

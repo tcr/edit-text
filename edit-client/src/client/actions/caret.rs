@@ -238,10 +238,10 @@ pub fn caret_clear(ctx: &ActionContext, position: Pos) -> Result<Op, Error> {
     caret_clear_inner(ctx.get_walker(position)?)
 }
 
-pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan, pos: Pos) -> Result<Op, Error> {
+pub fn cur_to_caret(ctx: &ActionContext, cur: &CurSpan, pos: Pos) -> Result<Op, Error> {
     Ok(Op::transform_advance::<RtfSchema>(&{
         // First operation removes the caret.
-        caret_clear(&ctx, pos).unwrap_or_else(|_| Op::empty())
+        caret_clear(ctx, pos).unwrap_or_else(|_| Op::empty())
     }, &{
         // Second operation inserts a new caret.
         let walker = Walker::to_cursor(&ctx.doc, cur);

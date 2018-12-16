@@ -328,17 +328,18 @@ fn controller_command<C: ClientController>(
             match (focus, anchor) {
                 (Some(focus), Some(anchor)) => {
                     client.client_op(|mut ctx| {
-                        let op = cur_to_caret(ctx.clone(), &focus, Pos::Focus)?;
-                        ctx.doc = Op::apply(&ctx.doc, &op);
-                        let op2 = cur_to_caret(ctx, &anchor, Pos::Anchor)?;
-                        Ok(Op::compose(&op, &op2))
+                        let op = cur_to_caret(&ctx, &focus, Pos::Focus)?;
+                        ctx = ctx.apply(&op)?;
+                        let op2 = cur_to_caret(&ctx, &anchor, Pos::Anchor)?;
+                        ctx = ctx.apply(&op2)?;
+                        Ok(ctx.result())
                     })?;
                 }
                 (Some(focus), None) => {
-                    client.client_op(|doc| cur_to_caret(doc, &focus, Pos::Focus))?;
+                    client.client_op(|ctx| cur_to_caret(&ctx, &focus, Pos::Focus))?;
                 }
                 (None, Some(anchor)) => {
-                    client.client_op(|doc| cur_to_caret(doc, &anchor, Pos::Anchor))?;
+                    client.client_op(|ctx| cur_to_caret(&ctx, &anchor, Pos::Anchor))?;
                 }
                 (None, None) => {} // ???
             }
@@ -428,7 +429,7 @@ pub trait ClientController {
 
                     value = Task::ControllerCommand(ControllerCommand::Cursor {
                         focus: Some(cursors[idx].clone()),
-                        anchor: None,
+                        anchor: Some(cursors[idx].clone()),
                     });
                 }
 

@@ -747,16 +747,16 @@ export function start() {
     />,
     document.querySelector('#content')!,
     () => {
-      // Default notification
-      if (!sessionStorage.getItem("its-only-funny-once")) {
-        editorFrame!.showNotification({
-          element: (<div>
-            Check out <a href="http://github.com/tcr/edit-text">edit-text</a> on Github for more information.
-          </div>),
-          level: 'notice',
-        });
-        sessionStorage.setItem("its-only-funny-once", 'true');
-      }
+      // NUX notification.
+      // if (!sessionStorage.getItem("its-only-funny-once")) {
+      //   editorFrame!.showNotification({
+      //     element: (<div>
+      //       Check out <a href="http://github.com/tcr/edit-text">edit-text</a> on Github for more information.
+      //     </div>),
+      //     level: 'notice',
+      //   });
+      //   sessionStorage.setItem("its-only-funny-once", 'true');
+      // }
 
       // Connect client.
       DEBUG.measureTime('connect-client');

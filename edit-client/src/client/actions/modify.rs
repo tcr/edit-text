@@ -1,3 +1,5 @@
+//! Actions that edit the document structure. Modify blocks or characters.
+
 use super::*;
 use crate::walkers::*;
 use failure::Error;

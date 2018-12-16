@@ -24,6 +24,7 @@ r2d2 = "0.8.2"
 r2d2-diesel = "1.0.0"
 open = "1.2.2"
 rand = "0.4"
+regex = "1"
 reqwest = "0.8.5"
 ron = "0.4"
 libsqlite3-sys = { version = "*", features = ["bundled"] }
