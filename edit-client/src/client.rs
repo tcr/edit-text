@@ -310,17 +310,17 @@ fn controller_command<C: ClientController>(
             match (focus, anchor) {
                 (Some(focus), Some(anchor)) => {
                     client.client_op(|mut ctx| {
-                        let op = cur_to_caret(ctx.clone(), &focus, true)?;
+                        let op = cur_to_caret(ctx.clone(), &focus, Pos::Focus)?;
                         ctx.doc = Op::apply(&ctx.doc, &op);
-                        let op2 = cur_to_caret(ctx, &anchor, false)?;
+                        let op2 = cur_to_caret(ctx, &anchor, Pos::Anchor)?;
                         Ok(Op::compose(&op, &op2))
                     })?;
                 }
                 (Some(focus), None) => {
-                    client.client_op(|doc| cur_to_caret(doc, &focus, true))?;
+                    client.client_op(|doc| cur_to_caret(doc, &focus, Pos::Focus))?;
                 }
                 (None, Some(anchor)) => {
-                    client.client_op(|doc| cur_to_caret(doc, &anchor, false))?;
+                    client.client_op(|doc| cur_to_caret(doc, &anchor, Pos::Anchor))?;
                 }
                 (None, None) => {} // ???
             }

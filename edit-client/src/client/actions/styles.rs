@@ -11,7 +11,6 @@ use std::collections::HashSet;
 pub enum StyleOp {
     AddStyle(Style, Option<String>),
     RemoveStyle(Style),
-    // ToggleStyle(Style, Option<String>),
 }
 
 // TODO consider removing this and just use restyle

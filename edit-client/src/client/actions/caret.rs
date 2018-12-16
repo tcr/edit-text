@@ -154,12 +154,12 @@ pub fn caret_select_all(ctx: ActionContext) -> Result<Op, Error> {
     Ok(Op::transform_advance::<RtfSchema>(&{
         Op::transform_advance::<RtfSchema>(&{
             // Delete focus caret.
-            caret_clear(ctx.clone(), Pos::Focus)
+            caret_clear(&ctx, Pos::Focus)
                 .map(|(_pos_1, op_1)| op_1)
                 .unwrap_or_else(|_| Op::empty())
         }, &{
             // Delete anchor caret.
-            caret_clear(ctx.clone(), Pos::Anchor)
+            caret_clear(&ctx, Pos::Anchor)
                 .map(|(_pos_1, op_1)| op_1)
                 .unwrap_or_else(|_| Op::empty())
         })
@@ -227,29 +227,27 @@ pub fn caret_clear_inner(walker: Walker<'_>) -> Result<(isize, Op), Error> {
 }
 
 // Deletes a caret, returning its position.
-pub fn caret_clear(ctx: ActionContext, position: Pos) -> Result<(isize, Op), Error> {
+pub fn caret_clear(ctx: &ActionContext, position: Pos) -> Result<(isize, Op), Error> {
     let walker = ctx.get_walker(position)?;
     caret_clear_inner(walker)
 }
 
 fn caret_clear_optional(ctx: &ActionContext, pos: Pos) -> Op {
-    caret_clear(ctx.clone(), pos)
+    caret_clear(ctx, pos)
         .map(|(_pos, op)| op)
         .unwrap_or(Op::empty())
 }
 
-pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan, focus: bool) -> Result<Op, Error> {
+pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan, pos: Pos) -> Result<Op, Error> {
     Ok(Op::transform_advance::<RtfSchema>(&{
         // First operation removes the caret.
-        caret_clear(ctx.clone(), if focus { Pos::Focus } else { Pos::Anchor })
-            .map(|(_pos, op)| op)
-            .unwrap_or_else(|_| Op::empty())
+        caret_clear_optional(&ctx, pos)
     }, &{
         // Second operation inserts a new caret.
         let walker = Walker::to_cursor(&ctx.doc, cur);
         let mut writer = walker.to_writer();
         writer.add.begin();
-        writer.add.close(caret_attrs(&ctx.client_id, focus));
+        writer.add.close(caret_attrs(&ctx.client_id, if pos == Pos::Focus { true } else { false }));
         writer.exit_result()
     }))
 }
