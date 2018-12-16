@@ -1,5 +1,6 @@
 /// Copied from https://raw.githubusercontent.com/rust-lang-nursery/mdBook/3688f73052454bf510a5acc85cf55aae450c6e46/src/cmd/serve.rs
 /// from commit 3688f73 on https://github.com/rust-lang-nursery/mdBook/
+
 extern crate iron;
 extern crate staticfile;
 extern crate ws;
@@ -15,7 +16,7 @@ use self::iron::{
     Response,
     Set,
 };
-#[cfg(feature = "watch")]
+// #[cfg(feature = "watch")]
 use super::watch;
 use clap::{
     App,
@@ -122,7 +123,7 @@ pub fn execute(args: &ArgMatches, book_dir: &Path) -> Result<()> {
     let serving_url = format!("http://{}", address);
     info!("Serving on: {}", serving_url);
 
-    #[cfg(feature = "watch")]
+    // #[cfg(feature = "watch")]
     watch::trigger_on_change(&mut book, move |path, book_dir| {
         info!("File changed: {:?}", path);
         info!("Building book...");

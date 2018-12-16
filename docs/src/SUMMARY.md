@@ -12,7 +12,6 @@
   - [Documents](./working-with-documents.md)
   - [Operations](./working-with-operations.md)
   - [Operational Transform](./rtf-ot.md)
-  - [Delall Hack](./diary-delall.md)
 - [Rich Text](./rtf.md)
   - [Markdown](./markdown.md)
   - [Carets](./diary-carets.md)
@@ -21,3 +20,5 @@
   - [Hosted Sandbox](#)
   - [Dokku](./deploying.md)
   - [npm module](#)
+- [Appendix](#)
+  - [Delall Hack](./diary-delall.md)

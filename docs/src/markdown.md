@@ -1,7 +1,5 @@
 # Documents and Markdown
 
-A document in edit-text is built with *groups* and *characters*.
-
 The document model that edit-text uses is similar to HTML. We can trivially define a mapping from edit-text's document model to HTML:
 
 ```
@@ -15,15 +13,15 @@ The document model that edit-text uses is similar to HTML. We can trivially defi
 Becomes when converted to edit-text's document structure (expressed in RON):
 
 ```
-DocGroup({"tag": "bullet", [
+DocGroup({"tag": "bullet"}, [
     DocGroup({"tag": "p"}, [DocChars("Item 1")]),
-]})
-DocGroup({"tag": "bullet", [
+])
+DocGroup({"tag": "bullet"}, [
     DocGroup({"tag": "p"}, [DocChars("Item 2")]),
-]})
-DocGroup({"tag": "bullet", [
+])
+DocGroup({"tag": "bullet"}, [
     DocGroup({"tag": "p"}, [DocChars("Item 3...")]),
-]})
+])
 ```
 
 (Conversion from a doc group to HTML can be done with `doc_as_html` in `edit-common/lib.rs`. There's no inverse method.)
@@ -32,7 +30,7 @@ Some conversions are straightforward: aside from all non-significant whitespace,
 
 For groups, the first argument is a hashmap of `String` => `String` containing the "attributes". These are similar to HTML attributes and can contain any data. The one attribute required by all groups is the "tag" attribute, which usually maps to the name of its HTML equivalent.
 
-**O/T:** The use of "tag" or even any HTML semantics are not required by the operational transform library, Oatie. References to the "tag" attribute are almost entirely contained in `schema.rs`. In theory, every document/transform schema could use its own way of distinguishing between group kinds.
+NOTE: The use of "tag" or even any HTML semantics are not required by the operational transform library, Oatie. References to the "tag" attribute are almost entirely contained in `schema.rs`. In theory, every document/transform schema could use its own way of distinguishing between group kinds.
 
 Of interest in the above conversion is that quasi-`<bullet>` tag has different semantics than its HTML counterpart, `<ul><li>...</li></ul>`. This is a deliberate simplification for operational transform (that I should detail elsewhere), but essentially our goal is to better represent Markdown's semantics, not HTML's. Take the following example:
 
