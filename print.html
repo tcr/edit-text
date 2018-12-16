@@ -709,7 +709,23 @@ hr =&gt; Horizontal rule
 <a class="header" href="#splitting-image" id="splitting-image"><h1>Splitting Image</h1></a>
 <p>The entire document editing process is built on splitting a single origin block element into a series of sub-elements.</p>
 <p>All editing steps you can take in the frontend editor preserve this quality.</p>
-<a class="header" href="#wip-carets-and-you" id="wip-carets-and-you"><h1>[WIP] Carets and You</h1></a>
+<a class="header" href="#carets" id="carets"><h1>Carets</h1></a>
+<p>Carets are the vertical line which indicates your editing position in a document. When there are multiple viewers of a document, each viewer's current editing position would be represented by different carets. You can click the mouse to reposition the caret in a new location, or use various OS-specific shortcuts to move the caret by increments (like by word or line).</p>
+<p>When a document is loaded, the client inserts two carets for the user: an &quot;anchor&quot; caret, and a &quot;focus&quot; caret. Usually these carets are located at the same position. When the anchor and focus carets are one more caret positions apart, the editor treats this as a selection. For example, when you click and drag your mouse to create a selection, the anchor caret stays in place and the focus caret follows your mouse.</p>
+<p>Carets in edit-text are stored as part of the document itself. The data structure for carets looks like the following:</p>
+<pre><code>enum Attrs {
+    Caret {
+        client_id: String,
+        focus: boolean,
+    }
+    ...
+}
+</code></pre>
+<p>The <code>client_id</code> property represents the client for whom the caret belongs. (To see your client ID, click the debug menu in the editor.) The <code>focus</code> property is <code>false</code> if this is the anchor caret, and is <code>true</code> if this is the focus caret.</p>
+<p>Carets are represented as inline elements in HTML, and must exist only inside a block-level element.</p>
+<p>All editing operations that delete carets must also recreate the carets (possibly in a new location) to preserve there being one anchor and one focus caret for each client at all times.</p>
+<a class="header" href="#cursors" id="cursors"><h2>Cursors</h2></a>
+<p>A related concept in edit-text is a cursor, represented by the <code>CurSpan</code> type, which specifies a single discrete position inside of the document (<code>DocSpan</code> type). When a user clicks their mouse, this is translated to a specific cursor inside the document. This can then be converted into a position to insert a caret (see the <code>cur_to_caret</code> function). A caret can have fewer valid positions than there are cursor positions, so this conversion is lossy.</p>
 <a class="header" href="#deployment-and-usage-4" id="deployment-and-usage-4"><h1>Deployment and Usage</h1></a>
 <a class="header" href="#deployment-and-usage-5" id="deployment-and-usage-5"><h1>Deployment and Usage</h1></a>
 <a class="header" href="#deployment-and-usage-6" id="deployment-and-usage-6"><h1>Deployment and Usage</h1></a>
