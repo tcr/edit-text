@@ -25,10 +25,6 @@ impl<'a> Walker<'a> {
         &self.stepper.doc
     }
 
-    pub fn caret_pos(&self) -> isize {
-        self.stepper.caret_pos
-    }
-
     pub fn goto_pos(&mut self, target_pos: isize) -> bool {
         let mut matched = false;
         take_mut::take(&mut self.stepper, |prev_stepper| {
