@@ -30,7 +30,7 @@ pub fn caret_move(
             // If we aren't preserving the selection, collapse the anchor caret
             // to where the focus caret is.
             if !preserve_select {
-                let op = caret_clear_optional(&ctx, Pos::Anchor);
+                let op = caret_clear(&ctx, Pos::Anchor).unwrap_or_else(|_| Op::empty());
                 ctx.apply(&op)
             } else {
                 Ok(ctx)
@@ -73,7 +73,7 @@ pub fn caret_move(
 pub fn caret_word_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
     Ok(ctx)
         .and_then(|ctx| {
-            let op = caret_clear_optional(&ctx, Pos::Anchor);
+            let op = caret_clear(&ctx, Pos::Anchor).unwrap_or_else(|_| Op::empty());
             ctx.apply(&op)
         })
         .and_then(|ctx| {
@@ -213,8 +213,7 @@ pub fn caret_block_move(ctx: ActionContext, increase: bool) -> Result<Op, Error>
     Ok(Op::transform_advance::<RtfSchema>(&op_1, &op_2))
 }
 
-// Delete a caret, return its position.
-// TODO delete this?
+// Delete a caret.
 pub fn caret_clear_inner(walker: Walker<'_>) -> Result<Op, Error> {
     let mut writer = walker.to_writer();
     writer.del.begin();
@@ -224,19 +223,13 @@ pub fn caret_clear_inner(walker: Walker<'_>) -> Result<Op, Error> {
 
 // Deletes a caret, returning its position.
 pub fn caret_clear(ctx: &ActionContext, position: Pos) -> Result<Op, Error> {
-    let walker = ctx.get_walker(position)?;
-    caret_clear_inner(walker)
-}
-
-// TODO delete this?
-fn caret_clear_optional(ctx: &ActionContext, pos: Pos) -> Op {
-    caret_clear(ctx, pos).unwrap_or(Op::empty())
+    caret_clear_inner(ctx.get_walker(position)?)
 }
 
 pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan, pos: Pos) -> Result<Op, Error> {
     Ok(Op::transform_advance::<RtfSchema>(&{
         // First operation removes the caret.
-        caret_clear_optional(&ctx, pos)
+        caret_clear(&ctx, pos).unwrap_or_else(|_| Op::empty())
     }, &{
         // Second operation inserts a new caret.
         let walker = Walker::to_cursor(&ctx.doc, cur);
