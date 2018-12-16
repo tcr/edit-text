@@ -31,14 +31,13 @@ impl<'a, 'b> Iterator for DocToMarkdown<'a, 'b> {
 
         match self.doc_stepper.head() {
             Some(DocGroup(ref attrs, ref body)) => {
-                let res = Some(match attrs["tag"].as_ref() {
-                    "p" => Event::Start(Tag::Paragraph),
-                    "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => {
-                        let level = attrs["tag"][1..].parse::<i32>().unwrap_or(1);
-                        Event::Start(Tag::Header(level))
+                let res = Some(match attrs {
+                    Attrs::Text => Event::Start(Tag::Paragraph),
+                    Attrs::Header(level) => {
+                        Event::Start(Tag::Header(*level as i32))
                     }
-                    "pre" => Event::Start(Tag::CodeBlock("".into())),
-                    "html" => {
+                    Attrs::Code => Event::Start(Tag::CodeBlock("".into())),
+                    Attrs::Html => {
                         let mut out = String::new();
                         for child in body {
                             match *child {
@@ -51,9 +50,9 @@ impl<'a, 'b> Iterator for DocToMarkdown<'a, 'b> {
                         self.doc_stepper.next();
                         return Some(Event::Html(out.into()));
                     }
-                    "bullet" => {
+                    Attrs::ListItem => {
                         if let Some(DocGroup(ref pre_attrs, _)) = self.doc_stepper.unhead() {
-                            if pre_attrs["tag"] == "bullet" {
+                            if *pre_attrs != Attrs::ListItem {
                                 self.doc_stepper.enter();
                                 return Some(Event::Start(Tag::Item));
                             }
@@ -61,13 +60,13 @@ impl<'a, 'b> Iterator for DocToMarkdown<'a, 'b> {
                         self.queue.push(Event::Start(Tag::Item));
                         Event::Start(Tag::List(None))
                     }
-                    "caret" => {
+                    Attrs::Caret { .. } => {
                         self.doc_stepper.next();
                         return self.next();
                     }
-                    "hr" => Event::Start(Tag::Rule),
+                    Attrs::Rule => Event::Start(Tag::Rule),
                     _ => {
-                        eprintln!("Unexpected tag {:?}!", attrs["tag"]);
+                        eprintln!("Unexpected tag {:?}!", attrs);
                         self.doc_stepper.next();
                         return self.next();
                     }
@@ -100,25 +99,24 @@ impl<'a, 'b> Iterator for DocToMarkdown<'a, 'b> {
                         _ => unreachable!(),
                     };
                     self.doc_stepper.exit();
-                    Some(match attrs["tag"].as_ref() {
-                        "p" => Event::End(Tag::Paragraph),
-                        "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => {
-                            let level = attrs["tag"][1..].parse::<i32>().unwrap_or(1);
-                            Event::End(Tag::Header(level))
+                    Some(match attrs {
+                        Attrs::Text => Event::End(Tag::Paragraph),
+                        Attrs::Header(level) => {
+                            Event::End(Tag::Header(level as i32))
                         }
-                        "pre" => {
+                        Attrs::Code => {
                             self.queue.push(Event::End(Tag::CodeBlock("".into())));
                             Event::Text("\n".to_string().into())
                         }
-                        "bullet" => {
+                        Attrs::ListItem => {
                             if let Some(DocGroup(ref post_attrs, _)) = self.doc_stepper.head() {
-                                if post_attrs["tag"] != "bullet" {
+                                if *post_attrs != Attrs::ListItem {
                                     self.queue.push(Event::End(Tag::List(None)));
                                 }
                             }
                             Event::End(Tag::Item)
                         }
-                        "hr" => Event::End(Tag::Rule),
+                        Attrs::Rule => Event::End(Tag::Rule),
                         _ => unimplemented!(),
                     })
                 }

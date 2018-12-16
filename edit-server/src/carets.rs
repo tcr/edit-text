@@ -8,7 +8,9 @@ fn remove_carets_span(span: &DocSpan) -> Result<DocSpan, Error> {
     for elem in span {
         match *elem {
             DocGroup(ref attrs, ref span) => {
-                if attrs["tag"] != "caret" {
+                if let Attrs::Caret { .. } = attrs {
+                    // fall-through
+                } else {
                     let res = remove_carets_span(span)?;
                     ret.place(&DocGroup(attrs.clone(), res));
                 }
@@ -35,15 +37,19 @@ fn remove_carets_op_span(
     for elem in span {
         match *elem {
             DocGroup(ref attrs, ref span) => {
-                if attrs["tag"] == "caret" && filter.contains(&attrs["client"]) {
-                    assert!(span.is_empty());
-                    writer.begin();
-                    writer.close();
-                } else {
-                    writer.begin();
-                    remove_carets_op_span(writer, span, filter)?;
-                    writer.exit();
+                if let Attrs::Caret { ref client_id, .. } = attrs {
+                    if filter.contains(client_id) {
+                        assert!(span.is_empty());
+                        writer.begin();
+                        writer.close();
+                        continue;
+                    }
                 }
+                
+                // else
+                writer.begin();
+                remove_carets_op_span(writer, span, filter)?;
+                writer.exit();
             }
             DocChars(ref text, _) => {
                 writer.place(&DelSkip(text.char_len()));

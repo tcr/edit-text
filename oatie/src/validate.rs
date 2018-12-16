@@ -29,14 +29,14 @@ pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<()
     for elem in span {
         match *elem {
             DocGroup(ref attrs, ref span) => {
-                if attrs["tag"] == "caret" {
-                    // TODO allow again
+                // if let Attrs::Caret { .. } == attrs {
+                    // TODO Allow validation that only one caret exists per document.
                     // if !ctx.carets.insert(attrs["client"].clone()) {
                     //     bail!("Multiple carets for {:?} exist", attrs["client"]);
                     // }
-                }
+                // }
 
-                if attrs["tag"] == "bullet" {
+                if let Attrs::ListItem = attrs {
                     ensure!(!span.is_empty(), "Expected non-empty bullet");
                 }
 

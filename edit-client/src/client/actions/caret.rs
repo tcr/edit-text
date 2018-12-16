@@ -108,7 +108,7 @@ pub fn caret_word_move(
                             }
                         }
                         Some(DocGroup(ref attrs, _)) => {
-                            if attrs["tag"] == "caret" {
+                            if let Attrs::Caret { .. } = attrs {
                                 // guess we'll stop
                                 break;
                             }
@@ -132,7 +132,7 @@ pub fn caret_word_move(
                             }
                         }
                         Some(DocGroup(ref attrs, _)) => {
-                            if attrs["tag"] == "caret" {
+                            if let Attrs::Caret { .. } = attrs {
                                 // guess we'll stop
                                 break;
                             }

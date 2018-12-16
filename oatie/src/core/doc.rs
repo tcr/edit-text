@@ -11,7 +11,19 @@ use crate::style::OpaqueStyleMap;
 pub use super::place::*;
 pub use crate::string::*;
 
-pub type Attrs = HashMap<String, String>;
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
+pub enum Attrs {
+    Header(u8),
+    Text,
+    Code,
+    Html,
+    ListItem,
+    Rule,
+    Caret {
+        client_id: String,
+        focus: bool,
+    },
+}
 
 pub type DocSpan = Vec<DocElement>;
 pub type DelSpan = Vec<DelElement>;

@@ -17,10 +17,9 @@ fn is_boundary_char(c: char) -> bool {
 }
 
 fn caret_attrs(client_id: &str, focus: bool) -> Attrs {
-    hashmap! {
-        "tag".to_string() => "caret".to_string(),
-        "client".to_string() => client_id.to_string(),
-        "focus".to_string() => if focus { "true".to_string() } else { "false".to_string() }
+    Attrs::Caret {
+        client_id: client_id.to_string(),
+        focus,
     }
 }
 

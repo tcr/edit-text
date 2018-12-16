@@ -34,7 +34,7 @@ pub fn identify_styles(ctx: &ActionContext) -> Result<StyleSet, Error> {
             match walker_start.doc().unhead() {
                 Some(DocGroup(ref attrs, _)) => {
                     // Skip over inline carets.
-                    if attrs["tag"] == "caret" {
+                    if let Attrs::Caret { .. } = attrs {
                         walker_start.stepper.doc.prev();
                     } else {
                         break;
@@ -80,11 +80,19 @@ pub fn identify_block(ctx: ActionContext) -> Result<CaretState, Error> {
     let mut walker = ctx.get_walker(Pos::Focus)?;
     assert!(walker.back_block());
     if let Some(DocGroup(ref attrs, _)) = walker.doc().head() {
-        let tag = attrs["tag"].clone();
+        let tag = match attrs {
+            Attrs::Header(level) => format!("h{}", level),
+            Attrs::Html => format!("html"),
+            Attrs::Code => format!("pre"),
+            Attrs::Rule => format!("hr"),
+            Attrs::Caret { .. } => format!("caret"),
+            Attrs::Text => format!("p"),
+            Attrs::ListItem => format!("bullet"),
+        };
         let mut in_list = false;
         if walker.parent() {
             if let Some(DocGroup(ref attrs_2, _)) = walker.doc().head() {
-                in_list = attrs_2["tag"] == "bullet";
+                in_list = *attrs_2 == Attrs::ListItem
             }
         }
         Ok(CaretState {

@@ -101,7 +101,7 @@ graphql_object!(Mutations: Ctx |&self| {
                         eprintln!("Error in doc: {:?}", doc);
                         eprintln!("Error decoding document: {:?}", err);
                         Doc(doc_span![
-                            DocGroup({"tag": "pre"}, [
+                            DocGroup(Attrs::Code, [
                                 DocChars("Error decoding document.", {Style::Normie => None}),
                             ]),
                         ])

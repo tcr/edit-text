@@ -187,48 +187,48 @@ pub fn button_handlers<C: ClientController>(
         Ui::ButtonGroup(vec![
             Ui::Button(
                 "Text".to_string(),
-                callback!(|client| client.client_op(|doc| replace_block(doc, "p"))),
+                callback!(|client| client.client_op(|doc| replace_block(doc, Attrs::Text))),
                 state.as_ref().map(|x| x.block == "p").unwrap_or(false),
             ),
             Ui::Button(
                 "H1".to_string(),
-                callback!(|client| client.client_op(|doc| replace_block(doc, "h1"))),
+                callback!(|client| client.client_op(|doc| replace_block(doc, Attrs::Header(1)))),
                 // TODO i wish we could match on strings, use matches! here
                 state.as_ref().map(|x| x.block == "h1").unwrap_or(false),
             ),
             Ui::Button(
                 "H2".to_string(),
-                callback!(|client| client.client_op(|doc| replace_block(doc, "h2"))),
+                callback!(|client| client.client_op(|doc| replace_block(doc, Attrs::Header(2)))),
                 state.as_ref().map(|x| x.block == "h2").unwrap_or(false),
             ),
             Ui::Button(
                 "H3".to_string(),
-                callback!(|client| client.client_op(|doc| replace_block(doc, "h3"))),
+                callback!(|client| client.client_op(|doc| replace_block(doc, Attrs::Header(3)))),
                 state.as_ref().map(|x| x.block == "h3").unwrap_or(false),
             ),
             Ui::Button(
                 "H4".to_string(),
-                callback!(|client| client.client_op(|doc| replace_block(doc, "h4"))),
+                callback!(|client| client.client_op(|doc| replace_block(doc, Attrs::Header(4)))),
                 state.as_ref().map(|x| x.block == "h4").unwrap_or(false),
             ),
             Ui::Button(
                 "H5".to_string(),
-                callback!(|client| client.client_op(|doc| replace_block(doc, "h5"))),
+                callback!(|client| client.client_op(|doc| replace_block(doc, Attrs::Header(5)))),
                 state.as_ref().map(|x| x.block == "h5").unwrap_or(false),
             ),
             Ui::Button(
                 "H6".to_string(),
-                callback!(|client| client.client_op(|doc| replace_block(doc, "h6"))),
+                callback!(|client| client.client_op(|doc| replace_block(doc, Attrs::Header(6)))),
                 state.as_ref().map(|x| x.block == "h6").unwrap_or(false),
             ),
             Ui::Button(
                 "Code".to_string(),
-                callback!(|client| client.client_op(|doc| replace_block(doc, "pre"))),
+                callback!(|client| client.client_op(|doc| replace_block(doc, Attrs::Code))),
                 state.as_ref().map(|x| x.block == "pre").unwrap_or(false),
             ),
             Ui::Button(
                 "HTML".to_string(),
-                callback!(|client| client.client_op(|doc| replace_block(doc, "html"))),
+                callback!(|client| client.client_op(|doc| replace_block(doc, Attrs::Html))),
                 state.as_ref().map(|x| x.block == "html").unwrap_or(false),
             ),
         ]),
@@ -277,7 +277,8 @@ fn controller_command<C: ClientController>(
 ) -> Result<(), Error> {
     match req {
         ControllerCommand::RenameGroup { tag, curspan: _ } => {
-            client.client_op(|doc| replace_block(doc, &tag))?;
+            unimplemented!();
+            // client.client_op(|doc| replace_block(doc, &tag))?;
         }
         ControllerCommand::Button { button: index } => {
             // Find which button handler to respond to this command.

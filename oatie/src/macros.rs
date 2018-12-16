@@ -24,6 +24,11 @@ macro_rules! doc_span {
             DocGroup(map, doc_span![ $( $v )* ])
         }
     };
+    ( @kind DocGroup $b:expr , [ $( $v:tt )* ] $(,)* ) => {
+        {
+            DocGroup($b, doc_span![ $( $v )* ])
+        }
+    };
     ( ) => {
         vec![]
     };
@@ -62,6 +67,11 @@ macro_rules! add_span {
                 map.insert(add_span!(@str_literal $e).to_owned(), ($b).to_owned());
             )*
             AddGroup(map, add_span![ $( $v )* ])
+        }
+    };
+    ( @kind AddGroup $b:expr , [ $( $v:tt )* ] $(,)* ) => {
+        {
+            AddGroup($b, add_span![ $( $v )* ])
         }
     };
     ( ) => {

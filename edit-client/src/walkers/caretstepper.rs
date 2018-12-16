@@ -15,16 +15,20 @@ pub fn is_block_object(attrs: &Attrs) -> bool {
 }
 
 pub fn is_caret(attrs: &Attrs, client_id: Option<&str>, focus: bool) -> bool {
-    attrs["tag"] == "caret"
-        && client_id
-            .map(|id| attrs.get("client") == Some(&id.to_string()))
-            .unwrap_or(false)
-        && attrs.get("focus").map(|x| x == "true").unwrap_or(false) == focus
+    if let Attrs::Caret { client_id: caret_client_id, focus: caret_focus } = attrs {
+        client_id == Some(caret_client_id) && *caret_focus == focus
+    } else {
+        false
+    }
 }
 
 // Is any caret
 pub fn is_any_caret(attrs: &Attrs) -> bool {
-    attrs["tag"] == "caret"
+    if let Attrs::Caret { .. } = attrs {
+        true
+    } else {
+        false
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Copy)]

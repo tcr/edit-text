@@ -1911,7 +1911,7 @@ pub fn transform_add_del_inner(
                         b.next();
                     }
 
-                    AddGroup(tags, ins_span) => {
+                    AddGroup(attrs, ins_span) => {
                         let mut a_inner = AddStepper::new(&ins_span);
                         let mut delres_inner: DelSpan = vec![];
                         let mut addres_inner: AddSpan = vec![];
@@ -1927,14 +1927,15 @@ pub fn transform_add_del_inner(
                         }
 
                         // "Delall" hack for adding in bullets
-                        if !(addres_inner.skip_post_len() == 0 && tags["tag"] == "bullet") {
-                            addres.place(&AddGroup(tags, addres_inner));
+                        // TODO why does this need knowledge of the bullet group type?
+                        if !(addres_inner.skip_post_len() == 0 && attrs == Attrs::ListItem) {
+                            addres.place(&AddGroup(attrs, addres_inner));
                             delres.place(&DelWithGroup(delres_inner));
                         } else {
                             delres.place(&DelGroup(delres_inner));
                         }
 
-                        // addres.place(&AddGroup(tags, addres_inner));
+                        // addres.place(&AddGroup(attrs, addres_inner));
                         // delres.place(&DelWithGroup(delres_inner));
 
                         a.next();

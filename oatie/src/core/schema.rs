@@ -112,31 +112,19 @@ impl Schema for RtfSchema {
     }
 
     fn merge_attrs(a: &Attrs, b: &Attrs) -> Option<Attrs> {
-        if a.get("tag") == b.get("tag") && a.get("tag").map(|x| x == "span").unwrap_or(false) {
-            let c_a: String = a.get("class").unwrap_or(&"".to_string()).clone();
-            let c_b: String = b.get("class").unwrap_or(&"".to_string()).clone();
-
-            let mut c = parse_classes(&c_a);
-            c.extend(parse_classes(&c_b));
-            Some(hashmap! {
-                "tag".to_string() => "span".to_string(),
-                "class".to_string() => format_classes(&c),
-            })
-        } else {
-            None
-        }
+        None
     }
 
     fn track_type_from_attrs(attrs: &Attrs) -> Option<Self::Track> {
-        match &*attrs["tag"] {
-            "bullet" => Some(RtfTrack::ListItems),
-            "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "pre" | "html" => {
+        match attrs {
+            Attrs::ListItem => Some(RtfTrack::ListItems),
+            Attrs::Text | Attrs::Header(..) | Attrs::Code | Attrs::Html => {
                 Some(RtfTrack::Blocks)
             }
-            "span" => Some(RtfTrack::Inlines),
-            "caret" => Some(RtfTrack::InlineObjects),
-            "hr" => Some(RtfTrack::BlockObjects),
-            _ => None,
+            // "span" => Some(RtfTrack::Inlines),
+            Attrs::Caret { .. } => Some(RtfTrack::InlineObjects),
+            Attrs::Rule => Some(RtfTrack::BlockObjects),
+            // _ => None,
         }
     }
 }

@@ -28,8 +28,18 @@ type SelectionActive = HashSet<String>;
 
 // TODO unify with its counterpart in edit-client/src/walkers.rs?
 fn is_caret(attrs: &Attrs, client_id: Option<&str>) -> bool {
-    attrs["tag"] == "caret" && client_id.map(|id| attrs["client"] == id).unwrap_or(true)
+    if let Attrs::Caret { client_id: caret_client_id, .. } = attrs {
+        client_id.is_none() || caret_client_id == client_id.unwrap()
+    } else {
+        false
+    }
     // && attrs.get("focus").unwrap_or(&"false".to_string()).parse::<bool>().map(|x| x == focus).unwrap_or(false)
+}
+
+fn html_start_tag(tag: &str, attrs: HashMap<String, String>) -> String {
+    format!("<{} {}>", tag, attrs.into_iter().map(|(k, v)| {
+        format!("{}={}", k, serde_json::to_string(&v).unwrap_or("".to_string()))
+    }).collect::<Vec<String>>().join(" "))
 }
 
 // TODO move this to a different module
@@ -41,8 +51,8 @@ pub fn doc_as_html(doc: &DocSpan) -> String {
     loop {
         match stepper.head() {
             Some(DocGroup(attrs, _)) => {
-                if is_caret(&attrs, None) {
-                    *caret_index.entry(attrs["client"].to_owned()).or_insert(0) += 1;
+                if let Attrs::Caret { ref client_id, .. } = attrs {
+                    *caret_index.entry(client_id.to_owned()).or_insert(0) += 1;
                 }
                 stepper.enter();
             }
@@ -75,28 +85,30 @@ pub fn doc_as_html_inner(
     for elem in doc {
         match elem {
             &DocGroup(ref attrs, ref span) => {
-                out.push_str(&format!(
-                    r#"<div
-                        data-tag={}
-                        data-client={}
-                        data-anchor={}
-                        data-focus={}
-                        class={}
-                    >"#,
-                    serde_json::to_string(attrs.get("tag").unwrap_or(&"".to_string())).unwrap(),
-                    serde_json::to_string(attrs.get("client").unwrap_or(&"".to_string())).unwrap(),
-                    serde_json::to_string(attrs.get("anchor").unwrap_or(&"".to_string())).unwrap(),
-                    serde_json::to_string(attrs.get("focus").unwrap_or(&"".to_string())).unwrap(),
-                    serde_json::to_string(attrs.get("class").unwrap_or(&"".to_string())).unwrap(),
-                ));
+                out.push_str(&match attrs {
+                    Attrs::Text => html_start_tag("div", hashmap!{ "data-tag".into() => "p".into() }),
+                    Attrs::Code => html_start_tag("div", hashmap!{ "data-tag".into() => "pre".into() }),
+                    Attrs::Html => html_start_tag("div", hashmap!{ "data-tag".into() => "html".into() }),
+                    Attrs::Header(level) => {
+                        html_start_tag("div", hashmap!{ "data-tag".into() => format!("h{}", level) })
+                    },
+                    Attrs::ListItem => html_start_tag("div", hashmap!{ "data-tag".into() => "bullet".into() }),
+                    Attrs::Rule => html_start_tag("div", hashmap!{ "data-tag".into() => "hr".into() }),
+                    Attrs::Caret { ref client_id, ref focus } => {
+                        html_start_tag("div", hashmap!{
+                            "data-tag".into() => "caret".to_string(),
+                            "data-client".into() => client_id.to_string(),
+                            "data-focus".into() => if *focus { "true".into() } else { "false".into() },
+                            "data-anchor".into() => if !*focus { "true".into() } else { "false".into() },
+                        })
+                    },
+                });
 
-                if attrs.get("tag") == Some(&"caret".to_string()) {
-                    if let Some(client_id) = attrs.get("client") {
-                        if caret_index[client_id] == 2 {
-                            // Toggle this ID.
-                            if !remote_select_active.insert(client_id.clone()) {
-                                remote_select_active.remove(&client_id.clone());
-                            }
+                if let Attrs::Caret { client_id, .. } = attrs {
+                    if caret_index[client_id] == 2 {
+                        // Toggle this ID.
+                        if !remote_select_active.insert(client_id.clone()) {
+                            remote_select_active.remove(&client_id.clone());
                         }
                     }
                 }
@@ -106,7 +118,6 @@ pub fn doc_as_html_inner(
             }
             &DocChars(ref text, ref styles) => {
                 let mut classes = styles.styles();
-                // TODO Style::Selected could be selected here directly
                 if !remote_select_active.is_empty() {
                     classes.insert(Style::Selected);
                 }

@@ -225,7 +225,7 @@ impl DocWriter {
         self.stack.push(past);
     }
 
-    pub fn close(&mut self, attrs: HashMap<String, String>) {
+    pub fn close(&mut self, attrs: Attrs) {
         let past = self.past.clone();
         self.past = self.stack.pop().unwrap();
         self.past.push(DocGroup(attrs, past));

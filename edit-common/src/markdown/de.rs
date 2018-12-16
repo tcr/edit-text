@@ -49,7 +49,7 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                         OpaqueStyleMap::from(self.styles.clone()),
                     ));
                     if self.bare_text {
-                        self.body.close(hashmap! { "tag".into() => "p".into() });
+                        self.body.close(Attrs::Text);
                     }
                 }
                 SoftBreak => {
@@ -64,7 +64,7 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                         OpaqueStyleMap::from(self.styles.clone()),
                     ));
                     if self.bare_text {
-                        self.body.close(hashmap! { "tag".into() => "p".into() });
+                        self.body.close(Attrs::Text);
                     }
                 }
                 HardBreak => {
@@ -79,7 +79,7 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                         &html),
                         OpaqueStyleMap::from(hashmap!{ Style::Normie => None }),
                     ));
-                    self.body.close(hashmap! { "tag".into() => "html".into() });
+                    self.body.close(Attrs::Html);
                 }
 
                 InlineHtml(..) | FootnoteReference(..) => {}
@@ -141,29 +141,27 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
         match tag {
             // Blocks
             Tag::Paragraph => {
-                self.body.close(hashmap! { "tag".into() => "p".into() });
+                self.body.close(Attrs::Text);
                 self.bare_text = true;
             }
             Tag::Header(level) => {
-                let tag = format!("h{}", level);
-                self.body.close(hashmap! { "tag".into() => tag });
+                self.body.close(Attrs::Header(level as u8));
                 self.bare_text = true;
             }
             Tag::CodeBlock(_) => {
-                self.body.close(hashmap! { "tag".into() => "pre".into() });
+                self.body.close(Attrs::Code);
                 self.bare_text = true;
             }
 
             // List items
             Tag::Item => {
-                self.body
-                    .close(hashmap! { "tag".into() => "bullet".into() });
+                self.body.close(Attrs::ListItem);
                 self.bare_text = true;
             }
 
             // Block objects
             Tag::Rule => {
-                self.body.close(hashmap! { "tag".into() => "hr".into() });
+                self.body.close(Attrs::Rule);
             }
             Tag::Image(_, _) => (), // shouldn't happen, handled in start
 
