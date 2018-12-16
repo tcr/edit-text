@@ -14,7 +14,7 @@ Then add a new Rust target:
 rustup target add x86_64-unknown-linux-gnu
 ```
 
-You can deploy edit-text to a Dokku server using `./x.rs deploy`.
+You can deploy edit-text to a Dokku server using `./tools deploy`.
 
 ```
 ./tools deploy

@@ -19,7 +19,7 @@ libsqlite3-sys = { version = "*", features = ["bundled"] }
 migrations_internals = "~1.3.0"
 
 # mdbook
-mdbook = "=0.2.0"
+mdbook = { version = "=0.2.0", features = ["watch"] }
 notify = { version = "4.0" }
 iron = { version = "0.6" }
 staticfile = { version = "0.5" }

@@ -39,7 +39,7 @@ To build all components of edit-text (server, client, and frontend) at once, run
 ./tools build
 ```
 
-Build commands are executed using the `./x.rs` script. ([Read more.](http://timryan.org/2018/07/02/moving-from-the-shell-to-rust-with-commandspec.html))  You can rebuild individual edit-text components with `./x.rs server-build`, `./x.rs frontend-build`, etc. Run `./x.rs help` for more information.
+Build commands are executed using the `./tools` script. ([Read more.](http://timryan.org/2018/07/02/moving-from-the-shell-to-rust-with-commandspec.html))  You can rebuild individual edit-text components with `./tools server-build`, `./tools frontend-build`, etc. Run `./tools help` for more information.
 
 ### Running edit-text (standard)
 
@@ -53,7 +53,7 @@ In your terminal session, you can run this command to start the server (and opti
 
 Now open <http://localhost:8000/> and you are brought to a welcome page to start editing text!
 
-Note that the server also serves WebAssembly code to the browser that contains the edit-text client. After you make changes are made to client or server code, you should re-run `./x.rs build` to recompile both and then restart the server process. (If only server changes were made, you can skip this step and just run `./x.rs server` directly.)
+Note that the server also serves WebAssembly code to the browser that contains the edit-text client. After you make changes are made to client or server code, you should re-run `./tools build` to recompile both and then restart the server process. (If only server changes were made, you can skip this step and just run `./tools server` directly.)
 
 ### Running edit-text with a client in proxy mode (for debugging)
 
@@ -95,4 +95,4 @@ This cross-compiles all frontend code and pulls in the compiled WebAssembly bina
 ./tools frontend-watch
 ```
 
-This command watches the edit-frontend directory and continuously builds its after each change. Note that you may need to run `./x.rs wasm-build` as well. 
+This command watches the edit-frontend directory and continuously builds its after each change. Note that you may need to run `./tools wasm-build` as well. 
