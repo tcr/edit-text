@@ -75,7 +75,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li><li><a href="#.html"><strong aria-hidden="true">1.2.</strong> Code Overview</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">2.</strong> Development</a></li><li><ol class="section"><li><a href="intro-system.html"><strong aria-hidden="true">2.1.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">2.2.</strong> Build System ./tools</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">2.3.</strong> Testing</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">2.3.1.</strong> Writing an integration test</a></li></ol></li></ol></li><li><a href="#.html"><strong aria-hidden="true">3.</strong> Working with Documents</a></li><li><ol class="section"><li><a href="working-with-documents.html"><strong aria-hidden="true">3.1.</strong> Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">3.2.</strong> Operations</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">3.3.</strong> Operational Transform</a></li><li><a href="diary-delall.html"><strong aria-hidden="true">3.4.</strong> Delall Hack</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">4.</strong> Rich Text</a></li><li><ol class="section"><li><a href="markdown.html"><strong aria-hidden="true">4.1.</strong> Markdown</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">4.2.</strong> Carets</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">5.</strong> Deployment and Usage</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">5.1.</strong> Locally</a></li><li><a href="#.html"><strong aria-hidden="true">5.2.</strong> Hosted Sandbox</a></li><li><a href="deploying.html"><strong aria-hidden="true">5.3.</strong> Dokku</a></li><li><a href="#.html"><strong aria-hidden="true">5.4.</strong> npm module</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li><li><a href="#.html"><strong aria-hidden="true">1.2.</strong> Code Overview</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">2.</strong> Development</a></li><li><ol class="section"><li><a href="intro-system.html"><strong aria-hidden="true">2.1.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">2.2.</strong> Build System ./tools</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">2.3.</strong> Testing</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">2.3.1.</strong> Writing an integration test</a></li></ol></li></ol></li><li><a href="#.html"><strong aria-hidden="true">3.</strong> Working with Documents</a></li><li><ol class="section"><li><a href="working-with-documents.html"><strong aria-hidden="true">3.1.</strong> Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">3.2.</strong> Operations</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">3.3.</strong> Operational Transform</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">4.</strong> Rich Text</a></li><li><ol class="section"><li><a href="markdown.html"><strong aria-hidden="true">4.1.</strong> Markdown</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">4.2.</strong> Carets</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">5.</strong> Deployment and Usage</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">5.1.</strong> Locally</a></li><li><a href="#.html"><strong aria-hidden="true">5.2.</strong> Hosted Sandbox</a></li><li><a href="deploying.html"><strong aria-hidden="true">5.3.</strong> Dokku</a></li><li><a href="#.html"><strong aria-hidden="true">5.4.</strong> npm module</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">6.</strong> Appendix</a></li><li><ol class="section"><li><a href="diary-delall.html"><strong aria-hidden="true">6.1.</strong> Delall Hack</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -168,14 +168,14 @@ v1.10.1  # for example
 <p>To build all components of edit-text (server, client, and frontend) at once, run this command from the root of the repository:</p>
 <pre><code>./tools build
 </code></pre>
-<p>Build commands are executed using the <code>./x.rs</code> script. (<a href="http://timryan.org/2018/07/02/moving-from-the-shell-to-rust-with-commandspec.html">Read more.</a>)  You can rebuild individual edit-text components with <code>./x.rs server-build</code>, <code>./x.rs frontend-build</code>, etc. Run <code>./x.rs help</code> for more information.</p>
+<p>Build commands are executed using the <code>./tools</code> script. (<a href="http://timryan.org/2018/07/02/moving-from-the-shell-to-rust-with-commandspec.html">Read more.</a>)  You can rebuild individual edit-text components with <code>./tools server-build</code>, <code>./tools frontend-build</code>, etc. Run <code>./tools help</code> for more information.</p>
 <a class="header" href="#running-edit-text-standard" id="running-edit-text-standard"><h3>Running edit-text (standard)</h3></a>
 <p>The production configuration of edit-text is a long-running server process, and one or many WebAssembly + TypeScript clients running in the browser that connect to it.</p>
 <p>In your terminal session, you can run this command to start the server (and optionally compile with release optimizations):</p>
 <pre><code>./tools server [--release]
 </code></pre>
 <p>Now open <a href="http://localhost:8000/">http://localhost:8000/</a> and you are brought to a welcome page to start editing text!</p>
-<p>Note that the server also serves WebAssembly code to the browser that contains the edit-text client. After you make changes are made to client or server code, you should re-run <code>./x.rs build</code> to recompile both and then restart the server process. (If only server changes were made, you can skip this step and just run <code>./x.rs server</code> directly.)</p>
+<p>Note that the server also serves WebAssembly code to the browser that contains the edit-text client. After you make changes are made to client or server code, you should re-run <code>./tools build</code> to recompile both and then restart the server process. (If only server changes were made, you can skip this step and just run <code>./tools server</code> directly.)</p>
 <a class="header" href="#running-edit-text-with-a-client-in-proxy-mode-for-debugging" id="running-edit-text-with-a-client-in-proxy-mode-for-debugging"><h3>Running edit-text with a client in proxy mode (for debugging)</h3></a>
 <p>Debugging WebAssembly code is harder (in most ways) than debugging a local Rust binary. edit-text supports running the client as an independent &quot;proxy&quot;. An edit-text server running in one terminal connects to a client proxy running in another terminal, and communicates with frontend code running in the browser (TypeScript) over WebSockets. This client proxy is all code that would normally be cross-compiled to WebAssembly, but runs locally in your terminal and supports the same backtrace and debugging support as a local binary.</p>
 <p>You'll need two terminal sessions to run in this mode. First, start the server, and specify that you want to connect to a client proxy using <code>--client-proxy</code>. Without this argument, the server will expect server connections from WebAssembly instead.</p>
@@ -196,9 +196,9 @@ v1.10.1  # for example
 <p>This cross-compiles all frontend code and pulls in the compiled WebAssembly binary. To watch and recompile frontend code whenever it's modified, run this command:</p>
 <pre><code class="language-sh">./tools frontend-watch
 </code></pre>
-<p>This command watches the edit-frontend directory and continuously builds its after each change. Note that you may need to run <code>./x.rs wasm-build</code> as well.</p>
-<a class="header" href="#deployment-and-usage" id="deployment-and-usage"><h1>Deployment and Usage</h1></a>
-<a class="header" href="#deployment-and-usage-1" id="deployment-and-usage-1"><h1>Deployment and Usage</h1></a>
+<p>This command watches the edit-frontend directory and continuously builds its after each change. Note that you may need to run <code>./tools wasm-build</code> as well.</p>
+<a class="header" href="#appendix" id="appendix"><h1>Appendix</h1></a>
+<a class="header" href="#appendix-1" id="appendix-1"><h1>Appendix</h1></a>
 <a class="header" href="#system-overview" id="system-overview"><h1>System Overview</h1></a>
 <p>edit-text is built from the ground up as a collaborative text editor. It uses operational transform to merge updates from multiple clients, so it requires a synchronizing server. The server is also in charge of storing page content, so that every page can be shared via its URL.</p>
 <p>A client runs in a browser: text editing and synchronization code is written in Rust and cross-compiled to WebAssembly, and frontend code is written in TypeScript.</p>
@@ -280,18 +280,16 @@ dev: 0.0.0.0:8003/  prod: /$/graphql   GraphQL
 <a class="header" href="#testing-1" id="testing-1"><h1>Testing</h1></a>
 <p>There are two types of tests, integration tests and unit tests.</p>
 <a class="header" href="#unit-tests" id="unit-tests"><h2>Unit Tests</h2></a>
-<p>To run unit tests, run <code>./tools test</code>.</p>
+<p>To run unit tests, run <code>./tools test unit</code>.</p>
 <a class="header" href="#integration-tests" id="integration-tests"><h2>Integration Tests</h2></a>
-<p>Run <code>./tools test --integration</code> to run the test suite with integrated tests.</p>
+<p>Integration tests use a &quot;headless&quot; browser to run</p>
+<p>Run <code>./tools test integration</code> to run the test suite with integrated tests. Run <code>./tools test all</code> to run unit tests and integration tests.</p>
 <p>This runs simulated tests using headless browsers running concurrent editing operation. You should install a WebDriver implementation such as  <code>geckodriver</code>:</p>
-<pre><code>macOS:
-  brew install geckodriver
-Ubuntu:
-  npm install -g geckodriver
-Windows:
-  choco install selenium-gecko-driver
-</code></pre>
-<p>To run just the integrated tests, run './tools test --no-unit --integration'.</p>
+<ul>
+<li>macOS: <code>brew install geckodriver</code></li>
+<li>Ubuntu: <code>npm install -g geckodriver</code></li>
+<li>Windows: <code>choco install selenium-gecko-driver</code></li>
+</ul>
 <!--
 <a class="header" href="#oatie-testing" id="oatie-testing"><h2>Oatie testing</h2></a>
 <ul>
@@ -305,7 +303,7 @@ Windows:
 <a class="header" href="#edit-text-testing" id="edit-text-testing"><h2>edit-text testing</h2></a>
 <ul>
 <li></li>
-<li><code>geckodriver</code> integrated test (./x.rs test)</li>
+<li><code>geckodriver</code> integrated test (./tools test)</li>
 </ul>
 <p>Manual:</p>
 <ul>
@@ -317,38 +315,167 @@ Windows:
 <li>Unit tests</li>
 </ul>
 <p>--&gt;</p>
-<a class="header" href="#deployment-and-usage-2" id="deployment-and-usage-2"><h1>Deployment and Usage</h1></a>
-<a class="header" href="#deployment-and-usage-3" id="deployment-and-usage-3"><h1>Deployment and Usage</h1></a>
-<a class="header" href="#working-with-documents" id="working-with-documents"><h1>Working with Documents</h1></a>
-<p>The basic structure that Oatie operates on is a Document:</p>
+<a class="header" href="#appendix-2" id="appendix-2"><h1>Appendix</h1></a>
+<a class="header" href="#appendix-3" id="appendix-3"><h1>Appendix</h1></a>
+<a class="header" href="#documents" id="documents"><h1>Documents</h1></a>
+<p>The contents of a page is represented as a <strong>Document</strong>. For example, the following &quot;Hello world!&quot; document:</p>
+<p><img width="1189" alt="image" border="1" src="https://user-images.githubusercontent.com/80639/50059231-1737f500-0152-11e9-8704-d133d6b19e66.png"></p>
+<p>May be represeted with the following <code>DocSpan</code> in Rust:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+doc_span![
+    DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [&quot;Hello world!&quot;]),
+    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [&quot;This is a document.&quot;]),
+]
+#}</code></pre></pre>
+<p>And can also be exported as Markdown:</p>
+<pre><code class="language-markdown"># Hello world!
+
+This is a document.
+</code></pre>
+<a class="header" href="#text-and-groups" id="text-and-groups"><h2>Text and Groups</h2></a>
+<p>Documents are composed of <strong>text</strong> and <strong>groups</strong>. Text is a unicode string modeled by the <code>DocString</code> type. Groups are similar to HTML elements, having a set of &quot;attributes&quot; and then a vector of children which can be either text or other groups.</p>
+<p>In Rust, <code>enum DocElement</code> models these two types:</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
 type DocSpan = Vec&lt;DocElement&gt;;
 
-struct Doc(DocSpan);
+type Attrs = HashMap&lt;String, String&gt;;
 
-// Documents are made up of chars and groups.
 enum DocElement {
     DocChars(DocString),
     DocGroup(Attrs, DocSpan),
 }
-
-// Convenience wrapper for opaquely operating on Strings.
-struct DocString(String);
-// Convenience wrapper for group &quot;attributes&quot; like HTML attrs.
-type Attrs = HashMap&lt;String, String&gt;;
 #}</code></pre></pre>
-<p>Documents can <a href="working-with-operations.html">have operations performed on them</a> to result in a new, modified document.</p>
-<a class="header" href="#working-with-operations" id="working-with-operations"><h1>Working with Operations</h1></a>
-<p>Operations in edit-text are a sequence of a &quot;deletion&quot; followed by an &quot;addition&quot;, grouped together in a pair. All modifications edit-text can perform are designed to perform a deletion followed by an addition, and this distinction between deleting and adding content allows operational transform logic to be simplified.</p>
-<p>The <code>Op</code> type is a tuple of the <code>AddSpan</code> and <code>DelSpan</code> types, which just represent vectors of the <code>AddElement</code> and <code>DelElement</code> enums. The <code>DocElement</code> enums has some obvious counterparts here, like the trio of <code>DocChars</code>, <code>DelChars</code>, and <code>AddChars</code>.</p>
+<p>You can use the <code>oatie::macros::doc_span!</code> macro to conveniently create <code>DocSpan</code> objects:</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
-type DelSpan = Vec&lt;DelElement&gt;;
+doc_span![
+    DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [&quot;Title&quot;]),
+    DocGroup({&quot;tag&quot;: &quot;bullet&quot;}, [
+        DocGroup({&quot;tag&quot;: &quot;p&quot;}, [&quot;Groups can be nested.&quot;]),
+        DocGroup({&quot;tag&quot;: &quot;p&quot;}, [&quot;With multiple elements.&quot;]),
+    ]),
+]
+#}</code></pre></pre>
+<a class="header" href="#documents-and-operations" id="documents-and-operations"><h2>Documents and Operations</h2></a>
+<p>Documents can <a href="working-with-operations.html">have operations performed on them</a> to result in a new, modified document.</p>
+<a class="header" href="#schema" id="schema"><h2>Schema</h2></a>
+<p>Documents have no enforced structure other than being a collection of text and groups. To define which types in a document are valid and what they are allowed to contain, the <code>oatie::schema::RtfSchema</code> defines which groups can contain what other groups, which can contain text content, and which can be found in the root. See <code>oatie::validate::validate_doc_span</code> for how to validate a document tree.</p>
+<a class="header" href="#operations" id="operations"><h1>Operations</h1></a>
+<p>Operations are sequences of steps that when applied to a document, modifies the document by adding or removing content. Operations are
+broken down into two stages: deleting content, then adding content. This pair of &quot;delete&quot; and &quot;add&quot; steps makes up an operation, which is performed atomically on a document, ensuring that the result is always valid.</p>
+<p>Operations can be &quot;applied&quot; to a document, producing a new document:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+let updated_doc = Op::apply(&amp;doc, &amp;operation);
+#}</code></pre></pre>
+<p>When applying multiple operation pairs in a row, you can also &quot;compose&quot; them to
+produce a single operation that would produce the same result:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+let updated_doc_1 = Op::apply(&amp;doc, &amp;operation_1);
+let updated_doc_2 = Op::apply(&amp;updated_doc_1, &amp;operation_2);
 
+// Same result
+let updated_doc_2 = Op::apply(
+    &amp;doc,
+    &amp;Op::compose(&amp;operation_1, &amp;operation_2), // Composed operation
+);
+#}</code></pre></pre>
+<p>You can also transform two concurrent operation; see the section on <a href="rtf-ot.html">operational transform</a>.</p>
+<a class="header" href="#example-combining-two-groups" id="example-combining-two-groups"><h2>Example: Combining Two Groups</h2></a>
+<p>Let's start with a simple document composed of a title and a paragraph. The document
+looks like the following in Markdown:</p>
+<pre><code class="language-markdown"># Title
+
+Body
+</code></pre>
+<p>And would have the following document representation:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+let doc = doc_span![
+    DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [DocChars(&quot;Title&quot;)]),
+    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Body&quot;)]),
+];
+#}</code></pre></pre>
+<p>Imagine the user starts editing. The user places their caret to the left of the word &quot;Body&quot;, then hits backspace. What will happen is that the paragraph containing &quot;Body&quot; and the header containing the text &quot;Title&quot; will become combined into one header with the text &quot;TitleBody&quot;.</p>
+<p>There are a few ways to can imagine combining these two elements. The way in which edit-text implements this is by first deleting
+the current and preceding blocks while preserving their content, then creating a new element
+which spans the content of both blocks.</p>
+<p>First, we would delete each block group:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+let deletion = del_span![
+    DelGroup([DelSkip(5)]), // Five characters in &quot;Title&quot;
+    DelGroup([DelSkip(4)]), // Four characters in &quot;Body&quot;
+];
+
+assert_eq!(
+    Op::apply_deletion(&amp;doc, &amp;deletion),
+    doc_span![DocChars(&quot;TitleBody&quot;)],
+);
+#}</code></pre></pre>
+<p>The result is just the characters &quot;TitleBody&quot;. In edit-text, you are not allowed to have top-level textual content that is not contained inside of a group. So in order to produce a valid document, we now have to wrap the contents of both groups inside of a new group:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+let addition = del_span![
+    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [
+        AddSkip(9) // Nine characters in &quot;Titlebody&quot;
+    ])
+];
+
+assert_eq!(
+    Op::apply_addition(&amp;Op::apply_deletion(&amp;doc, &amp;deletion), &amp;addition),
+    doc_span![
+        DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [DocChars(&quot;TitleBody&quot;)]),
+    ];
+);
+#}</code></pre></pre>
+<p>A deletion followed by an addition is common enough in edit-text that you can work with it as a single datatype. The method <code>Op::apply</code> takes a document and a <code>&amp;(DelSpan, AddSpan)</code> type, and returns a modified document.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+type Op = (DelSpan, AddSpan);
+
+let valid_op: Op = (
+    del_span![
+        DelGroup([DelSkip(5)]),
+        DelGroup([DelSkip(4)]),
+    ],
+    add_span![
+        AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddSkip(9)]),
+    ],
+);
+
+assert_eq!(
+    Op::apply(&amp;doc, &amp;valid_op),
+    doc_span![
+        DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [DocChars(&quot;TitleBody&quot;)]),
+    ];
+);
+#}</code></pre></pre>
+<a class="header" href="#constaints" id="constaints"><h2>Constaints</h2></a>
+<p>Applying operations can fail. Usually, an operation is written to modify a known
+document state, and applying that operation to the document it was intended for
+should never fail.</p>
+<p>NOTE: At the moment, if your apply an operation improperly to document and it
+fails, it will likely panic!() rather than returning an Error object.</p>
+<a class="header" href="#deletion-and-addition-elements" id="deletion-and-addition-elements"><h2>Deletion and Addition Elements</h2></a>
+<p>There are a lot of</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
 enum DelElement {
+    /// ...
     DelSkip(usize),
     DelWithGroup(DelSpan),
     DelChars(usize),
@@ -358,65 +485,12 @@ enum DelElement {
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
-type AddSpan = Vec&lt;AddElement&gt;;
-
 enum AddElement {
     AddSkip(usize),
     AddWithGroup(AddSpan),
     AddChars(DocString),
     AddGroup(Attrs, AddSpan),
 }
-#}</code></pre></pre>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-type Op = (DelSpan, AddSpan);
-#}</code></pre></pre>
-<a class="header" href="#macros" id="macros"><h2>Macros</h2></a>
-<p>When importing oatie, there are several convenience macros which make writing the above easier:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-#[macro_use]
-extern crate oatie;
-
-let doc = doc_span![
-    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [
-        DocChars(&quot;Hello world!&quot;)
-    ]),
-];
-
-let op = op_span!([
-    DelGroup([DelSkip(12)]),
-    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddSkip(12)]),
-]);
-#}</code></pre></pre>
-<p>This is roughly equivalent to Rust code without needing to type <code>vec!</code> or use explicit <code>HashMap::new()</code> and <code>DocString(...)</code> invocations.</p>
-<a class="header" href="#using-operations" id="using-operations"><h2>Using Operations</h2></a>
-<p>An operation can be applied to a document.</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-#[macro_use]
-extern crate oatie;
-
-use oatie::doc::*;
-use oatie::OT;
-
-let doc = doc_span![
-    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Hello world!&quot;)]),
-];
-
-let op = op_span!([
-    DelGroup([DelSkip(12)]),
-    AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [AddSkip(12)]),
-]);
-
-let doc2 = Op::apply(&amp;doc, $op);
-
-println!(&quot;{:?}&quot;, doc2);
-
-// DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [DocChars(&quot;Hello world!&quot;)])
 #}</code></pre></pre>
 <a class="header" href="#operational-transform" id="operational-transform"><h1>Operational Transform</h1></a>
 <p>When two clients A and B make an operation concurrently, one way to get them back in sync is to determine what would operation B look like if operation A had happened first, and vice versa. If we can guarantee that this result on both clients produce the same output, meaning if we can guarantee the following (where &quot;:&quot; means &quot;composed with&quot;):</p>
@@ -483,9 +557,107 @@ new doc:   edit
 <p>A harder consideration is when we introduce groups, which are similar to HTML elements. <code>oatie</code> doesn't operate on HTML tags, but acts more like the DOM: groups are strictly nested and can only contain text or other groups. Each group has a &quot;tag&quot; (like an HTML tag), but also can contain other attributes (for example, each user's cursor contains the attribute of its originating client).</p>
 <p>Transforming two operations which operate on groups in distinct ways offers some difficulty.</p>
 <p>TODO</p>
-<a class="header" href="#operations" id="operations"><h2>Operations</h2></a>
+<a class="header" href="#operations-1" id="operations-1"><h2>Operations</h2></a>
 <p>We need both a deletion and an addition to perform some atomic operations, for example, making sure there are only <code>&lt;li&gt;</code> elements inside of a <code>&lt;ul&gt;</code> element for all document versions.</p>
 <p>TODO</p>
+<a class="header" href="#rich-text" id="rich-text"><h1>Rich Text</h1></a>
+<p>This section describes the rich text format used by edit-text.</p>
+<a class="header" href="#documents-and-markdown" id="documents-and-markdown"><h1>Documents and Markdown</h1></a>
+<p>The document model that edit-text uses is similar to HTML. We can trivially define a mapping from edit-text's document model to HTML:</p>
+<pre><code>&lt;ul&gt;
+  &lt;li&gt;&lt;p&gt;Item 1&lt;/p&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;p&gt;Item 2&lt;/p&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;p&gt;Item 3...&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</code></pre>
+<p>Becomes when converted to edit-text's document structure (expressed in RON):</p>
+<pre><code>DocGroup({&quot;tag&quot;: &quot;bullet&quot;}, [
+    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 1&quot;)]),
+])
+DocGroup({&quot;tag&quot;: &quot;bullet&quot;}, [
+    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 2&quot;)]),
+])
+DocGroup({&quot;tag&quot;: &quot;bullet&quot;}, [
+    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 3...&quot;)]),
+])
+</code></pre>
+<p>(Conversion from a doc group to HTML can be done with <code>doc_as_html</code> in <code>edit-common/lib.rs</code>. There's no inverse method.)</p>
+<p>Some conversions are straightforward: aside from all non-significant whitespace, all text nodes are converted into the DocChars(...) struct. To simplify other logic, there are some invariants that should be true about DocChars: DocChars(...) must not be empty, and there must not be two successive DocChars(...) components. This isn't validated anywhere (yet) but is expected to be true in all operations.</p>
+<p>For groups, the first argument is a hashmap of <code>String</code> =&gt; <code>String</code> containing the &quot;attributes&quot;. These are similar to HTML attributes and can contain any data. The one attribute required by all groups is the &quot;tag&quot; attribute, which usually maps to the name of its HTML equivalent.</p>
+<p>NOTE: The use of &quot;tag&quot; or even any HTML semantics are not required by the operational transform library, Oatie. References to the &quot;tag&quot; attribute are almost entirely contained in <code>schema.rs</code>. In theory, every document/transform schema could use its own way of distinguishing between group kinds.</p>
+<p>Of interest in the above conversion is that quasi-<code>&lt;bullet&gt;</code> tag has different semantics than its HTML counterpart, <code>&lt;ul&gt;&lt;li&gt;...&lt;/li&gt;&lt;/ul&gt;</code>. This is a deliberate simplification for operational transform (that I should detail elsewhere), but essentially our goal is to better represent Markdown's semantics, not HTML's. Take the following example:</p>
+<pre><code class="language-md">* Item 1
+* Item 2
+
+Interstitial paragraph
+
+* Item 3...
+</code></pre>
+<p>And the middle paragraph, <code>Interstitial paragraph</code> is deleted. The document then becomes:</p>
+<pre><code class="language-md">* Item 1
+* Item 2
+* Item 3...
+</code></pre>
+<p>Because edit-text converts directly from its document representation into Markdown, we can bypass the logic of joining common <code>&lt;ul&gt;</code> parents in this case and also lean more heavily on Markdown-to-html conversion to perform this for us.</p>
+<a class="header" href="#markdown-serialization--deserialization" id="markdown-serialization--deserialization"><h2>Markdown serialization + deserialization</h2></a>
+<p>The module that controls markdown lives at <code>edit-common/src/markdown</code>.</p>
+<ul>
+<li><a href="https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/ser.rs">ser.rs</a></li>
+<li><a href="https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/de.rs">de.rs</a></li>
+</ul>
+<p>edit-text's document schema should allow conversion losslessly into Markdown, while the deserialization code takes into account (or should) that Markdown's possible output is a superset of what edit-text supports, and thus all non-supported content should be stripped out.</p>
+<a class="header" href="#document-elements" id="document-elements"><h2>Document Elements</h2></a>
+<p>This are the current elements supported by edit-text:</p>
+<pre><code>bullet =&gt; Bulleted item
+p =&gt; Paragraph
+h1/h2/h3/h4/h5/h6 =&gt; Header
+pre =&gt; Code block
+html =&gt; Inline HTML content (a raw string, as it would appear in Markdown)
+caret =&gt; Caret position
+hr =&gt; Horizontal rule
+</code></pre>
+<a class="header" href="#splitting-image" id="splitting-image"><h1>Splitting Image</h1></a>
+<p>The entire document editing process is built on splitting a single origin block element into a series of sub-elements.</p>
+<p>All editing steps you can take in the frontend editor preserve this quality.</p>
+<a class="header" href="#carets" id="carets"><h1>Carets</h1></a>
+<p>Carets are the vertical line which indicates your editing position in a document. When there are multiple viewers of a document, each viewer's current editing position would be represented by different carets. You can click the mouse to reposition the caret in a new location, or use various OS-specific shortcuts to move the caret by increments (like by word or line).</p>
+<p>When a document is loaded, the client inserts two carets for the user: an &quot;anchor&quot; caret, and a &quot;focus&quot; caret. Usually these carets are located at the same position. When the anchor and focus carets are one more caret positions apart, the editor treats this as a selection. For example, when you click and drag your mouse to create a selection, the anchor caret stays in place and the focus caret follows your mouse.</p>
+<p>Carets in edit-text are stored as part of the document itself. The data structure for carets looks like the following:</p>
+<pre><code>enum Attrs {
+    Caret {
+        client_id: String,
+        focus: boolean,
+    }
+    ...
+}
+</code></pre>
+<p>The <code>client_id</code> property represents the client for whom the caret belongs. (To see your client ID, click the debug menu in the editor.) The <code>focus</code> property is <code>false</code> if this is the anchor caret, and is <code>true</code> if this is the focus caret.</p>
+<p>Carets are represented as inline elements in HTML, and must exist only inside a block-level element.</p>
+<p>All editing operations that delete carets must also recreate the carets (possibly in a new location) to preserve there being one anchor and one focus caret for each client at all times.</p>
+<a class="header" href="#cursors" id="cursors"><h2>Cursors</h2></a>
+<p>A related concept in edit-text is a cursor, represented by the <code>CurSpan</code> type, which specifies a single discrete position inside of the document (<code>DocSpan</code> type). When a user clicks their mouse, this is translated to a specific cursor inside the document. This can then be converted into a position to insert a caret (see the <code>cur_to_caret</code> function). A caret can have fewer valid positions than there are cursor positions, so this conversion is lossy.</p>
+<a class="header" href="#appendix-4" id="appendix-4"><h1>Appendix</h1></a>
+<a class="header" href="#appendix-5" id="appendix-5"><h1>Appendix</h1></a>
+<a class="header" href="#appendix-6" id="appendix-6"><h1>Appendix</h1></a>
+<a class="header" href="#deploying-to-dokku" id="deploying-to-dokku"><h1>Deploying to Dokku</h1></a>
+<p>[macOS Instructions] To deploy to a Dokku instance, you'll have to install a linux cross-compiler. This will cross-compile the Linux binary locally and then package it in a Docker container for distribution.</p>
+<p>First, to install the cross compiler:</p>
+<pre><code>brew install qinyao-he/homebrew-gcc_cross_compilers/x64-elf-gcc
+</code></pre>
+<p>Then add a new Rust target:</p>
+<pre><code>rustup target add x86_64-unknown-linux-gnu
+</code></pre>
+<p>You can deploy edit-text to a Dokku server using <code>./tools deploy</code>.</p>
+<pre><code>./tools deploy
+</code></pre>
+<ul>
+<li>This first cross-compiles the edit-server binary using a local Docker image.</li>
+<li>It then uploads the binary using the <code>dokku tar:in</code> command on a remote server (not the Git endpoint).</li>
+<li>You can configure the dokku URL using the <code>EDIT_DEPLOY_URL</code> environment variable.</li>
+<li>You can configure the dokku application name using the <code>EDIT_DOKKU_NAME</code> environment variable.</li>
+</ul>
+<a class="header" href="#appendix-7" id="appendix-7"><h1>Appendix</h1></a>
+<a class="header" href="#appendix-8" id="appendix-8"><h1>Appendix</h1></a>
 <a class="header" href="#wip-delall-hack" id="wip-delall-hack"><h1>[WIP] Delall Hack</h1></a>
 <p>Grepping the codebase for &quot;Delall&quot; turns up this comment in <code>transform.rs</code>:</p>
 <pre><code>// &quot;Delall&quot; transform hack to avoid fully deleted elements that
@@ -649,104 +821,6 @@ Op([DelWithGroup([DelSkip(7), DelChars(1)])], [AddWithGroup([AddSkip(8), AddGrou
 </code></pre>
 <p>If you imagine a document consisting of only this element, and we see that one client has deleted the entire element, we accidentally wind up with a client's caret being in the root element (instead of block element). See [Splitting image](./diary-markdown.md].</p>
 <p>To avoid this problem, the Delall hack delets alls newly inserted elements from an insertion that is transformed against a deletion that delets all content. We can verify any arbitrary <code>DelGroup</code> delets all of its inner contents using a recursive check.</p>
-<a class="header" href="#rich-text" id="rich-text"><h1>Rich Text</h1></a>
-<p>This section describes the rich text format used by edit-text.</p>
-<a class="header" href="#documents-and-markdown" id="documents-and-markdown"><h1>Documents and Markdown</h1></a>
-<p>A document in edit-text is built with <em>groups</em> and <em>characters</em>.</p>
-<p>The document model that edit-text uses is similar to HTML. We can trivially define a mapping from edit-text's document model to HTML:</p>
-<pre><code>&lt;ul&gt;
-  &lt;li&gt;&lt;p&gt;Item 1&lt;/p&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;p&gt;Item 2&lt;/p&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;p&gt;Item 3...&lt;/p&gt;&lt;/li&gt;
-&lt;/ul&gt;
-</code></pre>
-<p>Becomes when converted to edit-text's document structure (expressed in RON):</p>
-<pre><code>DocGroup({&quot;tag&quot;: &quot;bullet&quot;, [
-    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 1&quot;)]),
-]})
-DocGroup({&quot;tag&quot;: &quot;bullet&quot;, [
-    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 2&quot;)]),
-]})
-DocGroup({&quot;tag&quot;: &quot;bullet&quot;, [
-    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 3...&quot;)]),
-]})
-</code></pre>
-<p>(Conversion from a doc group to HTML can be done with <code>doc_as_html</code> in <code>edit-common/lib.rs</code>. There's no inverse method.)</p>
-<p>Some conversions are straightforward: aside from all non-significant whitespace, all text nodes are converted into the DocChars(...) struct. To simplify other logic, there are some invariants that should be true about DocChars: DocChars(...) must not be empty, and there must not be two successive DocChars(...) components. This isn't validated anywhere (yet) but is expected to be true in all operations.</p>
-<p>For groups, the first argument is a hashmap of <code>String</code> =&gt; <code>String</code> containing the &quot;attributes&quot;. These are similar to HTML attributes and can contain any data. The one attribute required by all groups is the &quot;tag&quot; attribute, which usually maps to the name of its HTML equivalent.</p>
-<p><strong>O/T:</strong> The use of &quot;tag&quot; or even any HTML semantics are not required by the operational transform library, Oatie. References to the &quot;tag&quot; attribute are almost entirely contained in <code>schema.rs</code>. In theory, every document/transform schema could use its own way of distinguishing between group kinds.</p>
-<p>Of interest in the above conversion is that quasi-<code>&lt;bullet&gt;</code> tag has different semantics than its HTML counterpart, <code>&lt;ul&gt;&lt;li&gt;...&lt;/li&gt;&lt;/ul&gt;</code>. This is a deliberate simplification for operational transform (that I should detail elsewhere), but essentially our goal is to better represent Markdown's semantics, not HTML's. Take the following example:</p>
-<pre><code class="language-md">* Item 1
-* Item 2
-
-Interstitial paragraph
-
-* Item 3...
-</code></pre>
-<p>And the middle paragraph, <code>Interstitial paragraph</code> is deleted. The document then becomes:</p>
-<pre><code class="language-md">* Item 1
-* Item 2
-* Item 3...
-</code></pre>
-<p>Because edit-text converts directly from its document representation into Markdown, we can bypass the logic of joining common <code>&lt;ul&gt;</code> parents in this case and also lean more heavily on Markdown-to-html conversion to perform this for us.</p>
-<a class="header" href="#markdown-serialization--deserialization" id="markdown-serialization--deserialization"><h2>Markdown serialization + deserialization</h2></a>
-<p>The module that controls markdown lives at <code>edit-common/src/markdown</code>.</p>
-<ul>
-<li><a href="https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/ser.rs">ser.rs</a></li>
-<li><a href="https://github.com/tcr/edit-text/blob/master/edit-common/src/markdown/de.rs">de.rs</a></li>
-</ul>
-<p>edit-text's document schema should allow conversion losslessly into Markdown, while the deserialization code takes into account (or should) that Markdown's possible output is a superset of what edit-text supports, and thus all non-supported content should be stripped out.</p>
-<a class="header" href="#document-elements" id="document-elements"><h2>Document Elements</h2></a>
-<p>This are the current elements supported by edit-text:</p>
-<pre><code>bullet =&gt; Bulleted item
-p =&gt; Paragraph
-h1/h2/h3/h4/h5/h6 =&gt; Header
-pre =&gt; Code block
-html =&gt; Inline HTML content (a raw string, as it would appear in Markdown)
-caret =&gt; Caret position
-hr =&gt; Horizontal rule
-</code></pre>
-<a class="header" href="#splitting-image" id="splitting-image"><h1>Splitting Image</h1></a>
-<p>The entire document editing process is built on splitting a single origin block element into a series of sub-elements.</p>
-<p>All editing steps you can take in the frontend editor preserve this quality.</p>
-<a class="header" href="#carets" id="carets"><h1>Carets</h1></a>
-<p>Carets are the vertical line which indicates your editing position in a document. When there are multiple viewers of a document, each viewer's current editing position would be represented by different carets. You can click the mouse to reposition the caret in a new location, or use various OS-specific shortcuts to move the caret by increments (like by word or line).</p>
-<p>When a document is loaded, the client inserts two carets for the user: an &quot;anchor&quot; caret, and a &quot;focus&quot; caret. Usually these carets are located at the same position. When the anchor and focus carets are one more caret positions apart, the editor treats this as a selection. For example, when you click and drag your mouse to create a selection, the anchor caret stays in place and the focus caret follows your mouse.</p>
-<p>Carets in edit-text are stored as part of the document itself. The data structure for carets looks like the following:</p>
-<pre><code>enum Attrs {
-    Caret {
-        client_id: String,
-        focus: boolean,
-    }
-    ...
-}
-</code></pre>
-<p>The <code>client_id</code> property represents the client for whom the caret belongs. (To see your client ID, click the debug menu in the editor.) The <code>focus</code> property is <code>false</code> if this is the anchor caret, and is <code>true</code> if this is the focus caret.</p>
-<p>Carets are represented as inline elements in HTML, and must exist only inside a block-level element.</p>
-<p>All editing operations that delete carets must also recreate the carets (possibly in a new location) to preserve there being one anchor and one focus caret for each client at all times.</p>
-<a class="header" href="#cursors" id="cursors"><h2>Cursors</h2></a>
-<p>A related concept in edit-text is a cursor, represented by the <code>CurSpan</code> type, which specifies a single discrete position inside of the document (<code>DocSpan</code> type). When a user clicks their mouse, this is translated to a specific cursor inside the document. This can then be converted into a position to insert a caret (see the <code>cur_to_caret</code> function). A caret can have fewer valid positions than there are cursor positions, so this conversion is lossy.</p>
-<a class="header" href="#deployment-and-usage-4" id="deployment-and-usage-4"><h1>Deployment and Usage</h1></a>
-<a class="header" href="#deployment-and-usage-5" id="deployment-and-usage-5"><h1>Deployment and Usage</h1></a>
-<a class="header" href="#deployment-and-usage-6" id="deployment-and-usage-6"><h1>Deployment and Usage</h1></a>
-<a class="header" href="#deploying-to-dokku" id="deploying-to-dokku"><h1>Deploying to Dokku</h1></a>
-<p>[macOS Instructions] To deploy to a Dokku instance, you'll have to install a linux cross-compiler. This will cross-compile the Linux binary locally and then package it in a Docker container for distribution.</p>
-<p>First, to install the cross compiler:</p>
-<pre><code>brew install qinyao-he/homebrew-gcc_cross_compilers/x64-elf-gcc
-</code></pre>
-<p>Then add a new Rust target:</p>
-<pre><code>rustup target add x86_64-unknown-linux-gnu
-</code></pre>
-<p>You can deploy edit-text to a Dokku server using <code>./x.rs deploy</code>.</p>
-<pre><code>./tools deploy
-</code></pre>
-<ul>
-<li>This first cross-compiles the edit-server binary using a local Docker image.</li>
-<li>It then uploads the binary using the <code>dokku tar:in</code> command on a remote server (not the Git endpoint).</li>
-<li>You can configure the dokku URL using the <code>EDIT_DEPLOY_URL</code> environment variable.</li>
-<li>You can configure the dokku application name using the <code>EDIT_DOKKU_NAME</code> environment variable.</li>
-</ul>
-<a class="header" href="#deployment-and-usage-7" id="deployment-and-usage-7"><h1>Deployment and Usage</h1></a>
 
                     </main>
 
