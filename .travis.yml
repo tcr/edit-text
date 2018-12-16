@@ -61,6 +61,9 @@ after_success:
   - rm -rf /home/travis/.cargo/registry
   - if [ $TRAVIS_EVENT_TYPE != "cron" ]; then cache-s3 --prefix="edit-text_linux_$(cat rust-toolchain)" save -p edit-frontend/node_modules/ -p ~/.cargo -p target --max-size=3GiB; fi
 
+  # Export CNAME for gh-pages publishing
+  - echo "docs.edit.io" > docs/book/CNAME
+
 deploy:
   provider: pages
   skip-cleanup: true
