@@ -25,10 +25,6 @@ impl<'a> Walker<'a> {
         &self.stepper.doc
     }
 
-    pub fn caret_pos(&self) -> isize {
-        self.stepper.caret_pos
-    }
-
     pub fn goto_pos(&mut self, target_pos: isize) -> bool {
         let mut matched = false;
         take_mut::take(&mut self.stepper, |prev_stepper| {
@@ -265,6 +261,36 @@ impl<'a> Walker<'a> {
             } else {
                 prev_stepper
             }
+        });
+
+        matched
+    }
+
+    pub fn at_start_of_block(&mut self) -> bool {
+        let mut matched = false;
+        take_mut::take(&mut self.stepper, |prev_stepper| {
+            let mut rstepper = prev_stepper.clone().rev();
+
+            // Iterate until we reach a block.
+            matched = loop {
+                if rstepper.next().is_none() {
+                    break false;
+                }
+                match rstepper.doc.head() {
+                    Some(DocGroup(attrs, _)) => {
+                        if is_any_caret(&attrs) {
+                            continue;
+                        }
+                        if is_block(&attrs) {
+                            break true;
+                        }
+                    }
+                    _ => {}
+                }
+                break false;
+            };
+
+            prev_stepper
         });
 
         matched

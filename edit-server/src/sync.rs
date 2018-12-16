@@ -421,8 +421,8 @@ pub fn sync_socket_server(port: u16) {
     // Websocket URL.
     let url = format!("0.0.0.0:{}", port);
     eprintln!(
-        "  Sync server is listening for WebSocket connections on {}",
-        url
+        "  Sync server is listening for WebSocket connections on port {}",
+        port
     );
 
     // Start the WebSocket listener.

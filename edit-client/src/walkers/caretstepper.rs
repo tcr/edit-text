@@ -27,7 +27,7 @@ pub fn is_any_caret(attrs: &Attrs) -> bool {
     attrs["tag"] == "caret"
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Copy)]
 pub enum Pos {
     Start,
     Anchor,

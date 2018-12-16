@@ -30,7 +30,7 @@ pub fn caret_move(
             // If we aren't preserving the selection, collapse the anchor caret
             // to where the focus caret is.
             if !preserve_select {
-                let op = caret_clear_optional(&ctx, Pos::Anchor);
+                let op = caret_clear(&ctx, Pos::Anchor).unwrap_or_else(|_| Op::empty());
                 ctx.apply(&op)
             } else {
                 Ok(ctx)
@@ -73,7 +73,7 @@ pub fn caret_move(
 pub fn caret_word_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
     Ok(ctx)
         .and_then(|ctx| {
-            let op = caret_clear_optional(&ctx, Pos::Anchor);
+            let op = caret_clear(&ctx, Pos::Anchor).unwrap_or_else(|_| Op::empty());
             ctx.apply(&op)
         })
         .and_then(|ctx| {
@@ -154,14 +154,10 @@ pub fn caret_select_all(ctx: ActionContext) -> Result<Op, Error> {
     Ok(Op::transform_advance::<RtfSchema>(&{
         Op::transform_advance::<RtfSchema>(&{
             // Delete focus caret.
-            caret_clear(ctx.clone(), Pos::Focus)
-                .map(|(_pos_1, op_1)| op_1)
-                .unwrap_or_else(|_| Op::empty())
+            caret_clear(&ctx, Pos::Focus).unwrap_or_else(|_| Op::empty())
         }, &{
             // Delete anchor caret.
-            caret_clear(ctx.clone(), Pos::Anchor)
-                .map(|(_pos_1, op_1)| op_1)
-                .unwrap_or_else(|_| Op::empty())
+            caret_clear(&ctx, Pos::Anchor).unwrap_or_else(|_| Op::empty())
         })
     }, &{
         Op::transform_advance::<RtfSchema>(&{
@@ -217,39 +213,29 @@ pub fn caret_block_move(ctx: ActionContext, increase: bool) -> Result<Op, Error>
     Ok(Op::transform_advance::<RtfSchema>(&op_1, &op_2))
 }
 
-// Delete a caret, return its position.
-pub fn caret_clear_inner(walker: Walker<'_>) -> Result<(isize, Op), Error> {
-    let pos = walker.caret_pos();
+// Delete a caret.
+pub fn caret_clear_inner(walker: Walker<'_>) -> Result<Op, Error> {
     let mut writer = walker.to_writer();
     writer.del.begin();
     writer.del.close();
-    Ok((pos, writer.exit_result()))
+    Ok(writer.exit_result())
 }
 
 // Deletes a caret, returning its position.
-pub fn caret_clear(ctx: ActionContext, position: Pos) -> Result<(isize, Op), Error> {
-    let walker = ctx.get_walker(position)?;
-    caret_clear_inner(walker)
+pub fn caret_clear(ctx: &ActionContext, position: Pos) -> Result<Op, Error> {
+    caret_clear_inner(ctx.get_walker(position)?)
 }
 
-fn caret_clear_optional(ctx: &ActionContext, pos: Pos) -> Op {
-    caret_clear(ctx.clone(), pos)
-        .map(|(_pos, op)| op)
-        .unwrap_or(Op::empty())
-}
-
-pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan, focus: bool) -> Result<Op, Error> {
+pub fn cur_to_caret(ctx: ActionContext, cur: &CurSpan, pos: Pos) -> Result<Op, Error> {
     Ok(Op::transform_advance::<RtfSchema>(&{
         // First operation removes the caret.
-        caret_clear(ctx.clone(), if focus { Pos::Focus } else { Pos::Anchor })
-            .map(|(_pos, op)| op)
-            .unwrap_or_else(|_| Op::empty())
+        caret_clear(&ctx, pos).unwrap_or_else(|_| Op::empty())
     }, &{
         // Second operation inserts a new caret.
         let walker = Walker::to_cursor(&ctx.doc, cur);
         let mut writer = walker.to_writer();
         writer.add.begin();
-        writer.add.close(caret_attrs(&ctx.client_id, focus));
+        writer.add.close(caret_attrs(&ctx.client_id, if pos == Pos::Focus { true } else { false }));
         writer.exit_result()
     }))
 }
