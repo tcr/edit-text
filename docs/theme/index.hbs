@@ -30,7 +30,19 @@
         <link rel="stylesheet" href="{{ ../path_to_root }}{{ this }}">
         {{/each}}
         <style>
+            /* Hide empty links*/
             a[href="#.html"] { opacity: 0.5; pointer-events: none; }
+
+            /* svgbob monospace */
+            svg.bob { font-family: monospace; display: block; margin: 1.6em auto; padding: 2em 3em; }
+            svg.bob text { transform: translateX(-2px); }
+
+            p > img:first-child, svg.bob { display: block; border: 1px solid #bbb; }
+            table, table th, table td { border-collapse: collapse; border: 1px solid #bbb; }
+            table th { padding: 0.2em 1.5em }
+
+            /* header spacing */
+            h2, h3 { margin-top: 1.6em; }
         </style>
 
         {{#if mathjax_support}}

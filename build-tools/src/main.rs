@@ -176,6 +176,7 @@ enum Cli {
 enum TestTarget {
     #[structopt(name = "integration")]
     Integration {
+        #[allow(unused)]
         #[structopt(long = "no-headless", help = "Do not run in headless mode.")]
         no_headless: bool,
     },

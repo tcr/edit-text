@@ -27,6 +27,10 @@ ws = { version = "0.7" }
 log = "0.4"
 env_logger = "0.5"
 
+# mdbook-svgbob
+regex = "1"
+svgbob = "0.4"
+
 # wasm-bindgen-cli
 wasm-bindgen-cli-support = { version = "0.2" }
 wasm-bindgen-shared = { version = "0.2" }
