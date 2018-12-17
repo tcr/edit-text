@@ -28,7 +28,19 @@
         <!-- Custom theme stylesheets -->
         
         <style>
+            /* Hide empty links*/
             a[href="#.html"] { opacity: 0.5; pointer-events: none; }
+
+            /* svgbob monospace */
+            svg.bob { font-family: monospace; display: block; margin: 1.6em auto; padding: 2em 3em; }
+            svg.bob text { transform: translateX(-2px); }
+
+            p > img:first-child, svg.bob { display: block; border: 1px solid #bbb; }
+            table, table th, table td { border-collapse: collapse; border: 1px solid #bbb; }
+            table th { padding: 0.2em 1.5em }
+
+            /* header spacing */
+            h2, h3 { margin-top: 1.6em; }
         </style>
 
         
@@ -145,20 +157,31 @@
                         <a class="header" href="#system-overview" id="system-overview"><h1>System Overview</h1></a>
 <p>edit-text is built from the ground up as a collaborative text editor. It uses operational transform to merge updates from multiple clients, so it requires a synchronizing server. The server is also in charge of storing page content, so that every page can be shared via its URL.</p>
 <p>A client runs in a browser: text editing and synchronization code is written in Rust and cross-compiled to WebAssembly, and frontend code is written in TypeScript.</p>
-<p>Here's a rough diagram:</p>
-<pre><code> Server &lt;-+--&gt; Client &lt;--------&gt; Frontend
- (Rust)   | (Rust + Wasm)     (TypeScript)
-          |
-          |--&gt; Client &lt;--------&gt; Frontend
-          |--&gt; Client &lt;--------&gt; Frontend
-          \--&gt; ...
+<p>Here's a diagram demonstrating the different components:</p>
+<pre><code class="language-svgbob">+--------+        +---------------+--------------+        +--------------+
+| Server | &lt;--+--&gt;|   Client A    |  Controller  |&lt;------&gt;|   Frontend   |
+| (Rust) |    |   |---------------'--------------|        | (TypeScript) |
+|        |    |   |         (Rust + Wasm)        |        |              |
++--------+    |   +------------------------------+        +--------------+
+              |
+              |-----&gt; Client B
+              |
+              |-----&gt; Client C
+              |
+              +-----&gt; ...
 </code></pre>
+<p>Notice that Client and Controller are part of the same component. This is useful
+from an API perspective: commands that are addressed to the client will always
+originate from the server, and commands addressed to the Controller will always
+originate from the frontend. On the implementation level, however, Client and
+Controller are the same process.</p>
 <a class="header" href="#server-apis" id="server-apis"><h2>Server APIs</h2></a>
 <p>The server performs document synchronization. It is the &quot;server&quot; component that orchestrates simultaneous document modifications which happen on several Users.</p>
-<pre><code>dev: 0.0.0.0:8000/  prod: /            HTML Server
-dev: 0.0.0.0:8002/  prod: /$/ws        WebSocket
-dev: 0.0.0.0:8003/  prod: /$/graphql   GraphQL
-</code></pre>
+<table><thead><tr><th> Port </th><th> Path Mapping </th><th> Description</th></tr></thead><tbody>
+<tr><td> 8000 </td><td> /    </td><td> HTML Server</td></tr>
+<tr><td> 8002 </td><td> /$/ws    </td><td> WebSocket</td></tr>
+<tr><td> 8003 </td><td> /$/graphql    </td><td> GraphQL</td></tr>
+</tbody></table>
 <p>HTML is served from <code>/</code>. Static versions of each page are available before scripting is fully downloaded.</p>
 <p>When the client-side script connects the WebSocket, the server recognizes it as a new synchronization client and reloads the content of the page. Editing is then enabled. Each edit made by the client is sent to the server as an operation, and the server computes and pushes push new deltas to the client.</p>
 <p>There is an additional API exposed as GraphQL for non-synchronization tasks. This exposes mutations like updating a page with Markdown, downloading and renaming pages, and other page-editing features.</p>
@@ -169,7 +192,6 @@ dev: 0.0.0.0:8003/  prod: /$/graphql   GraphQL
 <p>The top-level crates/modules are these:</p>
 <ul>
 <li>oatie, the operational transform crate</li>
-<li>simple-ws, a thin websocket wrapper</li>
 <li>edit-common, the shared code crate</li>
 <li>edit-client, the client crate</li>
 <li>edit-server, the server crate</li>

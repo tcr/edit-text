@@ -28,7 +28,19 @@
         <!-- Custom theme stylesheets -->
         
         <style>
+            /* Hide empty links*/
             a[href="#.html"] { opacity: 0.5; pointer-events: none; }
+
+            /* svgbob monospace */
+            svg.bob { font-family: monospace; display: block; margin: 1.6em auto; padding: 2em 3em; }
+            svg.bob text { transform: translateX(-2px); }
+
+            p > img:first-child, svg.bob { display: block; border: 1px solid #bbb; }
+            table, table th, table td { border-collapse: collapse; border: 1px solid #bbb; }
+            table th { padding: 0.2em 1.5em }
+
+            /* header spacing */
+            h2, h3 { margin-top: 1.6em; }
         </style>
 
         
@@ -144,7 +156,7 @@
                     <main>
                         <a class="header" href="#documents" id="documents"><h1>Documents</h1></a>
 <p>The contents of a page is represented as a <strong>Document</strong>. For example, the following &quot;Hello world!&quot; document:</p>
-<p><img width="1189" alt="image" border="1" src="https://user-images.githubusercontent.com/80639/50059231-1737f500-0152-11e9-8704-d133d6b19e66.png"></p>
+<p><img width="1189" alt="image" src="https://user-images.githubusercontent.com/80639/50059231-1737f500-0152-11e9-8704-d133d6b19e66.png"></p>
 <p>May be represeted with the following <code>DocSpan</code> in Rust:</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]

@@ -7,3 +7,6 @@ title = "edit-text internals"
 [build]
 build-dir = "../book"
 create-missing = false
+
+[preprocessor.svgbob]
+renderers = ["html"]
