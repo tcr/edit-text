@@ -8,6 +8,9 @@
 * *controller* &mdash; Receives UI-level event updates from the frontend
   and converts it into operations on the client document.
 
+* *cursor* &mdash; All positions in which a Text or Group element can be
+  inserted into a document can be represented by a cursor object.
+
 * *frontend* &mdash; The editor UI. The current document is rendered
   as a component inside the frontend, and interactions with this component are
   forwarded to the controller. The frontend also manages the toolbar,
