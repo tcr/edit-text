@@ -201,7 +201,7 @@ fn expect_yarn() {
     }
 }
 
-fn change_list_only_docs() -> Result<bool, Error> {
+fn change_list_only_docs(verbose: bool) -> Result<bool, Error> {
     let output = command!(
         "
             git --no-pager diff --name-only HEAD..origin/master
@@ -210,11 +210,13 @@ fn change_list_only_docs() -> Result<bool, Error> {
     .output()?
     .stdout;
 
-    eprintln!("touched files:");
-    String::from_utf8_lossy(&output)
-        .lines()
-        .for_each(|value| eprintln!(" - {}", value));
-    eprintln!();
+    if verbose {
+        eprintln!("touched files:");
+        String::from_utf8_lossy(&output)
+            .lines()
+            .for_each(|value| eprintln!(" - {}", value));
+        eprintln!();
+    }
 
     // If only the docs/ folder has been modified, we only need
     // to test if ./tools book-build is successful to merge.
@@ -356,7 +358,7 @@ fn run() -> Result<(), Error> {
                 eprintln!();
             }
 
-            let only_docs = change_list_only_docs()?;
+            let only_docs = change_list_only_docs(true)?;
 
             if only_docs {
                 // If only docs/ was modified, just build the book.
@@ -921,7 +923,7 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::BookOnly => {
-            std::process::exit(if change_list_only_docs()? { 0 } else { 1 });
+            std::process::exit(if change_list_only_docs(false)? { 0 } else { 1 });
         }
 
         Cli::BookWatch => {

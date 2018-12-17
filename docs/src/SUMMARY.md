@@ -1,11 +1,11 @@
 # Summary
 
-- [Introduction](./intro.md)
+- [edit-text](./intro.md)
   - [Getting Started](./getting-started.md)
 - [Development](#)
   - [System Overview](./intro-system.md)
   - [Build System ./tools](./intro-x.md)
-  - [Testing](./intro-testing.md)
+  - [Tests](./intro-testing.md)
     - [Writing an integration test](#)
 - [Working with Documents](#)
   - [Documents](./working-with-documents.md)
@@ -19,8 +19,8 @@
   - [Editor Component](./editor-component.md)
 - [Deployment and Usage](#)
   - [Running as a binary](./edit-server-binary.md)
-  - [Hosted Sandbox](#)
   - [Dokku](./deploying.md)
+  - [Hosted Sandbox](#)
   - [npm module](#)
 - [Appendix](./appendix.md)
   - [Delall Hack](./diary-delall.md)
