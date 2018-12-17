@@ -369,6 +369,14 @@ fn run() -> Result<(), Error> {
                     ",
                     self_path = SELF_PATH,
                 )?;
+
+                eprintln!("ci: building docs");
+                execute!(
+                    r"
+                        cargo doc --no-deps
+                    ",
+                )?;
+                eprintln!();
             } else {
                 // Build all ./tools targets.
                 eprintln!("ci: building all");
@@ -377,6 +385,14 @@ fn run() -> Result<(), Error> {
                         {self_path} build
                     ",
                     self_path = SELF_PATH,
+                )?;
+                eprintln!();
+
+                eprintln!("ci: building docs");
+                execute!(
+                    r"
+                        cargo doc --no-deps
+                    ",
                 )?;
                 eprintln!();
 
