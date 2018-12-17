@@ -89,7 +89,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> edit-text</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">2.</strong> Development</a></li><li><ol class="section"><li><a href="intro-system.html"><strong aria-hidden="true">2.1.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">2.2.</strong> Build System ./tools</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">2.3.</strong> Tests</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">2.3.1.</strong> Writing an integration test</a></li></ol></li></ol></li><li><a href="#.html"><strong aria-hidden="true">3.</strong> Working with Documents</a></li><li><ol class="section"><li><a href="working-with-documents.html"><strong aria-hidden="true">3.1.</strong> Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">3.2.</strong> Operations</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">3.3.</strong> Operational Transform</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">4.</strong> Rich Text</a></li><li><ol class="section"><li><a href="markdown.html"><strong aria-hidden="true">4.1.</strong> Markdown</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">4.2.</strong> Carets</a></li></ol></li><li><a href="frontend.html"><strong aria-hidden="true">5.</strong> Frontend</a></li><li><ol class="section"><li><a href="server-apis.html"><strong aria-hidden="true">5.1.</strong> Server APIs</a></li><li><a href="editor-component.html"><strong aria-hidden="true">5.2.</strong> Editor Component</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">6.</strong> Deployment and Usage</a></li><li><ol class="section"><li><a href="edit-server-binary.html"><strong aria-hidden="true">6.1.</strong> Running as a binary</a></li><li><a href="deploying.html"><strong aria-hidden="true">6.2.</strong> Dokku</a></li><li><a href="#.html"><strong aria-hidden="true">6.3.</strong> Hosted Sandbox</a></li><li><a href="#.html"><strong aria-hidden="true">6.4.</strong> npm module</a></li></ol></li><li><a href="appendix.html"><strong aria-hidden="true">7.</strong> Appendix</a></li><li><ol class="section"><li><a href="diary-delall.html"><strong aria-hidden="true">7.1.</strong> Delall Hack</a></li><li><a href="glossary.html"><strong aria-hidden="true">7.2.</strong> Glossary</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> edit-text</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li></ol></li><li><a href="development.html"><strong aria-hidden="true">2.</strong> Development</a></li><li><ol class="section"><li><a href="intro-system.html"><strong aria-hidden="true">2.1.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">2.2.</strong> Build System ./tools</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">2.3.</strong> Tests</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">2.3.1.</strong> Writing an integration test</a></li></ol></li></ol></li><li><a href="editor-basics.html"><strong aria-hidden="true">3.</strong> Editor Basics</a></li><li><ol class="section"><li><a href="working-with-documents.html"><strong aria-hidden="true">3.1.</strong> Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">3.2.</strong> Operations</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">3.3.</strong> Operational Transform</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">4.</strong> Rich Text</a></li><li><ol class="section"><li><a href="markdown.html"><strong aria-hidden="true">4.1.</strong> Markdown</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">4.2.</strong> Carets</a></li></ol></li><li><a href="server.html"><strong aria-hidden="true">5.</strong> Server</a></li><li><ol class="section"><li><a href="server-apis.html"><strong aria-hidden="true">5.1.</strong> HTTP APIs</a></li><li><a href="storage.html"><strong aria-hidden="true">5.2.</strong> Storage</a></li></ol></li><li><a href="frontend.html"><strong aria-hidden="true">6.</strong> Frontend</a></li><li><ol class="section"><li><a href="editor-component.html"><strong aria-hidden="true">6.1.</strong> Editor Component</a></li><li><a href="webassembly-interface.html"><strong aria-hidden="true">6.2.</strong> WebAssembly Interface</a></li></ol></li><li><a href="deploying.html"><strong aria-hidden="true">7.</strong> Deploying</a></li><li><ol class="section"><li><a href="edit-server-binary.html"><strong aria-hidden="true">7.1.</strong> Running as a binary</a></li><li><a href="dokku.html"><strong aria-hidden="true">7.2.</strong> Dokku</a></li><li><a href="#.html"><strong aria-hidden="true">7.3.</strong> Hosted Sandbox</a></li><li><a href="#.html"><strong aria-hidden="true">7.4.</strong> npm module</a></li></ol></li><li><a href="appendix.html"><strong aria-hidden="true">8.</strong> Appendix</a></li><li><ol class="section"><li><a href="diary-delall.html"><strong aria-hidden="true">8.1.</strong> Delall Hack</a></li><li><a href="glossary.html"><strong aria-hidden="true">8.2.</strong> Glossary</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -164,16 +164,32 @@
 <p>For installation instructions, please read <a href="getting-started.html"><strong>Getting Started</strong></a>.</p>
 <a class="header" href="#getting-started" id="getting-started"><h1>Getting Started</h1></a>
 <a class="header" href="#requirements" id="requirements"><h2>Requirements</h2></a>
-<p><strong>Installing rustup:</strong> <code>edit-text</code> is written in Rust, and so you will need a Rust compiler in order to serve the application. Rust may be installed using your system package manager, but the preferred way to download and install Rust is through the <a href="http://rustup.rs/"><code>rustup</code> toolchain</a> available at rustup.rs. To check if you have <code>rustup</code> installed, you can run the following command:</p>
+<p><strong>Installing rustup:</strong> <code>edit-text</code> is written in Rust, and so you will need a
+Rust compiler in order to serve the application. Rust may be installed using
+your system package manager, but the preferred way to download and install Rust
+is through the <a href="http://rustup.rs/"><code>rustup</code> toolchain</a> available at rustup.rs.
+To check if you have <code>rustup</code> installed, you can run the following command:</p>
 <pre><code>$ rustup show active-toolchain
 nightly-2018-09-25-x86_64-apple-darwin  # for example
 </code></pre>
-<p>This command should print a rust version that is equivalent to the contents of the <code>./rust-toolchain</code> file. This is the version of the nightly Rust compiler the project currently depends on. This file is updated periodically; <code>rustup</code> will automatically manage downloading and using the correct compiler version for you.</p>
-<p><strong>Installing Node.js:</strong> To build the frontend you will need to install <a href="http://nodejs.org/">Node.js</a> and <a href="http://yarnpkg.com">Yarn</a>. To install Node.js, see <a href="https://nodejs.org/en/download/package-manager/">installation instructions for your OS</a>. To check if you have a recent version of Node.js installed, see if the output of this command is <code>&gt;= v6.0.0</code>:</p>
+<p>This command should print a rust version that is equivalent to the contents of
+the <code>./rust-toolchain</code> file. This is the version of the nightly Rust compiler
+the project currently depends on. This file is updated periodically; <code>rustup</code>
+will automatically manage downloading and using the correct compiler version for
+you.</p>
+<p><strong>Installing Node.js:</strong> To build the frontend you will need to install something
+called <a href="http://nodejs.org/">Node.js</a> and <a href="http://yarnpkg.com">Yarn</a>. To install
+Node.js, see <a href="https://nodejs.org/en/download/package-manager/">installation instructions for your
+OS</a>. To check if you have a
+recent version of Node.js installed, see if the output of this command is <code>&gt;= v6.0.0</code>:</p>
 <pre><code>$ node -v
 v10.12.0  # for example
 </code></pre>
-<p>The frontend is written partly in TypeScript, and the build tool uses Yarn to install and manage its JavaScript package dependencies. To install yarn, follow the <a href="https://yarnpkg.com/en/docs/install#mac-stable">installation instructions for your OS</a> or just run <code>npm i -g yarn</code>. To see if Yarn is installed and available:</p>
+<p>The frontend is written partly in TypeScript, and the build tool uses Yarn to
+install and manage its JavaScript package dependencies. To install yarn, follow
+the <a href="https://yarnpkg.com/en/docs/install#mac-stable">installation instructions for your
+OS</a> or just run <code>npm i -g yarn</code>.
+To see if Yarn is installed and available:</p>
 <pre><code>$ yarn -v
 v1.10.1  # for example
 </code></pre>
@@ -181,7 +197,8 @@ v1.10.1  # for example
 <p>Clone the repository from Github:</p>
 <pre><code>git clone https://github.com/tcr/edit-text
 </code></pre>
-<p>Build commands are executed using the <code>./tools</code> script. You can rebuild individual edit-text components with <code>./tools server-build</code>, <code>./tools frontend-build</code>, etc. Run <code>./tools help</code> for more information.</p>
+<p>Build commands are executed using the <code>./tools</code> script. You can rebuild
+individual edit-text components with <code>./tools server-build</code>, <code>./tools frontend-build</code>, etc. Run <code>./tools help</code> for more information.</p>
 <a class="header" href="#run-the-server" id="run-the-server"><h3>Run the server</h3></a>
 <p>The production configuration of edit-text is a long-running server process, and
 one or many WebAssembly + TypeScript clients running in the browser that connect
@@ -190,8 +207,9 @@ to it.</p>
 using the following command:</p>
 <pre><code class="language-sh">./tools frontend-build
 </code></pre>
-<p>This cross-compiles all frontend code and pulls in the compiled WebAssembly binary,
-using <a href="https://github.com/rustwasm/wasm-bindgen">wasm-bindgen</a> to talk to the frontend.</p>
+<p>This cross-compiles all frontend code and pulls in the compiled WebAssembly
+binary, using <a href="https://github.com/rustwasm/wasm-bindgen">wasm-bindgen</a> to talk
+to the frontend.</p>
 <p>In your terminal session, you can then run this command to start the server:</p>
 <pre><code>./tools server
 </code></pre>
@@ -210,7 +228,11 @@ newer version of the client code has been compiled.</p>
 should kill and re-run the <code>./tools server</code> command to rebuild and launch it.
 The <code>frontend-watch</code> command will automatically rebuild code that it depends
 on for you.</p>
-<a class="header" href="#appendix" id="appendix"><h1>Appendix</h1></a>
+<a class="header" href="#development" id="development"><h1>Development</h1></a>
+<p>edit-text uses a build system written in Rust, <code>./tools</code>, which is a basic
+wrapper over <code>cargo</code> and <code>npm</code> commands and other essential project functionality.
+This is used to invoke tests as well as launch the edit-text server.</p>
+<p>{{#toc}}</p>
 <a class="header" href="#system-overview" id="system-overview"><h1>System Overview</h1></a>
 <p>edit-text is built from the ground up as a collaborative text editor. It uses
 operational transform to merge updates from multiple clients, so it requires a
@@ -267,7 +289,11 @@ Controller are the same process.</p>
 <p>The server is a command-line program called <code>edit-server</code>. In release mode, it
 bundles all client-side code and can be uploaded to a server to run the program
 directly.</p>
-<p>If you use edit-text in its normal configuration, the Client, Controller, and Frontend all run in your browser as WebAssembly and JavaScript. In proxy mode, the Client and Controller run as a command line program.</p>
+<p>The edit-text client is written in Rust and can be run both in the browser (to
+power the editor) or from the command line (for tools like the client proxy, and client replay).
+If you use edit-text in its normal configuration, the Client, Controller, and
+Frontend all run in your browser as WebAssembly and JavaScript. In proxy mode,
+the Client and Controller run as a command line program.</p>
 <p>The Frontend is written in TypeScript.</p>
 <a class="header" href="#cratemodule-overview" id="cratemodule-overview"><h2>Crate/Module overview</h2></a>
 <p>The top-level crates/modules are these:</p>
@@ -373,8 +399,15 @@ invoke the build tool with <code>.\tools</code> instead. Please substitute <code
 <li>Unit tests</li>
 </ul>
 <p>--&gt;</p>
-<a class="header" href="#appendix-1" id="appendix-1"><h1>Appendix</h1></a>
-<a class="header" href="#appendix-2" id="appendix-2"><h1>Appendix</h1></a>
+<a class="header" href="#appendix" id="appendix"><h1>Appendix</h1></a>
+<a class="header" href="#editor-basics" id="editor-basics"><h1>Editor Basics</h1></a>
+<p>This section describes the basics of how editors are stored and modified.
+The content of the editor is a &quot;document&quot; composed of text and
+groups (which can contain other text or groups). Operations are data types that
+can modify the document by adding or deleting content. These operations are
+composable, and also can occur concurrently—conflicts are resolved with the
+operational transform algorithm.</p>
+<p>{{#toc}}</p>
 <a class="header" href="#documents" id="documents"><h1>Documents</h1></a>
 <p>The contents of a page is represented as a <strong>Document</strong>. For example, the following &quot;Hello world!&quot; document:</p>
 <p><img width="1189" alt="image" src="https://user-images.githubusercontent.com/80639/50059231-1737f500-0152-11e9-8704-d133d6b19e66.png"></p>
@@ -585,17 +618,16 @@ If you're interested in more about how the transform step works, read on.</stron
 <li>Because we received an ACK, we can send the next operation in our network queue (if any).</li>
 </ol>
 <p>Note that the strategies for server and client code to bring operations &quot;up to date&quot; differ in that the client only needs to transform against one operation, while the server needs to transform against all intervening operations in its history. The server only needs to store the history up to the client that is the most out of date, however, and can always boot off clients which are off too old a version.</p>
+<a class="header" href="#split-block-model" id="split-block-model"><h3>Split Block Model</h3></a>
+<p>The entire document editing process is built on splitting a single origin block
+element into a series of sub-elements.</p>
+<p>All editing steps you can take in the frontend editor should follow this constaint.</p>
 <a class="header" href="#rich-text" id="rich-text"><h1>Rich Text</h1></a>
-<p>This section describes the rich text format used by edit-text.</p>
-<a class="header" href="#documents-and-markdown" id="documents-and-markdown"><h1>Documents and Markdown</h1></a>
-<p>The document model that edit-text uses is similar to HTML. We can trivially define a mapping from edit-text's document model to HTML:</p>
-<pre><code>&lt;ul&gt;
-  &lt;li&gt;&lt;p&gt;Item 1&lt;/p&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;p&gt;Item 2&lt;/p&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;p&gt;Item 3...&lt;/p&gt;&lt;/li&gt;
-&lt;/ul&gt;
-</code></pre>
-<p>Becomes when converted to edit-text's document structure (expressed in RON):</p>
+<p>This section describes the Rich Text schema used by edit-text. This schema is
+designed to be Markdown-compatible.</p>
+<p>{{#toc}}</p>
+<a class="header" href="#markdown" id="markdown"><h1>Markdown</h1></a>
+<p>Let's assume we have the following document in edit-text's document structure:</p>
 <pre><code>DocGroup({&quot;tag&quot;: &quot;bullet&quot;}, [
     DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 1&quot;)]),
 ])
@@ -606,7 +638,13 @@ DocGroup({&quot;tag&quot;: &quot;bullet&quot;}, [
     DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Item 3...&quot;)]),
 ])
 </code></pre>
-<p>(Conversion from a doc group to HTML can be done with <code>doc_as_html</code> in <code>edit-common/lib.rs</code>. There's no inverse method.)</p>
+<p>We can trivially define a mapping from edit-text's document model to HTML. (Conversion from a doc group to HTML can be done with <code>doc_as_html</code> in <code>edit-common/lib.rs</code>. There's no inverse method.) The result is an unordered list:</p>
+<pre><code>&lt;ul&gt;
+  &lt;li&gt;&lt;p&gt;Item 1&lt;/p&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;p&gt;Item 2&lt;/p&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;p&gt;Item 3...&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</code></pre>
 <p>Some conversions are straightforward: aside from all non-significant whitespace, all text nodes are converted into the DocChars(...) struct. To simplify other logic, there are some invariants that should be true about DocChars: DocChars(...) must not be empty, and there must not be two successive DocChars(...) components. This isn't validated anywhere (yet) but is expected to be true in all operations.</p>
 <p>For groups, the first argument is a hashmap of <code>String</code> =&gt; <code>String</code> containing the &quot;attributes&quot;. These are similar to HTML attributes and can contain any data. The one attribute required by all groups is the &quot;tag&quot; attribute, which usually maps to the name of its HTML equivalent.</p>
 <p>NOTE: The use of &quot;tag&quot; or even any HTML semantics are not required by the operational transform library, Oatie. References to the &quot;tag&quot; attribute are almost entirely contained in <code>schema.rs</code>. In theory, every document/transform schema could use its own way of distinguishing between group kinds.</p>
@@ -633,17 +671,15 @@ Interstitial paragraph
 <p>edit-text's document schema should allow conversion losslessly into Markdown, while the deserialization code takes into account (or should) that Markdown's possible output is a superset of what edit-text supports, and thus all non-supported content should be stripped out.</p>
 <a class="header" href="#document-elements" id="document-elements"><h2>Document Elements</h2></a>
 <p>This are the current elements supported by edit-text:</p>
-<pre><code>bullet =&gt; Bulleted item
-p =&gt; Paragraph
-h1/h2/h3/h4/h5/h6 =&gt; Header
-pre =&gt; Code block
-html =&gt; Inline HTML content (a raw string, as it would appear in Markdown)
-caret =&gt; Caret position
-hr =&gt; Horizontal rule
-</code></pre>
-<a class="header" href="#splitting-image" id="splitting-image"><h1>Splitting Image</h1></a>
-<p>The entire document editing process is built on splitting a single origin block element into a series of sub-elements.</p>
-<p>All editing steps you can take in the frontend editor preserve this quality.</p>
+<table><thead><tr><th> Tag </th><th> Description </th></tr></thead><tbody>
+<tr><td> bullet </td><td> Bulleted item</td></tr>
+<tr><td> p </td><td> Paragraph</td></tr>
+<tr><td> h[1-6] </td><td> Header</td></tr>
+<tr><td> pre </td><td> Code block</td></tr>
+<tr><td> html </td><td> Inline HTML content (a raw string, as it would appear in Markdown)</td></tr>
+<tr><td> caret </td><td> Caret position</td></tr>
+<tr><td> hr </td><td> Horizontal rule</td></tr>
+</tbody></table>
 <a class="header" href="#carets" id="carets"><h1>Carets</h1></a>
 <p>Carets are the vertical line which indicates your editing position in a document. When there are multiple viewers of a document, each viewer's current editing position would be represented by different carets. You can click the mouse to reposition the caret in a new location, or use various OS-specific shortcuts to move the caret by increments (like by word or line).</p>
 <p>When a document is loaded, the client inserts two carets for the user: an &quot;anchor&quot; caret, and a &quot;focus&quot; caret. Usually these carets are located at the same position. When the anchor and focus carets are one more caret positions apart, the editor treats this as a selection. For example, when you click and drag your mouse to create a selection, the anchor caret stays in place and the focus caret follows your mouse.</p>
@@ -661,13 +697,11 @@ hr =&gt; Horizontal rule
 <p>All editing operations that delete carets must also recreate the carets (possibly in a new location) to preserve there being one anchor and one focus caret for each client at all times.</p>
 <a class="header" href="#cursors" id="cursors"><h2>Cursors</h2></a>
 <p>A related concept in edit-text is a cursor, represented by the <code>CurSpan</code> type, which specifies a single discrete position inside of the document (<code>DocSpan</code> type). When a user clicks their mouse, this is translated to a specific cursor inside the document. This can then be converted into a position to insert a caret (see the <code>cur_to_caret</code> function). A caret can have fewer valid positions than there are cursor positions, so this conversion is lossy.</p>
-<a class="header" href="#frontend" id="frontend"><h1>Frontend</h1></a>
-<p>The Frontend is written in TypeScript and communicates with a WebAssembly
-component containing the Client and Controller.</p>
-<p>The edit-text client is written in Rust and can be run both in the browser (to
-power the editor) or from the command line (for tools like the client proxy, and client replay).</p>
-<p>The frontend invokes the client over a <code>wasm-bindgen</code> bridge, exchanging JSON messages (&quot;commands&quot;). The frontend exposes an editor interface using React. The client instructs the frontend on what text styling options to expose, and responds to keypresses with updated HTML to render in the editor.</p>
-<p>The frontend is written in React.</p>
+<a class="header" href="#server" id="server"><h1>Server</h1></a>
+<p>The server binary serves HTTP content, a GraphQL endpoint for performing
+page-level commands, and a WebSocket endpoint for synchronizing document
+content.</p>
+<p>{{#toc}}</p>
 <a class="header" href="#server-apis" id="server-apis"><h1>Server APIs</h1></a>
 <p>The server performs document synchronization. It is the &quot;server&quot; component that orchestrates simultaneous document modifications which happen on several Users.</p>
 <table><thead><tr><th> Port </th><th> Path Mapping </th><th> Description</th></tr></thead><tbody>
@@ -678,8 +712,14 @@ power the editor) or from the command line (for tools like the client proxy, and
 <p>HTML is served from <code>/</code>. Static versions of each page are available before scripting is fully downloaded.</p>
 <p>When the client-side script connects the WebSocket, the server recognizes it as a new synchronization client and reloads the content of the page. Editing is then enabled. Each edit made by the client is sent to the server as an operation, and the server computes and pushes push new deltas to the client.</p>
 <p>There is an additional API exposed as GraphQL for non-synchronization tasks. This exposes mutations like updating a page with Markdown, downloading and renaming pages, and other page-editing features.# Server APIs</p>
+<a class="header" href="#storage" id="storage"><h1>Storage</h1></a>
+<p>edit-text uses a local SQLite database for storage.</p>
+<a class="header" href="#frontend" id="frontend"><h1>Frontend</h1></a>
+<p>The Frontend is written in TypeScript and communicates with a WebAssembly
+component containing the Client and Controller.</p>
+<p>{{#toc}}</p>
 <a class="header" href="#editor-component" id="editor-component"><h1>Editor Component</h1></a>
-<p>The editor is a react component.</p>
+<p>The frontend is written in React, and the editor is a react component.</p>
 <pre><code class="language-javascript">&lt;Editor
     content={string}
     controller={ControllerImpl}
@@ -687,7 +727,12 @@ power the editor) or from the command line (for tools like the client proxy, and
     disabled={boolean}
 /&gt;
 </code></pre>
-<a class="header" href="#appendix-3" id="appendix-3"><h1>Appendix</h1></a>
+<a class="header" href="#webassembly-interface" id="webassembly-interface"><h1>WebAssembly Interface</h1></a>
+<p>The frontend invokes the client over a <code>wasm-bindgen</code> bridge, exchanging JSON messages (&quot;commands&quot;). The frontend exposes an editor interface using React. The client instructs the frontend on what text styling options to expose, and responds to keypresses with updated HTML to render in the editor.</p>
+<a class="header" href="#deploying" id="deploying"><h1>Deploying</h1></a>
+<p>This section describes how you can compile a standalone edit-server binary,
+and deploy to a remote server or hosted service like Dokku.</p>
+<p>{{#toc}}</p>
 <a class="header" href="#running-as-a-binary" id="running-as-a-binary"><h1>Running as a binary</h1></a>
 <p>The <code>edit-server/</code> crate can export a binary that you can deploy to a remote
 server, containing the source code of the client and the ability to talk to
@@ -716,10 +761,11 @@ cargo build --release --features standalone
 <li>You can configure the dokku URL using the <code>EDIT_DEPLOY_URL</code> environment variable.</li>
 <li>You can configure the dokku application name using the <code>EDIT_DOKKU_NAME</code> environment variable.</li>
 </ul>
-<a class="header" href="#appendix-4" id="appendix-4"><h1>Appendix</h1></a>
-<a class="header" href="#appendix-5" id="appendix-5"><h1>Appendix</h1></a>
-<a class="header" href="#appendix-6" id="appendix-6"><h1>Appendix</h1></a>
+<a class="header" href="#appendix-1" id="appendix-1"><h1>Appendix</h1></a>
+<a class="header" href="#appendix-2" id="appendix-2"><h1>Appendix</h1></a>
+<a class="header" href="#appendix-3" id="appendix-3"><h1>Appendix</h1></a>
 <p>Content that wasn't included in the rest of the docs.</p>
+<p>{{#toc}}</p>
 <a class="header" href="#delall-hack" id="delall-hack"><h1>Delall Hack</h1></a>
 <p>Grepping the codebase for &quot;Delall&quot; turns up this comment in <code>transform.rs</code>:</p>
 <pre><code>// &quot;Delall&quot; transform hack to avoid fully deleted elements that

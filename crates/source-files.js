@@ -1,5 +1,5 @@
 var N = null;var sourcesIndex = {};
-sourcesIndex['build_tools'] = {"name":"","dirs":[{"name":"cargo_watch","dirs":[],"files":["mod.rs"]},{"name":"mdbook_bin","dirs":[],"files":["mod.rs","serve.rs","svgbob.rs","watch.rs"]}],"files":["main.rs"]};
+sourcesIndex['build_tools'] = {"name":"","dirs":[{"name":"cargo_watch","dirs":[],"files":["mod.rs"]},{"name":"mdbook_bin","dirs":[],"files":["mod.rs","preprocessors.rs","serve.rs","watch.rs"]}],"files":["main.rs"]};
 sourcesIndex['edit_client'] = {"name":"","dirs":[{"name":"client","dirs":[{"name":"actions","dirs":[],"files":["caret.rs","identify.rs","modify.rs","styles.rs"]}],"files":["actions.rs","clientdoc.rs"]},{"name":"walkers","dirs":[],"files":["caretstepper.rs"]}],"files":["client.rs","lib.rs","log.rs","monkey.rs","proxy.rs","random.rs","walkers.rs"]};
 sourcesIndex['edit_client_proxy'] = {"name":"","dirs":[],"files":["edit-client-proxy.rs"]};
 sourcesIndex['edit_common'] = {"name":"","dirs":[{"name":"markdown","dirs":[],"files":["de.rs","mod.rs","ser.rs"]}],"files":["commands.rs","lib.rs","simple_ws.rs"]};
