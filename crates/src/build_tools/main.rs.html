@@ -974,7 +974,6 @@
 <span id="974">974</span>
 <span id="975">975</span>
 <span id="976">976</span>
-<span id="977">977</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Don&#39;t add additional noise to the build tools.</span>
 <span class="comment">// #![deny(warnings)]</span>
@@ -1910,10 +1909,9 @@
             <span class="kw">let</span> <span class="ident">docs_dir</span> <span class="op">=</span> <span class="ident">Path</span>::<span class="ident">new</span>(<span class="string">&quot;docs&quot;</span>);
             <span class="macro">eprintln</span><span class="macro">!</span>(<span class="string">&quot;Building {:?}&quot;</span>, <span class="ident">docs_dir</span>);
 
-            <span class="ident">MDBook</span>::<span class="ident">load</span>(<span class="kw-2">&amp;</span><span class="ident">docs_dir</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;Could not load mdbook&quot;</span>)
-                .<span class="ident">build</span>()
-                .<span class="ident">expect</span>(<span class="string">&quot;Could not build mdbook&quot;</span>);
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">book</span> <span class="op">=</span> <span class="ident">MDBook</span>::<span class="ident">load</span>(<span class="kw-2">&amp;</span><span class="ident">docs_dir</span>).<span class="ident">expect</span>(<span class="string">&quot;Could not load mdbook&quot;</span>);
+            <span class="kw">crate</span>::<span class="ident">mdbook_bin</span>::<span class="ident">inject_preprocessors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">book</span>);
+            <span class="ident">book</span>.<span class="ident">build</span>().<span class="ident">expect</span>(<span class="string">&quot;Could not build mdbook&quot;</span>);
         }
 
         <span class="ident">Cli</span>::<span class="ident">BookOnly</span> <span class="op">=&gt;</span> {
