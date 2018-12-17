@@ -4,26 +4,37 @@ edit-text is built from the ground up as a collaborative text editor. It uses op
 
 A client runs in a browser: text editing and synchronization code is written in Rust and cross-compiled to WebAssembly, and frontend code is written in TypeScript.
 
-Here's a rough diagram:
+Here's a diagram demonstrating the different components:
 
+```svgbob
++--------+        +---------------+--------------+        +--------------+
+| Server | <--+-->|   Client A    |  Controller  |<------>|   Frontend   |
+| (Rust) |    |   |---------------'--------------|        | (TypeScript) |
+|        |    |   |         (Rust + Wasm)        |        |              |
++--------+    |   +------------------------------+        +--------------+
+              |
+              |-----> Client B
+              |
+              |-----> Client C
+              |
+              +-----> ...
 ```
- Server <-+--> Client <--------> Frontend
- (Rust)   | (Rust + Wasm)     (TypeScript)
-          |
-          |--> Client <--------> Frontend
-          |--> Client <--------> Frontend
-          \--> ...
-```
+
+Notice that Client and Controller are part of the same component. This is useful
+from an API perspective: commands that are addressed to the client will always
+originate from the server, and commands addressed to the Controller will always
+originate from the frontend. On the implementation level, however, Client and
+Controller are the same process.
 
 ## Server APIs
 
 The server performs document synchronization. It is the "server" component that orchestrates simultaneous document modifications which happen on several Users.
 
-```
-dev: 0.0.0.0:8000/  prod: /            HTML Server
-dev: 0.0.0.0:8002/  prod: /$/ws        WebSocket
-dev: 0.0.0.0:8003/  prod: /$/graphql   GraphQL
-```
+| Port | Path Mapping | Description 
+|------|------|-------------
+| 8000 | /    | HTML Server
+| 8002 | /$/ws    | WebSocket
+| 8003 | /$/graphql    | GraphQL
 
 HTML is served from `/`. Static versions of each page are available before scripting is fully downloaded.
 
@@ -42,7 +53,6 @@ The frontend invokes the client over a `wasm-bindgen` bridge, exchanging JSON me
 The top-level crates/modules are these:
 
 * oatie, the operational transform crate
-* simple-ws, a thin websocket wrapper
 * edit-common, the shared code crate
 * edit-client, the client crate
 * edit-server, the server crate

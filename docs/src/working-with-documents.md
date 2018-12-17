@@ -2,7 +2,7 @@
 
 The contents of a page is represented as a **Document**. For example, the following "Hello world!" document:
 
-<img width="1189" alt="image" border="1" src="https://user-images.githubusercontent.com/80639/50059231-1737f500-0152-11e9-8704-d133d6b19e66.png">
+<img width="1189" alt="image" src="https://user-images.githubusercontent.com/80639/50059231-1737f500-0152-11e9-8704-d133d6b19e66.png">
 
 May be represeted with the following `DocSpan` in Rust:
 

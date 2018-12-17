@@ -86,6 +86,8 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 pub fn execute(args: &ArgMatches, book_dir: &Path) -> Result<()> {
     let mut book = MDBook::load(&book_dir)?;
 
+    book.with_preprecessor(super::SvgbobPreprocessor);
+
     let port = args.value_of("port").unwrap();
     let ws_port = args.value_of("websocket-port").unwrap();
     let hostname = args.value_of("hostname").unwrap();
@@ -132,6 +134,7 @@ pub fn execute(args: &ArgMatches, book_dir: &Path) -> Result<()> {
 
         let result = MDBook::load(&book_dir)
             .and_then(|mut b| {
+                b.with_preprecessor(super::SvgbobPreprocessor);
                 b.config
                     .set("output.html.livereload-url", &livereload_url)?;
                 Ok(b)

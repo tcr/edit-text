@@ -32,11 +32,16 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 
 // Watch command implementation
 pub fn execute(args: &ArgMatches, book_dir: &Path) -> Result<()> {
-    let book = MDBook::load(&book_dir)?;
+    let mut book = MDBook::load(&book_dir)?;
+
+    book.with_preprecessor(super::SvgbobPreprocessor);
 
     trigger_on_change(&book, |path, book_dir| {
         info!("File changed: {:?}\nBuilding book...\n", path);
-        let result = MDBook::load(&book_dir).and_then(|b| b.build());
+        let result = MDBook::load(&book_dir).and_then(|mut b| {
+            b.with_preprecessor(super::SvgbobPreprocessor);
+            b.build()
+        });
 
         if let Err(e) = result {
             error!("Unable to build the book");
