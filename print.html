@@ -32,7 +32,7 @@
             a[href="#.html"] { opacity: 0.5; pointer-events: none; }
 
             /* svgbob monospace */
-            svg.bob { font-family: monospace; display: block; margin: 1.6em auto; padding: 2em 3em; }
+            svg.bob { font-family: Monaco, monospace; display: block; margin: 1.6em auto; padding: 2em 3em; }
             svg.bob text { transform: translateX(-2px); }
 
             p > img:first-child, svg.bob { display: block; border: 1px solid #bbb; }
@@ -87,7 +87,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li><li><a href="#.html"><strong aria-hidden="true">1.2.</strong> Code Overview</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">2.</strong> Development</a></li><li><ol class="section"><li><a href="intro-system.html"><strong aria-hidden="true">2.1.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">2.2.</strong> Build System ./tools</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">2.3.</strong> Testing</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">2.3.1.</strong> Writing an integration test</a></li></ol></li></ol></li><li><a href="#.html"><strong aria-hidden="true">3.</strong> Working with Documents</a></li><li><ol class="section"><li><a href="working-with-documents.html"><strong aria-hidden="true">3.1.</strong> Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">3.2.</strong> Operations</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">3.3.</strong> Operational Transform</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">4.</strong> Rich Text</a></li><li><ol class="section"><li><a href="markdown.html"><strong aria-hidden="true">4.1.</strong> Markdown</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">4.2.</strong> Carets</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">5.</strong> Deployment and Usage</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">5.1.</strong> Locally</a></li><li><a href="#.html"><strong aria-hidden="true">5.2.</strong> Hosted Sandbox</a></li><li><a href="deploying.html"><strong aria-hidden="true">5.3.</strong> Dokku</a></li><li><a href="#.html"><strong aria-hidden="true">5.4.</strong> npm module</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">6.</strong> Appendix</a></li><li><ol class="section"><li><a href="diary-delall.html"><strong aria-hidden="true">6.1.</strong> Delall Hack</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li><li><a href="#.html"><strong aria-hidden="true">1.2.</strong> Code Overview</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">2.</strong> Development</a></li><li><ol class="section"><li><a href="intro-system.html"><strong aria-hidden="true">2.1.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">2.2.</strong> Build System ./tools</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">2.3.</strong> Testing</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">2.3.1.</strong> Writing an integration test</a></li></ol></li></ol></li><li><a href="#.html"><strong aria-hidden="true">3.</strong> Working with Documents</a></li><li><ol class="section"><li><a href="working-with-documents.html"><strong aria-hidden="true">3.1.</strong> Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">3.2.</strong> Operations</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">3.3.</strong> Operational Transform</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">4.</strong> Rich Text</a></li><li><ol class="section"><li><a href="markdown.html"><strong aria-hidden="true">4.1.</strong> Markdown</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">4.2.</strong> Carets</a></li></ol></li><li><a href="frontend.html"><strong aria-hidden="true">5.</strong> Frontend</a></li><li><ol class="section"><li><a href="server-apis.html"><strong aria-hidden="true">5.1.</strong> Server APIs</a></li><li><a href="editor-component.html"><strong aria-hidden="true">5.2.</strong> Editor Component</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">6.</strong> Deployment and Usage</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">6.1.</strong> Running as a binary</a></li><li><a href="#.html"><strong aria-hidden="true">6.2.</strong> Hosted Sandbox</a></li><li><a href="deploying.html"><strong aria-hidden="true">6.3.</strong> Dokku</a></li><li><a href="#.html"><strong aria-hidden="true">6.4.</strong> npm module</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">7.</strong> Appendix</a></li><li><ol class="section"><li><a href="diary-delall.html"><strong aria-hidden="true">7.1.</strong> Delall Hack</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -214,47 +214,63 @@ v1.10.1  # for example
 <a class="header" href="#appendix" id="appendix"><h1>Appendix</h1></a>
 <a class="header" href="#appendix-1" id="appendix-1"><h1>Appendix</h1></a>
 <a class="header" href="#system-overview" id="system-overview"><h1>System Overview</h1></a>
-<p>edit-text is built from the ground up as a collaborative text editor. It uses operational transform to merge updates from multiple clients, so it requires a synchronizing server. The server is also in charge of storing page content, so that every page can be shared via its URL.</p>
-<p>A client runs in a browser: text editing and synchronization code is written in Rust and cross-compiled to WebAssembly, and frontend code is written in TypeScript.</p>
-<p>Here's a diagram demonstrating the different components:</p>
-<pre><code class="language-svgbob">+--------+        +---------------+--------------+        +--------------+
-| Server | &lt;--+--&gt;|   Client A    |  Controller  |&lt;------&gt;|   Frontend   |
-| (Rust) |    |   |---------------'--------------|        | (TypeScript) |
-|        |    |   |         (Rust + Wasm)        |        |              |
-+--------+    |   +------------------------------+        +--------------+
-              |
-              |-----&gt; Client B
-              |
-              |-----&gt; Client C
-              |
-              +-----&gt; ...
+<p>edit-text is built from the ground up as a collaborative text editor. It uses
+operational transform to merge updates from multiple clients, so it requires a
+synchronizing server. The server is also in charge of storing page content, so
+that every page can be shared via its URL.</p>
+<p>There are four components in the system:</p>
+<ul>
+<li>The <strong>Server</strong>, which serves HTTP content, a GraphQL endpoint for performing
+page-level commands, and a WebSocket endpoint for synchronizing document
+content.</li>
+<li>The <strong>Client</strong>, which can connect to a server and synchronize its document
+content. It sends client-side modifications (in the form of operations) to the
+server, and receives updated content (in the form of operations) from the server
+after any client submits an update.</li>
+<li>The <strong>Controller</strong>, which receives UI-level event updates from the frontend
+and converts it into operations on the client document.</li>
+<li>The <strong>Frontend</strong>, which is the editor UI. The current document is rendered
+as a component inside the frontend, and interactions with this component are
+forwarded to the controller. The frontend also manages the toolbar,
+notifications, and dialog boxes.</li>
+</ul>
+<p>Each of these four components can be controlled by their <strong>commands</strong>, defined
+in <code>commands.rs</code>, effectively providing an asynchronous API for each component
+in the system.</p>
+<p>Here is a diagram representing communication between the Server, Client,
+Controller, and Frontend:</p>
+<pre><code class="language-svgbob">+----------+         +--------------+--------------+        +--------------+
+|          |         |              |              |        |              |
+|  Server  | &lt;--+---&gt;|   Client A   |  Controller  |&lt;------&gt;|   Frontend   |
+|          |    |    |              |              |        |              |
++----------+    |    +--------------+--------------+        +--------------+
+   (Rust)       |          (Rust + WebAssembly)               (TypeScript)
+                |
+                |
+                |-----&gt; Client B
+                |
+                |-----&gt; Client C
+                |
+                +-----&gt; ...
 </code></pre>
-<p>Notice that Client and Controller are part of the same component. This is useful
+<p>Notice that <strong>Client</strong> and <strong>Controller</strong> are part of the same component. This is useful
 from an API perspective: commands that are addressed to the client will always
 originate from the server, and commands addressed to the Controller will always
 originate from the frontend. On the implementation level, however, Client and
 Controller are the same process.</p>
-<a class="header" href="#server-apis" id="server-apis"><h2>Server APIs</h2></a>
-<p>The server performs document synchronization. It is the &quot;server&quot; component that orchestrates simultaneous document modifications which happen on several Users.</p>
-<table><thead><tr><th> Port </th><th> Path Mapping </th><th> Description</th></tr></thead><tbody>
-<tr><td> 8000 </td><td> /    </td><td> HTML Server</td></tr>
-<tr><td> 8002 </td><td> /$/ws    </td><td> WebSocket</td></tr>
-<tr><td> 8003 </td><td> /$/graphql    </td><td> GraphQL</td></tr>
-</tbody></table>
-<p>HTML is served from <code>/</code>. Static versions of each page are available before scripting is fully downloaded.</p>
-<p>When the client-side script connects the WebSocket, the server recognizes it as a new synchronization client and reloads the content of the page. Editing is then enabled. Each edit made by the client is sent to the server as an operation, and the server computes and pushes push new deltas to the client.</p>
-<p>There is an additional API exposed as GraphQL for non-synchronization tasks. This exposes mutations like updating a page with Markdown, downloading and renaming pages, and other page-editing features.</p>
-<a class="header" href="#frontend" id="frontend"><h2>Frontend</h2></a>
-<p>The edit-text client is written in Rust and can be run both in the browser (to power the editor) or from the command line (for tools like the client proxy, and client replay).</p>
-<p>The frontend invokes the client over a <code>wasm-bindgen</code> bridge, exchanging JSON messages (&quot;commands&quot;). The frontend exposes an editor interface using React. The client instructs the frontend on what text styling options to expose, and responds to keypresses with updated HTML to render in the editor.</p>
+<p>The server is a command-line program called <code>edit-server</code>. In release mode, it
+bundles all client-side code and can be uploaded to a server to run the program
+directly.</p>
+<p>If you use edit-text in its normal configuration, the Client, Controller, and Frontend all run in your browser as WebAssembly and JavaScript. In proxy mode, the Client and Controller run as a command line program.</p>
+<p>The Frontend is written in TypeScript.</p>
 <a class="header" href="#cratemodule-overview" id="cratemodule-overview"><h2>Crate/Module overview</h2></a>
 <p>The top-level crates/modules are these:</p>
 <ul>
-<li>oatie, the operational transform crate</li>
-<li>edit-common, the shared code crate</li>
-<li>edit-client, the client crate</li>
-<li>edit-server, the server crate</li>
-<li>edit-frontend, the TypeScript module using webpack</li>
+<li><code>oatie/</code> is the operational transform library</li>
+<li><code>edit-common/</code> contains code shared by all edit-* crates</li>
+<li><code>edit-client/</code> contains the Client and Controller</li>
+<li><code>edit-server/</code> contains the Server binary</li>
+<li><code>edit-frontend/</code> contains the Frontend code as a Node module compiled with webpack</li>
 </ul>
 <a class="header" href="#build-tool-tools" id="build-tool-tools"><h1>Build Tool ./tools</h1></a>
 <p><code>./tools</code> is the build tool. Invocation will be different if you are on Windows or a Linux or macOS system:</p>
@@ -345,14 +361,11 @@ Controller are the same process.</p>
 <p>The contents of a page is represented as a <strong>Document</strong>. For example, the following &quot;Hello world!&quot; document:</p>
 <p><img width="1189" alt="image" src="https://user-images.githubusercontent.com/80639/50059231-1737f500-0152-11e9-8704-d133d6b19e66.png"></p>
 <p>May be represeted with the following <code>DocSpan</code> in Rust:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-doc_span![
+<pre><code class="language-rust noplaypen">doc_span![
     DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [&quot;Hello world!&quot;]),
     DocGroup({&quot;tag&quot;: &quot;p&quot;}, [&quot;This is a document.&quot;]),
 ]
-#}</code></pre></pre>
+</code></pre>
 <p>And can also be exported as Markdown:</p>
 <pre><code class="language-markdown"># Hello world!
 
@@ -361,10 +374,7 @@ This is a document.
 <a class="header" href="#text-and-groups" id="text-and-groups"><h2>Text and Groups</h2></a>
 <p>Documents are composed of <strong>text</strong> and <strong>groups</strong>. Text is a unicode string modeled by the <code>DocString</code> type. Groups are similar to HTML elements, having a set of &quot;attributes&quot; and then a vector of children which can be either text or other groups.</p>
 <p>In Rust, <code>enum DocElement</code> models these two types:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-type DocSpan = Vec&lt;DocElement&gt;;
+<pre><code class="language-rust noplaypen">type DocSpan = Vec&lt;DocElement&gt;;
 
 type Attrs = HashMap&lt;String, String&gt;;
 
@@ -372,19 +382,16 @@ enum DocElement {
     DocChars(DocString),
     DocGroup(Attrs, DocSpan),
 }
-#}</code></pre></pre>
+</code></pre>
 <p>You can use the <code>oatie::macros::doc_span!</code> macro to conveniently create <code>DocSpan</code> objects:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-doc_span![
+<pre><code class="language-rust noplaypen">doc_span![
     DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [&quot;Title&quot;]),
     DocGroup({&quot;tag&quot;: &quot;bullet&quot;}, [
         DocGroup({&quot;tag&quot;: &quot;p&quot;}, [&quot;Groups can be nested.&quot;]),
         DocGroup({&quot;tag&quot;: &quot;p&quot;}, [&quot;With multiple elements.&quot;]),
     ]),
 ]
-#}</code></pre></pre>
+</code></pre>
 <a class="header" href="#documents-and-operations" id="documents-and-operations"><h2>Documents and Operations</h2></a>
 <p>Documents can <a href="working-with-operations.html">have operations performed on them</a> to result in a new, modified document.</p>
 <a class="header" href="#schema" id="schema"><h2>Schema</h2></a>
@@ -393,17 +400,11 @@ doc_span![
 <p>Operations are sequences of steps that when applied to a document, modifies the document by adding or removing content. Operations are
 broken down into two stages: deleting content, then adding content. This pair of &quot;delete&quot; and &quot;add&quot; steps makes up an operation, which is performed atomically on a document, ensuring that the result is always valid.</p>
 <p>Operations can be &quot;applied&quot; to a document, producing a new document:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-let updated_doc = Op::apply(&amp;doc, &amp;operation);
-#}</code></pre></pre>
+<pre><code class="language-rust noplaypen">let updated_doc = Op::apply(&amp;doc, &amp;operation);
+</code></pre>
 <p>When applying multiple operation pairs in a row, you can also &quot;compose&quot; them to
 produce a single operation that would produce the same result:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-let updated_doc_1 = Op::apply(&amp;doc, &amp;operation_1);
+<pre><code class="language-rust noplaypen">let updated_doc_1 = Op::apply(&amp;doc, &amp;operation_1);
 let updated_doc_2 = Op::apply(&amp;updated_doc_1, &amp;operation_2);
 
 // Same result
@@ -411,7 +412,7 @@ let updated_doc_2 = Op::apply(
     &amp;doc,
     &amp;Op::compose(&amp;operation_1, &amp;operation_2), // Composed operation
 );
-#}</code></pre></pre>
+</code></pre>
 <p>You can also transform two concurrent operation; see the section on <a href="rtf-ot.html">operational transform</a>.</p>
 <a class="header" href="#example-combining-two-groups" id="example-combining-two-groups"><h2>Example: Combining Two Groups</h2></a>
 <p>Let's start with a simple document composed of a title and a paragraph. The document
@@ -421,23 +422,17 @@ looks like the following in Markdown:</p>
 Body
 </code></pre>
 <p>And would have the following document representation:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-let doc = doc_span![
+<pre><code class="language-rust noplaypen">let doc = doc_span![
     DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [DocChars(&quot;Title&quot;)]),
     DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocChars(&quot;Body&quot;)]),
 ];
-#}</code></pre></pre>
+</code></pre>
 <p>Imagine the user starts editing. The user places their caret to the left of the word &quot;Body&quot;, then hits backspace. What will happen is that the paragraph containing &quot;Body&quot; and the header containing the text &quot;Title&quot; will become combined into one header with the text &quot;TitleBody&quot;.</p>
 <p>There are a few ways to can imagine combining these two elements. The way in which edit-text implements this is by first deleting
 the current and preceding blocks while preserving their content, then creating a new element
 which spans the content of both blocks.</p>
 <p>First, we would delete each block group:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-let deletion = del_span![
+<pre><code class="language-rust noplaypen">let deletion = del_span![
     DelGroup([DelSkip(5)]), // Five characters in &quot;Title&quot;
     DelGroup([DelSkip(4)]), // Four characters in &quot;Body&quot;
 ];
@@ -446,12 +441,9 @@ assert_eq!(
     Op::apply_deletion(&amp;doc, &amp;deletion),
     doc_span![DocChars(&quot;TitleBody&quot;)],
 );
-#}</code></pre></pre>
+</code></pre>
 <p>The result is just the characters &quot;TitleBody&quot;. In edit-text, you are not allowed to have top-level textual content that is not contained inside of a group. So in order to produce a valid document, we now have to wrap the contents of both groups inside of a new group:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-let addition = del_span![
+<pre><code class="language-rust noplaypen">let addition = del_span![
     AddGroup({&quot;tag&quot;: &quot;h1&quot;}, [
         AddSkip(9) // Nine characters in &quot;Titlebody&quot;
     ])
@@ -463,12 +455,9 @@ assert_eq!(
         DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [DocChars(&quot;TitleBody&quot;)]),
     ];
 );
-#}</code></pre></pre>
+</code></pre>
 <p>A deletion followed by an addition is common enough in edit-text that you can work with it as a single datatype. The method <code>Op::apply</code> takes a document and a <code>&amp;(DelSpan, AddSpan)</code> type, and returns a modified document.</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-type Op = (DelSpan, AddSpan);
+<pre><code class="language-rust noplaypen">type Op = (DelSpan, AddSpan);
 
 let valid_op: Op = (
     del_span![
@@ -486,7 +475,7 @@ assert_eq!(
         DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [DocChars(&quot;TitleBody&quot;)]),
     ];
 );
-#}</code></pre></pre>
+</code></pre>
 <a class="header" href="#constaints" id="constaints"><h2>Constaints</h2></a>
 <p>Applying operations can fail. Usually, an operation is written to modify a known
 document state, and applying that operation to the document it was intended for
@@ -494,28 +483,22 @@ should never fail.</p>
 <p>NOTE: At the moment, if your apply an operation improperly to document and it
 fails, it will likely panic!() rather than returning an Error object.</p>
 <a class="header" href="#deletion-and-addition-elements" id="deletion-and-addition-elements"><h2>Deletion and Addition Elements</h2></a>
-<p>There are a lot of</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-enum DelElement {
+<p>These are all the steps a Deletion or Addition can perform.</p>
+<pre><code class="language-rust noplaypen">enum DelElement {
     /// ...
     DelSkip(usize),
     DelWithGroup(DelSpan),
     DelChars(usize),
     DelGroup(DelSpan),
 }
-#}</code></pre></pre>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-enum AddElement {
+</code></pre>
+<pre><code class="language-rust noplaypen">enum AddElement {
     AddSkip(usize),
     AddWithGroup(AddSpan),
     AddChars(DocString),
     AddGroup(Attrs, AddSpan),
 }
-#}</code></pre></pre>
+</code></pre>
 <a class="header" href="#operational-transform" id="operational-transform"><h1>Operational Transform</h1></a>
 <p>When two clients A and B make an operation concurrently, one way to get them back in sync is to determine what would operation B look like if operation A had happened first, and vice versa. If we can guarantee that this result on both clients produce the same output, meaning if we can guarantee the following (where &quot;:&quot; means &quot;composed with&quot;):</p>
 <pre><code> operation A : (operation B as if A had happened first)
@@ -660,6 +643,32 @@ hr =&gt; Horizontal rule
 <p>All editing operations that delete carets must also recreate the carets (possibly in a new location) to preserve there being one anchor and one focus caret for each client at all times.</p>
 <a class="header" href="#cursors" id="cursors"><h2>Cursors</h2></a>
 <p>A related concept in edit-text is a cursor, represented by the <code>CurSpan</code> type, which specifies a single discrete position inside of the document (<code>DocSpan</code> type). When a user clicks their mouse, this is translated to a specific cursor inside the document. This can then be converted into a position to insert a caret (see the <code>cur_to_caret</code> function). A caret can have fewer valid positions than there are cursor positions, so this conversion is lossy.</p>
+<a class="header" href="#frontend" id="frontend"><h1>Frontend</h1></a>
+<p>The Frontend is written in TypeScript and communicates with a WebAssembly
+component containing the Client and Controller.</p>
+<p>The edit-text client is written in Rust and can be run both in the browser (to
+power the editor) or from the command line (for tools like the client proxy, and client replay).</p>
+<p>The frontend invokes the client over a <code>wasm-bindgen</code> bridge, exchanging JSON messages (&quot;commands&quot;). The frontend exposes an editor interface using React. The client instructs the frontend on what text styling options to expose, and responds to keypresses with updated HTML to render in the editor.</p>
+<p>The frontend is written in React.</p>
+<a class="header" href="#server-apis" id="server-apis"><h1>Server APIs</h1></a>
+<p>The server performs document synchronization. It is the &quot;server&quot; component that orchestrates simultaneous document modifications which happen on several Users.</p>
+<table><thead><tr><th> Port </th><th> Path Mapping </th><th> Description</th></tr></thead><tbody>
+<tr><td> 8000 </td><td> /    </td><td> HTML Server</td></tr>
+<tr><td> 8002 </td><td> /$/ws    </td><td> WebSocket</td></tr>
+<tr><td> 8003 </td><td> /$/graphql    </td><td> GraphQL</td></tr>
+</tbody></table>
+<p>HTML is served from <code>/</code>. Static versions of each page are available before scripting is fully downloaded.</p>
+<p>When the client-side script connects the WebSocket, the server recognizes it as a new synchronization client and reloads the content of the page. Editing is then enabled. Each edit made by the client is sent to the server as an operation, and the server computes and pushes push new deltas to the client.</p>
+<p>There is an additional API exposed as GraphQL for non-synchronization tasks. This exposes mutations like updating a page with Markdown, downloading and renaming pages, and other page-editing features.# Server APIs</p>
+<a class="header" href="#editor-component" id="editor-component"><h1>Editor Component</h1></a>
+<p>The editor is a react component.</p>
+<pre><code class="language-javascript">&lt;Editor
+    content={string}
+    controller={ControllerImpl}
+    editorID={string}
+    disabled={boolean}
+/&gt;
+</code></pre>
 <a class="header" href="#appendix-4" id="appendix-4"><h1>Appendix</h1></a>
 <a class="header" href="#appendix-5" id="appendix-5"><h1>Appendix</h1></a>
 <a class="header" href="#appendix-6" id="appendix-6"><h1>Appendix</h1></a>
@@ -704,18 +713,12 @@ hr =&gt; Horizontal rule
 <p><strong>NOTE:</strong> This is a long, but realistic, example. Imagine every client connected that has a ton of lag, accuring operations until it waits for a server response.</p>
 <p>When transforming two operations, oatie (so far) does not need to know anything about the document the operation will eventually operate on in order to compose or transform two operations. In order to maintain this property, some pedantic cases arise where we need to think carefully what the result of a transform will be.</p>
 <p>Say two clients have the following document:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-&lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/h1&gt;
+<pre><code class="language-rust noplaypen">&lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/h1&gt;
 &lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world!&lt;/p&gt;
-#}</code></pre></pre>
+</code></pre>
 <a class="header" href="#the-journey-of-client-a" id="the-journey-of-client-a"><h3>The journey of Client A</h3></a>
 <p>Client A hits backspace, which will collapse the two block-level elements (<code>h1</code> and <code>p</code>) into one. The document there will now look like this:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-// This operation:
+<pre><code class="language-rust noplaypen">// This operation:
 Op([
     DelGroup([DelSkip(7)]), DelGroup([DelSkip(8)]),
 ], [
@@ -724,12 +727,9 @@ Op([
 
 // New Document
 &lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;caret client=&quot;A&quot; /&gt; world!&lt;/p&gt;
-#}</code></pre></pre>
+</code></pre>
 <p>Next, Client A forward-deletes everything that existed in the second paragraph (<code>&quot; world!&quot;</code>). So the document now looks like this:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-// This operation:
+<pre><code class="language-rust noplaypen">// This operation:
 Op([
     DelWithGroup([DelSkip(8), DelChars(7)]),
 ], [
@@ -744,12 +744,9 @@ Op([
 
 // New document
 &lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;caret client=&quot;A&quot; /&gt;&lt;/p&gt;
-#}</code></pre></pre>
+</code></pre>
 <p>Lastly (for good measure) Client A clicks at the beginning of the first paragraph to move its caret:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-// This operation:
+<pre><code class="language-rust noplaypen">// This operation:
 Op([
     DelWithGroup([DelSkip(7), DelGroup([])]),
 ], [
@@ -765,13 +762,10 @@ Op([
 
 // New document
 &lt;h1&gt;&lt;caret client=&quot;A&quot; /&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/p&gt;
-#}</code></pre></pre>
+</code></pre>
 <a class="header" href="#the-journey-of-client-b" id="the-journey-of-client-b"><h3>The journey of Client B</h3></a>
 <p>Client B is less active, has less lag, or just less to contribute. It simply moves its cursor to the second block...:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-// This operation:
+<pre><code class="language-rust noplaypen">// This operation:
 Op([
     DelGroup([DelGroup([]), DelSkip(7)]),
 ], [
@@ -781,12 +775,9 @@ Op([
 // New Document
 &lt;h1&gt;Hello &lt;/h1&gt;
 &lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world!&lt;caret client=B&quot; /&gt;&lt;/p&gt;
-#}</code></pre></pre>
+</code></pre>
 <p>Then Client B hits backspace:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-// This operation:
+<pre><code class="language-rust noplaypen">// This operation:
 Op([
     DelSkip(1), DelWithGroup([DelSkip(7), DelChars(1)]),
 ], [
@@ -802,10 +793,10 @@ Op([
 // New Document
 &lt;h1&gt;Hello &lt;/h1&gt;
 &lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world&lt;caret client=B&quot; /&gt;&lt;/p&gt;
-#}</code></pre></pre>
+</code></pre>
 <a class="header" href="#transform" id="transform"><h3>Transform</h3></a>
 <p>In the end of this hypothetical, we are now transforming these two operations:</p>
-<pre><code>// Client A
+<pre><code class="language-rust noplaypen">// Client A
 Op([
     DelGroup([DelSkip(7)]), DelGroup([DelGroup([]), DelChars(7)]),
 ], [
@@ -820,10 +811,7 @@ Op([
 ])
 </code></pre>
 <p>And we know exactly what each result is generated from applying each operation to our original document (first shown at the beginning of this document):</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-// Original document
+<pre><code class="language-rust noplaypen">// Original document
 &lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/h1&gt;
 &lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world!&lt;/p&gt;
 
@@ -834,7 +822,7 @@ Op([
 // Client B
 &lt;h1&gt;Hello &lt;/h1&gt;
 &lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world&lt;caret client=B&quot; /&gt;&lt;/p&gt;
-#}</code></pre></pre>
+</code></pre>
 <p>But when transforming, by design, we avoid needing knowledge of what the document looks like. So let's evaluate these operations as though we didn't know what the result was going to look like.</p>
 <p>In particular, we want to look at how the paragraph, <code>&quot; world!&quot;</code>, is modified. Client A has deleted it entirely, whereas Client B deleted a character and inserted its caret:</p>
 <pre><code>Op([DelGroup([DelGroup([]), DelChars(7)])], [])

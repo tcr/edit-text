@@ -32,7 +32,7 @@
             a[href="#.html"] { opacity: 0.5; pointer-events: none; }
 
             /* svgbob monospace */
-            svg.bob { font-family: monospace; display: block; margin: 1.6em auto; padding: 2em 3em; }
+            svg.bob { font-family: Monaco, monospace; display: block; margin: 1.6em auto; padding: 2em 3em; }
             svg.bob text { transform: translateX(-2px); }
 
             p > img:first-child, svg.bob { display: block; border: 1px solid #bbb; }
@@ -87,7 +87,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li><li><a href="#.html"><strong aria-hidden="true">1.2.</strong> Code Overview</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">2.</strong> Development</a></li><li><ol class="section"><li><a href="intro-system.html"><strong aria-hidden="true">2.1.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">2.2.</strong> Build System ./tools</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">2.3.</strong> Testing</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">2.3.1.</strong> Writing an integration test</a></li></ol></li></ol></li><li><a href="#.html"><strong aria-hidden="true">3.</strong> Working with Documents</a></li><li><ol class="section"><li><a href="working-with-documents.html"><strong aria-hidden="true">3.1.</strong> Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">3.2.</strong> Operations</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">3.3.</strong> Operational Transform</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">4.</strong> Rich Text</a></li><li><ol class="section"><li><a href="markdown.html"><strong aria-hidden="true">4.1.</strong> Markdown</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">4.2.</strong> Carets</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">5.</strong> Deployment and Usage</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">5.1.</strong> Locally</a></li><li><a href="#.html"><strong aria-hidden="true">5.2.</strong> Hosted Sandbox</a></li><li><a href="deploying.html"><strong aria-hidden="true">5.3.</strong> Dokku</a></li><li><a href="#.html"><strong aria-hidden="true">5.4.</strong> npm module</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">6.</strong> Appendix</a></li><li><ol class="section"><li><a href="diary-delall.html" class="active"><strong aria-hidden="true">6.1.</strong> Delall Hack</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li><li><a href="#.html"><strong aria-hidden="true">1.2.</strong> Code Overview</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">2.</strong> Development</a></li><li><ol class="section"><li><a href="intro-system.html"><strong aria-hidden="true">2.1.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">2.2.</strong> Build System ./tools</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">2.3.</strong> Testing</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">2.3.1.</strong> Writing an integration test</a></li></ol></li></ol></li><li><a href="#.html"><strong aria-hidden="true">3.</strong> Working with Documents</a></li><li><ol class="section"><li><a href="working-with-documents.html"><strong aria-hidden="true">3.1.</strong> Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">3.2.</strong> Operations</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">3.3.</strong> Operational Transform</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">4.</strong> Rich Text</a></li><li><ol class="section"><li><a href="markdown.html"><strong aria-hidden="true">4.1.</strong> Markdown</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">4.2.</strong> Carets</a></li></ol></li><li><a href="frontend.html"><strong aria-hidden="true">5.</strong> Frontend</a></li><li><ol class="section"><li><a href="server-apis.html"><strong aria-hidden="true">5.1.</strong> Server APIs</a></li><li><a href="editor-component.html"><strong aria-hidden="true">5.2.</strong> Editor Component</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">6.</strong> Deployment and Usage</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">6.1.</strong> Running as a binary</a></li><li><a href="#.html"><strong aria-hidden="true">6.2.</strong> Hosted Sandbox</a></li><li><a href="deploying.html"><strong aria-hidden="true">6.3.</strong> Dokku</a></li><li><a href="#.html"><strong aria-hidden="true">6.4.</strong> npm module</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">7.</strong> Appendix</a></li><li><ol class="section"><li><a href="diary-delall.html" class="active"><strong aria-hidden="true">7.1.</strong> Delall Hack</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -176,18 +176,12 @@
 <p><strong>NOTE:</strong> This is a long, but realistic, example. Imagine every client connected that has a ton of lag, accuring operations until it waits for a server response.</p>
 <p>When transforming two operations, oatie (so far) does not need to know anything about the document the operation will eventually operate on in order to compose or transform two operations. In order to maintain this property, some pedantic cases arise where we need to think carefully what the result of a transform will be.</p>
 <p>Say two clients have the following document:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-&lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/h1&gt;
+<pre><code class="language-rust noplaypen">&lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/h1&gt;
 &lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world!&lt;/p&gt;
-#}</code></pre></pre>
+</code></pre>
 <a class="header" href="#the-journey-of-client-a" id="the-journey-of-client-a"><h3>The journey of Client A</h3></a>
 <p>Client A hits backspace, which will collapse the two block-level elements (<code>h1</code> and <code>p</code>) into one. The document there will now look like this:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-// This operation:
+<pre><code class="language-rust noplaypen">// This operation:
 Op([
     DelGroup([DelSkip(7)]), DelGroup([DelSkip(8)]),
 ], [
@@ -196,12 +190,9 @@ Op([
 
 // New Document
 &lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;caret client=&quot;A&quot; /&gt; world!&lt;/p&gt;
-#}</code></pre></pre>
+</code></pre>
 <p>Next, Client A forward-deletes everything that existed in the second paragraph (<code>&quot; world!&quot;</code>). So the document now looks like this:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-// This operation:
+<pre><code class="language-rust noplaypen">// This operation:
 Op([
     DelWithGroup([DelSkip(8), DelChars(7)]),
 ], [
@@ -216,12 +207,9 @@ Op([
 
 // New document
 &lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;caret client=&quot;A&quot; /&gt;&lt;/p&gt;
-#}</code></pre></pre>
+</code></pre>
 <p>Lastly (for good measure) Client A clicks at the beginning of the first paragraph to move its caret:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-// This operation:
+<pre><code class="language-rust noplaypen">// This operation:
 Op([
     DelWithGroup([DelSkip(7), DelGroup([])]),
 ], [
@@ -237,13 +225,10 @@ Op([
 
 // New document
 &lt;h1&gt;&lt;caret client=&quot;A&quot; /&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/p&gt;
-#}</code></pre></pre>
+</code></pre>
 <a class="header" href="#the-journey-of-client-b" id="the-journey-of-client-b"><h3>The journey of Client B</h3></a>
 <p>Client B is less active, has less lag, or just less to contribute. It simply moves its cursor to the second block...:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-// This operation:
+<pre><code class="language-rust noplaypen">// This operation:
 Op([
     DelGroup([DelGroup([]), DelSkip(7)]),
 ], [
@@ -253,12 +238,9 @@ Op([
 // New Document
 &lt;h1&gt;Hello &lt;/h1&gt;
 &lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world!&lt;caret client=B&quot; /&gt;&lt;/p&gt;
-#}</code></pre></pre>
+</code></pre>
 <p>Then Client B hits backspace:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-// This operation:
+<pre><code class="language-rust noplaypen">// This operation:
 Op([
     DelSkip(1), DelWithGroup([DelSkip(7), DelChars(1)]),
 ], [
@@ -274,10 +256,10 @@ Op([
 // New Document
 &lt;h1&gt;Hello &lt;/h1&gt;
 &lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world&lt;caret client=B&quot; /&gt;&lt;/p&gt;
-#}</code></pre></pre>
+</code></pre>
 <a class="header" href="#transform" id="transform"><h3>Transform</h3></a>
 <p>In the end of this hypothetical, we are now transforming these two operations:</p>
-<pre><code>// Client A
+<pre><code class="language-rust noplaypen">// Client A
 Op([
     DelGroup([DelSkip(7)]), DelGroup([DelGroup([]), DelChars(7)]),
 ], [
@@ -292,10 +274,7 @@ Op([
 ])
 </code></pre>
 <p>And we know exactly what each result is generated from applying each operation to our original document (first shown at the beginning of this document):</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-// Original document
+<pre><code class="language-rust noplaypen">// Original document
 &lt;h1&gt;&lt;caret client=B&quot; /&gt;Hello &lt;/h1&gt;
 &lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world!&lt;/p&gt;
 
@@ -306,7 +285,7 @@ Op([
 // Client B
 &lt;h1&gt;Hello &lt;/h1&gt;
 &lt;p&gt;&lt;caret client=&quot;A&quot; /&gt; world&lt;caret client=B&quot; /&gt;&lt;/p&gt;
-#}</code></pre></pre>
+</code></pre>
 <p>But when transforming, by design, we avoid needing knowledge of what the document looks like. So let's evaluate these operations as though we didn't know what the result was going to look like.</p>
 <p>In particular, we want to look at how the paragraph, <code>&quot; world!&quot;</code>, is modified. Client A has deleted it entirely, whereas Client B deleted a character and inserted its caret:</p>
 <pre><code>Op([DelGroup([DelGroup([]), DelChars(7)])], [])
