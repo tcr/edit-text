@@ -1,24 +1,19 @@
 # Documents
 
-The contents of a page is represented as a **Document**. For example, the following "Hello world!" document:
+The contents of a page is stored as a **Document** object. For example, the following "Hello world!" document:
 
 <img width="1189" alt="image" src="https://user-images.githubusercontent.com/80639/50059231-1737f500-0152-11e9-8704-d133d6b19e66.png">
 
-May be represeted with the following `DocSpan` in Rust:
+May be created and manipulated in Rust:
 
 ```rust,noplaypen
-doc_span![
+let document = doc_span![
     DocGroup({"tag": "h1"}, ["Hello world!"]),
     DocGroup({"tag": "p"}, ["This is a document."]),
-]
-```
+];
 
-And can also be exported as Markdown:
-
-```markdown
-# Hello world!
-
-This is a document.
+// Convert this document to Markdown.
+let markdown = edit_common::markdown::doc_to_markdown(&document)?;
 ```
 
 ## Text and Groups
