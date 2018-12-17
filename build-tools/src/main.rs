@@ -932,10 +932,9 @@ fn run() -> Result<(), Error> {
             let docs_dir = Path::new("docs");
             eprintln!("Building {:?}", docs_dir);
 
-            MDBook::load(&docs_dir)
-                .expect("Could not load mdbook")
-                .build()
-                .expect("Could not build mdbook");
+            let mut book = MDBook::load(&docs_dir).expect("Could not load mdbook");
+            crate::mdbook_bin::inject_preprocessors(&mut book);
+            book.build().expect("Could not build mdbook");
         }
 
         Cli::BookOnly => {
