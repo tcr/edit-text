@@ -63,6 +63,9 @@ enum Cli {
     #[structopt(name = "book-build", about = "Builds the book.")]
     BookBuild,
 
+    #[structopt(name = "book-only-is-modified", raw(setting = "AppSettings::Hidden"))]
+    BookOnly,
+
     #[structopt(name = "book-watch", about = "Watches and rebuilds the book.")]
     BookWatch,
 
@@ -198,6 +201,28 @@ fn expect_yarn() {
     }
 }
 
+fn change_list_only_docs() -> Result<bool, Error> {
+    let output = command!(
+        "
+            git --no-pager diff --name-only HEAD..origin/master
+        "
+    )?
+    .output()?
+    .stdout;
+
+    eprintln!("touched files:");
+    String::from_utf8_lossy(&output)
+        .lines()
+        .for_each(|value| eprintln!(" - {}", value));
+    eprintln!();
+
+    // If only the docs/ folder has been modified, we only need
+    // to test if ./tools book-build is successful to merge.
+    Ok(String::from_utf8_lossy(&output)
+        .lines()
+        .all(|item| Path::new(item).starts_with("docs/")))
+}
+
 fn run() -> Result<(), Error> {
     // We want to set this to the executable directly, rather than cargo build,
     // because we can't re-build the currently running executable on Windows.
@@ -331,25 +356,7 @@ fn run() -> Result<(), Error> {
                 eprintln!();
             }
 
-            let output = command!(
-                "
-                    git --no-pager diff --name-only HEAD..origin/master
-                "
-            )?
-            .output()?
-            .stdout;
-
-            eprintln!("touched files:");
-            String::from_utf8_lossy(&output)
-                .lines()
-                .for_each(|value| eprintln!(" - {}", value));
-            eprintln!();
-
-            // If only the docs/ folder has been modified, we only need
-            // to test if ./tools book-build is successful to merge.
-            let only_docs = String::from_utf8_lossy(&output)
-                .lines()
-                .all(|item| Path::new(item).starts_with("docs/"));
+            let only_docs = change_list_only_docs()?;
 
             if only_docs {
                 // If only docs/ was modified, just build the book.
@@ -911,6 +918,10 @@ fn run() -> Result<(), Error> {
                 .expect("Could not load mdbook")
                 .build()
                 .expect("Could not build mdbook");
+        }
+
+        Cli::BookOnly => {
+            std::process::exit(if change_list_only_docs()? { 0 } else { 1 });
         }
 
         Cli::BookWatch => {

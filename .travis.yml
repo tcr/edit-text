@@ -59,7 +59,7 @@ script:
 after_success:
   # Delete the cargo registry, then cache resulting files
   - rm -rf /home/travis/.cargo/registry
-  - if [ $TRAVIS_EVENT_TYPE != "cron" ]; then cache-s3 --prefix="edit-text_linux_$(cat rust-toolchain)" save -p edit-frontend/node_modules/ -p ~/.cargo -p target --max-size=3GiB; fi
+  - if [ $TRAVIS_EVENT_TYPE != "cron" ] && ! ./tools book-only-is-modified; then cache-s3 --prefix="edit-text_linux_$(cat rust-toolchain)" save -p edit-frontend/node_modules/ -p ~/.cargo -p target --max-size=3GiB; fi
 
   # Export CNAME for gh-pages publishing
   - echo "docs.edit.io" > docs/book/CNAME

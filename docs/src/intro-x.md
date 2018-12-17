@@ -1,31 +1,31 @@
-# Build Tool ./tools
+# Build System ./tools
 
-`./tools` is the build tool. Invocation will be different if you are on Windows or a Linux or macOS system:
+`./tools` is the build tool. You can call this command from the root of the
+`edit-server/` directory. To see a list of build commands, run the following: 
 
 ```
-./tools help    # Linux, macOS, etc.
-.\tools help    # Windows
+./tools help
 ```
 
-Please substitute either `./tools` or `.\tools` in the examples below accordingly.
+NOTE: If you are on Windows running in the command prompt, you will need to
+invoke the build tool with `.\tools` instead. Please substitute `./tools` with
+`.\tools` accordingly throughout this guide.
 
-Running `./tools help` displays a list of build commands.
+## Building the Server
 
-## Server building
-
-To launch the edit-text server:
+To build the edit-text server:
 
 ```sh
 ./tools server-build
 ```
 
-To run it on port `8000`:
+To build and launch the server on HTTP port `8000`:
 
 ```sh
 ./tools server
 ```
 
-## Frontend build
+## Building the Frontend
 
 The frontend is all the JavaScript code that runs in the browser, and optionally including the WASM build system. To build the frontend, run this from the root directory:
 
@@ -39,7 +39,7 @@ If you want to launch a long-lived script to build the frontend and rebuild each
 ./tools frontend-watch
 ```
 
-### Building WASM
+### Building the Client with WebAssembly
 
 Building *just* the frontend WebAssembly component generated from `edit-client` can be done using this command:
 

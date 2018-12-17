@@ -1,4 +1,4 @@
-# [WIP] Delall Hack
+# Delall Hack
 
 Grepping the codebase for "Delall" turns up this comment in `transform.rs`:
 
@@ -10,7 +10,7 @@ Grepping the codebase for "Delall" turns up this comment in `transform.rs`:
 // content of the group.
 ```
 
-Let me expand on some of these ideas here.
+This is an explainer on what this means.
 
 ## Operations only know the document structure implied by the operation
 
