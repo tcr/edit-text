@@ -56,4 +56,8 @@ test_script:
 
 after_test:
 - ps: Remove-Item -Recurse -Force $ENV:UserProfile\.cargo\registry
-- ps: .\cache-s3 --prefix=edit-text_win32_$(cat rust-toolchain) save -p edit-frontend\node_modules -p $ENV:UserProfile\.cargo -p target --max-size 3GiB
+- ps: |
+        .\tools book-only-is-modified
+        if ($LastExitCode -ne 0) {
+          .\cache-s3 --prefix=edit-text_win32_$(cat rust-toolchain) save -p edit-frontend\node_modules -p $ENV:UserProfile\.cargo -p target --max-size 3GiB
+        }

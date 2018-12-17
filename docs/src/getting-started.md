@@ -45,35 +45,15 @@ Build commands are executed using the `./tools` script. ([Read more.](http://tim
 
 The production configuration of edit-text is a long-running server process, and one or many WebAssembly + TypeScript clients running in the browser that connect to it.
 
-In your terminal session, you can run this command to start the server (and optionally compile with release optimizations):
+In your terminal session, you can run this command to start the server:
 
 ```
-./tools server [--release]
+./tools server
 ```
 
 Now open <http://localhost:8000/> and you are brought to a welcome page to start editing text!
 
-Note that the server also serves WebAssembly code to the browser that contains the edit-text client. After you make changes are made to client or server code, you should re-run `./tools build` to recompile both and then restart the server process. (If only server changes were made, you can skip this step and just run `./tools server` directly.)
-
-### Running edit-text with a client in proxy mode (for debugging)
-
-Debugging WebAssembly code is harder (in most ways) than debugging a local Rust binary. edit-text supports running the client as an independent "proxy". An edit-text server running in one terminal connects to a client proxy running in another terminal, and communicates with frontend code running in the browser (TypeScript) over WebSockets. This client proxy is all code that would normally be cross-compiled to WebAssembly, but runs locally in your terminal and supports the same backtrace and debugging support as a local binary.
-
-You'll need two terminal sessions to run in this mode. First, start the server, and specify that you want to connect to a client proxy using `--client-proxy`. Without this argument, the server will expect server connections from WebAssembly instead.
-
-```
-./tools server --client-proxy [--release]
-```
-
-In another terminal session, you can start the proxy. (It's recommended you compile in release mode, as client code is much slower in debug mode.)
-
-```
-./tools client-proxy [--release]
-```
-
-Then you can open http://localhost:8000/ as before in your browser, and monitor the `client-proxy` terminal for status of the clients that your browser is connected to.
-
-You will see any failures appear in the client-proxy code that would appear in the browser console when in WASM mode. If you encounter a panic or fatal error, this "proxy" mechanism of debugging usually gives much more information about where the error originated. Note that aside from running as a binary, there should be no differences in behavior between the client-proxy and the client in Webassembly.
+After you make changes to server code, you should kill and re-run the `./tools server` command to rebuild and launch it.
 
 ## Compiling the frontend
 
@@ -96,3 +76,30 @@ This cross-compiles all frontend code and pulls in the compiled WebAssembly bina
 ```
 
 This command watches the edit-frontend directory and continuously builds its after each change. Note that you may need to run `./tools wasm-build` as well. 
+
+## Advanced
+
+There are scenarios in which you might want to run edit-text that aren't handled
+by the steps above.
+
+**NOTE:** You can skip this section if you are just getting started.
+
+### Running edit-text with a client in proxy mode (for debugging)
+
+Debugging WebAssembly code is harder (in most ways) than debugging a local Rust binary. edit-text supports running the client as an independent "proxy". An edit-text server running in one terminal connects to a client proxy running in another terminal, and communicates with frontend code running in the browser (TypeScript) over WebSockets. This client proxy is all code that would normally be cross-compiled to WebAssembly, but runs locally in your terminal and supports the same backtrace and debugging support as a local binary.
+
+You'll need two terminal sessions to run in this mode. First, start the server, and specify that you want to connect to a client proxy using `--client-proxy`. Without this argument, the server will expect server connections from WebAssembly instead.
+
+```
+./tools server --client-proxy [--release]
+```
+
+In another terminal session, you can start the proxy. (It's recommended you compile in release mode, as client code is much slower in debug mode.)
+
+```
+./tools client-proxy [--release]
+```
+
+Then you can open http://localhost:8000/ as before in your browser, and monitor the `client-proxy` terminal for status of the clients that your browser is connected to.
+
+You will see any failures appear in the client-proxy code that would appear in the browser console when in WASM mode. If you encounter a panic or fatal error, this "proxy" mechanism of debugging usually gives much more information about where the error originated. Note that aside from running as a binary, there should be no differences in behavior between the client-proxy and the client in Webassembly.
