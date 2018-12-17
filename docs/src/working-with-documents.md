@@ -6,7 +6,7 @@ The contents of a page is represented as a **Document**. For example, the follow
 
 May be represeted with the following `DocSpan` in Rust:
 
-```rust
+```rust,noplaypen
 doc_span![
     DocGroup({"tag": "h1"}, ["Hello world!"]),
     DocGroup({"tag": "p"}, ["This is a document."]),
@@ -27,7 +27,7 @@ Documents are composed of **text** and **groups**. Text is a unicode string mode
 
 In Rust, `enum DocElement` models these two types:
 
-```rust
+```rust,noplaypen
 type DocSpan = Vec<DocElement>;
 
 type Attrs = HashMap<String, String>;
@@ -40,7 +40,7 @@ enum DocElement {
 
 You can use the `oatie::macros::doc_span!` macro to conveniently create `DocSpan` objects:
 
-```rust
+```rust,noplaypen
 doc_span![
     DocGroup({"tag": "h1"}, ["Title"]),
     DocGroup({"tag": "bullet"}, [
