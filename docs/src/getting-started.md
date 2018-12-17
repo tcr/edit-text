@@ -2,23 +2,40 @@
 
 ## Requirements
 
-**Installing rustup:** `edit-text` is written in Rust, and so you will need a Rust compiler in order to serve the application. Rust may be installed using your system package manager, but the preferred way to download and install Rust is through the [`rustup` toolchain](http://rustup.rs/) available at rustup.rs. To check if you have `rustup` installed, you can run the following command:
+**Installing rustup:** `edit-text` is written in Rust, and so you will need a
+Rust compiler in order to serve the application. Rust may be installed using
+your system package manager, but the preferred way to download and install Rust
+is through the [`rustup` toolchain](http://rustup.rs/) available at rustup.rs.
+To check if you have `rustup` installed, you can run the following command:
 
 ```
 $ rustup show active-toolchain
 nightly-2018-09-25-x86_64-apple-darwin  # for example
 ```
 
-This command should print a rust version that is equivalent to the contents of the `./rust-toolchain` file. This is the version of the nightly Rust compiler the project currently depends on. This file is updated periodically; `rustup` will automatically manage downloading and using the correct compiler version for you.
+This command should print a rust version that is equivalent to the contents of
+the `./rust-toolchain` file. This is the version of the nightly Rust compiler
+the project currently depends on. This file is updated periodically; `rustup`
+will automatically manage downloading and using the correct compiler version for
+you.
 
-**Installing Node.js:** To build the frontend you will need to install [Node.js](http://nodejs.org/) and [Yarn](http://yarnpkg.com). To install Node.js, see [installation instructions for your OS](https://nodejs.org/en/download/package-manager/). To check if you have a recent version of Node.js installed, see if the output of this command is `>= v6.0.0`:
+**Installing Node.js:** To build the frontend you will need to install something
+called [Node.js](http://nodejs.org/) and [Yarn](http://yarnpkg.com). To install
+Node.js, see [installation instructions for your
+OS](https://nodejs.org/en/download/package-manager/). To check if you have a
+recent version of Node.js installed, see if the output of this command is `>=
+v6.0.0`:
 
 ```
 $ node -v
 v10.12.0  # for example
 ```
 
-The frontend is written partly in TypeScript, and the build tool uses Yarn to install and manage its JavaScript package dependencies. To install yarn, follow the [installation instructions for your OS](https://yarnpkg.com/en/docs/install#mac-stable) or just run `npm i -g yarn`. To see if Yarn is installed and available:
+The frontend is written partly in TypeScript, and the build tool uses Yarn to
+install and manage its JavaScript package dependencies. To install yarn, follow
+the [installation instructions for your
+OS](https://yarnpkg.com/en/docs/install#mac-stable) or just run `npm i -g yarn`.
+To see if Yarn is installed and available:
 
 ```
 $ yarn -v
@@ -33,7 +50,9 @@ Clone the repository from Github:
 git clone https://github.com/tcr/edit-text
 ```
 
-Build commands are executed using the `./tools` script. You can rebuild individual edit-text components with `./tools server-build`, `./tools frontend-build`, etc. Run `./tools help` for more information.
+Build commands are executed using the `./tools` script. You can rebuild
+individual edit-text components with `./tools server-build`, `./tools
+frontend-build`, etc. Run `./tools help` for more information.
 
 ### Run the server
 
@@ -48,8 +67,9 @@ using the following command:
 ./tools frontend-build
 ```
 
-This cross-compiles all frontend code and pulls in the compiled WebAssembly binary,
-using [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen) to talk to the frontend.
+This cross-compiles all frontend code and pulls in the compiled WebAssembly
+binary, using [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen) to talk
+to the frontend.
 
 In your terminal session, you can then run this command to start the server:
 

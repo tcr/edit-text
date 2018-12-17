@@ -33,13 +33,12 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 // Watch command implementation
 pub fn execute(args: &ArgMatches, book_dir: &Path) -> Result<()> {
     let mut book = MDBook::load(&book_dir)?;
-
-    book.with_preprecessor(super::SvgbobPreprocessor);
+    super::inject_preprocessors(&mut book);
 
     trigger_on_change(&book, |path, book_dir| {
         info!("File changed: {:?}\nBuilding book...\n", path);
         let result = MDBook::load(&book_dir).and_then(|mut b| {
-            b.with_preprecessor(super::SvgbobPreprocessor);
+            super::inject_preprocessors(&mut b);
             b.build()
         });
 

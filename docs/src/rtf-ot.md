@@ -89,3 +89,10 @@ For client B, this is somewhat tricker; we already applied our operation! So we 
 5. Because we received an ACK, we can send the next operation in our network queue (if any).
 
 Note that the strategies for server and client code to bring operations "up to date" differ in that the client only needs to transform against one operation, while the server needs to transform against all intervening operations in its history. The server only needs to store the history up to the client that is the most out of date, however, and can always boot off clients which are off too old a version.
+
+### Split Block Model
+
+The entire document editing process is built on splitting a single origin block
+element into a series of sub-elements.
+
+All editing steps you can take in the frontend editor should follow this constaint.

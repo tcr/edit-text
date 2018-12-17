@@ -17,7 +17,6 @@ impl Preprocessor for SvgbobPreprocessor {
     }
 }
 
-
 fn process<'a, I>(items: I) -> Result<(), Error>
 where
     I: IntoIterator<Item = &'a mut BookItem> + 'a,
@@ -39,4 +38,33 @@ where
         }
     }
     Ok(())
+}
+
+pub struct TOCPreprocessor;
+
+impl Preprocessor for TOCPreprocessor {
+    fn name(&self) -> &str {
+        "toc"
+    }
+
+    fn run(&self, ctx: &PreprocessorContext, book: &mut Book) -> Result<(), Error> {
+        for section in &mut book.sections {
+            if let BookItem::Chapter(ref mut chapter) = section {
+                if !chapter.sub_items.is_empty() {
+                    let toc: Vec<String> = chapter.sub_items.iter()
+                        .filter_map(|sub_item| {
+                            if let BookItem::Chapter(ref chapter) = sub_item {
+                                Some(format!("1. [{}]({})", chapter.name, chapter.path.to_string_lossy()))
+                            } else {
+                                None
+                            }
+                        })
+                        .collect();
+                    
+                    chapter.content = chapter.content.replace("{{#toc}}", &format!("\n\n{}\n\n", toc.join("\n")));
+                }
+            }
+        }
+        Ok(())
+    }
 }

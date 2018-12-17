@@ -1,16 +1,6 @@
-# Documents and Markdown
+# Markdown
 
-The document model that edit-text uses is similar to HTML. We can trivially define a mapping from edit-text's document model to HTML:
-
-```
-<ul>
-  <li><p>Item 1</p></li>
-  <li><p>Item 2</p></li>
-  <li><p>Item 3...</p></li>
-</ul>
-```
-
-Becomes when converted to edit-text's document structure (expressed in RON):
+Let's assume we have the following document in edit-text's document structure:
 
 ```
 DocGroup({"tag": "bullet"}, [
@@ -24,7 +14,15 @@ DocGroup({"tag": "bullet"}, [
 ])
 ```
 
-(Conversion from a doc group to HTML can be done with `doc_as_html` in `edit-common/lib.rs`. There's no inverse method.)
+We can trivially define a mapping from edit-text's document model to HTML. (Conversion from a doc group to HTML can be done with `doc_as_html` in `edit-common/lib.rs`. There's no inverse method.) The result is an unordered list:
+
+```
+<ul>
+  <li><p>Item 1</p></li>
+  <li><p>Item 2</p></li>
+  <li><p>Item 3...</p></li>
+</ul>
+```
 
 Some conversions are straightforward: aside from all non-significant whitespace, all text nodes are converted into the DocChars(...) struct. To simplify other logic, there are some invariants that should be true about DocChars: DocChars(...) must not be empty, and there must not be two successive DocChars(...) components. This isn't validated anywhere (yet) but is expected to be true in all operations.
 
@@ -66,18 +64,12 @@ edit-text's document schema should allow conversion losslessly into Markdown, wh
 
 This are the current elements supported by edit-text:
 
-```
-bullet => Bulleted item
-p => Paragraph
-h1/h2/h3/h4/h5/h6 => Header
-pre => Code block
-html => Inline HTML content (a raw string, as it would appear in Markdown)
-caret => Caret position
-hr => Horizontal rule
-```
-
-# Splitting Image
-
-The entire document editing process is built on splitting a single origin block element into a series of sub-elements.
-
-All editing steps you can take in the frontend editor preserve this quality.
+| Tag | Description |
+|-----|-------------|
+| bullet | Bulleted item
+| p | Paragraph
+| h[1-6] | Header
+| pre | Code block
+| html | Inline HTML content (a raw string, as it would appear in Markdown)
+| caret | Caret position
+| hr | Horizontal rule
