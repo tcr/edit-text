@@ -41,6 +41,8 @@
 
             /* header spacing */
             h2, h3 { margin-top: 1.6em; }
+
+            main { line-height: 1.5; }
         </style>
 
         
@@ -87,7 +89,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html" class="active"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">2.</strong> Development</a></li><li><ol class="section"><li><a href="intro-system.html"><strong aria-hidden="true">2.1.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">2.2.</strong> Build System ./tools</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">2.3.</strong> Testing</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">2.3.1.</strong> Writing an integration test</a></li></ol></li></ol></li><li><a href="#.html"><strong aria-hidden="true">3.</strong> Working with Documents</a></li><li><ol class="section"><li><a href="working-with-documents.html"><strong aria-hidden="true">3.1.</strong> Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">3.2.</strong> Operations</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">3.3.</strong> Operational Transform</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">4.</strong> Rich Text</a></li><li><ol class="section"><li><a href="markdown.html"><strong aria-hidden="true">4.1.</strong> Markdown</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">4.2.</strong> Carets</a></li></ol></li><li><a href="frontend.html"><strong aria-hidden="true">5.</strong> Frontend</a></li><li><ol class="section"><li><a href="server-apis.html"><strong aria-hidden="true">5.1.</strong> Server APIs</a></li><li><a href="editor-component.html"><strong aria-hidden="true">5.2.</strong> Editor Component</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">6.</strong> Deployment and Usage</a></li><li><ol class="section"><li><a href="edit-server-binary.html"><strong aria-hidden="true">6.1.</strong> Running as a binary</a></li><li><a href="#.html"><strong aria-hidden="true">6.2.</strong> Hosted Sandbox</a></li><li><a href="deploying.html"><strong aria-hidden="true">6.3.</strong> Dokku</a></li><li><a href="#.html"><strong aria-hidden="true">6.4.</strong> npm module</a></li></ol></li><li><a href="appendix.html"><strong aria-hidden="true">7.</strong> Appendix</a></li><li><ol class="section"><li><a href="diary-delall.html"><strong aria-hidden="true">7.1.</strong> Delall Hack</a></li><li><a href="glossary.html"><strong aria-hidden="true">7.2.</strong> Glossary</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> edit-text</a></li><li><ol class="section"><li><a href="getting-started.html" class="active"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">2.</strong> Development</a></li><li><ol class="section"><li><a href="intro-system.html"><strong aria-hidden="true">2.1.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">2.2.</strong> Build System ./tools</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">2.3.</strong> Tests</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">2.3.1.</strong> Writing an integration test</a></li></ol></li></ol></li><li><a href="#.html"><strong aria-hidden="true">3.</strong> Working with Documents</a></li><li><ol class="section"><li><a href="working-with-documents.html"><strong aria-hidden="true">3.1.</strong> Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">3.2.</strong> Operations</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">3.3.</strong> Operational Transform</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">4.</strong> Rich Text</a></li><li><ol class="section"><li><a href="markdown.html"><strong aria-hidden="true">4.1.</strong> Markdown</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">4.2.</strong> Carets</a></li></ol></li><li><a href="frontend.html"><strong aria-hidden="true">5.</strong> Frontend</a></li><li><ol class="section"><li><a href="server-apis.html"><strong aria-hidden="true">5.1.</strong> Server APIs</a></li><li><a href="editor-component.html"><strong aria-hidden="true">5.2.</strong> Editor Component</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">6.</strong> Deployment and Usage</a></li><li><ol class="section"><li><a href="edit-server-binary.html"><strong aria-hidden="true">6.1.</strong> Running as a binary</a></li><li><a href="deploying.html"><strong aria-hidden="true">6.2.</strong> Dokku</a></li><li><a href="#.html"><strong aria-hidden="true">6.3.</strong> Hosted Sandbox</a></li><li><a href="#.html"><strong aria-hidden="true">6.4.</strong> npm module</a></li></ol></li><li><a href="appendix.html"><strong aria-hidden="true">7.</strong> Appendix</a></li><li><ol class="section"><li><a href="diary-delall.html"><strong aria-hidden="true">7.1.</strong> Delall Hack</a></li><li><a href="glossary.html"><strong aria-hidden="true">7.2.</strong> Glossary</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -173,42 +175,35 @@ v1.10.1  # for example
 <p>Clone the repository from Github:</p>
 <pre><code>git clone https://github.com/tcr/edit-text
 </code></pre>
-<p>To build all components of edit-text (server, client, and frontend) at once, run this command from the root of the repository:</p>
-<pre><code>./tools build
-</code></pre>
-<p>Build commands are executed using the <code>./tools</code> script. (<a href="http://timryan.org/2018/07/02/moving-from-the-shell-to-rust-with-commandspec.html">Read more.</a>)  You can rebuild individual edit-text components with <code>./tools server-build</code>, <code>./tools frontend-build</code>, etc. Run <code>./tools help</code> for more information.</p>
-<a class="header" href="#running-edit-text-standard" id="running-edit-text-standard"><h3>Running edit-text (standard)</h3></a>
-<p>The production configuration of edit-text is a long-running server process, and one or many WebAssembly + TypeScript clients running in the browser that connect to it.</p>
-<p>In your terminal session, you can run this command to start the server:</p>
-<pre><code>./tools server
-</code></pre>
-<p>Now open <a href="http://localhost:8000/">http://localhost:8000/</a> and you are brought to a welcome page to start editing text!</p>
-<p>After you make changes to server code, you should kill and re-run the <code>./tools server</code> command to rebuild and launch it.</p>
-<a class="header" href="#compiling-the-frontend" id="compiling-the-frontend"><h2>Compiling the frontend</h2></a>
-<p>If you're made changes to WebAssembly code in &quot;edit-client/&quot;, you can cross-compile the wasm binary including any <a href="https://github.com/rustwasm/wasm-bindgen">wasm-bindgen</a> with this command:</p>
-<pre><code class="language-sh">./tools wasm-build
-</code></pre>
-<p>The bundled frontend code (written in TypeScript) is tracked in git and can be run immediately after cloning the repository. You can also compile it yourself. Make sure you have Node installed first, then build the frontend:</p>
+<p>Build commands are executed using the <code>./tools</code> script. You can rebuild individual edit-text components with <code>./tools server-build</code>, <code>./tools frontend-build</code>, etc. Run <code>./tools help</code> for more information.</p>
+<a class="header" href="#run-the-server" id="run-the-server"><h3>Run the server</h3></a>
+<p>The production configuration of edit-text is a long-running server process, and
+one or many WebAssembly + TypeScript clients running in the browser that connect
+to it.</p>
+<p>You can build the WebAssembly client as well as the frontend webpack module
+using the following command:</p>
 <pre><code class="language-sh">./tools frontend-build
 </code></pre>
-<p>This cross-compiles all frontend code and pulls in the compiled WebAssembly binary. To watch and recompile frontend code whenever it's modified, run this command:</p>
+<p>This cross-compiles all frontend code and pulls in the compiled WebAssembly binary,
+using <a href="https://github.com/rustwasm/wasm-bindgen">wasm-bindgen</a> to talk to the frontend.</p>
+<p>In your terminal session, you can then run this command to start the server:</p>
+<pre><code>./tools server
+</code></pre>
+<p>Now open <a href="http://localhost:8000/">http://localhost:8000/</a> and you are brought to a welcome page to start
+editing text!</p>
+<a class="header" href="#development-workflow" id="development-workflow"><h3>Development Workflow</h3></a>
+<p>A simple development pattern is to launch <code>./tools server</code> in one window, and
+to watch and recompile frontend code whenever it's modified with this command in
+another window:</p>
 <pre><code class="language-sh">./tools frontend-watch
 </code></pre>
-<p>This command watches the edit-frontend directory and continuously builds its after each change. Note that you may need to run <code>./tools wasm-build</code> as well.</p>
-<a class="header" href="#advanced" id="advanced"><h2>Advanced</h2></a>
-<p>There are scenarios in which you might want to run edit-text that aren't handled
-by the steps above.</p>
-<p><strong>NOTE:</strong> You can skip this section if you are just getting started.</p>
-<a class="header" href="#running-edit-text-with-a-client-in-proxy-mode-for-debugging" id="running-edit-text-with-a-client-in-proxy-mode-for-debugging"><h3>Running edit-text with a client in proxy mode (for debugging)</h3></a>
-<p>Debugging WebAssembly code is harder (in most ways) than debugging a local Rust binary. edit-text supports running the client as an independent &quot;proxy&quot;. An edit-text server running in one terminal connects to a client proxy running in another terminal, and communicates with frontend code running in the browser (TypeScript) over WebSockets. This client proxy is all code that would normally be cross-compiled to WebAssembly, but runs locally in your terminal and supports the same backtrace and debugging support as a local binary.</p>
-<p>You'll need two terminal sessions to run in this mode. First, start the server, and specify that you want to connect to a client proxy using <code>--client-proxy</code>. Without this argument, the server will expect server connections from WebAssembly instead.</p>
-<pre><code>./tools server --client-proxy [--release]
-</code></pre>
-<p>In another terminal session, you can start the proxy. (It's recommended you compile in release mode, as client code is much slower in debug mode.)</p>
-<pre><code>./tools client-proxy [--release]
-</code></pre>
-<p>Then you can open http://localhost:8000/ as before in your browser, and monitor the <code>client-proxy</code> terminal for status of the clients that your browser is connected to.</p>
-<p>You will see any failures appear in the client-proxy code that would appear in the browser console when in WASM mode. If you encounter a panic or fatal error, this &quot;proxy&quot; mechanism of debugging usually gives much more information about where the error originated. Note that aside from running as a binary, there should be no differences in behavior between the client-proxy and the client in Webassembly.</p>
+<p>This command watches the edit-frontend directory and continuously builds its
+after each change. The frontend will periodically display a notification if a
+newer version of the client code has been compiled.</p>
+<p>After you make changes to <code>edit-server/</code>, <code>edit-common/</code>, or <code>oatie/</code>, you
+should kill and re-run the <code>./tools server</code> command to rebuild and launch it.
+The <code>frontend-watch</code> command will automatically rebuild code that it depends
+on for you.</p>
 
                     </main>
 
