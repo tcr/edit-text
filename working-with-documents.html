@@ -166,18 +166,16 @@
                 <div id="content" class="content">
                     <main>
                         <a class="header" href="#documents" id="documents"><h1>Documents</h1></a>
-<p>The contents of a page is represented as a <strong>Document</strong>. For example, the following &quot;Hello world!&quot; document:</p>
+<p>The contents of a page is stored as a <strong>Document</strong> object. For example, the following &quot;Hello world!&quot; document:</p>
 <p><img width="1189" alt="image" src="https://user-images.githubusercontent.com/80639/50059231-1737f500-0152-11e9-8704-d133d6b19e66.png"></p>
-<p>May be represeted with the following <code>DocSpan</code> in Rust:</p>
-<pre><code class="language-rust noplaypen">doc_span![
+<p>May be created and manipulated in Rust:</p>
+<pre><code class="language-rust noplaypen">let document = doc_span![
     DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [&quot;Hello world!&quot;]),
     DocGroup({&quot;tag&quot;: &quot;p&quot;}, [&quot;This is a document.&quot;]),
-]
-</code></pre>
-<p>And can also be exported as Markdown:</p>
-<pre><code class="language-markdown"># Hello world!
+];
 
-This is a document.
+// Convert this document to Markdown.
+let markdown = edit_common::markdown::doc_to_markdown(&amp;document)?;
 </code></pre>
 <a class="header" href="#text-and-groups" id="text-and-groups"><h2>Text and Groups</h2></a>
 <p>Documents are composed of <strong>text</strong> and <strong>groups</strong>. Text is a unicode string modeled by the <code>DocString</code> type. Groups are similar to HTML elements, having a set of &quot;attributes&quot; and then a vector of children which can be either text or other groups.</p>
