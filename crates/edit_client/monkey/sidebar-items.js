@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["MONKEY_ARROW",""],["MONKEY_BACKSPACE",""],["MONKEY_BUTTON",""],["MONKEY_CLICK",""],["MONKEY_ENTER",""],["MONKEY_LETTER",""]],"fn":[["setup_monkey",""]],"struct":[["Scheduler",""]],"type":[["MonkeyParam",""]]});

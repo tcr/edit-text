@@ -1,0 +1,10 @@
+var ALIASES = {};
+ALIASES['build_tools'] = {};
+ALIASES['edit_client'] = {};
+ALIASES['edit_client_proxy'] = {};
+ALIASES['edit_common'] = {};
+ALIASES['edit_replay'] = {};
+ALIASES['edit_server'] = {};
+ALIASES['edit_server_logs'] = {};
+ALIASES['oatie'] = {};
+ALIASES['oatie_transform'] = {};

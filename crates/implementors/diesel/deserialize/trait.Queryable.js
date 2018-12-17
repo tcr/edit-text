@@ -1,0 +1,10 @@
+(function() {var implementors = {};
+implementors["edit_server"] = [{text:"impl&lt;__DB:&nbsp;Backend, __ST&gt; Queryable&lt;__ST, __DB&gt; for <a class=\"struct\" href=\"edit_server/db/types/struct.Post.html\" title=\"struct edit_server::db::types::Post\">Post</a> <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.tuple.html\">(</a><a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/string/struct.String.html\" title=\"struct alloc::string::String\">String</a>, <a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/string/struct.String.html\" title=\"struct alloc::string::String\">String</a><a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.tuple.html\">)</a>: Queryable&lt;__ST, __DB&gt;,&nbsp;</span>",synthetic:false,types:["edit_server::db::types::Post"]},{text:"impl&lt;__DB:&nbsp;Backend, __ST&gt; Queryable&lt;__ST, __DB&gt; for <a class=\"struct\" href=\"edit_server/db/types/struct.Log.html\" title=\"struct edit_server::db::types::Log\">Log</a> <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.tuple.html\">(</a><a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.i32.html\">i32</a>, <a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/string/struct.String.html\" title=\"struct alloc::string::String\">String</a>, <a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/string/struct.String.html\" title=\"struct alloc::string::String\">String</a><a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.tuple.html\">)</a>: Queryable&lt;__ST, __DB&gt;,&nbsp;</span>",synthetic:false,types:["edit_server::db::types::Log"]},];
+
+            if (window.register_implementors) {
+                window.register_implementors(implementors);
+            } else {
+                window.pending_implementors = implementors;
+            }
+        
+})()

@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["DocString","Abstraction for String that has better performance by restricting its API. It can also be styled using the Style enum."]]});

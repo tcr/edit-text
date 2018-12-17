@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Log",""],["NewLog",""],["NewPost",""],["Post",""]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["ClientUpdate",""]],"fn":[["default_new_doc",""],["spawn_sync_thread","Run a sync server thread for a given page ID."],["sync_socket_server",""],["valid_page_id",""]],"struct":[["ClientNotify",""],["PageController",""]]});
