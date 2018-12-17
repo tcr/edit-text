@@ -1,6 +1,6 @@
 # Editor Component
 
-The editor is a react component.
+The frontend is written in React, and the editor is a react component.
 
 ```javascript
 <Editor

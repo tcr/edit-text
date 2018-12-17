@@ -57,7 +57,11 @@ The server is a command-line program called `edit-server`. In release mode, it
 bundles all client-side code and can be uploaded to a server to run the program
 directly.
 
-If you use edit-text in its normal configuration, the Client, Controller, and Frontend all run in your browser as WebAssembly and JavaScript. In proxy mode, the Client and Controller run as a command line program.
+The edit-text client is written in Rust and can be run both in the browser (to
+power the editor) or from the command line (for tools like the client proxy, and client replay).
+If you use edit-text in its normal configuration, the Client, Controller, and
+Frontend all run in your browser as WebAssembly and JavaScript. In proxy mode, 
+the Client and Controller run as a command line program.
 
 The Frontend is written in TypeScript.
 
