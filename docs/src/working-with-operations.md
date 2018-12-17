@@ -5,14 +5,14 @@ broken down into two stages: deleting content, then adding content. This pair of
 
 Operations can be "applied" to a document, producing a new document:
 
-```rust
+```rust,noplaypen
 let updated_doc = Op::apply(&doc, &operation);
 ```
 
 When applying multiple operation pairs in a row, you can also "compose" them to
 produce a single operation that would produce the same result:
 
-```rust
+```rust,noplaypen
 let updated_doc_1 = Op::apply(&doc, &operation_1);
 let updated_doc_2 = Op::apply(&updated_doc_1, &operation_2);
 
@@ -39,7 +39,7 @@ Body
 
 And would have the following document representation:
 
-```rust
+```rust,noplaypen
 let doc = doc_span![
     DocGroup({"tag": "h1"}, [DocChars("Title")]),
     DocGroup({"tag": "p"}, [DocChars("Body")]),
@@ -54,7 +54,7 @@ which spans the content of both blocks.
 
 First, we would delete each block group:
 
-```rust
+```rust,noplaypen
 let deletion = del_span![
     DelGroup([DelSkip(5)]), // Five characters in "Title"
     DelGroup([DelSkip(4)]), // Four characters in "Body"
@@ -68,7 +68,7 @@ assert_eq!(
 
 The result is just the characters "TitleBody". In edit-text, you are not allowed to have top-level textual content that is not contained inside of a group. So in order to produce a valid document, we now have to wrap the contents of both groups inside of a new group:
 
-```rust
+```rust,noplaypen
 let addition = del_span![
     AddGroup({"tag": "h1"}, [
         AddSkip(9) // Nine characters in "Titlebody"
@@ -85,7 +85,7 @@ assert_eq!(
 
 A deletion followed by an addition is common enough in edit-text that you can work with it as a single datatype. The method `Op::apply` takes a document and a `&(DelSpan, AddSpan)` type, and returns a modified document.
 
-```rust
+```rust,noplaypen
 type Op = (DelSpan, AddSpan);
 
 let valid_op: Op = (
@@ -117,9 +117,9 @@ fails, it will likely panic!() rather than returning an Error object.
 
 ## Deletion and Addition Elements
 
-There are a lot of 
+These are all the steps a Deletion or Addition can perform.
 
-```rust
+```rust,noplaypen
 enum DelElement {
     /// ...
     DelSkip(usize),
@@ -129,7 +129,7 @@ enum DelElement {
 }
 ```
 
-```rust
+```rust,noplaypen
 enum AddElement {
     AddSkip(usize),
     AddWithGroup(AddSpan),

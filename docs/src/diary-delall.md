@@ -32,7 +32,7 @@ When transforming two operations, oatie (so far) does not need to know anything 
 
 Say two clients have the following document:
 
-```rust
+```rust,noplaypen
 <h1><caret client=B" />Hello </h1>
 <p><caret client="A" /> world!</p>
 ```
@@ -41,7 +41,7 @@ Say two clients have the following document:
 
 Client A hits backspace, which will collapse the two block-level elements (`h1` and `p`) into one. The document there will now look like this:
 
-```rust
+```rust,noplaypen
 // This operation:
 Op([
     DelGroup([DelSkip(7)]), DelGroup([DelSkip(8)]),
@@ -55,7 +55,7 @@ Op([
 
 Next, Client A forward-deletes everything that existed in the second paragraph (`" world!"`). So the document now looks like this:
 
-```rust
+```rust,noplaypen
 // This operation:
 Op([
     DelWithGroup([DelSkip(8), DelChars(7)]),
@@ -75,7 +75,7 @@ Op([
 
 Lastly (for good measure) Client A clicks at the beginning of the first paragraph to move its caret:
 
-```rust
+```rust,noplaypen
 // This operation:
 Op([
     DelWithGroup([DelSkip(7), DelGroup([])]),
@@ -99,7 +99,7 @@ Op([
 Client B is less active, has less lag, or just less to contribute. It simply moves its cursor to the second block...:
 
 
-```rust
+```rust,noplaypen
 // This operation:
 Op([
     DelGroup([DelGroup([]), DelSkip(7)]),
@@ -114,7 +114,7 @@ Op([
 
 Then Client B hits backspace:
 
-```rust
+```rust,noplaypen
 // This operation:
 Op([
     DelSkip(1), DelWithGroup([DelSkip(7), DelChars(1)]),
@@ -137,7 +137,7 @@ Op([
 
 In the end of this hypothetical, we are now transforming these two operations:
 
-```
+```rust,noplaypen
 // Client A
 Op([
     DelGroup([DelSkip(7)]), DelGroup([DelGroup([]), DelChars(7)]),
@@ -155,7 +155,7 @@ Op([
 
 And we know exactly what each result is generated from applying each operation to our original document (first shown at the beginning of this document):
 
-```rust
+```rust,noplaypen
 // Original document
 <h1><caret client=B" />Hello </h1>
 <p><caret client="A" /> world!</p>
