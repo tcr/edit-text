@@ -87,7 +87,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li><li><a href="#.html"><strong aria-hidden="true">1.2.</strong> Code Overview</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">2.</strong> Development</a></li><li><ol class="section"><li><a href="intro-system.html"><strong aria-hidden="true">2.1.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">2.2.</strong> Build System ./tools</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">2.3.</strong> Testing</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">2.3.1.</strong> Writing an integration test</a></li></ol></li></ol></li><li><a href="#.html"><strong aria-hidden="true">3.</strong> Working with Documents</a></li><li><ol class="section"><li><a href="working-with-documents.html"><strong aria-hidden="true">3.1.</strong> Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">3.2.</strong> Operations</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">3.3.</strong> Operational Transform</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">4.</strong> Rich Text</a></li><li><ol class="section"><li><a href="markdown.html"><strong aria-hidden="true">4.1.</strong> Markdown</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">4.2.</strong> Carets</a></li></ol></li><li><a href="frontend.html"><strong aria-hidden="true">5.</strong> Frontend</a></li><li><ol class="section"><li><a href="server-apis.html"><strong aria-hidden="true">5.1.</strong> Server APIs</a></li><li><a href="editor-component.html"><strong aria-hidden="true">5.2.</strong> Editor Component</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">6.</strong> Deployment and Usage</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">6.1.</strong> Running as a binary</a></li><li><a href="#.html"><strong aria-hidden="true">6.2.</strong> Hosted Sandbox</a></li><li><a href="deploying.html"><strong aria-hidden="true">6.3.</strong> Dokku</a></li><li><a href="#.html"><strong aria-hidden="true">6.4.</strong> npm module</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">7.</strong> Appendix</a></li><li><ol class="section"><li><a href="diary-delall.html"><strong aria-hidden="true">7.1.</strong> Delall Hack</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">2.</strong> Development</a></li><li><ol class="section"><li><a href="intro-system.html"><strong aria-hidden="true">2.1.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">2.2.</strong> Build System ./tools</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">2.3.</strong> Testing</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">2.3.1.</strong> Writing an integration test</a></li></ol></li></ol></li><li><a href="#.html"><strong aria-hidden="true">3.</strong> Working with Documents</a></li><li><ol class="section"><li><a href="working-with-documents.html"><strong aria-hidden="true">3.1.</strong> Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">3.2.</strong> Operations</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">3.3.</strong> Operational Transform</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">4.</strong> Rich Text</a></li><li><ol class="section"><li><a href="markdown.html"><strong aria-hidden="true">4.1.</strong> Markdown</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">4.2.</strong> Carets</a></li></ol></li><li><a href="frontend.html"><strong aria-hidden="true">5.</strong> Frontend</a></li><li><ol class="section"><li><a href="server-apis.html"><strong aria-hidden="true">5.1.</strong> Server APIs</a></li><li><a href="editor-component.html"><strong aria-hidden="true">5.2.</strong> Editor Component</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">6.</strong> Deployment and Usage</a></li><li><ol class="section"><li><a href="edit-server-binary.html"><strong aria-hidden="true">6.1.</strong> Running as a binary</a></li><li><a href="#.html"><strong aria-hidden="true">6.2.</strong> Hosted Sandbox</a></li><li><a href="deploying.html"><strong aria-hidden="true">6.3.</strong> Dokku</a></li><li><a href="#.html"><strong aria-hidden="true">6.4.</strong> npm module</a></li></ol></li><li><a href="appendix.html"><strong aria-hidden="true">7.</strong> Appendix</a></li><li><ol class="section"><li><a href="diary-delall.html"><strong aria-hidden="true">7.1.</strong> Delall Hack</a></li><li><a href="glossary.html"><strong aria-hidden="true">7.2.</strong> Glossary</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -185,21 +185,11 @@ v1.10.1  # for example
 <p>Build commands are executed using the <code>./tools</code> script. (<a href="http://timryan.org/2018/07/02/moving-from-the-shell-to-rust-with-commandspec.html">Read more.</a>)  You can rebuild individual edit-text components with <code>./tools server-build</code>, <code>./tools frontend-build</code>, etc. Run <code>./tools help</code> for more information.</p>
 <a class="header" href="#running-edit-text-standard" id="running-edit-text-standard"><h3>Running edit-text (standard)</h3></a>
 <p>The production configuration of edit-text is a long-running server process, and one or many WebAssembly + TypeScript clients running in the browser that connect to it.</p>
-<p>In your terminal session, you can run this command to start the server (and optionally compile with release optimizations):</p>
-<pre><code>./tools server [--release]
+<p>In your terminal session, you can run this command to start the server:</p>
+<pre><code>./tools server
 </code></pre>
 <p>Now open <a href="http://localhost:8000/">http://localhost:8000/</a> and you are brought to a welcome page to start editing text!</p>
-<p>Note that the server also serves WebAssembly code to the browser that contains the edit-text client. After you make changes are made to client or server code, you should re-run <code>./tools build</code> to recompile both and then restart the server process. (If only server changes were made, you can skip this step and just run <code>./tools server</code> directly.)</p>
-<a class="header" href="#running-edit-text-with-a-client-in-proxy-mode-for-debugging" id="running-edit-text-with-a-client-in-proxy-mode-for-debugging"><h3>Running edit-text with a client in proxy mode (for debugging)</h3></a>
-<p>Debugging WebAssembly code is harder (in most ways) than debugging a local Rust binary. edit-text supports running the client as an independent &quot;proxy&quot;. An edit-text server running in one terminal connects to a client proxy running in another terminal, and communicates with frontend code running in the browser (TypeScript) over WebSockets. This client proxy is all code that would normally be cross-compiled to WebAssembly, but runs locally in your terminal and supports the same backtrace and debugging support as a local binary.</p>
-<p>You'll need two terminal sessions to run in this mode. First, start the server, and specify that you want to connect to a client proxy using <code>--client-proxy</code>. Without this argument, the server will expect server connections from WebAssembly instead.</p>
-<pre><code>./tools server --client-proxy [--release]
-</code></pre>
-<p>In another terminal session, you can start the proxy. (It's recommended you compile in release mode, as client code is much slower in debug mode.)</p>
-<pre><code>./tools client-proxy [--release]
-</code></pre>
-<p>Then you can open http://localhost:8000/ as before in your browser, and monitor the <code>client-proxy</code> terminal for status of the clients that your browser is connected to.</p>
-<p>You will see any failures appear in the client-proxy code that would appear in the browser console when in WASM mode. If you encounter a panic or fatal error, this &quot;proxy&quot; mechanism of debugging usually gives much more information about where the error originated. Note that aside from running as a binary, there should be no differences in behavior between the client-proxy and the client in Webassembly.</p>
+<p>After you make changes to server code, you should kill and re-run the <code>./tools server</code> command to rebuild and launch it.</p>
 <a class="header" href="#compiling-the-frontend" id="compiling-the-frontend"><h2>Compiling the frontend</h2></a>
 <p>If you're made changes to WebAssembly code in &quot;edit-client/&quot;, you can cross-compile the wasm binary including any <a href="https://github.com/rustwasm/wasm-bindgen">wasm-bindgen</a> with this command:</p>
 <pre><code class="language-sh">./tools wasm-build
@@ -211,8 +201,21 @@ v1.10.1  # for example
 <pre><code class="language-sh">./tools frontend-watch
 </code></pre>
 <p>This command watches the edit-frontend directory and continuously builds its after each change. Note that you may need to run <code>./tools wasm-build</code> as well.</p>
+<a class="header" href="#advanced" id="advanced"><h2>Advanced</h2></a>
+<p>There are scenarios in which you might want to run edit-text that aren't handled
+by the steps above.</p>
+<p><strong>NOTE:</strong> You can skip this section if you are just getting started.</p>
+<a class="header" href="#running-edit-text-with-a-client-in-proxy-mode-for-debugging" id="running-edit-text-with-a-client-in-proxy-mode-for-debugging"><h3>Running edit-text with a client in proxy mode (for debugging)</h3></a>
+<p>Debugging WebAssembly code is harder (in most ways) than debugging a local Rust binary. edit-text supports running the client as an independent &quot;proxy&quot;. An edit-text server running in one terminal connects to a client proxy running in another terminal, and communicates with frontend code running in the browser (TypeScript) over WebSockets. This client proxy is all code that would normally be cross-compiled to WebAssembly, but runs locally in your terminal and supports the same backtrace and debugging support as a local binary.</p>
+<p>You'll need two terminal sessions to run in this mode. First, start the server, and specify that you want to connect to a client proxy using <code>--client-proxy</code>. Without this argument, the server will expect server connections from WebAssembly instead.</p>
+<pre><code>./tools server --client-proxy [--release]
+</code></pre>
+<p>In another terminal session, you can start the proxy. (It's recommended you compile in release mode, as client code is much slower in debug mode.)</p>
+<pre><code>./tools client-proxy [--release]
+</code></pre>
+<p>Then you can open http://localhost:8000/ as before in your browser, and monitor the <code>client-proxy</code> terminal for status of the clients that your browser is connected to.</p>
+<p>You will see any failures appear in the client-proxy code that would appear in the browser console when in WASM mode. If you encounter a panic or fatal error, this &quot;proxy&quot; mechanism of debugging usually gives much more information about where the error originated. Note that aside from running as a binary, there should be no differences in behavior between the client-proxy and the client in Webassembly.</p>
 <a class="header" href="#appendix" id="appendix"><h1>Appendix</h1></a>
-<a class="header" href="#appendix-1" id="appendix-1"><h1>Appendix</h1></a>
 <a class="header" href="#system-overview" id="system-overview"><h1>System Overview</h1></a>
 <p>edit-text is built from the ground up as a collaborative text editor. It uses
 operational transform to merge updates from multiple clients, so it requires a
@@ -220,19 +223,27 @@ synchronizing server. The server is also in charge of storing page content, so
 that every page can be shared via its URL.</p>
 <p>There are four components in the system:</p>
 <ul>
-<li>The <strong>Server</strong>, which serves HTTP content, a GraphQL endpoint for performing
+<li>
+<p>The <strong>Server</strong>, which serves HTTP content, a GraphQL endpoint for performing
 page-level commands, and a WebSocket endpoint for synchronizing document
-content.</li>
-<li>The <strong>Client</strong>, which can connect to a server and synchronize its document
+content.</p>
+</li>
+<li>
+<p>The <strong>Client</strong>, which can connect to a server and synchronize its document
 content. It sends client-side modifications (in the form of operations) to the
 server, and receives updated content (in the form of operations) from the server
-after any client submits an update.</li>
-<li>The <strong>Controller</strong>, which receives UI-level event updates from the frontend
-and converts it into operations on the client document.</li>
-<li>The <strong>Frontend</strong>, which is the editor UI. The current document is rendered
+after any client submits an update.</p>
+</li>
+<li>
+<p>The <strong>Controller</strong>, which receives UI-level event updates from the frontend
+and converts it into operations on the client document.</p>
+</li>
+<li>
+<p>The <strong>Frontend</strong>, which is the editor UI. The current document is rendered
 as a component inside the frontend, and interactions with this component are
 forwarded to the controller. The frontend also manages the toolbar,
-notifications, and dialog boxes.</li>
+notifications, and dialog boxes.</p>
+</li>
 </ul>
 <p>Each of these four components can be controlled by their <strong>commands</strong>, defined
 in <code>commands.rs</code>, effectively providing an asynchronous API for each component
@@ -272,28 +283,29 @@ directly.</p>
 <li><code>edit-server/</code> contains the Server binary</li>
 <li><code>edit-frontend/</code> contains the Frontend code as a Node module compiled with webpack</li>
 </ul>
-<a class="header" href="#build-tool-tools" id="build-tool-tools"><h1>Build Tool ./tools</h1></a>
-<p><code>./tools</code> is the build tool. Invocation will be different if you are on Windows or a Linux or macOS system:</p>
-<pre><code>./tools help    # Linux, macOS, etc.
-.\tools help    # Windows
+<a class="header" href="#build-system-tools" id="build-system-tools"><h1>Build System ./tools</h1></a>
+<p><code>./tools</code> is the build tool. You can call this command from the root of the
+<code>edit-server/</code> directory. To see a list of build commands, run the following:</p>
+<pre><code>./tools help
 </code></pre>
-<p>Please substitute either <code>./tools</code> or <code>.\tools</code> in the examples below accordingly.</p>
-<p>Running <code>./tools help</code> displays a list of build commands.</p>
-<a class="header" href="#server-building" id="server-building"><h2>Server building</h2></a>
-<p>To launch the edit-text server:</p>
+<p>NOTE: If you are on Windows running in the command prompt, you will need to
+invoke the build tool with <code>.\tools</code> instead. Please substitute <code>./tools</code> with
+<code>.\tools</code> accordingly throughout this guide.</p>
+<a class="header" href="#building-the-server" id="building-the-server"><h2>Building the Server</h2></a>
+<p>To build the edit-text server:</p>
 <pre><code class="language-sh">./tools server-build
 </code></pre>
-<p>To run it on port <code>8000</code>:</p>
+<p>To build and launch the server on HTTP port <code>8000</code>:</p>
 <pre><code class="language-sh">./tools server
 </code></pre>
-<a class="header" href="#frontend-build" id="frontend-build"><h2>Frontend build</h2></a>
+<a class="header" href="#building-the-frontend" id="building-the-frontend"><h2>Building the Frontend</h2></a>
 <p>The frontend is all the JavaScript code that runs in the browser, and optionally including the WASM build system. To build the frontend, run this from the root directory:</p>
 <pre><code class="language-sh">./tools frontend-build
 </code></pre>
 <p>If you want to launch a long-lived script to build the frontend and rebuild each time a frontend file changes:</p>
 <pre><code class="language-sh">./tools frontend-watch
 </code></pre>
-<a class="header" href="#building-wasm" id="building-wasm"><h3>Building WASM</h3></a>
+<a class="header" href="#building-the-client-with-webassembly" id="building-the-client-with-webassembly"><h3>Building the Client with WebAssembly</h3></a>
 <p>Building <em>just</em> the frontend WebAssembly component generated from <code>edit-client</code> can be done using this command:</p>
 <pre><code class="language-sh">./tools wasm-build
 </code></pre>
@@ -355,8 +367,8 @@ directly.</p>
 <li>Unit tests</li>
 </ul>
 <p>--&gt;</p>
+<a class="header" href="#appendix-1" id="appendix-1"><h1>Appendix</h1></a>
 <a class="header" href="#appendix-2" id="appendix-2"><h1>Appendix</h1></a>
-<a class="header" href="#appendix-3" id="appendix-3"><h1>Appendix</h1></a>
 <a class="header" href="#documents" id="documents"><h1>Documents</h1></a>
 <p>The contents of a page is represented as a <strong>Document</strong>. For example, the following &quot;Hello world!&quot; document:</p>
 <p><img width="1189" alt="image" src="https://user-images.githubusercontent.com/80639/50059231-1737f500-0152-11e9-8704-d133d6b19e66.png"></p>
@@ -669,9 +681,19 @@ power the editor) or from the command line (for tools like the client proxy, and
     disabled={boolean}
 /&gt;
 </code></pre>
+<a class="header" href="#appendix-3" id="appendix-3"><h1>Appendix</h1></a>
+<a class="header" href="#running-as-a-binary" id="running-as-a-binary"><h1>Running as a binary</h1></a>
+<p>The <code>edit-server/</code> crate can export a binary that you can deploy to a remote
+server, containing the source code of the client and the ability to talk to
+a locally instantiated SQLite database.</p>
+<pre><code>./tools server
+</code></pre>
+<p>To build a standalone binary that bundles client files statically:</p>
+<pre><code>cd edit-server
+cargo build --release --features standalone
+../target/release/edit-server
+</code></pre>
 <a class="header" href="#appendix-4" id="appendix-4"><h1>Appendix</h1></a>
-<a class="header" href="#appendix-5" id="appendix-5"><h1>Appendix</h1></a>
-<a class="header" href="#appendix-6" id="appendix-6"><h1>Appendix</h1></a>
 <a class="header" href="#deploying-to-dokku" id="deploying-to-dokku"><h1>Deploying to Dokku</h1></a>
 <p>[macOS Instructions] To deploy to a Dokku instance, you'll have to install a linux cross-compiler. This will cross-compile the Linux binary locally and then package it in a Docker container for distribution.</p>
 <p>First, to install the cross compiler:</p>
@@ -689,9 +711,10 @@ power the editor) or from the command line (for tools like the client proxy, and
 <li>You can configure the dokku URL using the <code>EDIT_DEPLOY_URL</code> environment variable.</li>
 <li>You can configure the dokku application name using the <code>EDIT_DOKKU_NAME</code> environment variable.</li>
 </ul>
-<a class="header" href="#appendix-7" id="appendix-7"><h1>Appendix</h1></a>
-<a class="header" href="#appendix-8" id="appendix-8"><h1>Appendix</h1></a>
-<a class="header" href="#wip-delall-hack" id="wip-delall-hack"><h1>[WIP] Delall Hack</h1></a>
+<a class="header" href="#appendix-5" id="appendix-5"><h1>Appendix</h1></a>
+<a class="header" href="#appendix-6" id="appendix-6"><h1>Appendix</h1></a>
+<p>Content that wasn't included in the rest of the docs.</p>
+<a class="header" href="#delall-hack" id="delall-hack"><h1>Delall Hack</h1></a>
 <p>Grepping the codebase for &quot;Delall&quot; turns up this comment in <code>transform.rs</code>:</p>
 <pre><code>// &quot;Delall&quot; transform hack to avoid fully deleted elements that
 // leave their content unwrapped. Because one side deletes the
@@ -699,7 +722,7 @@ power the editor) or from the command line (for tools like the client proxy, and
 // the document). Instead, we just delete all the newly added
 // content of the group.
 </code></pre>
-<p>Let me expand on some of these ideas here.</p>
+<p>This is an explainer on what this means.</p>
 <a class="header" href="#operations-only-know-the-document-structure-implied-by-the-operation" id="operations-only-know-the-document-structure-implied-by-the-operation"><h2>Operations only know the document structure implied by the operation</h2></a>
 <p>You do a DelGroup on a Group, but when transformed against any of these elements, we can respond consistently even without knowing the other type of document.</p>
 <p>TODO: This section</p>
@@ -833,6 +856,30 @@ Op([DelWithGroup([DelSkip(7), DelChars(1)])], [AddWithGroup([AddSkip(8), AddGrou
 </code></pre>
 <p>If you imagine a document consisting of only this element, and we see that one client has deleted the entire element, we accidentally wind up with a client's caret being in the root element (instead of block element). See [Splitting image](./diary-markdown.md].</p>
 <p>To avoid this problem, the Delall hack delets alls newly inserted elements from an insertion that is transformed against a deletion that delets all content. We can verify any arbitrary <code>DelGroup</code> delets all of its inner contents using a recursive check.</p>
+<a class="header" href="#glossary" id="glossary"><h1>Glossary</h1></a>
+<ul>
+<li>
+<p><em>client</em> — A client can connect to a server and synchronize its document
+content. It sends client-side modifications (in the form of operations) to the
+server, and receives updated content (in the form of operations) from the server
+after any client submits an update.</p>
+</li>
+<li>
+<p><em>controller</em> — Receives UI-level event updates from the frontend
+and converts it into operations on the client document.</p>
+</li>
+<li>
+<p><em>frontend</em> — The editor UI. The current document is rendered
+as a component inside the frontend, and interactions with this component are
+forwarded to the controller. The frontend also manages the toolbar,
+notifications, and dialog boxes.</p>
+</li>
+<li>
+<p><em>server</em> — Serves HTTP content, a GraphQL endpoint for performing
+page-level commands, and a WebSocket endpoint for synchronizing document
+content.</p>
+</li>
+</ul>
 
                     </main>
 

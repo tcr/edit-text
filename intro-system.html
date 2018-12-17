@@ -87,7 +87,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li><li><a href="#.html"><strong aria-hidden="true">1.2.</strong> Code Overview</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">2.</strong> Development</a></li><li><ol class="section"><li><a href="intro-system.html" class="active"><strong aria-hidden="true">2.1.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">2.2.</strong> Build System ./tools</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">2.3.</strong> Testing</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">2.3.1.</strong> Writing an integration test</a></li></ol></li></ol></li><li><a href="#.html"><strong aria-hidden="true">3.</strong> Working with Documents</a></li><li><ol class="section"><li><a href="working-with-documents.html"><strong aria-hidden="true">3.1.</strong> Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">3.2.</strong> Operations</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">3.3.</strong> Operational Transform</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">4.</strong> Rich Text</a></li><li><ol class="section"><li><a href="markdown.html"><strong aria-hidden="true">4.1.</strong> Markdown</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">4.2.</strong> Carets</a></li></ol></li><li><a href="frontend.html"><strong aria-hidden="true">5.</strong> Frontend</a></li><li><ol class="section"><li><a href="server-apis.html"><strong aria-hidden="true">5.1.</strong> Server APIs</a></li><li><a href="editor-component.html"><strong aria-hidden="true">5.2.</strong> Editor Component</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">6.</strong> Deployment and Usage</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">6.1.</strong> Running as a binary</a></li><li><a href="#.html"><strong aria-hidden="true">6.2.</strong> Hosted Sandbox</a></li><li><a href="deploying.html"><strong aria-hidden="true">6.3.</strong> Dokku</a></li><li><a href="#.html"><strong aria-hidden="true">6.4.</strong> npm module</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">7.</strong> Appendix</a></li><li><ol class="section"><li><a href="diary-delall.html"><strong aria-hidden="true">7.1.</strong> Delall Hack</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="getting-started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">2.</strong> Development</a></li><li><ol class="section"><li><a href="intro-system.html" class="active"><strong aria-hidden="true">2.1.</strong> System Overview</a></li><li><a href="intro-x.html"><strong aria-hidden="true">2.2.</strong> Build System ./tools</a></li><li><a href="intro-testing.html"><strong aria-hidden="true">2.3.</strong> Testing</a></li><li><ol class="section"><li><a href="#.html"><strong aria-hidden="true">2.3.1.</strong> Writing an integration test</a></li></ol></li></ol></li><li><a href="#.html"><strong aria-hidden="true">3.</strong> Working with Documents</a></li><li><ol class="section"><li><a href="working-with-documents.html"><strong aria-hidden="true">3.1.</strong> Documents</a></li><li><a href="working-with-operations.html"><strong aria-hidden="true">3.2.</strong> Operations</a></li><li><a href="rtf-ot.html"><strong aria-hidden="true">3.3.</strong> Operational Transform</a></li></ol></li><li><a href="rtf.html"><strong aria-hidden="true">4.</strong> Rich Text</a></li><li><ol class="section"><li><a href="markdown.html"><strong aria-hidden="true">4.1.</strong> Markdown</a></li><li><a href="diary-carets.html"><strong aria-hidden="true">4.2.</strong> Carets</a></li></ol></li><li><a href="frontend.html"><strong aria-hidden="true">5.</strong> Frontend</a></li><li><ol class="section"><li><a href="server-apis.html"><strong aria-hidden="true">5.1.</strong> Server APIs</a></li><li><a href="editor-component.html"><strong aria-hidden="true">5.2.</strong> Editor Component</a></li></ol></li><li><a href="#.html"><strong aria-hidden="true">6.</strong> Deployment and Usage</a></li><li><ol class="section"><li><a href="edit-server-binary.html"><strong aria-hidden="true">6.1.</strong> Running as a binary</a></li><li><a href="#.html"><strong aria-hidden="true">6.2.</strong> Hosted Sandbox</a></li><li><a href="deploying.html"><strong aria-hidden="true">6.3.</strong> Dokku</a></li><li><a href="#.html"><strong aria-hidden="true">6.4.</strong> npm module</a></li></ol></li><li><a href="appendix.html"><strong aria-hidden="true">7.</strong> Appendix</a></li><li><ol class="section"><li><a href="diary-delall.html"><strong aria-hidden="true">7.1.</strong> Delall Hack</a></li><li><a href="glossary.html"><strong aria-hidden="true">7.2.</strong> Glossary</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -161,19 +161,27 @@ synchronizing server. The server is also in charge of storing page content, so
 that every page can be shared via its URL.</p>
 <p>There are four components in the system:</p>
 <ul>
-<li>The <strong>Server</strong>, which serves HTTP content, a GraphQL endpoint for performing
+<li>
+<p>The <strong>Server</strong>, which serves HTTP content, a GraphQL endpoint for performing
 page-level commands, and a WebSocket endpoint for synchronizing document
-content.</li>
-<li>The <strong>Client</strong>, which can connect to a server and synchronize its document
+content.</p>
+</li>
+<li>
+<p>The <strong>Client</strong>, which can connect to a server and synchronize its document
 content. It sends client-side modifications (in the form of operations) to the
 server, and receives updated content (in the form of operations) from the server
-after any client submits an update.</li>
-<li>The <strong>Controller</strong>, which receives UI-level event updates from the frontend
-and converts it into operations on the client document.</li>
-<li>The <strong>Frontend</strong>, which is the editor UI. The current document is rendered
+after any client submits an update.</p>
+</li>
+<li>
+<p>The <strong>Controller</strong>, which receives UI-level event updates from the frontend
+and converts it into operations on the client document.</p>
+</li>
+<li>
+<p>The <strong>Frontend</strong>, which is the editor UI. The current document is rendered
 as a component inside the frontend, and interactions with this component are
 forwarded to the controller. The frontend also manages the toolbar,
-notifications, and dialog boxes.</li>
+notifications, and dialog boxes.</p>
+</li>
 </ul>
 <p>Each of these four components can be controlled by their <strong>commands</strong>, defined
 in <code>commands.rs</code>, effectively providing an asynchronous API for each component
