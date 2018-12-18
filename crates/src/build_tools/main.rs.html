@@ -942,38 +942,6 @@
 <span id="942">942</span>
 <span id="943">943</span>
 <span id="944">944</span>
-<span id="945">945</span>
-<span id="946">946</span>
-<span id="947">947</span>
-<span id="948">948</span>
-<span id="949">949</span>
-<span id="950">950</span>
-<span id="951">951</span>
-<span id="952">952</span>
-<span id="953">953</span>
-<span id="954">954</span>
-<span id="955">955</span>
-<span id="956">956</span>
-<span id="957">957</span>
-<span id="958">958</span>
-<span id="959">959</span>
-<span id="960">960</span>
-<span id="961">961</span>
-<span id="962">962</span>
-<span id="963">963</span>
-<span id="964">964</span>
-<span id="965">965</span>
-<span id="966">966</span>
-<span id="967">967</span>
-<span id="968">968</span>
-<span id="969">969</span>
-<span id="970">970</span>
-<span id="971">971</span>
-<span id="972">972</span>
-<span id="973">973</span>
-<span id="974">974</span>
-<span id="975">975</span>
-<span id="976">976</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Don&#39;t add additional noise to the build tools.</span>
 <span class="comment">// #![deny(warnings)]</span>
@@ -1524,22 +1492,6 @@
                 <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Database path: edit-server/edit.sqlite3&quot;</span>);
             }
 
-            <span class="comment">// Build dist folder if it doesn&#39;t exist.</span>
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">Path</span>::<span class="ident">new</span>(<span class="string">&quot;edit-frontend/dist/edit.js&quot;</span>).<span class="ident">exists</span>() {
-                <span class="macro">execute</span><span class="macro">!</span>(
-                    <span class="string">r&quot;
-                        {self_path} wasm-build
-                    &quot;</span>,
-                    <span class="ident">self_path</span> <span class="op">=</span> <span class="ident">SELF_PATH</span>,
-                )<span class="question-mark">?</span>;
-                <span class="macro">execute</span><span class="macro">!</span>(
-                    <span class="string">r&quot;
-                        {self_path} frontend-build
-                    &quot;</span>,
-                    <span class="ident">self_path</span> <span class="op">=</span> <span class="ident">SELF_PATH</span>,
-                )<span class="question-mark">?</span>;
-            }
-
             <span class="macro">eprintln</span><span class="macro">!</span>(<span class="string">&quot;Starting server...&quot;</span>);
 
             <span class="kw">let</span> <span class="ident">release_flag</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">release</span> { <span class="prelude-val">Some</span>(<span class="string">&quot;--release&quot;</span>) } <span class="kw">else</span> { <span class="prelude-val">None</span> };
@@ -1566,22 +1518,6 @@
 
         <span class="ident">Cli</span>::<span class="ident">ServerBuild</span> { <span class="ident">args</span> } <span class="op">=&gt;</span> {
             <span class="kw">let</span> <span class="ident">release_flag</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">release</span> { <span class="prelude-val">Some</span>(<span class="string">&quot;--release&quot;</span>) } <span class="kw">else</span> { <span class="prelude-val">None</span> };
-
-            <span class="comment">// Build dist folder if it doesn&#39;t exist.</span>
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">Path</span>::<span class="ident">new</span>(<span class="string">&quot;edit-frontend/dist/edit.js&quot;</span>).<span class="ident">exists</span>() {
-                <span class="macro">execute</span><span class="macro">!</span>(
-                    <span class="string">r&quot;
-                        {self_path} wasm-build
-                    &quot;</span>,
-                    <span class="ident">self_path</span> <span class="op">=</span> <span class="ident">SELF_PATH</span>,
-                )<span class="question-mark">?</span>;
-                <span class="macro">execute</span><span class="macro">!</span>(
-                    <span class="string">r&quot;
-                        {self_path} frontend-build
-                    &quot;</span>,
-                    <span class="ident">self_path</span> <span class="op">=</span> <span class="ident">SELF_PATH</span>,
-                )<span class="question-mark">?</span>;
-            }
 
             <span class="macro">execute</span><span class="macro">!</span>(
                 <span class="string">r&quot;
