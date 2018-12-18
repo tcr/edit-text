@@ -275,6 +275,13 @@ export class EditorFrame extends React.Component {
       console.error('!!! client close');
     };
 
+    this.client.onError = (e: any) => {
+      this.showNotification({
+        level: 'error',
+        element: <div>edit-text encountered an exception. Please reload this page to continue. (Error thrown from WebAssembly)</div>
+      });
+    };
+
     // Update watcher.
     // TODO move this to a better location.
     let cachedEtag: null | string = null;

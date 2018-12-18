@@ -4,7 +4,7 @@
   - [Getting Started](./getting-started.md)
 - [Development](./development.md)
   - [System Overview](./intro-system.md)
-  - [Build System ./tools](./intro-x.md)
+  - [Build with ./tools](./intro-x.md)
   - [Tests](./intro-testing.md)
     - [Writing an integration test](#)
 - [Editor Basics](./editor-basics.md)

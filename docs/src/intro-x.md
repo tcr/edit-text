@@ -1,15 +1,21 @@
-# Build System ./tools
+# Build with ./tools
 
-`./tools` is the build tool. You can call this command from the root of the
-`edit-server/` directory. To see a list of build commands, run the following: 
+edit-text has a custom build script written in Rust that you invoke by running
+`./tools` in the project root directory. This is a basic wrapper over `cargo`
+and `npm` commands and other essential project functionality, and provides an
+easy way to launch the edit-text server and compile the frontend JavaScript
+bundle.
+
+To see a list of build commands, open the project directory in your terminal
+and run the following command:
 
 ```
 ./tools help
 ```
 
-NOTE: If you are on Windows running in the command prompt, you will need to
+NOTE: If you are on Windows running in `cmd.exe`, you will need to
 invoke the build tool with `.\tools` instead. Please substitute `./tools` with
-`.\tools` accordingly throughout this guide.
+`.\tools` throughout this guide.
 
 ## Building the Server
 

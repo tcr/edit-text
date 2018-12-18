@@ -72,6 +72,7 @@ export class WasmController implements ControllerImpl {
   // public
   onMessage: (msg: any) => void | null;
   onClose: () => void | null; // unused
+  onError: (err: any) => void | null;
 
   // TODO refactor wasmClient, remove Module
   Module: any;
@@ -85,9 +86,14 @@ export class WasmController implements ControllerImpl {
         console.groupEnd();
       }
 
-      this.clientBindings.command(JSON.stringify({
-        ControllerCommand: command,
-      }));
+      try {
+        this.clientBindings.command(JSON.stringify({
+          ControllerCommand: command,
+        }));
+      } catch (e) {
+        this.onError ? this.onError(e) : null;
+        throw e;
+      }
     }
   }
 

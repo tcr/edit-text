@@ -358,9 +358,10 @@ fn run() -> Result<(), Error> {
                 eprintln!();
             }
 
-            let only_docs = change_list_only_docs(true)?;
-
-            if only_docs {
+            // If the change list is 1) only edits to docs/, and 2) the --update
+            // flag was not passed in, then skip the test suite and just build
+            // the book + run cargo doc.
+            if !update && change_list_only_docs(true)? {
                 // If only docs/ was modified, just build the book.
                 eprintln!("ci: building only book");
                 execute!(
@@ -378,7 +379,7 @@ fn run() -> Result<(), Error> {
                 )?;
                 eprintln!();
             } else {
-                // Build all ./tools targets.
+                // Perform a full build of all ./tools targets.
                 eprintln!("ci: building all");
                 execute!(
                     r"
