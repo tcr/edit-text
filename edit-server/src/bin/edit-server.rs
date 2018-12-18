@@ -16,6 +16,7 @@ use md5;
 use reqwest;
 use crypto::md5::Md5;
 use crypto::digest::Digest;
+use yansi::Paint;
 
 #[macro_use]
 extern crate serde_json;
@@ -183,6 +184,18 @@ fn run_http_server(port: u16, client_proxy: bool) {
     assert!(template_dir.exists(Path::new("client.hbs")));
     assert!(template_dir.exists(Path::new("presentation.hbs")));
     assert!(template_dir.exists(Path::new("favicon.png")));
+
+    // Build dist folder if it doesn't exist.
+    if dist_dir.get(Path::new("edit.js")).is_none() {
+        eprintln!("{}", Paint::yellow(r"
+=======================================================
+  WARNING!
+  The file edit-frontend/dist/edit.js does not exist.  
+  You should generate the frontend code by running   
+  `./tools frontend-build` from a terminal window.        
+=======================================================
+"));
+    }
 
     println!(
         "> Server listening for HTTP connections on http://0.0.0.0:{}/",

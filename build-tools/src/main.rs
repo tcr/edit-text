@@ -547,22 +547,6 @@ fn run() -> Result<(), Error> {
                 println!("Database path: edit-server/edit.sqlite3");
             }
 
-            // Build dist folder if it doesn't exist.
-            if !Path::new("edit-frontend/dist/edit.js").exists() {
-                execute!(
-                    r"
-                        {self_path} wasm-build
-                    ",
-                    self_path = SELF_PATH,
-                )?;
-                execute!(
-                    r"
-                        {self_path} frontend-build
-                    ",
-                    self_path = SELF_PATH,
-                )?;
-            }
-
             eprintln!("Starting server...");
 
             let release_flag = if release { Some("--release") } else { None };
@@ -589,22 +573,6 @@ fn run() -> Result<(), Error> {
 
         Cli::ServerBuild { args } => {
             let release_flag = if release { Some("--release") } else { None };
-
-            // Build dist folder if it doesn't exist.
-            if !Path::new("edit-frontend/dist/edit.js").exists() {
-                execute!(
-                    r"
-                        {self_path} wasm-build
-                    ",
-                    self_path = SELF_PATH,
-                )?;
-                execute!(
-                    r"
-                        {self_path} frontend-build
-                    ",
-                    self_path = SELF_PATH,
-                )?;
-            }
 
             execute!(
                 r"
