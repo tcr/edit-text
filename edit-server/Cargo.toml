@@ -36,6 +36,7 @@ take_mut = "0.2.0"
 taken = "0.1.1"
 url = "1.6.0"
 ws = "0.7.3"
+yansi = "0.5"
 
 [dependencies.diesel]
 features = ["sqlite"]
