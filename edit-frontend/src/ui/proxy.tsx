@@ -9,6 +9,7 @@ declare var CONFIG: any;
 export class ProxyController implements ControllerImpl {
   onMessage: (msg: any) => void | null;
   onClose: () => void | null;
+  onError: (error: any) => void | null;
 
   private socket: WebSocket;
 
