@@ -9,6 +9,6 @@ export interface ControllerImpl {
   onClose: () => void | null;
   onError: (error: any) => void | null;
 
-  connect(onError: () => void): Promise<void>;
+  connect(): Promise<void>;
   sendCommand(command: ControllerCommand): void;
 }

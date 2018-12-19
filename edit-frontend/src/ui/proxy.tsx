@@ -23,7 +23,7 @@ export class ProxyController implements ControllerImpl {
     this.socket.send(JSON.stringify(command));
   }
 
-  connect(onError: () => void): Promise<void> {
+  connect(): Promise<void> {
     let network = this;
     return Promise.resolve()
     .then(() => {
