@@ -4,6 +4,7 @@ import copy from './copy';
 import * as util from './util';
 import { ControllerImpl } from './controller';
 import {vm} from './vm';
+import DEBUG from '../debug';
 
 const ROOT_SELECTOR = '.edit-text';
 
@@ -434,9 +435,22 @@ export class Editor extends React.Component {
       return;
     }
 
-    // Listen for command+c
+    // Listener: command + c
     if (e.keyCode == 67 && (e.ctrlKey || e.metaKey)) {
       this.performCopy();
+      e.preventDefault();
+      return;
+    }
+
+    // Listener: command + left, command + right
+    if (e.metaKey && (e.keyCode == 37 || e.keyCode == 39)) {
+      // TODO This shouldn't call into DEBUG, this code should instead live
+      // in editor.tsx and be called from debug.ts.
+      if (e.keyCode == 37) {
+        DEBUG.caretToStartOfLine();
+      } else {
+        DEBUG.caretToEndOfLine();
+      }
       e.preventDefault();
       return;
     }
@@ -453,6 +467,7 @@ export class Editor extends React.Component {
     // the client box model.
     let UP = e.keyCode == 38;
     let DOWN = e.keyCode == 40;
+    // Listener: up, down
     if (UP || DOWN) {
       let current = document.querySelector('div.current[data-tag="caret"][data-focus="true"]');
       if (current !== null) {

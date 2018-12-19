@@ -84,6 +84,23 @@ fn key_handlers<C: ClientController>() -> Vec<KeyHandler<C>> {
             Box::new(|client| client.client_op(|doc| caret_move(doc, true, true))),
         ),
 
+        // opt + shift + left
+        KeyHandler(
+            37,
+            false,
+            true,
+            true,
+            Box::new(|client| client.client_op(|doc| caret_word_move(doc, false, true))),
+        ),
+        // opt + shift + right
+        KeyHandler(
+            39,
+            false,
+            true,
+            true,
+            Box::new(|client| client.client_op(|doc| caret_word_move(doc, true, true))),
+        ),
+
         // up
         KeyHandler(
             38,
@@ -124,23 +141,23 @@ fn key_handlers<C: ClientController>() -> Vec<KeyHandler<C>> {
             false,
             Box::new(|client| client.client_op(|doc| toggle_list(doc))),
         ),
-        // OPT-left
+        // opt + left
         KeyHandler(
             37,
             false,
             false,
             true,
-            Box::new(|client| client.client_op(|doc| caret_word_move(doc, false))),
+            Box::new(|client| client.client_op(|doc| caret_word_move(doc, false, false))),
         ),
-        // OPT-left
+        // opt + left
         KeyHandler(
             39,
             false,
             false,
             true,
-            Box::new(|client| client.client_op(|doc| caret_word_move(doc, true))),
+            Box::new(|client| client.client_op(|doc| caret_word_move(doc, true, false))),
         ),
-        // OPT-a
+        // cmd + a
         KeyHandler(
             65,
             true,
