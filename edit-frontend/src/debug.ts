@@ -129,14 +129,37 @@ const DEBUG = {
         document.querySelector('.edit-text')!.dispatchEvent(evt);
     },
 
+    mouseup: (x: number, y: number) => {
+        let evt = new MouseEvent("mouseup", {
+            bubbles: true,
+            cancelable: true,
+            clientX: x,
+            clientY: y,
+        });
+        document.querySelector('.edit-text')!.dispatchEvent(evt);
+    },
+
+    caretToStartOfLine: () => {
+        let caret = document.querySelector(`.edit-text [data-tag=caret][data-client=${JSON.stringify(DEBUG.clientID())}][data-focus=true]`);
+        if (caret) {
+            let edit = document.querySelector('.edit-text')!;
+            let clientY = (caret.getBoundingClientRect().top + caret.getBoundingClientRect().bottom) / 2;
+            let clientX = edit.getBoundingClientRect().left;
+            DEBUG.mousedown(clientX, clientY);
+            DEBUG.mouseup(clientX, clientY);
+        } else {
+            throw new Error('No caret found.');
+        }
+    },
+
     caretToEndOfLine: () => {
         let caret = document.querySelector(`.edit-text [data-tag=caret][data-client=${JSON.stringify(DEBUG.clientID())}][data-focus=true]`);
         if (caret) {
             let edit = document.querySelector('.edit-text')!;
             let clientY = (caret.getBoundingClientRect().top + caret.getBoundingClientRect().bottom) / 2;
             let clientX = edit.getBoundingClientRect().right - 1;
-            console.log('#####', clientX, clientY);
             DEBUG.mousedown(clientX, clientY);
+            DEBUG.mouseup(clientX, clientY);
         } else {
             throw new Error('No caret found.');
         }

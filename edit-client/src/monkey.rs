@@ -82,7 +82,7 @@ impl Scheduler {
 
                     if alive.load(Ordering::Relaxed) && monkey.load(Ordering::Relaxed) {
                         let task_object = task();
-                        let task_str =
+                        let _task_str =
                             serde_json::to_string(&Task::ControllerCommand(task_object)).unwrap();
                         
                         // FIXME This needs to send the task to the controller,
