@@ -37,22 +37,6 @@ export function sendCommandToJS(msg: any) {
   sendCommandToJSList.forEach(handler => handler(msg));
 }
 
-let forwardWasmTaskCallback: any = null;
-
-export function getForwardWasmTaskCallback(): any {
-  return forwardWasmTaskCallback;
-}
-
-export function setForwardWasmTaskCallback(value: any) {
-  forwardWasmTaskCallback = value;
-}
-
-export function forwardWasmTask(msg: any) {
-  if (forwardWasmTaskCallback) {
-    forwardWasmTaskCallback(msg);
-  }
-}
-
 // ^^^^^
 
 
@@ -75,30 +59,27 @@ export class WasmController implements ControllerImpl {
   onError: (err: any) => void | null;
 
   // TODO refactor wasmClient, remove Module
-  Module: any;
   clientBindings: WasmClientModule;
 
   sendCommand(command: ControllerCommand) {
-    if (forwardWasmTaskCallback != null) {
-      if (CONFIG.console_command_log) {
-        console.groupCollapsed('%c[controller] %s', 'background: #c63; padding: 3px 5px; display: block; color: white;', command.tag);
-        console.debug(command);
-        console.groupEnd();
-      }
+    if (CONFIG.console_command_log) {
+      console.groupCollapsed('%c[controller] %s', 'background: #c63; padding: 3px 5px; display: block; color: white;', command.tag);
+      console.debug(command);
+      console.groupEnd();
+    }
 
-      try {
-        this.clientBindings.command(JSON.stringify({
-          ControllerCommand: command,
-        }));
-      } catch (e) {
-        this.onError ? this.onError(e) : null;
-        throw e;
-      }
+    try {
+      this.clientBindings.command(JSON.stringify({
+        ControllerCommand: command,
+      }));
+    } catch (e) {
+      this.onError ? this.onError(e) : null;
+      throw e;
     }
   }
 
   // Wasm connector.
-  connect(onError: () => void): Promise<void> {
+  connect(): Promise<void> {
     const client = this;
 
     return new Promise((resolve, reject) => {
@@ -125,23 +106,11 @@ export class WasmController implements ControllerImpl {
       index.getWasmModule()
       .then(Module => {
         let clientBindings = Module.wasm_setup(route.serverUrl());
-        DEBUG.setGlobalClientBindings(clientBindings);
-
-        // Websocket port
-        client.Module = Module;
         client.clientBindings = clientBindings;
 
-        forwardWasmTaskCallback = (msg: any) => {
-          try {
-            clientBindings.command(msg);
-          } catch (e) {
-            forwardWasmTaskCallback = null;
-
-            onError();
-
-            throw new WasmError(e, `Error during client command: ${e.message}`);
-          }
-        };
+        // Share with the DEBUG object, since it expects a single global
+        // instance of the editor.
+        DEBUG.setGlobalClientBindings(clientBindings);
 
         resolve();
       });

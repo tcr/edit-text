@@ -46,7 +46,6 @@ impl Scheduler {
         F: Fn() -> ControllerCommand + 'static,
     {
         use crate::wasm::{
-            forwardWasmTask,
             setTimeout,
         };
 
@@ -85,7 +84,11 @@ impl Scheduler {
                         let task_object = task();
                         let task_str =
                             serde_json::to_string(&Task::ControllerCommand(task_object)).unwrap();
-                        forwardWasmTask(&task_str);
+                        
+                        // FIXME This needs to send the task to the controller,
+                        // but somehow that needs to be routed through the
+                        // frontend?
+                        // forwardWasmTask(&task_str);
                     }
                 })
             };

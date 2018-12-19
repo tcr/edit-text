@@ -7,7 +7,8 @@ import {vm} from './vm';
 
 const ROOT_SELECTOR = '.edit-text';
 
-// TODO define this better
+// TODO This should be a type exported from Rust using
+// wasm-typescript-definition.
 type Cursor = any;
 
 function isTextNode(
@@ -118,7 +119,7 @@ function curto(
   if (isTextNode(el) && isSpan(el.parentNode)) {
     el = el.parentNode;
   }
-  // TODO if isTextNode but !isSpan there should be an invariant thrown
+  // TODO We should assert that isSpan(el.parentNode).
 
   function place_skip(cur: CurSpan, value: number) {
     if ('CurSkip' in cur[0]) {

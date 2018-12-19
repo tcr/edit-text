@@ -4,8 +4,6 @@ use std::sync::{
 };
 
 // Sync barrier, optional sequential barrier.
-// TODO this whole thing should be refactored:
-// Checkpoint::create(5) -> Vec<Checkpoint; 5> then map to create your threads
 pub struct Checkpoint {
     pub index: usize,
     all: Arc<Barrier>,               // joint
