@@ -165,6 +165,26 @@ const DEBUG = {
         }
     },
 
+    drawMarker(x: number, y: number): Element {
+        let div = document.createElement('div');
+        document.body.appendChild(div);
+        div.style.cssText = `
+          display: block;
+          position: absolute;
+          width: 20px;
+          height: 20px;
+          border: 2px solid red;
+          border-right: 0px;
+          border-bottom: 0px;
+          box-sizing: border-box;
+          background: transparent;
+          box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.3);
+          top: ${y}px;
+          left: ${x}px;
+        `;
+        return div;
+    },
+
     // Bindings to global ref for client module
     // NOTE: only for debugging! bindings should not be referenced globally.
 

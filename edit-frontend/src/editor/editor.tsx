@@ -231,6 +231,7 @@ function caretScan(
   
   // Attempt to get the text node under our scanning point.
   let first: any = util.textNodeAtPoint(x, y);
+
   // In doc "# Most of all\n\nThe world is a place where parts of wholes are perscribed"
   // When you hit the down key for any character in the first line, it works,
   // until the last character (end of the line), where if you hit the down key it 
@@ -250,10 +251,11 @@ function caretScan(
   if (first !== null) { // Or we have nothing to compare to and we'll loop all day
     while (true) {
       // Step a reasonable increment in each direction.
-      const STEP = 10;
+      const STEP = 14;
       y += UP ? -STEP : STEP;
 
       let el = document.elementFromPoint(x, y);
+
       // console.log('locating element at %d, %d:', x, y, el);
       if (!root.contains(el) || el == null) { // Off the page!
         break;
@@ -266,6 +268,7 @@ function caretScan(
 
         // Check for the "empty div" scenario
         let isEmptyDiv = isEmptyBlock(el);
+
         // if (isEmptyDiv) {
         //   console.log('----->', el.getBoundingClientRect());
         // }

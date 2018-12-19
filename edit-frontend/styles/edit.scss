@@ -240,6 +240,7 @@ body.theme-column {
         margin-right: -1px;
         content: '\200c' !important; // zero width non-joiner Unicode code point
         animation: fadein 0.3s;
+        pointer-events: none;
     }
 
     div[data-tag="caret"][data-focus="false"] {
