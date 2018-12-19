@@ -238,16 +238,12 @@ body.theme-column {
         border-left: 2px $color_caret solid;
         margin-left: -1px;
         margin-right: -1px;
-        content: '';
+        content: '\200c' !important; // zero width non-joiner Unicode code point
         animation: fadein 0.3s;
     }
 
     div[data-tag="caret"][data-focus="false"] {
         display: none;
-    }
-
-    div[data-tag="caret"][data-wsj]::before {
-        content: '\200c' !important; // zero width non-joiner Unicode code point
     }
 
     div[data-tag="caret"].current::before {
