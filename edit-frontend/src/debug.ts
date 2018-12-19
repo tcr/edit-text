@@ -129,17 +129,60 @@ const DEBUG = {
         document.querySelector('.edit-text')!.dispatchEvent(evt);
     },
 
+    mouseup: (x: number, y: number) => {
+        let evt = new MouseEvent("mouseup", {
+            bubbles: true,
+            cancelable: true,
+            clientX: x,
+            clientY: y,
+        });
+        document.querySelector('.edit-text')!.dispatchEvent(evt);
+    },
+
+    caretToStartOfLine: () => {
+        let caret = document.querySelector(`.edit-text [data-tag=caret][data-client=${JSON.stringify(DEBUG.clientID())}][data-focus=true]`);
+        if (caret) {
+            let edit = document.querySelector('.edit-text')!;
+            let clientY = (caret.getBoundingClientRect().top + caret.getBoundingClientRect().bottom) / 2;
+            let clientX = edit.getBoundingClientRect().left;
+            DEBUG.mousedown(clientX, clientY);
+            DEBUG.mouseup(clientX, clientY);
+        } else {
+            throw new Error('No caret found.');
+        }
+    },
+
     caretToEndOfLine: () => {
         let caret = document.querySelector(`.edit-text [data-tag=caret][data-client=${JSON.stringify(DEBUG.clientID())}][data-focus=true]`);
         if (caret) {
             let edit = document.querySelector('.edit-text')!;
             let clientY = (caret.getBoundingClientRect().top + caret.getBoundingClientRect().bottom) / 2;
             let clientX = edit.getBoundingClientRect().right - 1;
-            console.log('#####', clientX, clientY);
             DEBUG.mousedown(clientX, clientY);
+            DEBUG.mouseup(clientX, clientY);
         } else {
             throw new Error('No caret found.');
         }
+    },
+
+    drawMarker(x: number, y: number): Element {
+        let div = document.createElement('div');
+        document.body.appendChild(div);
+        div.style.cssText = `
+          display: block;
+          position: absolute;
+          width: 20px;
+          height: 20px;
+          border: 2px solid red;
+          border-right: 0px;
+          border-bottom: 0px;
+          box-sizing: border-box;
+          background: transparent;
+          box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.3);
+          top: ${y}px;
+          left: ${x}px;
+        `;
+        return div;
     },
 
     // Bindings to global ref for client module

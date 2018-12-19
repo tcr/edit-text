@@ -70,11 +70,21 @@ pub fn caret_move(
         .map(|ctx| ctx.result())
 }
 
-pub fn caret_word_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> {
+pub fn caret_word_move(
+    ctx: ActionContext,
+    increase: bool,
+    preserve_select: bool,
+) -> Result<Op, Error> {
     Ok(ctx)
         .and_then(|ctx| {
-            let op = caret_clear(&ctx, Pos::Anchor).unwrap_or_else(|_| Op::empty());
-            ctx.apply(&op)
+            // If we aren't preserving the selection, collapse the anchor caret
+            // to where the focus caret is.
+            if !preserve_select {
+                let op = caret_clear(&ctx, Pos::Anchor).unwrap_or_else(|_| Op::empty());
+                ctx.apply(&op)
+            } else {
+                Ok(ctx)
+            }
         })
         .and_then(|ctx| {
             let mut walker = ctx.get_walker(Pos::Focus).expect("Expected a Focus caret");
@@ -137,10 +147,12 @@ pub fn caret_word_move(ctx: ActionContext, increase: bool) -> Result<Op, Error> 
 
             // Second operation inserts the new caret.
             let mut writer = walker.to_writer();
+            if !preserve_select {
+                writer.add.begin();
+                writer.add.close(caret_attrs(&ctx.client_id, false));
+            }
             writer.add.begin();
             writer.add.close(caret_attrs(&ctx.client_id, true));
-            writer.add.begin();
-            writer.add.close(caret_attrs(&ctx.client_id, false));
             let op_2 = writer.exit_result();
 
             // Return composed operations. Select proper order or otherwise composition

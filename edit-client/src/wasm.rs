@@ -34,8 +34,6 @@ lazy_static! {
 extern "C" {
     /// Send a command *from* the client *to* the frontend.
     pub fn sendCommandToJS(input: &str) -> u32;
-
-    pub fn forwardWasmTask(input: &str);
 }
 
 #[wasm_bindgen]

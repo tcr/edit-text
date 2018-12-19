@@ -345,7 +345,7 @@ fn apply_del_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &DelSpa
                         nextdel = false;
                     } else {
                         // noop
-                        bc.delete(count);
+                        bc.DeleteElements(1);
                     }
                 }
                 _ => {

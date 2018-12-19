@@ -4,10 +4,12 @@ import copy from './copy';
 import * as util from './util';
 import { ControllerImpl } from './controller';
 import {vm} from './vm';
+import DEBUG from '../debug';
 
 const ROOT_SELECTOR = '.edit-text';
 
-// TODO define this better
+// TODO This should be a type exported from Rust using
+// wasm-typescript-definition.
 type Cursor = any;
 
 function isTextNode(
@@ -118,7 +120,7 @@ function curto(
   if (isTextNode(el) && isSpan(el.parentNode)) {
     el = el.parentNode;
   }
-  // TODO if isTextNode but !isSpan there should be an invariant thrown
+  // TODO We should assert that isSpan(el.parentNode).
 
   function place_skip(cur: CurSpan, value: number) {
     if ('CurSkip' in cur[0]) {
@@ -229,6 +231,7 @@ function caretScan(
   
   // Attempt to get the text node under our scanning point.
   let first: any = util.textNodeAtPoint(x, y);
+
   // In doc "# Most of all\n\nThe world is a place where parts of wholes are perscribed"
   // When you hit the down key for any character in the first line, it works,
   // until the last character (end of the line), where if you hit the down key it 
@@ -248,10 +251,11 @@ function caretScan(
   if (first !== null) { // Or we have nothing to compare to and we'll loop all day
     while (true) {
       // Step a reasonable increment in each direction.
-      const STEP = 10;
+      const STEP = 14;
       y += UP ? -STEP : STEP;
 
       let el = document.elementFromPoint(x, y);
+
       // console.log('locating element at %d, %d:', x, y, el);
       if (!root.contains(el) || el == null) { // Off the page!
         break;
@@ -264,6 +268,7 @@ function caretScan(
 
         // Check for the "empty div" scenario
         let isEmptyDiv = isEmptyBlock(el);
+
         // if (isEmptyDiv) {
         //   console.log('----->', el.getBoundingClientRect());
         // }
@@ -433,9 +438,22 @@ export class Editor extends React.Component {
       return;
     }
 
-    // Listen for command+c
+    // Listener: command + c
     if (e.keyCode == 67 && (e.ctrlKey || e.metaKey)) {
       this.performCopy();
+      e.preventDefault();
+      return;
+    }
+
+    // Listener: command + left, command + right
+    if (e.metaKey && (e.keyCode == 37 || e.keyCode == 39)) {
+      // TODO This shouldn't call into DEBUG, this code should instead live
+      // in editor.tsx and be called from debug.ts.
+      if (e.keyCode == 37) {
+        DEBUG.caretToStartOfLine();
+      } else {
+        DEBUG.caretToEndOfLine();
+      }
       e.preventDefault();
       return;
     }
@@ -452,6 +470,7 @@ export class Editor extends React.Component {
     // the client box model.
     let UP = e.keyCode == 38;
     let DOWN = e.keyCode == 40;
+    // Listener: up, down
     if (UP || DOWN) {
       let current = document.querySelector('div.current[data-tag="caret"][data-focus="true"]');
       if (current !== null) {

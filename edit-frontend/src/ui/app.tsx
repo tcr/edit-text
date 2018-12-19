@@ -583,7 +583,7 @@ function multiConnect(client: ControllerImpl) {
   };
 }
 
-
+// This is a prototype of a standalone edit-text React component.
 class EditText extends React.Component {
   props: {
     client: WasmController,
@@ -664,7 +664,7 @@ class EditText extends React.Component {
     };
 
     this.props.client
-      .connect(() => {})
+      .connect()
       .then(() => {
         console.log('Loading static editor.');
         this.props.client.clientBindings.command(JSON.stringify({
@@ -760,10 +760,7 @@ export function start() {
 
       // Connect client.
       DEBUG.measureTime('connect-client');
-      client
-        .connect(() => {
-          // TODO all set
-        });
+      client.connect();
     }
   );
 }
