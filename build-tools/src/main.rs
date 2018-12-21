@@ -301,12 +301,27 @@ fn run() -> Result<(), Error> {
     #[allow(non_snake_case)]
     let CARGO_ARGS_OATIE = cargo_args_for_crate("oatie", &[], &[])?;
 
-    // Pass arguments directly to subcommands: don't capture -h, -v, or verification
-    // Do this by adding "--" into the args flag after the subcommand.
-    // TODO merge this into cargo_args_for_crate
+    // ISSUE Centralize custom cargo arguments in ./tools
+    //
+    // The source code of the `./tools` command that runs build steps is found
+    // in "build-tools/src/main.rs". There are two variables, `release` and
+    // `force_color`, which are set at the beginning of the script. They are
+    // used to set the color output and release mode flags for all invocations
+    // to `cargo` that the build script performs. But repeating each of these
+    // arguments each time cargo is called is verbose and error-prone.
+    // 
+    // There's already a function that is called to generate arguments to be
+    // passed on to cargo, `cargo_args_for_crate`, which is used right now to
+    // load features options from the Configuration.toml file. If the logic for
+    // adding the "--release" flag and the "--color=always" flag were added to
+    // the vector of arguments `cargo_args_for_crate` returns, then there can be
+    // just one set of arguments injected into each cargo call in the script,
+    // and the `release` and `force_color` variables can be deleted.
+
     let mut args = ::std::env::args().collect::<Vec<_>>();
 
-    // We interpret the --release flag at the build level.
+    // Extract the --release flag from the args list. We'll reuse the --release
+    // flag by injecting it into argumets for cargo.
     let release = args.iter().find(|x| *x == "--release").is_some();
     args = args.into_iter().filter(|x| *x != "--release").collect();
 
