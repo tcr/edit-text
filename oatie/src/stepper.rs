@@ -2,6 +2,7 @@
 
 mod docmutator;
 mod docstepper;
+pub mod charcursor;
 
 use crate::doc::*;
 use crate::place::can_element_join;
@@ -12,14 +13,14 @@ pub use self::docmutator::*;
 pub use self::docstepper::*;
 
 #[derive(Clone, Debug)]
-pub struct DelStepper {
-    pub head: Option<DelElement>,
-    pub rest: Vec<DelElement>,
-    pub stack: Vec<Vec<DelElement>>,
+pub struct DelStepper<S: Schema> {
+    pub head: Option<DelElement<S>>,
+    pub rest: Vec<DelElement<S>>,
+    pub stack: Vec<Vec<DelElement<S>>>,
 }
 
-impl DelStepper {
-    pub fn new(span: &DelSpan) -> DelStepper {
+impl<S: Schema> DelStepper<S> {
+    pub fn new(span: &DelSpan<S>) -> DelStepper<S> {
         let mut ret = DelStepper {
             head: None,
             rest: span.to_vec(),
@@ -29,7 +30,7 @@ impl DelStepper {
         ret
     }
 
-    pub fn next(&mut self) -> Option<DelElement> {
+    pub fn next(&mut self) -> Option<DelElement<S>> {
         let res = self.head.clone();
         self.head = if !self.rest.is_empty() {
             Some(self.rest.remove(0))
@@ -39,7 +40,7 @@ impl DelStepper {
         res
     }
 
-    pub fn get_head(&self) -> DelElement {
+    pub fn get_head(&self) -> DelElement<S> {
         self.head.clone().unwrap()
     }
 
@@ -66,7 +67,7 @@ impl DelStepper {
         self.next();
     }
 
-    pub fn into_span(self) -> DelSpan {
+    pub fn into_span(self) -> DelSpan<S> {
         let DelStepper { head, rest, .. } = self;
         if let Some(head) = head {
             let mut out = rest.to_vec();
@@ -79,14 +80,14 @@ impl DelStepper {
 }
 
 #[derive(Clone, Debug)]
-pub struct AddStepper {
-    pub head: Option<AddElement>,
-    pub rest: Vec<AddElement>,
-    pub stack: Vec<Vec<AddElement>>,
+pub struct AddStepper<S: Schema> {
+    pub head: Option<AddElement<S>>,
+    pub rest: Vec<AddElement<S>>,
+    pub stack: Vec<Vec<AddElement<S>>>,
 }
 
-impl AddStepper {
-    pub fn new(span: &AddSpan) -> AddStepper {
+impl<S: Schema> AddStepper<S> {
+    pub fn new(span: &AddSpan<S>) -> AddStepper<S> {
         let mut ret = AddStepper {
             head: None,
             rest: span.to_vec(),
@@ -96,7 +97,7 @@ impl AddStepper {
         ret
     }
 
-    pub fn next(&mut self) -> Option<AddElement> {
+    pub fn next(&mut self) -> Option<AddElement<S>> {
         let res = self.head.clone();
         self.head = if !self.rest.is_empty() {
             Some(self.rest.remove(0))
@@ -106,7 +107,7 @@ impl AddStepper {
         res
     }
 
-    pub fn get_head(&self) -> AddElement {
+    pub fn get_head(&self) -> AddElement<S> {
         self.head.clone().unwrap()
     }
 
@@ -114,7 +115,7 @@ impl AddStepper {
         self.head.is_none() && self.stack.is_empty()
     }
 
-    pub fn into_span(self) -> AddSpan {
+    pub fn into_span(self) -> AddSpan<S> {
         let AddStepper { head, rest, .. } = self;
         if let Some(head) = head {
             let mut out = rest.to_vec();

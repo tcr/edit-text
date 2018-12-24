@@ -9,6 +9,7 @@ use super::transform::{
 };
 use std::fmt;
 use enumset::EnumSetType;
+use crate::core::style::OpaqueStyleMap;
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum Attrs {
@@ -119,11 +120,14 @@ impl Track for RtfTrack {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct RtfSchema;
 
 impl Schema for RtfSchema {
     type Track = RtfTrack;
+
+    type GroupProperties = Attrs;
+    type CharsProperties = OpaqueStyleMap;
 
     fn attrs_eq(a: &Attrs, b: &Attrs) -> bool {
         // TODO normalize?

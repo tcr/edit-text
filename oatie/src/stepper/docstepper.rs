@@ -1,26 +1,27 @@
 use crate::stepper::*;
+pub use super::charcursor::*;
 
 // DocStepper
 
 // Where we define the impl on.
 #[derive(Clone, Debug)]
-pub struct DocStepper<'a> {
-    pub(crate) char_cursor: Option<CharCursor>,
-    pub(crate) stack: Vec<(isize, &'a [DocElement])>,
+pub struct DocStepper<'a, S: Schema> {
+    pub(crate) char_cursor: Option<CharCursor<S>>,
+    pub(crate) stack: Vec<(isize, &'a [DocElement<S>])>,
 }
 
 // DocStepper impls
 
-impl<'a> PartialEq for DocStepper<'a> {
-    fn eq(&self, b: &DocStepper<'a>) -> bool {
+impl<'a, S: Schema> PartialEq for DocStepper<'a, S> {
+    fn eq(&self, b: &DocStepper<'a, S>) -> bool {
         let a = self;
         (a.char_cursor.as_ref().map(|c| c.value()) == b.char_cursor.as_ref().map(|c| c.value())
             && a.stack == b.stack)
     }
 }
 
-impl<'a> DocStepper<'a> {
-    pub fn new<'b>(span: &'b [DocElement]) -> DocStepper<'b> {
+impl<'a, S: Schema> DocStepper<'a, S> {
+    pub fn new<'b>(span: &'b [DocElement<S>]) -> DocStepper<'b, S> {
         let mut stepper = DocStepper {
             char_cursor: None,
             stack: Vec::with_capacity(8),
@@ -63,7 +64,7 @@ impl<'a> DocStepper<'a> {
         self.char_cursor = cursor;
     }
 
-    pub fn char_cursor_expect(&self) -> &CharCursor {
+    pub fn char_cursor_expect(&self) -> &CharCursor<S> {
         self.char_cursor
             .as_ref()
             .expect("Expected a generated char cursor")
@@ -95,11 +96,11 @@ impl<'a> DocStepper<'a> {
     // What DocElement the index points to is the "head". If the head points
     // to a DocChars, we also create a char_cursor to index into the string.
 
-    pub(crate) fn current<'h>(&'h self) -> &'h (isize, &'a [DocElement]) {
+    pub(crate) fn current<'h>(&'h self) -> &'h (isize, &'a [DocElement<S>]) {
         self.stack.last().unwrap()
     }
 
-    pub fn parent_attrs(&self) -> &Attrs {
+    pub fn parent_attrs(&self) -> &S::GroupProperties {
         let (index, ref list) = &self.stack[self.stack.len() - 2];
         if let DocGroup(ref attrs, ..) = &list[*index as usize] {
             attrs
@@ -122,11 +123,11 @@ impl<'a> DocStepper<'a> {
         self.char_cursor_update();
     }
 
-    pub(crate) fn head_raw<'h>(&'h self) -> Option<&'a DocElement> {
+    pub(crate) fn head_raw<'h>(&'h self) -> Option<&'a DocElement<S>> {
         self.current().1.get(self.head_index())
     }
 
-    pub(crate) fn unhead_raw<'h>(&'h self) -> Option<&'a DocElement> {
+    pub(crate) fn unhead_raw<'h>(&'h self) -> Option<&'a DocElement<S>> {
         // If we've split a string, don't modify the index.
         if self
             .char_cursor
@@ -153,7 +154,7 @@ impl<'a> DocStepper<'a> {
         self.char_cursor_update_prev();
     }
 
-    pub fn head<'h>(&'h self) -> Option<&'h DocElement> {
+    pub fn head<'h>(&'h self) -> Option<&'h DocElement<S>> {
         match self.head_raw() {
             Some(&DocChars(..)) => {
                 // Expect cursor is at a string of length 1 at least
@@ -169,7 +170,7 @@ impl<'a> DocStepper<'a> {
         }
     }
 
-    pub fn unhead<'h>(&'h self) -> Option<&'h DocElement> {
+    pub fn unhead<'h>(&'h self) -> Option<&'h DocElement<S>> {
         if let Some(&DocChars(..)) = self.head_raw() {
             // .left may be empty, so allow fall-through (don't .unwrap())
             if let Some(docstring) = self.char_cursor_expect().left_element() {
@@ -180,7 +181,7 @@ impl<'a> DocStepper<'a> {
         self.current().1.get((self.head_index() - 1) as usize)
     }
 
-    pub fn peek(&self) -> Option<DocElement> {
+    pub fn peek(&self) -> Option<DocElement<S>> {
         match self.current().1.get((self.head_index() + 1) as usize) {
             Some(text @ &DocChars(..)) => {
                 // Pass along new text node
@@ -299,7 +300,7 @@ impl<'a> DocStepper<'a> {
         self.next();
     }
 
-    pub(crate) fn exit_with_attrs(&mut self) -> Attrs {
+    pub(crate) fn exit_with_attrs(&mut self) -> S::GroupProperties {
         self.unenter();
         let attrs = if let Some(&DocGroup(ref attrs, ..)) = self.head_raw() {
             attrs.clone()
@@ -318,7 +319,7 @@ mod tests {
 
     fn test_doc_0() -> DocSpan {
         doc_span![
-            DocGroup({"tag": "h1"}, [
+            DocGroup(Attrs::Header(1), [
                 DocChars("Cool"),
             ]),
         ]

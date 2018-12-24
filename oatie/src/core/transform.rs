@@ -3,12 +3,12 @@
 use std::cmp;
 use super::compose;
 use super::doc::*;
-use super::style::StyleMap;
 use crate::stepper::*;
 use crate::writer::*;
 use std::fmt::Debug;
 use std::marker::PhantomData;
-use crate::style::OpaqueStyleMap;
+use serde::Serialize;
+use serde::de::DeserializeOwned;
 
 pub trait Track: Copy + Debug + PartialEq + Sized {
     // Rename this do close split? if applicable?
@@ -30,47 +30,41 @@ pub trait Track: Copy + Debug + PartialEq + Sized {
     fn ancestors(&self) -> Vec<Self>;
 }
 
-pub trait Schema: Clone + Debug {
+pub trait Schema: Clone + Debug + PartialEq {
     type Track: Track + Sized;
 
+    type GroupProperties: Sized + Clone + Debug + Serialize + PartialEq + DeserializeOwned;
+    type CharsProperties: Sized + Clone + Debug + Serialize + PartialEq + DeserializeOwned + Default + StyleTrait;
+
     /// Determines if two sets of Attrs are equal.
-    fn attrs_eq(a: &Attrs, b: &Attrs) -> bool;
+    fn attrs_eq(a: &Self::GroupProperties, b: &Self::GroupProperties) -> bool;
 
     /// Get the track type from this Attrs.
-    fn track_type_from_attrs(attrs: &Attrs) -> Option<Self::Track>;
+    fn track_type_from_attrs(attrs: &Self::GroupProperties) -> Option<Self::Track>;
 
     /// Combine two Attrs into a new definition.
-    fn merge_attrs(a: &Attrs, b: &Attrs) -> Option<Attrs>;
+    fn merge_attrs(a: &Self::GroupProperties, b: &Self::GroupProperties) -> Option<Self::GroupProperties>;
 }
 
 #[derive(Clone, Debug)]
-struct TrackState<S>
-where
-    S: Schema,
-{
-    tag_a: Option<Attrs>,
-    tag_real: Option<Attrs>,
-    tag_b: Option<Attrs>,
+struct TrackState<S: Schema> {
+    tag_a: Option<S::GroupProperties>,
+    tag_real: Option<S::GroupProperties>,
+    tag_b: Option<S::GroupProperties>,
     is_original_a: bool,
     is_original_b: bool,
     _phantom: PhantomData<S>,
 }
 
-struct Transform<S>
-where
-    S: Schema,
-{
+struct Transform<S: Schema> {
     tracks: Vec<TrackState<S>>,
-    a_del: DelWriter,
-    a_add: AddWriter,
-    b_del: DelWriter,
-    b_add: AddWriter,
+    a_del: DelWriter<S>,
+    a_add: AddWriter<S>,
+    b_del: DelWriter<S>,
+    b_add: AddWriter<S>,
 }
 
-impl<S> Transform<S>
-where
-    S: Schema,
-{
+impl<S: Schema> Transform<S> {
     fn new() -> Transform<S> {
         Transform {
             tracks: vec![],
@@ -81,7 +75,7 @@ where
         }
     }
 
-    fn enter(&mut self, name: &Attrs) {
+    fn enter(&mut self, name: &S::GroupProperties) {
         let last = self
             .tracks
             .iter()
@@ -108,7 +102,7 @@ where
     }
 
     // TODO maybe take "real" value as input?
-    fn enter_a(&mut self, a: &Attrs, b: Option<Attrs>) {
+    fn enter_a(&mut self, a: &S::GroupProperties, b: Option<S::GroupProperties>) {
         let last = self
             .tracks
             .iter()
@@ -150,7 +144,7 @@ where
         self.b_add.begin();
     }
 
-    fn enter_b(&mut self, a: Option<Attrs>, b: &Attrs) {
+    fn enter_b(&mut self, a: Option<S::GroupProperties>, b: &S::GroupProperties) {
         log_transform!("ENTER B");
 
         let last = self
@@ -204,7 +198,7 @@ where
     }
 
     // Close the topmost track.
-    fn abort(&mut self) -> (Option<Attrs>, Option<Attrs>, Option<Attrs>) {
+    fn abort(&mut self) -> (Option<S::GroupProperties>, Option<S::GroupProperties>, Option<S::GroupProperties>) {
         let track = self.tracks.pop().unwrap();
 
         if let Some(ref real) = track.tag_real {
@@ -237,37 +231,37 @@ where
         self.b_add.place(&AddSkip(n));
     }
 
-    fn style_a(&mut self, count: usize, styles: StyleMap) {
+    fn style_a(&mut self, count: usize, styles: S::CharsProperties) {
         self.a_del.place(&DelSkip(count));
         self.a_add.place(&AddStyles(count, styles));
     }
 
-    fn style_b(&mut self, count: usize, styles: StyleMap) {
+    fn style_b(&mut self, count: usize, styles: S::CharsProperties) {
         self.b_del.place(&DelSkip(count));
         self.b_add.place(&AddStyles(count, styles));
     }
 
-    fn with_group_a(&mut self, span: &AddSpan) {
+    fn with_group_a(&mut self, span: &AddSpan<S>) {
         self.a_add.place(&AddWithGroup(span.clone()));
     }
 
-    fn with_group_b(&mut self, span: &AddSpan) {
+    fn with_group_b(&mut self, span: &AddSpan<S>) {
         self.b_add.place(&AddWithGroup(span.clone()));
     }
 
-    fn group_a(&mut self, attrs: &Attrs, span: &AddSpan) {
+    fn group_a(&mut self, attrs: &S::GroupProperties, span: &AddSpan<S>) {
         self.a_add.place(&AddGroup(attrs.clone(), span.clone()));
     }
 
-    fn group_b(&mut self, attrs: &Attrs, span: &AddSpan) {
+    fn group_b(&mut self, attrs: &S::GroupProperties, span: &AddSpan<S>) {
         self.b_add.place(&AddGroup(attrs.clone(), span.clone()));
     }
 
-    fn chars_a(&mut self, chars: DocString, styles: OpaqueStyleMap) {
+    fn chars_a(&mut self, chars: DocString, styles: S::CharsProperties) {
         self.a_add.place(&AddChars(chars, styles));
     }
 
-    fn chars_b(&mut self, chars: DocString, styles: OpaqueStyleMap) {
+    fn chars_b(&mut self, chars: DocString, styles: S::CharsProperties) {
         self.b_add.place(&AddChars(chars, styles));
     }
 
@@ -552,7 +546,7 @@ where
         }
     }
 
-    fn result(mut self) -> (Op, Op) {
+    fn result(mut self) -> (Op<S>, Op<S>) {
         let mut a_del = self.a_del;
         let mut a_add = self.a_add;
         let mut b_del = self.b_del;
@@ -596,7 +590,7 @@ where
     }
 }
 
-pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
+pub fn transform_insertions<S: Schema>(avec: &AddSpan<S>, bvec: &AddSpan<S>) -> (Op<S>, Op<S>) {
     let mut a = AddStepper::new(avec);
     let mut b = AddStepper::new(bvec);
 
@@ -1166,8 +1160,8 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
 }
 
 // Create del span that occurs after the input deletion has occurred.
-fn undel(input_del: &DelSpan) -> DelSpan {
-    let mut del: DelSpan = vec![];
+fn undel<S: Schema>(input_del: &DelSpan<S>) -> DelSpan<S> {
+    let mut del: DelSpan<S> = vec![];
     for elem in input_del {
         match elem {
             &DelChars(..) => {
@@ -1190,11 +1184,11 @@ fn undel(input_del: &DelSpan) -> DelSpan {
     del
 }
 
-pub fn transform_del_del_inner(
-    a_del: &mut DelWriter,
-    b_del: &mut DelWriter,
-    a: &mut DelStepper,
-    b: &mut DelStepper,
+pub fn transform_del_del_inner<S: Schema>(
+    a_del: &mut DelWriter<S>,
+    b_del: &mut DelWriter<S>,
+    a: &mut DelStepper<S>,
+    b: &mut DelStepper<S>,
 ) {
     while !a.is_done() && !b.is_done() {
         log_transform!("{}", Green.bold().paint("transform_deletions:"));
@@ -1556,7 +1550,10 @@ pub fn transform_del_del_inner(
     log_transform!("{}", BrightYellow.paint(format!("done")),);
 }
 
-pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan) {
+pub fn transform_deletions<S: Schema>(
+    avec: &DelSpan<S>,
+    bvec: &DelSpan<S>,
+) -> (DelSpan<S>, DelSpan<S>) {
     let mut a_del = DelWriter::new();
     let mut b_del = DelWriter::new();
 
@@ -1608,11 +1605,11 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
     (a_res, b_res)
 }
 
-pub fn transform_add_del_inner(
-    delres: &mut DelSpan,
-    addres: &mut AddSpan,
-    a: &mut AddStepper,
-    b: &mut DelStepper,
+pub fn transform_add_del_inner<S: Schema>(
+    delres: &mut DelSpan<S>,
+    addres: &mut AddSpan<S>,
+    a: &mut AddStepper<S>,
+    b: &mut DelStepper<S>,
 ) {
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
@@ -1637,8 +1634,8 @@ pub fn transform_add_del_inner(
                 }
                 AddGroup(attrs, a_span) => {
                     let mut a_inner = AddStepper::new(&a_span);
-                    let mut addres_inner: AddSpan = vec![];
-                    let mut delres_inner: DelSpan = vec![];
+                    let mut addres_inner: AddSpan<S> = vec![];
+                    let mut delres_inner: DelSpan<S> = vec![];
                     transform_add_del_inner(&mut delres_inner, &mut addres_inner, &mut a_inner, b);
                     if !a_inner.is_done() {
                         addres_inner.place(&a_inner.head.unwrap());
@@ -1698,8 +1695,8 @@ pub fn transform_add_del_inner(
                 }
                 AddGroup(attrs, a_span) => {
                     let mut a_inner = AddStepper::new(&a_span);
-                    let mut addres_inner: AddSpan = vec![];
-                    let mut delres_inner: DelSpan = vec![];
+                    let mut addres_inner: AddSpan<S> = vec![];
+                    let mut delres_inner: DelSpan<S> = vec![];
                     transform_add_del_inner(&mut delres_inner, &mut addres_inner, &mut a_inner, b);
                     if !a_inner.is_done() {
                         addres_inner.place(&a_inner.head.unwrap());
@@ -1718,11 +1715,13 @@ pub fn transform_add_del_inner(
                 }
                 AddStyles(a_count, a_styles) => {
                     // Remove styles from A that were present in B.
-                    let combined_styles: StyleMap = a_styles
-                        .clone()
-                        .drain()
-                        .filter(|(ref k, _)| b_styles.contains(k))
-                        .collect();
+                    // let combined_styles: StyleMap = a_styles
+                    //     .clone()
+                    //     .drain()
+                    //     .filter(|(k, _)| b_styles.contains(*k))
+                    //     .collect();
+                    // FIXME
+                    let combined_styles = a_styles.clone();
 
                     addres.place(&AddStyles(cmp::min(a_count, b_count), combined_styles));
                     delres.place(&DelStyles(b_count, b_styles.clone())); // Not combined
@@ -1753,8 +1752,8 @@ pub fn transform_add_del_inner(
                 }
                 AddGroup(attrs, a_span) => {
                     let mut a_inner = AddStepper::new(&a_span);
-                    let mut addres_inner: AddSpan = vec![];
-                    let mut delres_inner: DelSpan = vec![];
+                    let mut addres_inner: AddSpan<S> = vec![];
+                    let mut delres_inner: DelSpan<S> = vec![];
                     transform_add_del_inner(&mut delres_inner, &mut addres_inner, &mut a_inner, b);
                     if !a_inner.is_done() {
                         addres_inner.place(&a_inner.head.unwrap());
@@ -1793,8 +1792,8 @@ pub fn transform_add_del_inner(
                 }
                 AddGroup(attrs, a_span) => {
                     let mut a_inner = AddStepper::new(&a_span);
-                    let mut addres_inner: AddSpan = vec![];
-                    let mut delres_inner: DelSpan = vec![];
+                    let mut addres_inner: AddSpan<S> = vec![];
+                    let mut delres_inner: DelSpan<S> = vec![];
                     transform_add_del_inner(&mut delres_inner, &mut addres_inner, &mut a_inner, b);
                     if !a_inner.is_done() {
                         addres_inner.place(&a_inner.head.unwrap());
@@ -1832,8 +1831,8 @@ pub fn transform_add_del_inner(
                         // the document). Instead, we just delete all the newly added
                         // content of the group.
                         if span.skip_post_len() == 0 {
-                            fn unadd(add: &AddSpan) -> DelSpan {
-                                let mut del: DelSpan = vec![];
+                            fn unadd<S: Schema>(add: &AddSpan<S>) -> DelSpan<S> {
+                                let mut del: DelSpan<S> = vec![];
                                 for elem in add {
                                     match elem {
                                         &AddChars(ref value, _) => {
@@ -1862,8 +1861,8 @@ pub fn transform_add_del_inner(
                         } else {
                             let mut a_inner = AddStepper::new(&ins_span);
                             let mut b_inner = DelStepper::new(&span);
-                            let mut delres_inner: DelSpan = vec![];
-                            let mut addres_inner: AddSpan = vec![];
+                            let mut delres_inner: DelSpan<S> = vec![];
+                            let mut addres_inner: AddSpan<S> = vec![];
                             transform_add_del_inner(
                                 &mut delres_inner,
                                 &mut addres_inner,
@@ -1913,8 +1912,8 @@ pub fn transform_add_del_inner(
 
                     AddGroup(attrs, ins_span) => {
                         let mut a_inner = AddStepper::new(&ins_span);
-                        let mut delres_inner: DelSpan = vec![];
-                        let mut addres_inner: AddSpan = vec![];
+                        let mut delres_inner: DelSpan<S> = vec![];
+                        let mut addres_inner: AddSpan<S> = vec![];
                         transform_add_del_inner(
                             &mut delres_inner,
                             &mut addres_inner,
@@ -1927,16 +1926,15 @@ pub fn transform_add_del_inner(
                         }
 
                         // "Delall" hack for adding in bullets
-                        // TODO why does this need knowledge of the bullet group type?
-                        if !(addres_inner.skip_post_len() == 0 && attrs == Attrs::ListItem) {
+                        // TODO why does this need knowledge of the bullet group
+                        // type?
+                        // FIXME I'm not sure what to do here so I'm doing this
+                        // if !(addres_inner.skip_post_len() == 0 && attrs == Attrs::ListItem) {
                             addres.place(&AddGroup(attrs, addres_inner));
                             delres.place(&DelWithGroup(delres_inner));
-                        } else {
-                            delres.place(&DelGroup(delres_inner));
-                        }
-
-                        // addres.place(&AddGroup(attrs, addres_inner));
-                        // delres.place(&DelWithGroup(delres_inner));
+                        // } else {
+                        //     delres.place(&DelGroup(delres_inner));
+                        // }
 
                         a.next();
                     }
@@ -2040,9 +2038,9 @@ pub fn transform_add_del_inner(
 
 /// Transforms a insertion preceding a deletion into a deletion preceding an insertion.
 /// After this, sequential deletions and insertions can be composed together in one operation.
-pub fn transform_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
-    let mut delres: DelSpan = Vec::with_capacity(avec.len() + bvec.len());
-    let mut addres: AddSpan = Vec::with_capacity(avec.len() + bvec.len());
+pub fn transform_add_del<S: Schema>(avec: &AddSpan<S>, bvec: &DelSpan<S>) -> Op<S> {
+    let mut delres: DelSpan<S> = Vec::with_capacity(avec.len() + bvec.len());
+    let mut addres: AddSpan<S> = Vec::with_capacity(avec.len() + bvec.len());
 
     let mut a = AddStepper::new(avec);
     let mut b = DelStepper::new(bvec);
@@ -2063,7 +2061,7 @@ pub fn transform_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
 }
 
 /// Transform two operations according to a schema.
-pub fn transform<S: Schema>(a: &Op, b: &Op) -> (Op, Op) {
+pub fn transform<S: Schema>(a: &Op<S>, b: &Op<S>) -> (Op<S>, Op<S>) {
     // Transform deletions A and B against each other to get delA` and delB`.
     log_transform!(" # transform[1] transform_deletions");
     log_transform!(" a_del   {:?}", a.0);

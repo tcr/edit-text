@@ -9,13 +9,13 @@ use failure::Error;
 use std::collections::HashSet;
 
 #[derive(Clone)]
-pub struct ValidateContext {
-    stack: Vec<Attrs>,
+pub struct ValidateContext<S: Schema> {
+    stack: Vec<S::GroupProperties>,
     carets: HashSet<String>,
 }
 
-impl ValidateContext {
-    pub fn new() -> ValidateContext {
+impl<S: Schema> ValidateContext<S> {
+    pub fn new() -> ValidateContext<S> {
         ValidateContext {
             stack: vec![],
             carets: hashset![],
@@ -24,7 +24,7 @@ impl ValidateContext {
 }
 
 // TODO caret-specific validation should be moved out to the schema!
-pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<(), Error> {
+pub fn validate_doc_span<S: Schema>(ctx: &mut ValidateContext<S>, span: &DocSpan<S>) -> Result<(), Error> {
     for elem in span {
         match *elem {
             DocGroup(ref attrs, ref span) => {
@@ -35,9 +35,10 @@ pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<()
                     // }
                 // }
 
-                if let Attrs::ListItem = attrs {
-                    ensure!(!span.is_empty(), "Expected non-empty bullet");
-                }
+                // FIXME This is disabled with the removal
+                // if let Attrs::ListItem = attrs {
+                //     ensure!(!span.is_empty(), "Expected non-empty bullet");
+                // }
 
                 ctx.stack.push(attrs.clone());
                 validate_doc_span(ctx, span)?;
@@ -45,8 +46,8 @@ pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<()
 
                 // Check parentage.
                 if let Some(parent) = ctx.stack.last() {
-                    let parent_type = RtfSchema::track_type_from_attrs(parent).unwrap();
-                    let cur_type = RtfSchema::track_type_from_attrs(attrs).unwrap();
+                    let parent_type = S::track_type_from_attrs(parent).unwrap();
+                    let cur_type = S::track_type_from_attrs(attrs).unwrap();
                     ensure!(
                         cur_type.parents().contains(&parent_type),
                         "Block has incorrect parent"
@@ -54,7 +55,7 @@ pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<()
                 } else {
                     // Top-level blocks
                     ensure!(
-                        RtfSchema::track_type_from_attrs(attrs)
+                        S::track_type_from_attrs(attrs)
                             .unwrap()
                             .allowed_in_root(),
                         "Root block has incorrect parent"
@@ -66,7 +67,7 @@ pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<()
 
                 if let Some(block) = ctx.stack.last() {
                     ensure!(
-                        RtfSchema::track_type_from_attrs(block)
+                        S::track_type_from_attrs(block)
                             .unwrap()
                             .supports_text(),
                         "Char found outside block"
@@ -80,7 +81,7 @@ pub fn validate_doc_span(ctx: &mut ValidateContext, span: &DocSpan) -> Result<()
     Ok(())
 }
 
-pub fn validate_doc(doc: &Doc) -> Result<(), Error> {
+pub fn validate_doc<S: Schema>(doc: &Doc<S>) -> Result<(), Error> {
     let mut ctx = ValidateContext::new();
     validate_doc_span(&mut ctx, &doc.0)
 }

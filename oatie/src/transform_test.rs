@@ -16,8 +16,11 @@ use failure::Error;
 use regex::Regex;
 use yansi::Paint;
 
-fn op_transform_compare<T: Schema>(a: &Op, b: &Op) -> (Op, Op, Op, Op) {
-    let (a_, b_) = transform::<T>(a, b);
+fn op_transform_compare<S: Schema>(
+    a: &Op<S>,
+    b: &Op<S>,
+) -> (Op<S>, Op<S>, Op<S>, Op<S>) {
+    let (a_, b_) = transform::<S>(a, b);
 
     println!();
     println!(" --> a \n{:?}", a);
@@ -44,16 +47,20 @@ fn op_transform_compare<T: Schema>(a: &Op, b: &Op) -> (Op, Op, Op, Op) {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-enum TestSpec {
-    TransformTest { doc: DocSpan, a: Op, b: Op },
+enum TestSpec<S: Schema> {
+    TransformTest {
+        doc: DocSpan<S>,
+        a: Op<S>,
+        b: Op<S>,
+    },
 }
 
-pub fn run_transform_test<T: Schema>(input: &str) -> Result<(), Error> {
+pub fn run_transform_test<S: Schema>(input: &str) -> Result<(), Error> {
     let mut test: HashMap<String, String> = HashMap::new();
 
     // ron-defined test specs
     if input.find("TransformTest").is_some() {
-        match ron::de::from_str::<TestSpec>(input)? {
+        match ron::de::from_str::<TestSpec<S>>(input)? {
             TestSpec::TransformTest {
                 ref doc,
                 ref a,
@@ -105,17 +112,17 @@ pub fn run_transform_test<T: Schema>(input: &str) -> Result<(), Error> {
 
     // Extract test entries.
     let a = (
-        ron::de::from_str::<DelSpan>(&test["a_del"])?,
-        ron::de::from_str::<AddSpan>(&test["a_add"])?,
+        ron::de::from_str::<DelSpan<S>>(&test["a_del"])?,
+        ron::de::from_str::<AddSpan<S>>(&test["a_add"])?,
     );
     let b = (
-        ron::de::from_str::<DelSpan>(&test["b_del"])?,
-        ron::de::from_str::<AddSpan>(&test["b_add"])?,
+        ron::de::from_str::<DelSpan<S>>(&test["b_del"])?,
+        ron::de::from_str::<AddSpan<S>>(&test["b_add"])?,
     );
     let check = if test.contains_key("op_del") || test.contains_key("op_add") {
         Some((
-            ron::de::from_str::<DelSpan>(&test["op_del"])?,
-            ron::de::from_str::<AddSpan>(&test["op_add"])?,
+            ron::de::from_str::<DelSpan<S>>(&test["op_del"])?,
+            ron::de::from_str::<AddSpan<S>>(&test["op_add"])?,
         ))
     } else {
         None
@@ -126,7 +133,7 @@ pub fn run_transform_test<T: Schema>(input: &str) -> Result<(), Error> {
         "{}",
         Paint::red("(!) comparing transform operation results...")
     );
-    let (a_, b_, a_res, _b_res) = op_transform_compare::<T>(&a, &b);
+    let (a_, b_, a_res, _b_res) = op_transform_compare::<S>(&a, &b);
     println!("ok");
     println!();
 
@@ -147,7 +154,7 @@ pub fn run_transform_test<T: Schema>(input: &str) -> Result<(), Error> {
 
         println!("\n\n\n{:?}\n\n\n", doc);
 
-        let doc = Doc(ron::de::from_str::<DocSpan>(doc)?);
+        let doc = Doc(ron::de::from_str::<DocSpan<S>>(doc)?);
         println!("original document: {:?}", doc);
         validate_doc_span(&mut ValidateContext::new(), &doc.0)?;
         println!();

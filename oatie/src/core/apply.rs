@@ -2,13 +2,12 @@
 
 use super::doc::*;
 use crate::stepper::*;
-use crate::style::*;
 
-fn apply_add_inner<M: DocMutator>(
+fn apply_add_inner<M: DocMutator<S>, S: Schema>(
     bc: &mut M,
-    spanvec: &DocSpan,
-    addvec: &AddSpan,
-) -> (DocSpan, DocSpan) {
+    spanvec: &DocSpan<S>,
+    addvec: &AddSpan<S>,
+) -> (DocSpan<S>, DocSpan<S>) {
     let mut span = &spanvec[..];
     let mut del = &addvec[..];
 
@@ -18,7 +17,7 @@ fn apply_add_inner<M: DocMutator>(
         span = &span[1..]
     }
 
-    let mut res: DocSpan = Vec::with_capacity(span.len());
+    let mut res: DocSpan<S> = Vec::with_capacity(span.len());
 
     if del.is_empty() {
         return (vec![], spanvec.clone().to_vec());
@@ -54,7 +53,7 @@ fn apply_add_inner<M: DocMutator>(
                         d = AddStyles(count - value.char_len(), styles.clone());
                         chars_styles.extend(&styles);
                         bc.delete(1);
-                        bc.InsertDocString(value.clone(), OpaqueStyleMap::from(styles.clone()));
+                        bc.InsertDocString(value.clone(), styles.clone());
                         // partial = false;
                         res.place(&DocChars(value, chars_styles));
                         nextdel = false;
@@ -63,7 +62,7 @@ fn apply_add_inner<M: DocMutator>(
                         let mut left_styles = chars_styles.clone();
                         left_styles.extend(&styles);
                         bc.delete(1);
-                        bc.InsertDocString(left.clone(), OpaqueStyleMap::from(styles.clone()));
+                        bc.InsertDocString(left.clone(), styles.clone());
                         // partial = false;
                         res.place(&DocChars(left, left_styles));
                         first = Some(DocChars(right, chars_styles));
@@ -71,7 +70,7 @@ fn apply_add_inner<M: DocMutator>(
                     } else {
                         chars_styles.extend(&styles);
                         bc.delete(1);
-                        bc.InsertDocString(value.clone(), OpaqueStyleMap::from(styles.clone()));
+                        bc.InsertDocString(value.clone(), styles.clone());
                         // partial = false;
                         res.place(&DocChars(value, chars_styles));
                     }
@@ -186,7 +185,11 @@ fn apply_add_inner<M: DocMutator>(
 }
 
 // TODO replace all occurances of this with apply_add_inner
-fn apply_add_outer<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &AddSpan) -> DocSpan {
+fn apply_add_outer<M: DocMutator<S>, S: Schema>(
+    bc: &mut M,
+    spanvec: &DocSpan<S>,
+    addvec: &AddSpan<S>,
+) -> DocSpan<S> {
     let (mut res, remaining) = apply_add_inner(bc, spanvec, addvec);
 
     // TODO never accept unbalanced components?
@@ -208,14 +211,20 @@ fn apply_add_outer<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &AddSpa
     res
 }
 
-pub fn apply_add(spanvec: &DocSpan, add: &AddSpan) -> DocSpan {
+pub fn apply_add<S: Schema>(
+    spanvec: &DocSpan<S>,
+    add: &AddSpan<S>,
+) -> DocSpan<S> {
     let mut mutator = NullDocMutator {};
     let ret = apply_add_outer(&mut mutator, spanvec, add);
     ret
 }
 
 // TODO what does this do, why doe sit exist, for creating BC for frontend??
-pub fn apply_add_bc(spanvec: &DocSpan, addvec: &AddSpan) -> (Doc, Program) {
+pub fn apply_add_bc<S: Schema>(
+    spanvec: &DocSpan<S>,
+    addvec: &AddSpan<S>,
+) -> (Doc<S>, Program) {
     let mut mutator = RecordingDocMutator::new(DocStepper::new(spanvec));
     let output_doc = apply_add_outer(&mut mutator, spanvec, addvec);
 
@@ -233,11 +242,15 @@ pub fn apply_add_bc(spanvec: &DocSpan, addvec: &AddSpan) -> (Doc, Program) {
     (Doc(output_doc), bc)
 }
 
-fn apply_del_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &DelSpan) -> DocSpan {
+fn apply_del_inner<M: DocMutator<S>, S: Schema>(
+    bc: &mut M,
+    spanvec: &DocSpan<S>,
+    addvec: &DelSpan<S>,
+) -> DocSpan<S> {
     let mut span = &spanvec[..];
     let mut del = &addvec[..];
 
-    let mut res: DocSpan = Vec::with_capacity(span.len());
+    let mut res: DocSpan<S> = Vec::with_capacity(span.len());
 
     if del.is_empty() {
         return span.to_vec();
@@ -387,14 +400,20 @@ fn apply_del_inner<M: DocMutator>(bc: &mut M, spanvec: &DocSpan, addvec: &DelSpa
     res
 }
 
-pub fn apply_delete(spanvec: &DocSpan, delvec: &DelSpan) -> DocSpan {
+pub fn apply_delete<S: Schema>(
+    spanvec: &DocSpan<S>,
+    delvec: &DelSpan<S>,
+) -> DocSpan<S> {
     let mut mutator = NullDocMutator {};
     let ret = apply_del_inner(&mut mutator, spanvec, delvec);
     ret
 }
 
 // TODO what does this do, why doe sit exist, for creating BC for frontend??
-pub fn apply_del_bc(spanvec: &DocSpan, del: &DelSpan) -> (DocSpan, Program) {
+pub fn apply_del_bc<S: Schema>(
+    spanvec: &DocSpan<S>,
+    del: &DelSpan<S>,
+) -> (DocSpan<S>, Program) {
     let mut mutator = RecordingDocMutator::new(DocStepper::new(spanvec));
     let output_doc = apply_del_inner(&mut mutator, spanvec, del);
 
@@ -420,7 +439,10 @@ pub fn apply_del_bc(spanvec: &DocSpan, del: &DelSpan) -> (DocSpan, Program) {
     (output_doc, bc)
 }
 
-pub fn apply_op_bc(spanvec: &DocSpan, op: &Op) -> Vec<Program> {
+pub fn apply_op_bc<S: Schema>(
+    spanvec: &DocSpan<S>,
+    op: &Op<S>,
+) -> Vec<Program> {
     // console_log!("\n\n\n\n\naaaaaaa\n\n\n\n\n\n\n");
     let &(ref delvec, ref addvec) = op;
     // console_log!("👻👻  1  👻👻");
@@ -432,7 +454,10 @@ pub fn apply_op_bc(spanvec: &DocSpan, op: &Op) -> Vec<Program> {
     vec![del_program, add_program]
 }
 
-pub fn apply_operation(spanvec: &DocSpan, op: &Op) -> DocSpan {
+pub fn apply_operation<S: Schema>(
+    spanvec: &DocSpan<S>,
+    op: &Op<S>,
+) -> DocSpan<S> {
     let &(ref delvec, ref addvec) = op;
     // println!("------> @1 {:?}", spanvec);
     // println!("------> @2 {:?}", delvec);

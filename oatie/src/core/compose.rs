@@ -4,7 +4,11 @@ use super::doc::*;
 use std::cmp;
 use crate::stepper::*;
 
-fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepper) {
+fn compose_del_del_inner<S: Schema>(
+    res: &mut DelSpan<S>,
+    a: &mut DelStepper<S>,
+    b: &mut DelStepper<S>,
+) {
     while !a.is_done() && !b.is_done() {
         match a.get_head() {
             DelSkip(acount) => {
@@ -85,7 +89,7 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
             DelStyles(a_count, a_styles) => match b.head.clone() {
                 Some(DelStyles(b_count, b_styles)) => {
                     let mut both_styles = b_styles.clone();
-                    both_styles.extend(a_styles.clone());
+                    both_styles.extend(&a_styles);
                     res.push(DelStyles(cmp::min(a_count, b_count), both_styles));
                     if a_count > b_count {
                         b.head = Some(DelStyles(a_count - b_count, a_styles));
@@ -179,7 +183,7 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
             }
             DelGroup(ref span) => {
                 let mut c = DelStepper::new(span);
-                let mut inner: DelSpan = vec![];
+                let mut inner: DelSpan<S> = vec![];
                 compose_del_del_inner(&mut inner, &mut c, b);
                 if !c.is_done() {
                     inner.place(&c.head.unwrap());
@@ -219,7 +223,10 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
     }
 }
 
-pub fn compose_del_del(avec: &DelSpan, bvec: &DelSpan) -> DelSpan {
+pub fn compose_del_del<S: Schema>(
+    avec: &DelSpan<S>,
+    bvec: &DelSpan<S>,
+) -> DelSpan<S> {
     let mut res = Vec::with_capacity(avec.len() + bvec.len());
 
     let mut a = DelStepper::new(avec);
@@ -240,7 +247,11 @@ pub fn compose_del_del(avec: &DelSpan, bvec: &DelSpan) -> DelSpan {
     res
 }
 
-fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddStepper, b: &mut AddStepper) {
+fn compose_add_add_inner<S: Schema>(
+    res: &mut AddSpan<S>,
+    a: &mut AddStepper<S>,
+    b: &mut AddStepper<S>,
+) {
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
             AddChars(..) => {
@@ -249,7 +260,7 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddStepper, b: &mut AddStepp
             AddStyles(b_count, b_styles) => match a.get_head() {
                 AddStyles(a_count, a_styles) => {
                     let mut both_styles = b_styles.clone();
-                    both_styles.extend(a_styles.clone());
+                    both_styles.extend(&a_styles);
                     res.push(AddStyles(cmp::min(a_count, b_count), both_styles));
                     if a_count > b_count {
                         b.head = Some(AddStyles(a_count - b_count, a_styles));
@@ -412,7 +423,10 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddStepper, b: &mut AddStepp
     }
 }
 
-pub fn compose_add_add(avec: &AddSpan, bvec: &AddSpan) -> AddSpan {
+pub fn compose_add_add<S: Schema>(
+    avec: &AddSpan<S>,
+    bvec: &AddSpan<S>,
+) -> AddSpan<S> {
     let mut res = Vec::with_capacity(avec.len() + bvec.len());
 
     let mut a = AddStepper::new(avec);
@@ -433,9 +447,12 @@ pub fn compose_add_add(avec: &AddSpan, bvec: &AddSpan) -> AddSpan {
     res
 }
 
-pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
-    let mut delres: DelSpan = Vec::with_capacity(avec.len() + bvec.len());
-    let mut addres: AddSpan = Vec::with_capacity(avec.len() + bvec.len());
+pub fn compose_add_del<S: Schema>(
+    avec: &AddSpan<S>, 
+    bvec: &DelSpan<S>,
+) -> Op<S> {
+    let mut delres: DelSpan<S> = Vec::with_capacity(avec.len() + bvec.len());
+    let mut addres: AddSpan<S> = Vec::with_capacity(avec.len() + bvec.len());
 
     let mut a = AddStepper::new(avec);
     let mut b = DelStepper::new(bvec);
@@ -461,11 +478,11 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
     (delres, addres)
 }
 
-fn compose_add_del_inner(
-    delres: &mut DelSpan,
-    addres: &mut AddSpan,
-    a: &mut AddStepper,
-    b: &mut DelStepper,
+fn compose_add_del_inner<S: Schema>(
+    delres: &mut DelSpan<S>,
+    addres: &mut AddSpan<S>,
+    a: &mut AddStepper<S>,
+    b: &mut DelStepper<S>,
 ) {
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
@@ -522,11 +539,13 @@ fn compose_add_del_inner(
                 }
                 AddStyles(a_count, a_styles) => {
                     // a_styles - b_styles
-                    let combined_styles = a_styles
-                        .clone()
-                        .drain()
-                        .filter(|(k, _)| !b_styles.contains(k))
-                        .collect();
+                    // FIXME
+                    let combined_styles = a_styles.clone();
+                    // let combined_styles = a_styles
+                    //     .clone()
+                    //     .drain()
+                    //     .filter(|(k, _)| !b_styles.contains(*k))
+                    //     .collect();
 
                     // res.push(AddStyles(cmp::min(a_count, b_count), both_styles));
                     if a_count > b_count {
@@ -816,7 +835,7 @@ fn compose_add_del_inner(
     }
 }
 
-pub fn compose(a: &Op, b: &Op) -> Op {
+pub fn compose<S: Schema>(a: &Op<S>, b: &Op<S>) -> Op<S> {
     let &(ref adel, ref ains) = a;
     let &(ref bdel, ref bins) = b;
 

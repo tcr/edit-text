@@ -20,7 +20,7 @@ use pulldown_cmark::{
 
 struct Ctx<'b, I> {
     iter: I,
-    body: &'b mut DocWriter,
+    body: &'b mut DocWriter<S>,
     styles: StyleMap,
     bare_text: bool,
 }

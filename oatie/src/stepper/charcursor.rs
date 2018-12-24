@@ -1,22 +1,23 @@
+//! TODO Move this to src/core ?
+
 use super::DocString;
-use crate::style::*;
-use crate::doc::DocElement;
+use crate::doc::*;
 
 /// Indexes into a DocString, tracking two owned DocStrings left() and right() which
 /// can be retrieved by reference. Because indexing into the string is
 /// performed on DocString internals, this makes scanning a Unicode string
 /// much faster than split_at().
 #[derive(Clone, Debug, PartialEq)]
-pub struct CharCursor {
-    left_string: DocElement,
-    right_string: DocElement,
+pub struct CharCursor<S: Schema> {
+    left_string: DocElement<S>,
+    right_string: DocElement<S>,
     index: usize,   // in chars
     str_len: usize, // in chars
 }
 
-impl CharCursor {
+impl<S: Schema> CharCursor<S> {
     #[inline(always)]
-    pub fn from_docstring(text: &DocString, styles: OpaqueStyleMap) -> CharCursor {
+    pub fn from_docstring(text: &DocString, styles: S::CharsProperties) -> CharCursor<S> {
         let mut left_string = text.clone();
         let mut right_string = text.clone();
 
@@ -36,7 +37,7 @@ impl CharCursor {
     }
 
     #[inline(always)]
-    pub fn from_docstring_end(text: &DocString, styles: OpaqueStyleMap) -> CharCursor {
+    pub fn from_docstring_end(text: &DocString, styles: S::CharsProperties) -> CharCursor<S> {
         let left_string = text.clone();
         let mut right_string = text.clone();
 
@@ -55,13 +56,13 @@ impl CharCursor {
         }
     }
 
-    pub fn update_from_docstring(&mut self, text: &DocString, styles: OpaqueStyleMap) {
+    pub fn update_from_docstring(&mut self, text: &DocString, styles: S::CharsProperties) {
         self.left_string = DocElement::DocChars(text.clone(), styles.clone());
         self.right_string = DocElement::DocChars(text.clone(), styles);
         self.index = text.char_len();
     }
 
-    pub fn style<'a>(&'a self) -> &'a OpaqueStyleMap {
+    pub fn style<'a>(&'a self) -> &'a S::CharsProperties {
         if let DocElement::DocChars(_, ref styles) = &self.left_string {
             styles
         } else {
@@ -93,7 +94,7 @@ impl CharCursor {
         }
     }
 
-    pub fn left_element<'a>(&'a self) -> Option<&'a DocElement> {
+    pub fn left_element<'a>(&'a self) -> Option<&'a DocElement<S>> {
         if let DocElement::DocChars(ref left_text, _) = &self.left_string {
             if unsafe { left_text.try_byte_range().unwrap().len() == 0 } {
                 None
@@ -105,7 +106,7 @@ impl CharCursor {
         }
     }
 
-    pub fn right_element<'a>(&'a self) -> Option<&'a DocElement> {
+    pub fn right_element<'a>(&'a self) -> Option<&'a DocElement<S>> {
         if let DocElement::DocChars(ref right_text, _) = &self.right_string {
             if unsafe { right_text.try_byte_range().unwrap().len() == 0 } {
                 None

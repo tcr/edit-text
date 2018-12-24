@@ -1,6 +1,6 @@
 use super::*;
 use wasm_bindgen::prelude::*;
-use crate::style::*;
+use serde_json::json;
 
 impl Program {
     pub fn new() -> Program {
@@ -35,7 +35,7 @@ impl Program {
 }
 
 #[allow(non_snake_case)]
-pub trait DocMutator {
+pub trait DocMutator<S: Schema> {
     fn flush_chars(&mut self) -> bool {
         unimplemented!();
     }
@@ -65,7 +65,7 @@ pub trait DocMutator {
         unimplemented!();
     }
 
-    fn InsertDocString(&mut self, _docstring: DocString, _styles: OpaqueStyleMap) {
+    fn InsertDocString(&mut self, _docstring: DocString, _styles: S::CharsProperties) {
         unimplemented!();
     }
 
@@ -73,7 +73,7 @@ pub trait DocMutator {
         unimplemented!();
     }
 
-    fn WrapPrevious(&mut self, _count: usize, _attrs: Attrs) {
+    fn WrapPrevious(&mut self, _count: usize, _attrs: S::GroupProperties) {
         unimplemented!();
     }
 
@@ -84,7 +84,7 @@ pub trait DocMutator {
 
 pub struct NullDocMutator {}
 
-impl DocMutator for NullDocMutator {
+impl<S: Schema> DocMutator<S> for NullDocMutator {
     fn Enter(&mut self) {
         // no-op
     }
@@ -106,7 +106,7 @@ impl DocMutator for NullDocMutator {
         // no-op
     }
 
-    fn InsertDocString(&mut self, _docstring: DocString, _style: OpaqueStyleMap) {
+    fn InsertDocString(&mut self, _docstring: DocString, _style: S::CharsProperties) {
         // no-op
     }
 
@@ -114,7 +114,7 @@ impl DocMutator for NullDocMutator {
         // no-op
     }
 
-    fn WrapPrevious(&mut self, _count: usize, _attrs: Attrs) {
+    fn WrapPrevious(&mut self, _count: usize, _attrs: S::GroupProperties) {
         // no-op
     }
 
@@ -130,8 +130,8 @@ pub enum Bytecode {
     Exit,
     AdvanceElements(usize),
     DeleteElements(usize),
-    InsertDocString(DocString, OpaqueStyleMap),
-    WrapPrevious(usize, Attrs),
+    InsertDocString(DocString, serde_json::Value),
+    WrapPrevious(usize, serde_json::Value),
     UnwrapSelf,
     JoinTextLeft,
 }
@@ -140,25 +140,25 @@ pub enum Bytecode {
 pub struct Program(pub Vec<Bytecode>);
 
 #[derive(Clone, Debug)]
-pub struct RecordingDocMutator<'a> {
+pub struct RecordingDocMutator<'a, S: Schema> {
     bc: Program,
-    stepper: DocStepper<'a>,
-    writer: DocWriter,
+    stepper: DocStepper<'a, S>,
+    writer: DocWriter<S>,
 }
 
-impl<'a> RecordingDocMutator<'a> {
-    pub fn stepper(&'a self) -> &'a DocStepper<'_> {
+impl<'a, S: Schema> RecordingDocMutator<'a, S> {
+    pub fn stepper(&'a self) -> &'a DocStepper<'_, S> {
         &self.stepper
     }
 
-    pub fn result(mut self) -> Result<(DocSpan, Program), Error> {
+    pub fn result(mut self) -> Result<(DocSpan<S>, Program), Error> {
         self.flush();
 
         let RecordingDocMutator { writer, bc, .. } = self;
         (writer.result().map(|doc| (doc, bc)))
     }
 
-    pub fn new(stepper: DocStepper<'_>) -> RecordingDocMutator<'_> {
+    pub fn new(stepper: DocStepper<'_, S>) -> RecordingDocMutator<'_, S> {
         RecordingDocMutator {
             bc: Program(vec![]),
             stepper,
@@ -174,7 +174,7 @@ impl<'a> RecordingDocMutator<'a> {
                 let partial = self.stepper.char_cursor_expect().right().expect("hey now");
                 // console_log!("🏟 {:?}", partial);
                 if let Some(&DocChars(ref _text, ref styles)) = self.stepper.head_raw() {
-                    self.bc.place(Bytecode::InsertDocString(partial.clone(), styles.clone()));
+                    self.bc.place(Bytecode::InsertDocString(partial.clone(), json!(styles)));
                     self.writer.place(&DocChars(partial.clone(), styles.clone()));
                 } else {
                     unreachable!();
@@ -209,7 +209,7 @@ impl<'a> RecordingDocMutator<'a> {
 }
 
 #[allow(non_snake_case)]
-impl<'a> DocMutator for RecordingDocMutator<'a> {
+impl<'a, S: Schema> DocMutator<S> for RecordingDocMutator<'a, S> {
     fn Enter(&mut self) {
         self.bc.place(Bytecode::Enter);
 
@@ -277,8 +277,8 @@ impl<'a> DocMutator for RecordingDocMutator<'a> {
         }
     }
 
-    fn InsertDocString(&mut self, docstring: DocString, styles: OpaqueStyleMap) {
-        self.bc.place(Bytecode::InsertDocString(docstring.clone(), styles.clone()));
+    fn InsertDocString(&mut self, docstring: DocString, styles: S::CharsProperties) {
+        self.bc.place(Bytecode::InsertDocString(docstring.clone(), json!(styles)));
 
         // No-op stepper
 
@@ -298,9 +298,9 @@ impl<'a> DocMutator for RecordingDocMutator<'a> {
         // TODO apply above comment to the .delete() method ALSO
     }
 
-    fn WrapPrevious(&mut self, count: usize, attrs: Attrs) {
+    fn WrapPrevious(&mut self, count: usize, attrs: S::GroupProperties) {
         // console_log!("(A) {:?}", self.stepper.char_index());
-        self.bc.place(Bytecode::WrapPrevious(count, attrs.clone()));
+        self.bc.place(Bytecode::WrapPrevious(count, json!(attrs)));
 
         // No-op stepper
 
