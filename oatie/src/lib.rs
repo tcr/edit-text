@@ -50,6 +50,7 @@ mod string;
 // FIXME pub mod transform_test;
 pub mod validate;
 pub mod writer;
+pub mod rtf;
 
 use crate::apply::*;
 use crate::compose::*;

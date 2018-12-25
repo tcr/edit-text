@@ -4,60 +4,19 @@ use serde::{
 };
 use serde::de::Deserializer;
 use serde::ser::Serializer;
-use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
+use std::collections::HashSet;
 use enumset::*;
 pub use crate::core::schema::*;
 
-pub type StyleMap = HashMap<Style, Option<String>>;
-pub type StyleSet = HashSet<Style>;
+// FIXME
+use crate::rtf::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct OpaqueStyleMap(EnumSet<Style>, Option<Arc<String>>);
-
-pub trait IntoStyle {
-    fn into_style(&self) -> OpaqueStyleMap;
-}
-
-impl IntoStyle for OpaqueStyleMap {
-    fn into_style(&self) -> OpaqueStyleMap {
-        self.clone()
-    }
-}
-
-impl IntoStyle for HashSet<Style> {
-    fn into_style(&self) -> OpaqueStyleMap {
-        let mut set = EnumSet::new();
-        self.iter().for_each(|k| { set.insert(*k); });
-        OpaqueStyleMap(set, None)
-    }
-}
-
-impl IntoStyle for HashMap<Style, Option<String>> {
-    fn into_style(&self) -> OpaqueStyleMap {
-        let mut map = self.clone();
-        let link = map.remove_entry(&Style::Link)
-            .map(|(_k, link)| {
-                Arc::new(link.unwrap())
-            });
-        let mut set = EnumSet::new();
-        map.keys().for_each(|k| { set.insert(*k); });
-        OpaqueStyleMap(set, link)
-    }
-}
+pub struct OpaqueStyleMap(EnumSet<RtfStyle>);
 
 impl OpaqueStyleMap {
     pub fn new() -> Self {
-        OpaqueStyleMap(EnumSet::new(), None)
-    }
-
-    pub fn from<I: IntoStyle>(map: I) -> Self {
-        map.into_style()
-    }
-
-    pub fn iter(&self) -> impl Iterator<Item=(Style, Option<String>)> {
-        // TODO OpaqueStyleMap::iter needs to support Link values (self.1)
-        self.0.iter().map(|k| (k, None))
+        OpaqueStyleMap(EnumSet::new())
     }
 }
 
@@ -81,41 +40,32 @@ impl<'de> Deserialize<'de> for OpaqueStyleMap {
     where
         D: Deserializer<'de>,
     {
-        Ok(OpaqueStyleMap::from(StyleSet::deserialize(deserializer)?.into_iter().map(|k| (k, None)).collect::<StyleMap>()))
+        // FIXME
+        // Ok(OpaqueStyleMap::from(StyleSet::deserialize(deserializer)?.into_iter().map(|k|
+        // (k, None)).collect::<StyleMap>()))
+        unimplemented!();
     }
 }
 
 pub trait StyleTrait {
-    // fn new() -> Self;
-    // fn from(mut map: StyleMap) -> Self;
-    fn styles(&self) -> StyleSet;
-    fn contains(&self, style: Style) -> bool;
-    fn to_map(&self) -> StyleMap;
-    // fn iter(&self) -> impl Iterator<Item=(Style, Option<String>)>;
+    fn styles(&self) -> HashSet<RtfStyle>;
+    fn contains(&self, style: RtfStyle) -> bool;
     fn is_empty(&self) -> bool;
     fn extend(&mut self, map: &Self);
     fn remove(&mut self, set: &Self);
 }
 
 impl StyleTrait for OpaqueStyleMap {
-    fn styles(&self) -> StyleSet {
+    fn styles(&self) -> HashSet<RtfStyle> {
         self.0.iter().collect()
     }
 
-    fn contains(&self, style: Style) -> bool {
+    fn contains(&self, style: RtfStyle) -> bool {
         self.0.contains(style)
     }
 
-    fn to_map(&self) -> StyleMap {
-        let mut hashmap: StyleMap = self.0.iter().map(|s| (s.to_owned(), None)).collect();
-        if let Some(ref string) = self.1 {
-            hashmap.insert(Style::Link, Some((*string).to_string()));
-        }
-        hashmap
-    }
-
     fn is_empty(&self) -> bool {
-        self.iter().count() == 0
+        self.0.iter().count() == 0
     }
 
     fn extend(&mut self, map: &Self) {
