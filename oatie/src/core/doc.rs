@@ -3,9 +3,9 @@
 use serde::{Deserialize, Serialize};
 
 // Re-exports
-pub use crate::core::transform::Schema;
 pub use super::place::*;
 pub use crate::string::*;
+pub use crate::core::schema::*;
 
 pub type DocSpan<S> = Vec<DocElement<S>>;
 pub type DelSpan<S> = Vec<DelElement<S>>;

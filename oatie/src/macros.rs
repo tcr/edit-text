@@ -4,7 +4,7 @@
 macro_rules! doc_span {
     ( @str_literal $e:expr ) => { $e };
     ( @kind DocChars $b:expr $(,)* ) => {
-        DocChars($crate::doc::DocString::from_str($b), $crate::style::OpaqueStyleMap::new())
+        DocChars($crate::doc::DocString::from_str($b), $crate::style::StyleSet::new())
     };
     ( @kind DocChars $b:expr , { $( $e:expr => $c:expr ),+  $(,)* } $(,)* ) => {
         {
@@ -12,7 +12,7 @@ macro_rules! doc_span {
             $(
                 map.insert($e, $c);
             )*
-            DocChars($crate::doc::DocString::from_str($b), $crate::style::OpaqueStyleMap::from(map))
+            DocChars($crate::doc::DocString::from_str($b), $crate::style::StyleSet::from(map))
         }
     };
     ( @kind DocGroup $b:expr , [ $( $v:tt )* ] $(,)* ) => {
@@ -42,11 +42,11 @@ macro_rules! add_span {
             $(
                 map.insert($e, $c);
             )*
-            AddChars($crate::doc::DocString::from_str($b), $crate::style::OpaqueStyleMap::from(map))
+            AddChars($crate::doc::DocString::from_str($b), $crate::style::StyleSet::from(map))
         }
     };
     ( @kind AddChars $b:expr $(,)* ) => {
-        AddChars($crate::doc::DocString::from_str($b), $crate::style::OpaqueStyleMap::new())
+        AddChars($crate::doc::DocString::from_str($b), $crate::style::StyleSet::new())
     };
     ( @kind AddWithGroup [ $( $v:tt )* ] $(,)* ) => {
         AddWithGroup(add_span![ $( $v )* ])

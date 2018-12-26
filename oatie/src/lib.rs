@@ -47,7 +47,7 @@ pub mod normalize;
 mod parse;
 pub mod stepper;
 mod string;
-// FIXME pub mod transform_test;
+pub mod transform_test;
 pub mod validate;
 pub mod writer;
 pub mod rtf;

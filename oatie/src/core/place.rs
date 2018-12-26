@@ -15,7 +15,7 @@ pub(crate) fn can_element_join<S: Schema>(left: &DocElement<S>, right: &DocEleme
 pub(crate) fn try_element_join<S: Schema>(left: &mut DocElement<S>, right: &DocElement<S>) -> bool {
     match (left, right) {
         (&mut DocChars(ref mut prefix, ref prefix_styles), &DocChars(ref suffix, ref suffix_styles)) => {
-            if prefix_styles.styles() == suffix_styles.styles() {
+            if prefix_styles == suffix_styles {
                 prefix.push_str(suffix.as_str());
                 return true;
             }
@@ -43,11 +43,6 @@ impl<S: Schema> DocPlaceable<S> for DocSpan<S> {
                     if try_element_join(element, elem) {
                         return;
                     }
-                    // // Check if they're equal and we can push it directly.
-                    // if prefix.styles() == text.styles() {
-                    //     prefix.push_str(text.as_str());
-                    //     return;
-                    // }
                 }
 
                 // Otherwise, push the new entry

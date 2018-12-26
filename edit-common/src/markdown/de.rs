@@ -1,6 +1,6 @@
 use failure::Error;
 use oatie::doc::*;
-use oatie::style::OpaqueStyleMap;
+use oatie::style::StyleSet;
 use oatie::writer::DocWriter;
 use pulldown_cmark::{
     Event::{
@@ -21,7 +21,7 @@ use pulldown_cmark::{
 struct Ctx<'b, I> {
     iter: I,
     body: &'b mut DocWriter<S>,
-    styles: StyleMap,
+    styles: StyleSet,
     bare_text: bool,
 }
 
@@ -46,7 +46,7 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                     }
                     self.body.place(&DocChars(
                         DocString::from_str(text.as_ref()),
-                        OpaqueStyleMap::from(self.styles.clone()),
+                        StyleSet::from(self.styles.clone()),
                     ));
                     if self.bare_text {
                         self.body.close(Attrs::Text);
@@ -61,7 +61,7 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                         self.body.begin();
                     }
                     self.body.place(&DocChars(DocString::from_str(" "),
-                        OpaqueStyleMap::from(self.styles.clone()),
+                        StyleSet::from(self.styles.clone()),
                     ));
                     if self.bare_text {
                         self.body.close(Attrs::Text);
@@ -70,14 +70,14 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                 HardBreak => {
                     self.body.place(&DocChars(DocString::from_str(
                         "\n"),
-                        OpaqueStyleMap::from(self.styles.clone()),
+                        StyleSet::from(self.styles.clone()),
                     ));
                 }
                 Html(html) => {
                     self.body.begin();
                     self.body.place(&DocChars(DocString::from_str(
                         &html),
-                        OpaqueStyleMap::from(hashmap!{ Style::Normie => None }),
+                        StyleSet::from(hashmap!{ Style::Normie => None }),
                     ));
                     self.body.close(Attrs::Html);
                 }

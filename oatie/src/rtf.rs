@@ -3,8 +3,8 @@
 
 use super::schema::*;
 use std::fmt;
-use enumset::EnumSetType;
-use crate::core::style::OpaqueStyleMap;
+use std::collections::HashSet;
+use serde::{Serialize, Deserialize, Serializer, Deserializer};
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum Attrs {
@@ -21,7 +21,7 @@ pub enum Attrs {
 }
 
 #[repr(u8)]
-#[derive(Debug, Serialize, Deserialize, EnumSetType)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Hash, Clone)]
 pub enum RtfStyle {
     Normie,   // Sentinel (if this isn't present on a DocString, something went wrong somewhere)
     Selected, // Never used in server, added on client to show selected text
@@ -30,12 +30,81 @@ pub enum RtfStyle {
     Link,     // Needs attached link data
 }
 
+// impl Hash for RtfStyle {
+// }
+
+// impl Eq for RtfStyle {
+// }
+
 impl fmt::Display for RtfStyle {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // Use the Debug implementation for Display.
         fmt::Debug::fmt(self, f)
     }
 }
+
+
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StyleSet(HashSet<RtfStyle>);
+
+impl StyleSet {
+    pub fn new() -> Self {
+        StyleSet(HashSet::new())
+    }
+}
+
+impl Default for StyleSet {
+    fn default() -> Self {
+        StyleSet::new()
+    }
+}
+
+impl Serialize for StyleSet {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.styles().serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for StyleSet {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(StyleSet(<HashSet<RtfStyle> as Deserialize>::deserialize(deserializer)?))
+    }
+}
+
+
+impl StyleTrait for StyleSet {
+    type Style = RtfStyle;
+
+    fn styles(&self) -> HashSet<RtfStyle> {
+        self.0.clone()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.0.iter().count() == 0
+    }
+
+    fn extend(&mut self, set: &Self) {
+        for item in set.styles() {
+            self.0.insert(item);
+        }
+    }
+
+    fn remove(&mut self, set: &Self) {
+        for item in set.styles() {
+            self.0.remove(&item);
+        }
+    }
+}
+
+
+
 
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum RtfTrack {
@@ -122,7 +191,7 @@ impl Schema for RtfSchema {
     type Track = RtfTrack;
 
     type GroupProperties = Attrs;
-    type CharsProperties = OpaqueStyleMap;
+    type CharsProperties = StyleSet;
 
     fn attrs_eq(a: &Attrs, b: &Attrs) -> bool {
         // TODO normalize?

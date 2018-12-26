@@ -5,7 +5,7 @@ use crate::walkers::*;
 use failure::Error;
 use oatie::doc::*;
 use oatie::OT;
-use oatie::style::OpaqueStyleMap;
+use oatie::style::StyleSet;
 
 // Insert a string at the user's caret position.
 pub fn add_string(ctx: ActionContext, input: &str) -> Result<ActionContext, Error> {
@@ -29,7 +29,7 @@ pub fn add_string(ctx: ActionContext, input: &str) -> Result<ActionContext, Erro
 
             // Insert new character.
             let mut writer = walker.to_writer();
-            let step = AddChars(DocString::from_str(input), OpaqueStyleMap::from(styles));
+            let step = AddChars(DocString::from_str(input), StyleSet::from(styles));
             writer.add.place(&step);
             ctx.apply(&writer.exit_result())
         })

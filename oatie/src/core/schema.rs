@@ -1,7 +1,8 @@
-use super::doc::*;
 use std::fmt::Debug;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
+use std::collections::HashSet;
+use std::hash::Hash;
 
 pub trait Track: Copy + Debug + PartialEq + Sized {
     // Rename this do close split? if applicable?
@@ -37,4 +38,13 @@ pub trait Schema: Clone + Debug + PartialEq {
 
     /// Combine two Attrs into a new definition.
     fn merge_attrs(a: &Self::GroupProperties, b: &Self::GroupProperties) -> Option<Self::GroupProperties>;
+}
+
+pub trait StyleTrait: Sized {
+    type Style: Sized + Clone + PartialEq + Hash;
+
+    fn styles(&self) -> HashSet<Self::Style>;
+    fn is_empty(&self) -> bool;
+    fn extend(&mut self, set: &Self);
+    fn remove(&mut self, set: &Self);
 }

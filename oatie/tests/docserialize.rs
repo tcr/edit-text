@@ -15,7 +15,7 @@ fn test_docserialize_ron() {
     // assert_eq!(res, "[DocChars(\"birds snakes and aeroplanes\"),]");
     eprintln!();
 
-    // FIXME links don't work in serialization
+    // TODO links don't work in serialization
     let start = doc_span![
         DocChars("birds snakes and aeroplanes", { Style::Bold => None /*, Style::Link => Some("Wow".to_string()) */ })
     ];
@@ -54,7 +54,7 @@ fn test_docserialize_json() {
 
 
 
-    // FIXME links don't work in serialization
+    // TODO links don't work in serialization
     let start = doc_span![
         DocChars("birds snakes and aeroplanes", { Style::Bold => None /*, Style::Link => Some("Wow".to_string()) */ })
     ];

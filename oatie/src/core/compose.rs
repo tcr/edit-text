@@ -539,13 +539,8 @@ fn compose_add_del_inner<S: Schema>(
                 }
                 AddStyles(a_count, a_styles) => {
                     // a_styles - b_styles
-                    // FIXME
-                    let combined_styles = a_styles.clone();
-                    // let combined_styles = a_styles
-                    //     .clone()
-                    //     .drain()
-                    //     .filter(|(k, _)| !b_styles.contains(*k))
-                    //     .collect();
+                    let mut combined_styles = a_styles.clone();
+                    combined_styles.remove(&b_styles);
 
                     // res.push(AddStyles(cmp::min(a_count, b_count), both_styles));
                     if a_count > b_count {

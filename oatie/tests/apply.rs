@@ -12,7 +12,7 @@ use oatie::doc::DelElement::*;
 use oatie::doc::DocElement::*;
 use oatie::doc::*;
 use oatie::*;
-use oatie::style::OpaqueStyleMap;
+use oatie::style::StyleSet;
 
 pub fn test_start() {
     if let Ok(_) = env_logger::init() {
@@ -50,31 +50,31 @@ fn try_this() {
 
     assert_eq!(
         apply_delete(
-            &vec![DocChars(DocString::from_str("Hello World!"), OpaqueStyleMap::new())],
+            &vec![DocChars(DocString::from_str("Hello World!"), StyleSet::new())],
             &vec![DelChars(6)],
         ),
-        vec![DocChars(DocString::from_str("World!"), OpaqueStyleMap::new())]
+        vec![DocChars(DocString::from_str("World!"), StyleSet::new())]
     );
 
     assert_eq!(
         apply_add(
-            &vec![DocChars(DocString::from_str("World!"), OpaqueStyleMap::new())],
-            &vec![AddChars(DocString::from_str("Hello "), OpaqueStyleMap::new())],
+            &vec![DocChars(DocString::from_str("World!"), StyleSet::new())],
+            &vec![AddChars(DocString::from_str("Hello "), StyleSet::new())],
         ),
-        vec![DocChars(DocString::from_str("Hello World!"), OpaqueStyleMap::new())],
+        vec![DocChars(DocString::from_str("Hello World!"), StyleSet::new())],
     );
 
     assert_eq!(
         apply_add(
             &vec![
                 DocGroup(HashMap::new(), vec![]),
-                DocChars(DocString::from_str("World!"), OpaqueStyleMap::new()),
+                DocChars(DocString::from_str("World!"), StyleSet::new()),
             ],
-            &vec![AddSkip(1), AddChars(DocString::from_str("Hello "), OpaqueStyleMap::new())],
+            &vec![AddSkip(1), AddChars(DocString::from_str("Hello "), StyleSet::new())],
         ),
         vec![
             DocGroup(HashMap::new(), vec![]),
-            DocChars(DocString::from_str("Hello World!"), OpaqueStyleMap::new()),
+            DocChars(DocString::from_str("Hello World!"), StyleSet::new()),
         ]
     );
 
@@ -82,13 +82,13 @@ fn try_this() {
         apply_delete(
             &vec![DocGroup(
                 HashMap::new(),
-                vec![DocChars(DocString::from_str("Hello Damned World!"), OpaqueStyleMap::new())],
+                vec![DocChars(DocString::from_str("Hello Damned World!"), StyleSet::new())],
             )],
             &vec![DelWithGroup(vec![DelSkip(6), DelChars(7)])],
         ),
         vec![DocGroup(
             HashMap::new(),
-            vec![DocChars(DocString::from_str("Hello World!"), OpaqueStyleMap::new())],
+            vec![DocChars(DocString::from_str("Hello World!"), StyleSet::new())],
         )]
     );
 
@@ -96,40 +96,40 @@ fn try_this() {
         apply_add(
             &vec![DocGroup(
                 HashMap::new(),
-                vec![DocChars(DocString::from_str("Hello!"), OpaqueStyleMap::new())],
+                vec![DocChars(DocString::from_str("Hello!"), StyleSet::new())],
             )],
             &vec![AddWithGroup(vec![
                 AddSkip(5),
-                AddChars(DocString::from_str(" World"), OpaqueStyleMap::new()),
+                AddChars(DocString::from_str(" World"), StyleSet::new()),
             ])],
         ),
         vec![DocGroup(
             HashMap::new(),
-            vec![DocChars(DocString::from_str("Hello World!"), OpaqueStyleMap::new())],
+            vec![DocChars(DocString::from_str("Hello World!"), StyleSet::new())],
         )]
     );
 
     assert_eq!(
         apply_operation(
-            &vec![DocChars(DocString::from_str("Goodbye World!"), OpaqueStyleMap::new())],
+            &vec![DocChars(DocString::from_str("Goodbye World!"), StyleSet::new())],
             &(
                 vec![DelChars(7)],
-                vec![AddChars(DocString::from_str("Hello"), OpaqueStyleMap::new())],
+                vec![AddChars(DocString::from_str("Hello"), StyleSet::new())],
             )
         ),
-        vec![DocChars(DocString::from_str("Hello World!"), OpaqueStyleMap::new())]
+        vec![DocChars(DocString::from_str("Hello World!"), StyleSet::new())]
     );
 
     assert_eq!(
         apply_add(
-            &vec![DocChars(DocString::from_str("Hello world!"), OpaqueStyleMap::new())],
+            &vec![DocChars(DocString::from_str("Hello world!"), StyleSet::new())],
             &vec![
                 AddSkip(10),
-                AddChars(DocString::from_str("dd49"), OpaqueStyleMap::new()),
+                AddChars(DocString::from_str("dd49"), StyleSet::new()),
                 AddSkip(2),
             ],
         ),
-        vec![DocChars(DocString::from_str("Hello worldd49d!"), OpaqueStyleMap::new())]
+        vec![DocChars(DocString::from_str("Hello worldd49d!"), StyleSet::new())]
     );
 }
 
@@ -140,9 +140,9 @@ fn test_lib_op() {
     assert_eq!(
         apply_operation(
             &vec![
-                DocChars(DocString::from_str("Heo"), OpaqueStyleMap::new()),
+                DocChars(DocString::from_str("Heo"), StyleSet::new()),
                 DocGroup(HashMap::new(), vec![]),
-                DocChars(DocString::from_str("!"), OpaqueStyleMap::new()),
+                DocChars(DocString::from_str("!"), StyleSet::new()),
             ],
             &(
                 vec![DelSkip(1), DelChars(1), DelSkip(2), DelSkip(1)],
@@ -150,9 +150,9 @@ fn test_lib_op() {
             ),
         ),
         vec![
-            DocChars(DocString::from_str("Ho"), OpaqueStyleMap::new()),
+            DocChars(DocString::from_str("Ho"), StyleSet::new()),
             DocGroup(HashMap::new(), vec![]),
-            DocChars(DocString::from_str("!"), OpaqueStyleMap::new()),
+            DocChars(DocString::from_str("!"), StyleSet::new()),
         ]
     );
 }

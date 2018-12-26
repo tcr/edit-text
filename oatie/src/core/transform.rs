@@ -1676,14 +1676,9 @@ pub fn transform_add_del_inner<S: Schema>(
                     a.next();
                 }
                 AddStyles(a_count, a_styles) => {
-                    // Remove styles from A that were present in B.
-                    // let combined_styles: StyleMap = a_styles
-                    //     .clone()
-                    //     .drain()
-                    //     .filter(|(k, _)| b_styles.contains(*k))
-                    //     .collect();
-                    // FIXME
-                    let combined_styles = a_styles.clone();
+                    // a_styles - b_styles
+                    let mut combined_styles = a_styles.clone();
+                    combined_styles.remove(&b_styles);
 
                     addres.place(&AddStyles(cmp::min(a_count, b_count), combined_styles));
                     delres.place(&DelStyles(b_count, b_styles.clone())); // Not combined

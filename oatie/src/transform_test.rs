@@ -15,6 +15,8 @@ use super::OT;
 use failure::Error;
 use regex::Regex;
 use yansi::Paint;
+use serde::Serialize;
+use serde::de::DeserializeOwned;
 
 fn op_transform_compare<S: Schema>(
     a: &Op<S>,
@@ -55,7 +57,7 @@ enum TestSpec<S: Schema> {
     },
 }
 
-pub fn run_transform_test<S: Schema>(input: &str) -> Result<(), Error> {
+pub fn run_transform_test<S: Schema + Serialize + DeserializeOwned>(input: &str) -> Result<(), Error> {
     let mut test: HashMap<String, String> = HashMap::new();
 
     // ron-defined test specs

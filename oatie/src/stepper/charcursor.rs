@@ -168,7 +168,7 @@ mod tests {
 
     #[test]
     fn basic() {
-        let mut ds = CharCursor::from_docstring(&DocString::from_str("Welcome!"), OpaqueStyleMap::new());
+        let mut ds = CharCursor::from_docstring(&DocString::from_str("Welcome!"), StyleSet::new());
         ds.value_add(6);
         assert_eq!(ds.right().unwrap().as_str(), "e!");
     }
@@ -176,21 +176,21 @@ mod tests {
     #[test]
     #[should_panic]
     fn seek_too_far() {
-        let mut ds = CharCursor::from_docstring(&DocString::from_str("Welcome!"), OpaqueStyleMap::new());
+        let mut ds = CharCursor::from_docstring(&DocString::from_str("Welcome!"), StyleSet::new());
         ds.value_add(11);
     }
 
     #[test]
     #[should_panic]
     fn seek_negative() {
-        let mut ds = CharCursor::from_docstring(&DocString::from_str("Welcome!"), OpaqueStyleMap::new());
+        let mut ds = CharCursor::from_docstring(&DocString::from_str("Welcome!"), StyleSet::new());
         ds.value_add(4);
         ds.value_sub(10);
     }
 
     #[test]
     fn option_ends() {
-        let mut ds = CharCursor::from_docstring(&DocString::from_str("Welcome!"), OpaqueStyleMap::new());
+        let mut ds = CharCursor::from_docstring(&DocString::from_str("Welcome!"), StyleSet::new());
         assert_eq!(ds.left(), None);
         assert_eq!(ds.right().is_some(), true);
         ds.value_add("Welcome!".len());

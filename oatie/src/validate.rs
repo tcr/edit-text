@@ -35,7 +35,8 @@ pub fn validate_doc_span<S: Schema>(ctx: &mut ValidateContext<S>, span: &DocSpan
                     // }
                 // }
 
-                // FIXME This is disabled with the removal
+                // TODO This is disabled with the removal of attribute
+                // introspection, but should be re-instated
                 // if let Attrs::ListItem = attrs {
                 //     ensure!(!span.is_empty(), "Expected non-empty bullet");
                 // }

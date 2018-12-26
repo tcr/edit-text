@@ -333,7 +333,7 @@ mod tests {
         stepper.skip(2);
         assert_eq!(
             stepper.head().unwrap(),
-            &DocChars(DocString::from_str("ol"), OpaqueStyleMap::new())
+            &DocChars(DocString::from_str("ol"), StyleSet::new())
         );
     }
 
