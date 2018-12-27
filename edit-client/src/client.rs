@@ -13,6 +13,7 @@ use edit_common::{
 use failure::Error;
 use oatie::{self, OT};
 use oatie::doc::*;
+use oatie::rtf::*;
 use oatie::validate::validate_doc;
 use serde_json;
 use std::char::from_u32;
@@ -180,8 +181,8 @@ pub fn button_handlers<C: ClientController>(
         }};
     }
 
-    let is_bold = state.as_ref().map(|x| x.styles.contains(&Style::Bold)).unwrap_or(false);
-    let is_italic = state.as_ref().map(|x| x.styles.contains(&Style::Italic)).unwrap_or(false);
+    let is_bold = state.as_ref().map(|x| x.styles.contains(&RtfStyle::Bold)).unwrap_or(false);
+    let is_italic = state.as_ref().map(|x| x.styles.contains(&RtfStyle::Italic)).unwrap_or(false);
 
     let ui = vec![
         Ui::ButtonGroup(vec![
@@ -247,9 +248,9 @@ pub fn button_handlers<C: ClientController>(
                 "Bold".to_string(),
                 callback!(move |client| client.client_op(|doc| {
                     if is_bold {
-                        remove_styles(doc, hashset![Style::Bold])
+                        remove_styles(doc, StyleSet::from(hashset![RtfStyle::Bold]))
                     } else {
-                        apply_style(doc, Style::Bold, None)
+                        apply_style(doc, RtfStyle::Bold, None)
                     }
                 })),
                 is_bold,
@@ -258,9 +259,9 @@ pub fn button_handlers<C: ClientController>(
                 "Italic".to_string(),
                 callback!(move |client| client.client_op(|doc| {
                     if is_italic {
-                        remove_styles(doc, hashset![Style::Italic])
+                        remove_styles(doc, StyleSet::from(hashset![RtfStyle::Italic]))
                     } else {
-                        apply_style(doc, Style::Italic, None)
+                        apply_style(doc, RtfStyle::Italic, None)
                     }
                 })),
                 is_italic,
@@ -570,7 +571,7 @@ pub trait ClientController {
         }
     }
 
-    fn upload(&mut self, local_op: Op) -> Result<(), Error> {
+    fn upload(&mut self, local_op: Op<RtfSchema>) -> Result<(), Error> {
         log_wasm!(Debug("CLIENTOP".to_string()));
         let client_id = self.state().client_doc.client_id.clone();
         let version = self.state().client_doc.version;
@@ -590,7 +591,7 @@ pub trait ClientController {
 
     fn client_op<C>(&mut self, callback: C) -> Result<(), Error>
     where
-        C: Fn(ActionContext) -> Result<Op, Error>,
+        C: Fn(ActionContext) -> Result<Op<RtfSchema>, Error>,
         Self: Sized,
     {
         // Apply operation.

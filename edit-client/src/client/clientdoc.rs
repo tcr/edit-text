@@ -1,20 +1,20 @@
 //! Document + versioning state that talks to a synchronization server.
 
 use oatie::doc::*;
-use oatie::schema::RtfSchema;
+use oatie::rtf::RtfSchema;
 use oatie::validate::validate_doc;
 use oatie::OT;
 use std::mem;
 
 #[derive(Debug)]
 pub struct ClientDoc {
-    pub doc: Doc,
+    pub doc: Doc<RtfSchema>,
     pub version: usize,
     pub client_id: String,
 
-    pub original_doc: Doc,
-    pub pending_op: Option<Op>,
-    pub local_op: Op,
+    pub original_doc: Doc<RtfSchema>,
+    pub pending_op: Option<Op<RtfSchema>>,
+    pub local_op: Op<RtfSchema>,
 }
 
 impl ClientDoc {
@@ -32,7 +32,7 @@ impl ClientDoc {
     }
 
     /// Overwrite current state
-    pub fn init(&mut self, new_doc: &Doc, version: usize) {
+    pub fn init(&mut self, new_doc: &Doc<RtfSchema>, version: usize) {
         self.doc = new_doc.clone();
         self.version = version;
 
@@ -44,7 +44,11 @@ impl ClientDoc {
     /// Sync ACK'd our pending operation.
     /// Returns the next op to send to sync, if any.
     // TODO we can determine new_doc without needing it passed in
-    pub fn sync_confirmed_pending_op(&mut self, new_doc: &Doc, version: usize) -> Option<Op> {
+    pub fn sync_confirmed_pending_op(
+        &mut self,
+        new_doc: &Doc<RtfSchema>,
+        version: usize,
+    ) -> Option<Op<RtfSchema>> {
         log_wasm!(SyncNew("confirmed_pending_op".into()));
 
         // Server can't acknowledge an operation that wasn't pending.
@@ -76,10 +80,10 @@ impl ClientDoc {
     // TODO we can determine new_doc without needing it passed in
     pub fn sync_sent_new_version(
         &mut self,
-        new_doc: &Doc,
+        new_doc: &Doc<RtfSchema>,
         version: usize,
-        input_op: &Op,
-    ) -> (Doc, Op) {
+        input_op: &Op<RtfSchema>,
+    ) -> (Doc<RtfSchema>, Op<RtfSchema>) {
         // log_wasm!(SyncNew("new_op".into()));
         self.assert_compose_correctness(None);
 
@@ -114,14 +118,13 @@ impl ClientDoc {
         println!();
 
         // I x P -> I', P'
-        let (pending_transform, input_transform) =
-            Op::transform::<RtfSchema>(&input_op, &pending_op);
+        let (pending_transform, input_transform) = Op::transform(&input_op, &pending_op);
 
         // let pending_final = Op::compose(&pending_transform, &correction);
         // let input_final = Op::compose(&input_transform, &correction);
 
         // P' x L -> P'', L'
-        let (local_transform, _) = Op::transform::<RtfSchema>(&input_transform, &local_op);
+        let (local_transform, _) = Op::transform(&input_transform, &local_op);
 
         // let correction = correct_op(&local_transform).unwrap();
         // let input_correction = correct_op(&input_transform).unwrap();
@@ -189,7 +192,7 @@ impl ClientDoc {
     }
 
     /// When there are no payloads queued, queue a next one.
-    pub fn next_payload(&mut self) -> Option<Op> {
+    pub fn next_payload(&mut self) -> Option<Op<RtfSchema>> {
         log_wasm!(Debug(format!("NEXT_PAYLOAD: {:?}", self.local_op)));
         if self.pending_op.is_none() && self.local_op != Op::empty() {
             // Take the contents of local_op.
@@ -202,7 +205,7 @@ impl ClientDoc {
     }
 
     #[allow(unused)]
-    fn assert_compose_correctness(&self, op: Option<Op>) {
+    fn assert_compose_correctness(&self, op: Option<Op<RtfSchema>>) {
         // Reference for variable names:
         // self.original_doc + pending_op + local_op + op
         //                              ^ recreated_doc
@@ -255,7 +258,7 @@ impl ClientDoc {
     }
 
     /// An operation was applied to the document locally.
-    pub fn apply_local_op(&mut self, op: &Op) {
+    pub fn apply_local_op(&mut self, op: &Op<RtfSchema>) {
         self.assert_compose_correctness(Some(op.clone()));
 
         // TODO pending op should be none, but it's actually a value here.

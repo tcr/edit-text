@@ -1,16 +1,14 @@
 use oatie::doc::*;
 use oatie::stepper::*;
-use oatie::transform::Schema;
+use oatie::rtf::*;
 use take_mut;
 
 pub fn is_block(attrs: &Attrs) -> bool {
-    use oatie::schema::*;
     RtfSchema::track_type_from_attrs(attrs) == Some(RtfTrack::Blocks)
 }
 
 // TODO what does this refer to?
 pub fn is_block_object(attrs: &Attrs) -> bool {
-    use oatie::schema::*;
     RtfSchema::track_type_from_attrs(attrs) == Some(RtfTrack::BlockObjects)
 }
 
@@ -41,12 +39,12 @@ pub enum Pos {
 
 #[derive(Clone, Debug)]
 pub struct CaretStepper<'a> {
-    pub doc: DocStepper<'a>,
+    pub doc: DocStepper<'a, RtfSchema>,
     pub caret_pos: isize,
 }
 
 impl<'a> CaretStepper<'a> {
-    pub fn new(doc: DocStepper<'a>) -> CaretStepper<'a> {
+    pub fn new(doc: DocStepper<'a, RtfSchema>) -> CaretStepper<'a> {
         // Start at caret pos 0
         let mut stepper = CaretStepper { doc, caret_pos: -1 };
         while stepper.caret_pos != 0 {
@@ -136,7 +134,7 @@ impl<'a> Iterator for CaretStepper<'a> {
 
 #[derive(Clone, Debug)]
 pub struct ReverseCaretStepper<'a> {
-    pub doc: DocStepper<'a>,
+    pub doc: DocStepper<'a, RtfSchema>,
     pub caret_pos: isize,
 }
 

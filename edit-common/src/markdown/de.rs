@@ -1,6 +1,6 @@
 use failure::Error;
 use oatie::doc::*;
-use oatie::style::StyleSet;
+use oatie::rtf::*;
 use oatie::writer::DocWriter;
 use pulldown_cmark::{
     Event::{
@@ -20,7 +20,7 @@ use pulldown_cmark::{
 
 struct Ctx<'b, I> {
     iter: I,
-    body: &'b mut DocWriter<S>,
+    body: &'b mut DocWriter<RtfSchema>,
     styles: StyleSet,
     bare_text: bool,
 }
@@ -46,7 +46,7 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                     }
                     self.body.place(&DocChars(
                         DocString::from_str(text.as_ref()),
-                        StyleSet::from(self.styles.clone()),
+                        self.styles.clone(),
                     ));
                     if self.bare_text {
                         self.body.close(Attrs::Text);
@@ -60,24 +60,25 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                     if self.bare_text {
                         self.body.begin();
                     }
-                    self.body.place(&DocChars(DocString::from_str(" "),
-                        StyleSet::from(self.styles.clone()),
+                    self.body.place(&DocChars(
+                        DocString::from_str(" "),
+                        self.styles.clone(),
                     ));
                     if self.bare_text {
                         self.body.close(Attrs::Text);
                     }
                 }
                 HardBreak => {
-                    self.body.place(&DocChars(DocString::from_str(
-                        "\n"),
-                        StyleSet::from(self.styles.clone()),
+                    self.body.place(&DocChars(
+                        DocString::from_str("\n"),
+                        self.styles.clone(),
                     ));
                 }
                 Html(html) => {
                     self.body.begin();
-                    self.body.place(&DocChars(DocString::from_str(
-                        &html),
-                        StyleSet::from(hashmap!{ Style::Normie => None }),
+                    self.body.place(&DocChars(
+                        DocString::from_str(&html),
+                        StyleSet::from(hashset!{ RtfStyle::Normie }),
                     ));
                     self.body.close(Attrs::Html);
                 }
@@ -116,13 +117,15 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
 
             // Spans
             Tag::Link(dest, _title) => {
-                self.styles.insert(Style::Link, Some(dest.to_string()));
+                // FIXME
+                // self.styles.insert(Style::Link, Some(dest.to_string()));
+                self.styles.insert(RtfStyle::Link);
             }
             Tag::Strong => {
-                self.styles.insert(Style::Bold, None);
+                self.styles.insert(RtfStyle::Bold);
             }
             Tag::Emphasis => {
-                self.styles.insert(Style::Italic, None);
+                self.styles.insert(RtfStyle::Italic);
             }
 
             Tag::Table(..)
@@ -167,13 +170,13 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
 
             // Spans
             Tag::Link(..) => {
-                self.styles.remove(&Style::Link);
+                self.styles.remove(&RtfStyle::Link);
             }
             Tag::Strong => {
-                self.styles.remove(&Style::Bold);
+                self.styles.remove(&RtfStyle::Bold);
             }
             Tag::Emphasis => {
-                self.styles.remove(&Style::Italic);
+                self.styles.remove(&RtfStyle::Italic);
             }
 
             Tag::FootnoteDefinition(_)
@@ -188,14 +191,14 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
     }
 }
 
-pub fn markdown_to_doc(input: &str) -> Result<DocSpan, Error> {
+pub fn markdown_to_doc(input: &str) -> Result<DocSpan<RtfSchema>, Error> {
     let parser = Parser::new(input);
     let mut doc_writer = DocWriter::new();
     {
         let mut ctx = Ctx {
             iter: parser,
             body: &mut doc_writer,
-            styles: hashmap!{ Style::Normie => None },
+            styles: StyleSet::from(hashset!{ RtfStyle::Normie }),
             bare_text: true,
         };
         ctx.run();

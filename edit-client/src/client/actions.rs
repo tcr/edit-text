@@ -10,6 +10,7 @@ pub use self::identify::*;
 use crate::walkers::*;
 use failure::Error;
 use oatie::doc::*;
+use oatie::rtf::*;
 use oatie::OT;
 
 fn is_boundary_char(c: char) -> bool {
@@ -25,13 +26,13 @@ fn caret_attrs(client_id: &str, focus: bool) -> Attrs {
 
 #[derive(Clone)]
 pub struct ActionContext {
-    pub doc: Doc,
+    pub doc: Doc<RtfSchema>,
     pub client_id: String,
-    op_result: Op,
+    op_result: Op<RtfSchema>,
 }
 
 impl ActionContext {
-    pub fn new(doc: Doc, client_id: String) -> ActionContext {
+    pub fn new(doc: Doc<RtfSchema>, client_id: String) -> ActionContext {
         ActionContext {
             doc,
             client_id,
@@ -39,7 +40,7 @@ impl ActionContext {
         }
     }
 
-    pub fn apply(mut self, op: &Op) -> Result<ActionContext, Error> {
+    pub fn apply(mut self, op: &Op<RtfSchema>) -> Result<ActionContext, Error> {
         // update self with the op, update self doc, return new self
         self.doc = Op::apply(&self.doc, op);
         self.op_result = Op::compose(&self.op_result, op);
@@ -50,7 +51,7 @@ impl ActionContext {
         Walker::to_caret(&self.doc, &self.client_id, pos)
     }
 
-    pub fn result(self) -> Op {
+    pub fn result(self) -> Op<RtfSchema> {
         self.op_result
     }
 }

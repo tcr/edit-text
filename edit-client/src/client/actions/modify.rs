@@ -5,7 +5,7 @@ use crate::walkers::*;
 use failure::Error;
 use oatie::doc::*;
 use oatie::OT;
-use oatie::style::StyleSet;
+use oatie::rtf::*;
 
 // Insert a string at the user's caret position.
 pub fn add_string(ctx: ActionContext, input: &str) -> Result<ActionContext, Error> {
@@ -16,15 +16,11 @@ pub fn add_string(ctx: ActionContext, input: &str) -> Result<ActionContext, Erro
             let walker = ctx.get_walker(Pos::Start)?;
 
             // Clone styles of hte previous text node, or use default styles.
-            let mut styles = hashmap!{ Style::Normie => None };
+            let mut styles = hashset!{ RtfStyle::Normie };
             let mut char_walker = walker.clone();
             char_walker.back_char();
             if let Some(DocChars(_, ref prefix_styles)) = char_walker.doc().head() {
-                styles.extend(
-                    prefix_styles
-                        .iter()
-                        .map(|(a, b)| (a.to_owned(), b.to_owned())),
-                );
+                styles.extend(prefix_styles.styles());
             }
 
             // Insert new character.
@@ -35,7 +31,7 @@ pub fn add_string(ctx: ActionContext, input: &str) -> Result<ActionContext, Erro
         })
 }
 
-pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
+pub fn toggle_list(ctx: ActionContext) -> Result<Op<RtfSchema>, Error> {
     // Create a walker that points to the beginning of the block the caret
     // is currently in.
     let mut walker = ctx.get_walker(Pos::Focus).expect("Expected a Focus caret");
@@ -68,7 +64,7 @@ pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
 }
 
 /// Replaces the current block with a new block.
-pub fn replace_block(ctx: ActionContext, attrs: Attrs) -> Result<Op, Error> {
+pub fn replace_block(ctx: ActionContext, attrs: Attrs) -> Result<Op<RtfSchema>, Error> {
     // Create a walker that points to the beginning of the block the caret
     // is currently in.
     let mut walker = ctx.get_walker(Pos::Focus).expect("Expected a Focus caret");
@@ -97,7 +93,7 @@ pub fn replace_block(ctx: ActionContext, attrs: Attrs) -> Result<Op, Error> {
 /// Hit backspace at the beginning of a block.
 fn combine_with_previous_block(
     walker: Walker<'_>,
-) -> Result<Op, Error> {
+) -> Result<Op<RtfSchema>, Error> {
     // Check for first block in a list item.
     let mut parent_walker = walker.clone();
     assert!(parent_walker.back_block());
@@ -242,7 +238,7 @@ fn combine_with_previous_block(
 }
 
 // Deletes backward once from a provided walker position.
-fn delete_char_inner(mut walker: Walker<'_>) -> Result<Op, Error> {
+fn delete_char_inner(mut walker: Walker<'_>) -> Result<Op<RtfSchema>, Error> {
     // See if we can collapse this and the previous block or list item.
     if walker.at_start_of_block() {
         return combine_with_previous_block(walker);
@@ -307,7 +303,7 @@ fn delete_selection(ctx: ActionContext) -> Result<(bool, ActionContext), Error> 
 }
 
 /// Backspace.
-pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
+pub fn delete_char(ctx: ActionContext) -> Result<Op<RtfSchema>, Error> {
     // Bail early if we delete a selection.
     let (success, ctx) = delete_selection(ctx)?;
     if success {
@@ -320,7 +316,7 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
 }
 
 // Splits the current block at the position of the user's caret.
-pub fn split_block(ctx: ActionContext, add_hr: bool) -> Result<Op, Error> {
+pub fn split_block(ctx: ActionContext, add_hr: bool) -> Result<Op<RtfSchema>, Error> {
     let walker = ctx.get_walker(Pos::Start)?;
     let skip = walker.doc().skip_len();
 

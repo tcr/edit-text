@@ -16,10 +16,8 @@ pub mod simple_ws;
 use serde_json;
 use htmlescape::encode_minimal;
 use oatie::doc::*;
-use std::collections::{
-    HashMap,
-    HashSet,
-};
+use std::collections::{HashMap, HashSet};
+use oatie::rtf::*;
 
 type CaretIndex = HashMap<String, usize>;
 type SelectionActive = HashSet<String>;
@@ -32,7 +30,7 @@ fn html_start_tag(tag: &str, attrs: HashMap<String, String>) -> String {
 
 // TODO move this to a different module
 /// Converts a DocSpan to an HTML string.
-pub fn doc_as_html(doc: &DocSpan) -> String {
+pub fn doc_as_html(doc: &DocSpan<RtfSchema>) -> String {
     // Count all carets in tree.
     let mut caret_index: CaretIndex = HashMap::new();
     let mut stepper = ::oatie::stepper::DocStepper::new(doc);
@@ -62,7 +60,7 @@ pub fn doc_as_html(doc: &DocSpan) -> String {
 }
 
 pub fn doc_as_html_inner(
-    doc: &DocSpan,
+    doc: &DocSpan<RtfSchema>,
     caret_index: &CaretIndex,
     remote_select_active: &mut SelectionActive,
 ) -> String {
@@ -107,7 +105,7 @@ pub fn doc_as_html_inner(
             &DocChars(ref text, ref styles) => {
                 let mut classes = styles.styles();
                 if !remote_select_active.is_empty() {
-                    classes.insert(Style::Selected);
+                    classes.insert(RtfStyle::Selected);
                 }
 
                 out.push_str(&format!(
@@ -117,16 +115,18 @@ pub fn doc_as_html_inner(
                         .map(|e| e.to_string())
                         .collect::<Vec<_>>()
                         .join(" "),
-                    styles
-                        .iter()
-                        .filter(|(_, v)| v.is_some())
-                        .map(|(k, v)| format!(
-                            "data-style-{k}={v}",
-                            k = k,
-                            v = serde_json::to_string(&v).unwrap()
-                        ))
-                        .collect::<Vec<String>>()
-                        .join(" "),
+                    // FIXME
+                    // styles
+                    //     .styles()
+                    //     .iter()
+                    //     .map(|(k, v)| format!(
+                    //         "data-style-{k}={v}",
+                    //         k = k,
+                    //         v = serde_json::to_string(&v).unwrap()
+                    //     ))
+                    //     .collect::<Vec<String>>()
+                    //     .join(" "),
+                    "",
                 ));
                 out.push_str(&encode_minimal(text.as_str()));
                 out.push_str(r"</span>");

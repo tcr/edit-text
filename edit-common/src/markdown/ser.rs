@@ -1,5 +1,6 @@
 use failure::Error;
 use oatie::doc::*;
+use oatie::rtf::*;
 use oatie::stepper::DocStepper;
 use pulldown_cmark::{
     Event,
@@ -8,12 +9,12 @@ use pulldown_cmark::{
 use pulldown_cmark_to_cmark::fmt::cmark;
 
 struct DocToMarkdown<'a, 'b> {
-    doc_stepper: DocStepper<'a>,
+    doc_stepper: DocStepper<'a, RtfSchema>,
     queue: Vec<Event<'b>>,
 }
 
 impl<'a, 'b> DocToMarkdown<'a, 'b> {
-    fn new(doc: &'a DocSpan) -> Self {
+    fn new(doc: &'a DocSpan<RtfSchema>) -> Self {
         DocToMarkdown {
             doc_stepper: DocStepper::new(doc),
             queue: vec![],
@@ -77,7 +78,7 @@ impl<'a, 'b> Iterator for DocToMarkdown<'a, 'b> {
             Some(DocChars(ref text, ref styles)) => {
                 // Styling.
                 let text_event = Event::Text(text.to_string().replace("\n", "  \n").into());
-                let res = if styles.contains(Style::Bold) {
+                let res = if styles.contains(&RtfStyle::Bold) {
                     self.queue.push(text_event);
                     self.queue.push(Event::End(Tag::Strong));
                     Some(Event::Start(Tag::Strong))
@@ -125,7 +126,7 @@ impl<'a, 'b> Iterator for DocToMarkdown<'a, 'b> {
     }
 }
 
-pub fn doc_to_markdown(doc: &DocSpan) -> Result<String, Error> {
+pub fn doc_to_markdown(doc: &DocSpan<RtfSchema>) -> Result<String, Error> {
     let to_mark = DocToMarkdown::new(&doc);
     let mut buf = String::new();
     cmark(to_mark, &mut buf, None)?;

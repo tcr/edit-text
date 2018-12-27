@@ -52,6 +52,22 @@ impl StyleSet {
     pub fn new() -> Self {
         StyleSet(HashSet::new())
     }
+
+    pub fn from(set: HashSet<RtfStyle>) -> Self {
+        StyleSet(set)
+    }
+
+    pub fn insert(&mut self, style: RtfStyle) {
+        self.0.insert(style);
+    }
+
+    pub fn remove(&mut self, style: &RtfStyle) {
+        self.0.remove(style);
+    }
+
+    pub fn contains(&self, style: &RtfStyle) -> bool {
+        self.0.contains(style)
+    }
 }
 
 impl Default for StyleSet {
@@ -82,7 +98,7 @@ impl<'de> Deserialize<'de> for StyleSet {
 impl StyleTrait for StyleSet {
     type Style = RtfStyle;
 
-    fn styles(&self) -> HashSet<RtfStyle> {
+    fn styles(&self) -> HashSet<Self::Style> {
         self.0.clone()
     }
 
@@ -184,7 +200,7 @@ impl Track for RtfTrack {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct RtfSchema;
 
 impl Schema for RtfSchema {
