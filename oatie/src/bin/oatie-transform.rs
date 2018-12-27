@@ -11,7 +11,7 @@ fn main() {
         .read_to_string(&mut input)
         .expect("Could not read stdin");
 
-    match run_transform_test::<RtfSchema>(&input) {
+    match run_transform_test(&input) {
         Ok(..) => {
             println!("all set!");
         }

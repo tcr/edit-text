@@ -44,13 +44,14 @@ mod core;
 pub use self::core::*;
 
 pub mod normalize;
-mod parse;
 pub mod stepper;
-mod string;
 pub mod transform_test;
 pub mod validate;
 pub mod writer;
 pub mod rtf;
+pub mod deserialize;
+mod parse;
+mod string;
 
 use crate::apply::*;
 use crate::compose::*;
