@@ -1,9 +1,10 @@
 use failure::Error;
 use oatie::doc::*;
+use oatie::rtf::*;
 use oatie::writer::*;
 
-fn remove_carets_span(span: &DocSpan) -> Result<DocSpan, Error> {
-    let mut ret: DocSpan = vec![];
+fn remove_carets_span(span: &DocSpan<RtfSchema>) -> Result<DocSpan<RtfSchema>, Error> {
+    let mut ret: DocSpan<RtfSchema> = vec![];
 
     for elem in span {
         match *elem {
@@ -25,13 +26,13 @@ fn remove_carets_span(span: &DocSpan) -> Result<DocSpan, Error> {
 
 /// Removes carets from a doc.
 // TODO maybe just merge this with the below function
-pub fn remove_carets(doc: &Doc) -> Result<Doc, Error> {
+pub fn remove_carets(doc: &Doc<RtfSchema>) -> Result<Doc<RtfSchema>, Error> {
     Ok(Doc(remove_carets_span(&doc.0)?))
 }
 
 fn remove_carets_op_span(
-    writer: &mut DelWriter,
-    span: &DocSpan,
+    writer: &mut DelWriter<RtfSchema>,
+    span: &DocSpan<RtfSchema>,
     filter: &[String],
 ) -> Result<(), Error> {
     for elem in span {
@@ -60,7 +61,7 @@ fn remove_carets_op_span(
 }
 
 /// Removes carets from a doc. Filter contains the client IDs to remove.
-pub fn remove_carets_op(doc: &Doc, filter: Vec<String>) -> Result<Op, Error> {
+pub fn remove_carets_op(doc: &Doc<RtfSchema>, filter: Vec<String>) -> Result<Op<RtfSchema>, Error> {
     let mut writer = DelWriter::new();
     remove_carets_op_span(&mut writer, &doc.0, &filter)?;
     Ok((writer.result(), vec![]))

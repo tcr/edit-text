@@ -4,15 +4,15 @@
 macro_rules! doc_span {
     ( @str_literal $e:expr ) => { $e };
     ( @kind DocChars $b:expr $(,)* ) => {
-        DocChars($crate::doc::DocString::from_str($b), $crate::style::StyleSet::new())
+        DocChars($crate::doc::DocString::from_str($b), $crate::rtf::StyleSet::new())
     };
-    ( @kind DocChars $b:expr , { $( $e:expr => $c:expr ),+  $(,)* } $(,)* ) => {
+    ( @kind DocChars $b:expr , { $( $e:expr ),+  $(,)* } $(,)* ) => {
         {
-            let mut map = ::std::collections::HashMap::<Style, Option<String>>::new();
+            let mut map = ::std::collections::HashSet::new();
             $(
-                map.insert($e, $c);
+                map.insert($e);
             )*
-            DocChars($crate::doc::DocString::from_str($b), $crate::style::StyleSet::from(map))
+            DocChars($crate::doc::DocString::from_str($b), $crate::rtf::StyleSet::from(map))
         }
     };
     ( @kind DocGroup $b:expr , [ $( $v:tt )* ] $(,)* ) => {
@@ -38,15 +38,15 @@ macro_rules! add_span {
     };
     ( @kind AddChars $b:expr , { $( $e:expr => $c:expr ),+  $(,)* } $(,)* ) => {
         {
-            let mut map = ::std::collections::HashMap::<Style, Option<String>>::new();
+            let mut map = ::std::collections::HashSet();
             $(
                 map.insert($e, $c);
             )*
-            AddChars($crate::doc::DocString::from_str($b), $crate::style::StyleSet::from(map))
+            AddChars($crate::doc::DocString::from_str($b), $crate::rtf::StyleSet::from(map))
         }
     };
     ( @kind AddChars $b:expr $(,)* ) => {
-        AddChars($crate::doc::DocString::from_str($b), $crate::style::StyleSet::new())
+        AddChars($crate::doc::DocString::from_str($b), $crate::rtf::StyleSet::new())
     };
     ( @kind AddWithGroup [ $( $v:tt )* ] $(,)* ) => {
         AddWithGroup(add_span![ $( $v )* ])

@@ -4,6 +4,7 @@ use diesel::{
     self,
     sqlite::SqliteConnection,
 };
+use oatie::rtf::*;
 use failure::Error;
 use std::collections::HashMap;
 
@@ -26,7 +27,7 @@ where
 
 // TODO usize is not useful.
 // also is this always upsert? shoudl be named that then
-pub fn create_page<'a>(conn: &SqliteConnection, id: &'a str, doc: &Doc) -> usize {
+pub fn create_page<'a>(conn: &SqliteConnection, id: &'a str, doc: &Doc<RtfSchema>) -> usize {
     use super::schema::posts;
 
     let body = ::ron::ser::to_string(&doc.0).unwrap();
@@ -56,7 +57,7 @@ pub fn all_posts(db: &SqliteConnection) -> HashMap<String, String> {
     ret
 }
 
-pub fn get_single_page(db: &SqliteConnection, input_id: &str) -> Option<Doc> {
+pub fn get_single_page(db: &SqliteConnection, input_id: &str) -> Option<Doc<RtfSchema>> {
     use super::schema::posts::dsl::*;
 
     let post = lock_retry(|| posts.filter(id.eq(input_id)).first::<Post>(db));
@@ -71,7 +72,7 @@ pub fn get_single_page(db: &SqliteConnection, input_id: &str) -> Option<Doc> {
                 x.body.to_string()
             }
         })
-        .and_then(|x| Ok(::ron::de::from_str::<DocSpan>(&x)?))
+        .and_then(|x| Ok(::ron::de::from_str::<DocSpan<RtfSchema>>(&x)?))
         .map(|d| Doc(d))
         .ok()
 }

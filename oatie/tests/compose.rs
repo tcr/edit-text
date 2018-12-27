@@ -10,9 +10,9 @@ use oatie::apply::*;
 use oatie::compose::*;
 use oatie::doc::*;
 use oatie::normalize::*;
+use oatie::rtf::*;
 use oatie::*;
 use std::collections::HashMap;
-use oatie::style::StyleSet;
 
 fn test_start() {
     let _ = env_logger::init();
@@ -23,12 +23,12 @@ fn test_compose_del_del() {
     test_start();
 
     assert_eq!(
-        compose_del_del(&vec![DelSkip(6), DelChars(6)], &vec![DelChars(3)]),
+        compose_del_del::<RtfSchema>(&vec![DelSkip(6), DelChars(6)], &vec![DelChars(3)]),
         vec![DelChars(3), DelSkip(3), DelChars(6)]
     );
 
     assert_eq!(
-        compose_del_del(&vec![DelSkip(6), DelChars(6)], &vec![DelChars(6)]),
+        compose_del_del::<RtfSchema>(&vec![DelSkip(6), DelChars(6)], &vec![DelChars(6)]),
         vec![DelChars(12)]
     );
 
@@ -38,7 +38,7 @@ fn test_compose_del_del() {
     // );
 
     assert_eq!(
-        compose_del_del(
+        compose_del_del::<RtfSchema>(
             &vec![DelWithGroup(vec![DelChars(6)])],
             &vec![DelWithGroup(vec![DelChars(6)])],
         ),
@@ -46,7 +46,7 @@ fn test_compose_del_del() {
     );
 
     assert_eq!(
-        compose_del_del(
+        compose_del_del::<RtfSchema>(
             &vec![DelSkip(2), DelChars(6), DelSkip(1), DelChars(2), DelSkip(1)],
             &vec![DelSkip(1), DelChars(1), DelSkip(1)],
         ),
@@ -54,7 +54,7 @@ fn test_compose_del_del() {
     );
 
     assert_eq!(
-        compose_del_del(
+        compose_del_del::<RtfSchema>(
             &del_span![DelGroup([DelSkip(11)])],
             &del_span![DelSkip(6), DelChars(1)],
         ),
@@ -65,15 +65,18 @@ fn test_compose_del_del() {
 #[test]
 fn test_compose_add_add() {
     assert_eq!(
-        compose_add_add(
+        compose_add_add::<RtfSchema>(
             &vec![AddChars(DocString::from_str("World!"), StyleSet::new())],
             &vec![AddChars(DocString::from_str("Hello "), StyleSet::new())],
         ),
-        vec![AddChars(DocString::from_str("Hello World!"), StyleSet::new())],
+        vec![AddChars(
+            DocString::from_str("Hello World!"),
+            StyleSet::new()
+        )],
     );
 
     assert_eq!(
-        compose_add_add(
+        compose_add_add::<RtfSchema>(
             &vec![AddChars(DocString::from_str("edef"), StyleSet::new())],
             &vec![
                 AddChars(DocString::from_str("d"), StyleSet::new()),
@@ -90,15 +93,24 @@ fn test_compose_add_add() {
     );
 
     assert_eq!(
-        compose_add_add(
-            &vec![AddSkip(10), AddChars(DocString::from_str("h"), StyleSet::new())],
-            &vec![AddSkip(11), AddChars(DocString::from_str("i"), StyleSet::new())],
+        compose_add_add::<RtfSchema>(
+            &vec![
+                AddSkip(10),
+                AddChars(DocString::from_str("h"), StyleSet::new())
+            ],
+            &vec![
+                AddSkip(11),
+                AddChars(DocString::from_str("i"), StyleSet::new())
+            ],
         ),
-        vec![AddSkip(10), AddChars(DocString::from_str("hi"), StyleSet::new())],
+        vec![
+            AddSkip(10),
+            AddChars(DocString::from_str("hi"), StyleSet::new())
+        ],
     );
 
     assert_eq!(
-        compose_add_add(
+        compose_add_add::<RtfSchema>(
             &vec![
                 AddSkip(5),
                 AddChars(DocString::from_str("yEH"), StyleSet::new()),
@@ -135,7 +147,7 @@ fn test_compose_add_del() {
     test_start();
 
     assert_eq!(
-        compose_add_del(
+        compose_add_del::<RtfSchema>(
             &vec![
                 AddSkip(4),
                 AddChars(DocString::from_str("0O"), StyleSet::new()),
@@ -179,34 +191,56 @@ fn test_compose() {
     test_start();
 
     assert_eq!(
-        normalize(compose(
-            &op_span!([], [
-        AddGroup({"tag": "p"}, [AddSkip(6)])
-    ]),
-            &op_span!([
-        DelGroup([DelSkip(6)])
-    ], [
-        AddGroup({"tag": "p"}, [AddSkip(4)]),
-        AddGroup({"tag": "p"}, [AddSkip(2)])
-    ]),
+        normalize::<RtfSchema>(compose(
+            &op_span!([], [AddGroup(Attrs::Text, [AddSkip(6)]),]),
+            &op_span!(
+                [DelGroup([DelSkip(6)])],
+                [
+                    AddGroup(Attrs::Text, [AddSkip(4)]),
+                    AddGroup(Attrs::Text, [AddSkip(2)]),
+                ]
+            ),
         )),
-        op_span!([], [
-        AddGroup({"tag": "p"}, [AddSkip(4)]),
-        AddGroup({"tag": "p"}, [AddSkip(2)])
-    ])
+        op_span!(
+            [],
+            [
+                AddGroup(Attrs::Text, [AddSkip(4)]),
+                AddGroup(Attrs::Text, [AddSkip(2)]),
+            ]
+        )
     );
 
     assert_eq!(
-        compose(
+        compose::<RtfSchema>(
             &op_span!(
                 [DelWithGroup([DelSkip(5), DelWithGroup([]), DelSkip(1)])],
-                [AddWithGroup([AddSkip(5), AddWithGroup([]), AddSkip(1), AddGroup({"client": "left", "tag": "caret"}, [])])],
+                [AddWithGroup([
+                    AddSkip(5),
+                    AddWithGroup([]),
+                    AddSkip(1),
+                    AddGroup(
+                        Attrs::Caret {
+                            client_id: "left".to_string(),
+                            focus: true
+                        },
+                        []
+                    )
+                ])],
             ),
             &op_span!([DelWithGroup([DelSkip(5), DelGroup([])])], []),
         ),
         op_span!(
             [DelWithGroup([DelSkip(5), DelGroup([]), DelSkip(1)])],
-            [AddWithGroup([AddSkip(6), AddGroup({"tag": "caret", "client": "left"}, [])])],
+            [AddWithGroup([
+                AddSkip(6),
+                AddGroup(
+                    Attrs::Caret {
+                        client_id: "left".to_string(),
+                        focus: true
+                    },
+                    []
+                )
+            ])],
         ),
     );
 }

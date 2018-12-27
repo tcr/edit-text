@@ -5,23 +5,18 @@
 
 #[macro_use]
 extern crate oatie;
-
 #[macro_use]
 extern crate rouille;
-
 #[macro_use]
 extern crate failure;
-
-use md5;
-use reqwest;
-use regex::Regex;
-use crypto::md5::Md5;
-use crypto::digest::Digest;
-use yansi::Paint;
-
 #[macro_use]
 extern crate serde_json;
 
+use md5;
+use reqwest;
+use crypto::md5::Md5;
+use crypto::digest::Digest;
+use yansi::Paint;
 use edit_common::{
     doc_as_html,
     markdown::{
@@ -37,6 +32,7 @@ use handlebars::Handlebars;
 use include_dir_macro::include_dir;
 use mime_guess::guess_mime_type;
 use oatie::doc::*;
+use oatie::rtf::*;
 use oatie::validate::validate_doc;
 use rand::thread_rng;
 use rouille::Response;
@@ -137,7 +133,7 @@ impl Dir for LocalDir {
     }
 }
 
-pub fn default_doc() -> Doc {
+pub fn default_doc() -> Doc<RtfSchema> {
     const INPUT: &'static str = r#"
 
 # Welcome
@@ -272,7 +268,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                                     eprintln!("Error decoding document: {:?}", err);
                                     Doc(doc_span![
                                         DocGroup(Attrs::Code, [
-                                            DocChars("Error decoding document.", {Style::Normie => None}),
+                                            DocChars("Error decoding document.", {RtfStyle::Normie}),
                                         ]),
                                     ])
                                 }
@@ -286,7 +282,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                                     eprintln!("Error decoding document: {:?}", err);
                                     Doc(doc_span![
                                         DocGroup(Attrs::Code, [
-                                            DocChars("Error decoding document.", {Style::Normie => None}),
+                                            DocChars("Error decoding document.", {RtfStyle::Normie}),
                                         ]),
                                     ])
                                 }
@@ -446,7 +442,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                     &get_or_create_page_graphql(
                         &id,
                         &Doc(doc_span![DocGroup(Attrs::Header(1), [
-                            DocChars(&id, { Style::Normie => None }),
+                            DocChars(&id, { RtfStyle::Normie }),
                         ])]),
                     ).unwrap().0
                 );

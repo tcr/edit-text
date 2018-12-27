@@ -3,7 +3,7 @@
 use failure::Error;
 use oatie::{
     doc::*,
-    schema::RtfSchema,
+    rtf::*,
     validate::validate_doc,
     OT,
 };
@@ -12,8 +12,8 @@ use std::collections::HashMap;
 pub struct SyncState {
     pub version: usize,
     pub clients: HashMap<String, usize>, // client_id -> client_version
-    pub history: HashMap<usize, Op>,     // version -> op
-    pub doc: Doc,
+    pub history: HashMap<usize, Op<RtfSchema>>,     // version -> op
+    pub doc: Doc<RtfSchema>,
 }
 
 impl SyncState {
@@ -31,10 +31,10 @@ impl SyncState {
     /// Transform an operation incrementally against each interim document operation.
     pub fn update_operation_to_current(
         &self,
-        mut op: Op,
+        mut op: Op<RtfSchema>,
         mut input_version: usize,
         target_version: usize,
-    ) -> Result<Op, Error> {
+    ) -> Result<Op<RtfSchema>, Error> {
         // Transform against all more recent operations.
         while input_version < target_version {
             // If the version exists (it should) transform against it.
@@ -42,7 +42,7 @@ impl SyncState {
                 .history
                 .get(&input_version)
                 .ok_or(format_err!("Version missing from history"))?;
-            let (updated_op, _) = Op::transform::<RtfSchema>(version_op, &op);
+            let (updated_op, _) = Op::transform(version_op, &op);
             op = updated_op;
 
             input_version += 1;
@@ -50,7 +50,7 @@ impl SyncState {
         Ok(op)
     }
 
-    pub fn commit(&mut self, client_id: &str, op: Op, input_version: usize) -> Result<Op, Error> {
+    pub fn commit(&mut self, client_id: &str, op: Op<RtfSchema>, input_version: usize) -> Result<Op<RtfSchema>, Error> {
         let target_version = self.version;
 
         // Update the operation so we can apply it to the document.
@@ -80,7 +80,7 @@ impl SyncState {
         Ok(op)
     }
 
-    pub fn new(doc: Doc, version: usize) -> SyncState {
+    pub fn new(doc: Doc<RtfSchema>, version: usize) -> SyncState {
         SyncState {
             doc,
             version,

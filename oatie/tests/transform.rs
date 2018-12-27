@@ -1,4 +1,4 @@
-use oatie::schema::RtfSchema;
+use oatie::rtf::*;
 use oatie::transform_test::*;
 // use std::io;
 // use std::io::prelude::*;

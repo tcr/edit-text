@@ -315,9 +315,9 @@ impl<'a, S: Schema> DocStepper<'a, S> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::style::*;
+    use crate::rtf::*;
 
-    fn test_doc_0() -> DocSpan {
+    fn test_doc_0() -> DocSpan<RtfSchema> {
         doc_span![
             DocGroup(Attrs::Header(1), [
                 DocChars("Cool"),

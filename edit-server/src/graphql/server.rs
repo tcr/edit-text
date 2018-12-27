@@ -19,6 +19,7 @@ use juniper::{
 };
 use oatie::{
     doc::*,
+    rtf::*,
     validate::validate_doc,
 };
 use r2d2;
@@ -102,7 +103,7 @@ graphql_object!(Mutations: Ctx |&self| {
                         eprintln!("Error decoding document: {:?}", err);
                         Doc(doc_span![
                             DocGroup(Attrs::Code, [
-                                DocChars("Error decoding document.", {Style::Normie => None}),
+                                DocChars("Error decoding document.", {RtfStyle::Normie}),
                             ]),
                         ])
                     }
