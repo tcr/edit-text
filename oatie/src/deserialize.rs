@@ -1,5 +1,7 @@
 //! Update legacy serialization formats to a modern format.
 
+use failure::Error;
+
 // Decoding "v1" docs, which used an ad-hoc serde format as the data types
 // evolved. There's no specification for this, just compatibility with old
 // code (test cases and database storage).
@@ -220,5 +222,35 @@ pub mod v1 {
 
     pub fn addspan_json(input: &str) -> Result<crate::doc::AddSpan<crate::rtf::RtfSchema>, Error> {
         update_addspan(serde_json::from_str(input)?)
+    }
+}
+
+pub fn docspan_ron(input: &str) -> Result<crate::doc::DocSpan<crate::rtf::RtfSchema>, Error> {
+    match ron::de::from_str::<crate::doc::DocSpan<crate::rtf::RtfSchema>>(input) {
+        Ok(value) => Ok(value),
+        Err(err) => {
+            // Try V1 encoding.
+            // Throw original ron error if error is encountered.
+            if let Ok(value) = v1::docspan_ron(input) {
+                Ok(value)
+            } else {
+                Err(err.into())
+            }
+        }
+    }
+}
+
+pub fn docspan_json(input: &str) -> Result<crate::doc::DocSpan<crate::rtf::RtfSchema>, Error> {
+    match ron::de::from_str::<crate::doc::DocSpan<crate::rtf::RtfSchema>>(input) {
+        Ok(value) => Ok(value),
+        Err(err) => {
+            // Try V1 encoding.
+            // Throw original ron error if error is encountered.
+            if let Ok(value) = v1::docspan_json(input) {
+                Ok(value)
+            } else {
+                Err(err.into())
+            }
+        }
     }
 }

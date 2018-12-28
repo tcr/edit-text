@@ -455,7 +455,7 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::WasmBuild { no_vendor } => {
-            // let release_flag = None; //Some("--release");
+            let release_flag = Some("--release");
 
             // Install wasm target
             execute!(
@@ -469,9 +469,9 @@ fn run() -> Result<(), Error> {
             execute!(
                 r"
                     cd edit-client
-                    cargo build --lib --target wasm32-unknown-unknown {cargo_args}
+                    cargo build --lib --target wasm32-unknown-unknown {cargo_args} {release_flag}
                 ",
-                // release_flag = ,
+                release_flag = {release_flag},
                 cargo_args = CARGO_ARGS_EDIT_CLIENT,
             )?;
 
@@ -483,7 +483,7 @@ fn run() -> Result<(), Error> {
 
                 let mut b = Bindgen::new();
                 b.input_path("./target/wasm32-unknown-unknown/release/edit_client.wasm")
-                    // .debug(args.flag_debug)
+                    // .debug(true)
                     .typescript(true);
                 b.generate("./edit-frontend/src/bindgen")?;
 

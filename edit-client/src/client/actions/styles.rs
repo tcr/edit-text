@@ -19,7 +19,7 @@ pub fn apply_style(ctx: ActionContext, style: RtfStyle, value: Option<String>) -
 }
 
 // TODO consider removing this and just use restyle
-pub fn remove_styles(ctx: ActionContext, mut styles: StyleSet) -> Result<Op<RtfSchema>, Error> {
+pub fn remove_styles(ctx: ActionContext, styles: StyleSet) -> Result<Op<RtfSchema>, Error> {
     restyle(
         ctx,
         styles

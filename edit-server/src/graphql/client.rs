@@ -107,7 +107,7 @@ mutation ($id: String!, $default: String!) {
         .unwrap()
         .to_string();
 
-    Ok(Doc(::ron::de::from_str(&doc_string)?))
+    Ok(Doc(oatie::deserialize::docspan_ron(&doc_string)?))
 }
 
 pub fn create_page_graphql(input_id: &str, doc: &Doc<RtfSchema>) -> Option<Doc<RtfSchema>> {

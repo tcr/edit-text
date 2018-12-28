@@ -220,7 +220,7 @@ impl WasmClientController {
             let closure = Closure::wrap(Box::new(move |_event: web_sys::Event| {
                 // console.debug('server socket opened.');
                 // DEBUG.measureTime('connect-ready');
-                console_log!("####### SERVER SOCKET OPENED");
+                console_log!("(W) Server socket opened.");
             }) as Box<dyn FnMut(_)>);
             ws.add_event_listener_with_callback("open", closure.as_ref().unchecked_ref())?;
             closure.forget();
@@ -232,6 +232,7 @@ impl WasmClientController {
             let ws2 = ws.clone();
             let closure = Closure::wrap(Box::new(move |event: web_sys::MessageEvent| {
                 let command_data = event.data().as_string().unwrap();
+
                 let command: ClientCommand = serde_json::from_str(&command_data).unwrap();
                 let command_json: serde_json::Value = serde_json::from_str(&command_data).unwrap();
                 let command_jsvalue = js_sys::JSON::parse(&command_data).unwrap();
