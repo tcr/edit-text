@@ -72,7 +72,7 @@ pub fn get_single_page(db: &SqliteConnection, input_id: &str) -> Option<Doc<RtfS
                 x.body.to_string()
             }
         })
-        .and_then(|x| Ok(::ron::de::from_str::<DocSpan<RtfSchema>>(&x)?))
+        .and_then(|x| Ok(oatie::deserialize::docspan_ron(&x)?))
         .map(|d| Doc(d))
         .ok()
 }

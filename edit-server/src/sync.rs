@@ -368,7 +368,11 @@ impl PageMaster {
             // Retrieve from database, or use a default generic document.
             let conn = self.db_pool.get().unwrap();
             let inner_doc =
-                get_single_page(&conn, page_id).unwrap_or_else(|| default_new_doc(page_id));
+                get_single_page(&conn, page_id)
+                    .unwrap_or_else(|| {
+                        eprintln!("warning: could not find page {:?}, using default.", page_id);
+                        default_new_doc(page_id)
+                    });
 
             let (tx_notify, rx_notify) = unbounded();
             self.pages.insert(page_id.to_string(), tx_notify.clone());
