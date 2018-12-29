@@ -52,7 +52,7 @@ fn remove_carets_op_span(
                 remove_carets_op_span(writer, span, filter)?;
                 writer.exit();
             }
-            DocChars(ref text, _) => {
+            DocChars(_, ref text) => {
                 writer.place(&DelSkip(text.char_len()));
             }
         }

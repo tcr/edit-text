@@ -273,22 +273,22 @@ fn compose_add_add_inner<S: Schema>(
                         b.next();
                     }
                 }
-                AddChars(value, mut styles) => {
+                AddChars(mut styles, value) => {
                     if b_count < value.char_len() {
                         let (a_left, a_right) = value.split_at(b_count);
                         let mut left_styles = styles.clone();
                         left_styles.extend(&b_styles);
-                        res.place(&AddChars(a_left, left_styles));
-                        a.head = Some(AddChars(a_right, styles));
+                        res.place(&AddChars(left_styles, a_left));
+                        a.head = Some(AddChars(styles, a_right));
                         b.next();
                     } else if b_count > value.char_len() {
                         styles.extend(&b_styles);
                         b.head = Some(AddStyles(b_count - value.char_len(), b_styles));
-                        res.place(&AddChars(value, styles));
+                        res.place(&AddChars(styles, value));
                         a.next();
                     } else {
                         styles.extend(&b_styles);
-                        res.place(&AddChars(value, styles));
+                        res.place(&AddChars(styles, value));
                         a.next();
                         b.next();
                     }
@@ -337,11 +337,11 @@ fn compose_add_add_inner<S: Schema>(
                         b.next();
                     }
                 }
-                AddChars(value, styles) => {
+                AddChars(styles, value) => {
                     if bcount < value.char_len() {
                         let (a_left, a_right) = value.split_at(bcount);
-                        res.place(&AddChars(a_left, styles.clone()));
-                        a.head = Some(AddChars(a_right, styles));
+                        res.place(&AddChars(styles.clone(), a_left));
+                        a.head = Some(AddChars(styles, a_right));
                         b.next();
                     } else if bcount > value.char_len() {
                         res.place(&a.next().unwrap());
@@ -487,10 +487,10 @@ fn compose_add_del_inner<S: Schema>(
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
             DelChars(bcount) => match a.get_head() {
-                AddChars(avalue, a_styles) => {
+                AddChars(a_styles, avalue) => {
                     if bcount < avalue.char_len() {
                         let (_a_left, a_right) = avalue.split_at(bcount);
-                        a.head = Some(AddChars(a_right, a_styles));
+                        a.head = Some(AddChars(a_styles, a_right));
                         b.next();
                     } else if bcount > avalue.char_len() {
                         a.next();
@@ -518,21 +518,21 @@ fn compose_add_del_inner<S: Schema>(
                 }
             },
             DelStyles(b_count, b_styles) => match a.get_head() {
-                AddChars(a_value, mut a_styles) => {
+                AddChars(mut a_styles, a_value) => {
                     if b_count < a_value.char_len() {
                         let (a_left, a_right) = a_value.split_at(b_count);
                         let mut a_left_styles = a_styles.clone();
                         a_left_styles.remove(&b_styles);
-                        addres.place(&AddChars(a_left, a_left_styles));
-                        a.head = Some(AddChars(a_right, a_styles));
+                        addres.place(&AddChars(a_left_styles, a_left));
+                        a.head = Some(AddChars(a_styles, a_right));
                         b.next();
                     } else if b_count > a_value.char_len() {
                         a_styles.remove(&b_styles);
                         b.head = Some(DelSkip(b_count - a_value.char_len()));
-                        addres.place(&AddChars(a_value, a_styles));
+                        addres.place(&AddChars(a_styles, a_value));
                     } else {
                         a_styles.remove(&b_styles);
-                        addres.place(&AddChars(a_value, a_styles));
+                        addres.place(&AddChars(a_styles, a_value));
                         a.next();
                         b.next();
                     }
@@ -580,11 +580,11 @@ fn compose_add_del_inner<S: Schema>(
                 }
             },
             DelSkip(bcount) => match a.get_head() {
-                AddChars(avalue, a_styles) => {
+                AddChars(a_styles, avalue) => {
                     if bcount < avalue.char_len() {
                         let (a_left, a_right) = avalue.split_at(bcount);
-                        addres.place(&AddChars(a_left, a_styles.clone()));
-                        a.head = Some(AddChars(a_right, a_styles));
+                        addres.place(&AddChars(a_styles.clone(), a_left));
+                        a.head = Some(AddChars(a_styles, a_right));
                         b.next();
                     } else if bcount > avalue.char_len() {
                         addres.place(&a.next().unwrap());

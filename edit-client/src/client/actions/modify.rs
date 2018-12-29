@@ -19,13 +19,13 @@ pub fn add_string(ctx: ActionContext, input: &str) -> Result<ActionContext, Erro
             let mut styles = hashset!{ RtfStyle::Normie };
             let mut char_walker = walker.clone();
             char_walker.back_char();
-            if let Some(DocChars(_, ref prefix_styles)) = char_walker.doc().head() {
+            if let Some(DocChars(ref prefix_styles, _)) = char_walker.doc().head() {
                 styles.extend(prefix_styles.styles());
             }
 
             // Insert new character.
             let mut writer = walker.to_writer();
-            let step = AddChars(DocString::from_str(input), StyleSet::from(styles));
+            let step = AddChars(StyleSet::from(styles), DocString::from_str(input));
             writer.add.place(&step);
             ctx.apply(&writer.exit_result())
         })

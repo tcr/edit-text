@@ -432,7 +432,7 @@ impl<'a> Walker<'a> {
             // console_log!("head stack len ---> {:?}", doc_stepper.stack().len());
             // console_log!("head stack ---> {:?}", doc_stepper.stack());
             match doc_stepper.head() {
-                Some(DocChars(ref text, _)) => {
+                Some(DocChars(_, ref text)) => {
                     let text_len = text.char_len();
                     del.place(&DelSkip(text_len));
                     add.place(&AddSkip(text_len));

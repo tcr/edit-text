@@ -37,7 +37,7 @@ impl<'a, S: Schema> DocStepper<'a, S> {
     // TODO rename char_cursor_reset ?
     // TODO Make this pub(crate) once walkers.rs doesn't repend on it.
     pub fn char_cursor_update(&mut self) {
-        self.char_cursor = if let Some(&DocChars(ref text, ref styles)) = self.head_raw() {
+        self.char_cursor = if let Some(&DocChars(ref styles, ref text)) = self.head_raw() {
             Some(CharCursor::from_docstring(text, styles.to_owned()))
         } else {
             None
@@ -54,7 +54,7 @@ impl<'a, S: Schema> DocStepper<'a, S> {
     /// cursor if we've reached a group.
     pub(crate) fn char_cursor_update_prev(&mut self) {
         let cursor = match self.head() {
-            Some(DocChars(ref text, ref styles)) => {
+            Some(DocChars(ref styles, ref text)) => {
                 let mut cursor = CharCursor::from_docstring_end(text, styles.to_owned());
                 cursor.value_sub(1);
                 Some(cursor)
@@ -234,7 +234,7 @@ impl<'a, S: Schema> DocStepper<'a, S> {
             };
 
             match head {
-                DocChars(ref text, _) => {
+                DocChars(_, ref text) => {
                     let remaining = text.char_len();
                     if skip >= remaining {
                         skip -= remaining;
@@ -333,7 +333,7 @@ mod tests {
         stepper.skip(2);
         assert_eq!(
             stepper.head().unwrap(),
-            &DocChars(DocString::from_str("ol"), StyleSet::new())
+            &DocChars(StyleSet::new(), DocString::from_str("ol"))
         );
     }
 

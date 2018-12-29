@@ -14,7 +14,7 @@ pub(crate) fn can_element_join<S: Schema>(left: &DocElement<S>, right: &DocEleme
 
 pub(crate) fn try_element_join<S: Schema>(left: &mut DocElement<S>, right: &DocElement<S>) -> bool {
     match (left, right) {
-        (&mut DocChars(ref mut prefix, ref prefix_styles), &DocChars(ref suffix, ref suffix_styles)) => {
+        (&mut DocChars(ref prefix_styles, ref mut prefix), &DocChars(ref suffix_styles, ref suffix)) => {
             if prefix_styles == suffix_styles {
                 prefix.push_str(suffix.as_str());
                 return true;
@@ -34,7 +34,7 @@ pub trait DocPlaceable<S: Schema> {
 impl<S: Schema> DocPlaceable<S> for DocSpan<S> {
     fn place(&mut self, elem: &DocElement<S>) {
         match *elem {
-            DocChars(ref text, ref _styles) => {
+            DocChars(ref _styles, ref text) => {
                 assert!(text.char_len() > 0);
 
                 // If the most recent element is text, we may want to just
@@ -64,7 +64,7 @@ impl<S: Schema> DocPlaceable<S> for DocSpan<S> {
         let mut ret = 0;
         for item in self {
             ret += match *item {
-                DocChars(ref value, _) => value.char_len(),
+                DocChars(_, ref value) => value.char_len(),
                 DocGroup(..) => 1,
             };
         }
@@ -196,12 +196,12 @@ impl<S: Schema> AddPlaceable<S> for AddSpan<S> {
 
     fn place(&mut self, elem: &AddElement<S>) {
         match *elem {
-            AddChars(ref text, ref styles) => {
+            AddChars(ref styles, ref text) => {
                 assert!(text.char_len() > 0);
 
                 // If the most recent element is text, we may want to just
                 // append our text to it to cut down on new elements.
-                if let Some(&mut AddChars(ref mut prefix, ref prefix_styles)) = self.last_mut() {
+                if let Some(&mut AddChars(ref prefix_styles, ref mut prefix)) = self.last_mut() {
                     // Check if they're equal and we can push it directly.
                     if styles == prefix_styles {
                         prefix.push_str(text.as_str());
@@ -210,7 +210,7 @@ impl<S: Schema> AddPlaceable<S> for AddSpan<S> {
                 }
 
                 // Otherwise, push the new entry
-                self.push(AddChars(text.to_owned(), styles.clone()));
+                self.push(AddChars(styles.clone(), text.to_owned()));
             }
             AddStyles(count, ref styles) => {
                 assert!(count > 0);
@@ -257,7 +257,7 @@ impl<S: Schema> AddPlaceable<S> for AddSpan<S> {
         for item in self {
             ret += match *item {
                 AddSkip(len) | AddStyles(len, _) => len,
-                AddChars(ref chars, _) => chars.char_len(),
+                AddChars(_, ref chars) => chars.char_len(),
                 AddGroup(..) | AddWithGroup(..) => 1,
             };
         }

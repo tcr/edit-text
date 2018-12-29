@@ -48,14 +48,14 @@ fn apply_add_inner<M: DocMutator<S>, S: Schema>(
 
         match d.clone() {
             AddStyles(count, styles) => match first.clone().unwrap() {
-                DocChars(value, mut chars_styles) => {
+                DocChars(mut chars_styles, value) => {
                     if value.char_len() < count {
                         d = AddStyles(count - value.char_len(), styles.clone());
                         chars_styles.extend(&styles);
                         bc.delete(1);
                         bc.InsertDocString(value.clone(), styles.clone());
                         // partial = false;
-                        res.place(&DocChars(value, chars_styles));
+                        res.place(&DocChars(chars_styles, value));
                         nextdel = false;
                     } else if value.char_len() > count {
                         let (left, right) = value.split_at(count);
@@ -64,15 +64,15 @@ fn apply_add_inner<M: DocMutator<S>, S: Schema>(
                         bc.delete(1);
                         bc.InsertDocString(left.clone(), styles.clone());
                         // partial = false;
-                        res.place(&DocChars(left, left_styles));
-                        first = Some(DocChars(right, chars_styles));
+                        res.place(&DocChars(left_styles, left));
+                        first = Some(DocChars(chars_styles, right));
                         nextfirst = false;
                     } else {
                         chars_styles.extend(&styles);
                         bc.delete(1);
                         bc.InsertDocString(value.clone(), styles.clone());
                         // partial = false;
-                        res.place(&DocChars(value, chars_styles));
+                        res.place(&DocChars(chars_styles, value));
                     }
                 }
                 DocGroup(..) => {
@@ -80,23 +80,23 @@ fn apply_add_inner<M: DocMutator<S>, S: Schema>(
                 }
             },
             AddSkip(count) => match first.clone().unwrap() {
-                DocChars(value, chars_styles) => {
+                DocChars(chars_styles, value) => {
                     if value.char_len() < count {
                         // Consume and advance
                         d = AddSkip(count - value.char_len());
                         bc.AdvanceElements(1);
-                        res.place(&DocChars(value, chars_styles));
+                        res.place(&DocChars(chars_styles, value));
                         nextdel = false;
                     } else if value.char_len() > count {
                         let (left, right) = value.split_at(count);
                         // Split text element, we assume
                         bc.skip(count);
-                        res.place(&DocChars(left, chars_styles.clone()));
-                        first = Some(DocChars(right, chars_styles));
+                        res.place(&DocChars(chars_styles.clone(), left));
+                        first = Some(DocChars(chars_styles, right));
                         nextfirst = false;
                     } else {
                         bc.AdvanceElements(1);
-                        res.place(&DocChars(value, chars_styles));
+                        res.place(&DocChars(chars_styles, value));
                     }
                 }
                 DocGroup(..) => {
@@ -118,11 +118,11 @@ fn apply_add_inner<M: DocMutator<S>, S: Schema>(
                     panic!("Invalid AddWithGroup");
                 }
             },
-            AddChars(value, styles) => {
+            AddChars(styles, value) => {
                 // TODO where do you skip anything, exactly
                 // need to manifest the place issue externally as well
                 bc.InsertDocString(value.clone(), styles.clone());
-                res.place(&DocChars(value, styles));
+                res.place(&DocChars(styles, value));
                 nextfirst = false;
             }
             AddGroup(attrs, innerspan) => {
@@ -270,13 +270,13 @@ fn apply_del_inner<M: DocMutator<S>, S: Schema>(
 
         match d.clone() {
             DelStyles(count, styles) => match first.clone() {
-                DocChars(value, mut chars_styles) => {
+                DocChars(mut chars_styles, value) => {
                     if value.char_len() < count {
                         d = DelStyles(count - value.char_len(), styles.clone());
                         chars_styles.remove(&styles);
                         bc.delete(1);
                         bc.InsertDocString(value.clone(), chars_styles.clone());
-                        res.place(&DocChars(value, chars_styles));
+                        res.place(&DocChars(chars_styles, value));
                         nextdel = false;
                     } else if value.char_len() > count {
                         let (left, right) = value.split_at(count);
@@ -284,14 +284,14 @@ fn apply_del_inner<M: DocMutator<S>, S: Schema>(
                         left_styles.remove(&styles);
                         bc.delete(1);
                         bc.InsertDocString(left.clone(), chars_styles.clone());
-                        res.place(&DocChars(left, chars_styles.clone()));
-                        first = DocChars(right, chars_styles);
+                        res.place(&DocChars(chars_styles.clone(), left));
+                        first = DocChars(chars_styles, right);
                         nextfirst = false;
                     } else {
                         chars_styles.remove(&styles);
                         bc.delete(1);
                         bc.InsertDocString(value.clone(), chars_styles.clone());
-                        res.place(&DocChars(value, chars_styles));
+                        res.place(&DocChars(chars_styles, value));
                     }
                 }
                 _ => {
@@ -299,22 +299,22 @@ fn apply_del_inner<M: DocMutator<S>, S: Schema>(
                 }
             },
             DelSkip(count) => match first.clone() {
-                DocChars(value, chars_styles) => {
+                DocChars(chars_styles, value) => {
                     if value.char_len() < count {
                         d = DelSkip(count - value.char_len());
                         bc.AdvanceElements(1);
-                        res.place(&DocChars(value, chars_styles));
+                        res.place(&DocChars(chars_styles, value));
                         nextdel = false;
                     } else if value.char_len() > count {
                         let (left, right) = value.split_at(count);
                         // Assume this should be deleted from the left
                         bc.skip(count);
-                        res.place(&DocChars(left, chars_styles.clone()));
-                        first = DocChars(right, chars_styles);
+                        res.place(&DocChars(chars_styles.clone(), left));
+                        first = DocChars(chars_styles, right);
                         nextfirst = false;
                     } else {
                         bc.AdvanceElements(1);
-                        res.place(&DocChars(value, chars_styles));
+                        res.place(&DocChars(chars_styles, value));
                         nextdel = true;
                     }
                 }
@@ -348,10 +348,10 @@ fn apply_del_inner<M: DocMutator<S>, S: Schema>(
                 }
             },
             DelChars(count) => match first.clone() {
-                DocChars(value, chars_styles) => {
+                DocChars(chars_styles, value) => {
                     if value.char_len() > count {
                         let (_, right) = value.split_at(count);
-                        first = DocChars(right, chars_styles);
+                        first = DocChars(chars_styles, right);
                         nextfirst = false;
                     } else if value.char_len() < count {
                         d = DelChars(count - value.char_len());

@@ -74,7 +74,7 @@ pub fn restyle(ctx: ActionContext, ops: Vec<StyleOp>) -> Result<Op<RtfSchema>, E
                     writer.del.begin();
                     doc1.enter();
                 }
-                Some(DocChars(ref text, _)) => {
+                Some(DocChars(_, ref text)) => {
                     writer
                         .del
                         .place(&DelStyles(text.char_len(), StyleSet::from(remove_styles.clone())));
@@ -98,7 +98,7 @@ pub fn restyle(ctx: ActionContext, ops: Vec<StyleOp>) -> Result<Op<RtfSchema>, E
                     writer.add.begin();
                     doc1.enter();
                 }
-                Some(DocChars(ref text, _)) => {
+                Some(DocChars(_, ref text)) => {
                     writer
                         .add
                         .place(&AddStyles(text.char_len(), StyleSet::from(add_styles.clone())));

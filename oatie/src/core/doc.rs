@@ -16,7 +16,7 @@ pub type Op<S> = (DelSpan<S>, AddSpan<S>);
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum DocElement<S: Schema> {
-    DocChars(DocString, #[serde(default, skip_serializing_if = "StyleTrait::is_empty")] S::CharsProperties),
+    DocChars(S::CharsProperties, DocString),
     DocGroup(S::GroupProperties, DocSpan<S>),
 }
 
@@ -49,7 +49,7 @@ pub use self::DelElement::*;
 pub enum AddElement<S: Schema> {
     AddSkip(usize),
     AddWithGroup(AddSpan<S>),
-    AddChars(DocString, #[serde(default, skip_serializing_if = "StyleTrait::is_empty")] S::CharsProperties),
+    AddChars(S::CharsProperties, DocString),
     AddGroup(S::GroupProperties, AddSpan<S>),
     AddStyles(usize, S::CharsProperties),
 }

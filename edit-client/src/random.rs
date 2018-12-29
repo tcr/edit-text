@@ -32,7 +32,7 @@ pub fn random_cursor_span(ctx: &mut RandomCursorContext, span: &DocSpan<RtfSchem
                 random_cursor_span(ctx, span)?;
                 ctx.cur.exit();
             }
-            DocChars(ref text, _) => {
+            DocChars(_, ref text) => {
                 ensure!(text.char_len() > 0, "Empty char string");
 
                 for _ in 0..text.char_len() {

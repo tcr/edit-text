@@ -153,8 +153,8 @@ pub mod v1 {
                     crate::doc::DocGroup(update_attrs(attrs)?, update_docspan(span)?)
                 }
                 DocElement::DocChars(string, styles) => crate::doc::DocChars(
-                    crate::doc::DocString::from_string(string.0),
                     update_styles(styles)?,
+                    crate::doc::DocString::from_string(string.0),
                 ),
             });
         }
@@ -168,8 +168,8 @@ pub mod v1 {
                 AddElement::AddSkip(skip) => crate::doc::AddSkip(skip),
                 AddElement::AddWithGroup(span) => crate::doc::AddWithGroup(update_addspan(span)?),
                 AddElement::AddChars(string, styles) => crate::doc::AddChars(
-                    crate::doc::DocString::from_string(string.0),
                     update_styles(styles)?,
+                    crate::doc::DocString::from_string(string.0),
                 ),
                 AddElement::AddGroup(attrs, span) => {
                     crate::doc::AddGroup(update_attrs(attrs)?, update_addspan(span)?)

@@ -77,7 +77,7 @@ impl<'a> CaretStepper<'a> {
     // but is it the best name or interface?
     pub fn skip_element(&mut self) -> Option<()> {
         let len = match self.doc.head() {
-            Some(DocChars(val, _)) => {
+            Some(DocChars(_, val)) => {
                 let len = val.char_len();
                 self.doc.next();
                 len

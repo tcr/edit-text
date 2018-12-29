@@ -220,11 +220,11 @@ impl<S: Schema> Transform<S> {
     }
 
     fn chars_a(&mut self, chars: DocString, styles: S::CharsProperties) {
-        self.a_add.place(&AddChars(chars, styles));
+        self.a_add.place(&AddChars(styles, chars));
     }
 
     fn chars_b(&mut self, chars: DocString, styles: S::CharsProperties) {
-        self.b_add.place(&AddChars(chars, styles));
+        self.b_add.place(&AddChars(styles, chars));
     }
 
     fn current(&self) -> Option<TrackState<S>> {
@@ -588,7 +588,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan<S>, bvec: &AddSpan<S>) -> 
                     t.with_group_a(span);
                     b.next();
                 }
-                Some(AddChars(b_chars, b_styles)) => {
+                Some(AddChars(b_styles, b_chars)) => {
                     t.skip_b(b_chars.char_len());
                     t.chars_a(b_chars, b_styles);
                     b.next();
@@ -626,7 +626,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan<S>, bvec: &AddSpan<S>) -> 
                     t.with_group_b(span);
                     a.next();
                 }
-                Some(AddChars(a_chars, a_styles)) => {
+                Some(AddChars(a_styles, a_chars)) => {
                     t.skip_a(a_chars.char_len());
                     t.chars_b(a_chars, a_styles);
                     a.next();
@@ -695,7 +695,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan<S>, bvec: &AddSpan<S>) -> 
                 // TODO don't like that this isn't a pattern match;
                 // This case should handle AddWithGroup and AddGroup (I believe)
                 (None, compare) => {
-                    let ok = if let Some(AddChars(ref b_chars, ref b_styles)) = compare {
+                    let ok = if let Some(AddChars(ref b_styles, ref b_chars)) = compare {
                         if t.supports_text() {
                             t.skip_b(b_chars.char_len());
                             t.chars_a(b_chars.clone(), b_styles.clone());
@@ -844,7 +844,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan<S>, bvec: &AddSpan<S>) -> 
                     // TODO if they are different tags THEN WHAT
                 }
                 (compare, None) => {
-                    let is_char = if let Some(AddChars(a_chars, a_styles)) = compare.clone() {
+                    let is_char = if let Some(AddChars(a_styles, a_chars)) = compare.clone() {
                         if t.supports_text() {
                             t.regenerate();
 
@@ -1030,15 +1030,15 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan<S>, bvec: &AddSpan<S>) -> 
                     t.skip_a(cmp::min(a_count, b_count));
                     t.style_b(cmp::min(a_count, b_count), a_styles);
                 }
-                (Some(AddSkip(..)), Some(AddChars(b_chars, b_styles)))
-                | (Some(AddStyles(..)), Some(AddChars(b_chars, b_styles))) => {
+                | (Some(AddSkip(..)), Some(AddChars(b_styles, b_chars)))
+                | (Some(AddStyles(..)), Some(AddChars(b_styles, b_chars))) => {
                     t.regenerate();
 
                     b.next();
                     t.skip_b(b_chars.char_len());
                     t.chars_a(b_chars, b_styles);
                 }
-                (Some(AddChars(a_chars, a_styles)), _) => {
+                (Some(AddChars(a_styles, a_chars)), _) => {
                     t.regenerate();
 
                     t.skip_a(a_chars.char_len());
@@ -1096,7 +1096,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan<S>, bvec: &AddSpan<S>) -> 
                     }
                     b.next();
                 }
-                (Some(AddWithGroup(_a_inner)), Some(AddChars(b_chars, b_styles))) => {
+                (Some(AddWithGroup(_a_inner)), Some(AddChars(b_styles, b_chars))) => {
                     t.regenerate(); // caret-35
 
                     t.b_del.place(&DelSkip(b_chars.char_len()));
@@ -1576,9 +1576,9 @@ pub fn transform_add_del_inner<S: Schema>(
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
             DelChars(bcount) => match a.get_head() {
-                AddChars(avalue, a_styles) => {
+                AddChars(a_styles, avalue) => {
                     delres.place(&DelSkip(avalue.char_len()));
-                    addres.place(&AddChars(avalue, a_styles));
+                    addres.place(&AddChars(a_styles, avalue));
                     a.next();
                 }
                 AddSkip(acount) => {
@@ -1613,9 +1613,9 @@ pub fn transform_add_del_inner<S: Schema>(
                 }
             },
             DelSkip(bcount) => match a.get_head() {
-                AddChars(avalue, a_styles) => {
+                AddChars(a_styles, avalue) => {
                     delres.place(&DelSkip(avalue.char_len()));
-                    addres.place(&AddChars(avalue, a_styles));
+                    addres.place(&AddChars(a_styles, avalue));
                     a.next();
                 }
                 AddStyles(a_count, a_styles) => {
@@ -1670,9 +1670,9 @@ pub fn transform_add_del_inner<S: Schema>(
                 }
             },
             DelStyles(b_count, b_styles) => match a.get_head() {
-                AddChars(a_value, a_styles) => {
+                AddChars(a_styles, a_value) => {
                     delres.place(&DelSkip(a_value.char_len()));
-                    addres.place(&AddChars(a_value, a_styles));
+                    addres.place(&AddChars(a_styles, a_value));
                     a.next();
                 }
                 AddStyles(a_count, a_styles) => {
@@ -1726,7 +1726,7 @@ pub fn transform_add_del_inner<S: Schema>(
                 AddStyles(..) => {
                     panic!("invalid transform DelWithGroup with AddStyles");
                 }
-                AddChars(avalue, _) => {
+                AddChars(_, avalue) => {
                     delres.place(&DelSkip(avalue.char_len()));
                     addres.place(&a.next().unwrap());
                 }
@@ -1766,7 +1766,7 @@ pub fn transform_add_del_inner<S: Schema>(
                     AddStyles(..) => {
                         panic!("invalid transform DelGroup with AddStyles");
                     }
-                    AddChars(avalue, _) => {
+                    AddChars(_, avalue) => {
                         delres.place(&DelSkip(avalue.char_len()));
                         addres.place(&a.next().unwrap());
                     }
@@ -1792,7 +1792,7 @@ pub fn transform_add_del_inner<S: Schema>(
                                 let mut del: DelSpan<S> = vec![];
                                 for elem in add {
                                     match elem {
-                                        &AddChars(ref value, _) => {
+                                        &AddChars(_, ref value) => {
                                             del.place(&DelChars(value.char_len()));
                                         }
                                         &AddStyles(count, _) => {

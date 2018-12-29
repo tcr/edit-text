@@ -66,46 +66,46 @@ fn test_compose_del_del() {
 fn test_compose_add_add() {
     assert_eq!(
         compose_add_add::<RtfSchema>(
-            &vec![AddChars(DocString::from_str("World!"), StyleSet::new())],
-            &vec![AddChars(DocString::from_str("Hello "), StyleSet::new())],
+            &vec![AddChars(StyleSet::new(), DocString::from_str("World!"))],
+            &vec![AddChars(StyleSet::new(), DocString::from_str("Hello "))],
         ),
         vec![AddChars(
+            StyleSet::new(),
             DocString::from_str("Hello World!"),
-            StyleSet::new()
         )],
     );
 
     assert_eq!(
         compose_add_add::<RtfSchema>(
-            &vec![AddChars(DocString::from_str("edef"), StyleSet::new())],
+            &vec![AddChars(StyleSet::new(), DocString::from_str("edef"))],
             &vec![
-                AddChars(DocString::from_str("d"), StyleSet::new()),
+                AddChars(StyleSet::new(), DocString::from_str("d")),
                 AddSkip(1),
-                AddChars(DocString::from_str("a"), StyleSet::new()),
+                AddChars(StyleSet::new(), DocString::from_str("a")),
                 AddSkip(1),
-                AddChars(DocString::from_str("b"), StyleSet::new()),
+                AddChars(StyleSet::new(), DocString::from_str("b")),
                 AddSkip(1),
-                AddChars(DocString::from_str("e"), StyleSet::new()),
+                AddChars(StyleSet::new(), DocString::from_str("e")),
                 AddSkip(1),
             ],
         ),
-        vec![AddChars(DocString::from_str("deadbeef"), StyleSet::new())],
+        vec![AddChars(StyleSet::new(), DocString::from_str("deadbeef"))],
     );
 
     assert_eq!(
         compose_add_add::<RtfSchema>(
             &vec![
                 AddSkip(10),
-                AddChars(DocString::from_str("h"), StyleSet::new())
+                AddChars(StyleSet::new(), DocString::from_str("h"))
             ],
             &vec![
                 AddSkip(11),
-                AddChars(DocString::from_str("i"), StyleSet::new())
+                AddChars(StyleSet::new(), DocString::from_str("i"))
             ],
         ),
         vec![
             AddSkip(10),
-            AddChars(DocString::from_str("hi"), StyleSet::new())
+            AddChars(StyleSet::new(), DocString::from_str("hi"))
         ],
     );
 
@@ -113,30 +113,30 @@ fn test_compose_add_add() {
         compose_add_add::<RtfSchema>(
             &vec![
                 AddSkip(5),
-                AddChars(DocString::from_str("yEH"), StyleSet::new()),
+                AddChars(StyleSet::new(), DocString::from_str("yEH")),
                 AddSkip(1),
-                AddChars(DocString::from_str("GlG5"), StyleSet::new()),
+                AddChars(StyleSet::new(), DocString::from_str("GlG5")),
                 AddSkip(4),
-                AddChars(DocString::from_str("nnG"), StyleSet::new()),
+                AddChars(StyleSet::new(), DocString::from_str("nnG")),
                 AddSkip(1),
-                AddChars(DocString::from_str("ra8c"), StyleSet::new()),
+                AddChars(StyleSet::new(), DocString::from_str("ra8c")),
                 AddSkip(1),
             ],
             &vec![
                 AddSkip(10),
-                AddChars(DocString::from_str("Eh"), StyleSet::new()),
+                AddChars(StyleSet::new(), DocString::from_str("Eh")),
                 AddSkip(16),
             ],
         ),
         vec![
             AddSkip(5),
-            AddChars(DocString::from_str("yEH"), StyleSet::new()),
+            AddChars(StyleSet::new(), DocString::from_str("yEH")),
             AddSkip(1),
-            AddChars(DocString::from_str("GEhlG5"), StyleSet::new()),
+            AddChars(StyleSet::new(), DocString::from_str("GEhlG5")),
             AddSkip(4),
-            AddChars(DocString::from_str("nnG"), StyleSet::new()),
+            AddChars(StyleSet::new(), DocString::from_str("nnG")),
             AddSkip(1),
-            AddChars(DocString::from_str("ra8c"), StyleSet::new()),
+            AddChars(StyleSet::new(), DocString::from_str("ra8c")),
             AddSkip(1),
         ]
     );
@@ -150,11 +150,11 @@ fn test_compose_add_del() {
         compose_add_del::<RtfSchema>(
             &vec![
                 AddSkip(4),
-                AddChars(DocString::from_str("0O"), StyleSet::new()),
+                AddChars(StyleSet::new(), DocString::from_str("0O")),
                 AddSkip(5),
-                AddChars(DocString::from_str("mnc"), StyleSet::new()),
+                AddChars(StyleSet::new(), DocString::from_str("mnc")),
                 AddSkip(3),
-                AddChars(DocString::from_str("gbL"), StyleSet::new()),
+                AddChars(StyleSet::new(), DocString::from_str("gbL")),
             ],
             &vec![
                 DelSkip(1),
@@ -178,9 +178,9 @@ fn test_compose_add_del() {
             ],
             vec![
                 AddSkip(3),
-                AddChars(DocString::from_str("0"), StyleSet::new()),
+                AddChars(StyleSet::new(), DocString::from_str("0")),
                 AddSkip(2),
-                AddChars(DocString::from_str("b"), StyleSet::new()),
+                AddChars(StyleSet::new(), DocString::from_str("b")),
             ],
         )
     );

@@ -45,8 +45,8 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                         self.body.begin();
                     }
                     self.body.place(&DocChars(
-                        DocString::from_str(text.as_ref()),
                         self.styles.clone(),
+                        DocString::from_str(text.as_ref()),
                     ));
                     if self.bare_text {
                         self.body.close(Attrs::Text);
@@ -61,8 +61,8 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                         self.body.begin();
                     }
                     self.body.place(&DocChars(
-                        DocString::from_str(" "),
                         self.styles.clone(),
+                        DocString::from_str(" "),
                     ));
                     if self.bare_text {
                         self.body.close(Attrs::Text);
@@ -70,15 +70,15 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                 }
                 HardBreak => {
                     self.body.place(&DocChars(
-                        DocString::from_str("\n"),
                         self.styles.clone(),
+                        DocString::from_str("\n"),
                     ));
                 }
                 Html(html) => {
                     self.body.begin();
                     self.body.place(&DocChars(
-                        DocString::from_str(&html),
                         StyleSet::from(hashset!{ RtfStyle::Normie }),
+                        DocString::from_str(&html),
                     ));
                     self.body.close(Attrs::Html);
                 }

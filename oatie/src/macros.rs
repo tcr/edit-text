@@ -4,7 +4,7 @@
 macro_rules! doc_span {
     ( @str_literal $e:expr ) => { $e };
     ( @kind DocChars $b:expr $(,)* ) => {
-        DocChars($crate::doc::DocString::from_str($b), $crate::rtf::StyleSet::new())
+        DocChars($crate::rtf::StyleSet::new(), $crate::doc::DocString::from_str($b))
     };
     ( @kind DocChars $b:expr , { $( $e:expr ),+  $(,)* } $(,)* ) => {
         {
@@ -12,7 +12,7 @@ macro_rules! doc_span {
             $(
                 map.insert($e);
             )*
-            DocChars($crate::doc::DocString::from_str($b), $crate::rtf::StyleSet::from(map))
+            DocChars($crate::rtf::StyleSet::from(map), $crate::doc::DocString::from_str($b))
         }
     };
     ( @kind DocGroup $b:expr , [ $( $v:tt )* ] $(,)* ) => {
@@ -42,11 +42,11 @@ macro_rules! add_span {
             $(
                 map.insert($e, $c);
             )*
-            AddChars($crate::doc::DocString::from_str($b), $crate::rtf::StyleSet::from(map))
+            AddChars($crate::rtf::StyleSet::from(map), $crate::doc::DocString::from_str($b))
         }
     };
     ( @kind AddChars $b:expr $(,)* ) => {
-        AddChars($crate::doc::DocString::from_str($b), $crate::rtf::StyleSet::new())
+        AddChars($crate::rtf::StyleSet::new(), $crate::doc::DocString::from_str($b))
     };
     ( @kind AddWithGroup [ $( $v:tt )* ] $(,)* ) => {
         AddWithGroup(add_span![ $( $v )* ])

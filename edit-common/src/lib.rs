@@ -42,7 +42,7 @@ pub fn doc_as_html(doc: &DocSpan<RtfSchema>) -> String {
                 }
                 stepper.enter();
             }
-            Some(DocChars(ref text, _)) => {
+            Some(DocChars(_, ref text)) => {
                 stepper.skip(text.char_len());
             }
             None => {
@@ -102,7 +102,7 @@ pub fn doc_as_html_inner(
                 out.push_str(&doc_as_html_inner(span, caret_index, remote_select_active));
                 out.push_str(r"</div>");
             }
-            &DocChars(ref text, ref styles) => {
+            &DocChars(ref styles, ref text) => {
                 let mut classes = styles.styles();
                 if !remote_select_active.is_empty() {
                     classes.insert(RtfStyle::Selected);

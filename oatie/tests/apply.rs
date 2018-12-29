@@ -50,31 +50,31 @@ fn try_this() {
 
     assert_eq!(
         apply_delete::<RtfSchema>(
-            &vec![DocChars(DocString::from_str("Hello World!"), StyleSet::new())],
+            &vec![DocChars(StyleSet::new(), DocString::from_str("Hello World!"))],
             &vec![DelChars(6)],
         ),
-        vec![DocChars(DocString::from_str("World!"), StyleSet::new())]
+        vec![DocChars(StyleSet::new(), DocString::from_str("World!"))]
     );
 
     assert_eq!(
         apply_add::<RtfSchema>(
-            &vec![DocChars(DocString::from_str("World!"), StyleSet::new())],
-            &vec![AddChars(DocString::from_str("Hello "), StyleSet::new())],
+            &vec![DocChars(StyleSet::new(), DocString::from_str("World!"))],
+            &vec![AddChars(StyleSet::new(), DocString::from_str("Hello "))],
         ),
-        vec![DocChars(DocString::from_str("Hello World!"), StyleSet::new())],
+        vec![DocChars(StyleSet::new(), DocString::from_str("Hello World!"))],
     );
 
     assert_eq!(
         apply_add::<RtfSchema>(
             &vec![
                 DocGroup(Attrs::Text, vec![]),
-                DocChars(DocString::from_str("World!"), StyleSet::new()),
+                DocChars(StyleSet::new(), DocString::from_str("World!")),
             ],
-            &vec![AddSkip(1), AddChars(DocString::from_str("Hello "), StyleSet::new())],
+            &vec![AddSkip(1), AddChars(StyleSet::new(), DocString::from_str("Hello "))],
         ),
         vec![
             DocGroup(Attrs::Text, vec![]),
-            DocChars(DocString::from_str("Hello World!"), StyleSet::new()),
+            DocChars(StyleSet::new(), DocString::from_str("Hello World!")),
         ]
     );
 
@@ -82,13 +82,13 @@ fn try_this() {
         apply_delete::<RtfSchema>(
             &vec![DocGroup(
                 Attrs::Text,
-                vec![DocChars(DocString::from_str("Hello Damned World!"), StyleSet::new())],
+                vec![DocChars(StyleSet::new(), DocString::from_str("Hello Damned World!"))],
             )],
             &vec![DelWithGroup(vec![DelSkip(6), DelChars(7)])],
         ),
         vec![DocGroup(
             Attrs::Text,
-            vec![DocChars(DocString::from_str("Hello World!"), StyleSet::new())],
+            vec![DocChars(StyleSet::new(), DocString::from_str("Hello World!"))],
         )]
     );
 
@@ -96,40 +96,40 @@ fn try_this() {
         apply_add::<RtfSchema>(
             &vec![DocGroup(
                 Attrs::Text,
-                vec![DocChars(DocString::from_str("Hello!"), StyleSet::new())],
+                vec![DocChars(StyleSet::new(), DocString::from_str("Hello!"))],
             )],
             &vec![AddWithGroup(vec![
                 AddSkip(5),
-                AddChars(DocString::from_str(" World"), StyleSet::new()),
+                AddChars(StyleSet::new(), DocString::from_str(" World")),
             ])],
         ),
         vec![DocGroup(
             Attrs::Text,
-            vec![DocChars(DocString::from_str("Hello World!"), StyleSet::new())],
+            vec![DocChars(StyleSet::new(), DocString::from_str("Hello World!"))],
         )]
     );
 
     assert_eq!(
         apply_operation::<RtfSchema>(
-            &vec![DocChars(DocString::from_str("Goodbye World!"), StyleSet::new())],
+            &vec![DocChars(StyleSet::new(), DocString::from_str("Goodbye World!"))],
             &(
                 vec![DelChars(7)],
-                vec![AddChars(DocString::from_str("Hello"), StyleSet::new())],
+                vec![AddChars(StyleSet::new(), DocString::from_str("Hello"))],
             )
         ),
-        vec![DocChars(DocString::from_str("Hello World!"), StyleSet::new())]
+        vec![DocChars(StyleSet::new(), DocString::from_str("Hello World!"))]
     );
 
     assert_eq!(
         apply_add::<RtfSchema>(
-            &vec![DocChars(DocString::from_str("Hello world!"), StyleSet::new())],
+            &vec![DocChars(StyleSet::new(), DocString::from_str("Hello world!"))],
             &vec![
                 AddSkip(10),
-                AddChars(DocString::from_str("dd49"), StyleSet::new()),
+                AddChars(StyleSet::new(), DocString::from_str("dd49")),
                 AddSkip(2),
             ],
         ),
-        vec![DocChars(DocString::from_str("Hello worldd49d!"), StyleSet::new())]
+        vec![DocChars(StyleSet::new(), DocString::from_str("Hello worldd49d!"))]
     );
 }
 
@@ -140,9 +140,9 @@ fn test_lib_op() {
     assert_eq!(
         apply_operation::<RtfSchema>(
             &vec![
-                DocChars(DocString::from_str("Heo"), StyleSet::new()),
+                DocChars(StyleSet::new(), DocString::from_str("Heo")),
                 DocGroup(Attrs::Text, vec![]),
-                DocChars(DocString::from_str("!"), StyleSet::new()),
+                DocChars(StyleSet::new(), DocString::from_str("!")),
             ],
             &(
                 vec![DelSkip(1), DelChars(1), DelSkip(2), DelSkip(1)],
@@ -150,9 +150,9 @@ fn test_lib_op() {
             ),
         ),
         vec![
-            DocChars(DocString::from_str("Ho"), StyleSet::new()),
+            DocChars(StyleSet::new(), DocString::from_str("Ho")),
             DocGroup(Attrs::Text, vec![]),
-            DocChars(DocString::from_str("!"), StyleSet::new()),
+            DocChars(StyleSet::new(), DocString::from_str("!")),
         ]
     );
 }
