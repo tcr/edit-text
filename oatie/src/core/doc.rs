@@ -16,7 +16,7 @@ pub type Op<S> = (DelSpan<S>, AddSpan<S>);
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum DocElement<S: Schema> {
-    DocChars(S::CharsProperties, DocString),
+    DocText(S::CharsProperties, DocString),
     DocGroup(S::GroupProperties, DocSpan<S>),
 }
 
@@ -27,13 +27,13 @@ pub struct Doc<S: Schema>(pub Vec<DocElement<S>>);
 
 
 
-// [DocChars("birds snakes and aeroplanes",[Bold,],),]
+// [DocText("birds snakes and aeroplanes",[Bold,],),]
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum DelElement<S: Schema> {
     DelSkip(usize),
     DelWithGroup(DelSpan<S>),
-    DelChars(usize),
+    DelText(usize),
     DelGroup(DelSpan<S>),
     DelStyles(usize, S::CharsProperties),
     // TODO Implement these
@@ -49,7 +49,7 @@ pub use self::DelElement::*;
 pub enum AddElement<S: Schema> {
     AddSkip(usize),
     AddWithGroup(AddSpan<S>),
-    AddChars(S::CharsProperties, DocString),
+    AddText(S::CharsProperties, DocString),
     AddGroup(S::GroupProperties, AddSpan<S>),
     AddStyles(usize, S::CharsProperties),
 }

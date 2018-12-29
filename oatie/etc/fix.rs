@@ -22,10 +22,10 @@ fn run() -> Result<(), Error> {
 
     let doc = Doc(doc_span![
         DocGroup({"tag": "h2"}, [
-            DocChars("12")
+            DocText("12")
         ]),
         DocGroup({"tag": "p"}, [
-            DocChars("1"),
+            DocText("1"),
         ]),
     ]);
 
@@ -34,7 +34,7 @@ fn run() -> Result<(), Error> {
             DelSkip(2)
         ]),
         DelWithGroup([
-            DelChars(1),
+            DelText(1),
         ]),
     ],
     [
@@ -45,7 +45,7 @@ fn run() -> Result<(), Error> {
             AddSkip(2),
         ]),
         AddWithGroup([
-            AddChars("6"),
+            AddText("6"),
         ]),
     ]);
 
@@ -89,7 +89,7 @@ fn run() -> Result<(), Error> {
 
 let local_op = op_span!([
     DelWithGroup([
-        DelChars(1),
+        DelText(1),
     ]),
 ], [
     AddGroup({"tag": "bullet"}, [
@@ -106,7 +106,7 @@ let input_transform = op_span!([
     ]),
 ], [
     AddGroup({"tag": "h3"}, [
-        AddChars("5"),
+        AddText("5"),
         AddSkip(1),
     ]),
 ]);
@@ -140,13 +140,13 @@ let input_transform = op_span!([
 
 /*
 fn main() {
-// let pending_op = op_span!([DelWithGroup([DelGroup([DelSkip(2)]), DelGroup([DelSkip(11), DelWithGroup([]), DelSkip(1)])]), DelGroup([DelWithGroup([DelChars(1), DelGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(1)])]), DelWithGroup([DelSkip(1), DelWithGroup([])]), DelSkip(1)], [AddWithGroup([AddGroup({"tag": "h3"}, [AddChars(" ")]), AddGroup({"tag": "p"}, [AddChars("L"), AddGroup({"tag": "caret", "client": "b"}, []), AddChars(" "), AddSkip(13), AddWithGroup([]), AddSkip(1)])]), AddWithGroup([AddSkip(1), AddChars("b")]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(1), AddWithGroup([])]), AddSkip(1)]);
+// let pending_op = op_span!([DelWithGroup([DelGroup([DelSkip(2)]), DelGroup([DelSkip(11), DelWithGroup([]), DelSkip(1)])]), DelGroup([DelWithGroup([DelText(1), DelGroup([]), DelSkip(1)]), DelWithGroup([DelSkip(1)])]), DelWithGroup([DelSkip(1), DelWithGroup([])]), DelSkip(1)], [AddWithGroup([AddGroup({"tag": "h3"}, [AddText(" ")]), AddGroup({"tag": "p"}, [AddText("L"), AddGroup({"tag": "caret", "client": "b"}, []), AddText(" "), AddSkip(13), AddWithGroup([]), AddSkip(1)])]), AddWithGroup([AddSkip(1), AddText("b")]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(1), AddWithGroup([])]), AddSkip(1)]);
 
-// let local_op = op_span!([DelWithGroup([DelGroup([DelChars(1)]), DelGroup([DelChars(1), DelGroup([]), DelSkip(14), DelWithGroup([]), DelSkip(1)])]), DelWithGroup([DelSkip(2)]), DelWithGroup([DelSkip(1)]), DelSkip(2)], [AddWithGroup([AddGroup({"tag": "h3"}, [AddChars("C"), AddSkip(14), AddWithGroup([]), AddSkip(1), AddChars("p")])]), AddGroup({"tag": "bullet"}, [AddWithGroup([AddGroup({"client": "b", "tag": "caret"}, []), AddSkip(1), AddChars("2"), AddSkip(1)])]), AddWithGroup([AddSkip(1)]), AddSkip(2)]);
+// let local_op = op_span!([DelWithGroup([DelGroup([DelText(1)]), DelGroup([DelText(1), DelGroup([]), DelSkip(14), DelWithGroup([]), DelSkip(1)])]), DelWithGroup([DelSkip(2)]), DelWithGroup([DelSkip(1)]), DelSkip(2)], [AddWithGroup([AddGroup({"tag": "h3"}, [AddText("C"), AddSkip(14), AddWithGroup([]), AddSkip(1), AddText("p")])]), AddGroup({"tag": "bullet"}, [AddWithGroup([AddGroup({"client": "b", "tag": "caret"}, []), AddSkip(1), AddText("2"), AddSkip(1)])]), AddWithGroup([AddSkip(1)]), AddSkip(2)]);
 
-// let input_op = op_span!([DelWithGroup([DelGroup([DelSkip(2)]), DelGroup([DelSkip(2), DelChars(2), DelSkip(2), DelChars(2), DelSkip(1), DelChars(2), DelGroup([]), DelChars(1)])]), DelWithGroup([DelGroup([DelChars(1), DelGroup([]), DelChars(1)]), DelWithGroup([DelSkip(1)])]), DelWithGroup([DelSkip(1), DelWithGroup([])]), DelSkip(1)], [AddWithGroup([AddGroup({"tag": "pre"}, [AddChars("A"), AddSkip(1), AddGroup({"tag": "caret", "client": "a"}, []), AddSkip(6), AddChars("i ")])]), AddWithGroup([AddWithGroup([AddSkip(1)])]), AddWithGroup([AddSkip(1), AddWithGroup([])]), AddSkip(1)]);
+// let input_op = op_span!([DelWithGroup([DelGroup([DelSkip(2)]), DelGroup([DelSkip(2), DelText(2), DelSkip(2), DelText(2), DelSkip(1), DelText(2), DelGroup([]), DelText(1)])]), DelWithGroup([DelGroup([DelText(1), DelGroup([]), DelText(1)]), DelWithGroup([DelSkip(1)])]), DelWithGroup([DelSkip(1), DelWithGroup([])]), DelSkip(1)], [AddWithGroup([AddGroup({"tag": "pre"}, [AddText("A"), AddSkip(1), AddGroup({"tag": "caret", "client": "a"}, []), AddSkip(6), AddText("i ")])]), AddWithGroup([AddWithGroup([AddSkip(1)])]), AddWithGroup([AddSkip(1), AddWithGroup([])]), AddSkip(1)]);
 
-// let doc = Doc(doc_span![DocGroup({"tag": "bullet"}, [DocGroup({"tag": "pre"}, [DocChars("Av"), DocGroup({"client": "a", "tag": "caret"}, []), DocChars("B20 W7i ")])]), DocGroup({"tag": "bullet"}, [DocGroup({"tag": "h3"}, [DocChars("2")])]), DocGroup({"tag": "h3"}, [DocChars("8"), DocGroup({"tag": "caret", "client": "c"}, [])]), DocGroup({"tag": "h1"}, [DocChars("0pos Mercutio, a rich text editor.")])]);
+// let doc = Doc(doc_span![DocGroup({"tag": "bullet"}, [DocGroup({"tag": "pre"}, [DocText("Av"), DocGroup({"client": "a", "tag": "caret"}, []), DocText("B20 W7i ")])]), DocGroup({"tag": "bullet"}, [DocGroup({"tag": "h3"}, [DocText("2")])]), DocGroup({"tag": "h3"}, [DocText("8"), DocGroup({"tag": "caret", "client": "c"}, [])]), DocGroup({"tag": "h1"}, [DocText("0pos Mercutio, a rich text editor.")])]);
 
 
 
@@ -157,7 +157,7 @@ fn main() {
 
     let input_op_transform = op_span!([
     DelGroup([
-        DelChars(1)
+        DelText(1)
     ]),
 ], [
 ]);
@@ -196,7 +196,7 @@ fn main() {
     // self.doc = Op::apply(&self.doc, &local_op_transform);
 
 
-// let pending = op_span!([DelWithGroup([DelGroup([DelSkip(2), DelWithGroup([]), DelSkip(8)])]), DelGroup([DelWithGroup([DelSkip(1)])]), DelWithGroup([DelSkip(1), DelWithGroup([])]), DelSkip(1)], [AddWithGroup([AddGroup({"tag": "pre"}, [AddSkip(1), AddChars(" ")]), AddGroup({"tag": "pre"}, [AddChars("L"), AddGroup({"tag": "caret", "client": "b"}, []), AddChars(" "), AddSkip(1), AddWithGroup([]), AddSkip(8)])]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(1), AddWithGroup([])]), AddSkip(1)]);
+// let pending = op_span!([DelWithGroup([DelGroup([DelSkip(2), DelWithGroup([]), DelSkip(8)])]), DelGroup([DelWithGroup([DelSkip(1)])]), DelWithGroup([DelSkip(1), DelWithGroup([])]), DelSkip(1)], [AddWithGroup([AddGroup({"tag": "pre"}, [AddSkip(1), AddText(" ")]), AddGroup({"tag": "pre"}, [AddText("L"), AddGroup({"tag": "caret", "client": "b"}, []), AddText(" "), AddSkip(1), AddWithGroup([]), AddSkip(8)])]), AddWithGroup([AddSkip(1)]), AddWithGroup([AddSkip(1), AddWithGroup([])]), AddSkip(1)]);
 
 // ([
 //     DelGroup([

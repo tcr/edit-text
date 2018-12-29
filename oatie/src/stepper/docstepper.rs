@@ -37,7 +37,7 @@ impl<'a, S: Schema> DocStepper<'a, S> {
     // TODO rename char_cursor_reset ?
     // TODO Make this pub(crate) once walkers.rs doesn't repend on it.
     pub fn char_cursor_update(&mut self) {
-        self.char_cursor = if let Some(&DocChars(ref styles, ref text)) = self.head_raw() {
+        self.char_cursor = if let Some(&DocText(ref styles, ref text)) = self.head_raw() {
             Some(CharCursor::from_docstring(text, styles.to_owned()))
         } else {
             None
@@ -54,7 +54,7 @@ impl<'a, S: Schema> DocStepper<'a, S> {
     /// cursor if we've reached a group.
     pub(crate) fn char_cursor_update_prev(&mut self) {
         let cursor = match self.head() {
-            Some(DocChars(ref styles, ref text)) => {
+            Some(DocText(ref styles, ref text)) => {
                 let mut cursor = CharCursor::from_docstring_end(text, styles.to_owned());
                 cursor.value_sub(1);
                 Some(cursor)
@@ -94,7 +94,7 @@ impl<'a, S: Schema> DocStepper<'a, S> {
 
     // Current row in the stack is a DocSpan reference and an index.
     // What DocElement the index points to is the "head". If the head points
-    // to a DocChars, we also create a char_cursor to index into the string.
+    // to a DocText, we also create a char_cursor to index into the string.
 
     pub(crate) fn current<'h>(&'h self) -> &'h (isize, &'a [DocElement<S>]) {
         self.stack.last().unwrap()
@@ -156,7 +156,7 @@ impl<'a, S: Schema> DocStepper<'a, S> {
 
     pub fn head<'h>(&'h self) -> Option<&'h DocElement<S>> {
         match self.head_raw() {
-            Some(&DocChars(..)) => {
+            Some(&DocText(..)) => {
                 // Expect cursor is at a string of length 1 at least
                 // (meaning cursor has not passed to the end of the string)
                 Some(
@@ -171,7 +171,7 @@ impl<'a, S: Schema> DocStepper<'a, S> {
     }
 
     pub fn unhead<'h>(&'h self) -> Option<&'h DocElement<S>> {
-        if let Some(&DocChars(..)) = self.head_raw() {
+        if let Some(&DocText(..)) = self.head_raw() {
             // .left may be empty, so allow fall-through (don't .unwrap())
             if let Some(docstring) = self.char_cursor_expect().left_element() {
                 return Some(docstring);
@@ -183,7 +183,7 @@ impl<'a, S: Schema> DocStepper<'a, S> {
 
     pub fn peek(&self) -> Option<DocElement<S>> {
         match self.current().1.get((self.head_index() + 1) as usize) {
-            Some(text @ &DocChars(..)) => {
+            Some(text @ &DocText(..)) => {
                 // Pass along new text node
                 Some(text.clone())
             }
@@ -195,7 +195,7 @@ impl<'a, S: Schema> DocStepper<'a, S> {
     pub fn unskip(&mut self, mut skip: usize) {
         while skip > 0 {
             match self.head_raw() {
-                Some(DocChars(..)) => {
+                Some(DocText(..)) => {
                     if self.char_cursor_expect().value() > 0 {
                         self.char_cursor_expect_sub(1);
                         skip -= 1;
@@ -234,7 +234,7 @@ impl<'a, S: Schema> DocStepper<'a, S> {
             };
 
             match head {
-                DocChars(_, ref text) => {
+                DocText(_, ref text) => {
                     let remaining = text.char_len();
                     if skip >= remaining {
                         skip -= remaining;
@@ -320,7 +320,7 @@ mod tests {
     fn test_doc_0() -> DocSpan<RtfSchema> {
         doc_span![
             DocGroup(Attrs::Header(1), [
-                DocChars("Cool"),
+                DocText("Cool"),
             ]),
         ]
     }
@@ -333,7 +333,7 @@ mod tests {
         stepper.skip(2);
         assert_eq!(
             stepper.head().unwrap(),
-            &DocChars(StyleSet::new(), DocString::from_str("ol"))
+            &DocText(StyleSet::new(), DocString::from_str("ol"))
         );
     }
 

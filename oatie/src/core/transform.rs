@@ -220,11 +220,11 @@ impl<S: Schema> Transform<S> {
     }
 
     fn chars_a(&mut self, chars: DocString, styles: S::CharsProperties) {
-        self.a_add.place(&AddChars(styles, chars));
+        self.a_add.place(&AddText(styles, chars));
     }
 
     fn chars_b(&mut self, chars: DocString, styles: S::CharsProperties) {
-        self.b_add.place(&AddChars(styles, chars));
+        self.b_add.place(&AddText(styles, chars));
     }
 
     fn current(&self) -> Option<TrackState<S>> {
@@ -588,7 +588,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan<S>, bvec: &AddSpan<S>) -> 
                     t.with_group_a(span);
                     b.next();
                 }
-                Some(AddChars(b_styles, b_chars)) => {
+                Some(AddText(b_styles, b_chars)) => {
                     t.skip_b(b_chars.char_len());
                     t.chars_a(b_chars, b_styles);
                     b.next();
@@ -626,7 +626,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan<S>, bvec: &AddSpan<S>) -> 
                     t.with_group_b(span);
                     a.next();
                 }
-                Some(AddChars(a_styles, a_chars)) => {
+                Some(AddText(a_styles, a_chars)) => {
                     t.skip_a(a_chars.char_len());
                     t.chars_b(a_chars, a_styles);
                     a.next();
@@ -695,7 +695,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan<S>, bvec: &AddSpan<S>) -> 
                 // TODO don't like that this isn't a pattern match;
                 // This case should handle AddWithGroup and AddGroup (I believe)
                 (None, compare) => {
-                    let ok = if let Some(AddChars(ref b_styles, ref b_chars)) = compare {
+                    let ok = if let Some(AddText(ref b_styles, ref b_chars)) = compare {
                         if t.supports_text() {
                             t.skip_b(b_chars.char_len());
                             t.chars_a(b_chars.clone(), b_styles.clone());
@@ -844,7 +844,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan<S>, bvec: &AddSpan<S>) -> 
                     // TODO if they are different tags THEN WHAT
                 }
                 (compare, None) => {
-                    let is_char = if let Some(AddChars(a_styles, a_chars)) = compare.clone() {
+                    let is_char = if let Some(AddText(a_styles, a_chars)) = compare.clone() {
                         if t.supports_text() {
                             t.regenerate();
 
@@ -1030,15 +1030,15 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan<S>, bvec: &AddSpan<S>) -> 
                     t.skip_a(cmp::min(a_count, b_count));
                     t.style_b(cmp::min(a_count, b_count), a_styles);
                 }
-                | (Some(AddSkip(..)), Some(AddChars(b_styles, b_chars)))
-                | (Some(AddStyles(..)), Some(AddChars(b_styles, b_chars))) => {
+                | (Some(AddSkip(..)), Some(AddText(b_styles, b_chars)))
+                | (Some(AddStyles(..)), Some(AddText(b_styles, b_chars))) => {
                     t.regenerate();
 
                     b.next();
                     t.skip_b(b_chars.char_len());
                     t.chars_a(b_chars, b_styles);
                 }
-                (Some(AddChars(a_styles, a_chars)), _) => {
+                (Some(AddText(a_styles, a_chars)), _) => {
                     t.regenerate();
 
                     t.skip_a(a_chars.char_len());
@@ -1096,7 +1096,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan<S>, bvec: &AddSpan<S>) -> 
                     }
                     b.next();
                 }
-                (Some(AddWithGroup(_a_inner)), Some(AddChars(b_styles, b_chars))) => {
+                (Some(AddWithGroup(_a_inner)), Some(AddText(b_styles, b_chars))) => {
                     t.regenerate(); // caret-35
 
                     t.b_del.place(&DelSkip(b_chars.char_len()));
@@ -1126,7 +1126,7 @@ fn undel<S: Schema>(input_del: &DelSpan<S>) -> DelSpan<S> {
     let mut del: DelSpan<S> = vec![];
     for elem in input_del {
         match elem {
-            &DelChars(..) => {
+            &DelText(..) => {
                 // skip
             }
             &DelSkip(value) => {
@@ -1252,36 +1252,36 @@ pub fn transform_del_del_inner<S: Schema>(
                 a_del.place(&DelSkip(cmp::min(a_count, b_count)));
                 b_del.place(&DelSkip(cmp::min(a_count, b_count)));
             }
-            (Some(DelSkip(a_count)), Some(DelChars(b_chars))) => {
+            (Some(DelSkip(a_count)), Some(DelText(b_chars))) => {
                 if a_count > b_chars {
                     a.head = Some(DelSkip(a_count - b_chars));
                     b.next();
-                    a_del.place(&DelChars(b_chars));
+                    a_del.place(&DelText(b_chars));
                 } else if a_count < b_chars {
                     a.next();
-                    b.head = Some(DelChars(b_chars - a_count));
-                    a_del.place(&DelChars(a_count));
+                    b.head = Some(DelText(b_chars - a_count));
+                    a_del.place(&DelText(a_count));
                 } else {
                     a.next();
                     b.next();
-                    a_del.place(&DelChars(b_chars));
+                    a_del.place(&DelText(b_chars));
                 }
             }
-            (Some(DelChars(a_chars)), Some(DelChars(b_chars))) => {
+            (Some(DelText(a_chars)), Some(DelText(b_chars))) => {
                 if a_chars > b_chars {
-                    a.head = Some(DelChars(a_chars - b_chars));
+                    a.head = Some(DelText(a_chars - b_chars));
                     b.next();
                 } else if a_chars < b_chars {
                     a.next();
-                    b.head = Some(DelChars(b_chars - a_chars));
+                    b.head = Some(DelText(b_chars - a_chars));
                 } else {
                     a.next();
                     b.next();
                 }
             }
-            (Some(DelChars(a_chars)), Some(DelSkip(b_count))) => {
+            (Some(DelText(a_chars)), Some(DelSkip(b_count))) => {
                 if a_chars > b_count {
-                    a.head = Some(DelChars(a_chars - b_count));
+                    a.head = Some(DelText(a_chars - b_count));
                     b.next();
                 } else if a_chars < b_count {
                     a.next();
@@ -1292,7 +1292,7 @@ pub fn transform_del_del_inner<S: Schema>(
                 }
 
                 // a_del.skip(cmp::min(a_chars, b_chars));
-                b_del.place(&DelChars(cmp::min(a_chars, b_count)));
+                b_del.place(&DelText(cmp::min(a_chars, b_count)));
             }
             (Some(DelStyles(a_count, a_styles)), Some(DelStyles(b_count, b_styles))) => {
                 if a_count > b_count {
@@ -1345,32 +1345,32 @@ pub fn transform_del_del_inner<S: Schema>(
                     b_del.place(&DelStyles(a_count, a_styles));
                 }
             }
-            (Some(DelStyles(a_count, a_styles)), Some(DelChars(b_count))) => {
+            (Some(DelStyles(a_count, a_styles)), Some(DelText(b_count))) => {
                 if a_count > b_count {
                     a.head = Some(DelStyles(a_count - b_count, a_styles.clone()));
                     b.next();
-                    a_del.place(&DelChars(b_count));
+                    a_del.place(&DelText(b_count));
                 } else if a_count < b_count {
                     a.next();
-                    b.head = Some(DelChars(b_count - a_count));
+                    b.head = Some(DelText(b_count - a_count));
                 } else {
                     a.next();
                     b.next();
-                    a_del.place(&DelChars(a_count));
+                    a_del.place(&DelText(a_count));
                 }
             }
-            (Some(DelChars(a_count)), Some(DelStyles(b_count, b_styles))) => {
+            (Some(DelText(a_count)), Some(DelStyles(b_count, b_styles))) => {
                 if a_count > b_count {
-                    a.head = Some(DelChars(a_count - b_count));
+                    a.head = Some(DelText(a_count - b_count));
                     b.next();
-                    b_del.place(&DelChars(b_count));
+                    b_del.place(&DelText(b_count));
                 } else if a_count < b_count {
                     a.next();
                     b.head = Some(DelStyles(b_count - a_count, b_styles.clone()));
                 } else {
                     a.next();
                     b.next();
-                    b_del.place(&DelChars(a_count));
+                    b_del.place(&DelText(a_count));
                 }
             }
 
@@ -1495,14 +1495,14 @@ pub fn transform_del_del_inner<S: Schema>(
             // TODO why are these unreachable?
             (None, _)
             | (_, None)
-            | (Some(DelWithGroup(_)), Some(DelChars(_)))
+            | (Some(DelWithGroup(_)), Some(DelText(_)))
             | (Some(DelWithGroup(_)), Some(DelStyles(_, _)))
             | (Some(DelStyles(_, _)), Some(DelWithGroup(_)))
-            | (Some(DelChars(_)), Some(DelWithGroup(_)))
-            | (Some(DelGroup(_)), Some(DelChars(_)))
+            | (Some(DelText(_)), Some(DelWithGroup(_)))
+            | (Some(DelGroup(_)), Some(DelText(_)))
             | (Some(DelGroup(_)), Some(DelStyles(_, _)))
             | (Some(DelStyles(_, _)), Some(DelGroup(_)))
-            | (Some(DelChars(_)), Some(DelGroup(_))) => {
+            | (Some(DelText(_)), Some(DelGroup(_))) => {
                 log_transform!("Not reachable: {:?}", unimplemented);
                 unreachable!();
             }
@@ -1575,10 +1575,10 @@ pub fn transform_add_del_inner<S: Schema>(
 ) {
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
-            DelChars(bcount) => match a.get_head() {
-                AddChars(a_styles, avalue) => {
+            DelText(bcount) => match a.get_head() {
+                AddText(a_styles, avalue) => {
                     delres.place(&DelSkip(avalue.char_len()));
-                    addres.place(&AddChars(a_styles, avalue));
+                    addres.place(&AddText(a_styles, avalue));
                     a.next();
                 }
                 AddSkip(acount) => {
@@ -1587,8 +1587,8 @@ pub fn transform_add_del_inner<S: Schema>(
                         delres.place(&b.next().unwrap());
                     } else if bcount > acount {
                         a.next();
-                        delres.place(&DelChars(acount));
-                        b.head = Some(DelChars(bcount - acount));
+                        delres.place(&DelText(acount));
+                        b.head = Some(DelText(bcount - acount));
                     } else {
                         a.next();
                         delres.place(&b.next().unwrap());
@@ -1608,14 +1608,14 @@ pub fn transform_add_del_inner<S: Schema>(
                     a.next();
                 }
                 _unknown => {
-                    log_transform!("Compare: {:?} {:?}", DelChars(bcount), _unknown);
+                    log_transform!("Compare: {:?} {:?}", DelText(bcount), _unknown);
                     panic!("Unimplemented or Unexpected");
                 }
             },
             DelSkip(bcount) => match a.get_head() {
-                AddChars(a_styles, avalue) => {
+                AddText(a_styles, avalue) => {
                     delres.place(&DelSkip(avalue.char_len()));
-                    addres.place(&AddChars(a_styles, avalue));
+                    addres.place(&AddText(a_styles, avalue));
                     a.next();
                 }
                 AddStyles(a_count, a_styles) => {
@@ -1670,9 +1670,9 @@ pub fn transform_add_del_inner<S: Schema>(
                 }
             },
             DelStyles(b_count, b_styles) => match a.get_head() {
-                AddChars(a_styles, a_value) => {
+                AddText(a_styles, a_value) => {
                     delres.place(&DelSkip(a_value.char_len()));
-                    addres.place(&AddChars(a_styles, a_value));
+                    addres.place(&AddText(a_styles, a_value));
                     a.next();
                 }
                 AddStyles(a_count, a_styles) => {
@@ -1726,7 +1726,7 @@ pub fn transform_add_del_inner<S: Schema>(
                 AddStyles(..) => {
                     panic!("invalid transform DelWithGroup with AddStyles");
                 }
-                AddChars(_, avalue) => {
+                AddText(_, avalue) => {
                     delres.place(&DelSkip(avalue.char_len()));
                     addres.place(&a.next().unwrap());
                 }
@@ -1766,7 +1766,7 @@ pub fn transform_add_del_inner<S: Schema>(
                     AddStyles(..) => {
                         panic!("invalid transform DelGroup with AddStyles");
                     }
-                    AddChars(_, avalue) => {
+                    AddText(_, avalue) => {
                         delres.place(&DelSkip(avalue.char_len()));
                         addres.place(&a.next().unwrap());
                     }
@@ -1792,8 +1792,8 @@ pub fn transform_add_del_inner<S: Schema>(
                                 let mut del: DelSpan<S> = vec![];
                                 for elem in add {
                                     match elem {
-                                        &AddChars(_, ref value) => {
-                                            del.place(&DelChars(value.char_len()));
+                                        &AddText(_, ref value) => {
+                                            del.place(&DelText(value.char_len()));
                                         }
                                         &AddStyles(count, _) => {
                                             del.place(&DelSkip(count)); // TODO unsure if correct
@@ -1901,8 +1901,8 @@ pub fn transform_add_del_inner<S: Schema>(
               // }
               // DelMany(bcount) => {
               //     match a.get_head() {
-              //         AddChars(avalue) => {
-              //             addres.place(&AddChars(avalue.clone()));
+              //         AddText(avalue) => {
+              //             addres.place(&AddText(avalue.clone()));
               //             delres.place(&DelSkip(avalue.len()));
               //             a.next();
               //         }
@@ -1951,7 +1951,7 @@ pub fn transform_add_del_inner<S: Schema>(
               // }
               // DelGroupAll => {
               //     match a.get_head() {
-              //         AddChars(avalue) => {
+              //         AddText(avalue) => {
               //             delres.place(&DelSkip(avalue.chars().count()));
               //             addres.place(&a.next().unwrap());
               //         }

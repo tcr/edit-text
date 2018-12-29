@@ -35,13 +35,13 @@ fn compose_del_del_inner<S: Schema>(
                         }
                         res.place(&b.next().unwrap());
                     }
-                    Some(DelChars(bcount)) => {
-                        res.place(&DelChars(cmp::min(acount, bcount)));
+                    Some(DelText(bcount)) => {
+                        res.place(&DelText(cmp::min(acount, bcount)));
                         if acount > bcount {
                             a.head = Some(DelSkip(acount - bcount));
                             b.next();
                         } else if acount < bcount {
-                            b.head = Some(DelChars(bcount - acount));
+                            b.head = Some(DelText(bcount - acount));
                             a.next();
                         } else {
                             a.next();
@@ -49,7 +49,7 @@ fn compose_del_del_inner<S: Schema>(
                         }
                     }
                     Some(DelStyles(b_count, b_styles)) => {
-                        res.place(&DelChars(cmp::min(acount, b_count)));
+                        res.place(&DelText(cmp::min(acount, b_count)));
                         if acount > b_count {
                             a.head = Some(DelSkip(acount - b_count));
                             b.next();
@@ -118,13 +118,13 @@ fn compose_del_del_inner<S: Schema>(
                 Some(DelWithGroup(..)) | Some(DelGroup(..)) => {
                     unreachable!();
                 }
-                Some(DelChars(b_count)) => {
-                    res.place(&DelChars(cmp::min(a_count, b_count)));
+                Some(DelText(b_count)) => {
+                    res.place(&DelText(cmp::min(a_count, b_count)));
                     if a_count > b_count {
                         a.head = Some(DelStyles(a_count - b_count, a_styles));
                         b.next();
                     } else if a_count < b_count {
-                        b.head = Some(DelChars(b_count - a_count));
+                        b.head = Some(DelText(b_count - a_count));
                         a.next();
                     } else {
                         a.next();
@@ -158,8 +158,8 @@ fn compose_del_del_inner<S: Schema>(
                         a.next();
                         b.next();
                     }
-                    Some(DelChars(..)) => {
-                        panic!("DelWithGroup vs DelChars is bad");
+                    Some(DelText(..)) => {
+                        panic!("DelWithGroup vs DelText is bad");
                     }
                     None => {
                         res.place(&a.next().unwrap());
@@ -192,8 +192,8 @@ fn compose_del_del_inner<S: Schema>(
                 res.place(&DelGroup(inner));
                 a.next();
             }
-            DelChars(count) => {
-                res.place(&DelChars(count));
+            DelText(count) => {
+                res.place(&DelText(count));
                 a.next();
             } // DelObject => {
               //     match b.head.clone() {
@@ -254,7 +254,7 @@ fn compose_add_add_inner<S: Schema>(
 ) {
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
-            AddChars(..) => {
+            AddText(..) => {
                 res.place(&b.next().unwrap());
             }
             AddStyles(b_count, b_styles) => match a.get_head() {
@@ -273,22 +273,22 @@ fn compose_add_add_inner<S: Schema>(
                         b.next();
                     }
                 }
-                AddChars(mut styles, value) => {
+                AddText(mut styles, value) => {
                     if b_count < value.char_len() {
                         let (a_left, a_right) = value.split_at(b_count);
                         let mut left_styles = styles.clone();
                         left_styles.extend(&b_styles);
-                        res.place(&AddChars(left_styles, a_left));
-                        a.head = Some(AddChars(styles, a_right));
+                        res.place(&AddText(left_styles, a_left));
+                        a.head = Some(AddText(styles, a_right));
                         b.next();
                     } else if b_count > value.char_len() {
                         styles.extend(&b_styles);
                         b.head = Some(AddStyles(b_count - value.char_len(), b_styles));
-                        res.place(&AddChars(styles, value));
+                        res.place(&AddText(styles, value));
                         a.next();
                     } else {
                         styles.extend(&b_styles);
-                        res.place(&AddChars(styles, value));
+                        res.place(&AddText(styles, value));
                         a.next();
                         b.next();
                     }
@@ -337,11 +337,11 @@ fn compose_add_add_inner<S: Schema>(
                         b.next();
                     }
                 }
-                AddChars(styles, value) => {
+                AddText(styles, value) => {
                     if bcount < value.char_len() {
                         let (a_left, a_right) = value.split_at(bcount);
-                        res.place(&AddChars(styles.clone(), a_left));
-                        a.head = Some(AddChars(styles, a_right));
+                        res.place(&AddText(styles.clone(), a_left));
+                        a.head = Some(AddText(styles, a_right));
                         b.next();
                     } else if bcount > value.char_len() {
                         res.place(&a.next().unwrap());
@@ -394,8 +394,8 @@ fn compose_add_add_inner<S: Schema>(
                 b.next();
             }
             AddWithGroup(ref bspan) => match a.get_head() {
-                AddChars(..) => {
-                    panic!("Cannot compose AddWithGroup with AddChars");
+                AddText(..) => {
+                    panic!("Cannot compose AddWithGroup with AddText");
                 }
                 AddStyles(..) => {
                     panic!("Cannot compose AddWithGroup with AddStyles");
@@ -486,15 +486,15 @@ fn compose_add_del_inner<S: Schema>(
 ) {
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
-            DelChars(bcount) => match a.get_head() {
-                AddChars(a_styles, avalue) => {
+            DelText(bcount) => match a.get_head() {
+                AddText(a_styles, avalue) => {
                     if bcount < avalue.char_len() {
                         let (_a_left, a_right) = avalue.split_at(bcount);
-                        a.head = Some(AddChars(a_styles, a_right));
+                        a.head = Some(AddText(a_styles, a_right));
                         b.next();
                     } else if bcount > avalue.char_len() {
                         a.next();
-                        b.head = Some(DelChars(bcount - avalue.char_len()));
+                        b.head = Some(DelText(bcount - avalue.char_len()));
                     } else {
                         a.next();
                         b.next();
@@ -506,8 +506,8 @@ fn compose_add_del_inner<S: Schema>(
                         delres.place(&b.next().unwrap());
                     } else if bcount > acount {
                         a.next();
-                        delres.place(&DelChars(acount));
-                        b.head = Some(DelChars(bcount - acount));
+                        delres.place(&DelText(acount));
+                        b.head = Some(DelText(bcount - acount));
                     } else {
                         a.next();
                         delres.place(&b.next().unwrap());
@@ -518,21 +518,21 @@ fn compose_add_del_inner<S: Schema>(
                 }
             },
             DelStyles(b_count, b_styles) => match a.get_head() {
-                AddChars(mut a_styles, a_value) => {
+                AddText(mut a_styles, a_value) => {
                     if b_count < a_value.char_len() {
                         let (a_left, a_right) = a_value.split_at(b_count);
                         let mut a_left_styles = a_styles.clone();
                         a_left_styles.remove(&b_styles);
-                        addres.place(&AddChars(a_left_styles, a_left));
-                        a.head = Some(AddChars(a_styles, a_right));
+                        addres.place(&AddText(a_left_styles, a_left));
+                        a.head = Some(AddText(a_styles, a_right));
                         b.next();
                     } else if b_count > a_value.char_len() {
                         a_styles.remove(&b_styles);
                         b.head = Some(DelSkip(b_count - a_value.char_len()));
-                        addres.place(&AddChars(a_styles, a_value));
+                        addres.place(&AddText(a_styles, a_value));
                     } else {
                         a_styles.remove(&b_styles);
-                        addres.place(&AddChars(a_styles, a_value));
+                        addres.place(&AddText(a_styles, a_value));
                         a.next();
                         b.next();
                     }
@@ -580,11 +580,11 @@ fn compose_add_del_inner<S: Schema>(
                 }
             },
             DelSkip(bcount) => match a.get_head() {
-                AddChars(a_styles, avalue) => {
+                AddText(a_styles, avalue) => {
                     if bcount < avalue.char_len() {
                         let (a_left, a_right) = avalue.split_at(bcount);
-                        addres.place(&AddChars(a_styles.clone(), a_left));
-                        a.head = Some(AddChars(a_styles, a_right));
+                        addres.place(&AddText(a_styles.clone(), a_left));
+                        a.head = Some(AddText(a_styles, a_right));
                         b.next();
                     } else if bcount > avalue.char_len() {
                         addres.place(&a.next().unwrap());
@@ -645,8 +645,8 @@ fn compose_add_del_inner<S: Schema>(
                 }
             },
             DelWithGroup(span) => match a.get_head() {
-                AddChars(..) => {
-                    panic!("DelWithGroup by AddChars is ILLEGAL");
+                AddText(..) => {
+                    panic!("DelWithGroup by AddText is ILLEGAL");
                 }
                 AddStyles(..) => {
                     panic!("DelWithGroup by AddStyles is ILLEGAL");
@@ -679,8 +679,8 @@ fn compose_add_del_inner<S: Schema>(
             },
             DelGroup(span) => {
                 match a.get_head() {
-                    AddChars(..) => {
-                        panic!("DelGroup by AddChars is ILLEGAL");
+                    AddText(..) => {
+                        panic!("DelGroup by AddText is ILLEGAL");
                     }
                     AddStyles(..) => {
                         panic!("DelGroup by AddStyles is ILLEGAL");
@@ -755,10 +755,10 @@ fn compose_add_del_inner<S: Schema>(
               // }
               // DelMany(bcount) => {
               //     match a.get_head() {
-              //         AddChars(avalue) => {
+              //         AddText(avalue) => {
               //             let alen = avalue.chars().count();
               //             if bcount < alen {
-              //                 a.head = Some(AddChars(avalue.chars().skip(bcount).collect()));
+              //                 a.head = Some(AddText(avalue.chars().skip(bcount).collect()));
               //                 b.next();
               //             } else if bcount > alen {
               //                 a.next();
@@ -805,8 +805,8 @@ fn compose_add_del_inner<S: Schema>(
               // }
               // DelGroupAll => {
               //     match a.get_head() {
-              //         AddChars(avalue) => {
-              //             panic!("DelGroupAll by AddChars is ILLEGAL");
+              //         AddText(avalue) => {
+              //             panic!("DelGroupAll by AddText is ILLEGAL");
               //         }
               //         AddSkip(acount) => {
               //             delres.place(&b.next().unwrap());

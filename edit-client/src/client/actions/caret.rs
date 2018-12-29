@@ -100,7 +100,7 @@ pub fn caret_word_move(
                 walker.next_char();
                 loop {
                     match walker.doc().head() {
-                        Some(DocChars(_, ref text)) => {
+                        Some(DocText(_, ref text)) => {
                             if is_boundary_char(text.as_str().chars().next().unwrap()) {
                                 break;
                             } else {
@@ -124,7 +124,7 @@ pub fn caret_word_move(
                 walker.back_char();
                 loop {
                     match walker.doc().unhead() {
-                        Some(DocChars(_, ref text)) => {
+                        Some(DocText(_, ref text)) => {
                             if is_boundary_char(text.as_str().chars().rev().next().unwrap()) {
                                 break;
                             } else {

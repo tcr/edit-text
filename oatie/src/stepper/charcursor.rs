@@ -29,8 +29,8 @@ impl<S: Schema> CharCursor<S> {
         }
 
         CharCursor {
-            left_string: DocElement::DocChars(styles.clone(), left_string),
-            right_string: DocElement::DocChars(styles, right_string),
+            left_string: DocElement::DocText(styles.clone(), left_string),
+            right_string: DocElement::DocText(styles, right_string),
             index: 0,
             str_len: text.char_len(),
         }
@@ -49,21 +49,21 @@ impl<S: Schema> CharCursor<S> {
         }
 
         CharCursor {
-            left_string: DocElement::DocChars(styles.clone(), left_string),
-            right_string: DocElement::DocChars(styles, right_string),
+            left_string: DocElement::DocText(styles.clone(), left_string),
+            right_string: DocElement::DocText(styles, right_string),
             index: text.char_len(),
             str_len: text.char_len(),
         }
     }
 
     pub fn update_from_docstring(&mut self, text: &DocString, styles: S::CharsProperties) {
-        self.left_string = DocElement::DocChars(styles.clone(), text.clone());
-        self.right_string = DocElement::DocChars(styles, text.clone());
+        self.left_string = DocElement::DocText(styles.clone(), text.clone());
+        self.right_string = DocElement::DocText(styles, text.clone());
         self.index = text.char_len();
     }
 
     pub fn style<'a>(&'a self) -> &'a S::CharsProperties {
-        if let DocElement::DocChars(ref styles, _) = &self.left_string {
+        if let DocElement::DocText(ref styles, _) = &self.left_string {
             styles
         } else {
             unreachable!();
@@ -71,7 +71,7 @@ impl<S: Schema> CharCursor<S> {
     }
 
     pub fn left<'a>(&'a self) -> Option<&'a DocString> {
-        if let DocElement::DocChars(_, ref left_text) = &self.left_string {
+        if let DocElement::DocText(_, ref left_text) = &self.left_string {
             if unsafe { left_text.try_byte_range().unwrap().len() == 0 } {
                 None
             } else {
@@ -83,7 +83,7 @@ impl<S: Schema> CharCursor<S> {
     }
 
     pub fn right<'a>(&'a self) -> Option<&'a DocString> {
-        if let DocElement::DocChars(_, ref right_text) = &self.right_string {
+        if let DocElement::DocText(_, ref right_text) = &self.right_string {
             if unsafe { right_text.try_byte_range().unwrap().len() == 0 } {
                 None
             } else {
@@ -95,7 +95,7 @@ impl<S: Schema> CharCursor<S> {
     }
 
     pub fn left_element<'a>(&'a self) -> Option<&'a DocElement<S>> {
-        if let DocElement::DocChars(_, ref left_text) = &self.left_string {
+        if let DocElement::DocText(_, ref left_text) = &self.left_string {
             if unsafe { left_text.try_byte_range().unwrap().len() == 0 } {
                 None
             } else {
@@ -107,7 +107,7 @@ impl<S: Schema> CharCursor<S> {
     }
 
     pub fn right_element<'a>(&'a self) -> Option<&'a DocElement<S>> {
-        if let DocElement::DocChars(_, ref right_text) = &self.right_string {
+        if let DocElement::DocText(_, ref right_text) = &self.right_string {
             if unsafe { right_text.try_byte_range().unwrap().len() == 0 } {
                 None
             } else {
@@ -119,7 +119,7 @@ impl<S: Schema> CharCursor<S> {
     }
 
     fn left_text_mut<'a>(&'a mut self) -> &'a mut DocString {
-        if let DocElement::DocChars(_, ref mut left_text) = self.left_string {
+        if let DocElement::DocText(_, ref mut left_text) = self.left_string {
             left_text
         } else {
             unreachable!();
@@ -127,7 +127,7 @@ impl<S: Schema> CharCursor<S> {
     }
 
     fn right_text_mut<'a>(&'a mut self) -> &'a mut DocString {
-        if let DocElement::DocChars(_, ref mut right_text) = self.right_string {
+        if let DocElement::DocText(_, ref mut right_text) = self.right_string {
             right_text
         } else {
             unreachable!();

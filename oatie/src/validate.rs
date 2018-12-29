@@ -63,7 +63,7 @@ pub fn validate_doc_span<S: Schema>(ctx: &mut ValidateContext<S>, span: &DocSpan
                     );
                 }
             }
-            DocChars(ref _styles, ref text) => {
+            DocText(ref _styles, ref text) => {
                 ensure!(text.char_len() > 0, "Empty char string");
 
                 if let Some(block) = ctx.stack.last() {

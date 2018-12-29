@@ -152,7 +152,7 @@ pub mod v1 {
                 DocElement::DocGroup(attrs, span) => {
                     crate::doc::DocGroup(update_attrs(attrs)?, update_docspan(span)?)
                 }
-                DocElement::DocChars(string, styles) => crate::doc::DocChars(
+                DocElement::DocChars(string, styles) => crate::doc::DocText(
                     update_styles(styles)?,
                     crate::doc::DocString::from_string(string.0),
                 ),
@@ -167,7 +167,7 @@ pub mod v1 {
             output.push(match item {
                 AddElement::AddSkip(skip) => crate::doc::AddSkip(skip),
                 AddElement::AddWithGroup(span) => crate::doc::AddWithGroup(update_addspan(span)?),
-                AddElement::AddChars(string, styles) => crate::doc::AddChars(
+                AddElement::AddChars(string, styles) => crate::doc::AddText(
                     update_styles(styles)?,
                     crate::doc::DocString::from_string(string.0),
                 ),
@@ -188,7 +188,7 @@ pub mod v1 {
             output.push(match item {
                 DelElement::DelSkip(skip) => crate::doc::DelSkip(skip),
                 DelElement::DelWithGroup(span) => crate::doc::DelWithGroup(update_delspan(span)?),
-                DelElement::DelChars(skip) => crate::doc::DelChars(skip),
+                DelElement::DelChars(skip) => crate::doc::DelText(skip),
                 DelElement::DelGroup(span) => {
                     crate::doc::DelGroup(update_delspan(span)?)
                 }

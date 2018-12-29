@@ -6,17 +6,17 @@ use oatie::deserialize::v1;
 
 #[test]
 fn test_docserialize_roundtrip_ron() {
-    let start = doc_span![DocChars("birds snakes and aeroplanes")];
+    let start = doc_span![DocText("birds snakes and aeroplanes")];
     let res = ron::ser::to_string(&start).unwrap();
     println!("re {:?}", res);
     let res2: Vec<DocElement<RtfSchema>> = ron::de::from_str(&res).unwrap();
     println!("re {:?}", res2);
     assert_eq!(start, res2);
-    // assert_eq!(res, "[DocChars(\"birds snakes and aeroplanes\"),]");
+    // assert_eq!(res, "[DocText(\"birds snakes and aeroplanes\"),]");
     eprintln!();
 
     // TODO test link serialization
-    let start = doc_span![DocChars("birds snakes and aeroplanes", {
+    let start = doc_span![DocText("birds snakes and aeroplanes", {
         RtfStyle::Bold /*, Style::Link => Some("Wow".to_string()) */
     })];
     let res = ron::ser::to_string(&start).unwrap();
@@ -24,13 +24,13 @@ fn test_docserialize_roundtrip_ron() {
     let res2: Vec<DocElement<RtfSchema>> = ron::de::from_str(&res).unwrap();
     assert_eq!(start, res2);
     println!("re {:?}", res2);
-    // assert_eq!(res, "[DocChars((\"birds snakes and aeroplanes\",[Bold,],)),]");
+    // assert_eq!(res, "[DocText((\"birds snakes and aeroplanes\",[Bold,],)),]");
     eprintln!();
 }
 
 #[test]
 fn test_docserialize_roundtrip_json() {
-    let start = doc_span![DocChars("birds snakes and aeroplanes")];
+    let start = doc_span![DocText("birds snakes and aeroplanes")];
     let res = serde_json::to_string(&start).unwrap();
     println!("re.....: {:?}", res);
 
@@ -40,7 +40,7 @@ fn test_docserialize_roundtrip_json() {
     eprintln!();
 
     // TODO test link serialization
-    let start = doc_span![DocChars("birds snakes and aeroplanes", {
+    let start = doc_span![DocText("birds snakes and aeroplanes", {
         RtfStyle::Bold /*, Style::Link => Some("Wow".to_string()) */
     })];
     let res = serde_json::to_string(&start).unwrap();

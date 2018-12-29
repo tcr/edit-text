@@ -268,7 +268,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                                     eprintln!("Error decoding document: {:?}", err);
                                     Doc(doc_span![
                                         DocGroup(Attrs::Code, [
-                                            DocChars("Error decoding document.", {RtfStyle::Normie}),
+                                            DocText("Error decoding document.", {RtfStyle::Normie}),
                                         ]),
                                     ])
                                 }
@@ -282,7 +282,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                                     eprintln!("Error decoding document: {:?}", err);
                                     Doc(doc_span![
                                         DocGroup(Attrs::Code, [
-                                            DocChars("Error decoding document.", {RtfStyle::Normie}),
+                                            DocText("Error decoding document.", {RtfStyle::Normie}),
                                         ]),
                                     ])
                                 }
@@ -411,7 +411,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 let body: String = doc_to_markdown(
                     &get_or_create_page_graphql(
                         &id,
-                        &Doc(doc_span![DocGroup(Attrs::Header(1), [DocChars(&id)])]),
+                        &Doc(doc_span![DocGroup(Attrs::Header(1), [DocText(&id)])]),
                     ).expect("Received malformed content from db, aborting").0
                 ).unwrap();
 
@@ -442,7 +442,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                     &get_or_create_page_graphql(
                         &id,
                         &Doc(doc_span![DocGroup(Attrs::Header(1), [
-                            DocChars(&id, { RtfStyle::Normie }),
+                            DocText(&id, { RtfStyle::Normie }),
                         ])]),
                     ).unwrap().0
                 );

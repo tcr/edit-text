@@ -103,7 +103,7 @@ graphql_object!(Mutations: Ctx |&self| {
                         eprintln!("Error decoding document: {:?}", err);
                         Doc(doc_span![
                             DocGroup(Attrs::Code, [
-                                DocChars("Error decoding document.", {RtfStyle::Normie}),
+                                DocText("Error decoding document.", {RtfStyle::Normie}),
                             ]),
                         ])
                     }

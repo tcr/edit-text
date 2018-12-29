@@ -27,7 +27,7 @@ struct Cli {
 #[derive(Debug, Serialize)]
 enum DocElem {
     DocGroup(::std::collections::HashMap<String, String>, Vec<DocElem>),
-    DocChars(String),
+    DocText(String),
 }
 
 main!(|args: Cli| {
@@ -35,7 +35,7 @@ main!(|args: Cli| {
 
     let d = DocElem::DocGroup(hashmap!{
         "alpha".into() => "beta".into(),
-    }, vec![DocElem::DocChars("hi\ntim".to_string())]);
+    }, vec![DocElem::DocText("hi\ntim".to_string())]);
 
     println!("ron: {}", to_string(&d).unwrap());
 });

@@ -173,9 +173,9 @@ impl<'a, S: Schema> RecordingDocMutator<'a, S> {
                 // Partial string.
                 let partial = self.stepper.char_cursor_expect().right().expect("hey now");
                 // console_log!("🏟 {:?}", partial);
-                if let Some(&DocChars(ref styles, ref _text)) = self.stepper.head_raw() {
+                if let Some(&DocText(ref styles, ref _text)) = self.stepper.head_raw() {
                     self.bc.place(Bytecode::InsertDocString(partial.clone(), json!(styles)));
-                    self.writer.place(&DocChars(styles.clone(), partial.clone()));
+                    self.writer.place(&DocText(styles.clone(), partial.clone()));
                 } else {
                     unreachable!();
                 }
@@ -282,7 +282,7 @@ impl<'a, S: Schema> DocMutator<S> for RecordingDocMutator<'a, S> {
 
         // No-op stepper
 
-        self.writer.place(&DocChars(styles, docstring));
+        self.writer.place(&DocText(styles, docstring));
     }
 
     fn UnwrapSelf(&mut self) {
@@ -327,7 +327,7 @@ impl<'a, S: Schema> DocMutator<S> for RecordingDocMutator<'a, S> {
                 if let Some(left) = cursor.left() {
                     if left.char_len() == count {
                         self.bc.place(Bytecode::DeleteElements(1)); // It's over, delete time
-                        if let Some(&DocChars(ref styles, _)) = self.stepper.head_raw() {
+                        if let Some(&DocText(ref styles, _)) = self.stepper.head_raw() {
                             self.InsertDocString(left.clone(), styles.to_owned()); // Insert the left part of string
                         } else {
                             unreachable!();
@@ -342,7 +342,7 @@ impl<'a, S: Schema> DocMutator<S> for RecordingDocMutator<'a, S> {
                             text.seek_start_forward(count);
                         }
                         // console_log!("\n\n\nPARTIAL ADVANEMENET {:?}\n\n\n", text);
-                        if let Some(&DocChars(ref styles, _)) = self.stepper.head_raw() {
+                        if let Some(&DocText(ref styles, _)) = self.stepper.head_raw() {
                             self.InsertDocString(text, styles.clone());
                         } else {
                             unreachable!();

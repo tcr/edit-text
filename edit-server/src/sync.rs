@@ -45,7 +45,7 @@ const PAGE_TITLE_LEN: usize = 100; // 100 chars is the limit
 pub fn default_new_doc(id: &str) -> Doc<RtfSchema> {
     Doc(doc_span![
         DocGroup(Attrs::Header(1), [
-            DocChars(id),
+            DocText(id),
         ])
     ])
 }

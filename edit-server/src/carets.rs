@@ -16,7 +16,7 @@ fn remove_carets_span(span: &DocSpan<RtfSchema>) -> Result<DocSpan<RtfSchema>, E
                     ret.place(&DocGroup(attrs.clone(), res));
                 }
             }
-            DocChars(..) => {
+            DocText(..) => {
                 ret.place(elem);
             }
         }
@@ -52,7 +52,7 @@ fn remove_carets_op_span(
                 remove_carets_op_span(writer, span, filter)?;
                 writer.exit();
             }
-            DocChars(_, ref text) => {
+            DocText(_, ref text) => {
                 writer.place(&DelSkip(text.char_len()));
             }
         }

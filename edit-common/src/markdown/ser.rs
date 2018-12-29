@@ -42,7 +42,7 @@ impl<'a, 'b> Iterator for DocToMarkdown<'a, 'b> {
                         let mut out = String::new();
                         for child in body {
                             match *child {
-                                DocChars(_, ref text) => {
+                                DocText(_, ref text) => {
                                     out.push_str(text.as_str());
                                 }
                                 _ => {}
@@ -75,7 +75,7 @@ impl<'a, 'b> Iterator for DocToMarkdown<'a, 'b> {
                 self.doc_stepper.enter();
                 res
             }
-            Some(DocChars(ref styles, ref text)) => {
+            Some(DocText(ref styles, ref text)) => {
                 // Styling.
                 let text_event = Event::Text(text.to_string().replace("\n", "  \n").into());
                 let res = if styles.contains(&RtfStyle::Bold) {

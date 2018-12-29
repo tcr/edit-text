@@ -3,16 +3,16 @@
 #[macro_export]
 macro_rules! doc_span {
     ( @str_literal $e:expr ) => { $e };
-    ( @kind DocChars $b:expr $(,)* ) => {
-        DocChars($crate::rtf::StyleSet::new(), $crate::doc::DocString::from_str($b))
+    ( @kind DocText $b:expr $(,)* ) => {
+        DocText($crate::rtf::StyleSet::new(), $crate::doc::DocString::from_str($b))
     };
-    ( @kind DocChars $b:expr , { $( $e:expr ),+  $(,)* } $(,)* ) => {
+    ( @kind DocText $b:expr , { $( $e:expr ),+  $(,)* } $(,)* ) => {
         {
             let mut map = ::std::collections::HashSet::new();
             $(
                 map.insert($e);
             )*
-            DocChars($crate::rtf::StyleSet::from(map), $crate::doc::DocString::from_str($b))
+            DocText($crate::rtf::StyleSet::from(map), $crate::doc::DocString::from_str($b))
         }
     };
     ( @kind DocGroup $b:expr , [ $( $v:tt )* ] $(,)* ) => {
@@ -36,17 +36,17 @@ macro_rules! add_span {
     ( @kind AddSkip $b:expr $(,)* ) => {
         AddSkip($b)
     };
-    ( @kind AddChars $b:expr , { $( $e:expr => $c:expr ),+  $(,)* } $(,)* ) => {
+    ( @kind AddText $b:expr , { $( $e:expr => $c:expr ),+  $(,)* } $(,)* ) => {
         {
             let mut map = ::std::collections::HashSet();
             $(
                 map.insert($e, $c);
             )*
-            AddChars($crate::rtf::StyleSet::from(map), $crate::doc::DocString::from_str($b))
+            AddText($crate::rtf::StyleSet::from(map), $crate::doc::DocString::from_str($b))
         }
     };
-    ( @kind AddChars $b:expr $(,)* ) => {
-        AddChars($crate::rtf::StyleSet::new(), $crate::doc::DocString::from_str($b))
+    ( @kind AddText $b:expr $(,)* ) => {
+        AddText($crate::rtf::StyleSet::new(), $crate::doc::DocString::from_str($b))
     };
     ( @kind AddWithGroup [ $( $v:tt )* ] $(,)* ) => {
         AddWithGroup(add_span![ $( $v )* ])
@@ -72,8 +72,8 @@ macro_rules! del_span {
     ( @kind DelSkip $b:expr $(,)* ) => {
         DelSkip($b)
     };
-    ( @kind DelChars $b:expr $(,)* ) => {
-        DelChars($b.to_owned())
+    ( @kind DelText $b:expr $(,)* ) => {
+        DelText($b.to_owned())
     };
     ( @kind DelWithGroup [ $( $v:tt )* ] $(,)* ) => {
         DelWithGroup(del_span![ $( $v )* ])

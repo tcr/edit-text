@@ -2,7 +2,7 @@ use super::doc::*;
 
 pub(crate) fn can_element_join<S: Schema>(left: &DocElement<S>, right: &DocElement<S>) -> bool {
     match (left, right) {
-        (&DocChars(ref _prefix, ref prefix_styles), &DocChars(ref _suffix, ref suffix_styles)) => {
+        (&DocText(ref _prefix, ref prefix_styles), &DocText(ref _suffix, ref suffix_styles)) => {
             if prefix_styles == suffix_styles {
                 return true;
             }
@@ -14,7 +14,7 @@ pub(crate) fn can_element_join<S: Schema>(left: &DocElement<S>, right: &DocEleme
 
 pub(crate) fn try_element_join<S: Schema>(left: &mut DocElement<S>, right: &DocElement<S>) -> bool {
     match (left, right) {
-        (&mut DocChars(ref prefix_styles, ref mut prefix), &DocChars(ref suffix_styles, ref suffix)) => {
+        (&mut DocText(ref prefix_styles, ref mut prefix), &DocText(ref suffix_styles, ref suffix)) => {
             if prefix_styles == suffix_styles {
                 prefix.push_str(suffix.as_str());
                 return true;
@@ -34,7 +34,7 @@ pub trait DocPlaceable<S: Schema> {
 impl<S: Schema> DocPlaceable<S> for DocSpan<S> {
     fn place(&mut self, elem: &DocElement<S>) {
         match *elem {
-            DocChars(ref _styles, ref text) => {
+            DocText(ref _styles, ref text) => {
                 assert!(text.char_len() > 0);
 
                 // If the most recent element is text, we may want to just
@@ -64,7 +64,7 @@ impl<S: Schema> DocPlaceable<S> for DocSpan<S> {
         let mut ret = 0;
         for item in self {
             ret += match *item {
-                DocChars(_, ref value) => value.char_len(),
+                DocText(_, ref value) => value.char_len(),
                 DocGroup(..) => 1,
             };
         }
@@ -92,12 +92,12 @@ impl<S: Schema> DelPlaceable<S> for DelSpan<S> {
 
     fn place(&mut self, elem: &DelElement<S>) {
         match *elem {
-            DelChars(count) => {
+            DelText(count) => {
                 assert!(count > 0);
-                if let Some(&mut DelChars(ref mut value)) = self.last_mut() {
+                if let Some(&mut DelText(ref mut value)) = self.last_mut() {
                     *value += count;
                 } else {
-                    self.push(DelChars(count));
+                    self.push(DelText(count));
                 }
             }
             DelStyles(count, ref styles) => {
@@ -136,7 +136,7 @@ impl<S: Schema> DelPlaceable<S> for DelSpan<S> {
         let mut ret = 0;
         for item in self {
             ret += match *item {
-                DelSkip(len) | DelChars(len) | DelStyles(len, _) => len,
+                DelSkip(len) | DelText(len) | DelStyles(len, _) => len,
                 DelGroup(..) | DelWithGroup(..) => 1,
                 // DelMany(len) => len,
                 // DelObject | DelGroupAll  => 1,
@@ -150,7 +150,7 @@ impl<S: Schema> DelPlaceable<S> for DelSpan<S> {
         for item in self {
             ret += match *item {
                 DelSkip(len) | DelStyles(len, _) => len,
-                DelChars(..) => 0,
+                DelText(..) => 0,
                 DelWithGroup(..) => 1,
                 DelGroup(ref span) => span.skip_post_len(),
                 // DelObject | DelMany(..) | DelGroupAll => 0,
@@ -196,12 +196,12 @@ impl<S: Schema> AddPlaceable<S> for AddSpan<S> {
 
     fn place(&mut self, elem: &AddElement<S>) {
         match *elem {
-            AddChars(ref styles, ref text) => {
+            AddText(ref styles, ref text) => {
                 assert!(text.char_len() > 0);
 
                 // If the most recent element is text, we may want to just
                 // append our text to it to cut down on new elements.
-                if let Some(&mut AddChars(ref prefix_styles, ref mut prefix)) = self.last_mut() {
+                if let Some(&mut AddText(ref prefix_styles, ref mut prefix)) = self.last_mut() {
                     // Check if they're equal and we can push it directly.
                     if styles == prefix_styles {
                         prefix.push_str(text.as_str());
@@ -210,7 +210,7 @@ impl<S: Schema> AddPlaceable<S> for AddSpan<S> {
                 }
 
                 // Otherwise, push the new entry
-                self.push(AddChars(styles.clone(), text.to_owned()));
+                self.push(AddText(styles.clone(), text.to_owned()));
             }
             AddStyles(count, ref styles) => {
                 assert!(count > 0);
@@ -244,7 +244,7 @@ impl<S: Schema> AddPlaceable<S> for AddSpan<S> {
         for item in self {
             ret += match *item {
                 AddSkip(len) | AddStyles(len, _) => len,
-                AddChars(ref _chars, _) => 0,
+                AddText(ref _chars, _) => 0,
                 AddGroup(_, ref span) => span.skip_pre_len(),
                 AddWithGroup(..) => 1,
             };
@@ -257,7 +257,7 @@ impl<S: Schema> AddPlaceable<S> for AddSpan<S> {
         for item in self {
             ret += match *item {
                 AddSkip(len) | AddStyles(len, _) => len,
-                AddChars(_, ref chars) => chars.char_len(),
+                AddText(_, ref chars) => chars.char_len(),
                 AddGroup(..) | AddWithGroup(..) => 1,
             };
         }

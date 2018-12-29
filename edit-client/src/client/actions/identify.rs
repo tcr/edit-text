@@ -41,7 +41,7 @@ pub fn identify_styles(ctx: &ActionContext) -> Result<StyleSet, Error> {
                         break;
                     }
                 }
-                Some(DocChars(ref styles, _)) => {
+                Some(DocText(ref styles, _)) => {
                     return Ok(styles.clone());
                 }
                 _ => break,
@@ -61,7 +61,7 @@ pub fn identify_styles(ctx: &ActionContext) -> Result<StyleSet, Error> {
             Some(DocGroup(..)) => {
                 doc1.enter();
             }
-            Some(DocChars(ref styles, ref text)) => {
+            Some(DocText(ref styles, ref text)) => {
                 existing_styles.extend(styles.styles());
                 doc1.skip(text.char_len());
             }

@@ -19,13 +19,13 @@ pub fn add_string(ctx: ActionContext, input: &str) -> Result<ActionContext, Erro
             let mut styles = hashset!{ RtfStyle::Normie };
             let mut char_walker = walker.clone();
             char_walker.back_char();
-            if let Some(DocChars(ref prefix_styles, _)) = char_walker.doc().head() {
+            if let Some(DocText(ref prefix_styles, _)) = char_walker.doc().head() {
                 styles.extend(prefix_styles.styles());
             }
 
             // Insert new character.
             let mut writer = walker.to_writer();
-            let step = AddChars(StyleSet::from(styles), DocString::from_str(input));
+            let step = AddText(StyleSet::from(styles), DocString::from_str(input));
             writer.add.place(&step);
             ctx.apply(&writer.exit_result())
         })
@@ -258,7 +258,7 @@ fn delete_char_inner(mut walker: Walker<'_>) -> Result<Op<RtfSchema>, Error> {
     }
 
     // Check that we precede a character.
-    if let Some(DocChars(..)) = walker.doc().head() {
+    if let Some(DocText(..)) = walker.doc().head() {
         // fallthrough
     } else {
         unreachable!();
@@ -266,7 +266,7 @@ fn delete_char_inner(mut walker: Walker<'_>) -> Result<Op<RtfSchema>, Error> {
 
     // Delete the character we skipped over.
     let mut writer = walker.to_writer();
-    writer.del.place(&DelChars(1));
+    writer.del.place(&DelText(1));
     Ok(writer.exit_result())
 }
 
@@ -284,7 +284,7 @@ fn delete_selection(ctx: ActionContext) -> Result<(bool, ActionContext), Error> 
             // cursors is 0.
             // TODO: This is incredibly inefficient.
             //  1. Dont' recurse infinitely, do this in a loop.
-            //  2. Skip entire DocChars components instead of one character at a time.
+            //  2. Skip entire DocText components instead of one character at a time.
             Ok(
                 if delta != 0 {
                     // Get real weird with it.
