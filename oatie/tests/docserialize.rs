@@ -16,9 +16,9 @@ fn test_docserialize_roundtrip_ron() {
     eprintln!();
 
     // TODO test link serialization
-    let start = doc_span![DocText("birds snakes and aeroplanes", {
+    let start = doc_span![DocText({
         RtfStyle::Bold /*, Style::Link => Some("Wow".to_string()) */
-    })];
+    }, "birds snakes and aeroplanes")];
     let res = ron::ser::to_string(&start).unwrap();
     println!("re {:?}", res);
     let res2: Vec<DocElement<RtfSchema>> = ron::de::from_str(&res).unwrap();
@@ -40,9 +40,9 @@ fn test_docserialize_roundtrip_json() {
     eprintln!();
 
     // TODO test link serialization
-    let start = doc_span![DocText("birds snakes and aeroplanes", {
+    let start = doc_span![DocText({
         RtfStyle::Bold /*, Style::Link => Some("Wow".to_string()) */
-    })];
+    }, "birds snakes and aeroplanes")];
     let res = serde_json::to_string(&start).unwrap();
     println!("re {:?}", res);
     let res2: DocSpan<RtfSchema> = serde_json::from_str(&res).unwrap();

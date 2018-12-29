@@ -6,7 +6,7 @@ macro_rules! doc_span {
     ( @kind DocText $b:expr $(,)* ) => {
         DocText($crate::rtf::StyleSet::new(), $crate::doc::DocString::from_str($b))
     };
-    ( @kind DocText $b:expr , { $( $e:expr ),+  $(,)* } $(,)* ) => {
+    ( @kind DocText { $( $e:expr ),+  $(,)* } , $b:expr $(,)* ) => {
         {
             let mut map = ::std::collections::HashSet::new();
             $(
@@ -36,7 +36,7 @@ macro_rules! add_span {
     ( @kind AddSkip $b:expr $(,)* ) => {
         AddSkip($b)
     };
-    ( @kind AddText $b:expr , { $( $e:expr => $c:expr ),+  $(,)* } $(,)* ) => {
+    ( @kind AddText { $( $e:expr => $c:expr ),+ , $b:expr  $(,)* } $(,)* ) => {
         {
             let mut map = ::std::collections::HashSet();
             $(
