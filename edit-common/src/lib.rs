@@ -16,11 +16,8 @@ pub mod simple_ws;
 use serde_json;
 use htmlescape::encode_minimal;
 use oatie::doc::*;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap};
 use oatie::rtf::*;
-
-type CaretIndex = HashMap<String, usize>;
-type SelectionActive = HashSet<String>;
 
 fn html_start_tag(tag: &str, attrs: HashMap<String, String>) -> String {
     format!("<{} {}>", tag, attrs.into_iter().map(|(k, v)| {
@@ -28,41 +25,9 @@ fn html_start_tag(tag: &str, attrs: HashMap<String, String>) -> String {
     }).collect::<Vec<String>>().join(" "))
 }
 
-// TODO move this to a different module
 /// Converts a DocSpan to an HTML string.
-pub fn doc_as_html(doc: &DocSpan<RtfSchema>) -> String {
-    // Count all carets in tree.
-    let mut caret_index: CaretIndex = HashMap::new();
-    let mut stepper = ::oatie::stepper::DocStepper::new(doc);
-    loop {
-        match stepper.head() {
-            Some(DocGroup(attrs, _)) => {
-                if let Attrs::Caret { ref client_id, .. } = attrs {
-                    *caret_index.entry(client_id.to_owned()).or_insert(0) += 1;
-                }
-                stepper.enter();
-            }
-            Some(DocText(_, ref text)) => {
-                stepper.skip(text.char_len());
-            }
-            None => {
-                if stepper.is_done() {
-                    break;
-                } else {
-                    stepper.exit();
-                }
-            }
-        }
-    }
-
-    let mut remote_select_active = hashset![];
-    doc_as_html_inner(doc, &caret_index, &mut remote_select_active)
-}
-
-pub fn doc_as_html_inner(
+pub fn doc_as_html(
     doc: &DocSpan<RtfSchema>,
-    caret_index: &CaretIndex,
-    remote_select_active: &mut SelectionActive,
 ) -> String {
     use oatie::doc::*;
 
@@ -90,23 +55,11 @@ pub fn doc_as_html_inner(
                     },
                 });
 
-                if let Attrs::Caret { client_id, .. } = attrs {
-                    if caret_index[client_id] == 2 {
-                        // Toggle this ID.
-                        if !remote_select_active.insert(client_id.clone()) {
-                            remote_select_active.remove(&client_id.clone());
-                        }
-                    }
-                }
-
-                out.push_str(&doc_as_html_inner(span, caret_index, remote_select_active));
+                out.push_str(&doc_as_html(span));
                 out.push_str(r"</div>");
             }
             &DocText(ref styles, ref text) => {
-                let mut classes = styles.styles();
-                if !remote_select_active.is_empty() {
-                    classes.insert(RtfStyle::Selected);
-                }
+                let classes = styles.styles();
 
                 out.push_str(&format!(
                     r#"<span class="{}" {}>"#,

@@ -130,9 +130,10 @@ pub mod v1 {
         let mut set = std::collections::HashSet::new();
         for style in styles {
             match style {
-                Style::Normie => {
-                    set.insert(crate::rtf::RtfStyle::Normie);
-                }
+                // Normie is no longer used; it was a sentinel that styles were
+                // working by visually rendering non-Normie styled text in
+                // a bizarre and noticeable way.
+                Style::Normie => {}
                 Style::Bold => {
                     set.insert(crate::rtf::RtfStyle::Bold);
                 }

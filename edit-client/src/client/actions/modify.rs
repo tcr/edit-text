@@ -16,7 +16,7 @@ pub fn add_string(ctx: ActionContext, input: &str) -> Result<ActionContext, Erro
             let walker = ctx.get_walker(Pos::Start)?;
 
             // Clone styles of hte previous text node, or use default styles.
-            let mut styles = hashset!{ RtfStyle::Normie };
+            let mut styles = hashset!{};
             let mut char_walker = walker.clone();
             char_walker.back_char();
             if let Some(DocText(ref prefix_styles, _)) = char_walker.doc().head() {

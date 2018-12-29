@@ -77,7 +77,7 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                 Html(html) => {
                     self.body.begin();
                     self.body.place(&DocText(
-                        StyleSet::from(hashset!{ RtfStyle::Normie }),
+                        StyleSet::new(),
                         DocString::from_str(&html),
                     ));
                     self.body.close(Attrs::Html);
@@ -117,9 +117,8 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
 
             // Spans
             Tag::Link(dest, _title) => {
-                // FIXME
+                // TODO link styles
                 // self.styles.insert(Style::Link, Some(dest.to_string()));
-                self.styles.insert(RtfStyle::Link);
             }
             Tag::Strong => {
                 self.styles.insert(RtfStyle::Bold);
@@ -170,7 +169,8 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
 
             // Spans
             Tag::Link(..) => {
-                self.styles.remove(&RtfStyle::Link);
+                // TODO add link styles
+                // self.styles.remove(&RtfStyle::Link);
             }
             Tag::Strong => {
                 self.styles.remove(&RtfStyle::Bold);
@@ -198,7 +198,7 @@ pub fn markdown_to_doc(input: &str) -> Result<DocSpan<RtfSchema>, Error> {
         let mut ctx = Ctx {
             iter: parser,
             body: &mut doc_writer,
-            styles: StyleSet::from(hashset!{ RtfStyle::Normie }),
+            styles: StyleSet::new(),
             bare_text: true,
         };
         ctx.run();

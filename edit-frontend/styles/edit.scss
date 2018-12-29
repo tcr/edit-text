@@ -447,17 +447,6 @@ body.theme-column {
         color: white;
     }
 
-    // fancy font
-    span:not(.Normie) {
-        color: yellow;
-        -webkit-text-stroke: 3px #f00;
-        paint-order: stroke fill;
-        -webkit-text-fill-color: yellow;
-        text-shadow:
-            2px 2px 0 #000,
-            3px 3px 0 #000;
-    }
-
     // for debugging
     span + span {
         // outline: thin solid #32a1ce;

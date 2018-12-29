@@ -268,7 +268,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                                     eprintln!("Error decoding document: {:?}", err);
                                     Doc(doc_span![
                                         DocGroup(Attrs::Code, [
-                                            DocText({RtfStyle::Normie}, "Error decoding document."),
+                                            DocText("Error decoding document."),
                                         ]),
                                     ])
                                 }
@@ -282,7 +282,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                                     eprintln!("Error decoding document: {:?}", err);
                                     Doc(doc_span![
                                         DocGroup(Attrs::Code, [
-                                            DocText({RtfStyle::Normie}, "Error decoding document."),
+                                            DocText("Error decoding document."),
                                         ]),
                                     ])
                                 }
@@ -442,7 +442,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                     &get_or_create_page_graphql(
                         &id,
                         &Doc(doc_span![DocGroup(Attrs::Header(1), [
-                            DocText({ RtfStyle::Normie }, &id),
+                            DocText(&id),
                         ])]),
                     ).unwrap().0
                 );

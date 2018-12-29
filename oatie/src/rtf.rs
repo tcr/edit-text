@@ -23,11 +23,8 @@ pub enum Attrs {
 #[repr(u8)]
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Hash, Clone)]
 pub enum RtfStyle {
-    Normie,   // Sentinel (if this isn't present on a DocString, something went wrong somewhere)
-    Selected, // Never used in server, added on client to show selected text
     Bold,
     Italic,
-    Link,     // Needs attached link data
 }
 
 // impl Hash for RtfStyle {
