@@ -28,7 +28,7 @@ type DocSpan = Vec<DocElement>;
 type Attrs = HashMap<String, String>;
 
 enum DocElement {
-    DocChars(DocString),
+    DocText(DocString),
     DocGroup(Attrs, DocSpan),
 }
 ```

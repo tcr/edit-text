@@ -1,8 +1,8 @@
 use super::doc::*;
 
-pub(crate) fn can_element_join(left: &DocElement, right: &DocElement) -> bool {
+pub(crate) fn can_element_join<S: Schema>(left: &DocElement<S>, right: &DocElement<S>) -> bool {
     match (left, right) {
-        (&DocChars(ref prefix, ref prefix_styles), &DocChars(ref suffix, ref suffix_styles)) => {
+        (&DocText(ref _prefix, ref prefix_styles), &DocText(ref _suffix, ref suffix_styles)) => {
             if prefix_styles == suffix_styles {
                 return true;
             }
@@ -12,10 +12,10 @@ pub(crate) fn can_element_join(left: &DocElement, right: &DocElement) -> bool {
     false
 }
 
-pub(crate) fn try_element_join(left: &mut DocElement, right: &DocElement) -> bool {
+pub(crate) fn try_element_join<S: Schema>(left: &mut DocElement<S>, right: &DocElement<S>) -> bool {
     match (left, right) {
-        (&mut DocChars(ref mut prefix, ref prefix_styles), &DocChars(ref suffix, ref suffix_styles)) => {
-            if prefix_styles.styles() == suffix_styles.styles() {
+        (&mut DocText(ref prefix_styles, ref mut prefix), &DocText(ref suffix_styles, ref suffix)) => {
+            if prefix_styles == suffix_styles {
                 prefix.push_str(suffix.as_str());
                 return true;
             }
@@ -25,16 +25,16 @@ pub(crate) fn try_element_join(left: &mut DocElement, right: &DocElement) -> boo
     false
 }
 
-pub trait DocPlaceable {
+pub trait DocPlaceable<S: Schema> {
     fn skip_len(&self) -> usize;
-    fn place_all(&mut self, all: &[DocElement]);
-    fn place(&mut self, value: &DocElement);
+    fn place_all(&mut self, all: &[DocElement<S>]);
+    fn place(&mut self, value: &DocElement<S>);
 }
 
-impl DocPlaceable for DocSpan {
-    fn place(&mut self, elem: &DocElement) {
+impl<S: Schema> DocPlaceable<S> for DocSpan<S> {
+    fn place(&mut self, elem: &DocElement<S>) {
         match *elem {
-            DocChars(ref text, ref _styles) => {
+            DocText(ref _styles, ref text) => {
                 assert!(text.char_len() > 0);
 
                 // If the most recent element is text, we may want to just
@@ -43,11 +43,6 @@ impl DocPlaceable for DocSpan {
                     if try_element_join(element, elem) {
                         return;
                     }
-                    // // Check if they're equal and we can push it directly.
-                    // if prefix.styles() == text.styles() {
-                    //     prefix.push_str(text.as_str());
-                    //     return;
-                    // }
                 }
 
                 // Otherwise, push the new entry
@@ -59,7 +54,7 @@ impl DocPlaceable for DocSpan {
         }
     }
 
-    fn place_all(&mut self, all: &[DocElement]) {
+    fn place_all(&mut self, all: &[DocElement<S>]) {
         for i in all {
             self.place(i);
         }
@@ -69,7 +64,7 @@ impl DocPlaceable for DocSpan {
         let mut ret = 0;
         for item in self {
             ret += match *item {
-                DocChars(ref value, _) => value.char_len(),
+                DocText(_, ref value) => value.char_len(),
                 DocGroup(..) => 1,
             };
         }
@@ -77,9 +72,9 @@ impl DocPlaceable for DocSpan {
     }
 }
 
-pub trait DelPlaceable {
-    fn place_all(&mut self, all: &[DelElement]);
-    fn place(&mut self, value: &DelElement);
+pub trait DelPlaceable<S: Schema> {
+    fn place_all(&mut self, all: &[DelElement<S>]);
+    fn place(&mut self, value: &DelElement<S>);
     fn skip_pre_len(&self) -> usize;
     fn skip_post_len(&self) -> usize;
 
@@ -88,21 +83,21 @@ pub trait DelPlaceable {
     fn is_continuous_skip(&self) -> bool;
 }
 
-impl DelPlaceable for DelSpan {
-    fn place_all(&mut self, all: &[DelElement]) {
+impl<S: Schema> DelPlaceable<S> for DelSpan<S> {
+    fn place_all(&mut self, all: &[DelElement<S>]) {
         for i in all {
             self.place(i);
         }
     }
 
-    fn place(&mut self, elem: &DelElement) {
+    fn place(&mut self, elem: &DelElement<S>) {
         match *elem {
-            DelChars(count) => {
+            DelText(count) => {
                 assert!(count > 0);
-                if let Some(&mut DelChars(ref mut value)) = self.last_mut() {
+                if let Some(&mut DelText(ref mut value)) = self.last_mut() {
                     *value += count;
                 } else {
-                    self.push(DelChars(count));
+                    self.push(DelText(count));
                 }
             }
             DelStyles(count, ref styles) => {
@@ -141,7 +136,7 @@ impl DelPlaceable for DelSpan {
         let mut ret = 0;
         for item in self {
             ret += match *item {
-                DelSkip(len) | DelChars(len) | DelStyles(len, _) => len,
+                DelSkip(len) | DelText(len) | DelStyles(len, _) => len,
                 DelGroup(..) | DelWithGroup(..) => 1,
                 // DelMany(len) => len,
                 // DelObject | DelGroupAll  => 1,
@@ -155,7 +150,7 @@ impl DelPlaceable for DelSpan {
         for item in self {
             ret += match *item {
                 DelSkip(len) | DelStyles(len, _) => len,
-                DelChars(..) => 0,
+                DelText(..) => 0,
                 DelWithGroup(..) => 1,
                 DelGroup(ref span) => span.skip_post_len(),
                 // DelObject | DelMany(..) | DelGroupAll => 0,
@@ -181,9 +176,9 @@ impl DelPlaceable for DelSpan {
     }
 }
 
-pub trait AddPlaceable {
-    fn place_all(&mut self, all: &[AddElement]);
-    fn place(&mut self, value: &AddElement);
+pub trait AddPlaceable<S: Schema> {
+    fn place_all(&mut self, all: &[AddElement<S>]);
+    fn place(&mut self, value: &AddElement<S>);
     fn skip_pre_len(&self) -> usize;
     fn skip_post_len(&self) -> usize;
 
@@ -192,21 +187,21 @@ pub trait AddPlaceable {
     fn is_continuous_skip(&self) -> bool;
 }
 
-impl AddPlaceable for AddSpan {
-    fn place_all(&mut self, all: &[AddElement]) {
+impl<S: Schema> AddPlaceable<S> for AddSpan<S> {
+    fn place_all(&mut self, all: &[AddElement<S>]) {
         for i in all {
             self.place(i);
         }
     }
 
-    fn place(&mut self, elem: &AddElement) {
+    fn place(&mut self, elem: &AddElement<S>) {
         match *elem {
-            AddChars(ref text, ref styles) => {
+            AddText(ref styles, ref text) => {
                 assert!(text.char_len() > 0);
 
                 // If the most recent element is text, we may want to just
                 // append our text to it to cut down on new elements.
-                if let Some(&mut AddChars(ref mut prefix, ref prefix_styles)) = self.last_mut() {
+                if let Some(&mut AddText(ref prefix_styles, ref mut prefix)) = self.last_mut() {
                     // Check if they're equal and we can push it directly.
                     if styles == prefix_styles {
                         prefix.push_str(text.as_str());
@@ -215,7 +210,7 @@ impl AddPlaceable for AddSpan {
                 }
 
                 // Otherwise, push the new entry
-                self.push(AddChars(text.to_owned(), styles.clone()));
+                self.push(AddText(styles.clone(), text.to_owned()));
             }
             AddStyles(count, ref styles) => {
                 assert!(count > 0);
@@ -249,7 +244,7 @@ impl AddPlaceable for AddSpan {
         for item in self {
             ret += match *item {
                 AddSkip(len) | AddStyles(len, _) => len,
-                AddChars(ref _chars, _) => 0,
+                AddText(ref _chars, _) => 0,
                 AddGroup(_, ref span) => span.skip_pre_len(),
                 AddWithGroup(..) => 1,
             };
@@ -262,7 +257,7 @@ impl AddPlaceable for AddSpan {
         for item in self {
             ret += match *item {
                 AddSkip(len) | AddStyles(len, _) => len,
-                AddChars(ref chars, _) => chars.char_len(),
+                AddText(_, ref chars) => chars.char_len(),
                 AddGroup(..) | AddWithGroup(..) => 1,
             };
         }

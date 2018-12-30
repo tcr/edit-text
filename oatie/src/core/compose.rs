@@ -4,7 +4,11 @@ use super::doc::*;
 use std::cmp;
 use crate::stepper::*;
 
-fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepper) {
+fn compose_del_del_inner<S: Schema>(
+    res: &mut DelSpan<S>,
+    a: &mut DelStepper<S>,
+    b: &mut DelStepper<S>,
+) {
     while !a.is_done() && !b.is_done() {
         match a.get_head() {
             DelSkip(acount) => {
@@ -31,13 +35,13 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
                         }
                         res.place(&b.next().unwrap());
                     }
-                    Some(DelChars(bcount)) => {
-                        res.place(&DelChars(cmp::min(acount, bcount)));
+                    Some(DelText(bcount)) => {
+                        res.place(&DelText(cmp::min(acount, bcount)));
                         if acount > bcount {
                             a.head = Some(DelSkip(acount - bcount));
                             b.next();
                         } else if acount < bcount {
-                            b.head = Some(DelChars(bcount - acount));
+                            b.head = Some(DelText(bcount - acount));
                             a.next();
                         } else {
                             a.next();
@@ -45,7 +49,7 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
                         }
                     }
                     Some(DelStyles(b_count, b_styles)) => {
-                        res.place(&DelChars(cmp::min(acount, b_count)));
+                        res.place(&DelText(cmp::min(acount, b_count)));
                         if acount > b_count {
                             a.head = Some(DelSkip(acount - b_count));
                             b.next();
@@ -85,7 +89,7 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
             DelStyles(a_count, a_styles) => match b.head.clone() {
                 Some(DelStyles(b_count, b_styles)) => {
                     let mut both_styles = b_styles.clone();
-                    both_styles.extend(a_styles.clone());
+                    both_styles.extend(&a_styles);
                     res.push(DelStyles(cmp::min(a_count, b_count), both_styles));
                     if a_count > b_count {
                         b.head = Some(DelStyles(a_count - b_count, a_styles));
@@ -114,13 +118,13 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
                 Some(DelWithGroup(..)) | Some(DelGroup(..)) => {
                     unreachable!();
                 }
-                Some(DelChars(b_count)) => {
-                    res.place(&DelChars(cmp::min(a_count, b_count)));
+                Some(DelText(b_count)) => {
+                    res.place(&DelText(cmp::min(a_count, b_count)));
                     if a_count > b_count {
                         a.head = Some(DelStyles(a_count - b_count, a_styles));
                         b.next();
                     } else if a_count < b_count {
-                        b.head = Some(DelChars(b_count - a_count));
+                        b.head = Some(DelText(b_count - a_count));
                         a.next();
                     } else {
                         a.next();
@@ -154,8 +158,8 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
                         a.next();
                         b.next();
                     }
-                    Some(DelChars(..)) => {
-                        panic!("DelWithGroup vs DelChars is bad");
+                    Some(DelText(..)) => {
+                        panic!("DelWithGroup vs DelText is bad");
                     }
                     None => {
                         res.place(&a.next().unwrap());
@@ -179,7 +183,7 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
             }
             DelGroup(ref span) => {
                 let mut c = DelStepper::new(span);
-                let mut inner: DelSpan = vec![];
+                let mut inner: DelSpan<S> = vec![];
                 compose_del_del_inner(&mut inner, &mut c, b);
                 if !c.is_done() {
                     inner.place(&c.head.unwrap());
@@ -188,8 +192,8 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
                 res.place(&DelGroup(inner));
                 a.next();
             }
-            DelChars(count) => {
-                res.place(&DelChars(count));
+            DelText(count) => {
+                res.place(&DelText(count));
                 a.next();
             } // DelObject => {
               //     match b.head.clone() {
@@ -219,7 +223,10 @@ fn compose_del_del_inner(res: &mut DelSpan, a: &mut DelStepper, b: &mut DelStepp
     }
 }
 
-pub fn compose_del_del(avec: &DelSpan, bvec: &DelSpan) -> DelSpan {
+pub fn compose_del_del<S: Schema>(
+    avec: &DelSpan<S>,
+    bvec: &DelSpan<S>,
+) -> DelSpan<S> {
     let mut res = Vec::with_capacity(avec.len() + bvec.len());
 
     let mut a = DelStepper::new(avec);
@@ -240,16 +247,20 @@ pub fn compose_del_del(avec: &DelSpan, bvec: &DelSpan) -> DelSpan {
     res
 }
 
-fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddStepper, b: &mut AddStepper) {
+fn compose_add_add_inner<S: Schema>(
+    res: &mut AddSpan<S>,
+    a: &mut AddStepper<S>,
+    b: &mut AddStepper<S>,
+) {
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
-            AddChars(..) => {
+            AddText(..) => {
                 res.place(&b.next().unwrap());
             }
             AddStyles(b_count, b_styles) => match a.get_head() {
                 AddStyles(a_count, a_styles) => {
                     let mut both_styles = b_styles.clone();
-                    both_styles.extend(a_styles.clone());
+                    both_styles.extend(&a_styles);
                     res.push(AddStyles(cmp::min(a_count, b_count), both_styles));
                     if a_count > b_count {
                         b.head = Some(AddStyles(a_count - b_count, a_styles));
@@ -262,22 +273,22 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddStepper, b: &mut AddStepp
                         b.next();
                     }
                 }
-                AddChars(value, mut styles) => {
+                AddText(mut styles, value) => {
                     if b_count < value.char_len() {
                         let (a_left, a_right) = value.split_at(b_count);
                         let mut left_styles = styles.clone();
                         left_styles.extend(&b_styles);
-                        res.place(&AddChars(a_left, left_styles));
-                        a.head = Some(AddChars(a_right, styles));
+                        res.place(&AddText(left_styles, a_left));
+                        a.head = Some(AddText(styles, a_right));
                         b.next();
                     } else if b_count > value.char_len() {
                         styles.extend(&b_styles);
                         b.head = Some(AddStyles(b_count - value.char_len(), b_styles));
-                        res.place(&AddChars(value, styles));
+                        res.place(&AddText(styles, value));
                         a.next();
                     } else {
                         styles.extend(&b_styles);
-                        res.place(&AddChars(value, styles));
+                        res.place(&AddText(styles, value));
                         a.next();
                         b.next();
                     }
@@ -326,11 +337,11 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddStepper, b: &mut AddStepp
                         b.next();
                     }
                 }
-                AddChars(value, styles) => {
+                AddText(styles, value) => {
                     if bcount < value.char_len() {
                         let (a_left, a_right) = value.split_at(bcount);
-                        res.place(&AddChars(a_left, styles.clone()));
-                        a.head = Some(AddChars(a_right, styles));
+                        res.place(&AddText(styles.clone(), a_left));
+                        a.head = Some(AddText(styles, a_right));
                         b.next();
                     } else if bcount > value.char_len() {
                         res.place(&a.next().unwrap());
@@ -383,8 +394,8 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddStepper, b: &mut AddStepp
                 b.next();
             }
             AddWithGroup(ref bspan) => match a.get_head() {
-                AddChars(..) => {
-                    panic!("Cannot compose AddWithGroup with AddChars");
+                AddText(..) => {
+                    panic!("Cannot compose AddWithGroup with AddText");
                 }
                 AddStyles(..) => {
                     panic!("Cannot compose AddWithGroup with AddStyles");
@@ -412,7 +423,10 @@ fn compose_add_add_inner(res: &mut AddSpan, a: &mut AddStepper, b: &mut AddStepp
     }
 }
 
-pub fn compose_add_add(avec: &AddSpan, bvec: &AddSpan) -> AddSpan {
+pub fn compose_add_add<S: Schema>(
+    avec: &AddSpan<S>,
+    bvec: &AddSpan<S>,
+) -> AddSpan<S> {
     let mut res = Vec::with_capacity(avec.len() + bvec.len());
 
     let mut a = AddStepper::new(avec);
@@ -433,9 +447,12 @@ pub fn compose_add_add(avec: &AddSpan, bvec: &AddSpan) -> AddSpan {
     res
 }
 
-pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
-    let mut delres: DelSpan = Vec::with_capacity(avec.len() + bvec.len());
-    let mut addres: AddSpan = Vec::with_capacity(avec.len() + bvec.len());
+pub fn compose_add_del<S: Schema>(
+    avec: &AddSpan<S>, 
+    bvec: &DelSpan<S>,
+) -> Op<S> {
+    let mut delres: DelSpan<S> = Vec::with_capacity(avec.len() + bvec.len());
+    let mut addres: AddSpan<S> = Vec::with_capacity(avec.len() + bvec.len());
 
     let mut a = AddStepper::new(avec);
     let mut b = DelStepper::new(bvec);
@@ -461,23 +478,23 @@ pub fn compose_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
     (delres, addres)
 }
 
-fn compose_add_del_inner(
-    delres: &mut DelSpan,
-    addres: &mut AddSpan,
-    a: &mut AddStepper,
-    b: &mut DelStepper,
+fn compose_add_del_inner<S: Schema>(
+    delres: &mut DelSpan<S>,
+    addres: &mut AddSpan<S>,
+    a: &mut AddStepper<S>,
+    b: &mut DelStepper<S>,
 ) {
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
-            DelChars(bcount) => match a.get_head() {
-                AddChars(avalue, a_styles) => {
+            DelText(bcount) => match a.get_head() {
+                AddText(a_styles, avalue) => {
                     if bcount < avalue.char_len() {
                         let (_a_left, a_right) = avalue.split_at(bcount);
-                        a.head = Some(AddChars(a_right, a_styles));
+                        a.head = Some(AddText(a_styles, a_right));
                         b.next();
                     } else if bcount > avalue.char_len() {
                         a.next();
-                        b.head = Some(DelChars(bcount - avalue.char_len()));
+                        b.head = Some(DelText(bcount - avalue.char_len()));
                     } else {
                         a.next();
                         b.next();
@@ -489,8 +506,8 @@ fn compose_add_del_inner(
                         delres.place(&b.next().unwrap());
                     } else if bcount > acount {
                         a.next();
-                        delres.place(&DelChars(acount));
-                        b.head = Some(DelChars(bcount - acount));
+                        delres.place(&DelText(acount));
+                        b.head = Some(DelText(bcount - acount));
                     } else {
                         a.next();
                         delres.place(&b.next().unwrap());
@@ -501,32 +518,29 @@ fn compose_add_del_inner(
                 }
             },
             DelStyles(b_count, b_styles) => match a.get_head() {
-                AddChars(a_value, mut a_styles) => {
+                AddText(mut a_styles, a_value) => {
                     if b_count < a_value.char_len() {
                         let (a_left, a_right) = a_value.split_at(b_count);
                         let mut a_left_styles = a_styles.clone();
                         a_left_styles.remove(&b_styles);
-                        addres.place(&AddChars(a_left, a_left_styles));
-                        a.head = Some(AddChars(a_right, a_styles));
+                        addres.place(&AddText(a_left_styles, a_left));
+                        a.head = Some(AddText(a_styles, a_right));
                         b.next();
                     } else if b_count > a_value.char_len() {
                         a_styles.remove(&b_styles);
                         b.head = Some(DelSkip(b_count - a_value.char_len()));
-                        addres.place(&AddChars(a_value, a_styles));
+                        addres.place(&AddText(a_styles, a_value));
                     } else {
                         a_styles.remove(&b_styles);
-                        addres.place(&AddChars(a_value, a_styles));
+                        addres.place(&AddText(a_styles, a_value));
                         a.next();
                         b.next();
                     }
                 }
                 AddStyles(a_count, a_styles) => {
                     // a_styles - b_styles
-                    let combined_styles = a_styles
-                        .clone()
-                        .drain()
-                        .filter(|(k, _)| !b_styles.contains(k))
-                        .collect();
+                    let mut combined_styles = a_styles.clone();
+                    combined_styles.remove(&b_styles);
 
                     // res.push(AddStyles(cmp::min(a_count, b_count), both_styles));
                     if a_count > b_count {
@@ -566,11 +580,11 @@ fn compose_add_del_inner(
                 }
             },
             DelSkip(bcount) => match a.get_head() {
-                AddChars(avalue, a_styles) => {
+                AddText(a_styles, avalue) => {
                     if bcount < avalue.char_len() {
                         let (a_left, a_right) = avalue.split_at(bcount);
-                        addres.place(&AddChars(a_left, a_styles.clone()));
-                        a.head = Some(AddChars(a_right, a_styles));
+                        addres.place(&AddText(a_styles.clone(), a_left));
+                        a.head = Some(AddText(a_styles, a_right));
                         b.next();
                     } else if bcount > avalue.char_len() {
                         addres.place(&a.next().unwrap());
@@ -631,8 +645,8 @@ fn compose_add_del_inner(
                 }
             },
             DelWithGroup(span) => match a.get_head() {
-                AddChars(..) => {
-                    panic!("DelWithGroup by AddChars is ILLEGAL");
+                AddText(..) => {
+                    panic!("DelWithGroup by AddText is ILLEGAL");
                 }
                 AddStyles(..) => {
                     panic!("DelWithGroup by AddStyles is ILLEGAL");
@@ -665,8 +679,8 @@ fn compose_add_del_inner(
             },
             DelGroup(span) => {
                 match a.get_head() {
-                    AddChars(..) => {
-                        panic!("DelGroup by AddChars is ILLEGAL");
+                    AddText(..) => {
+                        panic!("DelGroup by AddText is ILLEGAL");
                     }
                     AddStyles(..) => {
                         panic!("DelGroup by AddStyles is ILLEGAL");
@@ -741,10 +755,10 @@ fn compose_add_del_inner(
               // }
               // DelMany(bcount) => {
               //     match a.get_head() {
-              //         AddChars(avalue) => {
+              //         AddText(avalue) => {
               //             let alen = avalue.chars().count();
               //             if bcount < alen {
-              //                 a.head = Some(AddChars(avalue.chars().skip(bcount).collect()));
+              //                 a.head = Some(AddText(avalue.chars().skip(bcount).collect()));
               //                 b.next();
               //             } else if bcount > alen {
               //                 a.next();
@@ -791,8 +805,8 @@ fn compose_add_del_inner(
               // }
               // DelGroupAll => {
               //     match a.get_head() {
-              //         AddChars(avalue) => {
-              //             panic!("DelGroupAll by AddChars is ILLEGAL");
+              //         AddText(avalue) => {
+              //             panic!("DelGroupAll by AddText is ILLEGAL");
               //         }
               //         AddSkip(acount) => {
               //             delres.place(&b.next().unwrap());
@@ -816,7 +830,7 @@ fn compose_add_del_inner(
     }
 }
 
-pub fn compose(a: &Op, b: &Op) -> Op {
+pub fn compose<S: Schema>(a: &Op<S>, b: &Op<S>) -> Op<S> {
     let &(ref adel, ref ains) = a;
     let &(ref bdel, ref bins) = b;
 

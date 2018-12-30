@@ -455,8 +455,6 @@ fn run() -> Result<(), Error> {
         }
 
         Cli::WasmBuild { no_vendor } => {
-            let release_flag = Some("--release");
-
             // Install wasm target
             execute!(
                 "
@@ -469,9 +467,10 @@ fn run() -> Result<(), Error> {
             execute!(
                 r"
                     cd edit-client
-                    cargo build {release_flag} --lib --target wasm32-unknown-unknown {cargo_args}
+                    cargo build --lib --target wasm32-unknown-unknown {cargo_args} {release_flag}
                 ",
-                release_flag = release_flag,
+                // Always compile in release mode.
+                release_flag = "--release",
                 cargo_args = CARGO_ARGS_EDIT_CLIENT,
             )?;
 
@@ -483,7 +482,7 @@ fn run() -> Result<(), Error> {
 
                 let mut b = Bindgen::new();
                 b.input_path("./target/wasm32-unknown-unknown/release/edit_client.wasm")
-                    // .debug(args.flag_debug)
+                    // .debug(!release) Unsure if debug generates too much content.
                     .typescript(true);
                 b.generate("./edit-frontend/src/bindgen")?;
 
@@ -802,7 +801,7 @@ fn run() -> Result<(), Error> {
             eprintln!("Compiling WebAssembly...");
             execute!(
                 "
-                    {self_path} wasm-build
+                    {self_path} wasm-build --release
                 ",
                 self_path = SELF_PATH,
             )?;
@@ -811,7 +810,7 @@ fn run() -> Result<(), Error> {
             eprintln!("Building frontend...");
             execute!(
                 r"
-                    {self_path} frontend-build
+                    {self_path} frontend-build --release
                 ",
                 self_path = SELF_PATH,
             )?;

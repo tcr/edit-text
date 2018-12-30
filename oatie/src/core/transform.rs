@@ -3,74 +3,30 @@
 use std::cmp;
 use super::compose;
 use super::doc::*;
-use super::style::StyleMap;
 use crate::stepper::*;
 use crate::writer::*;
-use std::fmt::Debug;
 use std::marker::PhantomData;
-use crate::style::OpaqueStyleMap;
-
-pub trait Track: Copy + Debug + PartialEq + Sized {
-    // Rename this do close split? if applicable?
-    fn do_split(&self) -> bool;
-
-    // Unsure about this naming
-    fn do_open_split(&self) -> bool;
-
-    fn supports_text(&self) -> bool;
-
-    fn allowed_in_root(&self) -> bool;
-
-    // TODO is this how this should work
-    fn is_object(&self) -> bool;
-
-    fn parents(&self) -> Vec<Self>;
-
-    // TODO extrapolate this from parents()
-    fn ancestors(&self) -> Vec<Self>;
-}
-
-pub trait Schema: Clone + Debug {
-    type Track: Track + Sized;
-
-    /// Determines if two sets of Attrs are equal.
-    fn attrs_eq(a: &Attrs, b: &Attrs) -> bool;
-
-    /// Get the track type from this Attrs.
-    fn track_type_from_attrs(attrs: &Attrs) -> Option<Self::Track>;
-
-    /// Combine two Attrs into a new definition.
-    fn merge_attrs(a: &Attrs, b: &Attrs) -> Option<Attrs>;
-}
+pub use super::schema::*;
 
 #[derive(Clone, Debug)]
-struct TrackState<S>
-where
-    S: Schema,
-{
-    tag_a: Option<Attrs>,
-    tag_real: Option<Attrs>,
-    tag_b: Option<Attrs>,
+struct TrackState<S: Schema> {
+    tag_a: Option<S::GroupProperties>,
+    tag_real: Option<S::GroupProperties>,
+    tag_b: Option<S::GroupProperties>,
     is_original_a: bool,
     is_original_b: bool,
     _phantom: PhantomData<S>,
 }
 
-struct Transform<S>
-where
-    S: Schema,
-{
+struct Transform<S: Schema> {
     tracks: Vec<TrackState<S>>,
-    a_del: DelWriter,
-    a_add: AddWriter,
-    b_del: DelWriter,
-    b_add: AddWriter,
+    a_del: DelWriter<S>,
+    a_add: AddWriter<S>,
+    b_del: DelWriter<S>,
+    b_add: AddWriter<S>,
 }
 
-impl<S> Transform<S>
-where
-    S: Schema,
-{
+impl<S: Schema> Transform<S> {
     fn new() -> Transform<S> {
         Transform {
             tracks: vec![],
@@ -81,7 +37,7 @@ where
         }
     }
 
-    fn enter(&mut self, name: &Attrs) {
+    fn enter(&mut self, name: &S::GroupProperties) {
         let last = self
             .tracks
             .iter()
@@ -108,7 +64,7 @@ where
     }
 
     // TODO maybe take "real" value as input?
-    fn enter_a(&mut self, a: &Attrs, b: Option<Attrs>) {
+    fn enter_a(&mut self, a: &S::GroupProperties, b: Option<S::GroupProperties>) {
         let last = self
             .tracks
             .iter()
@@ -150,7 +106,7 @@ where
         self.b_add.begin();
     }
 
-    fn enter_b(&mut self, a: Option<Attrs>, b: &Attrs) {
+    fn enter_b(&mut self, a: Option<S::GroupProperties>, b: &S::GroupProperties) {
         log_transform!("ENTER B");
 
         let last = self
@@ -204,7 +160,7 @@ where
     }
 
     // Close the topmost track.
-    fn abort(&mut self) -> (Option<Attrs>, Option<Attrs>, Option<Attrs>) {
+    fn abort(&mut self) -> (Option<S::GroupProperties>, Option<S::GroupProperties>, Option<S::GroupProperties>) {
         let track = self.tracks.pop().unwrap();
 
         if let Some(ref real) = track.tag_real {
@@ -237,38 +193,38 @@ where
         self.b_add.place(&AddSkip(n));
     }
 
-    fn style_a(&mut self, count: usize, styles: StyleMap) {
+    fn style_a(&mut self, count: usize, styles: S::CharsProperties) {
         self.a_del.place(&DelSkip(count));
         self.a_add.place(&AddStyles(count, styles));
     }
 
-    fn style_b(&mut self, count: usize, styles: StyleMap) {
+    fn style_b(&mut self, count: usize, styles: S::CharsProperties) {
         self.b_del.place(&DelSkip(count));
         self.b_add.place(&AddStyles(count, styles));
     }
 
-    fn with_group_a(&mut self, span: &AddSpan) {
+    fn with_group_a(&mut self, span: &AddSpan<S>) {
         self.a_add.place(&AddWithGroup(span.clone()));
     }
 
-    fn with_group_b(&mut self, span: &AddSpan) {
+    fn with_group_b(&mut self, span: &AddSpan<S>) {
         self.b_add.place(&AddWithGroup(span.clone()));
     }
 
-    fn group_a(&mut self, attrs: &Attrs, span: &AddSpan) {
+    fn group_a(&mut self, attrs: &S::GroupProperties, span: &AddSpan<S>) {
         self.a_add.place(&AddGroup(attrs.clone(), span.clone()));
     }
 
-    fn group_b(&mut self, attrs: &Attrs, span: &AddSpan) {
+    fn group_b(&mut self, attrs: &S::GroupProperties, span: &AddSpan<S>) {
         self.b_add.place(&AddGroup(attrs.clone(), span.clone()));
     }
 
-    fn chars_a(&mut self, chars: DocString, styles: OpaqueStyleMap) {
-        self.a_add.place(&AddChars(chars, styles));
+    fn chars_a(&mut self, chars: DocString, styles: S::CharsProperties) {
+        self.a_add.place(&AddText(styles, chars));
     }
 
-    fn chars_b(&mut self, chars: DocString, styles: OpaqueStyleMap) {
-        self.b_add.place(&AddChars(chars, styles));
+    fn chars_b(&mut self, chars: DocString, styles: S::CharsProperties) {
+        self.b_add.place(&AddText(styles, chars));
     }
 
     fn current(&self) -> Option<TrackState<S>> {
@@ -552,7 +508,7 @@ where
         }
     }
 
-    fn result(mut self) -> (Op, Op) {
+    fn result(mut self) -> (Op<S>, Op<S>) {
         let mut a_del = self.a_del;
         let mut a_add = self.a_add;
         let mut b_del = self.b_del;
@@ -596,7 +552,7 @@ where
     }
 }
 
-pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, Op) {
+pub fn transform_insertions<S: Schema>(avec: &AddSpan<S>, bvec: &AddSpan<S>) -> (Op<S>, Op<S>) {
     let mut a = AddStepper::new(avec);
     let mut b = AddStepper::new(bvec);
 
@@ -604,8 +560,8 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
 
     while !(a.is_done() && b.is_done()) {
         log_transform!("{}", Green.bold().paint("Tracks:"));
-        for t in &t.tracks {
-            log_transform!("{}", BrightGreen.paint(format!(" - {:?}", t)));
+        for _t in &t.tracks {
+            log_transform!("{}", BrightGreen.paint(format!(" - {:?}", _t)));
         }
 
         log_transform!("{}", BrightGreen.paint(format!(" @ a_del: {:?}", t.a_del)));
@@ -632,7 +588,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                     t.with_group_a(span);
                     b.next();
                 }
-                Some(AddChars(b_chars, b_styles)) => {
+                Some(AddText(b_styles, b_chars)) => {
                     t.skip_b(b_chars.char_len());
                     t.chars_a(b_chars, b_styles);
                     b.next();
@@ -670,7 +626,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                     t.with_group_b(span);
                     a.next();
                 }
-                Some(AddChars(a_chars, a_styles)) => {
+                Some(AddText(a_styles, a_chars)) => {
                     t.skip_a(a_chars.char_len());
                     t.chars_b(a_chars, a_styles);
                     a.next();
@@ -739,7 +695,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                 // TODO don't like that this isn't a pattern match;
                 // This case should handle AddWithGroup and AddGroup (I believe)
                 (None, compare) => {
-                    let ok = if let Some(AddChars(ref b_chars, ref b_styles)) = compare {
+                    let ok = if let Some(AddText(ref b_styles, ref b_chars)) = compare {
                         if t.supports_text() {
                             t.skip_b(b_chars.char_len());
                             t.chars_a(b_chars.clone(), b_styles.clone());
@@ -888,7 +844,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                     // TODO if they are different tags THEN WHAT
                 }
                 (compare, None) => {
-                    let is_char = if let Some(AddChars(a_chars, a_styles)) = compare.clone() {
+                    let is_char = if let Some(AddText(a_styles, a_chars)) = compare.clone() {
                         if t.supports_text() {
                             t.regenerate();
 
@@ -1074,15 +1030,15 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                     t.skip_a(cmp::min(a_count, b_count));
                     t.style_b(cmp::min(a_count, b_count), a_styles);
                 }
-                (Some(AddSkip(..)), Some(AddChars(b_chars, b_styles)))
-                | (Some(AddStyles(..)), Some(AddChars(b_chars, b_styles))) => {
+                | (Some(AddSkip(..)), Some(AddText(b_styles, b_chars)))
+                | (Some(AddStyles(..)), Some(AddText(b_styles, b_chars))) => {
                     t.regenerate();
 
                     b.next();
                     t.skip_b(b_chars.char_len());
                     t.chars_a(b_chars, b_styles);
                 }
-                (Some(AddChars(a_chars, a_styles)), _) => {
+                (Some(AddText(a_styles, a_chars)), _) => {
                     t.regenerate();
 
                     t.skip_a(a_chars.char_len());
@@ -1140,7 +1096,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
                     }
                     b.next();
                 }
-                (Some(AddWithGroup(_a_inner)), Some(AddChars(b_chars, b_styles))) => {
+                (Some(AddWithGroup(_a_inner)), Some(AddText(b_styles, b_chars))) => {
                     t.regenerate(); // caret-35
 
                     t.b_del.place(&DelSkip(b_chars.char_len()));
@@ -1166,11 +1122,11 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan, bvec: &AddSpan) -> (Op, O
 }
 
 // Create del span that occurs after the input deletion has occurred.
-fn undel(input_del: &DelSpan) -> DelSpan {
-    let mut del: DelSpan = vec![];
+fn undel<S: Schema>(input_del: &DelSpan<S>) -> DelSpan<S> {
+    let mut del: DelSpan<S> = vec![];
     for elem in input_del {
         match elem {
-            &DelChars(..) => {
+            &DelText(..) => {
                 // skip
             }
             &DelSkip(value) => {
@@ -1190,11 +1146,11 @@ fn undel(input_del: &DelSpan) -> DelSpan {
     del
 }
 
-pub fn transform_del_del_inner(
-    a_del: &mut DelWriter,
-    b_del: &mut DelWriter,
-    a: &mut DelStepper,
-    b: &mut DelStepper,
+pub fn transform_del_del_inner<S: Schema>(
+    a_del: &mut DelWriter<S>,
+    b_del: &mut DelWriter<S>,
+    a: &mut DelStepper<S>,
+    b: &mut DelStepper<S>,
 ) {
     while !a.is_done() && !b.is_done() {
         log_transform!("{}", Green.bold().paint("transform_deletions:"));
@@ -1296,36 +1252,36 @@ pub fn transform_del_del_inner(
                 a_del.place(&DelSkip(cmp::min(a_count, b_count)));
                 b_del.place(&DelSkip(cmp::min(a_count, b_count)));
             }
-            (Some(DelSkip(a_count)), Some(DelChars(b_chars))) => {
+            (Some(DelSkip(a_count)), Some(DelText(b_chars))) => {
                 if a_count > b_chars {
                     a.head = Some(DelSkip(a_count - b_chars));
                     b.next();
-                    a_del.place(&DelChars(b_chars));
+                    a_del.place(&DelText(b_chars));
                 } else if a_count < b_chars {
                     a.next();
-                    b.head = Some(DelChars(b_chars - a_count));
-                    a_del.place(&DelChars(a_count));
+                    b.head = Some(DelText(b_chars - a_count));
+                    a_del.place(&DelText(a_count));
                 } else {
                     a.next();
                     b.next();
-                    a_del.place(&DelChars(b_chars));
+                    a_del.place(&DelText(b_chars));
                 }
             }
-            (Some(DelChars(a_chars)), Some(DelChars(b_chars))) => {
+            (Some(DelText(a_chars)), Some(DelText(b_chars))) => {
                 if a_chars > b_chars {
-                    a.head = Some(DelChars(a_chars - b_chars));
+                    a.head = Some(DelText(a_chars - b_chars));
                     b.next();
                 } else if a_chars < b_chars {
                     a.next();
-                    b.head = Some(DelChars(b_chars - a_chars));
+                    b.head = Some(DelText(b_chars - a_chars));
                 } else {
                     a.next();
                     b.next();
                 }
             }
-            (Some(DelChars(a_chars)), Some(DelSkip(b_count))) => {
+            (Some(DelText(a_chars)), Some(DelSkip(b_count))) => {
                 if a_chars > b_count {
-                    a.head = Some(DelChars(a_chars - b_count));
+                    a.head = Some(DelText(a_chars - b_count));
                     b.next();
                 } else if a_chars < b_count {
                     a.next();
@@ -1336,7 +1292,7 @@ pub fn transform_del_del_inner(
                 }
 
                 // a_del.skip(cmp::min(a_chars, b_chars));
-                b_del.place(&DelChars(cmp::min(a_chars, b_count)));
+                b_del.place(&DelText(cmp::min(a_chars, b_count)));
             }
             (Some(DelStyles(a_count, a_styles)), Some(DelStyles(b_count, b_styles))) => {
                 if a_count > b_count {
@@ -1389,32 +1345,32 @@ pub fn transform_del_del_inner(
                     b_del.place(&DelStyles(a_count, a_styles));
                 }
             }
-            (Some(DelStyles(a_count, a_styles)), Some(DelChars(b_count))) => {
+            (Some(DelStyles(a_count, a_styles)), Some(DelText(b_count))) => {
                 if a_count > b_count {
                     a.head = Some(DelStyles(a_count - b_count, a_styles.clone()));
                     b.next();
-                    a_del.place(&DelChars(b_count));
+                    a_del.place(&DelText(b_count));
                 } else if a_count < b_count {
                     a.next();
-                    b.head = Some(DelChars(b_count - a_count));
+                    b.head = Some(DelText(b_count - a_count));
                 } else {
                     a.next();
                     b.next();
-                    a_del.place(&DelChars(a_count));
+                    a_del.place(&DelText(a_count));
                 }
             }
-            (Some(DelChars(a_count)), Some(DelStyles(b_count, b_styles))) => {
+            (Some(DelText(a_count)), Some(DelStyles(b_count, b_styles))) => {
                 if a_count > b_count {
-                    a.head = Some(DelChars(a_count - b_count));
+                    a.head = Some(DelText(a_count - b_count));
                     b.next();
-                    b_del.place(&DelChars(b_count));
+                    b_del.place(&DelText(b_count));
                 } else if a_count < b_count {
                     a.next();
                     b.head = Some(DelStyles(b_count - a_count, b_styles.clone()));
                 } else {
                     a.next();
                     b.next();
-                    b_del.place(&DelChars(a_count));
+                    b_del.place(&DelText(a_count));
                 }
             }
 
@@ -1539,14 +1495,14 @@ pub fn transform_del_del_inner(
             // TODO why are these unreachable?
             (None, _)
             | (_, None)
-            | (Some(DelWithGroup(_)), Some(DelChars(_)))
+            | (Some(DelWithGroup(_)), Some(DelText(_)))
             | (Some(DelWithGroup(_)), Some(DelStyles(_, _)))
             | (Some(DelStyles(_, _)), Some(DelWithGroup(_)))
-            | (Some(DelChars(_)), Some(DelWithGroup(_)))
-            | (Some(DelGroup(_)), Some(DelChars(_)))
+            | (Some(DelText(_)), Some(DelWithGroup(_)))
+            | (Some(DelGroup(_)), Some(DelText(_)))
             | (Some(DelGroup(_)), Some(DelStyles(_, _)))
             | (Some(DelStyles(_, _)), Some(DelGroup(_)))
-            | (Some(DelChars(_)), Some(DelGroup(_))) => {
+            | (Some(DelText(_)), Some(DelGroup(_))) => {
                 log_transform!("Not reachable: {:?}", unimplemented);
                 unreachable!();
             }
@@ -1556,7 +1512,10 @@ pub fn transform_del_del_inner(
     log_transform!("{}", BrightYellow.paint(format!("done")),);
 }
 
-pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan) {
+pub fn transform_deletions<S: Schema>(
+    avec: &DelSpan<S>,
+    bvec: &DelSpan<S>,
+) -> (DelSpan<S>, DelSpan<S>) {
     let mut a_del = DelWriter::new();
     let mut b_del = DelWriter::new();
 
@@ -1608,18 +1567,18 @@ pub fn transform_deletions(avec: &DelSpan, bvec: &DelSpan) -> (DelSpan, DelSpan)
     (a_res, b_res)
 }
 
-pub fn transform_add_del_inner(
-    delres: &mut DelSpan,
-    addres: &mut AddSpan,
-    a: &mut AddStepper,
-    b: &mut DelStepper,
+pub fn transform_add_del_inner<S: Schema>(
+    delres: &mut DelSpan<S>,
+    addres: &mut AddSpan<S>,
+    a: &mut AddStepper<S>,
+    b: &mut DelStepper<S>,
 ) {
     while !b.is_done() && !a.is_done() {
         match b.get_head() {
-            DelChars(bcount) => match a.get_head() {
-                AddChars(avalue, a_styles) => {
+            DelText(bcount) => match a.get_head() {
+                AddText(a_styles, avalue) => {
                     delres.place(&DelSkip(avalue.char_len()));
-                    addres.place(&AddChars(avalue, a_styles));
+                    addres.place(&AddText(a_styles, avalue));
                     a.next();
                 }
                 AddSkip(acount) => {
@@ -1628,8 +1587,8 @@ pub fn transform_add_del_inner(
                         delres.place(&b.next().unwrap());
                     } else if bcount > acount {
                         a.next();
-                        delres.place(&DelChars(acount));
-                        b.head = Some(DelChars(bcount - acount));
+                        delres.place(&DelText(acount));
+                        b.head = Some(DelText(bcount - acount));
                     } else {
                         a.next();
                         delres.place(&b.next().unwrap());
@@ -1637,8 +1596,8 @@ pub fn transform_add_del_inner(
                 }
                 AddGroup(attrs, a_span) => {
                     let mut a_inner = AddStepper::new(&a_span);
-                    let mut addres_inner: AddSpan = vec![];
-                    let mut delres_inner: DelSpan = vec![];
+                    let mut addres_inner: AddSpan<S> = vec![];
+                    let mut delres_inner: DelSpan<S> = vec![];
                     transform_add_del_inner(&mut delres_inner, &mut addres_inner, &mut a_inner, b);
                     if !a_inner.is_done() {
                         addres_inner.place(&a_inner.head.unwrap());
@@ -1648,15 +1607,15 @@ pub fn transform_add_del_inner(
                     delres.place(&DelWithGroup(delres_inner));
                     a.next();
                 }
-                unknown => {
-                    log_transform!("Compare: {:?} {:?}", DelChars(bcount), unknown);
+                _unknown => {
+                    log_transform!("Compare: {:?} {:?}", DelText(bcount), _unknown);
                     panic!("Unimplemented or Unexpected");
                 }
             },
             DelSkip(bcount) => match a.get_head() {
-                AddChars(avalue, a_styles) => {
+                AddText(a_styles, avalue) => {
                     delres.place(&DelSkip(avalue.char_len()));
-                    addres.place(&AddChars(avalue, a_styles));
+                    addres.place(&AddText(a_styles, avalue));
                     a.next();
                 }
                 AddStyles(a_count, a_styles) => {
@@ -1698,8 +1657,8 @@ pub fn transform_add_del_inner(
                 }
                 AddGroup(attrs, a_span) => {
                     let mut a_inner = AddStepper::new(&a_span);
-                    let mut addres_inner: AddSpan = vec![];
-                    let mut delres_inner: DelSpan = vec![];
+                    let mut addres_inner: AddSpan<S> = vec![];
+                    let mut delres_inner: DelSpan<S> = vec![];
                     transform_add_del_inner(&mut delres_inner, &mut addres_inner, &mut a_inner, b);
                     if !a_inner.is_done() {
                         addres_inner.place(&a_inner.head.unwrap());
@@ -1711,18 +1670,15 @@ pub fn transform_add_del_inner(
                 }
             },
             DelStyles(b_count, b_styles) => match a.get_head() {
-                AddChars(a_value, a_styles) => {
+                AddText(a_styles, a_value) => {
                     delres.place(&DelSkip(a_value.char_len()));
-                    addres.place(&AddChars(a_value, a_styles));
+                    addres.place(&AddText(a_styles, a_value));
                     a.next();
                 }
                 AddStyles(a_count, a_styles) => {
-                    // Remove styles from A that were present in B.
-                    let combined_styles: StyleMap = a_styles
-                        .clone()
-                        .drain()
-                        .filter(|(ref k, _)| b_styles.contains(k))
-                        .collect();
+                    // a_styles - b_styles
+                    let mut combined_styles = a_styles.clone();
+                    combined_styles.remove(&b_styles);
 
                     addres.place(&AddStyles(cmp::min(a_count, b_count), combined_styles));
                     delres.place(&DelStyles(b_count, b_styles.clone())); // Not combined
@@ -1753,8 +1709,8 @@ pub fn transform_add_del_inner(
                 }
                 AddGroup(attrs, a_span) => {
                     let mut a_inner = AddStepper::new(&a_span);
-                    let mut addres_inner: AddSpan = vec![];
-                    let mut delres_inner: DelSpan = vec![];
+                    let mut addres_inner: AddSpan<S> = vec![];
+                    let mut delres_inner: DelSpan<S> = vec![];
                     transform_add_del_inner(&mut delres_inner, &mut addres_inner, &mut a_inner, b);
                     if !a_inner.is_done() {
                         addres_inner.place(&a_inner.head.unwrap());
@@ -1770,7 +1726,7 @@ pub fn transform_add_del_inner(
                 AddStyles(..) => {
                     panic!("invalid transform DelWithGroup with AddStyles");
                 }
-                AddChars(avalue, _) => {
+                AddText(_, avalue) => {
                     delres.place(&DelSkip(avalue.char_len()));
                     addres.place(&a.next().unwrap());
                 }
@@ -1793,8 +1749,8 @@ pub fn transform_add_del_inner(
                 }
                 AddGroup(attrs, a_span) => {
                     let mut a_inner = AddStepper::new(&a_span);
-                    let mut addres_inner: AddSpan = vec![];
-                    let mut delres_inner: DelSpan = vec![];
+                    let mut addres_inner: AddSpan<S> = vec![];
+                    let mut delres_inner: DelSpan<S> = vec![];
                     transform_add_del_inner(&mut delres_inner, &mut addres_inner, &mut a_inner, b);
                     if !a_inner.is_done() {
                         addres_inner.place(&a_inner.head.unwrap());
@@ -1810,7 +1766,7 @@ pub fn transform_add_del_inner(
                     AddStyles(..) => {
                         panic!("invalid transform DelGroup with AddStyles");
                     }
-                    AddChars(avalue, _) => {
+                    AddText(_, avalue) => {
                         delres.place(&DelSkip(avalue.char_len()));
                         addres.place(&a.next().unwrap());
                     }
@@ -1832,12 +1788,12 @@ pub fn transform_add_del_inner(
                         // the document). Instead, we just delete all the newly added
                         // content of the group.
                         if span.skip_post_len() == 0 {
-                            fn unadd(add: &AddSpan) -> DelSpan {
-                                let mut del: DelSpan = vec![];
+                            fn unadd<S: Schema>(add: &AddSpan<S>) -> DelSpan<S> {
+                                let mut del: DelSpan<S> = vec![];
                                 for elem in add {
                                     match elem {
-                                        &AddChars(ref value, _) => {
-                                            del.place(&DelChars(value.char_len()));
+                                        &AddText(_, ref value) => {
+                                            del.place(&DelText(value.char_len()));
                                         }
                                         &AddStyles(count, _) => {
                                             del.place(&DelSkip(count)); // TODO unsure if correct
@@ -1862,8 +1818,8 @@ pub fn transform_add_del_inner(
                         } else {
                             let mut a_inner = AddStepper::new(&ins_span);
                             let mut b_inner = DelStepper::new(&span);
-                            let mut delres_inner: DelSpan = vec![];
-                            let mut addres_inner: AddSpan = vec![];
+                            let mut delres_inner: DelSpan<S> = vec![];
+                            let mut addres_inner: AddSpan<S> = vec![];
                             transform_add_del_inner(
                                 &mut delres_inner,
                                 &mut addres_inner,
@@ -1911,10 +1867,10 @@ pub fn transform_add_del_inner(
                         b.next();
                     }
 
-                    AddGroup(tags, ins_span) => {
+                    AddGroup(attrs, ins_span) => {
                         let mut a_inner = AddStepper::new(&ins_span);
-                        let mut delres_inner: DelSpan = vec![];
-                        let mut addres_inner: AddSpan = vec![];
+                        let mut delres_inner: DelSpan<S> = vec![];
+                        let mut addres_inner: AddSpan<S> = vec![];
                         transform_add_del_inner(
                             &mut delres_inner,
                             &mut addres_inner,
@@ -1927,15 +1883,15 @@ pub fn transform_add_del_inner(
                         }
 
                         // "Delall" hack for adding in bullets
-                        if !(addres_inner.skip_post_len() == 0 && tags["tag"] == "bullet") {
-                            addres.place(&AddGroup(tags, addres_inner));
+                        // TODO why does this need knowledge of the bullet group
+                        // type?
+                        // FIXME I'm not sure what to do here so I'm doing this
+                        // if !(addres_inner.skip_post_len() == 0 && attrs == Attrs::ListItem) {
+                            addres.place(&AddGroup(attrs, addres_inner));
                             delres.place(&DelWithGroup(delres_inner));
-                        } else {
-                            delres.place(&DelGroup(delres_inner));
-                        }
-
-                        // addres.place(&AddGroup(tags, addres_inner));
-                        // delres.place(&DelWithGroup(delres_inner));
+                        // } else {
+                        //     delres.place(&DelGroup(delres_inner));
+                        // }
 
                         a.next();
                     }
@@ -1945,8 +1901,8 @@ pub fn transform_add_del_inner(
               // }
               // DelMany(bcount) => {
               //     match a.get_head() {
-              //         AddChars(avalue) => {
-              //             addres.place(&AddChars(avalue.clone()));
+              //         AddText(avalue) => {
+              //             addres.place(&AddText(avalue.clone()));
               //             delres.place(&DelSkip(avalue.len()));
               //             a.next();
               //         }
@@ -1995,7 +1951,7 @@ pub fn transform_add_del_inner(
               // }
               // DelGroupAll => {
               //     match a.get_head() {
-              //         AddChars(avalue) => {
+              //         AddText(avalue) => {
               //             delres.place(&DelSkip(avalue.chars().count()));
               //             addres.place(&a.next().unwrap());
               //         }
@@ -2039,9 +1995,9 @@ pub fn transform_add_del_inner(
 
 /// Transforms a insertion preceding a deletion into a deletion preceding an insertion.
 /// After this, sequential deletions and insertions can be composed together in one operation.
-pub fn transform_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
-    let mut delres: DelSpan = Vec::with_capacity(avec.len() + bvec.len());
-    let mut addres: AddSpan = Vec::with_capacity(avec.len() + bvec.len());
+pub fn transform_add_del<S: Schema>(avec: &AddSpan<S>, bvec: &DelSpan<S>) -> Op<S> {
+    let mut delres: DelSpan<S> = Vec::with_capacity(avec.len() + bvec.len());
+    let mut addres: AddSpan<S> = Vec::with_capacity(avec.len() + bvec.len());
 
     let mut a = AddStepper::new(avec);
     let mut b = DelStepper::new(bvec);
@@ -2062,7 +2018,7 @@ pub fn transform_add_del(avec: &AddSpan, bvec: &DelSpan) -> Op {
 }
 
 /// Transform two operations according to a schema.
-pub fn transform<S: Schema>(a: &Op, b: &Op) -> (Op, Op) {
+pub fn transform<S: Schema>(a: &Op<S>, b: &Op<S>) -> (Op<S>, Op<S>) {
     // Transform deletions A and B against each other to get delA` and delB`.
     log_transform!(" # transform[1] transform_deletions");
     log_transform!(" a_del   {:?}", a.0);

@@ -3,25 +3,20 @@
 
 #[macro_use]
 extern crate diesel;
-
 #[macro_use]
 extern crate failure;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
 extern crate maplit;
-
 #[macro_use]
 extern crate oatie;
-
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
-
 #[macro_use]
 extern crate taken;
-
 #[macro_use]
 extern crate rouille;
 #[macro_use]

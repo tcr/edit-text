@@ -19,6 +19,7 @@ use juniper::{
 };
 use oatie::{
     doc::*,
+    rtf::*,
     validate::validate_doc,
 };
 use r2d2;
@@ -42,7 +43,7 @@ graphql_object!(Page: () |&self| {
     }
 
     field markdown() -> String {
-        let doc = Doc(::ron::de::from_str(&self.doc).unwrap());
+        let doc = oatie::deserialize::doc_ron(&self.doc).unwrap();
         doc_to_markdown(&doc.0).unwrap()
     }
 });
@@ -101,8 +102,8 @@ graphql_object!(Mutations: Ctx |&self| {
                         eprintln!("Error in doc: {:?}", doc);
                         eprintln!("Error decoding document: {:?}", err);
                         Doc(doc_span![
-                            DocGroup({"tag": "pre"}, [
-                                DocChars("Error decoding document.", {Style::Normie => None}),
+                            DocGroup(Attrs::Code, [
+                                DocText("Error decoding document."),
                             ]),
                         ])
                     }

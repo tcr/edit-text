@@ -3,25 +3,21 @@
 #[macro_export]
 macro_rules! doc_span {
     ( @str_literal $e:expr ) => { $e };
-    ( @kind DocChars $b:expr $(,)* ) => {
-        DocChars($crate::doc::DocString::from_str($b), $crate::style::OpaqueStyleMap::new())
+    ( @kind DocText $b:expr $(,)* ) => {
+        DocText($crate::rtf::StyleSet::new(), $crate::doc::DocString::from_str($b))
     };
-    ( @kind DocChars $b:expr , { $( $e:expr => $c:expr ),+  $(,)* } $(,)* ) => {
+    ( @kind DocText { $( $e:expr ),+  $(,)* } , $b:expr $(,)* ) => {
         {
-            let mut map = ::std::collections::HashMap::<Style, Option<String>>::new();
+            let mut map = ::std::collections::HashSet::new();
             $(
-                map.insert($e, $c);
+                map.insert($e);
             )*
-            DocChars($crate::doc::DocString::from_str($b), $crate::style::OpaqueStyleMap::from(map))
+            DocText($crate::rtf::StyleSet::from(map), $crate::doc::DocString::from_str($b))
         }
     };
-    ( @kind DocGroup { $( $e:tt : $b:expr ),+  $(,)* } , [ $( $v:tt )* ] $(,)* ) => {
+    ( @kind DocGroup $b:expr , [ $( $v:tt )* ] $(,)* ) => {
         {
-            let mut map = ::std::collections::HashMap::<String, String>::new();
-            $(
-                map.insert(doc_span!(@str_literal $e).to_owned(), ($b).to_owned());
-            )*
-            DocGroup(map, doc_span![ $( $v )* ])
+            DocGroup($b, doc_span![ $( $v )* ])
         }
     };
     ( ) => {
@@ -40,28 +36,24 @@ macro_rules! add_span {
     ( @kind AddSkip $b:expr $(,)* ) => {
         AddSkip($b)
     };
-    ( @kind AddChars $b:expr , { $( $e:expr => $c:expr ),+  $(,)* } $(,)* ) => {
+    ( @kind AddText { $( $e:expr => $c:expr ),+ , $b:expr  $(,)* } $(,)* ) => {
         {
-            let mut map = ::std::collections::HashMap::<Style, Option<String>>::new();
+            let mut map = ::std::collections::HashSet();
             $(
                 map.insert($e, $c);
             )*
-            AddChars($crate::doc::DocString::from_str($b), $crate::style::OpaqueStyleMap::from(map))
+            AddText($crate::rtf::StyleSet::from(map), $crate::doc::DocString::from_str($b))
         }
     };
-    ( @kind AddChars $b:expr $(,)* ) => {
-        AddChars($crate::doc::DocString::from_str($b), $crate::style::OpaqueStyleMap::new())
+    ( @kind AddText $b:expr $(,)* ) => {
+        AddText($crate::rtf::StyleSet::new(), $crate::doc::DocString::from_str($b))
     };
     ( @kind AddWithGroup [ $( $v:tt )* ] $(,)* ) => {
         AddWithGroup(add_span![ $( $v )* ])
     };
-    ( @kind AddGroup { $( $e:tt : $b:expr ),+  $(,)* } , [ $( $v:tt )* ] $(,)* ) => {
+    ( @kind AddGroup $b:expr , [ $( $v:tt )* ] $(,)* ) => {
         {
-            let mut map = ::std::collections::HashMap::<String, String>::new();
-            $(
-                map.insert(add_span!(@str_literal $e).to_owned(), ($b).to_owned());
-            )*
-            AddGroup(map, add_span![ $( $v )* ])
+            AddGroup($b, add_span![ $( $v )* ])
         }
     };
     ( ) => {
@@ -80,8 +72,8 @@ macro_rules! del_span {
     ( @kind DelSkip $b:expr $(,)* ) => {
         DelSkip($b)
     };
-    ( @kind DelChars $b:expr $(,)* ) => {
-        DelChars($b.to_owned())
+    ( @kind DelText $b:expr $(,)* ) => {
+        DelText($b.to_owned())
     };
     ( @kind DelWithGroup [ $( $v:tt )* ] $(,)* ) => {
         DelWithGroup(del_span![ $( $v )* ])

@@ -18,6 +18,7 @@ use edit_common::simple_ws;
 use edit_common::simple_ws::*;
 use failure::Error;
 use oatie::doc::*;
+use oatie::rtf::*;
 use rand::{
     thread_rng,
     Rng,
@@ -41,10 +42,10 @@ fn debug_sync_delay() -> Option<u64> {
 const INITIAL_SYNC_VERSION: usize = 100; // Arbitrarily select version 100
 const PAGE_TITLE_LEN: usize = 100; // 100 chars is the limit
 
-pub fn default_new_doc(id: &str) -> Doc {
+pub fn default_new_doc(id: &str) -> Doc<RtfSchema> {
     Doc(doc_span![
-        DocGroup({"tag": "h1"}, [
-            DocChars(id),
+        DocGroup(Attrs::Header(1), [
+            DocText(id),
         ])
     ])
 }
@@ -73,14 +74,14 @@ pub enum ClientUpdate {
     },
     Commit {
         client_id: String,
-        op: Op,
+        op: Op<RtfSchema>,
         version: usize,
     },
     Disconnect {
         client_id: String,
     },
     Overwrite {
-        doc: Doc,
+        doc: Doc<RtfSchema>,
     },
 }
 
@@ -188,7 +189,7 @@ impl PageController {
     // This is just a commit across all operations, and forwarding it to
     // all listening clients. It also is the commit point for all new
     // operations.
-    fn sync_commit(&mut self, client_id: &str, op: Op, input_version: usize) {
+    fn sync_commit(&mut self, client_id: &str, op: Op<RtfSchema>, input_version: usize) {
         // TODO we should evict the client if this fails.
         let op = self
             .state
@@ -317,7 +318,7 @@ impl PageController {
 pub fn spawn_sync_thread(
     page_id: String,
     rx_notify: CCReceiver<ClientUpdate>,
-    inner_doc: Doc,
+    inner_doc: Doc<RtfSchema>,
     db_pool: DbPool,
 ) -> Result<(), Error> {
     thread::spawn(move || {
@@ -367,7 +368,11 @@ impl PageMaster {
             // Retrieve from database, or use a default generic document.
             let conn = self.db_pool.get().unwrap();
             let inner_doc =
-                get_single_page(&conn, page_id).unwrap_or_else(|| default_new_doc(page_id));
+                get_single_page(&conn, page_id)
+                    .unwrap_or_else(|| {
+                        eprintln!("warning: could not find page {:?}, using default.", page_id);
+                        default_new_doc(page_id)
+                    });
 
             let (tx_notify, rx_notify) = unbounded();
             self.pages.insert(page_id.to_string(), tx_notify.clone());

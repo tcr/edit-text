@@ -12,7 +12,7 @@ use oatie::doc::DelElement::*;
 use oatie::doc::DocElement::*;
 use oatie::doc::*;
 use oatie::*;
-use oatie::style::OpaqueStyleMap;
+use oatie::rtf::*;
 
 pub fn test_start() {
     if let Ok(_) = env_logger::init() {
@@ -25,7 +25,7 @@ fn try_this() {
     test_start();
 
     // let source: DocSpan = vec![
-    //     DocChars(DocString::from_str("Hello world!")),
+    //     DocText(DocString::from_str("Hello world!")),
     //     DocGroup(HashMap::new(), vec![]),
     // ];
 
@@ -33,103 +33,103 @@ fn try_this() {
     // assert_eq!(
     //     apply_delete(
     //         &vec![
-    //             DocChars("Hello world!".to_owned()),
+    //             DocText("Hello world!".to_owned()),
     //             DocGroup(HashMap::new(), vec![]),
     //         ],
     //         &vec![
-    //             DelChars(3),
+    //             DelText(3),
     //             DelSkip(2),
-    //             DelChars(1),
+    //             DelText(1),
     //             DelSkip(1),
-    //             DelChars(5),
+    //             DelText(5),
     //             DelGroupAll,
     //         ],
     //     ),
-    //     vec![DocChars("low".to_owned())]
+    //     vec![DocText("low".to_owned())]
     // );
 
     assert_eq!(
-        apply_delete(
-            &vec![DocChars(DocString::from_str("Hello World!"), OpaqueStyleMap::new())],
-            &vec![DelChars(6)],
+        apply_delete::<RtfSchema>(
+            &vec![DocText(StyleSet::new(), DocString::from_str("Hello World!"))],
+            &vec![DelText(6)],
         ),
-        vec![DocChars(DocString::from_str("World!"), OpaqueStyleMap::new())]
+        vec![DocText(StyleSet::new(), DocString::from_str("World!"))]
     );
 
     assert_eq!(
-        apply_add(
-            &vec![DocChars(DocString::from_str("World!"), OpaqueStyleMap::new())],
-            &vec![AddChars(DocString::from_str("Hello "), OpaqueStyleMap::new())],
+        apply_add::<RtfSchema>(
+            &vec![DocText(StyleSet::new(), DocString::from_str("World!"))],
+            &vec![AddText(StyleSet::new(), DocString::from_str("Hello "))],
         ),
-        vec![DocChars(DocString::from_str("Hello World!"), OpaqueStyleMap::new())],
+        vec![DocText(StyleSet::new(), DocString::from_str("Hello World!"))],
     );
 
     assert_eq!(
-        apply_add(
+        apply_add::<RtfSchema>(
             &vec![
-                DocGroup(HashMap::new(), vec![]),
-                DocChars(DocString::from_str("World!"), OpaqueStyleMap::new()),
+                DocGroup(Attrs::Para, vec![]),
+                DocText(StyleSet::new(), DocString::from_str("World!")),
             ],
-            &vec![AddSkip(1), AddChars(DocString::from_str("Hello "), OpaqueStyleMap::new())],
+            &vec![AddSkip(1), AddText(StyleSet::new(), DocString::from_str("Hello "))],
         ),
         vec![
-            DocGroup(HashMap::new(), vec![]),
-            DocChars(DocString::from_str("Hello World!"), OpaqueStyleMap::new()),
+            DocGroup(Attrs::Para, vec![]),
+            DocText(StyleSet::new(), DocString::from_str("Hello World!")),
         ]
     );
 
     assert_eq!(
-        apply_delete(
+        apply_delete::<RtfSchema>(
             &vec![DocGroup(
-                HashMap::new(),
-                vec![DocChars(DocString::from_str("Hello Damned World!"), OpaqueStyleMap::new())],
+                Attrs::Para,
+                vec![DocText(StyleSet::new(), DocString::from_str("Hello Damned World!"))],
             )],
-            &vec![DelWithGroup(vec![DelSkip(6), DelChars(7)])],
+            &vec![DelWithGroup(vec![DelSkip(6), DelText(7)])],
         ),
         vec![DocGroup(
-            HashMap::new(),
-            vec![DocChars(DocString::from_str("Hello World!"), OpaqueStyleMap::new())],
+            Attrs::Para,
+            vec![DocText(StyleSet::new(), DocString::from_str("Hello World!"))],
         )]
     );
 
     assert_eq!(
-        apply_add(
+        apply_add::<RtfSchema>(
             &vec![DocGroup(
-                HashMap::new(),
-                vec![DocChars(DocString::from_str("Hello!"), OpaqueStyleMap::new())],
+                Attrs::Para,
+                vec![DocText(StyleSet::new(), DocString::from_str("Hello!"))],
             )],
             &vec![AddWithGroup(vec![
                 AddSkip(5),
-                AddChars(DocString::from_str(" World"), OpaqueStyleMap::new()),
+                AddText(StyleSet::new(), DocString::from_str(" World")),
             ])],
         ),
         vec![DocGroup(
-            HashMap::new(),
-            vec![DocChars(DocString::from_str("Hello World!"), OpaqueStyleMap::new())],
+            Attrs::Para,
+            vec![DocText(StyleSet::new(), DocString::from_str("Hello World!"))],
         )]
     );
 
     assert_eq!(
-        apply_operation(
-            &vec![DocChars(DocString::from_str("Goodbye World!"), OpaqueStyleMap::new())],
+        apply_operation::<RtfSchema>(
+            &vec![DocText(StyleSet::new(), DocString::from_str("Goodbye World!"))],
             &(
-                vec![DelChars(7)],
-                vec![AddChars(DocString::from_str("Hello"), OpaqueStyleMap::new())],
+                vec![DelText(7)],
+                vec![AddText(StyleSet::new(), DocString::from_str("Hello"))],
             )
         ),
-        vec![DocChars(DocString::from_str("Hello World!"), OpaqueStyleMap::new())]
+        vec![DocText(StyleSet::new(), DocString::from_str("Hello World!"))]
     );
 
     assert_eq!(
-        apply_add(
-            &vec![DocChars(DocString::from_str("Hello world!"), OpaqueStyleMap::new())],
+        apply_add::<RtfSchema>(
+            &vec![DocText(StyleSet::new(), DocString::from_str("Hello world!"))],
             &vec![
                 AddSkip(10),
-                AddChars(DocString::from_str("dd49"), OpaqueStyleMap::new()),
+                AddText(StyleSet::new(), DocString::from_str("dd49")),
                 AddSkip(2),
             ],
         ),
-        vec![DocChars(DocString::from_str("Hello worldd49d!"), OpaqueStyleMap::new())]
+        vec![DocText(StyleSet::new(), DocString::from_str("Hello worldd49d!"))]
     );
 }
 
@@ -138,21 +138,21 @@ fn test_lib_op() {
     test_start();
 
     assert_eq!(
-        apply_operation(
+        apply_operation::<RtfSchema>(
             &vec![
-                DocChars(DocString::from_str("Heo"), OpaqueStyleMap::new()),
-                DocGroup(HashMap::new(), vec![]),
-                DocChars(DocString::from_str("!"), OpaqueStyleMap::new()),
+                DocText(StyleSet::new(), DocString::from_str("Heo")),
+                DocGroup(Attrs::Para, vec![]),
+                DocText(StyleSet::new(), DocString::from_str("!")),
             ],
             &(
-                vec![DelSkip(1), DelChars(1), DelSkip(2), DelSkip(1)],
+                vec![DelSkip(1), DelText(1), DelSkip(2), DelSkip(1)],
                 vec![AddSkip(3)],
             ),
         ),
         vec![
-            DocChars(DocString::from_str("Ho"), OpaqueStyleMap::new()),
-            DocGroup(HashMap::new(), vec![]),
-            DocChars(DocString::from_str("!"), OpaqueStyleMap::new()),
+            DocText(StyleSet::new(), DocString::from_str("Ho")),
+            DocGroup(Attrs::Para, vec![]),
+            DocText(StyleSet::new(), DocString::from_str("!")),
         ]
     );
 }
@@ -162,10 +162,10 @@ fn apply_ghost() {
     test_start();
 
     assert_eq!(
-        apply_operation(
-            &doc_span![DocChars(" stop crying, little hip hop")],
-            &op_span![[], [AddChars("\u{01f47b}")]],
+        apply_operation::<RtfSchema>(
+            &doc_span![DocText(" stop crying, little hip hop")],
+            &op_span![[], [AddText("\u{01f47b}")]],
         ),
-        doc_span![DocChars("\u{01f47b} stop crying, little hip hop")]
+        doc_span![DocText("\u{01f47b} stop crying, little hip hop")]
     );
 }

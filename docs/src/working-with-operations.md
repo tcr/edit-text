@@ -41,8 +41,8 @@ And would have the following document representation:
 
 ```rust,noplaypen
 let doc = doc_span![
-    DocGroup({"tag": "h1"}, [DocChars("Title")]),
-    DocGroup({"tag": "p"}, [DocChars("Body")]),
+    DocGroup({"tag": "h1"}, [DocText("Title")]),
+    DocGroup({"tag": "p"}, [DocText("Body")]),
 ];
 ```
 
@@ -62,7 +62,7 @@ let deletion = del_span![
 
 assert_eq!(
     Op::apply_deletion(&doc, &deletion),
-    doc_span![DocChars("TitleBody")],
+    doc_span![DocText("TitleBody")],
 );
 ```
 
@@ -78,7 +78,7 @@ let addition = del_span![
 assert_eq!(
     Op::apply_addition(&Op::apply_deletion(&doc, &deletion), &addition),
     doc_span![
-        DocGroup({"tag": "h1"}, [DocChars("TitleBody")]),
+        DocGroup({"tag": "h1"}, [DocText("TitleBody")]),
     ];
 );
 ```
@@ -101,7 +101,7 @@ let valid_op: Op = (
 assert_eq!(
     Op::apply(&doc, &valid_op),
     doc_span![
-        DocGroup({"tag": "h1"}, [DocChars("TitleBody")]),
+        DocGroup({"tag": "h1"}, [DocText("TitleBody")]),
     ];
 );
 ```
@@ -124,7 +124,7 @@ enum DelElement {
     /// ...
     DelSkip(usize),
     DelWithGroup(DelSpan),
-    DelChars(usize),
+    DelText(usize),
     DelGroup(DelSpan),
 }
 ```
@@ -133,7 +133,7 @@ enum DelElement {
 enum AddElement {
     AddSkip(usize),
     AddWithGroup(AddSpan),
-    AddChars(DocString),
+    AddText(DocString),
     AddGroup(Attrs, AddSpan),
 }
 ```

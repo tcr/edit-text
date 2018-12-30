@@ -1,5 +1,6 @@
 use failure::Error;
 use oatie::doc::*;
+use oatie::rtf::*;
 use reqwest;
 use serde_json;
 
@@ -33,7 +34,7 @@ query {
     )
 }
 
-pub fn get_single_page_graphql(input_id: &str) -> Option<Doc> {
+pub fn get_single_page_graphql(input_id: &str) -> Option<Doc<RtfSchema>> {
     let client = reqwest::Client::new();
     let text = client
         .post("http://127.0.0.1:8003/graphql/")
@@ -81,7 +82,7 @@ pub fn graphql_request(
     Ok(serde_json::from_str(&text)?)
 }
 
-pub fn get_or_create_page_graphql(input_id: &str, doc: &Doc) -> Result<Doc, Error> {
+pub fn get_or_create_page_graphql(input_id: &str, doc: &Doc<RtfSchema>) -> Result<Doc<RtfSchema>, Error> {
     let ret = graphql_request(
         r#"
 
@@ -106,10 +107,10 @@ mutation ($id: String!, $default: String!) {
         .unwrap()
         .to_string();
 
-    Ok(Doc(::ron::de::from_str(&doc_string)?))
+    Ok(oatie::deserialize::doc_ron(&doc_string).or(oatie::deserialize::doc_json(&doc_string))?)
 }
 
-pub fn create_page_graphql(input_id: &str, doc: &Doc) -> Option<Doc> {
+pub fn create_page_graphql(input_id: &str, doc: &Doc<RtfSchema>) -> Option<Doc<RtfSchema>> {
     let client = reqwest::Client::new();
     let text = client
         .post("http://127.0.0.1:8003/graphql/")

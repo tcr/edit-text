@@ -158,6 +158,31 @@ where
     })
 }
 
+pub fn individual_editing<T>(markdown: &str, runner_test: fn(DebugClient, String, Checkpoint) -> T)
+where
+    T: std::future::Future<Output = Result<bool, Error>> + Send + 'static,
+{
+    commandspec::cleanup_on_ctrlc();
+
+    // Make an HTTP request to load the document.
+    let client = reqwest::Client::new();
+    let response = client
+        .get("http://0.0.0.0:8000/")
+        .query(&[("from", markdown)])
+        .send()
+        .unwrap();
+    let target_url = response.url().to_string();
+
+    let j1 = spawn_test_thread(target_url.clone(), Checkpoint::generate(1).remove(0), runner_test);
+
+    let ret1 = j1.join().unwrap().expect("Program failed:");
+
+    assert!(ret1, "client 1 failed test");
+
+    eprintln!("test successful.");
+}
+
+
 pub fn concurrent_editing<T>(markdown: &str, runner_test: fn(DebugClient, String, Checkpoint) -> T)
 where
     T: std::future::Future<Output = Result<bool, Error>> + Send + 'static,

@@ -83,6 +83,18 @@ const DEBUG = {
         int = null;
     },
 
+    selectAll: () => {
+        // cmd + a
+        let KeyboardEventAny = KeyboardEvent as any;
+        let evt = new KeyboardEventAny("keydown", {
+            bubbles: true,
+            cancelable: true,
+            keyCode: 'A'.charCodeAt(0),
+            metaKey: true,
+        });
+        document.dispatchEvent(evt);
+    },
+
     asMarkdown: () => {
         if (globalClientBindings == null) {
             throw new Error('Bindings not assigned');
@@ -106,6 +118,10 @@ const DEBUG = {
             charCode: charCode,
         });
         document.dispatchEvent(event);
+    },
+
+    root: (): HTMLElement => {
+        return document.querySelector('.edit-text')! as HTMLElement;
     },
 
     userCarets: (): Array<Attr> => {
@@ -183,6 +199,15 @@ const DEBUG = {
           left: ${x}px;
         `;
         return div;
+    },
+
+    randomCaretPosition: () => {
+        globalClientBindings!.command(JSON.stringify({
+            ControllerCommand: {
+                "tag" : "RandomTarget" ,
+                "fields" : { "position" : Math.random() , } ,
+            },
+        }));
     },
 
     // Bindings to global ref for client module

@@ -4,13 +4,13 @@ Let's assume we have the following document in edit-text's document structure:
 
 ```
 DocGroup({"tag": "bullet"}, [
-    DocGroup({"tag": "p"}, [DocChars("Item 1")]),
+    DocGroup({"tag": "p"}, [DocText("Item 1")]),
 ])
 DocGroup({"tag": "bullet"}, [
-    DocGroup({"tag": "p"}, [DocChars("Item 2")]),
+    DocGroup({"tag": "p"}, [DocText("Item 2")]),
 ])
 DocGroup({"tag": "bullet"}, [
-    DocGroup({"tag": "p"}, [DocChars("Item 3...")]),
+    DocGroup({"tag": "p"}, [DocText("Item 3...")]),
 ])
 ```
 
@@ -24,7 +24,7 @@ We can trivially define a mapping from edit-text's document model to HTML. (Conv
 </ul>
 ```
 
-Some conversions are straightforward: aside from all non-significant whitespace, all text nodes are converted into the DocChars(...) struct. To simplify other logic, there are some invariants that should be true about DocChars: DocChars(...) must not be empty, and there must not be two successive DocChars(...) components. This isn't validated anywhere (yet) but is expected to be true in all operations.
+Some conversions are straightforward: aside from all non-significant whitespace, all text nodes are converted into the DocText(...) struct. To simplify other logic, there are some invariants that should be true about DocText: DocText(...) must not be empty, and there must not be two successive DocText(...) components. This isn't validated anywhere (yet) but is expected to be true in all operations.
 
 For groups, the first argument is a hashmap of `String` => `String` containing the "attributes". These are similar to HTML attributes and can contain any data. The one attribute required by all groups is the "tag" attribute, which usually maps to the name of its HTML equivalent.
 

@@ -1,30 +1,32 @@
 use oatie::doc::*;
 use oatie::stepper::*;
-use oatie::transform::Schema;
+use oatie::rtf::*;
 use take_mut;
 
 pub fn is_block(attrs: &Attrs) -> bool {
-    use oatie::schema::*;
     RtfSchema::track_type_from_attrs(attrs) == Some(RtfTrack::Blocks)
 }
 
 // TODO what does this refer to?
 pub fn is_block_object(attrs: &Attrs) -> bool {
-    use oatie::schema::*;
     RtfSchema::track_type_from_attrs(attrs) == Some(RtfTrack::BlockObjects)
 }
 
 pub fn is_caret(attrs: &Attrs, client_id: Option<&str>, focus: bool) -> bool {
-    attrs["tag"] == "caret"
-        && client_id
-            .map(|id| attrs.get("client") == Some(&id.to_string()))
-            .unwrap_or(false)
-        && attrs.get("focus").map(|x| x == "true").unwrap_or(false) == focus
+    if let Attrs::Caret { client_id: caret_client_id, focus: caret_focus } = attrs {
+        client_id == Some(caret_client_id) && *caret_focus == focus
+    } else {
+        false
+    }
 }
 
 // Is any caret
 pub fn is_any_caret(attrs: &Attrs) -> bool {
-    attrs["tag"] == "caret"
+    if let Attrs::Caret { .. } = attrs {
+        true
+    } else {
+        false
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Copy)]
@@ -37,12 +39,12 @@ pub enum Pos {
 
 #[derive(Clone, Debug)]
 pub struct CaretStepper<'a> {
-    pub doc: DocStepper<'a>,
+    pub doc: DocStepper<'a, RtfSchema>,
     pub caret_pos: isize,
 }
 
 impl<'a> CaretStepper<'a> {
-    pub fn new(doc: DocStepper<'a>) -> CaretStepper<'a> {
+    pub fn new(doc: DocStepper<'a, RtfSchema>) -> CaretStepper<'a> {
         // Start at caret pos 0
         let mut stepper = CaretStepper { doc, caret_pos: -1 };
         while stepper.caret_pos != 0 {
@@ -61,7 +63,7 @@ impl<'a> CaretStepper<'a> {
     }
 
     pub fn is_valid_caret_pos(&self) -> bool {
-        if let Some(DocChars(..)) = self.doc.unhead() {
+        if let Some(DocText(..)) = self.doc.unhead() {
             return true;
         } else if self.doc.unhead().is_none() && !self.doc.is_back_done() {
             if is_block(self.doc.parent_attrs()) {
@@ -75,7 +77,7 @@ impl<'a> CaretStepper<'a> {
     // but is it the best name or interface?
     pub fn skip_element(&mut self) -> Option<()> {
         let len = match self.doc.head() {
-            Some(DocChars(val, _)) => {
+            Some(DocText(_, val)) => {
                 let len = val.char_len();
                 self.doc.next();
                 len
@@ -107,7 +109,7 @@ impl<'a> Iterator for CaretStepper<'a> {
 
     fn next(&mut self) -> Option<()> {
         match self.doc.head() {
-            Some(DocChars(..)) => {
+            Some(DocText(..)) => {
                 self.doc.skip(1);
             }
             Some(DocGroup(..)) => {
@@ -132,7 +134,7 @@ impl<'a> Iterator for CaretStepper<'a> {
 
 #[derive(Clone, Debug)]
 pub struct ReverseCaretStepper<'a> {
-    pub doc: DocStepper<'a>,
+    pub doc: DocStepper<'a, RtfSchema>,
     pub caret_pos: isize,
 }
 
@@ -149,7 +151,7 @@ impl<'a> ReverseCaretStepper<'a> {
         // more easily.
 
         // Fast-path
-        if let Some(DocChars(..)) = self.doc.unhead() {
+        if let Some(DocText(..)) = self.doc.unhead() {
             return true;
         } else if self.doc.unhead().is_none() {
             if self.doc.at_root() {
@@ -173,7 +175,7 @@ impl<'a> ReverseCaretStepper<'a> {
         }
 
         // Identically repeat fast-path logic
-        if let Some(DocChars(..)) = doc2.unhead() {
+        if let Some(DocText(..)) = doc2.unhead() {
             return true;
         } else if doc2.unhead().is_none() {
             if doc2.at_root() {
@@ -205,7 +207,7 @@ impl<'a> Iterator for ReverseCaretStepper<'a> {
         // console_log!("what {:?}", self.doc);
 
         match self.doc.unhead() {
-            Some(DocChars(..)) => {
+            Some(DocText(..)) => {
                 self.doc.unskip(1);
             }
             Some(DocGroup(..)) => {

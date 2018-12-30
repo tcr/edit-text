@@ -1,18 +1,16 @@
 //! Classes for generating operation steps (add / del).
 
-use std::collections::HashMap;
 use crate::doc::*;
-
 use failure::Error;
 
 #[derive(Clone, Debug, Default)]
-pub struct DelWriter {
-    pub past: Vec<DelElement>,
-    stack: Vec<Vec<DelElement>>,
+pub struct DelWriter<S: Schema> {
+    pub past: Vec<DelElement<S>>,
+    stack: Vec<Vec<DelElement<S>>>,
 }
 
-impl DelWriter {
-    pub fn new() -> DelWriter {
+impl<S: Schema> DelWriter<S> {
+    pub fn new() -> DelWriter<S> {
         DelWriter {
             past: vec![],
             stack: vec![],
@@ -54,15 +52,15 @@ impl DelWriter {
         }
     }
 
-    pub fn place(&mut self, elem: &DelElement) {
+    pub fn place(&mut self, elem: &DelElement<S>) {
         self.past.place(elem);
     }
 
-    pub fn place_all(&mut self, span: &DelSpan) {
+    pub fn place_all(&mut self, span: &DelSpan<S>) {
         self.past.place_all(span);
     }
 
-    pub fn result(self) -> DelSpan {
+    pub fn result(self) -> DelSpan<S> {
         if !self.stack.is_empty() {
             println!("{:?}", self);
             assert!(false, "cannot get result when stack is still full");
@@ -72,13 +70,13 @@ impl DelWriter {
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct AddWriter {
-    pub past: Vec<AddElement>,
-    stack: Vec<Vec<AddElement>>,
+pub struct AddWriter<S: Schema> {
+    pub past: Vec<AddElement<S>>,
+    stack: Vec<Vec<AddElement<S>>>,
 }
 
-impl AddWriter {
-    pub fn new() -> AddWriter {
+impl<S: Schema> AddWriter<S> {
+    pub fn new() -> AddWriter<S> {
         AddWriter {
             past: vec![],
             stack: vec![],
@@ -106,7 +104,7 @@ impl AddWriter {
         }
     }
 
-    pub fn close(&mut self, attrs: Attrs) {
+    pub fn close(&mut self, attrs: S::GroupProperties) {
         let past = self.past.clone();
         self.past = self
             .stack
@@ -122,15 +120,15 @@ impl AddWriter {
         }
     }
 
-    pub fn place(&mut self, elem: &AddElement) {
+    pub fn place(&mut self, elem: &AddElement<S>) {
         self.past.place(elem);
     }
 
-    pub fn place_all(&mut self, span: &AddSpan) {
+    pub fn place_all(&mut self, span: &AddSpan<S>) {
         self.past.place_all(span);
     }
 
-    pub fn result(self) -> AddSpan {
+    pub fn result(self) -> AddSpan<S> {
         if !self.stack.is_empty() {
             println!("{:?}", self);
             assert!(false, "cannot get result when stack is still full");
@@ -139,19 +137,19 @@ impl AddWriter {
     }
 }
 
-pub struct OpWriter {
-    pub del: DelWriter,
-    pub add: AddWriter,
+pub struct OpWriter<S: Schema> {
+    pub del: DelWriter<S>,
+    pub add: AddWriter<S>,
 }
 
-impl OpWriter {
-    pub fn exit_result(mut self) -> Op {
+impl<S: Schema> OpWriter<S> {
+    pub fn exit_result(mut self) -> Op<S> {
         self.del.exit_all();
         self.add.exit_all();
         self.result()
     }
 
-    pub fn result(self) -> Op {
+    pub fn result(self) -> Op<S> {
         (self.del.result(), self.add.result())
     }
 }
@@ -206,13 +204,13 @@ impl CurWriter {
 }
 
 #[derive(Clone, Debug)]
-pub struct DocWriter {
-    pub(crate) past: Vec<DocElement>, // TODO not public
-    stack: Vec<Vec<DocElement>>,
+pub struct DocWriter<S: Schema> {
+    pub(crate) past: Vec<DocElement<S>>, // TODO not public
+    stack: Vec<Vec<DocElement<S>>>,
 }
 
-impl DocWriter {
-    pub fn new() -> DocWriter {
+impl<S: Schema> DocWriter<S> {
+    pub fn new() -> DocWriter<S> {
         DocWriter {
             past: vec![],
             stack: vec![],
@@ -225,21 +223,21 @@ impl DocWriter {
         self.stack.push(past);
     }
 
-    pub fn close(&mut self, attrs: HashMap<String, String>) {
+    pub fn close(&mut self, attrs: S::GroupProperties) {
         let past = self.past.clone();
         self.past = self.stack.pop().unwrap();
         self.past.push(DocGroup(attrs, past));
     }
 
-    pub fn place(&mut self, elem: &DocElement) {
+    pub fn place(&mut self, elem: &DocElement<S>) {
         self.past.place(elem);
     }
 
-    pub fn place_all(&mut self, span: &DocSpan) {
+    pub fn place_all(&mut self, span: &DocSpan<S>) {
         self.past.place_all(span);
     }
 
-    pub fn result(self) -> Result<DocSpan, Error> {
+    pub fn result(self) -> Result<DocSpan<S>, Error> {
         if !self.stack.is_empty() {
             println!("{:?}", self);
             bail!("cannot get result when stack is still full");
@@ -254,7 +252,7 @@ impl DocWriter {
         self.past = self.stack.pop().unwrap();
     }
 
-    pub(crate) fn wrap_previous(&mut self, count: usize, attrs: Attrs) {
+    pub(crate) fn wrap_previous(&mut self, count: usize, attrs: S::GroupProperties) {
         let start = self.past.len() - count;
         let group = self.past.split_off(start);
         self.past.push(DocGroup(attrs, group));
