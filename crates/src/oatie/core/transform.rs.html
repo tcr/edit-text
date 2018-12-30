@@ -2095,124 +2095,36 @@
 <span id="2095">2095</span>
 <span id="2096">2096</span>
 <span id="2097">2097</span>
-<span id="2098">2098</span>
-<span id="2099">2099</span>
-<span id="2100">2100</span>
-<span id="2101">2101</span>
-<span id="2102">2102</span>
-<span id="2103">2103</span>
-<span id="2104">2104</span>
-<span id="2105">2105</span>
-<span id="2106">2106</span>
-<span id="2107">2107</span>
-<span id="2108">2108</span>
-<span id="2109">2109</span>
-<span id="2110">2110</span>
-<span id="2111">2111</span>
-<span id="2112">2112</span>
-<span id="2113">2113</span>
-<span id="2114">2114</span>
-<span id="2115">2115</span>
-<span id="2116">2116</span>
-<span id="2117">2117</span>
-<span id="2118">2118</span>
-<span id="2119">2119</span>
-<span id="2120">2120</span>
-<span id="2121">2121</span>
-<span id="2122">2122</span>
-<span id="2123">2123</span>
-<span id="2124">2124</span>
-<span id="2125">2125</span>
-<span id="2126">2126</span>
-<span id="2127">2127</span>
-<span id="2128">2128</span>
-<span id="2129">2129</span>
-<span id="2130">2130</span>
-<span id="2131">2131</span>
-<span id="2132">2132</span>
-<span id="2133">2133</span>
-<span id="2134">2134</span>
-<span id="2135">2135</span>
-<span id="2136">2136</span>
-<span id="2137">2137</span>
-<span id="2138">2138</span>
-<span id="2139">2139</span>
-<span id="2140">2140</span>
-<span id="2141">2141</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Performs operational transform on a Doc.</span>
 
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cmp</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">compose</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">doc</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">style</span>::<span class="ident">StyleMap</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">stepper</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">writer</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Debug</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">style</span>::<span class="ident">OpaqueStyleMap</span>;
-
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Track</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">PartialEq</span> <span class="op">+</span> <span class="ident">Sized</span> {
-    <span class="comment">// Rename this do close split? if applicable?</span>
-    <span class="kw">fn</span> <span class="ident">do_split</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span>;
-
-    <span class="comment">// Unsure about this naming</span>
-    <span class="kw">fn</span> <span class="ident">do_open_split</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span>;
-
-    <span class="kw">fn</span> <span class="ident">supports_text</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span>;
-
-    <span class="kw">fn</span> <span class="ident">allowed_in_root</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span>;
-
-    <span class="comment">// TODO is this how this should work</span>
-    <span class="kw">fn</span> <span class="ident">is_object</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span>;
-
-    <span class="kw">fn</span> <span class="ident">parents</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>;
-
-    <span class="comment">// TODO extrapolate this from parents()</span>
-    <span class="kw">fn</span> <span class="ident">ancestors</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>;
-}
-
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Schema</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Debug</span> {
-    <span class="kw">type</span> <span class="ident">Track</span>: <span class="ident">Track</span> <span class="op">+</span> <span class="ident">Sized</span>;
-
-    <span class="doccomment">/// Determines if two sets of Attrs are equal.</span>
-    <span class="kw">fn</span> <span class="ident">attrs_eq</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">Attrs</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">Attrs</span>) <span class="op">-&gt;</span> <span class="ident">bool</span>;
-
-    <span class="doccomment">/// Get the track type from this Attrs.</span>
-    <span class="kw">fn</span> <span class="ident">track_type_from_attrs</span>(<span class="ident">attrs</span>: <span class="kw-2">&amp;</span><span class="ident">Attrs</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Track</span><span class="op">&gt;</span>;
-
-    <span class="doccomment">/// Combine two Attrs into a new definition.</span>
-    <span class="kw">fn</span> <span class="ident">merge_attrs</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">Attrs</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">Attrs</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Attrs</span><span class="op">&gt;</span>;
-}
+<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">schema</span>::<span class="kw-2">*</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">TrackState</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">S</span>: <span class="ident">Schema</span>,
-{
-    <span class="ident">tag_a</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Attrs</span><span class="op">&gt;</span>,
-    <span class="ident">tag_real</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Attrs</span><span class="op">&gt;</span>,
-    <span class="ident">tag_b</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Attrs</span><span class="op">&gt;</span>,
+<span class="kw">struct</span> <span class="ident">TrackState</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span> {
+    <span class="ident">tag_a</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">GroupProperties</span><span class="op">&gt;</span>,
+    <span class="ident">tag_real</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">GroupProperties</span><span class="op">&gt;</span>,
+    <span class="ident">tag_b</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">GroupProperties</span><span class="op">&gt;</span>,
     <span class="ident">is_original_a</span>: <span class="ident">bool</span>,
     <span class="ident">is_original_b</span>: <span class="ident">bool</span>,
     <span class="ident">_phantom</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">struct</span> <span class="ident">Transform</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">S</span>: <span class="ident">Schema</span>,
-{
+<span class="kw">struct</span> <span class="ident">Transform</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span> {
     <span class="ident">tracks</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TrackState</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;&gt;</span>,
-    <span class="ident">a_del</span>: <span class="ident">DelWriter</span>,
-    <span class="ident">a_add</span>: <span class="ident">AddWriter</span>,
-    <span class="ident">b_del</span>: <span class="ident">DelWriter</span>,
-    <span class="ident">b_add</span>: <span class="ident">AddWriter</span>,
+    <span class="ident">a_del</span>: <span class="ident">DelWriter</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">a_add</span>: <span class="ident">AddWriter</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">b_del</span>: <span class="ident">DelWriter</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">b_add</span>: <span class="ident">AddWriter</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="ident">Transform</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">S</span>: <span class="ident">Schema</span>,
-{
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span> <span class="ident">Transform</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-&gt;</span> <span class="ident">Transform</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
         <span class="ident">Transform</span> {
             <span class="ident">tracks</span>: <span class="macro">vec</span><span class="macro">!</span>[],
@@ -2223,7 +2135,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">enter</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">Attrs</span>) {
+    <span class="kw">fn</span> <span class="ident">enter</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">S</span>::<span class="ident">GroupProperties</span>) {
         <span class="kw">let</span> <span class="ident">last</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">tracks</span>
             .<span class="ident">iter</span>()
@@ -2250,7 +2162,7 @@
     }
 
     <span class="comment">// TODO maybe take &quot;real&quot; value as input?</span>
-    <span class="kw">fn</span> <span class="ident">enter_a</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">Attrs</span>, <span class="ident">b</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Attrs</span><span class="op">&gt;</span>) {
+    <span class="kw">fn</span> <span class="ident">enter_a</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">S</span>::<span class="ident">GroupProperties</span>, <span class="ident">b</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">GroupProperties</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="ident">last</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">tracks</span>
             .<span class="ident">iter</span>()
@@ -2292,7 +2204,7 @@
         <span class="self">self</span>.<span class="ident">b_add</span>.<span class="ident">begin</span>();
     }
 
-    <span class="kw">fn</span> <span class="ident">enter_b</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Attrs</span><span class="op">&gt;</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">Attrs</span>) {
+    <span class="kw">fn</span> <span class="ident">enter_b</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">GroupProperties</span><span class="op">&gt;</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">S</span>::<span class="ident">GroupProperties</span>) {
         <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot;ENTER B&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">last</span> <span class="op">=</span> <span class="self">self</span>
@@ -2346,7 +2258,7 @@
     }
 
     <span class="comment">// Close the topmost track.</span>
-    <span class="kw">fn</span> <span class="ident">abort</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Attrs</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Attrs</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Attrs</span><span class="op">&gt;</span>) {
+    <span class="kw">fn</span> <span class="ident">abort</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">GroupProperties</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">GroupProperties</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">GroupProperties</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="ident">track</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tracks</span>.<span class="ident">pop</span>().<span class="ident">unwrap</span>();
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">real</span>) <span class="op">=</span> <span class="ident">track</span>.<span class="ident">tag_real</span> {
@@ -2379,38 +2291,38 @@
         <span class="self">self</span>.<span class="ident">b_add</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddSkip</span>(<span class="ident">n</span>));
     }
 
-    <span class="kw">fn</span> <span class="ident">style_a</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">count</span>: <span class="ident">usize</span>, <span class="ident">styles</span>: <span class="ident">StyleMap</span>) {
+    <span class="kw">fn</span> <span class="ident">style_a</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">count</span>: <span class="ident">usize</span>, <span class="ident">styles</span>: <span class="ident">S</span>::<span class="ident">CharsProperties</span>) {
         <span class="self">self</span>.<span class="ident">a_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelSkip</span>(<span class="ident">count</span>));
         <span class="self">self</span>.<span class="ident">a_add</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddStyles</span>(<span class="ident">count</span>, <span class="ident">styles</span>));
     }
 
-    <span class="kw">fn</span> <span class="ident">style_b</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">count</span>: <span class="ident">usize</span>, <span class="ident">styles</span>: <span class="ident">StyleMap</span>) {
+    <span class="kw">fn</span> <span class="ident">style_b</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">count</span>: <span class="ident">usize</span>, <span class="ident">styles</span>: <span class="ident">S</span>::<span class="ident">CharsProperties</span>) {
         <span class="self">self</span>.<span class="ident">b_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelSkip</span>(<span class="ident">count</span>));
         <span class="self">self</span>.<span class="ident">b_add</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddStyles</span>(<span class="ident">count</span>, <span class="ident">styles</span>));
     }
 
-    <span class="kw">fn</span> <span class="ident">with_group_a</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">span</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span>) {
+    <span class="kw">fn</span> <span class="ident">with_group_a</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">span</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) {
         <span class="self">self</span>.<span class="ident">a_add</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddWithGroup</span>(<span class="ident">span</span>.<span class="ident">clone</span>()));
     }
 
-    <span class="kw">fn</span> <span class="ident">with_group_b</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">span</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span>) {
+    <span class="kw">fn</span> <span class="ident">with_group_b</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">span</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) {
         <span class="self">self</span>.<span class="ident">b_add</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddWithGroup</span>(<span class="ident">span</span>.<span class="ident">clone</span>()));
     }
 
-    <span class="kw">fn</span> <span class="ident">group_a</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">attrs</span>: <span class="kw-2">&amp;</span><span class="ident">Attrs</span>, <span class="ident">span</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span>) {
+    <span class="kw">fn</span> <span class="ident">group_a</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">attrs</span>: <span class="kw-2">&amp;</span><span class="ident">S</span>::<span class="ident">GroupProperties</span>, <span class="ident">span</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) {
         <span class="self">self</span>.<span class="ident">a_add</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddGroup</span>(<span class="ident">attrs</span>.<span class="ident">clone</span>(), <span class="ident">span</span>.<span class="ident">clone</span>()));
     }
 
-    <span class="kw">fn</span> <span class="ident">group_b</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">attrs</span>: <span class="kw-2">&amp;</span><span class="ident">Attrs</span>, <span class="ident">span</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span>) {
+    <span class="kw">fn</span> <span class="ident">group_b</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">attrs</span>: <span class="kw-2">&amp;</span><span class="ident">S</span>::<span class="ident">GroupProperties</span>, <span class="ident">span</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) {
         <span class="self">self</span>.<span class="ident">b_add</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddGroup</span>(<span class="ident">attrs</span>.<span class="ident">clone</span>(), <span class="ident">span</span>.<span class="ident">clone</span>()));
     }
 
-    <span class="kw">fn</span> <span class="ident">chars_a</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">chars</span>: <span class="ident">DocString</span>, <span class="ident">styles</span>: <span class="ident">OpaqueStyleMap</span>) {
-        <span class="self">self</span>.<span class="ident">a_add</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddChars</span>(<span class="ident">chars</span>, <span class="ident">styles</span>));
+    <span class="kw">fn</span> <span class="ident">chars_a</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">chars</span>: <span class="ident">DocString</span>, <span class="ident">styles</span>: <span class="ident">S</span>::<span class="ident">CharsProperties</span>) {
+        <span class="self">self</span>.<span class="ident">a_add</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddText</span>(<span class="ident">styles</span>, <span class="ident">chars</span>));
     }
 
-    <span class="kw">fn</span> <span class="ident">chars_b</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">chars</span>: <span class="ident">DocString</span>, <span class="ident">styles</span>: <span class="ident">OpaqueStyleMap</span>) {
-        <span class="self">self</span>.<span class="ident">b_add</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddChars</span>(<span class="ident">chars</span>, <span class="ident">styles</span>));
+    <span class="kw">fn</span> <span class="ident">chars_b</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">chars</span>: <span class="ident">DocString</span>, <span class="ident">styles</span>: <span class="ident">S</span>::<span class="ident">CharsProperties</span>) {
+        <span class="self">self</span>.<span class="ident">b_add</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddText</span>(<span class="ident">styles</span>, <span class="ident">chars</span>));
     }
 
     <span class="kw">fn</span> <span class="ident">current</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TrackState</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;&gt;</span> {
@@ -2694,7 +2606,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">result</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> (<span class="ident">Op</span>, <span class="ident">Op</span>) {
+    <span class="kw">fn</span> <span class="ident">result</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> (<span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a_del</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">a_del</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a_add</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">a_add</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b_del</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">b_del</span>;
@@ -2738,7 +2650,7 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transform_insertions</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(<span class="ident">avec</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span>, <span class="ident">bvec</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span>) <span class="op">-&gt;</span> (<span class="ident">Op</span>, <span class="ident">Op</span>) {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transform_insertions</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(<span class="ident">avec</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">bvec</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> (<span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">AddStepper</span>::<span class="ident">new</span>(<span class="ident">avec</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">AddStepper</span>::<span class="ident">new</span>(<span class="ident">bvec</span>);
 
@@ -2746,8 +2658,8 @@
 
     <span class="kw">while</span> <span class="op">!</span>(<span class="ident">a</span>.<span class="ident">is_done</span>() <span class="op">&amp;&amp;</span> <span class="ident">b</span>.<span class="ident">is_done</span>()) {
         <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">Green</span>.<span class="ident">bold</span>().<span class="ident">paint</span>(<span class="string">&quot;Tracks:&quot;</span>));
-        <span class="kw">for</span> <span class="ident">t</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">t</span>.<span class="ident">tracks</span> {
-            <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">BrightGreen</span>.<span class="ident">paint</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot; - {:?}&quot;</span>, <span class="ident">t</span>)));
+        <span class="kw">for</span> <span class="ident">_t</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">t</span>.<span class="ident">tracks</span> {
+            <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">BrightGreen</span>.<span class="ident">paint</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot; - {:?}&quot;</span>, <span class="ident">_t</span>)));
         }
 
         <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">BrightGreen</span>.<span class="ident">paint</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot; @ a_del: {:?}&quot;</span>, <span class="ident">t</span>.<span class="ident">a_del</span>)));
@@ -2774,7 +2686,7 @@
                     <span class="ident">t</span>.<span class="ident">with_group_a</span>(<span class="ident">span</span>);
                     <span class="ident">b</span>.<span class="ident">next</span>();
                 }
-                <span class="prelude-val">Some</span>(<span class="ident">AddChars</span>(<span class="ident">b_chars</span>, <span class="ident">b_styles</span>)) <span class="op">=&gt;</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">AddText</span>(<span class="ident">b_styles</span>, <span class="ident">b_chars</span>)) <span class="op">=&gt;</span> {
                     <span class="ident">t</span>.<span class="ident">skip_b</span>(<span class="ident">b_chars</span>.<span class="ident">char_len</span>());
                     <span class="ident">t</span>.<span class="ident">chars_a</span>(<span class="ident">b_chars</span>, <span class="ident">b_styles</span>);
                     <span class="ident">b</span>.<span class="ident">next</span>();
@@ -2812,7 +2724,7 @@
                     <span class="ident">t</span>.<span class="ident">with_group_b</span>(<span class="ident">span</span>);
                     <span class="ident">a</span>.<span class="ident">next</span>();
                 }
-                <span class="prelude-val">Some</span>(<span class="ident">AddChars</span>(<span class="ident">a_chars</span>, <span class="ident">a_styles</span>)) <span class="op">=&gt;</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">AddText</span>(<span class="ident">a_styles</span>, <span class="ident">a_chars</span>)) <span class="op">=&gt;</span> {
                     <span class="ident">t</span>.<span class="ident">skip_a</span>(<span class="ident">a_chars</span>.<span class="ident">char_len</span>());
                     <span class="ident">t</span>.<span class="ident">chars_b</span>(<span class="ident">a_chars</span>, <span class="ident">a_styles</span>);
                     <span class="ident">a</span>.<span class="ident">next</span>();
@@ -2881,7 +2793,7 @@
                 <span class="comment">// TODO don&#39;t like that this isn&#39;t a pattern match;</span>
                 <span class="comment">// This case should handle AddWithGroup and AddGroup (I believe)</span>
                 (<span class="prelude-val">None</span>, <span class="ident">compare</span>) <span class="op">=&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">ok</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">AddChars</span>(<span class="kw-2">ref</span> <span class="ident">b_chars</span>, <span class="kw-2">ref</span> <span class="ident">b_styles</span>)) <span class="op">=</span> <span class="ident">compare</span> {
+                    <span class="kw">let</span> <span class="ident">ok</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">AddText</span>(<span class="kw-2">ref</span> <span class="ident">b_styles</span>, <span class="kw-2">ref</span> <span class="ident">b_chars</span>)) <span class="op">=</span> <span class="ident">compare</span> {
                         <span class="kw">if</span> <span class="ident">t</span>.<span class="ident">supports_text</span>() {
                             <span class="ident">t</span>.<span class="ident">skip_b</span>(<span class="ident">b_chars</span>.<span class="ident">char_len</span>());
                             <span class="ident">t</span>.<span class="ident">chars_a</span>(<span class="ident">b_chars</span>.<span class="ident">clone</span>(), <span class="ident">b_styles</span>.<span class="ident">clone</span>());
@@ -3030,7 +2942,7 @@
                     <span class="comment">// TODO if they are different tags THEN WHAT</span>
                 }
                 (<span class="ident">compare</span>, <span class="prelude-val">None</span>) <span class="op">=&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">is_char</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">AddChars</span>(<span class="ident">a_chars</span>, <span class="ident">a_styles</span>)) <span class="op">=</span> <span class="ident">compare</span>.<span class="ident">clone</span>() {
+                    <span class="kw">let</span> <span class="ident">is_char</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">AddText</span>(<span class="ident">a_styles</span>, <span class="ident">a_chars</span>)) <span class="op">=</span> <span class="ident">compare</span>.<span class="ident">clone</span>() {
                         <span class="kw">if</span> <span class="ident">t</span>.<span class="ident">supports_text</span>() {
                             <span class="ident">t</span>.<span class="ident">regenerate</span>();
 
@@ -3216,15 +3128,15 @@
                     <span class="ident">t</span>.<span class="ident">skip_a</span>(<span class="ident">cmp</span>::<span class="ident">min</span>(<span class="ident">a_count</span>, <span class="ident">b_count</span>));
                     <span class="ident">t</span>.<span class="ident">style_b</span>(<span class="ident">cmp</span>::<span class="ident">min</span>(<span class="ident">a_count</span>, <span class="ident">b_count</span>), <span class="ident">a_styles</span>);
                 }
-                (<span class="prelude-val">Some</span>(<span class="ident">AddSkip</span>(..)), <span class="prelude-val">Some</span>(<span class="ident">AddChars</span>(<span class="ident">b_chars</span>, <span class="ident">b_styles</span>)))
-                <span class="op">|</span> (<span class="prelude-val">Some</span>(<span class="ident">AddStyles</span>(..)), <span class="prelude-val">Some</span>(<span class="ident">AddChars</span>(<span class="ident">b_chars</span>, <span class="ident">b_styles</span>))) <span class="op">=&gt;</span> {
+                <span class="op">|</span> (<span class="prelude-val">Some</span>(<span class="ident">AddSkip</span>(..)), <span class="prelude-val">Some</span>(<span class="ident">AddText</span>(<span class="ident">b_styles</span>, <span class="ident">b_chars</span>)))
+                <span class="op">|</span> (<span class="prelude-val">Some</span>(<span class="ident">AddStyles</span>(..)), <span class="prelude-val">Some</span>(<span class="ident">AddText</span>(<span class="ident">b_styles</span>, <span class="ident">b_chars</span>))) <span class="op">=&gt;</span> {
                     <span class="ident">t</span>.<span class="ident">regenerate</span>();
 
                     <span class="ident">b</span>.<span class="ident">next</span>();
                     <span class="ident">t</span>.<span class="ident">skip_b</span>(<span class="ident">b_chars</span>.<span class="ident">char_len</span>());
                     <span class="ident">t</span>.<span class="ident">chars_a</span>(<span class="ident">b_chars</span>, <span class="ident">b_styles</span>);
                 }
-                (<span class="prelude-val">Some</span>(<span class="ident">AddChars</span>(<span class="ident">a_chars</span>, <span class="ident">a_styles</span>)), <span class="kw">_</span>) <span class="op">=&gt;</span> {
+                (<span class="prelude-val">Some</span>(<span class="ident">AddText</span>(<span class="ident">a_styles</span>, <span class="ident">a_chars</span>)), <span class="kw">_</span>) <span class="op">=&gt;</span> {
                     <span class="ident">t</span>.<span class="ident">regenerate</span>();
 
                     <span class="ident">t</span>.<span class="ident">skip_a</span>(<span class="ident">a_chars</span>.<span class="ident">char_len</span>());
@@ -3282,7 +3194,7 @@
                     }
                     <span class="ident">b</span>.<span class="ident">next</span>();
                 }
-                (<span class="prelude-val">Some</span>(<span class="ident">AddWithGroup</span>(<span class="ident">_a_inner</span>)), <span class="prelude-val">Some</span>(<span class="ident">AddChars</span>(<span class="ident">b_chars</span>, <span class="ident">b_styles</span>))) <span class="op">=&gt;</span> {
+                (<span class="prelude-val">Some</span>(<span class="ident">AddWithGroup</span>(<span class="ident">_a_inner</span>)), <span class="prelude-val">Some</span>(<span class="ident">AddText</span>(<span class="ident">b_styles</span>, <span class="ident">b_chars</span>))) <span class="op">=&gt;</span> {
                     <span class="ident">t</span>.<span class="ident">regenerate</span>(); <span class="comment">// caret-35</span>
 
                     <span class="ident">t</span>.<span class="ident">b_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelSkip</span>(<span class="ident">b_chars</span>.<span class="ident">char_len</span>()));
@@ -3308,11 +3220,11 @@
 }
 
 <span class="comment">// Create del span that occurs after the input deletion has occurred.</span>
-<span class="kw">fn</span> <span class="ident">undel</span>(<span class="ident">input_del</span>: <span class="kw-2">&amp;</span><span class="ident">DelSpan</span>) <span class="op">-&gt;</span> <span class="ident">DelSpan</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">del</span>: <span class="ident">DelSpan</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+<span class="kw">fn</span> <span class="ident">undel</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(<span class="ident">input_del</span>: <span class="kw-2">&amp;</span><span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">del</span>: <span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
     <span class="kw">for</span> <span class="ident">elem</span> <span class="kw">in</span> <span class="ident">input_del</span> {
         <span class="kw">match</span> <span class="ident">elem</span> {
-            <span class="kw-2">&amp;</span><span class="ident">DelChars</span>(..) <span class="op">=&gt;</span> {
+            <span class="kw-2">&amp;</span><span class="ident">DelText</span>(..) <span class="op">=&gt;</span> {
                 <span class="comment">// skip</span>
             }
             <span class="kw-2">&amp;</span><span class="ident">DelSkip</span>(<span class="ident">value</span>) <span class="op">=&gt;</span> {
@@ -3332,11 +3244,11 @@
     <span class="ident">del</span>
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transform_del_del_inner</span>(
-    <span class="ident">a_del</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelWriter</span>,
-    <span class="ident">b_del</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelWriter</span>,
-    <span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelStepper</span>,
-    <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelStepper</span>,
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transform_del_del_inner</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(
+    <span class="ident">a_del</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelWriter</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">b_del</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelWriter</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelStepper</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelStepper</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
 ) {
     <span class="kw">while</span> <span class="op">!</span><span class="ident">a</span>.<span class="ident">is_done</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">b</span>.<span class="ident">is_done</span>() {
         <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">Green</span>.<span class="ident">bold</span>().<span class="ident">paint</span>(<span class="string">&quot;transform_deletions:&quot;</span>));
@@ -3438,36 +3350,36 @@
                 <span class="ident">a_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelSkip</span>(<span class="ident">cmp</span>::<span class="ident">min</span>(<span class="ident">a_count</span>, <span class="ident">b_count</span>)));
                 <span class="ident">b_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelSkip</span>(<span class="ident">cmp</span>::<span class="ident">min</span>(<span class="ident">a_count</span>, <span class="ident">b_count</span>)));
             }
-            (<span class="prelude-val">Some</span>(<span class="ident">DelSkip</span>(<span class="ident">a_count</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="ident">b_chars</span>))) <span class="op">=&gt;</span> {
+            (<span class="prelude-val">Some</span>(<span class="ident">DelSkip</span>(<span class="ident">a_count</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="ident">b_chars</span>))) <span class="op">=&gt;</span> {
                 <span class="kw">if</span> <span class="ident">a_count</span> <span class="op">&gt;</span> <span class="ident">b_chars</span> {
                     <span class="ident">a</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelSkip</span>(<span class="ident">a_count</span> <span class="op">-</span> <span class="ident">b_chars</span>));
                     <span class="ident">b</span>.<span class="ident">next</span>();
-                    <span class="ident">a_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelChars</span>(<span class="ident">b_chars</span>));
+                    <span class="ident">a_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelText</span>(<span class="ident">b_chars</span>));
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">a_count</span> <span class="op">&lt;</span> <span class="ident">b_chars</span> {
                     <span class="ident">a</span>.<span class="ident">next</span>();
-                    <span class="ident">b</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="ident">b_chars</span> <span class="op">-</span> <span class="ident">a_count</span>));
-                    <span class="ident">a_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelChars</span>(<span class="ident">a_count</span>));
+                    <span class="ident">b</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="ident">b_chars</span> <span class="op">-</span> <span class="ident">a_count</span>));
+                    <span class="ident">a_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelText</span>(<span class="ident">a_count</span>));
                 } <span class="kw">else</span> {
                     <span class="ident">a</span>.<span class="ident">next</span>();
                     <span class="ident">b</span>.<span class="ident">next</span>();
-                    <span class="ident">a_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelChars</span>(<span class="ident">b_chars</span>));
+                    <span class="ident">a_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelText</span>(<span class="ident">b_chars</span>));
                 }
             }
-            (<span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="ident">a_chars</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="ident">b_chars</span>))) <span class="op">=&gt;</span> {
+            (<span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="ident">a_chars</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="ident">b_chars</span>))) <span class="op">=&gt;</span> {
                 <span class="kw">if</span> <span class="ident">a_chars</span> <span class="op">&gt;</span> <span class="ident">b_chars</span> {
-                    <span class="ident">a</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="ident">a_chars</span> <span class="op">-</span> <span class="ident">b_chars</span>));
+                    <span class="ident">a</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="ident">a_chars</span> <span class="op">-</span> <span class="ident">b_chars</span>));
                     <span class="ident">b</span>.<span class="ident">next</span>();
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">a_chars</span> <span class="op">&lt;</span> <span class="ident">b_chars</span> {
                     <span class="ident">a</span>.<span class="ident">next</span>();
-                    <span class="ident">b</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="ident">b_chars</span> <span class="op">-</span> <span class="ident">a_chars</span>));
+                    <span class="ident">b</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="ident">b_chars</span> <span class="op">-</span> <span class="ident">a_chars</span>));
                 } <span class="kw">else</span> {
                     <span class="ident">a</span>.<span class="ident">next</span>();
                     <span class="ident">b</span>.<span class="ident">next</span>();
                 }
             }
-            (<span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="ident">a_chars</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelSkip</span>(<span class="ident">b_count</span>))) <span class="op">=&gt;</span> {
+            (<span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="ident">a_chars</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelSkip</span>(<span class="ident">b_count</span>))) <span class="op">=&gt;</span> {
                 <span class="kw">if</span> <span class="ident">a_chars</span> <span class="op">&gt;</span> <span class="ident">b_count</span> {
-                    <span class="ident">a</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="ident">a_chars</span> <span class="op">-</span> <span class="ident">b_count</span>));
+                    <span class="ident">a</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="ident">a_chars</span> <span class="op">-</span> <span class="ident">b_count</span>));
                     <span class="ident">b</span>.<span class="ident">next</span>();
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">a_chars</span> <span class="op">&lt;</span> <span class="ident">b_count</span> {
                     <span class="ident">a</span>.<span class="ident">next</span>();
@@ -3478,7 +3390,7 @@
                 }
 
                 <span class="comment">// a_del.skip(cmp::min(a_chars, b_chars));</span>
-                <span class="ident">b_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelChars</span>(<span class="ident">cmp</span>::<span class="ident">min</span>(<span class="ident">a_chars</span>, <span class="ident">b_count</span>)));
+                <span class="ident">b_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelText</span>(<span class="ident">cmp</span>::<span class="ident">min</span>(<span class="ident">a_chars</span>, <span class="ident">b_count</span>)));
             }
             (<span class="prelude-val">Some</span>(<span class="ident">DelStyles</span>(<span class="ident">a_count</span>, <span class="ident">a_styles</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelStyles</span>(<span class="ident">b_count</span>, <span class="ident">b_styles</span>))) <span class="op">=&gt;</span> {
                 <span class="kw">if</span> <span class="ident">a_count</span> <span class="op">&gt;</span> <span class="ident">b_count</span> {
@@ -3531,32 +3443,32 @@
                     <span class="ident">b_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelStyles</span>(<span class="ident">a_count</span>, <span class="ident">a_styles</span>));
                 }
             }
-            (<span class="prelude-val">Some</span>(<span class="ident">DelStyles</span>(<span class="ident">a_count</span>, <span class="ident">a_styles</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="ident">b_count</span>))) <span class="op">=&gt;</span> {
+            (<span class="prelude-val">Some</span>(<span class="ident">DelStyles</span>(<span class="ident">a_count</span>, <span class="ident">a_styles</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="ident">b_count</span>))) <span class="op">=&gt;</span> {
                 <span class="kw">if</span> <span class="ident">a_count</span> <span class="op">&gt;</span> <span class="ident">b_count</span> {
                     <span class="ident">a</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelStyles</span>(<span class="ident">a_count</span> <span class="op">-</span> <span class="ident">b_count</span>, <span class="ident">a_styles</span>.<span class="ident">clone</span>()));
                     <span class="ident">b</span>.<span class="ident">next</span>();
-                    <span class="ident">a_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelChars</span>(<span class="ident">b_count</span>));
+                    <span class="ident">a_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelText</span>(<span class="ident">b_count</span>));
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">a_count</span> <span class="op">&lt;</span> <span class="ident">b_count</span> {
                     <span class="ident">a</span>.<span class="ident">next</span>();
-                    <span class="ident">b</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="ident">b_count</span> <span class="op">-</span> <span class="ident">a_count</span>));
+                    <span class="ident">b</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="ident">b_count</span> <span class="op">-</span> <span class="ident">a_count</span>));
                 } <span class="kw">else</span> {
                     <span class="ident">a</span>.<span class="ident">next</span>();
                     <span class="ident">b</span>.<span class="ident">next</span>();
-                    <span class="ident">a_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelChars</span>(<span class="ident">a_count</span>));
+                    <span class="ident">a_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelText</span>(<span class="ident">a_count</span>));
                 }
             }
-            (<span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="ident">a_count</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelStyles</span>(<span class="ident">b_count</span>, <span class="ident">b_styles</span>))) <span class="op">=&gt;</span> {
+            (<span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="ident">a_count</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelStyles</span>(<span class="ident">b_count</span>, <span class="ident">b_styles</span>))) <span class="op">=&gt;</span> {
                 <span class="kw">if</span> <span class="ident">a_count</span> <span class="op">&gt;</span> <span class="ident">b_count</span> {
-                    <span class="ident">a</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="ident">a_count</span> <span class="op">-</span> <span class="ident">b_count</span>));
+                    <span class="ident">a</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="ident">a_count</span> <span class="op">-</span> <span class="ident">b_count</span>));
                     <span class="ident">b</span>.<span class="ident">next</span>();
-                    <span class="ident">b_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelChars</span>(<span class="ident">b_count</span>));
+                    <span class="ident">b_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelText</span>(<span class="ident">b_count</span>));
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">a_count</span> <span class="op">&lt;</span> <span class="ident">b_count</span> {
                     <span class="ident">a</span>.<span class="ident">next</span>();
                     <span class="ident">b</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelStyles</span>(<span class="ident">b_count</span> <span class="op">-</span> <span class="ident">a_count</span>, <span class="ident">b_styles</span>.<span class="ident">clone</span>()));
                 } <span class="kw">else</span> {
                     <span class="ident">a</span>.<span class="ident">next</span>();
                     <span class="ident">b</span>.<span class="ident">next</span>();
-                    <span class="ident">b_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelChars</span>(<span class="ident">a_count</span>));
+                    <span class="ident">b_del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelText</span>(<span class="ident">a_count</span>));
                 }
             }
 
@@ -3681,14 +3593,14 @@
             <span class="comment">// TODO why are these unreachable?</span>
             (<span class="prelude-val">None</span>, <span class="kw">_</span>)
             <span class="op">|</span> (<span class="kw">_</span>, <span class="prelude-val">None</span>)
-            <span class="op">|</span> (<span class="prelude-val">Some</span>(<span class="ident">DelWithGroup</span>(<span class="kw">_</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="kw">_</span>)))
+            <span class="op">|</span> (<span class="prelude-val">Some</span>(<span class="ident">DelWithGroup</span>(<span class="kw">_</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="kw">_</span>)))
             <span class="op">|</span> (<span class="prelude-val">Some</span>(<span class="ident">DelWithGroup</span>(<span class="kw">_</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelStyles</span>(<span class="kw">_</span>, <span class="kw">_</span>)))
             <span class="op">|</span> (<span class="prelude-val">Some</span>(<span class="ident">DelStyles</span>(<span class="kw">_</span>, <span class="kw">_</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelWithGroup</span>(<span class="kw">_</span>)))
-            <span class="op">|</span> (<span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="kw">_</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelWithGroup</span>(<span class="kw">_</span>)))
-            <span class="op">|</span> (<span class="prelude-val">Some</span>(<span class="ident">DelGroup</span>(<span class="kw">_</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="kw">_</span>)))
+            <span class="op">|</span> (<span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="kw">_</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelWithGroup</span>(<span class="kw">_</span>)))
+            <span class="op">|</span> (<span class="prelude-val">Some</span>(<span class="ident">DelGroup</span>(<span class="kw">_</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="kw">_</span>)))
             <span class="op">|</span> (<span class="prelude-val">Some</span>(<span class="ident">DelGroup</span>(<span class="kw">_</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelStyles</span>(<span class="kw">_</span>, <span class="kw">_</span>)))
             <span class="op">|</span> (<span class="prelude-val">Some</span>(<span class="ident">DelStyles</span>(<span class="kw">_</span>, <span class="kw">_</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelGroup</span>(<span class="kw">_</span>)))
-            <span class="op">|</span> (<span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="kw">_</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelGroup</span>(<span class="kw">_</span>))) <span class="op">=&gt;</span> {
+            <span class="op">|</span> (<span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="kw">_</span>)), <span class="prelude-val">Some</span>(<span class="ident">DelGroup</span>(<span class="kw">_</span>))) <span class="op">=&gt;</span> {
                 <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot;Not reachable: {:?}&quot;</span>, <span class="ident">unimplemented</span>);
                 <span class="macro">unreachable</span><span class="macro">!</span>();
             }
@@ -3698,7 +3610,10 @@
     <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">BrightYellow</span>.<span class="ident">paint</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;done&quot;</span>)),);
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transform_deletions</span>(<span class="ident">avec</span>: <span class="kw-2">&amp;</span><span class="ident">DelSpan</span>, <span class="ident">bvec</span>: <span class="kw-2">&amp;</span><span class="ident">DelSpan</span>) <span class="op">-&gt;</span> (<span class="ident">DelSpan</span>, <span class="ident">DelSpan</span>) {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transform_deletions</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(
+    <span class="ident">avec</span>: <span class="kw-2">&amp;</span><span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">bvec</span>: <span class="kw-2">&amp;</span><span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+) <span class="op">-&gt;</span> (<span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a_del</span> <span class="op">=</span> <span class="ident">DelWriter</span>::<span class="ident">new</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b_del</span> <span class="op">=</span> <span class="ident">DelWriter</span>::<span class="ident">new</span>();
 
@@ -3750,18 +3665,18 @@
     (<span class="ident">a_res</span>, <span class="ident">b_res</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transform_add_del_inner</span>(
-    <span class="ident">delres</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelSpan</span>,
-    <span class="ident">addres</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">AddSpan</span>,
-    <span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">AddStepper</span>,
-    <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelStepper</span>,
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transform_add_del_inner</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(
+    <span class="ident">delres</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">addres</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">AddStepper</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelStepper</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
 ) {
     <span class="kw">while</span> <span class="op">!</span><span class="ident">b</span>.<span class="ident">is_done</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">a</span>.<span class="ident">is_done</span>() {
         <span class="kw">match</span> <span class="ident">b</span>.<span class="ident">get_head</span>() {
-            <span class="ident">DelChars</span>(<span class="ident">bcount</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">a</span>.<span class="ident">get_head</span>() {
-                <span class="ident">AddChars</span>(<span class="ident">avalue</span>, <span class="ident">a_styles</span>) <span class="op">=&gt;</span> {
+            <span class="ident">DelText</span>(<span class="ident">bcount</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">a</span>.<span class="ident">get_head</span>() {
+                <span class="ident">AddText</span>(<span class="ident">a_styles</span>, <span class="ident">avalue</span>) <span class="op">=&gt;</span> {
                     <span class="ident">delres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelSkip</span>(<span class="ident">avalue</span>.<span class="ident">char_len</span>()));
-                    <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddChars</span>(<span class="ident">avalue</span>, <span class="ident">a_styles</span>));
+                    <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddText</span>(<span class="ident">a_styles</span>, <span class="ident">avalue</span>));
                     <span class="ident">a</span>.<span class="ident">next</span>();
                 }
                 <span class="ident">AddSkip</span>(<span class="ident">acount</span>) <span class="op">=&gt;</span> {
@@ -3770,8 +3685,8 @@
                         <span class="ident">delres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>());
                     } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">bcount</span> <span class="op">&gt;</span> <span class="ident">acount</span> {
                         <span class="ident">a</span>.<span class="ident">next</span>();
-                        <span class="ident">delres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelChars</span>(<span class="ident">acount</span>));
-                        <span class="ident">b</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="ident">bcount</span> <span class="op">-</span> <span class="ident">acount</span>));
+                        <span class="ident">delres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelText</span>(<span class="ident">acount</span>));
+                        <span class="ident">b</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="ident">bcount</span> <span class="op">-</span> <span class="ident">acount</span>));
                     } <span class="kw">else</span> {
                         <span class="ident">a</span>.<span class="ident">next</span>();
                         <span class="ident">delres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>());
@@ -3779,8 +3694,8 @@
                 }
                 <span class="ident">AddGroup</span>(<span class="ident">attrs</span>, <span class="ident">a_span</span>) <span class="op">=&gt;</span> {
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a_inner</span> <span class="op">=</span> <span class="ident">AddStepper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">a_span</span>);
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addres_inner</span>: <span class="ident">AddSpan</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">delres_inner</span>: <span class="ident">DelSpan</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addres_inner</span>: <span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">delres_inner</span>: <span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
                     <span class="ident">transform_add_del_inner</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">delres_inner</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">addres_inner</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">a_inner</span>, <span class="ident">b</span>);
                     <span class="kw">if</span> <span class="op">!</span><span class="ident">a_inner</span>.<span class="ident">is_done</span>() {
                         <span class="ident">addres_inner</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">a_inner</span>.<span class="ident">head</span>.<span class="ident">unwrap</span>());
@@ -3790,15 +3705,15 @@
                     <span class="ident">delres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelWithGroup</span>(<span class="ident">delres_inner</span>));
                     <span class="ident">a</span>.<span class="ident">next</span>();
                 }
-                <span class="ident">unknown</span> <span class="op">=&gt;</span> {
-                    <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot;Compare: {:?} {:?}&quot;</span>, <span class="ident">DelChars</span>(<span class="ident">bcount</span>), <span class="ident">unknown</span>);
+                <span class="ident">_unknown</span> <span class="op">=&gt;</span> {
+                    <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot;Compare: {:?} {:?}&quot;</span>, <span class="ident">DelText</span>(<span class="ident">bcount</span>), <span class="ident">_unknown</span>);
                     <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Unimplemented or Unexpected&quot;</span>);
                 }
             },
             <span class="ident">DelSkip</span>(<span class="ident">bcount</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">a</span>.<span class="ident">get_head</span>() {
-                <span class="ident">AddChars</span>(<span class="ident">avalue</span>, <span class="ident">a_styles</span>) <span class="op">=&gt;</span> {
+                <span class="ident">AddText</span>(<span class="ident">a_styles</span>, <span class="ident">avalue</span>) <span class="op">=&gt;</span> {
                     <span class="ident">delres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelSkip</span>(<span class="ident">avalue</span>.<span class="ident">char_len</span>()));
-                    <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddChars</span>(<span class="ident">avalue</span>, <span class="ident">a_styles</span>));
+                    <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddText</span>(<span class="ident">a_styles</span>, <span class="ident">avalue</span>));
                     <span class="ident">a</span>.<span class="ident">next</span>();
                 }
                 <span class="ident">AddStyles</span>(<span class="ident">a_count</span>, <span class="ident">a_styles</span>) <span class="op">=&gt;</span> {
@@ -3840,8 +3755,8 @@
                 }
                 <span class="ident">AddGroup</span>(<span class="ident">attrs</span>, <span class="ident">a_span</span>) <span class="op">=&gt;</span> {
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a_inner</span> <span class="op">=</span> <span class="ident">AddStepper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">a_span</span>);
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addres_inner</span>: <span class="ident">AddSpan</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">delres_inner</span>: <span class="ident">DelSpan</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addres_inner</span>: <span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">delres_inner</span>: <span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
                     <span class="ident">transform_add_del_inner</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">delres_inner</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">addres_inner</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">a_inner</span>, <span class="ident">b</span>);
                     <span class="kw">if</span> <span class="op">!</span><span class="ident">a_inner</span>.<span class="ident">is_done</span>() {
                         <span class="ident">addres_inner</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">a_inner</span>.<span class="ident">head</span>.<span class="ident">unwrap</span>());
@@ -3853,18 +3768,15 @@
                 }
             },
             <span class="ident">DelStyles</span>(<span class="ident">b_count</span>, <span class="ident">b_styles</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">a</span>.<span class="ident">get_head</span>() {
-                <span class="ident">AddChars</span>(<span class="ident">a_value</span>, <span class="ident">a_styles</span>) <span class="op">=&gt;</span> {
+                <span class="ident">AddText</span>(<span class="ident">a_styles</span>, <span class="ident">a_value</span>) <span class="op">=&gt;</span> {
                     <span class="ident">delres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelSkip</span>(<span class="ident">a_value</span>.<span class="ident">char_len</span>()));
-                    <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddChars</span>(<span class="ident">a_value</span>, <span class="ident">a_styles</span>));
+                    <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddText</span>(<span class="ident">a_styles</span>, <span class="ident">a_value</span>));
                     <span class="ident">a</span>.<span class="ident">next</span>();
                 }
                 <span class="ident">AddStyles</span>(<span class="ident">a_count</span>, <span class="ident">a_styles</span>) <span class="op">=&gt;</span> {
-                    <span class="comment">// Remove styles from A that were present in B.</span>
-                    <span class="kw">let</span> <span class="ident">combined_styles</span>: <span class="ident">StyleMap</span> <span class="op">=</span> <span class="ident">a_styles</span>
-                        .<span class="ident">clone</span>()
-                        .<span class="ident">drain</span>()
-                        .<span class="ident">filter</span>(<span class="op">|</span>(<span class="kw-2">ref</span> <span class="ident">k</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">b_styles</span>.<span class="ident">contains</span>(<span class="ident">k</span>))
-                        .<span class="ident">collect</span>();
+                    <span class="comment">// a_styles - b_styles</span>
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">combined_styles</span> <span class="op">=</span> <span class="ident">a_styles</span>.<span class="ident">clone</span>();
+                    <span class="ident">combined_styles</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">b_styles</span>);
 
                     <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddStyles</span>(<span class="ident">cmp</span>::<span class="ident">min</span>(<span class="ident">a_count</span>, <span class="ident">b_count</span>), <span class="ident">combined_styles</span>));
                     <span class="ident">delres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelStyles</span>(<span class="ident">b_count</span>, <span class="ident">b_styles</span>.<span class="ident">clone</span>())); <span class="comment">// Not combined</span>
@@ -3895,8 +3807,8 @@
                 }
                 <span class="ident">AddGroup</span>(<span class="ident">attrs</span>, <span class="ident">a_span</span>) <span class="op">=&gt;</span> {
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a_inner</span> <span class="op">=</span> <span class="ident">AddStepper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">a_span</span>);
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addres_inner</span>: <span class="ident">AddSpan</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">delres_inner</span>: <span class="ident">DelSpan</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addres_inner</span>: <span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">delres_inner</span>: <span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
                     <span class="ident">transform_add_del_inner</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">delres_inner</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">addres_inner</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">a_inner</span>, <span class="ident">b</span>);
                     <span class="kw">if</span> <span class="op">!</span><span class="ident">a_inner</span>.<span class="ident">is_done</span>() {
                         <span class="ident">addres_inner</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">a_inner</span>.<span class="ident">head</span>.<span class="ident">unwrap</span>());
@@ -3912,7 +3824,7 @@
                 <span class="ident">AddStyles</span>(..) <span class="op">=&gt;</span> {
                     <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;invalid transform DelWithGroup with AddStyles&quot;</span>);
                 }
-                <span class="ident">AddChars</span>(<span class="ident">avalue</span>, <span class="kw">_</span>) <span class="op">=&gt;</span> {
+                <span class="ident">AddText</span>(<span class="kw">_</span>, <span class="ident">avalue</span>) <span class="op">=&gt;</span> {
                     <span class="ident">delres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelSkip</span>(<span class="ident">avalue</span>.<span class="ident">char_len</span>()));
                     <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>());
                 }
@@ -3935,8 +3847,8 @@
                 }
                 <span class="ident">AddGroup</span>(<span class="ident">attrs</span>, <span class="ident">a_span</span>) <span class="op">=&gt;</span> {
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a_inner</span> <span class="op">=</span> <span class="ident">AddStepper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">a_span</span>);
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addres_inner</span>: <span class="ident">AddSpan</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">delres_inner</span>: <span class="ident">DelSpan</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addres_inner</span>: <span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">delres_inner</span>: <span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
                     <span class="ident">transform_add_del_inner</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">delres_inner</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">addres_inner</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">a_inner</span>, <span class="ident">b</span>);
                     <span class="kw">if</span> <span class="op">!</span><span class="ident">a_inner</span>.<span class="ident">is_done</span>() {
                         <span class="ident">addres_inner</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">a_inner</span>.<span class="ident">head</span>.<span class="ident">unwrap</span>());
@@ -3952,7 +3864,7 @@
                     <span class="ident">AddStyles</span>(..) <span class="op">=&gt;</span> {
                         <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;invalid transform DelGroup with AddStyles&quot;</span>);
                     }
-                    <span class="ident">AddChars</span>(<span class="ident">avalue</span>, <span class="kw">_</span>) <span class="op">=&gt;</span> {
+                    <span class="ident">AddText</span>(<span class="kw">_</span>, <span class="ident">avalue</span>) <span class="op">=&gt;</span> {
                         <span class="ident">delres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelSkip</span>(<span class="ident">avalue</span>.<span class="ident">char_len</span>()));
                         <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>());
                     }
@@ -3974,12 +3886,12 @@
                         <span class="comment">// the document). Instead, we just delete all the newly added</span>
                         <span class="comment">// content of the group.</span>
                         <span class="kw">if</span> <span class="ident">span</span>.<span class="ident">skip_post_len</span>() <span class="op">==</span> <span class="number">0</span> {
-                            <span class="kw">fn</span> <span class="ident">unadd</span>(<span class="ident">add</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span>) <span class="op">-&gt;</span> <span class="ident">DelSpan</span> {
-                                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">del</span>: <span class="ident">DelSpan</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+                            <span class="kw">fn</span> <span class="ident">unadd</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(<span class="ident">add</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
+                                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">del</span>: <span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
                                 <span class="kw">for</span> <span class="ident">elem</span> <span class="kw">in</span> <span class="ident">add</span> {
                                     <span class="kw">match</span> <span class="ident">elem</span> {
-                                        <span class="kw-2">&amp;</span><span class="ident">AddChars</span>(<span class="kw-2">ref</span> <span class="ident">value</span>, <span class="kw">_</span>) <span class="op">=&gt;</span> {
-                                            <span class="ident">del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelChars</span>(<span class="ident">value</span>.<span class="ident">char_len</span>()));
+                                        <span class="kw-2">&amp;</span><span class="ident">AddText</span>(<span class="kw">_</span>, <span class="kw-2">ref</span> <span class="ident">value</span>) <span class="op">=&gt;</span> {
+                                            <span class="ident">del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelText</span>(<span class="ident">value</span>.<span class="ident">char_len</span>()));
                                         }
                                         <span class="kw-2">&amp;</span><span class="ident">AddStyles</span>(<span class="ident">count</span>, <span class="kw">_</span>) <span class="op">=&gt;</span> {
                                             <span class="ident">del</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelSkip</span>(<span class="ident">count</span>)); <span class="comment">// TODO unsure if correct</span>
@@ -4004,8 +3916,8 @@
                         } <span class="kw">else</span> {
                             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a_inner</span> <span class="op">=</span> <span class="ident">AddStepper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">ins_span</span>);
                             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b_inner</span> <span class="op">=</span> <span class="ident">DelStepper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">span</span>);
-                            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">delres_inner</span>: <span class="ident">DelSpan</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
-                            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addres_inner</span>: <span class="ident">AddSpan</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+                            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">delres_inner</span>: <span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+                            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addres_inner</span>: <span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
                             <span class="ident">transform_add_del_inner</span>(
                                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">delres_inner</span>,
                                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">addres_inner</span>,
@@ -4053,10 +3965,10 @@
                         <span class="ident">b</span>.<span class="ident">next</span>();
                     }
 
-                    <span class="ident">AddGroup</span>(<span class="ident">tags</span>, <span class="ident">ins_span</span>) <span class="op">=&gt;</span> {
+                    <span class="ident">AddGroup</span>(<span class="ident">attrs</span>, <span class="ident">ins_span</span>) <span class="op">=&gt;</span> {
                         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a_inner</span> <span class="op">=</span> <span class="ident">AddStepper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">ins_span</span>);
-                        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">delres_inner</span>: <span class="ident">DelSpan</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
-                        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addres_inner</span>: <span class="ident">AddSpan</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+                        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">delres_inner</span>: <span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+                        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addres_inner</span>: <span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
                         <span class="ident">transform_add_del_inner</span>(
                             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">delres_inner</span>,
                             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">addres_inner</span>,
@@ -4069,15 +3981,15 @@
                         }
 
                         <span class="comment">// &quot;Delall&quot; hack for adding in bullets</span>
-                        <span class="kw">if</span> <span class="op">!</span>(<span class="ident">addres_inner</span>.<span class="ident">skip_post_len</span>() <span class="op">==</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">tags</span>[<span class="string">&quot;tag&quot;</span>] <span class="op">==</span> <span class="string">&quot;bullet&quot;</span>) {
-                            <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddGroup</span>(<span class="ident">tags</span>, <span class="ident">addres_inner</span>));
+                        <span class="comment">// TODO why does this need knowledge of the bullet group</span>
+                        <span class="comment">// type?</span>
+                        <span class="comment">// FIXME I&#39;m not sure what to do here so I&#39;m doing this</span>
+                        <span class="comment">// if !(addres_inner.skip_post_len() == 0 &amp;&amp; attrs == Attrs::ListItem) {</span>
+                            <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddGroup</span>(<span class="ident">attrs</span>, <span class="ident">addres_inner</span>));
                             <span class="ident">delres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelWithGroup</span>(<span class="ident">delres_inner</span>));
-                        } <span class="kw">else</span> {
-                            <span class="ident">delres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelGroup</span>(<span class="ident">delres_inner</span>));
-                        }
-
-                        <span class="comment">// addres.place(&amp;AddGroup(tags, addres_inner));</span>
-                        <span class="comment">// delres.place(&amp;DelWithGroup(delres_inner));</span>
+                        <span class="comment">// } else {</span>
+                        <span class="comment">//     delres.place(&amp;DelGroup(delres_inner));</span>
+                        <span class="comment">// }</span>
 
                         <span class="ident">a</span>.<span class="ident">next</span>();
                     }
@@ -4087,8 +3999,8 @@
               <span class="comment">// }</span>
               <span class="comment">// DelMany(bcount) =&gt; {</span>
               <span class="comment">//     match a.get_head() {</span>
-              <span class="comment">//         AddChars(avalue) =&gt; {</span>
-              <span class="comment">//             addres.place(&amp;AddChars(avalue.clone()));</span>
+              <span class="comment">//         AddText(avalue) =&gt; {</span>
+              <span class="comment">//             addres.place(&amp;AddText(avalue.clone()));</span>
               <span class="comment">//             delres.place(&amp;DelSkip(avalue.len()));</span>
               <span class="comment">//             a.next();</span>
               <span class="comment">//         }</span>
@@ -4137,7 +4049,7 @@
               <span class="comment">// }</span>
               <span class="comment">// DelGroupAll =&gt; {</span>
               <span class="comment">//     match a.get_head() {</span>
-              <span class="comment">//         AddChars(avalue) =&gt; {</span>
+              <span class="comment">//         AddText(avalue) =&gt; {</span>
               <span class="comment">//             delres.place(&amp;DelSkip(avalue.chars().count()));</span>
               <span class="comment">//             addres.place(&amp;a.next().unwrap());</span>
               <span class="comment">//         }</span>
@@ -4181,9 +4093,9 @@
 
 <span class="doccomment">/// Transforms a insertion preceding a deletion into a deletion preceding an insertion.</span>
 <span class="doccomment">/// After this, sequential deletions and insertions can be composed together in one operation.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transform_add_del</span>(<span class="ident">avec</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span>, <span class="ident">bvec</span>: <span class="kw-2">&amp;</span><span class="ident">DelSpan</span>) <span class="op">-&gt;</span> <span class="ident">Op</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">delres</span>: <span class="ident">DelSpan</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">avec</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">bvec</span>.<span class="ident">len</span>());
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addres</span>: <span class="ident">AddSpan</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">avec</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">bvec</span>.<span class="ident">len</span>());
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transform_add_del</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(<span class="ident">avec</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">bvec</span>: <span class="kw-2">&amp;</span><span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">delres</span>: <span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">avec</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">bvec</span>.<span class="ident">len</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addres</span>: <span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">avec</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">bvec</span>.<span class="ident">len</span>());
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">AddStepper</span>::<span class="ident">new</span>(<span class="ident">avec</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">DelStepper</span>::<span class="ident">new</span>(<span class="ident">bvec</span>);
@@ -4204,7 +4116,7 @@
 }
 
 <span class="doccomment">/// Transform two operations according to a schema.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transform</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">Op</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">Op</span>) <span class="op">-&gt;</span> (<span class="ident">Op</span>, <span class="ident">Op</span>) {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transform</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> (<span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) {
     <span class="comment">// Transform deletions A and B against each other to get delA` and delB`.</span>
     <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot; # transform[1] transform_deletions&quot;</span>);
     <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot; a_del   {:?}&quot;</span>, <span class="ident">a</span>.<span class="number">0</span>);

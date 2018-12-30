@@ -213,6 +213,50 @@
 <span id="213">213</span>
 <span id="214">214</span>
 <span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Helper methods for performing transform tests.</span>
 
@@ -231,9 +275,33 @@
 <span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Error</span>;
 <span class="kw">use</span> <span class="ident">regex</span>::<span class="ident">Regex</span>;
 <span class="kw">use</span> <span class="ident">yansi</span>::<span class="ident">Paint</span>;
+<span class="kw">use</span> <span class="ident">serde</span>::<span class="ident">Serialize</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">rtf</span>::<span class="ident">RtfSchema</span>;
 
-<span class="kw">fn</span> <span class="ident">op_transform_compare</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">Op</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">Op</span>) <span class="op">-&gt;</span> (<span class="ident">Op</span>, <span class="ident">Op</span>, <span class="ident">Op</span>, <span class="ident">Op</span>) {
-    <span class="kw">let</span> (<span class="ident">a_</span>, <span class="ident">b_</span>) <span class="op">=</span> <span class="ident">transform</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">a</span>, <span class="ident">b</span>);
+<span class="doccomment">/// TestSpec defines the different types of tests we can run. It can be</span>
+<span class="doccomment">/// serialized to ron and output to a file, and loaded an run via this file.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">enum</span> <span class="ident">TestSpec</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span> {
+    <span class="ident">TransformTest</span> {
+        <span class="ident">a</span>: <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+        <span class="ident">b</span>: <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+        <span class="ident">doc</span>: <span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    },
+    <span class="ident">TransformTestConfigurable</span> { <span class="comment">// legacy test definitions</span>
+        <span class="ident">a</span>: <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+        <span class="ident">b</span>: <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+        <span class="ident">doc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;&gt;</span>,
+        <span class="ident">op_a</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;&gt;</span>,
+    },
+}
+
+<span class="kw">use</span> <span class="self">self</span>::<span class="ident">TestSpec</span>::<span class="kw-2">*</span>;
+
+<span class="kw">fn</span> <span class="ident">op_transform_compare</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(
+    <span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+) <span class="op">-&gt;</span> (<span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) {
+    <span class="kw">let</span> (<span class="ident">a_</span>, <span class="ident">b_</span>) <span class="op">=</span> <span class="ident">transform</span>::<span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">a</span>, <span class="ident">b</span>);
 
     <span class="macro">println</span><span class="macro">!</span>();
     <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot; --&gt; a \n{:?}&quot;</span>, <span class="ident">a</span>);
@@ -259,31 +327,14 @@
     (<span class="ident">a_</span>, <span class="ident">b_</span>, <span class="ident">a_res</span>, <span class="ident">b_res</span>)
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">enum</span> <span class="ident">TestSpec</span> {
-    <span class="ident">TransformTest</span> { <span class="ident">doc</span>: <span class="ident">DocSpan</span>, <span class="ident">a</span>: <span class="ident">Op</span>, <span class="ident">b</span>: <span class="ident">Op</span> },
-}
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run_transform_test</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">test</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
-
-    <span class="comment">// ron-defined test specs</span>
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">find</span>(<span class="string">&quot;TransformTest&quot;</span>).<span class="ident">is_some</span>() {
-        <span class="kw">match</span> <span class="ident">ron</span>::<span class="ident">de</span>::<span class="ident">from_str</span>::<span class="op">&lt;</span><span class="ident">TestSpec</span><span class="op">&gt;</span>(<span class="ident">input</span>)<span class="question-mark">?</span> {
-            <span class="ident">TestSpec</span>::<span class="ident">TransformTest</span> {
-                <span class="kw-2">ref</span> <span class="ident">doc</span>,
-                <span class="kw-2">ref</span> <span class="ident">a</span>,
-                <span class="kw-2">ref</span> <span class="ident">b</span>,
-            } <span class="op">=&gt;</span> {
-                <span class="ident">test</span>.<span class="ident">insert</span>(<span class="string">&quot;doc&quot;</span>.<span class="ident">into</span>(), <span class="ident">ron</span>::<span class="ident">ser</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="ident">doc</span>)<span class="question-mark">?</span>);
-                <span class="ident">test</span>.<span class="ident">insert</span>(<span class="string">&quot;a_del&quot;</span>.<span class="ident">into</span>(), <span class="ident">ron</span>::<span class="ident">ser</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="number">0</span>)<span class="question-mark">?</span>);
-                <span class="ident">test</span>.<span class="ident">insert</span>(<span class="string">&quot;a_add&quot;</span>.<span class="ident">into</span>(), <span class="ident">ron</span>::<span class="ident">ser</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="number">1</span>)<span class="question-mark">?</span>);
-                <span class="ident">test</span>.<span class="ident">insert</span>(<span class="string">&quot;b_del&quot;</span>.<span class="ident">into</span>(), <span class="ident">ron</span>::<span class="ident">ser</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="number">0</span>)<span class="question-mark">?</span>);
-                <span class="ident">test</span>.<span class="ident">insert</span>(<span class="string">&quot;b_add&quot;</span>.<span class="ident">into</span>(), <span class="ident">ron</span>::<span class="ident">ser</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="number">1</span>)<span class="question-mark">?</span>);
-            }
-        }
-    <span class="comment">// line by line</span>
+<span class="kw">fn</span> <span class="ident">parse_transform_test</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TestSpec</span><span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="prelude-val">Ok</span>(<span class="kw">if</span> <span class="ident">input</span>.<span class="ident">find</span>(<span class="string">&quot;TransformTest&quot;</span>).<span class="ident">is_some</span>() {
+        <span class="comment">// ron-defined test specs</span>
+        <span class="ident">ron</span>::<span class="ident">de</span>::<span class="ident">from_str</span>::<span class="op">&lt;</span><span class="ident">TestSpec</span><span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;&gt;</span>(<span class="ident">input</span>)<span class="question-mark">?</span>
     } <span class="kw">else</span> {
+        <span class="comment">// line by line</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">test</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
         <span class="kw">let</span> <span class="ident">re</span> <span class="op">=</span> <span class="ident">Regex</span>::<span class="ident">new</span>(<span class="string">r&quot;(\n|^)(\w+):([\n\w\W]+?)(\n(?:\w)|(\n\]))&quot;</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">res</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">re</span>
             .<span class="ident">captures_iter</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>)
@@ -295,139 +346,176 @@
             })
             .<span class="ident">collect</span>();
         <span class="ident">test</span>.<span class="ident">extend</span>(<span class="ident">res</span>);
-    }
 
-    <span class="comment">// Attempt old-style transform test which matches by line.</span>
-    <span class="kw">if</span> <span class="ident">test</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">0</span> {
-        <span class="kw">let</span> <span class="ident">four</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">lines</span>().<span class="ident">filter</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="op">!</span><span class="ident">x</span>.<span class="ident">is_empty</span>()).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;&gt;</span>();
-        <span class="kw">if</span> <span class="ident">four</span>.<span class="ident">len</span>() <span class="op">!=</span> <span class="number">4</span> <span class="op">&amp;&amp;</span> <span class="ident">four</span>.<span class="ident">len</span>() <span class="op">!=</span> <span class="number">6</span> {
-            <span class="macro">bail</span><span class="macro">!</span>(<span class="string">&quot;Needed four or six lines as input&quot;</span>);
+        <span class="comment">// Attempt old-style transform test which matches by line.</span>
+        <span class="kw">if</span> <span class="ident">test</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">0</span> {
+            <span class="kw">let</span> <span class="ident">four</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">lines</span>().<span class="ident">filter</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="op">!</span><span class="ident">x</span>.<span class="ident">is_empty</span>()).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;&gt;</span>();
+            <span class="kw">if</span> <span class="ident">four</span>.<span class="ident">len</span>() <span class="op">!=</span> <span class="number">4</span> <span class="op">&amp;&amp;</span> <span class="ident">four</span>.<span class="ident">len</span>() <span class="op">!=</span> <span class="number">6</span> {
+                <span class="macro">bail</span><span class="macro">!</span>(<span class="string">&quot;Needed four or six lines as input&quot;</span>);
+            }
+
+            <span class="ident">test</span>.<span class="ident">insert</span>(<span class="string">&quot;a_del&quot;</span>.<span class="ident">into</span>(), <span class="ident">four</span>[<span class="number">0</span>].<span class="ident">into</span>());
+            <span class="ident">test</span>.<span class="ident">insert</span>(<span class="string">&quot;a_add&quot;</span>.<span class="ident">into</span>(), <span class="ident">four</span>[<span class="number">1</span>].<span class="ident">into</span>());
+
+            <span class="ident">test</span>.<span class="ident">insert</span>(<span class="string">&quot;b_del&quot;</span>.<span class="ident">into</span>(), <span class="ident">four</span>[<span class="number">2</span>].<span class="ident">into</span>());
+            <span class="ident">test</span>.<span class="ident">insert</span>(<span class="string">&quot;b_add&quot;</span>.<span class="ident">into</span>(), <span class="ident">four</span>[<span class="number">3</span>].<span class="ident">into</span>());
+
+            <span class="comment">// Check validating lines</span>
+            <span class="kw">if</span> <span class="ident">four</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">6</span> {
+                <span class="ident">test</span>.<span class="ident">insert</span>(<span class="string">&quot;op_del&quot;</span>.<span class="ident">into</span>(), <span class="ident">four</span>[<span class="number">4</span>].<span class="ident">into</span>());
+                <span class="ident">test</span>.<span class="ident">insert</span>(<span class="string">&quot;op_add&quot;</span>.<span class="ident">into</span>(), <span class="ident">four</span>[<span class="number">5</span>].<span class="ident">into</span>());
+            }
         }
 
-        <span class="ident">test</span>.<span class="ident">insert</span>(<span class="string">&quot;a_del&quot;</span>.<span class="ident">into</span>(), <span class="ident">four</span>[<span class="number">0</span>].<span class="ident">into</span>());
-        <span class="ident">test</span>.<span class="ident">insert</span>(<span class="string">&quot;a_add&quot;</span>.<span class="ident">into</span>(), <span class="ident">four</span>[<span class="number">1</span>].<span class="ident">into</span>());
+        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;entries {:?}&quot;</span>, <span class="ident">test</span>.<span class="ident">keys</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;&gt;</span>());
 
-        <span class="ident">test</span>.<span class="ident">insert</span>(<span class="string">&quot;b_del&quot;</span>.<span class="ident">into</span>(), <span class="ident">four</span>[<span class="number">2</span>].<span class="ident">into</span>());
-        <span class="ident">test</span>.<span class="ident">insert</span>(<span class="string">&quot;b_add&quot;</span>.<span class="ident">into</span>(), <span class="ident">four</span>[<span class="number">3</span>].<span class="ident">into</span>());
+        <span class="comment">// Extract test entries.</span>
+        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> (
+            <span class="kw">crate</span>::<span class="ident">deserialize</span>::<span class="ident">v1</span>::<span class="ident">delspan_ron</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>[<span class="string">&quot;a_del&quot;</span>])<span class="question-mark">?</span>,
+            <span class="kw">crate</span>::<span class="ident">deserialize</span>::<span class="ident">v1</span>::<span class="ident">addspan_ron</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>[<span class="string">&quot;a_add&quot;</span>])<span class="question-mark">?</span>,
+        );
+        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> (
+            <span class="kw">crate</span>::<span class="ident">deserialize</span>::<span class="ident">v1</span>::<span class="ident">delspan_ron</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>[<span class="string">&quot;b_del&quot;</span>])<span class="question-mark">?</span>,
+            <span class="kw">crate</span>::<span class="ident">deserialize</span>::<span class="ident">v1</span>::<span class="ident">addspan_ron</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>[<span class="string">&quot;b_add&quot;</span>])<span class="question-mark">?</span>,
+        );
+        <span class="kw">let</span> <span class="ident">op_a</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">test</span>.<span class="ident">contains_key</span>(<span class="string">&quot;op_del&quot;</span>) <span class="op">||</span> <span class="ident">test</span>.<span class="ident">contains_key</span>(<span class="string">&quot;op_add&quot;</span>) {
+            <span class="prelude-val">Some</span>((
+                <span class="kw">crate</span>::<span class="ident">deserialize</span>::<span class="ident">v1</span>::<span class="ident">delspan_ron</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>[<span class="string">&quot;op_del&quot;</span>])<span class="question-mark">?</span>,
+                <span class="kw">crate</span>::<span class="ident">deserialize</span>::<span class="ident">v1</span>::<span class="ident">addspan_ron</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>[<span class="string">&quot;op_add&quot;</span>])<span class="question-mark">?</span>,
+            ))
+        } <span class="kw">else</span> {
+            <span class="prelude-val">None</span>
+        };
+        <span class="kw">let</span> <span class="ident">doc</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">test</span>.<span class="ident">contains_key</span>(<span class="string">&quot;doc&quot;</span>) {
+            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">deserialize</span>::<span class="ident">v1</span>::<span class="ident">docspan_ron</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>[<span class="string">&quot;doc&quot;</span>])<span class="question-mark">?</span>)
+        } <span class="kw">else</span> {
+            <span class="prelude-val">None</span>
+        };
 
-        <span class="comment">// Check validating lines</span>
-        <span class="kw">if</span> <span class="ident">four</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">6</span> {
-            <span class="ident">test</span>.<span class="ident">insert</span>(<span class="string">&quot;op_del&quot;</span>.<span class="ident">into</span>(), <span class="ident">four</span>[<span class="number">4</span>].<span class="ident">into</span>());
-            <span class="ident">test</span>.<span class="ident">insert</span>(<span class="string">&quot;op_add&quot;</span>.<span class="ident">into</span>(), <span class="ident">four</span>[<span class="number">5</span>].<span class="ident">into</span>());
+        <span class="ident">TransformTestConfigurable</span> {
+            <span class="ident">a</span>,
+            <span class="ident">b</span>,
+            <span class="ident">doc</span>,
+            <span class="ident">op_a</span>,
         }
+    })
+}
+
+
+<span class="comment">// TODO this method should take a generic Schema type</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run_transform_test</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">test</span> <span class="op">=</span> <span class="ident">parse_transform_test</span>(<span class="ident">input</span>)<span class="question-mark">?</span>;
+
+    <span class="macro">eprintln</span><span class="macro">!</span>(<span class="string">&quot;\ntest: {:?}\n&quot;</span>, <span class="ident">test</span>);
+    
+    <span class="kw">match</span> <span class="ident">test</span> {
+        <span class="ident">TransformTest</span> { <span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">doc</span> } <span class="op">=&gt;</span> {
+            <span class="comment">// Rewrite as configurable test.</span>
+            <span class="ident">test</span> <span class="op">=</span> <span class="ident">TransformTestConfigurable</span> {
+                <span class="ident">a</span>,
+                <span class="ident">b</span>,
+                <span class="ident">doc</span>: <span class="prelude-val">Some</span>(<span class="ident">doc</span>),
+                <span class="ident">op_a</span>: <span class="prelude-val">None</span>,
+            };
+        }
+        <span class="kw">_</span> <span class="op">=&gt;</span> {}
     }
 
-    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;entries {:?}&quot;</span>, <span class="ident">test</span>.<span class="ident">keys</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;&gt;</span>());
+    <span class="kw">match</span> <span class="ident">test</span> {
+        <span class="ident">TransformTestConfigurable</span> { <span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">doc</span>, <span class="ident">op_a</span> } <span class="op">=&gt;</span> {
+            <span class="comment">// Check that transforms produce identical operations when composed.</span>
+            <span class="macro">println</span><span class="macro">!</span>(
+                <span class="string">&quot;{}&quot;</span>,
+                <span class="ident">Paint</span>::<span class="ident">red</span>(<span class="string">&quot;(!) comparing transform operation results...&quot;</span>)
+            );
+            <span class="kw">let</span> (<span class="ident">a_</span>, <span class="ident">b_</span>, <span class="ident">a_res</span>, <span class="ident">_b_res</span>) <span class="op">=</span> <span class="ident">op_transform_compare</span>::<span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">b</span>);
+            <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;ok&quot;</span>);
+            <span class="macro">println</span><span class="macro">!</span>();
 
-    <span class="comment">// Extract test entries.</span>
-    <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> (
-        <span class="ident">ron</span>::<span class="ident">de</span>::<span class="ident">from_str</span>::<span class="op">&lt;</span><span class="ident">DelSpan</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>[<span class="string">&quot;a_del&quot;</span>])<span class="question-mark">?</span>,
-        <span class="ident">ron</span>::<span class="ident">de</span>::<span class="ident">from_str</span>::<span class="op">&lt;</span><span class="ident">AddSpan</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>[<span class="string">&quot;a_add&quot;</span>])<span class="question-mark">?</span>,
-    );
-    <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> (
-        <span class="ident">ron</span>::<span class="ident">de</span>::<span class="ident">from_str</span>::<span class="op">&lt;</span><span class="ident">DelSpan</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>[<span class="string">&quot;b_del&quot;</span>])<span class="question-mark">?</span>,
-        <span class="ident">ron</span>::<span class="ident">de</span>::<span class="ident">from_str</span>::<span class="op">&lt;</span><span class="ident">AddSpan</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>[<span class="string">&quot;b_add&quot;</span>])<span class="question-mark">?</span>,
-    );
-    <span class="kw">let</span> <span class="ident">check</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">test</span>.<span class="ident">contains_key</span>(<span class="string">&quot;op_del&quot;</span>) <span class="op">||</span> <span class="ident">test</span>.<span class="ident">contains_key</span>(<span class="string">&quot;op_add&quot;</span>) {
-        <span class="prelude-val">Some</span>((
-            <span class="ident">ron</span>::<span class="ident">de</span>::<span class="ident">from_str</span>::<span class="op">&lt;</span><span class="ident">DelSpan</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>[<span class="string">&quot;op_del&quot;</span>])<span class="question-mark">?</span>,
-            <span class="ident">ron</span>::<span class="ident">de</span>::<span class="ident">from_str</span>::<span class="op">&lt;</span><span class="ident">AddSpan</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>[<span class="string">&quot;op_add&quot;</span>])<span class="question-mark">?</span>,
-        ))
-    } <span class="kw">else</span> {
-        <span class="prelude-val">None</span>
-    };
+            <span class="comment">// Check validating lines.</span>
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">check</span>) <span class="op">=</span> <span class="ident">op_a</span> {
+                <span class="macro">println</span><span class="macro">!</span>(
+                    <span class="string">&quot;{}&quot;</span>,
+                    <span class="ident">Paint</span>::<span class="ident">red</span>(<span class="string">&quot;(!) validating client A against provided &#39;check&#39; op...&quot;</span>)
+                );
+                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">a_res</span>, <span class="ident">check</span>);
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;ok&quot;</span>);
+                <span class="macro">println</span><span class="macro">!</span>();
+            }
 
-    <span class="comment">// Check that transforms produce identical operations when composed.</span>
-    <span class="macro">println</span><span class="macro">!</span>(
-        <span class="string">&quot;{}&quot;</span>,
-        <span class="ident">Paint</span>::<span class="ident">red</span>(<span class="string">&quot;(!) comparing transform operation results...&quot;</span>)
-    );
-    <span class="kw">let</span> (<span class="ident">a_</span>, <span class="ident">b_</span>, <span class="ident">a_res</span>, <span class="ident">_b_res</span>) <span class="op">=</span> <span class="ident">op_transform_compare</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">b</span>);
-    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;ok&quot;</span>);
-    <span class="macro">println</span><span class="macro">!</span>();
+            <span class="comment">// Check against provided document.</span>
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">doc</span>) <span class="op">=</span> <span class="ident">doc</span> {
+                <span class="kw">let</span> <span class="ident">doc</span> <span class="op">=</span> <span class="ident">Doc</span>(<span class="ident">doc</span>);
 
-    <span class="comment">// Check validating lines.</span>
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">check</span>) <span class="op">=</span> <span class="ident">check</span> {
-        <span class="macro">println</span><span class="macro">!</span>(
-            <span class="string">&quot;{}&quot;</span>,
-            <span class="ident">Paint</span>::<span class="ident">red</span>(<span class="string">&quot;(!) validating client A against provided &#39;check&#39; op...&quot;</span>)
-        );
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">a_res</span>, <span class="ident">check</span>);
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;ok&quot;</span>);
-        <span class="macro">println</span><span class="macro">!</span>();
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">Paint</span>::<span class="ident">red</span>(<span class="string">&quot;(!) validating docs...&quot;</span>));
+
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;original document: {:?}&quot;</span>, <span class="ident">doc</span>);
+                <span class="ident">validate_doc_span</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ValidateContext</span>::<span class="ident">new</span>(), <span class="kw-2">&amp;</span><span class="ident">doc</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
+                <span class="macro">println</span><span class="macro">!</span>();
+
+                <span class="comment">// First test original operations can be applied against the doc.</span>
+                <span class="comment">// (This should always pass.)</span>
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">Paint</span>::<span class="ident">red</span>(<span class="string">&quot;(!) applying first ops...&quot;</span>));
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot; ---&gt; doc a : a&quot;</span>);
+                <span class="kw">let</span> <span class="ident">doc_a</span> <span class="op">=</span> <span class="ident">Op</span>::<span class="ident">apply</span>(<span class="kw-2">&amp;</span><span class="ident">doc</span>, <span class="kw-2">&amp;</span><span class="ident">a</span>);
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">doc_a</span>);
+                <span class="macro">println</span><span class="macro">!</span>();
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot; ---&gt; doc b : b&quot;</span>);
+                <span class="kw">let</span> <span class="ident">doc_b</span> <span class="op">=</span> <span class="ident">Op</span>::<span class="ident">apply</span>(<span class="kw-2">&amp;</span><span class="ident">doc</span>, <span class="kw-2">&amp;</span><span class="ident">b</span>);
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">doc_b</span>);
+                <span class="macro">println</span><span class="macro">!</span>();
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;ok&quot;</span>);
+                <span class="macro">println</span><span class="macro">!</span>();
+
+                <span class="comment">// Next apply the transformed ops.</span>
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">Paint</span>::<span class="ident">red</span>(<span class="string">&quot;(!) applying transformed ops...&quot;</span>));
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot; ---&gt; doc a : a : a&#39;&quot;</span>);
+                <span class="kw">let</span> <span class="ident">doc_a</span> <span class="op">=</span> <span class="ident">Op</span>::<span class="ident">apply</span>(<span class="kw-2">&amp;</span><span class="ident">doc_a</span>, <span class="kw-2">&amp;</span><span class="ident">a_</span>);
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">doc_a</span>);
+                <span class="ident">validate_doc_span</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ValidateContext</span>::<span class="ident">new</span>(), <span class="kw-2">&amp;</span><span class="ident">doc_a</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot; ---&gt; doc b : b : b&#39;&quot;</span>);
+                <span class="kw">let</span> <span class="ident">doc_b</span> <span class="op">=</span> <span class="ident">Op</span>::<span class="ident">apply</span>(<span class="kw-2">&amp;</span><span class="ident">doc_b</span>, <span class="kw-2">&amp;</span><span class="ident">b_</span>);
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">doc_b</span>);
+                <span class="ident">validate_doc_span</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ValidateContext</span>::<span class="ident">new</span>(), <span class="kw-2">&amp;</span><span class="ident">doc_b</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
+                <span class="macro">println</span><span class="macro">!</span>();
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;ok&quot;</span>);
+                <span class="macro">println</span><span class="macro">!</span>();
+
+                <span class="comment">// Next test them composed.</span>
+                <span class="macro">println</span><span class="macro">!</span>(
+                    <span class="string">&quot;{}&quot;</span>,
+                    <span class="ident">Paint</span>::<span class="ident">red</span>(<span class="string">&quot;(!) testing op composed (double check)...&quot;</span>)
+                );
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot; ---&gt; doc a : (a : a&#39;)&quot;</span>);
+                <span class="kw">let</span> <span class="ident">doc_a_cmp</span> <span class="op">=</span> <span class="ident">Op</span>::<span class="ident">apply</span>(<span class="kw-2">&amp;</span><span class="ident">doc</span>, <span class="kw-2">&amp;</span><span class="ident">Op</span>::<span class="ident">compose</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">a_</span>));
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">debug_pretty</span>(<span class="kw-2">&amp;</span><span class="ident">doc</span>));
+                <span class="macro">println</span><span class="macro">!</span>();
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">debug_pretty</span>(<span class="kw-2">&amp;</span><span class="ident">Op</span>::<span class="ident">compose</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">a_</span>)));
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">debug_pretty</span>(<span class="kw-2">&amp;</span><span class="ident">doc_a_cmp</span>));
+                <span class="ident">validate_doc_span</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ValidateContext</span>::<span class="ident">new</span>(), <span class="kw-2">&amp;</span><span class="ident">doc_a_cmp</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot; ---&gt; doc b : (b : b&#39;)&quot;</span>);
+                <span class="kw">let</span> <span class="ident">doc_b_cmp</span> <span class="op">=</span> <span class="ident">Op</span>::<span class="ident">apply</span>(<span class="kw-2">&amp;</span><span class="ident">doc</span>, <span class="kw-2">&amp;</span><span class="ident">Op</span>::<span class="ident">compose</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">a_</span>));
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">debug_pretty</span>(<span class="kw-2">&amp;</span><span class="ident">doc_b_cmp</span>));
+                <span class="ident">validate_doc_span</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ValidateContext</span>::<span class="ident">new</span>(), <span class="kw-2">&amp;</span><span class="ident">doc_b_cmp</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
+                <span class="macro">println</span><span class="macro">!</span>();
+                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;ok&quot;</span>);
+                <span class="macro">println</span><span class="macro">!</span>();
+
+                <span class="comment">// Next test transforms can produce identical documents.</span>
+                <span class="comment">// TODO</span>
+            }
+
+            <span class="comment">// ALSO CHECK THE REVERSE</span>
+            <span class="comment">// The result may be different, so we don&#39;t care it to</span>
+            <span class="comment">// that, but we can check that the transform is at least normalized.</span>
+            <span class="comment">// let _ = op_transform_compare(&amp;b, &amp;a);</span>
+
+            <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">Paint</span>::<span class="ident">green</span>(<span class="string">&quot;(!) done.&quot;</span>));
+
+            <span class="prelude-val">Ok</span>(())
+        }
+        <span class="kw">_</span> <span class="op">=&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
     }
-
-    <span class="comment">// Check against provided document.</span>
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">doc</span>) <span class="op">=</span> <span class="ident">test</span>.<span class="ident">get</span>(<span class="string">&quot;doc&quot;</span>) {
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">Paint</span>::<span class="ident">red</span>(<span class="string">&quot;(!) validating docs...&quot;</span>));
-
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;\n\n\n{:?}\n\n\n&quot;</span>, <span class="ident">doc</span>);
-
-        <span class="kw">let</span> <span class="ident">doc</span> <span class="op">=</span> <span class="ident">Doc</span>(<span class="ident">ron</span>::<span class="ident">de</span>::<span class="ident">from_str</span>::<span class="op">&lt;</span><span class="ident">DocSpan</span><span class="op">&gt;</span>(<span class="ident">doc</span>)<span class="question-mark">?</span>);
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;original document: {:?}&quot;</span>, <span class="ident">doc</span>);
-        <span class="ident">validate_doc_span</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ValidateContext</span>::<span class="ident">new</span>(), <span class="kw-2">&amp;</span><span class="ident">doc</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
-        <span class="macro">println</span><span class="macro">!</span>();
-
-        <span class="comment">// First test original operations can be applied against the doc.</span>
-        <span class="comment">// (This should always pass.)</span>
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">Paint</span>::<span class="ident">red</span>(<span class="string">&quot;(!) applying first ops...&quot;</span>));
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot; ---&gt; doc a : a&quot;</span>);
-        <span class="kw">let</span> <span class="ident">doc_a</span> <span class="op">=</span> <span class="ident">Op</span>::<span class="ident">apply</span>(<span class="kw-2">&amp;</span><span class="ident">doc</span>, <span class="kw-2">&amp;</span><span class="ident">a</span>);
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">doc_a</span>);
-        <span class="macro">println</span><span class="macro">!</span>();
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot; ---&gt; doc b : b&quot;</span>);
-        <span class="kw">let</span> <span class="ident">doc_b</span> <span class="op">=</span> <span class="ident">Op</span>::<span class="ident">apply</span>(<span class="kw-2">&amp;</span><span class="ident">doc</span>, <span class="kw-2">&amp;</span><span class="ident">b</span>);
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">doc_b</span>);
-        <span class="macro">println</span><span class="macro">!</span>();
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;ok&quot;</span>);
-        <span class="macro">println</span><span class="macro">!</span>();
-
-        <span class="comment">// Next apply the transformed ops.</span>
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">Paint</span>::<span class="ident">red</span>(<span class="string">&quot;(!) applying transformed ops...&quot;</span>));
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot; ---&gt; doc a : a : a&#39;&quot;</span>);
-        <span class="kw">let</span> <span class="ident">doc_a</span> <span class="op">=</span> <span class="ident">Op</span>::<span class="ident">apply</span>(<span class="kw-2">&amp;</span><span class="ident">doc_a</span>, <span class="kw-2">&amp;</span><span class="ident">a_</span>);
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">doc_a</span>);
-        <span class="ident">validate_doc_span</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ValidateContext</span>::<span class="ident">new</span>(), <span class="kw-2">&amp;</span><span class="ident">doc_a</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot; ---&gt; doc b : b : b&#39;&quot;</span>);
-        <span class="kw">let</span> <span class="ident">doc_b</span> <span class="op">=</span> <span class="ident">Op</span>::<span class="ident">apply</span>(<span class="kw-2">&amp;</span><span class="ident">doc_b</span>, <span class="kw-2">&amp;</span><span class="ident">b_</span>);
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">doc_b</span>);
-        <span class="ident">validate_doc_span</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ValidateContext</span>::<span class="ident">new</span>(), <span class="kw-2">&amp;</span><span class="ident">doc_b</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
-        <span class="macro">println</span><span class="macro">!</span>();
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;ok&quot;</span>);
-        <span class="macro">println</span><span class="macro">!</span>();
-
-        <span class="comment">// Next test them composed.</span>
-        <span class="macro">println</span><span class="macro">!</span>(
-            <span class="string">&quot;{}&quot;</span>,
-            <span class="ident">Paint</span>::<span class="ident">red</span>(<span class="string">&quot;(!) testing op composed (double check)...&quot;</span>)
-        );
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot; ---&gt; doc a : (a : a&#39;)&quot;</span>);
-        <span class="kw">let</span> <span class="ident">doc_a_cmp</span> <span class="op">=</span> <span class="ident">Op</span>::<span class="ident">apply</span>(<span class="kw-2">&amp;</span><span class="ident">doc</span>, <span class="kw-2">&amp;</span><span class="ident">Op</span>::<span class="ident">compose</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">a_</span>));
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">debug_pretty</span>(<span class="kw-2">&amp;</span><span class="ident">doc</span>));
-        <span class="macro">println</span><span class="macro">!</span>();
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">debug_pretty</span>(<span class="kw-2">&amp;</span><span class="ident">Op</span>::<span class="ident">compose</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">a_</span>)));
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">debug_pretty</span>(<span class="kw-2">&amp;</span><span class="ident">doc_a_cmp</span>));
-        <span class="ident">validate_doc_span</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ValidateContext</span>::<span class="ident">new</span>(), <span class="kw-2">&amp;</span><span class="ident">doc_a_cmp</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot; ---&gt; doc b : (b : b&#39;)&quot;</span>);
-        <span class="kw">let</span> <span class="ident">doc_b_cmp</span> <span class="op">=</span> <span class="ident">Op</span>::<span class="ident">apply</span>(<span class="kw-2">&amp;</span><span class="ident">doc</span>, <span class="kw-2">&amp;</span><span class="ident">Op</span>::<span class="ident">compose</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">a_</span>));
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">debug_pretty</span>(<span class="kw-2">&amp;</span><span class="ident">doc_b_cmp</span>));
-        <span class="ident">validate_doc_span</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ValidateContext</span>::<span class="ident">new</span>(), <span class="kw-2">&amp;</span><span class="ident">doc_b_cmp</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
-        <span class="macro">println</span><span class="macro">!</span>();
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;ok&quot;</span>);
-        <span class="macro">println</span><span class="macro">!</span>();
-
-        <span class="comment">// Next test transforms can produce identical documents.</span>
-        <span class="comment">// TODO</span>
-    }
-
-    <span class="comment">// ALSO CHECK THE REVERSE</span>
-    <span class="comment">// The result may be different, so we don&#39;t care it to</span>
-    <span class="comment">// that, but we can check that the transform is at least normalized.</span>
-    <span class="comment">// let _ = op_transform_compare(&amp;b, &amp;a);</span>
-
-    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">Paint</span>::<span class="ident">green</span>(<span class="string">&quot;(!) done.&quot;</span>));
-
-    <span class="prelude-val">Ok</span>(())
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><aside id="help" class="hidden"><div><h1 class="hidden">Help</h1><div class="shortcuts"><h2>Keyboard Shortcuts</h2><dl><dt><kbd>?</kbd></dt><dd>Show this help dialog</dd><dt><kbd>S</kbd></dt><dd>Focus the search field</dd><dt><kbd>↑</kbd></dt><dd>Move up in search results</dd><dt><kbd>↓</kbd></dt><dd>Move down in search results</dd><dt><kbd>↹</kbd></dt><dd>Switch tab</dd><dt><kbd>&#9166;</kbd></dt><dd>Go to active search result</dd><dt><kbd>+</kbd></dt><dd>Expand all sections</dd><dt><kbd>-</kbd></dt><dd>Collapse all sections</dd></dl></div><div class="infos"><h2>Search Tricks</h2><p>Prefix searches with a type followed by a colon (e.g. <code>fn:</code>) to restrict the search to a given type.</p><p>Accepted types are: <code>fn</code>, <code>mod</code>, <code>struct</code>, <code>enum</code>, <code>trait</code>, <code>type</code>, <code>macro</code>, and <code>const</code>.</p><p>Search functions by type signature (e.g. <code>vec -> usize</code> or <code>* -> vec</code>)</p><p>Search multiple things at once by splitting your query with comma (e.g. <code>str,u8</code> or <code>String,struct:Vec,test</code>)</p></div></div></aside><script>window.rootPath = "../../";window.currentCrate = "oatie";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-files.js"></script><script src="../../source-script.js"></script><script defer src="../../search-index.js"></script></body></html>

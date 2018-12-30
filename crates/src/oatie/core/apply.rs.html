@@ -441,18 +441,42 @@
 <span id="441">441</span>
 <span id="442">442</span>
 <span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Methods to apply an operation to a document.</span>
 
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">doc</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">stepper</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">style</span>::<span class="kw-2">*</span>;
 
-<span class="kw">fn</span> <span class="ident">apply_add_inner</span><span class="op">&lt;</span><span class="ident">M</span>: <span class="ident">DocMutator</span><span class="op">&gt;</span>(
+<span class="kw">fn</span> <span class="ident">apply_add_inner</span><span class="op">&lt;</span><span class="ident">M</span>: <span class="ident">DocMutator</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(
     <span class="ident">bc</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">M</span>,
-    <span class="ident">spanvec</span>: <span class="kw-2">&amp;</span><span class="ident">DocSpan</span>,
-    <span class="ident">addvec</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span>,
-) <span class="op">-&gt;</span> (<span class="ident">DocSpan</span>, <span class="ident">DocSpan</span>) {
+    <span class="ident">spanvec</span>: <span class="kw-2">&amp;</span><span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">addvec</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+) <span class="op">-&gt;</span> (<span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">span</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">spanvec</span>[..];
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">del</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">addvec</span>[..];
 
@@ -462,7 +486,7 @@
         <span class="ident">span</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">span</span>[<span class="number">1</span>..]
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span>: <span class="ident">DocSpan</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">span</span>.<span class="ident">len</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span>: <span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">span</span>.<span class="ident">len</span>());
 
     <span class="kw">if</span> <span class="ident">del</span>.<span class="ident">is_empty</span>() {
         <span class="kw">return</span> (<span class="macro">vec</span><span class="macro">!</span>[], <span class="ident">spanvec</span>.<span class="ident">clone</span>().<span class="ident">to_vec</span>());
@@ -493,31 +517,31 @@
 
         <span class="kw">match</span> <span class="ident">d</span>.<span class="ident">clone</span>() {
             <span class="ident">AddStyles</span>(<span class="ident">count</span>, <span class="ident">styles</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">first</span>.<span class="ident">clone</span>().<span class="ident">unwrap</span>() {
-                <span class="ident">DocChars</span>(<span class="ident">value</span>, <span class="kw-2">mut</span> <span class="ident">chars_styles</span>) <span class="op">=&gt;</span> {
+                <span class="ident">DocText</span>(<span class="kw-2">mut</span> <span class="ident">chars_styles</span>, <span class="ident">value</span>) <span class="op">=&gt;</span> {
                     <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">char_len</span>() <span class="op">&lt;</span> <span class="ident">count</span> {
                         <span class="ident">d</span> <span class="op">=</span> <span class="ident">AddStyles</span>(<span class="ident">count</span> <span class="op">-</span> <span class="ident">value</span>.<span class="ident">char_len</span>(), <span class="ident">styles</span>.<span class="ident">clone</span>());
                         <span class="ident">chars_styles</span>.<span class="ident">extend</span>(<span class="kw-2">&amp;</span><span class="ident">styles</span>);
                         <span class="ident">bc</span>.<span class="ident">delete</span>(<span class="number">1</span>);
-                        <span class="ident">bc</span>.<span class="ident">InsertDocString</span>(<span class="ident">value</span>.<span class="ident">clone</span>(), <span class="ident">OpaqueStyleMap</span>::<span class="ident">from</span>(<span class="ident">styles</span>.<span class="ident">clone</span>()));
+                        <span class="ident">bc</span>.<span class="ident">InsertDocString</span>(<span class="ident">value</span>.<span class="ident">clone</span>(), <span class="ident">styles</span>.<span class="ident">clone</span>());
                         <span class="comment">// partial = false;</span>
-                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="ident">value</span>, <span class="ident">chars_styles</span>));
+                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="ident">chars_styles</span>, <span class="ident">value</span>));
                         <span class="ident">nextdel</span> <span class="op">=</span> <span class="bool-val">false</span>;
                     } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">char_len</span>() <span class="op">&gt;</span> <span class="ident">count</span> {
                         <span class="kw">let</span> (<span class="ident">left</span>, <span class="ident">right</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">split_at</span>(<span class="ident">count</span>);
                         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">left_styles</span> <span class="op">=</span> <span class="ident">chars_styles</span>.<span class="ident">clone</span>();
                         <span class="ident">left_styles</span>.<span class="ident">extend</span>(<span class="kw-2">&amp;</span><span class="ident">styles</span>);
                         <span class="ident">bc</span>.<span class="ident">delete</span>(<span class="number">1</span>);
-                        <span class="ident">bc</span>.<span class="ident">InsertDocString</span>(<span class="ident">left</span>.<span class="ident">clone</span>(), <span class="ident">OpaqueStyleMap</span>::<span class="ident">from</span>(<span class="ident">styles</span>.<span class="ident">clone</span>()));
+                        <span class="ident">bc</span>.<span class="ident">InsertDocString</span>(<span class="ident">left</span>.<span class="ident">clone</span>(), <span class="ident">styles</span>.<span class="ident">clone</span>());
                         <span class="comment">// partial = false;</span>
-                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="ident">left</span>, <span class="ident">left_styles</span>));
-                        <span class="ident">first</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DocChars</span>(<span class="ident">right</span>, <span class="ident">chars_styles</span>));
+                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="ident">left_styles</span>, <span class="ident">left</span>));
+                        <span class="ident">first</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DocText</span>(<span class="ident">chars_styles</span>, <span class="ident">right</span>));
                         <span class="ident">nextfirst</span> <span class="op">=</span> <span class="bool-val">false</span>;
                     } <span class="kw">else</span> {
                         <span class="ident">chars_styles</span>.<span class="ident">extend</span>(<span class="kw-2">&amp;</span><span class="ident">styles</span>);
                         <span class="ident">bc</span>.<span class="ident">delete</span>(<span class="number">1</span>);
-                        <span class="ident">bc</span>.<span class="ident">InsertDocString</span>(<span class="ident">value</span>.<span class="ident">clone</span>(), <span class="ident">OpaqueStyleMap</span>::<span class="ident">from</span>(<span class="ident">styles</span>.<span class="ident">clone</span>()));
+                        <span class="ident">bc</span>.<span class="ident">InsertDocString</span>(<span class="ident">value</span>.<span class="ident">clone</span>(), <span class="ident">styles</span>.<span class="ident">clone</span>());
                         <span class="comment">// partial = false;</span>
-                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="ident">value</span>, <span class="ident">chars_styles</span>));
+                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="ident">chars_styles</span>, <span class="ident">value</span>));
                     }
                 }
                 <span class="ident">DocGroup</span>(..) <span class="op">=&gt;</span> {
@@ -525,23 +549,23 @@
                 }
             },
             <span class="ident">AddSkip</span>(<span class="ident">count</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">first</span>.<span class="ident">clone</span>().<span class="ident">unwrap</span>() {
-                <span class="ident">DocChars</span>(<span class="ident">value</span>, <span class="ident">chars_styles</span>) <span class="op">=&gt;</span> {
+                <span class="ident">DocText</span>(<span class="ident">chars_styles</span>, <span class="ident">value</span>) <span class="op">=&gt;</span> {
                     <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">char_len</span>() <span class="op">&lt;</span> <span class="ident">count</span> {
                         <span class="comment">// Consume and advance</span>
                         <span class="ident">d</span> <span class="op">=</span> <span class="ident">AddSkip</span>(<span class="ident">count</span> <span class="op">-</span> <span class="ident">value</span>.<span class="ident">char_len</span>());
                         <span class="ident">bc</span>.<span class="ident">AdvanceElements</span>(<span class="number">1</span>);
-                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="ident">value</span>, <span class="ident">chars_styles</span>));
+                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="ident">chars_styles</span>, <span class="ident">value</span>));
                         <span class="ident">nextdel</span> <span class="op">=</span> <span class="bool-val">false</span>;
                     } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">char_len</span>() <span class="op">&gt;</span> <span class="ident">count</span> {
                         <span class="kw">let</span> (<span class="ident">left</span>, <span class="ident">right</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">split_at</span>(<span class="ident">count</span>);
                         <span class="comment">// Split text element, we assume</span>
                         <span class="ident">bc</span>.<span class="ident">skip</span>(<span class="ident">count</span>);
-                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="ident">left</span>, <span class="ident">chars_styles</span>.<span class="ident">clone</span>()));
-                        <span class="ident">first</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DocChars</span>(<span class="ident">right</span>, <span class="ident">chars_styles</span>));
+                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="ident">chars_styles</span>.<span class="ident">clone</span>(), <span class="ident">left</span>));
+                        <span class="ident">first</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DocText</span>(<span class="ident">chars_styles</span>, <span class="ident">right</span>));
                         <span class="ident">nextfirst</span> <span class="op">=</span> <span class="bool-val">false</span>;
                     } <span class="kw">else</span> {
                         <span class="ident">bc</span>.<span class="ident">AdvanceElements</span>(<span class="number">1</span>);
-                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="ident">value</span>, <span class="ident">chars_styles</span>));
+                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="ident">chars_styles</span>, <span class="ident">value</span>));
                     }
                 }
                 <span class="ident">DocGroup</span>(..) <span class="op">=&gt;</span> {
@@ -563,11 +587,11 @@
                     <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Invalid AddWithGroup&quot;</span>);
                 }
             },
-            <span class="ident">AddChars</span>(<span class="ident">value</span>, <span class="ident">styles</span>) <span class="op">=&gt;</span> {
+            <span class="ident">AddText</span>(<span class="ident">styles</span>, <span class="ident">value</span>) <span class="op">=&gt;</span> {
                 <span class="comment">// TODO where do you skip anything, exactly</span>
                 <span class="comment">// need to manifest the place issue externally as well</span>
                 <span class="ident">bc</span>.<span class="ident">InsertDocString</span>(<span class="ident">value</span>.<span class="ident">clone</span>(), <span class="ident">styles</span>.<span class="ident">clone</span>());
-                <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="ident">value</span>, <span class="ident">styles</span>));
+                <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="ident">styles</span>, <span class="ident">value</span>));
                 <span class="ident">nextfirst</span> <span class="op">=</span> <span class="bool-val">false</span>;
             }
             <span class="ident">AddGroup</span>(<span class="ident">attrs</span>, <span class="ident">innerspan</span>) <span class="op">=&gt;</span> {
@@ -630,7 +654,11 @@
 }
 
 <span class="comment">// TODO replace all occurances of this with apply_add_inner</span>
-<span class="kw">fn</span> <span class="ident">apply_add_outer</span><span class="op">&lt;</span><span class="ident">M</span>: <span class="ident">DocMutator</span><span class="op">&gt;</span>(<span class="ident">bc</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">M</span>, <span class="ident">spanvec</span>: <span class="kw-2">&amp;</span><span class="ident">DocSpan</span>, <span class="ident">addvec</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span>) <span class="op">-&gt;</span> <span class="ident">DocSpan</span> {
+<span class="kw">fn</span> <span class="ident">apply_add_outer</span><span class="op">&lt;</span><span class="ident">M</span>: <span class="ident">DocMutator</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(
+    <span class="ident">bc</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">M</span>,
+    <span class="ident">spanvec</span>: <span class="kw-2">&amp;</span><span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">addvec</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+) <span class="op">-&gt;</span> <span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
     <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">res</span>, <span class="ident">remaining</span>) <span class="op">=</span> <span class="ident">apply_add_inner</span>(<span class="ident">bc</span>, <span class="ident">spanvec</span>, <span class="ident">addvec</span>);
 
     <span class="comment">// TODO never accept unbalanced components?</span>
@@ -639,7 +667,7 @@
         <span class="comment">//     let text = remaining.remove(0);</span>
         <span class="comment">//     bc.DeleteElements(1));</span>
         <span class="comment">//     match text {</span>
-        <span class="comment">//         DocChars(text) =&gt; {</span>
+        <span class="comment">//         DocText(text) =&gt; {</span>
         <span class="comment">//             console_log!(&quot;adding {:?}&quot;, text);</span>
         <span class="comment">//             bc.InsertDocString(text);</span>
         <span class="comment">//         }</span>
@@ -652,14 +680,20 @@
     <span class="ident">res</span>
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_add</span>(<span class="ident">spanvec</span>: <span class="kw-2">&amp;</span><span class="ident">DocSpan</span>, <span class="ident">add</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span>) <span class="op">-&gt;</span> <span class="ident">DocSpan</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_add</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(
+    <span class="ident">spanvec</span>: <span class="kw-2">&amp;</span><span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">add</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+) <span class="op">-&gt;</span> <span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mutator</span> <span class="op">=</span> <span class="ident">NullDocMutator</span> {};
     <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">apply_add_outer</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">mutator</span>, <span class="ident">spanvec</span>, <span class="ident">add</span>);
     <span class="ident">ret</span>
 }
 
 <span class="comment">// TODO what does this do, why doe sit exist, for creating BC for frontend??</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_add_bc</span>(<span class="ident">spanvec</span>: <span class="kw-2">&amp;</span><span class="ident">DocSpan</span>, <span class="ident">addvec</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span>) <span class="op">-&gt;</span> (<span class="ident">Doc</span>, <span class="ident">Program</span>) {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_add_bc</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(
+    <span class="ident">spanvec</span>: <span class="kw-2">&amp;</span><span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">addvec</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+) <span class="op">-&gt;</span> (<span class="ident">Doc</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">Program</span>) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mutator</span> <span class="op">=</span> <span class="ident">RecordingDocMutator</span>::<span class="ident">new</span>(<span class="ident">DocStepper</span>::<span class="ident">new</span>(<span class="ident">spanvec</span>));
     <span class="kw">let</span> <span class="ident">output_doc</span> <span class="op">=</span> <span class="ident">apply_add_outer</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">mutator</span>, <span class="ident">spanvec</span>, <span class="ident">addvec</span>);
 
@@ -677,11 +711,15 @@
     (<span class="ident">Doc</span>(<span class="ident">output_doc</span>), <span class="ident">bc</span>)
 }
 
-<span class="kw">fn</span> <span class="ident">apply_del_inner</span><span class="op">&lt;</span><span class="ident">M</span>: <span class="ident">DocMutator</span><span class="op">&gt;</span>(<span class="ident">bc</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">M</span>, <span class="ident">spanvec</span>: <span class="kw-2">&amp;</span><span class="ident">DocSpan</span>, <span class="ident">addvec</span>: <span class="kw-2">&amp;</span><span class="ident">DelSpan</span>) <span class="op">-&gt;</span> <span class="ident">DocSpan</span> {
+<span class="kw">fn</span> <span class="ident">apply_del_inner</span><span class="op">&lt;</span><span class="ident">M</span>: <span class="ident">DocMutator</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(
+    <span class="ident">bc</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">M</span>,
+    <span class="ident">spanvec</span>: <span class="kw-2">&amp;</span><span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">addvec</span>: <span class="kw-2">&amp;</span><span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+) <span class="op">-&gt;</span> <span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">span</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">spanvec</span>[..];
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">del</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">addvec</span>[..];
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span>: <span class="ident">DocSpan</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">span</span>.<span class="ident">len</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span>: <span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">span</span>.<span class="ident">len</span>());
 
     <span class="kw">if</span> <span class="ident">del</span>.<span class="ident">is_empty</span>() {
         <span class="kw">return</span> <span class="ident">span</span>.<span class="ident">to_vec</span>();
@@ -701,13 +739,13 @@
 
         <span class="kw">match</span> <span class="ident">d</span>.<span class="ident">clone</span>() {
             <span class="ident">DelStyles</span>(<span class="ident">count</span>, <span class="ident">styles</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">first</span>.<span class="ident">clone</span>() {
-                <span class="ident">DocChars</span>(<span class="ident">value</span>, <span class="kw-2">mut</span> <span class="ident">chars_styles</span>) <span class="op">=&gt;</span> {
+                <span class="ident">DocText</span>(<span class="kw-2">mut</span> <span class="ident">chars_styles</span>, <span class="ident">value</span>) <span class="op">=&gt;</span> {
                     <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">char_len</span>() <span class="op">&lt;</span> <span class="ident">count</span> {
                         <span class="ident">d</span> <span class="op">=</span> <span class="ident">DelStyles</span>(<span class="ident">count</span> <span class="op">-</span> <span class="ident">value</span>.<span class="ident">char_len</span>(), <span class="ident">styles</span>.<span class="ident">clone</span>());
                         <span class="ident">chars_styles</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">styles</span>);
                         <span class="ident">bc</span>.<span class="ident">delete</span>(<span class="number">1</span>);
                         <span class="ident">bc</span>.<span class="ident">InsertDocString</span>(<span class="ident">value</span>.<span class="ident">clone</span>(), <span class="ident">chars_styles</span>.<span class="ident">clone</span>());
-                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="ident">value</span>, <span class="ident">chars_styles</span>));
+                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="ident">chars_styles</span>, <span class="ident">value</span>));
                         <span class="ident">nextdel</span> <span class="op">=</span> <span class="bool-val">false</span>;
                     } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">char_len</span>() <span class="op">&gt;</span> <span class="ident">count</span> {
                         <span class="kw">let</span> (<span class="ident">left</span>, <span class="ident">right</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">split_at</span>(<span class="ident">count</span>);
@@ -715,14 +753,14 @@
                         <span class="ident">left_styles</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">styles</span>);
                         <span class="ident">bc</span>.<span class="ident">delete</span>(<span class="number">1</span>);
                         <span class="ident">bc</span>.<span class="ident">InsertDocString</span>(<span class="ident">left</span>.<span class="ident">clone</span>(), <span class="ident">chars_styles</span>.<span class="ident">clone</span>());
-                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="ident">left</span>, <span class="ident">chars_styles</span>.<span class="ident">clone</span>()));
-                        <span class="ident">first</span> <span class="op">=</span> <span class="ident">DocChars</span>(<span class="ident">right</span>, <span class="ident">chars_styles</span>);
+                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="ident">chars_styles</span>.<span class="ident">clone</span>(), <span class="ident">left</span>));
+                        <span class="ident">first</span> <span class="op">=</span> <span class="ident">DocText</span>(<span class="ident">chars_styles</span>, <span class="ident">right</span>);
                         <span class="ident">nextfirst</span> <span class="op">=</span> <span class="bool-val">false</span>;
                     } <span class="kw">else</span> {
                         <span class="ident">chars_styles</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">styles</span>);
                         <span class="ident">bc</span>.<span class="ident">delete</span>(<span class="number">1</span>);
                         <span class="ident">bc</span>.<span class="ident">InsertDocString</span>(<span class="ident">value</span>.<span class="ident">clone</span>(), <span class="ident">chars_styles</span>.<span class="ident">clone</span>());
-                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="ident">value</span>, <span class="ident">chars_styles</span>));
+                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="ident">chars_styles</span>, <span class="ident">value</span>));
                     }
                 }
                 <span class="kw">_</span> <span class="op">=&gt;</span> {
@@ -730,22 +768,22 @@
                 }
             },
             <span class="ident">DelSkip</span>(<span class="ident">count</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">first</span>.<span class="ident">clone</span>() {
-                <span class="ident">DocChars</span>(<span class="ident">value</span>, <span class="ident">chars_styles</span>) <span class="op">=&gt;</span> {
+                <span class="ident">DocText</span>(<span class="ident">chars_styles</span>, <span class="ident">value</span>) <span class="op">=&gt;</span> {
                     <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">char_len</span>() <span class="op">&lt;</span> <span class="ident">count</span> {
                         <span class="ident">d</span> <span class="op">=</span> <span class="ident">DelSkip</span>(<span class="ident">count</span> <span class="op">-</span> <span class="ident">value</span>.<span class="ident">char_len</span>());
                         <span class="ident">bc</span>.<span class="ident">AdvanceElements</span>(<span class="number">1</span>);
-                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="ident">value</span>, <span class="ident">chars_styles</span>));
+                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="ident">chars_styles</span>, <span class="ident">value</span>));
                         <span class="ident">nextdel</span> <span class="op">=</span> <span class="bool-val">false</span>;
                     } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">char_len</span>() <span class="op">&gt;</span> <span class="ident">count</span> {
                         <span class="kw">let</span> (<span class="ident">left</span>, <span class="ident">right</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">split_at</span>(<span class="ident">count</span>);
                         <span class="comment">// Assume this should be deleted from the left</span>
                         <span class="ident">bc</span>.<span class="ident">skip</span>(<span class="ident">count</span>);
-                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="ident">left</span>, <span class="ident">chars_styles</span>.<span class="ident">clone</span>()));
-                        <span class="ident">first</span> <span class="op">=</span> <span class="ident">DocChars</span>(<span class="ident">right</span>, <span class="ident">chars_styles</span>);
+                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="ident">chars_styles</span>.<span class="ident">clone</span>(), <span class="ident">left</span>));
+                        <span class="ident">first</span> <span class="op">=</span> <span class="ident">DocText</span>(<span class="ident">chars_styles</span>, <span class="ident">right</span>);
                         <span class="ident">nextfirst</span> <span class="op">=</span> <span class="bool-val">false</span>;
                     } <span class="kw">else</span> {
                         <span class="ident">bc</span>.<span class="ident">AdvanceElements</span>(<span class="number">1</span>);
-                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="ident">value</span>, <span class="ident">chars_styles</span>));
+                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="ident">chars_styles</span>, <span class="ident">value</span>));
                         <span class="ident">nextdel</span> <span class="op">=</span> <span class="bool-val">true</span>;
                     }
                 }
@@ -778,14 +816,14 @@
                     <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Invalid DelGroup&quot;</span>);
                 }
             },
-            <span class="ident">DelChars</span>(<span class="ident">count</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">first</span>.<span class="ident">clone</span>() {
-                <span class="ident">DocChars</span>(<span class="ident">value</span>, <span class="ident">chars_styles</span>) <span class="op">=&gt;</span> {
+            <span class="ident">DelText</span>(<span class="ident">count</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">first</span>.<span class="ident">clone</span>() {
+                <span class="ident">DocText</span>(<span class="ident">chars_styles</span>, <span class="ident">value</span>) <span class="op">=&gt;</span> {
                     <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">char_len</span>() <span class="op">&gt;</span> <span class="ident">count</span> {
                         <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">right</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">split_at</span>(<span class="ident">count</span>);
-                        <span class="ident">first</span> <span class="op">=</span> <span class="ident">DocChars</span>(<span class="ident">right</span>, <span class="ident">chars_styles</span>);
+                        <span class="ident">first</span> <span class="op">=</span> <span class="ident">DocText</span>(<span class="ident">chars_styles</span>, <span class="ident">right</span>);
                         <span class="ident">nextfirst</span> <span class="op">=</span> <span class="bool-val">false</span>;
                     } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">char_len</span>() <span class="op">&lt;</span> <span class="ident">count</span> {
-                        <span class="ident">d</span> <span class="op">=</span> <span class="ident">DelChars</span>(<span class="ident">count</span> <span class="op">-</span> <span class="ident">value</span>.<span class="ident">char_len</span>());
+                        <span class="ident">d</span> <span class="op">=</span> <span class="ident">DelText</span>(<span class="ident">count</span> <span class="op">-</span> <span class="ident">value</span>.<span class="ident">char_len</span>());
                         <span class="ident">nextdel</span> <span class="op">=</span> <span class="bool-val">false</span>;
                     } <span class="kw">else</span> {
                         <span class="comment">// noop</span>
@@ -793,7 +831,7 @@
                     }
                 }
                 <span class="kw">_</span> <span class="op">=&gt;</span> {
-                    <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Invalid DelChars&quot;</span>);
+                    <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Invalid DelText&quot;</span>);
                 }
             },
         }
@@ -831,14 +869,20 @@
     <span class="ident">res</span>
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_delete</span>(<span class="ident">spanvec</span>: <span class="kw-2">&amp;</span><span class="ident">DocSpan</span>, <span class="ident">delvec</span>: <span class="kw-2">&amp;</span><span class="ident">DelSpan</span>) <span class="op">-&gt;</span> <span class="ident">DocSpan</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_delete</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(
+    <span class="ident">spanvec</span>: <span class="kw-2">&amp;</span><span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">delvec</span>: <span class="kw-2">&amp;</span><span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+) <span class="op">-&gt;</span> <span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mutator</span> <span class="op">=</span> <span class="ident">NullDocMutator</span> {};
     <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">apply_del_inner</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">mutator</span>, <span class="ident">spanvec</span>, <span class="ident">delvec</span>);
     <span class="ident">ret</span>
 }
 
 <span class="comment">// TODO what does this do, why doe sit exist, for creating BC for frontend??</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_del_bc</span>(<span class="ident">spanvec</span>: <span class="kw-2">&amp;</span><span class="ident">DocSpan</span>, <span class="ident">del</span>: <span class="kw-2">&amp;</span><span class="ident">DelSpan</span>) <span class="op">-&gt;</span> (<span class="ident">DocSpan</span>, <span class="ident">Program</span>) {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_del_bc</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(
+    <span class="ident">spanvec</span>: <span class="kw-2">&amp;</span><span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">del</span>: <span class="kw-2">&amp;</span><span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+) <span class="op">-&gt;</span> (<span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">Program</span>) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mutator</span> <span class="op">=</span> <span class="ident">RecordingDocMutator</span>::<span class="ident">new</span>(<span class="ident">DocStepper</span>::<span class="ident">new</span>(<span class="ident">spanvec</span>));
     <span class="kw">let</span> <span class="ident">output_doc</span> <span class="op">=</span> <span class="ident">apply_del_inner</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">mutator</span>, <span class="ident">spanvec</span>, <span class="ident">del</span>);
 
@@ -849,8 +893,8 @@
         <span class="kw">let</span> <span class="ident">actual</span> <span class="op">=</span> <span class="ident">output_doc</span>.<span class="ident">clone</span>();
         <span class="kw">if</span> <span class="ident">actual</span> <span class="op">!=</span> <span class="ident">compare</span> {
             <span class="macro">console_log</span><span class="macro">!</span>(<span class="string">&quot;\n\n\n🚫🚫🚫 DELETION: {:?}&quot;</span>, <span class="ident">del</span>);
-            <span class="kw">for</span> <span class="ident">item</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">bc</span>.<span class="number">0</span> {
-                <span class="macro">console_log</span><span class="macro">!</span>(<span class="string">&quot;      -&gt; {:?}&quot;</span>, <span class="ident">item</span>);
+            <span class="kw">for</span> <span class="ident">_item</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">bc</span>.<span class="number">0</span> {
+                <span class="macro">console_log</span><span class="macro">!</span>(<span class="string">&quot;      -&gt; {:?}&quot;</span>, <span class="ident">_item</span>);
             }
             <span class="macro">console_log</span><span class="macro">!</span>(
                 <span class="string">&quot;\ntest =====&gt; [ {} ]\n\nactual:\n  {:?}\n\ncompare:\n  {:?}\n\n&quot;</span>,
@@ -864,7 +908,10 @@
     (<span class="ident">output_doc</span>, <span class="ident">bc</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_op_bc</span>(<span class="ident">spanvec</span>: <span class="kw-2">&amp;</span><span class="ident">DocSpan</span>, <span class="ident">op</span>: <span class="kw-2">&amp;</span><span class="ident">Op</span>) <span class="op">-&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Program</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_op_bc</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(
+    <span class="ident">spanvec</span>: <span class="kw-2">&amp;</span><span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">op</span>: <span class="kw-2">&amp;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+) <span class="op">-&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Program</span><span class="op">&gt;</span> {
     <span class="comment">// console_log!(&quot;\n\n\n\n\naaaaaaa\n\n\n\n\n\n\n&quot;);</span>
     <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">delvec</span>, <span class="kw-2">ref</span> <span class="ident">addvec</span>) <span class="op">=</span> <span class="ident">op</span>;
     <span class="comment">// console_log!(&quot;👻👻  1  👻👻&quot;);</span>
@@ -876,7 +923,10 @@
     <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">del_program</span>, <span class="ident">add_program</span>]
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_operation</span>(<span class="ident">spanvec</span>: <span class="kw-2">&amp;</span><span class="ident">DocSpan</span>, <span class="ident">op</span>: <span class="kw-2">&amp;</span><span class="ident">Op</span>) <span class="op">-&gt;</span> <span class="ident">DocSpan</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_operation</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(
+    <span class="ident">spanvec</span>: <span class="kw-2">&amp;</span><span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">op</span>: <span class="kw-2">&amp;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+) <span class="op">-&gt;</span> <span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">delvec</span>, <span class="kw-2">ref</span> <span class="ident">addvec</span>) <span class="op">=</span> <span class="ident">op</span>;
     <span class="comment">// println!(&quot;------&gt; @1 {:?}&quot;, spanvec);</span>
     <span class="comment">// println!(&quot;------&gt; @2 {:?}&quot;, delvec);</span>

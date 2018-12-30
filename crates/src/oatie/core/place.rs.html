@@ -309,17 +309,12 @@
 <span id="309">309</span>
 <span id="310">310</span>
 <span id="311">311</span>
-<span id="312">312</span>
-<span id="313">313</span>
-<span id="314">314</span>
-<span id="315">315</span>
-<span id="316">316</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">doc</span>::<span class="kw-2">*</span>;
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">can_element_join</span>(<span class="ident">left</span>: <span class="kw-2">&amp;</span><span class="ident">DocElement</span>, <span class="ident">right</span>: <span class="kw-2">&amp;</span><span class="ident">DocElement</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">can_element_join</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(<span class="ident">left</span>: <span class="kw-2">&amp;</span><span class="ident">DocElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">right</span>: <span class="kw-2">&amp;</span><span class="ident">DocElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
     <span class="kw">match</span> (<span class="ident">left</span>, <span class="ident">right</span>) {
-        (<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="kw-2">ref</span> <span class="ident">prefix</span>, <span class="kw-2">ref</span> <span class="ident">prefix_styles</span>), <span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="kw-2">ref</span> <span class="ident">suffix</span>, <span class="kw-2">ref</span> <span class="ident">suffix_styles</span>)) <span class="op">=&gt;</span> {
+        (<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="kw-2">ref</span> <span class="ident">_prefix</span>, <span class="kw-2">ref</span> <span class="ident">prefix_styles</span>), <span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="kw-2">ref</span> <span class="ident">_suffix</span>, <span class="kw-2">ref</span> <span class="ident">suffix_styles</span>)) <span class="op">=&gt;</span> {
             <span class="kw">if</span> <span class="ident">prefix_styles</span> <span class="op">==</span> <span class="ident">suffix_styles</span> {
                 <span class="kw">return</span> <span class="bool-val">true</span>;
             }
@@ -329,10 +324,10 @@
     <span class="bool-val">false</span>
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">try_element_join</span>(<span class="ident">left</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DocElement</span>, <span class="ident">right</span>: <span class="kw-2">&amp;</span><span class="ident">DocElement</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">try_element_join</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(<span class="ident">left</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DocElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">right</span>: <span class="kw-2">&amp;</span><span class="ident">DocElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
     <span class="kw">match</span> (<span class="ident">left</span>, <span class="ident">right</span>) {
-        (<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DocChars</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">prefix</span>, <span class="kw-2">ref</span> <span class="ident">prefix_styles</span>), <span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="kw-2">ref</span> <span class="ident">suffix</span>, <span class="kw-2">ref</span> <span class="ident">suffix_styles</span>)) <span class="op">=&gt;</span> {
-            <span class="kw">if</span> <span class="ident">prefix_styles</span>.<span class="ident">styles</span>() <span class="op">==</span> <span class="ident">suffix_styles</span>.<span class="ident">styles</span>() {
+        (<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DocText</span>(<span class="kw-2">ref</span> <span class="ident">prefix_styles</span>, <span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">prefix</span>), <span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="kw-2">ref</span> <span class="ident">suffix_styles</span>, <span class="kw-2">ref</span> <span class="ident">suffix</span>)) <span class="op">=&gt;</span> {
+            <span class="kw">if</span> <span class="ident">prefix_styles</span> <span class="op">==</span> <span class="ident">suffix_styles</span> {
                 <span class="ident">prefix</span>.<span class="ident">push_str</span>(<span class="ident">suffix</span>.<span class="ident">as_str</span>());
                 <span class="kw">return</span> <span class="bool-val">true</span>;
             }
@@ -342,16 +337,16 @@
     <span class="bool-val">false</span>
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">DocPlaceable</span> {
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">DocPlaceable</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">skip_len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">usize</span>;
-    <span class="kw">fn</span> <span class="ident">place_all</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">all</span>: <span class="kw-2">&amp;</span>[<span class="ident">DocElement</span>]);
-    <span class="kw">fn</span> <span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">DocElement</span>);
+    <span class="kw">fn</span> <span class="ident">place_all</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">all</span>: <span class="kw-2">&amp;</span>[<span class="ident">DocElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>]);
+    <span class="kw">fn</span> <span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">DocElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>);
 }
 
-<span class="kw">impl</span> <span class="ident">DocPlaceable</span> <span class="kw">for</span> <span class="ident">DocSpan</span> {
-    <span class="kw">fn</span> <span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">elem</span>: <span class="kw-2">&amp;</span><span class="ident">DocElement</span>) {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span> <span class="ident">DocPlaceable</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">elem</span>: <span class="kw-2">&amp;</span><span class="ident">DocElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">elem</span> {
-            <span class="ident">DocChars</span>(<span class="kw-2">ref</span> <span class="ident">text</span>, <span class="kw-2">ref</span> <span class="ident">_styles</span>) <span class="op">=&gt;</span> {
+            <span class="ident">DocText</span>(<span class="kw-2">ref</span> <span class="ident">_styles</span>, <span class="kw-2">ref</span> <span class="ident">text</span>) <span class="op">=&gt;</span> {
                 <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">text</span>.<span class="ident">char_len</span>() <span class="op">&gt;</span> <span class="number">0</span>);
 
                 <span class="comment">// If the most recent element is text, we may want to just</span>
@@ -360,11 +355,6 @@
                     <span class="kw">if</span> <span class="ident">try_element_join</span>(<span class="ident">element</span>, <span class="ident">elem</span>) {
                         <span class="kw">return</span>;
                     }
-                    <span class="comment">// // Check if they&#39;re equal and we can push it directly.</span>
-                    <span class="comment">// if prefix.styles() == text.styles() {</span>
-                    <span class="comment">//     prefix.push_str(text.as_str());</span>
-                    <span class="comment">//     return;</span>
-                    <span class="comment">// }</span>
                 }
 
                 <span class="comment">// Otherwise, push the new entry</span>
@@ -376,7 +366,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">place_all</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">all</span>: <span class="kw-2">&amp;</span>[<span class="ident">DocElement</span>]) {
+    <span class="kw">fn</span> <span class="ident">place_all</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">all</span>: <span class="kw-2">&amp;</span>[<span class="ident">DocElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>]) {
         <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="ident">all</span> {
             <span class="self">self</span>.<span class="ident">place</span>(<span class="ident">i</span>);
         }
@@ -386,7 +376,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="number">0</span>;
         <span class="kw">for</span> <span class="ident">item</span> <span class="kw">in</span> <span class="self">self</span> {
             <span class="ident">ret</span> <span class="op">+=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">item</span> {
-                <span class="ident">DocChars</span>(<span class="kw-2">ref</span> <span class="ident">value</span>, <span class="kw">_</span>) <span class="op">=&gt;</span> <span class="ident">value</span>.<span class="ident">char_len</span>(),
+                <span class="ident">DocText</span>(<span class="kw">_</span>, <span class="kw-2">ref</span> <span class="ident">value</span>) <span class="op">=&gt;</span> <span class="ident">value</span>.<span class="ident">char_len</span>(),
                 <span class="ident">DocGroup</span>(..) <span class="op">=&gt;</span> <span class="number">1</span>,
             };
         }
@@ -394,9 +384,9 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">DelPlaceable</span> {
-    <span class="kw">fn</span> <span class="ident">place_all</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">all</span>: <span class="kw-2">&amp;</span>[<span class="ident">DelElement</span>]);
-    <span class="kw">fn</span> <span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">DelElement</span>);
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">DelPlaceable</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">place_all</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">all</span>: <span class="kw-2">&amp;</span>[<span class="ident">DelElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>]);
+    <span class="kw">fn</span> <span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">DelElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>);
     <span class="kw">fn</span> <span class="ident">skip_pre_len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">usize</span>;
     <span class="kw">fn</span> <span class="ident">skip_post_len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">usize</span>;
 
@@ -405,21 +395,21 @@
     <span class="kw">fn</span> <span class="ident">is_continuous_skip</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span>;
 }
 
-<span class="kw">impl</span> <span class="ident">DelPlaceable</span> <span class="kw">for</span> <span class="ident">DelSpan</span> {
-    <span class="kw">fn</span> <span class="ident">place_all</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">all</span>: <span class="kw-2">&amp;</span>[<span class="ident">DelElement</span>]) {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span> <span class="ident">DelPlaceable</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">place_all</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">all</span>: <span class="kw-2">&amp;</span>[<span class="ident">DelElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>]) {
         <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="ident">all</span> {
             <span class="self">self</span>.<span class="ident">place</span>(<span class="ident">i</span>);
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">elem</span>: <span class="kw-2">&amp;</span><span class="ident">DelElement</span>) {
+    <span class="kw">fn</span> <span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">elem</span>: <span class="kw-2">&amp;</span><span class="ident">DelElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">elem</span> {
-            <span class="ident">DelChars</span>(<span class="ident">count</span>) <span class="op">=&gt;</span> {
+            <span class="ident">DelText</span>(<span class="ident">count</span>) <span class="op">=&gt;</span> {
                 <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">count</span> <span class="op">&gt;</span> <span class="number">0</span>);
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelChars</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">value</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">last_mut</span>() {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelText</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">value</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">last_mut</span>() {
                     <span class="kw-2">*</span><span class="ident">value</span> <span class="op">+=</span> <span class="ident">count</span>;
                 } <span class="kw">else</span> {
-                    <span class="self">self</span>.<span class="ident">push</span>(<span class="ident">DelChars</span>(<span class="ident">count</span>));
+                    <span class="self">self</span>.<span class="ident">push</span>(<span class="ident">DelText</span>(<span class="ident">count</span>));
                 }
             }
             <span class="ident">DelStyles</span>(<span class="ident">count</span>, <span class="kw-2">ref</span> <span class="ident">styles</span>) <span class="op">=&gt;</span> {
@@ -458,7 +448,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="number">0</span>;
         <span class="kw">for</span> <span class="ident">item</span> <span class="kw">in</span> <span class="self">self</span> {
             <span class="ident">ret</span> <span class="op">+=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">item</span> {
-                <span class="ident">DelSkip</span>(<span class="ident">len</span>) <span class="op">|</span> <span class="ident">DelChars</span>(<span class="ident">len</span>) <span class="op">|</span> <span class="ident">DelStyles</span>(<span class="ident">len</span>, <span class="kw">_</span>) <span class="op">=&gt;</span> <span class="ident">len</span>,
+                <span class="ident">DelSkip</span>(<span class="ident">len</span>) <span class="op">|</span> <span class="ident">DelText</span>(<span class="ident">len</span>) <span class="op">|</span> <span class="ident">DelStyles</span>(<span class="ident">len</span>, <span class="kw">_</span>) <span class="op">=&gt;</span> <span class="ident">len</span>,
                 <span class="ident">DelGroup</span>(..) <span class="op">|</span> <span class="ident">DelWithGroup</span>(..) <span class="op">=&gt;</span> <span class="number">1</span>,
                 <span class="comment">// DelMany(len) =&gt; len,</span>
                 <span class="comment">// DelObject | DelGroupAll  =&gt; 1,</span>
@@ -472,7 +462,7 @@
         <span class="kw">for</span> <span class="ident">item</span> <span class="kw">in</span> <span class="self">self</span> {
             <span class="ident">ret</span> <span class="op">+=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">item</span> {
                 <span class="ident">DelSkip</span>(<span class="ident">len</span>) <span class="op">|</span> <span class="ident">DelStyles</span>(<span class="ident">len</span>, <span class="kw">_</span>) <span class="op">=&gt;</span> <span class="ident">len</span>,
-                <span class="ident">DelChars</span>(..) <span class="op">=&gt;</span> <span class="number">0</span>,
+                <span class="ident">DelText</span>(..) <span class="op">=&gt;</span> <span class="number">0</span>,
                 <span class="ident">DelWithGroup</span>(..) <span class="op">=&gt;</span> <span class="number">1</span>,
                 <span class="ident">DelGroup</span>(<span class="kw-2">ref</span> <span class="ident">span</span>) <span class="op">=&gt;</span> <span class="ident">span</span>.<span class="ident">skip_post_len</span>(),
                 <span class="comment">// DelObject | DelMany(..) | DelGroupAll =&gt; 0,</span>
@@ -498,9 +488,9 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">AddPlaceable</span> {
-    <span class="kw">fn</span> <span class="ident">place_all</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">all</span>: <span class="kw-2">&amp;</span>[<span class="ident">AddElement</span>]);
-    <span class="kw">fn</span> <span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">AddElement</span>);
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">AddPlaceable</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">place_all</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">all</span>: <span class="kw-2">&amp;</span>[<span class="ident">AddElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>]);
+    <span class="kw">fn</span> <span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">AddElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>);
     <span class="kw">fn</span> <span class="ident">skip_pre_len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">usize</span>;
     <span class="kw">fn</span> <span class="ident">skip_post_len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">usize</span>;
 
@@ -509,21 +499,21 @@
     <span class="kw">fn</span> <span class="ident">is_continuous_skip</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span>;
 }
 
-<span class="kw">impl</span> <span class="ident">AddPlaceable</span> <span class="kw">for</span> <span class="ident">AddSpan</span> {
-    <span class="kw">fn</span> <span class="ident">place_all</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">all</span>: <span class="kw-2">&amp;</span>[<span class="ident">AddElement</span>]) {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span> <span class="ident">AddPlaceable</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">place_all</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">all</span>: <span class="kw-2">&amp;</span>[<span class="ident">AddElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>]) {
         <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="ident">all</span> {
             <span class="self">self</span>.<span class="ident">place</span>(<span class="ident">i</span>);
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">elem</span>: <span class="kw-2">&amp;</span><span class="ident">AddElement</span>) {
+    <span class="kw">fn</span> <span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">elem</span>: <span class="kw-2">&amp;</span><span class="ident">AddElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">elem</span> {
-            <span class="ident">AddChars</span>(<span class="kw-2">ref</span> <span class="ident">text</span>, <span class="kw-2">ref</span> <span class="ident">styles</span>) <span class="op">=&gt;</span> {
+            <span class="ident">AddText</span>(<span class="kw-2">ref</span> <span class="ident">styles</span>, <span class="kw-2">ref</span> <span class="ident">text</span>) <span class="op">=&gt;</span> {
                 <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">text</span>.<span class="ident">char_len</span>() <span class="op">&gt;</span> <span class="number">0</span>);
 
                 <span class="comment">// If the most recent element is text, we may want to just</span>
                 <span class="comment">// append our text to it to cut down on new elements.</span>
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">AddChars</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">prefix</span>, <span class="kw-2">ref</span> <span class="ident">prefix_styles</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">last_mut</span>() {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">AddText</span>(<span class="kw-2">ref</span> <span class="ident">prefix_styles</span>, <span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">prefix</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">last_mut</span>() {
                     <span class="comment">// Check if they&#39;re equal and we can push it directly.</span>
                     <span class="kw">if</span> <span class="ident">styles</span> <span class="op">==</span> <span class="ident">prefix_styles</span> {
                         <span class="ident">prefix</span>.<span class="ident">push_str</span>(<span class="ident">text</span>.<span class="ident">as_str</span>());
@@ -532,7 +522,7 @@
                 }
 
                 <span class="comment">// Otherwise, push the new entry</span>
-                <span class="self">self</span>.<span class="ident">push</span>(<span class="ident">AddChars</span>(<span class="ident">text</span>.<span class="ident">to_owned</span>(), <span class="ident">styles</span>.<span class="ident">clone</span>()));
+                <span class="self">self</span>.<span class="ident">push</span>(<span class="ident">AddText</span>(<span class="ident">styles</span>.<span class="ident">clone</span>(), <span class="ident">text</span>.<span class="ident">to_owned</span>()));
             }
             <span class="ident">AddStyles</span>(<span class="ident">count</span>, <span class="kw-2">ref</span> <span class="ident">styles</span>) <span class="op">=&gt;</span> {
                 <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">count</span> <span class="op">&gt;</span> <span class="number">0</span>);
@@ -566,7 +556,7 @@
         <span class="kw">for</span> <span class="ident">item</span> <span class="kw">in</span> <span class="self">self</span> {
             <span class="ident">ret</span> <span class="op">+=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">item</span> {
                 <span class="ident">AddSkip</span>(<span class="ident">len</span>) <span class="op">|</span> <span class="ident">AddStyles</span>(<span class="ident">len</span>, <span class="kw">_</span>) <span class="op">=&gt;</span> <span class="ident">len</span>,
-                <span class="ident">AddChars</span>(<span class="kw-2">ref</span> <span class="ident">_chars</span>, <span class="kw">_</span>) <span class="op">=&gt;</span> <span class="number">0</span>,
+                <span class="ident">AddText</span>(<span class="kw-2">ref</span> <span class="ident">_chars</span>, <span class="kw">_</span>) <span class="op">=&gt;</span> <span class="number">0</span>,
                 <span class="ident">AddGroup</span>(<span class="kw">_</span>, <span class="kw-2">ref</span> <span class="ident">span</span>) <span class="op">=&gt;</span> <span class="ident">span</span>.<span class="ident">skip_pre_len</span>(),
                 <span class="ident">AddWithGroup</span>(..) <span class="op">=&gt;</span> <span class="number">1</span>,
             };
@@ -579,7 +569,7 @@
         <span class="kw">for</span> <span class="ident">item</span> <span class="kw">in</span> <span class="self">self</span> {
             <span class="ident">ret</span> <span class="op">+=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">item</span> {
                 <span class="ident">AddSkip</span>(<span class="ident">len</span>) <span class="op">|</span> <span class="ident">AddStyles</span>(<span class="ident">len</span>, <span class="kw">_</span>) <span class="op">=&gt;</span> <span class="ident">len</span>,
-                <span class="ident">AddChars</span>(<span class="kw-2">ref</span> <span class="ident">chars</span>, <span class="kw">_</span>) <span class="op">=&gt;</span> <span class="ident">chars</span>.<span class="ident">char_len</span>(),
+                <span class="ident">AddText</span>(<span class="kw">_</span>, <span class="kw-2">ref</span> <span class="ident">chars</span>) <span class="op">=&gt;</span> <span class="ident">chars</span>.<span class="ident">char_len</span>(),
                 <span class="ident">AddGroup</span>(..) <span class="op">|</span> <span class="ident">AddWithGroup</span>(..) <span class="op">=&gt;</span> <span class="number">1</span>,
             };
         }

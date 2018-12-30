@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["RtfTrack",""]],"struct":[["RtfSchema",""]]});
+initSidebarItems({"trait":[["Schema",""],["StyleTrait",""],["Track",""]]});

@@ -957,7 +957,6 @@
 <span id="957">957</span>
 <span id="958">958</span>
 <span id="959">959</span>
-<span id="960">960</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Don&#39;t add additional noise to the build tools.</span>
 <span class="comment">// #![deny(warnings)]</span>
@@ -1416,8 +1415,6 @@
         }
 
         <span class="ident">Cli</span>::<span class="ident">WasmBuild</span> { <span class="ident">no_vendor</span> } <span class="op">=&gt;</span> {
-            <span class="kw">let</span> <span class="ident">release_flag</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="string">&quot;--release&quot;</span>);
-
             <span class="comment">// Install wasm target</span>
             <span class="macro">execute</span><span class="macro">!</span>(
                 <span class="string">&quot;
@@ -1430,9 +1427,10 @@
             <span class="macro">execute</span><span class="macro">!</span>(
                 <span class="string">r&quot;
                     cd edit-client
-                    cargo build {release_flag} --lib --target wasm32-unknown-unknown {cargo_args}
+                    cargo build --lib --target wasm32-unknown-unknown {cargo_args} {release_flag}
                 &quot;</span>,
-                <span class="ident">release_flag</span> <span class="op">=</span> <span class="ident">release_flag</span>,
+                <span class="comment">// Always compile in release mode.</span>
+                <span class="ident">release_flag</span> <span class="op">=</span> <span class="string">&quot;--release&quot;</span>,
                 <span class="ident">cargo_args</span> <span class="op">=</span> <span class="ident">CARGO_ARGS_EDIT_CLIENT</span>,
             )<span class="question-mark">?</span>;
 
@@ -1444,7 +1442,7 @@
 
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">Bindgen</span>::<span class="ident">new</span>();
                 <span class="ident">b</span>.<span class="ident">input_path</span>(<span class="string">&quot;./target/wasm32-unknown-unknown/release/edit_client.wasm&quot;</span>)
-                    <span class="comment">// .debug(args.flag_debug)</span>
+                    <span class="comment">// .debug(!release) Unsure if debug generates too much content.</span>
                     .<span class="ident">typescript</span>(<span class="bool-val">true</span>);
                 <span class="ident">b</span>.<span class="ident">generate</span>(<span class="string">&quot;./edit-frontend/src/bindgen&quot;</span>)<span class="question-mark">?</span>;
 
@@ -1763,7 +1761,7 @@
             <span class="macro">eprintln</span><span class="macro">!</span>(<span class="string">&quot;Compiling WebAssembly...&quot;</span>);
             <span class="macro">execute</span><span class="macro">!</span>(
                 <span class="string">&quot;
-                    {self_path} wasm-build
+                    {self_path} wasm-build --release
                 &quot;</span>,
                 <span class="ident">self_path</span> <span class="op">=</span> <span class="ident">SELF_PATH</span>,
             )<span class="question-mark">?</span>;
@@ -1772,7 +1770,7 @@
             <span class="macro">eprintln</span><span class="macro">!</span>(<span class="string">&quot;Building frontend...&quot;</span>);
             <span class="macro">execute</span><span class="macro">!</span>(
                 <span class="string">r&quot;
-                    {self_path} frontend-build
+                    {self_path} frontend-build --release
                 &quot;</span>,
                 <span class="ident">self_path</span> <span class="op">=</span> <span class="ident">SELF_PATH</span>,
             )<span class="question-mark">?</span>;

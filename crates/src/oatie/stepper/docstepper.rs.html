@@ -378,30 +378,32 @@
 <span id="378">378</span>
 <span id="379">379</span>
 <span id="380">380</span>
+<span id="381">381</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">stepper</span>::<span class="kw-2">*</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">charcursor</span>::<span class="kw-2">*</span>;
 
 <span class="comment">// DocStepper</span>
 
 <span class="comment">// Where we define the impl on.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">char_cursor</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CharCursor</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">stack</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">isize</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">DocElement</span>])<span class="op">&gt;</span>,
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">char_cursor</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CharCursor</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">stack</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">isize</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">DocElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>])<span class="op">&gt;</span>,
 }
 
 <span class="comment">// DocStepper impls</span>
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
         <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="self">self</span>;
         (<span class="ident">a</span>.<span class="ident">char_cursor</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">value</span>()) <span class="op">==</span> <span class="ident">b</span>.<span class="ident">char_cursor</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">value</span>())
             <span class="op">&amp;&amp;</span> <span class="ident">a</span>.<span class="ident">stack</span> <span class="op">==</span> <span class="ident">b</span>.<span class="ident">stack</span>)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="lifetime">&#39;b</span><span class="op">&gt;</span>(<span class="ident">span</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b</span> [<span class="ident">DocElement</span>]) <span class="op">-&gt;</span> <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;b</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span> <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="lifetime">&#39;b</span><span class="op">&gt;</span>(<span class="ident">span</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b</span> [<span class="ident">DocElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>]) <span class="op">-&gt;</span> <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;b</span>, <span class="ident">S</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stepper</span> <span class="op">=</span> <span class="ident">DocStepper</span> {
             <span class="ident">char_cursor</span>: <span class="prelude-val">None</span>,
             <span class="ident">stack</span>: <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="number">8</span>),
@@ -417,7 +419,7 @@
     <span class="comment">// TODO rename char_cursor_reset ?</span>
     <span class="comment">// TODO Make this pub(crate) once walkers.rs doesn&#39;t repend on it.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">char_cursor_update</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">char_cursor</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="kw-2">ref</span> <span class="ident">text</span>, <span class="kw-2">ref</span> <span class="ident">styles</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">head_raw</span>() {
+        <span class="self">self</span>.<span class="ident">char_cursor</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="kw-2">ref</span> <span class="ident">styles</span>, <span class="kw-2">ref</span> <span class="ident">text</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">head_raw</span>() {
             <span class="prelude-val">Some</span>(<span class="ident">CharCursor</span>::<span class="ident">from_docstring</span>(<span class="ident">text</span>, <span class="ident">styles</span>.<span class="ident">to_owned</span>()))
         } <span class="kw">else</span> {
             <span class="prelude-val">None</span>
@@ -434,7 +436,7 @@
     <span class="doccomment">/// cursor if we&#39;ve reached a group.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">char_cursor_update_prev</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="kw">let</span> <span class="ident">cursor</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">head</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">DocChars</span>(<span class="kw-2">ref</span> <span class="ident">text</span>, <span class="kw-2">ref</span> <span class="ident">styles</span>)) <span class="op">=&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">DocText</span>(<span class="kw-2">ref</span> <span class="ident">styles</span>, <span class="kw-2">ref</span> <span class="ident">text</span>)) <span class="op">=&gt;</span> {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cursor</span> <span class="op">=</span> <span class="ident">CharCursor</span>::<span class="ident">from_docstring_end</span>(<span class="ident">text</span>, <span class="ident">styles</span>.<span class="ident">to_owned</span>());
                 <span class="ident">cursor</span>.<span class="ident">value_sub</span>(<span class="number">1</span>);
                 <span class="prelude-val">Some</span>(<span class="ident">cursor</span>)
@@ -444,7 +446,7 @@
         <span class="self">self</span>.<span class="ident">char_cursor</span> <span class="op">=</span> <span class="ident">cursor</span>;
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">char_cursor_expect</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="ident">CharCursor</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">char_cursor_expect</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="ident">CharCursor</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">char_cursor</span>
             .<span class="ident">as_ref</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;Expected a generated char cursor&quot;</span>)
@@ -474,13 +476,13 @@
 
     <span class="comment">// Current row in the stack is a DocSpan reference and an index.</span>
     <span class="comment">// What DocElement the index points to is the &quot;head&quot;. If the head points</span>
-    <span class="comment">// to a DocChars, we also create a char_cursor to index into the string.</span>
+    <span class="comment">// to a DocText, we also create a char_cursor to index into the string.</span>
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">current</span><span class="op">&lt;</span><span class="lifetime">&#39;h</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> (<span class="ident">isize</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">DocElement</span>]) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">current</span><span class="op">&lt;</span><span class="lifetime">&#39;h</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> (<span class="ident">isize</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">DocElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>]) {
         <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">last</span>().<span class="ident">unwrap</span>()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parent_attrs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Attrs</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parent_attrs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="ident">S</span>::<span class="ident">GroupProperties</span> {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="kw-2">ref</span> <span class="ident">list</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">stack</span>[<span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">2</span>];
         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">DocGroup</span>(<span class="kw-2">ref</span> <span class="ident">attrs</span>, ..) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">list</span>[<span class="kw-2">*</span><span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>] {
             <span class="ident">attrs</span>
@@ -503,11 +505,11 @@
         <span class="self">self</span>.<span class="ident">char_cursor_update</span>();
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">head_raw</span><span class="op">&lt;</span><span class="lifetime">&#39;h</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">DocElement</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">head_raw</span><span class="op">&lt;</span><span class="lifetime">&#39;h</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">DocElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;&gt;</span> {
         <span class="self">self</span>.<span class="ident">current</span>().<span class="number">1</span>.<span class="ident">get</span>(<span class="self">self</span>.<span class="ident">head_index</span>())
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">unhead_raw</span><span class="op">&lt;</span><span class="lifetime">&#39;h</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">DocElement</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">unhead_raw</span><span class="op">&lt;</span><span class="lifetime">&#39;h</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">DocElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;&gt;</span> {
         <span class="comment">// If we&#39;ve split a string, don&#39;t modify the index.</span>
         <span class="kw">if</span> <span class="self">self</span>
             .<span class="ident">char_cursor</span>
@@ -534,9 +536,9 @@
         <span class="self">self</span>.<span class="ident">char_cursor_update_prev</span>();
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">head</span><span class="op">&lt;</span><span class="lifetime">&#39;h</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="ident">DocElement</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">head</span><span class="op">&lt;</span><span class="lifetime">&#39;h</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="ident">DocElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">head_raw</span>() {
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(..)) <span class="op">=&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(..)) <span class="op">=&gt;</span> {
                 <span class="comment">// Expect cursor is at a string of length 1 at least</span>
                 <span class="comment">// (meaning cursor has not passed to the end of the string)</span>
                 <span class="prelude-val">Some</span>(
@@ -550,8 +552,8 @@
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unhead</span><span class="op">&lt;</span><span class="lifetime">&#39;h</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="ident">DocElement</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(..)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">head_raw</span>() {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unhead</span><span class="op">&lt;</span><span class="lifetime">&#39;h</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="ident">DocElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;&gt;</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(..)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">head_raw</span>() {
             <span class="comment">// .left may be empty, so allow fall-through (don&#39;t .unwrap())</span>
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">docstring</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">char_cursor_expect</span>().<span class="ident">left_element</span>() {
                 <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">docstring</span>);
@@ -561,9 +563,9 @@
         <span class="self">self</span>.<span class="ident">current</span>().<span class="number">1</span>.<span class="ident">get</span>((<span class="self">self</span>.<span class="ident">head_index</span>() <span class="op">-</span> <span class="number">1</span>) <span class="kw">as</span> <span class="ident">usize</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">peek</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DocElement</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">peek</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DocElement</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">current</span>().<span class="number">1</span>.<span class="ident">get</span>((<span class="self">self</span>.<span class="ident">head_index</span>() <span class="op">+</span> <span class="number">1</span>) <span class="kw">as</span> <span class="ident">usize</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">text</span> @ <span class="kw-2">&amp;</span><span class="ident">DocChars</span>(..)) <span class="op">=&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">text</span> @ <span class="kw-2">&amp;</span><span class="ident">DocText</span>(..)) <span class="op">=&gt;</span> {
                 <span class="comment">// Pass along new text node</span>
                 <span class="prelude-val">Some</span>(<span class="ident">text</span>.<span class="ident">clone</span>())
             }
@@ -575,7 +577,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unskip</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">skip</span>: <span class="ident">usize</span>) {
         <span class="kw">while</span> <span class="ident">skip</span> <span class="op">&gt;</span> <span class="number">0</span> {
             <span class="kw">match</span> <span class="self">self</span>.<span class="ident">head_raw</span>() {
-                <span class="prelude-val">Some</span>(<span class="ident">DocChars</span>(..)) <span class="op">=&gt;</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">DocText</span>(..)) <span class="op">=&gt;</span> {
                     <span class="kw">if</span> <span class="self">self</span>.<span class="ident">char_cursor_expect</span>().<span class="ident">value</span>() <span class="op">&gt;</span> <span class="number">0</span> {
                         <span class="self">self</span>.<span class="ident">char_cursor_expect_sub</span>(<span class="number">1</span>);
                         <span class="ident">skip</span> <span class="op">-=</span> <span class="number">1</span>;
@@ -614,7 +616,7 @@
             };
 
             <span class="kw">match</span> <span class="ident">head</span> {
-                <span class="ident">DocChars</span>(<span class="kw-2">ref</span> <span class="ident">text</span>, <span class="kw">_</span>) <span class="op">=&gt;</span> {
+                <span class="ident">DocText</span>(<span class="kw">_</span>, <span class="kw-2">ref</span> <span class="ident">text</span>) <span class="op">=&gt;</span> {
                     <span class="kw">let</span> <span class="ident">remaining</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">char_len</span>();
                     <span class="kw">if</span> <span class="ident">skip</span> <span class="op">&gt;=</span> <span class="ident">remaining</span> {
                         <span class="ident">skip</span> <span class="op">-=</span> <span class="ident">remaining</span>;
@@ -680,7 +682,7 @@
         <span class="self">self</span>.<span class="ident">next</span>();
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">exit_with_attrs</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Attrs</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">exit_with_attrs</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">S</span>::<span class="ident">GroupProperties</span> {
         <span class="self">self</span>.<span class="ident">unenter</span>();
         <span class="kw">let</span> <span class="ident">attrs</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">DocGroup</span>(<span class="kw-2">ref</span> <span class="ident">attrs</span>, ..)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">head_raw</span>() {
             <span class="ident">attrs</span>.<span class="ident">clone</span>()
@@ -695,12 +697,12 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">style</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">rtf</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">fn</span> <span class="ident">test_doc_0</span>() <span class="op">-&gt;</span> <span class="ident">DocSpan</span> {
+    <span class="kw">fn</span> <span class="ident">test_doc_0</span>() <span class="op">-&gt;</span> <span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span> {
         <span class="macro">doc_span</span><span class="macro">!</span>[
-            <span class="ident">DocGroup</span>({<span class="string">&quot;tag&quot;</span>: <span class="string">&quot;h1&quot;</span>}, [
-                <span class="ident">DocChars</span>(<span class="string">&quot;Cool&quot;</span>),
+            <span class="ident">DocGroup</span>(<span class="ident">Attrs</span>::<span class="ident">Header</span>(<span class="number">1</span>), [
+                <span class="ident">DocText</span>(<span class="string">&quot;Cool&quot;</span>),
             ]),
         ]
     }
@@ -713,7 +715,7 @@
         <span class="ident">stepper</span>.<span class="ident">skip</span>(<span class="number">2</span>);
         <span class="macro">assert_eq</span><span class="macro">!</span>(
             <span class="ident">stepper</span>.<span class="ident">head</span>().<span class="ident">unwrap</span>(),
-            <span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="ident">DocString</span>::<span class="ident">from_str</span>(<span class="string">&quot;ol&quot;</span>), <span class="ident">OpaqueStyleMap</span>::<span class="ident">new</span>())
+            <span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="ident">StyleSet</span>::<span class="ident">new</span>(), <span class="ident">DocString</span>::<span class="ident">from_str</span>(<span class="string">&quot;ol&quot;</span>))
         );
     }
 

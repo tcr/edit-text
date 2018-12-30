@@ -112,38 +112,42 @@
 <span id="112">112</span>
 <span id="113">113</span>
 <span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">walkers</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Error</span>;
 <span class="kw">use</span> <span class="ident">oatie</span>::<span class="ident">doc</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">oatie</span>::<span class="ident">OT</span>;
+<span class="kw">use</span> <span class="ident">oatie</span>::<span class="ident">rtf</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">oatie</span>::<span class="ident">stepper</span>::<span class="ident">DocStepper</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
 <span class="comment">// For function reuse</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">StyleOp</span> {
-    <span class="ident">AddStyle</span>(<span class="ident">Style</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>),
-    <span class="ident">RemoveStyle</span>(<span class="ident">Style</span>),
+    <span class="ident">AddStyle</span>(<span class="ident">RtfStyle</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>),
+    <span class="ident">RemoveStyle</span>(<span class="ident">RtfStyle</span>),
 }
 
 <span class="comment">// TODO consider removing this and just use restyle</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_style</span>(<span class="ident">ctx</span>: <span class="ident">ActionContext</span>, <span class="ident">style</span>: <span class="ident">Style</span>, <span class="ident">value</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_style</span>(<span class="ident">ctx</span>: <span class="ident">ActionContext</span>, <span class="ident">style</span>: <span class="ident">RtfStyle</span>, <span class="ident">value</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="ident">restyle</span>(<span class="ident">ctx</span>, <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">StyleOp</span>::<span class="ident">AddStyle</span>(<span class="ident">style</span>, <span class="ident">value</span>)])
 }
 
 <span class="comment">// TODO consider removing this and just use restyle</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_styles</span>(<span class="ident">ctx</span>: <span class="ident">ActionContext</span>, <span class="kw-2">mut</span> <span class="ident">styles</span>: <span class="ident">StyleSet</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_styles</span>(<span class="ident">ctx</span>: <span class="ident">ActionContext</span>, <span class="ident">styles</span>: <span class="ident">StyleSet</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="ident">restyle</span>(
         <span class="ident">ctx</span>,
         <span class="ident">styles</span>
-            .<span class="ident">drain</span>()
+            .<span class="ident">styles</span>()
+            .<span class="ident">into_iter</span>()
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">style</span><span class="op">|</span> <span class="ident">StyleOp</span>::<span class="ident">RemoveStyle</span>(<span class="ident">style</span>))
             .<span class="ident">collect</span>(),
     )
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">restyle</span>(<span class="ident">ctx</span>: <span class="ident">ActionContext</span>, <span class="ident">ops</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">StyleOp</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">restyle</span>(<span class="ident">ctx</span>: <span class="ident">ActionContext</span>, <span class="ident">ops</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">StyleOp</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="comment">// Find start and end carets, or return if either are missing.</span>
     <span class="kw">let</span> (<span class="ident">walker_start</span>, <span class="ident">walker_end</span>) <span class="op">=</span> <span class="kw">match</span> (
         <span class="ident">ctx</span>.<span class="ident">get_walker</span>(<span class="ident">Pos</span>::<span class="ident">Start</span>),
@@ -162,10 +166,10 @@
     }
 
     <span class="comment">// Create style sets for adding or removing styles.</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">add_styles</span> <span class="op">=</span> <span class="macro">hashmap</span><span class="macro">!</span>[];
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">add_styles</span> <span class="op">=</span> <span class="macro">hashset</span><span class="macro">!</span>[];
     <span class="kw">for</span> <span class="ident">op</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">ops</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="kw-2">&amp;</span><span class="ident">StyleOp</span>::<span class="ident">AddStyle</span>(<span class="kw-2">ref</span> <span class="ident">style</span>, <span class="kw-2">ref</span> <span class="ident">value</span>) <span class="op">=</span> <span class="ident">op</span> {
-            <span class="ident">add_styles</span>.<span class="ident">insert</span>(<span class="ident">style</span>.<span class="ident">to_owned</span>(), <span class="ident">value</span>.<span class="ident">clone</span>());
+        <span class="kw">if</span> <span class="kw">let</span> <span class="kw-2">&amp;</span><span class="ident">StyleOp</span>::<span class="ident">AddStyle</span>(<span class="kw-2">ref</span> <span class="ident">style</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">op</span> {
+            <span class="ident">add_styles</span>.<span class="ident">insert</span>(<span class="ident">style</span>.<span class="ident">to_owned</span>());
         }
     }
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">remove_styles</span> <span class="op">=</span> <span class="macro">hashset</span><span class="macro">!</span>[];
@@ -179,18 +183,18 @@
 
     <span class="comment">// Remove styles.</span>
     <span class="kw">if</span> <span class="op">!</span><span class="ident">remove_styles</span>.<span class="ident">is_empty</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">doc1</span>: <span class="ident">DocStepper</span> <span class="op">=</span> <span class="ident">walker_start</span>.<span class="ident">doc</span>().<span class="ident">to_owned</span>();
-        <span class="kw">let</span> <span class="ident">doc2</span>: <span class="ident">DocStepper</span> <span class="op">=</span> <span class="ident">walker_end</span>.<span class="ident">doc</span>().<span class="ident">to_owned</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">doc1</span>: <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">walker_start</span>.<span class="ident">doc</span>().<span class="ident">to_owned</span>();
+        <span class="kw">let</span> <span class="ident">doc2</span>: <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">walker_end</span>.<span class="ident">doc</span>().<span class="ident">to_owned</span>();
         <span class="kw">while</span> <span class="ident">doc1</span> <span class="op">!=</span> <span class="ident">doc2</span> {
             <span class="kw">match</span> <span class="ident">doc1</span>.<span class="ident">head</span>() {
                 <span class="prelude-val">Some</span>(<span class="ident">DocGroup</span>(..)) <span class="op">=&gt;</span> {
                     <span class="ident">writer</span>.<span class="ident">del</span>.<span class="ident">begin</span>();
                     <span class="ident">doc1</span>.<span class="ident">enter</span>();
                 }
-                <span class="prelude-val">Some</span>(<span class="ident">DocChars</span>(<span class="kw-2">ref</span> <span class="ident">text</span>, <span class="kw">_</span>)) <span class="op">=&gt;</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">DocText</span>(<span class="kw">_</span>, <span class="kw-2">ref</span> <span class="ident">text</span>)) <span class="op">=&gt;</span> {
                     <span class="ident">writer</span>
                         .<span class="ident">del</span>
-                        .<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelStyles</span>(<span class="ident">text</span>.<span class="ident">char_len</span>(), <span class="ident">remove_styles</span>.<span class="ident">clone</span>()));
+                        .<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelStyles</span>(<span class="ident">text</span>.<span class="ident">char_len</span>(), <span class="ident">StyleSet</span>::<span class="ident">from</span>(<span class="ident">remove_styles</span>.<span class="ident">clone</span>())));
                     <span class="ident">doc1</span>.<span class="ident">skip</span>(<span class="ident">text</span>.<span class="ident">char_len</span>());
                 }
                 <span class="prelude-val">None</span> <span class="op">=&gt;</span> {
@@ -211,10 +215,10 @@
                     <span class="ident">writer</span>.<span class="ident">add</span>.<span class="ident">begin</span>();
                     <span class="ident">doc1</span>.<span class="ident">enter</span>();
                 }
-                <span class="prelude-val">Some</span>(<span class="ident">DocChars</span>(<span class="kw-2">ref</span> <span class="ident">text</span>, <span class="kw">_</span>)) <span class="op">=&gt;</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">DocText</span>(<span class="kw">_</span>, <span class="kw-2">ref</span> <span class="ident">text</span>)) <span class="op">=&gt;</span> {
                     <span class="ident">writer</span>
                         .<span class="ident">add</span>
-                        .<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddStyles</span>(<span class="ident">text</span>.<span class="ident">char_len</span>(), <span class="ident">add_styles</span>.<span class="ident">clone</span>()));
+                        .<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddStyles</span>(<span class="ident">text</span>.<span class="ident">char_len</span>(), <span class="ident">StyleSet</span>::<span class="ident">from</span>(<span class="ident">add_styles</span>.<span class="ident">clone</span>())));
                     <span class="ident">doc1</span>.<span class="ident">skip</span>(<span class="ident">text</span>.<span class="ident">char_len</span>());
                 }
                 <span class="prelude-val">None</span> <span class="op">=&gt;</span> {

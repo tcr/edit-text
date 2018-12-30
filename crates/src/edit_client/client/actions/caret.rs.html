@@ -256,10 +256,10 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">walkers</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Error</span>;
 <span class="kw">use</span> <span class="ident">oatie</span>::<span class="ident">doc</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">oatie</span>::<span class="ident">schema</span>::<span class="ident">RtfSchema</span>;
+<span class="kw">use</span> <span class="ident">oatie</span>::<span class="ident">rtf</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">oatie</span>::<span class="ident">OT</span>;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_caret</span>(<span class="ident">ctx</span>: <span class="ident">ActionContext</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_caret</span>(<span class="ident">ctx</span>: <span class="ident">ActionContext</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">walker</span> <span class="op">=</span> <span class="ident">Walker</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">ctx</span>.<span class="ident">doc</span>);
     <span class="kw">if</span> <span class="op">!</span><span class="ident">walker</span>.<span class="ident">goto_pos</span>(<span class="number">0</span>) {
         <span class="macro">bail</span><span class="macro">!</span>(<span class="string">&quot;Could not insert first caret&quot;</span>);
@@ -278,7 +278,7 @@
     <span class="ident">ctx</span>: <span class="ident">ActionContext</span>,
     <span class="ident">increase</span>: <span class="ident">bool</span>,
     <span class="ident">preserve_select</span>: <span class="ident">bool</span>,
-) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="prelude-val">Ok</span>(<span class="ident">ctx</span>)
         .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">ctx</span><span class="op">|</span> {
             <span class="comment">// If we aren&#39;t preserving the selection, collapse the anchor caret</span>
@@ -294,7 +294,7 @@
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">walker</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get_walker</span>(<span class="ident">Pos</span>::<span class="ident">Focus</span>)<span class="question-mark">?</span>;
 
             <span class="comment">// Remove focus caret and move it to next position.</span>
-            <span class="kw">let</span> <span class="ident">op</span> <span class="op">=</span> <span class="ident">Op</span>::<span class="ident">transform_advance</span>::<span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span>{
+            <span class="kw">let</span> <span class="ident">op</span> <span class="op">=</span> <span class="ident">Op</span>::<span class="ident">transform_advance</span>(<span class="kw-2">&amp;</span>{
                 <span class="comment">// First operation removes the caret.</span>
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">writer</span> <span class="op">=</span> <span class="ident">walker</span>.<span class="ident">to_writer</span>();
                 <span class="ident">writer</span>.<span class="ident">del</span>.<span class="ident">begin</span>();
@@ -328,7 +328,7 @@
     <span class="ident">ctx</span>: <span class="ident">ActionContext</span>,
     <span class="ident">increase</span>: <span class="ident">bool</span>,
     <span class="ident">preserve_select</span>: <span class="ident">bool</span>,
-) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="prelude-val">Ok</span>(<span class="ident">ctx</span>)
         .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">ctx</span><span class="op">|</span> {
             <span class="comment">// If we aren&#39;t preserving the selection, collapse the anchor caret</span>
@@ -354,7 +354,7 @@
                 <span class="ident">walker</span>.<span class="ident">next_char</span>();
                 <span class="kw">loop</span> {
                     <span class="kw">match</span> <span class="ident">walker</span>.<span class="ident">doc</span>().<span class="ident">head</span>() {
-                        <span class="prelude-val">Some</span>(<span class="ident">DocChars</span>(<span class="kw-2">ref</span> <span class="ident">text</span>, <span class="kw">_</span>)) <span class="op">=&gt;</span> {
+                        <span class="prelude-val">Some</span>(<span class="ident">DocText</span>(<span class="kw">_</span>, <span class="kw-2">ref</span> <span class="ident">text</span>)) <span class="op">=&gt;</span> {
                             <span class="kw">if</span> <span class="ident">is_boundary_char</span>(<span class="ident">text</span>.<span class="ident">as_str</span>().<span class="ident">chars</span>().<span class="ident">next</span>().<span class="ident">unwrap</span>()) {
                                 <span class="kw">break</span>;
                             } <span class="kw">else</span> {
@@ -362,7 +362,7 @@
                             }
                         }
                         <span class="prelude-val">Some</span>(<span class="ident">DocGroup</span>(<span class="kw-2">ref</span> <span class="ident">attrs</span>, <span class="kw">_</span>)) <span class="op">=&gt;</span> {
-                            <span class="kw">if</span> <span class="ident">attrs</span>[<span class="string">&quot;tag&quot;</span>] <span class="op">==</span> <span class="string">&quot;caret&quot;</span> {
+                            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Attrs</span>::<span class="ident">Caret</span> { .. } <span class="op">=</span> <span class="ident">attrs</span> {
                                 <span class="comment">// guess we&#39;ll stop</span>
                                 <span class="kw">break</span>;
                             }
@@ -378,7 +378,7 @@
                 <span class="ident">walker</span>.<span class="ident">back_char</span>();
                 <span class="kw">loop</span> {
                     <span class="kw">match</span> <span class="ident">walker</span>.<span class="ident">doc</span>().<span class="ident">unhead</span>() {
-                        <span class="prelude-val">Some</span>(<span class="ident">DocChars</span>(<span class="kw-2">ref</span> <span class="ident">text</span>, <span class="kw">_</span>)) <span class="op">=&gt;</span> {
+                        <span class="prelude-val">Some</span>(<span class="ident">DocText</span>(<span class="kw">_</span>, <span class="kw-2">ref</span> <span class="ident">text</span>)) <span class="op">=&gt;</span> {
                             <span class="kw">if</span> <span class="ident">is_boundary_char</span>(<span class="ident">text</span>.<span class="ident">as_str</span>().<span class="ident">chars</span>().<span class="ident">rev</span>().<span class="ident">next</span>().<span class="ident">unwrap</span>()) {
                                 <span class="kw">break</span>;
                             } <span class="kw">else</span> {
@@ -386,7 +386,7 @@
                             }
                         }
                         <span class="prelude-val">Some</span>(<span class="ident">DocGroup</span>(<span class="kw-2">ref</span> <span class="ident">attrs</span>, <span class="kw">_</span>)) <span class="op">=&gt;</span> {
-                            <span class="kw">if</span> <span class="ident">attrs</span>[<span class="string">&quot;tag&quot;</span>] <span class="op">==</span> <span class="string">&quot;caret&quot;</span> {
+                            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Attrs</span>::<span class="ident">Caret</span> { .. } <span class="op">=</span> <span class="ident">attrs</span> {
                                 <span class="comment">// guess we&#39;ll stop</span>
                                 <span class="kw">break</span>;
                             }
@@ -411,14 +411,14 @@
 
             <span class="comment">// Return composed operations. Select proper order or otherwise composition</span>
             <span class="comment">// will be invalid.</span>
-            <span class="ident">ctx</span>.<span class="ident">apply</span>(<span class="kw-2">&amp;</span><span class="ident">Op</span>::<span class="ident">transform_advance</span>::<span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">op_1</span>, <span class="kw-2">&amp;</span><span class="ident">op_2</span>))
+            <span class="ident">ctx</span>.<span class="ident">apply</span>(<span class="kw-2">&amp;</span><span class="ident">Op</span>::<span class="ident">transform_advance</span>(<span class="kw-2">&amp;</span><span class="ident">op_1</span>, <span class="kw-2">&amp;</span><span class="ident">op_2</span>))
         })
         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">ctx</span><span class="op">|</span> <span class="ident">ctx</span>.<span class="ident">result</span>())
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">caret_select_all</span>(<span class="ident">ctx</span>: <span class="ident">ActionContext</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-    <span class="prelude-val">Ok</span>(<span class="ident">Op</span>::<span class="ident">transform_advance</span>::<span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span>{
-        <span class="ident">Op</span>::<span class="ident">transform_advance</span>::<span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span>{
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">caret_select_all</span>(<span class="ident">ctx</span>: <span class="ident">ActionContext</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="prelude-val">Ok</span>(<span class="ident">Op</span>::<span class="ident">transform_advance</span>(<span class="kw-2">&amp;</span>{
+        <span class="ident">Op</span>::<span class="ident">transform_advance</span>(<span class="kw-2">&amp;</span>{
             <span class="comment">// Delete focus caret.</span>
             <span class="ident">caret_clear</span>(<span class="kw-2">&amp;</span><span class="ident">ctx</span>, <span class="ident">Pos</span>::<span class="ident">Focus</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Op</span>::<span class="ident">empty</span>())
         }, <span class="kw-2">&amp;</span>{
@@ -426,7 +426,7 @@
             <span class="ident">caret_clear</span>(<span class="kw-2">&amp;</span><span class="ident">ctx</span>, <span class="ident">Pos</span>::<span class="ident">Anchor</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Op</span>::<span class="ident">empty</span>())
         })
     }, <span class="kw-2">&amp;</span>{
-        <span class="ident">Op</span>::<span class="ident">transform_advance</span>::<span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span>{
+        <span class="ident">Op</span>::<span class="ident">transform_advance</span>(<span class="kw-2">&amp;</span>{
             <span class="comment">// Insert anchor caret at start.</span>
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">start</span> <span class="op">=</span> <span class="ident">Walker</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">ctx</span>.<span class="ident">doc</span>);
             <span class="ident">start</span>.<span class="ident">goto_pos</span>(<span class="number">0</span>);
@@ -448,7 +448,7 @@
     }))
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">caret_block_move</span>(<span class="ident">ctx</span>: <span class="ident">ActionContext</span>, <span class="ident">increase</span>: <span class="ident">bool</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">caret_block_move</span>(<span class="ident">ctx</span>: <span class="ident">ActionContext</span>, <span class="ident">increase</span>: <span class="ident">bool</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">walker</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get_walker</span>(<span class="ident">Pos</span>::<span class="ident">Focus</span>).<span class="ident">expect</span>(<span class="string">&quot;Expected a Focus caret&quot;</span>);
 
     <span class="comment">// First operation removes the caret.</span>
@@ -476,11 +476,11 @@
 
     <span class="comment">// Return composed operations. Select proper order or otherwise composition</span>
     <span class="comment">// will be invalid.</span>
-    <span class="prelude-val">Ok</span>(<span class="ident">Op</span>::<span class="ident">transform_advance</span>::<span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">op_1</span>, <span class="kw-2">&amp;</span><span class="ident">op_2</span>))
+    <span class="prelude-val">Ok</span>(<span class="ident">Op</span>::<span class="ident">transform_advance</span>(<span class="kw-2">&amp;</span><span class="ident">op_1</span>, <span class="kw-2">&amp;</span><span class="ident">op_2</span>))
 }
 
 <span class="comment">// Delete a caret.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">caret_clear_inner</span>(<span class="ident">walker</span>: <span class="ident">Walker</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">caret_clear_inner</span>(<span class="ident">walker</span>: <span class="ident">Walker</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">writer</span> <span class="op">=</span> <span class="ident">walker</span>.<span class="ident">to_writer</span>();
     <span class="ident">writer</span>.<span class="ident">del</span>.<span class="ident">begin</span>();
     <span class="ident">writer</span>.<span class="ident">del</span>.<span class="ident">close</span>();
@@ -488,14 +488,14 @@
 }
 
 <span class="comment">// Deletes a caret, returning its position.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">caret_clear</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">ActionContext</span>, <span class="ident">position</span>: <span class="ident">Pos</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">caret_clear</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">ActionContext</span>, <span class="ident">position</span>: <span class="ident">Pos</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="ident">caret_clear_inner</span>(<span class="ident">ctx</span>.<span class="ident">get_walker</span>(<span class="ident">position</span>)<span class="question-mark">?</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cur_to_caret</span>(<span class="ident">ctx</span>: <span class="ident">ActionContext</span>, <span class="ident">cur</span>: <span class="kw-2">&amp;</span><span class="ident">CurSpan</span>, <span class="ident">pos</span>: <span class="ident">Pos</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-    <span class="prelude-val">Ok</span>(<span class="ident">Op</span>::<span class="ident">transform_advance</span>::<span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span>{
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cur_to_caret</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">ActionContext</span>, <span class="ident">cur</span>: <span class="kw-2">&amp;</span><span class="ident">CurSpan</span>, <span class="ident">pos</span>: <span class="ident">Pos</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="prelude-val">Ok</span>(<span class="ident">Op</span>::<span class="ident">transform_advance</span>(<span class="kw-2">&amp;</span>{
         <span class="comment">// First operation removes the caret.</span>
-        <span class="ident">caret_clear</span>(<span class="kw-2">&amp;</span><span class="ident">ctx</span>, <span class="ident">pos</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Op</span>::<span class="ident">empty</span>())
+        <span class="ident">caret_clear</span>(<span class="ident">ctx</span>, <span class="ident">pos</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Op</span>::<span class="ident">empty</span>())
     }, <span class="kw-2">&amp;</span>{
         <span class="comment">// Second operation inserts a new caret.</span>
         <span class="kw">let</span> <span class="ident">walker</span> <span class="op">=</span> <span class="ident">Walker</span>::<span class="ident">to_cursor</span>(<span class="kw-2">&amp;</span><span class="ident">ctx</span>.<span class="ident">doc</span>, <span class="ident">cur</span>);

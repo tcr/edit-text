@@ -348,10 +348,13 @@
 <span id="348">348</span>
 <span id="349">349</span>
 <span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">wasm_bindgen</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">style</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">serde_json</span>::<span class="ident">json</span>;
 
 <span class="kw">impl</span> <span class="ident">Program</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-&gt;</span> <span class="ident">Program</span> {
@@ -386,7 +389,7 @@
 }
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">DocMutator</span> {
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">DocMutator</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">flush_chars</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
         <span class="macro">unimplemented</span><span class="macro">!</span>();
     }
@@ -416,7 +419,7 @@
         <span class="macro">unimplemented</span><span class="macro">!</span>();
     }
 
-    <span class="kw">fn</span> <span class="ident">InsertDocString</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_docstring</span>: <span class="ident">DocString</span>, <span class="ident">_styles</span>: <span class="ident">OpaqueStyleMap</span>) {
+    <span class="kw">fn</span> <span class="ident">InsertDocString</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_docstring</span>: <span class="ident">DocString</span>, <span class="ident">_styles</span>: <span class="ident">S</span>::<span class="ident">CharsProperties</span>) {
         <span class="macro">unimplemented</span><span class="macro">!</span>();
     }
 
@@ -424,7 +427,7 @@
         <span class="macro">unimplemented</span><span class="macro">!</span>();
     }
 
-    <span class="kw">fn</span> <span class="ident">WrapPrevious</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_count</span>: <span class="ident">usize</span>, <span class="ident">_attrs</span>: <span class="ident">Attrs</span>) {
+    <span class="kw">fn</span> <span class="ident">WrapPrevious</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_count</span>: <span class="ident">usize</span>, <span class="ident">_attrs</span>: <span class="ident">S</span>::<span class="ident">GroupProperties</span>) {
         <span class="macro">unimplemented</span><span class="macro">!</span>();
     }
 
@@ -435,7 +438,7 @@
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NullDocMutator</span> {}
 
-<span class="kw">impl</span> <span class="ident">DocMutator</span> <span class="kw">for</span> <span class="ident">NullDocMutator</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span> <span class="ident">DocMutator</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">NullDocMutator</span> {
     <span class="kw">fn</span> <span class="ident">Enter</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="comment">// no-op</span>
     }
@@ -457,7 +460,7 @@
         <span class="comment">// no-op</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">InsertDocString</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_docstring</span>: <span class="ident">DocString</span>, <span class="ident">_style</span>: <span class="ident">OpaqueStyleMap</span>) {
+    <span class="kw">fn</span> <span class="ident">InsertDocString</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_docstring</span>: <span class="ident">DocString</span>, <span class="ident">_style</span>: <span class="ident">S</span>::<span class="ident">CharsProperties</span>) {
         <span class="comment">// no-op</span>
     }
 
@@ -465,7 +468,7 @@
         <span class="comment">// no-op</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">WrapPrevious</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_count</span>: <span class="ident">usize</span>, <span class="ident">_attrs</span>: <span class="ident">Attrs</span>) {
+    <span class="kw">fn</span> <span class="ident">WrapPrevious</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_count</span>: <span class="ident">usize</span>, <span class="ident">_attrs</span>: <span class="ident">S</span>::<span class="ident">GroupProperties</span>) {
         <span class="comment">// no-op</span>
     }
 
@@ -481,8 +484,8 @@
     <span class="ident">Exit</span>,
     <span class="ident">AdvanceElements</span>(<span class="ident">usize</span>),
     <span class="ident">DeleteElements</span>(<span class="ident">usize</span>),
-    <span class="ident">InsertDocString</span>(<span class="ident">DocString</span>, <span class="ident">OpaqueStyleMap</span>),
-    <span class="ident">WrapPrevious</span>(<span class="ident">usize</span>, <span class="ident">Attrs</span>),
+    <span class="ident">InsertDocString</span>(<span class="ident">DocString</span>, <span class="ident">serde_json</span>::<span class="ident">Value</span>),
+    <span class="ident">WrapPrevious</span>(<span class="ident">usize</span>, <span class="ident">serde_json</span>::<span class="ident">Value</span>),
     <span class="ident">UnwrapSelf</span>,
     <span class="ident">JoinTextLeft</span>,
 }
@@ -491,25 +494,25 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Program</span>(<span class="kw">pub</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Bytecode</span><span class="op">&gt;</span>);
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RecordingDocMutator</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RecordingDocMutator</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span> {
     <span class="ident">bc</span>: <span class="ident">Program</span>,
-    <span class="ident">stepper</span>: <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
-    <span class="ident">writer</span>: <span class="ident">DocWriter</span>,
+    <span class="ident">stepper</span>: <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">writer</span>: <span class="ident">DocWriter</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">RecordingDocMutator</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">stepper</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span> <span class="ident">RecordingDocMutator</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">stepper</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">S</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">stepper</span>
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">result</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">DocSpan</span>, <span class="ident">Program</span>), <span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">result</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">Program</span>), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">flush</span>();
 
         <span class="kw">let</span> <span class="ident">RecordingDocMutator</span> { <span class="ident">writer</span>, <span class="ident">bc</span>, .. } <span class="op">=</span> <span class="self">self</span>;
         (<span class="ident">writer</span>.<span class="ident">result</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">doc</span><span class="op">|</span> (<span class="ident">doc</span>, <span class="ident">bc</span>)))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">stepper</span>: <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">RecordingDocMutator</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">stepper</span>: <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">S</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">RecordingDocMutator</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">S</span><span class="op">&gt;</span> {
         <span class="ident">RecordingDocMutator</span> {
             <span class="ident">bc</span>: <span class="ident">Program</span>(<span class="macro">vec</span><span class="macro">!</span>[]),
             <span class="ident">stepper</span>,
@@ -524,9 +527,9 @@
                 <span class="comment">// Partial string.</span>
                 <span class="kw">let</span> <span class="ident">partial</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stepper</span>.<span class="ident">char_cursor_expect</span>().<span class="ident">right</span>().<span class="ident">expect</span>(<span class="string">&quot;hey now&quot;</span>);
                 <span class="comment">// console_log!(&quot;🏟 {:?}&quot;, partial);</span>
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="kw-2">ref</span> <span class="ident">text</span>, <span class="kw-2">ref</span> <span class="ident">styles</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">stepper</span>.<span class="ident">head_raw</span>() {
-                    <span class="self">self</span>.<span class="ident">bc</span>.<span class="ident">place</span>(<span class="ident">Bytecode</span>::<span class="ident">InsertDocString</span>(<span class="ident">partial</span>.<span class="ident">clone</span>(), <span class="ident">styles</span>.<span class="ident">clone</span>()));
-                    <span class="self">self</span>.<span class="ident">writer</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="ident">partial</span>.<span class="ident">clone</span>(), <span class="ident">styles</span>.<span class="ident">clone</span>()));
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="kw-2">ref</span> <span class="ident">styles</span>, <span class="kw-2">ref</span> <span class="ident">_text</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">stepper</span>.<span class="ident">head_raw</span>() {
+                    <span class="self">self</span>.<span class="ident">bc</span>.<span class="ident">place</span>(<span class="ident">Bytecode</span>::<span class="ident">InsertDocString</span>(<span class="ident">partial</span>.<span class="ident">clone</span>(), <span class="macro">json</span><span class="macro">!</span>(<span class="ident">styles</span>)));
+                    <span class="self">self</span>.<span class="ident">writer</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="ident">styles</span>.<span class="ident">clone</span>(), <span class="ident">partial</span>.<span class="ident">clone</span>()));
                 } <span class="kw">else</span> {
                     <span class="macro">unreachable</span><span class="macro">!</span>();
                 }
@@ -560,7 +563,7 @@
 }
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">DocMutator</span> <span class="kw">for</span> <span class="ident">RecordingDocMutator</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span> <span class="ident">DocMutator</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RecordingDocMutator</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">Enter</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="self">self</span>.<span class="ident">bc</span>.<span class="ident">place</span>(<span class="ident">Bytecode</span>::<span class="ident">Enter</span>);
 
@@ -588,7 +591,10 @@
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">count</span> {
             <span class="self">self</span>.<span class="ident">bc</span>.<span class="ident">place</span>(<span class="ident">Bytecode</span>::<span class="ident">AdvanceElements</span>(<span class="number">1</span>));
 
-            <span class="self">self</span>.<span class="ident">writer</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">stepper</span>.<span class="ident">head_raw</span>().<span class="ident">expect</span>(<span class="string">&quot;oh god&quot;</span>));
+            <span class="self">self</span>.<span class="ident">writer</span>.<span class="ident">place</span>(<span class="kw">match</span> <span class="self">self</span>.<span class="ident">stepper</span>.<span class="ident">head_raw</span>() {
+                <span class="prelude-val">Some</span>(<span class="ident">head</span>) <span class="op">=&gt;</span> <span class="ident">head</span>,
+                <span class="kw">_</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;no head element&quot;</span>),
+            });
 
             <span class="self">self</span>.<span class="ident">stepper</span>.<span class="ident">next</span>();
         }
@@ -623,12 +629,12 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">InsertDocString</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">docstring</span>: <span class="ident">DocString</span>, <span class="ident">styles</span>: <span class="ident">OpaqueStyleMap</span>) {
-        <span class="self">self</span>.<span class="ident">bc</span>.<span class="ident">place</span>(<span class="ident">Bytecode</span>::<span class="ident">InsertDocString</span>(<span class="ident">docstring</span>.<span class="ident">clone</span>(), <span class="ident">styles</span>.<span class="ident">clone</span>()));
+    <span class="kw">fn</span> <span class="ident">InsertDocString</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">docstring</span>: <span class="ident">DocString</span>, <span class="ident">styles</span>: <span class="ident">S</span>::<span class="ident">CharsProperties</span>) {
+        <span class="self">self</span>.<span class="ident">bc</span>.<span class="ident">place</span>(<span class="ident">Bytecode</span>::<span class="ident">InsertDocString</span>(<span class="ident">docstring</span>.<span class="ident">clone</span>(), <span class="macro">json</span><span class="macro">!</span>(<span class="ident">styles</span>)));
 
         <span class="comment">// No-op stepper</span>
 
-        <span class="self">self</span>.<span class="ident">writer</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="ident">docstring</span>, <span class="ident">styles</span>));
+        <span class="self">self</span>.<span class="ident">writer</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="ident">styles</span>, <span class="ident">docstring</span>));
     }
 
     <span class="kw">fn</span> <span class="ident">UnwrapSelf</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
@@ -644,9 +650,9 @@
         <span class="comment">// TODO apply above comment to the .delete() method ALSO</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">WrapPrevious</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">count</span>: <span class="ident">usize</span>, <span class="ident">attrs</span>: <span class="ident">Attrs</span>) {
+    <span class="kw">fn</span> <span class="ident">WrapPrevious</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">count</span>: <span class="ident">usize</span>, <span class="ident">attrs</span>: <span class="ident">S</span>::<span class="ident">GroupProperties</span>) {
         <span class="comment">// console_log!(&quot;(A) {:?}&quot;, self.stepper.char_index());</span>
-        <span class="self">self</span>.<span class="ident">bc</span>.<span class="ident">place</span>(<span class="ident">Bytecode</span>::<span class="ident">WrapPrevious</span>(<span class="ident">count</span>, <span class="ident">attrs</span>.<span class="ident">clone</span>()));
+        <span class="self">self</span>.<span class="ident">bc</span>.<span class="ident">place</span>(<span class="ident">Bytecode</span>::<span class="ident">WrapPrevious</span>(<span class="ident">count</span>, <span class="macro">json</span><span class="macro">!</span>(<span class="ident">attrs</span>)));
 
         <span class="comment">// No-op stepper</span>
 
@@ -673,7 +679,7 @@
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">left</span>) <span class="op">=</span> <span class="ident">cursor</span>.<span class="ident">left</span>() {
                     <span class="kw">if</span> <span class="ident">left</span>.<span class="ident">char_len</span>() <span class="op">==</span> <span class="ident">count</span> {
                         <span class="self">self</span>.<span class="ident">bc</span>.<span class="ident">place</span>(<span class="ident">Bytecode</span>::<span class="ident">DeleteElements</span>(<span class="number">1</span>)); <span class="comment">// It&#39;s over, delete time</span>
-                        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="kw">_</span>, <span class="kw-2">ref</span> <span class="ident">styles</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">stepper</span>.<span class="ident">head_raw</span>() {
+                        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="kw-2">ref</span> <span class="ident">styles</span>, <span class="kw">_</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">stepper</span>.<span class="ident">head_raw</span>() {
                             <span class="self">self</span>.<span class="ident">InsertDocString</span>(<span class="ident">left</span>.<span class="ident">clone</span>(), <span class="ident">styles</span>.<span class="ident">to_owned</span>()); <span class="comment">// Insert the left part of string</span>
                         } <span class="kw">else</span> {
                             <span class="macro">unreachable</span><span class="macro">!</span>();
@@ -688,7 +694,7 @@
                             <span class="ident">text</span>.<span class="ident">seek_start_forward</span>(<span class="ident">count</span>);
                         }
                         <span class="comment">// console_log!(&quot;\n\n\nPARTIAL ADVANEMENET {:?}\n\n\n&quot;, text);</span>
-                        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">DocChars</span>(<span class="kw">_</span>, <span class="kw-2">ref</span> <span class="ident">styles</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">stepper</span>.<span class="ident">head_raw</span>() {
+                        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="kw-2">ref</span> <span class="ident">styles</span>, <span class="kw">_</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">stepper</span>.<span class="ident">head_raw</span>() {
                             <span class="self">self</span>.<span class="ident">InsertDocString</span>(<span class="ident">text</span>, <span class="ident">styles</span>.<span class="ident">clone</span>());
                         } <span class="kw">else</span> {
                             <span class="macro">unreachable</span><span class="macro">!</span>();

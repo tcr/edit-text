@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Bytecode",""]],"struct":[["AddStepper",""],["CurStepper",""],["DelStepper",""],["DocStepper",""],["NullDocMutator",""],["Program",""],["RecordingDocMutator",""]],"trait":[["DocMutator",""]]});
+initSidebarItems({"enum":[["Bytecode",""]],"mod":[["charcursor","TODO Move this to src/core ?"]],"struct":[["AddStepper",""],["CurStepper",""],["DelStepper",""],["DocStepper",""],["NullDocMutator",""],["Program",""],["RecordingDocMutator",""]],"trait":[["DocMutator",""]]});

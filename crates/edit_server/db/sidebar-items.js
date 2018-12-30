@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["db_connection",""],["db_pool_create",""]],"mod":[["queries",""],["schema",""],["types",""]],"type":[["DbPool",""]]});
+initSidebarItems({"mod":[["conn","Methods for creating a database connection and connection pool."],["queries",""],["schema",""],["types",""]]});

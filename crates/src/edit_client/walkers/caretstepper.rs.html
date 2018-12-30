@@ -231,34 +231,38 @@
 <span id="231">231</span>
 <span id="232">232</span>
 <span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">oatie</span>::<span class="ident">doc</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">oatie</span>::<span class="ident">stepper</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">oatie</span>::<span class="ident">transform</span>::<span class="ident">Schema</span>;
+<span class="kw">use</span> <span class="ident">oatie</span>::<span class="ident">rtf</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">take_mut</span>;
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_block</span>(<span class="ident">attrs</span>: <span class="kw-2">&amp;</span><span class="ident">Attrs</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
-    <span class="kw">use</span> <span class="ident">oatie</span>::<span class="ident">schema</span>::<span class="kw-2">*</span>;
     <span class="ident">RtfSchema</span>::<span class="ident">track_type_from_attrs</span>(<span class="ident">attrs</span>) <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="ident">RtfTrack</span>::<span class="ident">Blocks</span>)
 }
 
 <span class="comment">// TODO what does this refer to?</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_block_object</span>(<span class="ident">attrs</span>: <span class="kw-2">&amp;</span><span class="ident">Attrs</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
-    <span class="kw">use</span> <span class="ident">oatie</span>::<span class="ident">schema</span>::<span class="kw-2">*</span>;
     <span class="ident">RtfSchema</span>::<span class="ident">track_type_from_attrs</span>(<span class="ident">attrs</span>) <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="ident">RtfTrack</span>::<span class="ident">BlockObjects</span>)
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_caret</span>(<span class="ident">attrs</span>: <span class="kw-2">&amp;</span><span class="ident">Attrs</span>, <span class="ident">client_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>, <span class="ident">focus</span>: <span class="ident">bool</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
-    <span class="ident">attrs</span>[<span class="string">&quot;tag&quot;</span>] <span class="op">==</span> <span class="string">&quot;caret&quot;</span>
-        <span class="op">&amp;&amp;</span> <span class="ident">client_id</span>
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">id</span><span class="op">|</span> <span class="ident">attrs</span>.<span class="ident">get</span>(<span class="string">&quot;client&quot;</span>) <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>.<span class="ident">to_string</span>()))
-            .<span class="ident">unwrap_or</span>(<span class="bool-val">false</span>)
-        <span class="op">&amp;&amp;</span> <span class="ident">attrs</span>.<span class="ident">get</span>(<span class="string">&quot;focus&quot;</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span> <span class="op">==</span> <span class="string">&quot;true&quot;</span>).<span class="ident">unwrap_or</span>(<span class="bool-val">false</span>) <span class="op">==</span> <span class="ident">focus</span>
+    <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Attrs</span>::<span class="ident">Caret</span> { <span class="ident">client_id</span>: <span class="ident">caret_client_id</span>, <span class="ident">focus</span>: <span class="ident">caret_focus</span> } <span class="op">=</span> <span class="ident">attrs</span> {
+        <span class="ident">client_id</span> <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="ident">caret_client_id</span>) <span class="op">&amp;&amp;</span> <span class="kw-2">*</span><span class="ident">caret_focus</span> <span class="op">==</span> <span class="ident">focus</span>
+    } <span class="kw">else</span> {
+        <span class="bool-val">false</span>
+    }
 }
 
 <span class="comment">// Is any caret</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_any_caret</span>(<span class="ident">attrs</span>: <span class="kw-2">&amp;</span><span class="ident">Attrs</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
-    <span class="ident">attrs</span>[<span class="string">&quot;tag&quot;</span>] <span class="op">==</span> <span class="string">&quot;caret&quot;</span>
+    <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Attrs</span>::<span class="ident">Caret</span> { .. } <span class="op">=</span> <span class="ident">attrs</span> {
+        <span class="bool-val">true</span>
+    } <span class="kw">else</span> {
+        <span class="bool-val">false</span>
+    }
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Copy</span>)]</span>
@@ -271,12 +275,12 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CaretStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="ident">doc</span>: <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">doc</span>: <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">RtfSchema</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">caret_pos</span>: <span class="ident">isize</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">CaretStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">doc</span>: <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">CaretStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">doc</span>: <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">RtfSchema</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">CaretStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
         <span class="comment">// Start at caret pos 0</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stepper</span> <span class="op">=</span> <span class="ident">CaretStepper</span> { <span class="ident">doc</span>, <span class="ident">caret_pos</span>: <span class="op">-</span><span class="number">1</span> };
         <span class="kw">while</span> <span class="ident">stepper</span>.<span class="ident">caret_pos</span> <span class="op">!=</span> <span class="number">0</span> {
@@ -295,7 +299,7 @@
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_valid_caret_pos</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">DocChars</span>(..)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">doc</span>.<span class="ident">unhead</span>() {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">DocText</span>(..)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">doc</span>.<span class="ident">unhead</span>() {
             <span class="kw">return</span> <span class="bool-val">true</span>;
         } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">doc</span>.<span class="ident">unhead</span>().<span class="ident">is_none</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">doc</span>.<span class="ident">is_back_done</span>() {
             <span class="kw">if</span> <span class="ident">is_block</span>(<span class="self">self</span>.<span class="ident">doc</span>.<span class="ident">parent_attrs</span>()) {
@@ -309,7 +313,7 @@
     <span class="comment">// but is it the best name or interface?</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">skip_element</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">doc</span>.<span class="ident">head</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">DocChars</span>(<span class="ident">val</span>, <span class="kw">_</span>)) <span class="op">=&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">DocText</span>(<span class="kw">_</span>, <span class="ident">val</span>)) <span class="op">=&gt;</span> {
                 <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">val</span>.<span class="ident">char_len</span>();
                 <span class="self">self</span>.<span class="ident">doc</span>.<span class="ident">next</span>();
                 <span class="ident">len</span>
@@ -341,7 +345,7 @@
 
     <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">doc</span>.<span class="ident">head</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">DocChars</span>(..)) <span class="op">=&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">DocText</span>(..)) <span class="op">=&gt;</span> {
                 <span class="self">self</span>.<span class="ident">doc</span>.<span class="ident">skip</span>(<span class="number">1</span>);
             }
             <span class="prelude-val">Some</span>(<span class="ident">DocGroup</span>(..)) <span class="op">=&gt;</span> {
@@ -366,7 +370,7 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ReverseCaretStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="ident">doc</span>: <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">doc</span>: <span class="ident">DocStepper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">RtfSchema</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">caret_pos</span>: <span class="ident">isize</span>,
 }
 
@@ -383,7 +387,7 @@
         <span class="comment">// more easily.</span>
 
         <span class="comment">// Fast-path</span>
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">DocChars</span>(..)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">doc</span>.<span class="ident">unhead</span>() {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">DocText</span>(..)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">doc</span>.<span class="ident">unhead</span>() {
             <span class="kw">return</span> <span class="bool-val">true</span>;
         } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">doc</span>.<span class="ident">unhead</span>().<span class="ident">is_none</span>() {
             <span class="kw">if</span> <span class="self">self</span>.<span class="ident">doc</span>.<span class="ident">at_root</span>() {
@@ -407,7 +411,7 @@
         }
 
         <span class="comment">// Identically repeat fast-path logic</span>
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">DocChars</span>(..)) <span class="op">=</span> <span class="ident">doc2</span>.<span class="ident">unhead</span>() {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">DocText</span>(..)) <span class="op">=</span> <span class="ident">doc2</span>.<span class="ident">unhead</span>() {
             <span class="kw">return</span> <span class="bool-val">true</span>;
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">doc2</span>.<span class="ident">unhead</span>().<span class="ident">is_none</span>() {
             <span class="kw">if</span> <span class="ident">doc2</span>.<span class="ident">at_root</span>() {
@@ -439,7 +443,7 @@
         <span class="comment">// console_log!(&quot;what {:?}&quot;, self.doc);</span>
 
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">doc</span>.<span class="ident">unhead</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">DocChars</span>(..)) <span class="op">=&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">DocText</span>(..)) <span class="op">=&gt;</span> {
                 <span class="self">self</span>.<span class="ident">doc</span>.<span class="ident">unskip</span>(<span class="number">1</span>);
             }
             <span class="prelude-val">Some</span>(<span class="ident">DocGroup</span>(..)) <span class="op">=&gt;</span> {
@@ -464,5 +468,6 @@
 
         <span class="prelude-val">Some</span>(())
     }
-}</pre></div>
+}
+</pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><aside id="help" class="hidden"><div><h1 class="hidden">Help</h1><div class="shortcuts"><h2>Keyboard Shortcuts</h2><dl><dt><kbd>?</kbd></dt><dd>Show this help dialog</dd><dt><kbd>S</kbd></dt><dd>Focus the search field</dd><dt><kbd>↑</kbd></dt><dd>Move up in search results</dd><dt><kbd>↓</kbd></dt><dd>Move down in search results</dd><dt><kbd>↹</kbd></dt><dd>Switch tab</dd><dt><kbd>&#9166;</kbd></dt><dd>Go to active search result</dd><dt><kbd>+</kbd></dt><dd>Expand all sections</dd><dt><kbd>-</kbd></dt><dd>Collapse all sections</dd></dl></div><div class="infos"><h2>Search Tricks</h2><p>Prefix searches with a type followed by a colon (e.g. <code>fn:</code>) to restrict the search to a given type.</p><p>Accepted types are: <code>fn</code>, <code>mod</code>, <code>struct</code>, <code>enum</code>, <code>trait</code>, <code>type</code>, <code>macro</code>, and <code>const</code>.</p><p>Search functions by type signature (e.g. <code>vec -> usize</code> or <code>* -> vec</code>)</p><p>Search multiple things at once by splitting your query with comma (e.g. <code>str,u8</code> or <code>String,struct:Vec,test</code>)</p></div></div></aside><script>window.rootPath = "../../../";window.currentCrate = "edit_client";</script><script src="../../../aliases.js"></script><script src="../../../main.js"></script><script src="../../../source-files.js"></script><script src="../../../source-script.js"></script><script defer src="../../../search-index.js"></script></body></html>

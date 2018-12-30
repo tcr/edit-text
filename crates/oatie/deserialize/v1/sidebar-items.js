@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["AddElement",""],["DelElement",""],["DocElement",""],["Style",""]],"fn":[["addspan_json",""],["addspan_ron",""],["delspan_json",""],["delspan_ron",""],["docspan_json",""],["docspan_ron",""]],"struct":[["DocString",""]],"type":[["AddSpan",""],["DelSpan",""],["DocSpan",""]]});

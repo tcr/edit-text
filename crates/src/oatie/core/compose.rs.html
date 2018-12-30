@@ -841,6 +841,20 @@
 <span id="841">841</span>
 <span id="842">842</span>
 <span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Composes two operations together.</span>
 
@@ -848,7 +862,11 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cmp</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">stepper</span>::<span class="kw-2">*</span>;
 
-<span class="kw">fn</span> <span class="ident">compose_del_del_inner</span>(<span class="ident">res</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelSpan</span>, <span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelStepper</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelStepper</span>) {
+<span class="kw">fn</span> <span class="ident">compose_del_del_inner</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(
+    <span class="ident">res</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelStepper</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelStepper</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+) {
     <span class="kw">while</span> <span class="op">!</span><span class="ident">a</span>.<span class="ident">is_done</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">b</span>.<span class="ident">is_done</span>() {
         <span class="kw">match</span> <span class="ident">a</span>.<span class="ident">get_head</span>() {
             <span class="ident">DelSkip</span>(<span class="ident">acount</span>) <span class="op">=&gt;</span> {
@@ -875,13 +893,13 @@
                         }
                         <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>());
                     }
-                    <span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="ident">bcount</span>)) <span class="op">=&gt;</span> {
-                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelChars</span>(<span class="ident">cmp</span>::<span class="ident">min</span>(<span class="ident">acount</span>, <span class="ident">bcount</span>)));
+                    <span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="ident">bcount</span>)) <span class="op">=&gt;</span> {
+                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelText</span>(<span class="ident">cmp</span>::<span class="ident">min</span>(<span class="ident">acount</span>, <span class="ident">bcount</span>)));
                         <span class="kw">if</span> <span class="ident">acount</span> <span class="op">&gt;</span> <span class="ident">bcount</span> {
                             <span class="ident">a</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelSkip</span>(<span class="ident">acount</span> <span class="op">-</span> <span class="ident">bcount</span>));
                             <span class="ident">b</span>.<span class="ident">next</span>();
                         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">acount</span> <span class="op">&lt;</span> <span class="ident">bcount</span> {
-                            <span class="ident">b</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="ident">bcount</span> <span class="op">-</span> <span class="ident">acount</span>));
+                            <span class="ident">b</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="ident">bcount</span> <span class="op">-</span> <span class="ident">acount</span>));
                             <span class="ident">a</span>.<span class="ident">next</span>();
                         } <span class="kw">else</span> {
                             <span class="ident">a</span>.<span class="ident">next</span>();
@@ -889,7 +907,7 @@
                         }
                     }
                     <span class="prelude-val">Some</span>(<span class="ident">DelStyles</span>(<span class="ident">b_count</span>, <span class="ident">b_styles</span>)) <span class="op">=&gt;</span> {
-                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelChars</span>(<span class="ident">cmp</span>::<span class="ident">min</span>(<span class="ident">acount</span>, <span class="ident">b_count</span>)));
+                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelText</span>(<span class="ident">cmp</span>::<span class="ident">min</span>(<span class="ident">acount</span>, <span class="ident">b_count</span>)));
                         <span class="kw">if</span> <span class="ident">acount</span> <span class="op">&gt;</span> <span class="ident">b_count</span> {
                             <span class="ident">a</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelSkip</span>(<span class="ident">acount</span> <span class="op">-</span> <span class="ident">b_count</span>));
                             <span class="ident">b</span>.<span class="ident">next</span>();
@@ -929,7 +947,7 @@
             <span class="ident">DelStyles</span>(<span class="ident">a_count</span>, <span class="ident">a_styles</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">b</span>.<span class="ident">head</span>.<span class="ident">clone</span>() {
                 <span class="prelude-val">Some</span>(<span class="ident">DelStyles</span>(<span class="ident">b_count</span>, <span class="ident">b_styles</span>)) <span class="op">=&gt;</span> {
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">both_styles</span> <span class="op">=</span> <span class="ident">b_styles</span>.<span class="ident">clone</span>();
-                    <span class="ident">both_styles</span>.<span class="ident">extend</span>(<span class="ident">a_styles</span>.<span class="ident">clone</span>());
+                    <span class="ident">both_styles</span>.<span class="ident">extend</span>(<span class="kw-2">&amp;</span><span class="ident">a_styles</span>);
                     <span class="ident">res</span>.<span class="ident">push</span>(<span class="ident">DelStyles</span>(<span class="ident">cmp</span>::<span class="ident">min</span>(<span class="ident">a_count</span>, <span class="ident">b_count</span>), <span class="ident">both_styles</span>));
                     <span class="kw">if</span> <span class="ident">a_count</span> <span class="op">&gt;</span> <span class="ident">b_count</span> {
                         <span class="ident">b</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelStyles</span>(<span class="ident">a_count</span> <span class="op">-</span> <span class="ident">b_count</span>, <span class="ident">a_styles</span>));
@@ -958,13 +976,13 @@
                 <span class="prelude-val">Some</span>(<span class="ident">DelWithGroup</span>(..)) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">DelGroup</span>(..)) <span class="op">=&gt;</span> {
                     <span class="macro">unreachable</span><span class="macro">!</span>();
                 }
-                <span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="ident">b_count</span>)) <span class="op">=&gt;</span> {
-                    <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelChars</span>(<span class="ident">cmp</span>::<span class="ident">min</span>(<span class="ident">a_count</span>, <span class="ident">b_count</span>)));
+                <span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="ident">b_count</span>)) <span class="op">=&gt;</span> {
+                    <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelText</span>(<span class="ident">cmp</span>::<span class="ident">min</span>(<span class="ident">a_count</span>, <span class="ident">b_count</span>)));
                     <span class="kw">if</span> <span class="ident">a_count</span> <span class="op">&gt;</span> <span class="ident">b_count</span> {
                         <span class="ident">a</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelStyles</span>(<span class="ident">a_count</span> <span class="op">-</span> <span class="ident">b_count</span>, <span class="ident">a_styles</span>));
                         <span class="ident">b</span>.<span class="ident">next</span>();
                     } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">a_count</span> <span class="op">&lt;</span> <span class="ident">b_count</span> {
-                        <span class="ident">b</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="ident">b_count</span> <span class="op">-</span> <span class="ident">a_count</span>));
+                        <span class="ident">b</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="ident">b_count</span> <span class="op">-</span> <span class="ident">a_count</span>));
                         <span class="ident">a</span>.<span class="ident">next</span>();
                     } <span class="kw">else</span> {
                         <span class="ident">a</span>.<span class="ident">next</span>();
@@ -998,8 +1016,8 @@
                         <span class="ident">a</span>.<span class="ident">next</span>();
                         <span class="ident">b</span>.<span class="ident">next</span>();
                     }
-                    <span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(..)) <span class="op">=&gt;</span> {
-                        <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;DelWithGroup vs DelChars is bad&quot;</span>);
+                    <span class="prelude-val">Some</span>(<span class="ident">DelText</span>(..)) <span class="op">=&gt;</span> {
+                        <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;DelWithGroup vs DelText is bad&quot;</span>);
                     }
                     <span class="prelude-val">None</span> <span class="op">=&gt;</span> {
                         <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>());
@@ -1023,7 +1041,7 @@
             }
             <span class="ident">DelGroup</span>(<span class="kw-2">ref</span> <span class="ident">span</span>) <span class="op">=&gt;</span> {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">DelStepper</span>::<span class="ident">new</span>(<span class="ident">span</span>);
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span>: <span class="ident">DelSpan</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span>: <span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
                 <span class="ident">compose_del_del_inner</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">c</span>, <span class="ident">b</span>);
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">c</span>.<span class="ident">is_done</span>() {
                     <span class="ident">inner</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">c</span>.<span class="ident">head</span>.<span class="ident">unwrap</span>());
@@ -1032,8 +1050,8 @@
                 <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelGroup</span>(<span class="ident">inner</span>));
                 <span class="ident">a</span>.<span class="ident">next</span>();
             }
-            <span class="ident">DelChars</span>(<span class="ident">count</span>) <span class="op">=&gt;</span> {
-                <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelChars</span>(<span class="ident">count</span>));
+            <span class="ident">DelText</span>(<span class="ident">count</span>) <span class="op">=&gt;</span> {
+                <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelText</span>(<span class="ident">count</span>));
                 <span class="ident">a</span>.<span class="ident">next</span>();
             } <span class="comment">// DelObject =&gt; {</span>
               <span class="comment">//     match b.head.clone() {</span>
@@ -1063,7 +1081,10 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compose_del_del</span>(<span class="ident">avec</span>: <span class="kw-2">&amp;</span><span class="ident">DelSpan</span>, <span class="ident">bvec</span>: <span class="kw-2">&amp;</span><span class="ident">DelSpan</span>) <span class="op">-&gt;</span> <span class="ident">DelSpan</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compose_del_del</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(
+    <span class="ident">avec</span>: <span class="kw-2">&amp;</span><span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">bvec</span>: <span class="kw-2">&amp;</span><span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+) <span class="op">-&gt;</span> <span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">avec</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">bvec</span>.<span class="ident">len</span>());
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">DelStepper</span>::<span class="ident">new</span>(<span class="ident">avec</span>);
@@ -1084,16 +1105,20 @@
     <span class="ident">res</span>
 }
 
-<span class="kw">fn</span> <span class="ident">compose_add_add_inner</span>(<span class="ident">res</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">AddSpan</span>, <span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">AddStepper</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">AddStepper</span>) {
+<span class="kw">fn</span> <span class="ident">compose_add_add_inner</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(
+    <span class="ident">res</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">AddStepper</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">AddStepper</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+) {
     <span class="kw">while</span> <span class="op">!</span><span class="ident">b</span>.<span class="ident">is_done</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">a</span>.<span class="ident">is_done</span>() {
         <span class="kw">match</span> <span class="ident">b</span>.<span class="ident">get_head</span>() {
-            <span class="ident">AddChars</span>(..) <span class="op">=&gt;</span> {
+            <span class="ident">AddText</span>(..) <span class="op">=&gt;</span> {
                 <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>());
             }
             <span class="ident">AddStyles</span>(<span class="ident">b_count</span>, <span class="ident">b_styles</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">a</span>.<span class="ident">get_head</span>() {
                 <span class="ident">AddStyles</span>(<span class="ident">a_count</span>, <span class="ident">a_styles</span>) <span class="op">=&gt;</span> {
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">both_styles</span> <span class="op">=</span> <span class="ident">b_styles</span>.<span class="ident">clone</span>();
-                    <span class="ident">both_styles</span>.<span class="ident">extend</span>(<span class="ident">a_styles</span>.<span class="ident">clone</span>());
+                    <span class="ident">both_styles</span>.<span class="ident">extend</span>(<span class="kw-2">&amp;</span><span class="ident">a_styles</span>);
                     <span class="ident">res</span>.<span class="ident">push</span>(<span class="ident">AddStyles</span>(<span class="ident">cmp</span>::<span class="ident">min</span>(<span class="ident">a_count</span>, <span class="ident">b_count</span>), <span class="ident">both_styles</span>));
                     <span class="kw">if</span> <span class="ident">a_count</span> <span class="op">&gt;</span> <span class="ident">b_count</span> {
                         <span class="ident">b</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">AddStyles</span>(<span class="ident">a_count</span> <span class="op">-</span> <span class="ident">b_count</span>, <span class="ident">a_styles</span>));
@@ -1106,22 +1131,22 @@
                         <span class="ident">b</span>.<span class="ident">next</span>();
                     }
                 }
-                <span class="ident">AddChars</span>(<span class="ident">value</span>, <span class="kw-2">mut</span> <span class="ident">styles</span>) <span class="op">=&gt;</span> {
+                <span class="ident">AddText</span>(<span class="kw-2">mut</span> <span class="ident">styles</span>, <span class="ident">value</span>) <span class="op">=&gt;</span> {
                     <span class="kw">if</span> <span class="ident">b_count</span> <span class="op">&lt;</span> <span class="ident">value</span>.<span class="ident">char_len</span>() {
                         <span class="kw">let</span> (<span class="ident">a_left</span>, <span class="ident">a_right</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">split_at</span>(<span class="ident">b_count</span>);
                         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">left_styles</span> <span class="op">=</span> <span class="ident">styles</span>.<span class="ident">clone</span>();
                         <span class="ident">left_styles</span>.<span class="ident">extend</span>(<span class="kw-2">&amp;</span><span class="ident">b_styles</span>);
-                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddChars</span>(<span class="ident">a_left</span>, <span class="ident">left_styles</span>));
-                        <span class="ident">a</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">AddChars</span>(<span class="ident">a_right</span>, <span class="ident">styles</span>));
+                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddText</span>(<span class="ident">left_styles</span>, <span class="ident">a_left</span>));
+                        <span class="ident">a</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">AddText</span>(<span class="ident">styles</span>, <span class="ident">a_right</span>));
                         <span class="ident">b</span>.<span class="ident">next</span>();
                     } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">b_count</span> <span class="op">&gt;</span> <span class="ident">value</span>.<span class="ident">char_len</span>() {
                         <span class="ident">styles</span>.<span class="ident">extend</span>(<span class="kw-2">&amp;</span><span class="ident">b_styles</span>);
                         <span class="ident">b</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">AddStyles</span>(<span class="ident">b_count</span> <span class="op">-</span> <span class="ident">value</span>.<span class="ident">char_len</span>(), <span class="ident">b_styles</span>));
-                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddChars</span>(<span class="ident">value</span>, <span class="ident">styles</span>));
+                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddText</span>(<span class="ident">styles</span>, <span class="ident">value</span>));
                         <span class="ident">a</span>.<span class="ident">next</span>();
                     } <span class="kw">else</span> {
                         <span class="ident">styles</span>.<span class="ident">extend</span>(<span class="kw-2">&amp;</span><span class="ident">b_styles</span>);
-                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddChars</span>(<span class="ident">value</span>, <span class="ident">styles</span>));
+                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddText</span>(<span class="ident">styles</span>, <span class="ident">value</span>));
                         <span class="ident">a</span>.<span class="ident">next</span>();
                         <span class="ident">b</span>.<span class="ident">next</span>();
                     }
@@ -1170,11 +1195,11 @@
                         <span class="ident">b</span>.<span class="ident">next</span>();
                     }
                 }
-                <span class="ident">AddChars</span>(<span class="ident">value</span>, <span class="ident">styles</span>) <span class="op">=&gt;</span> {
+                <span class="ident">AddText</span>(<span class="ident">styles</span>, <span class="ident">value</span>) <span class="op">=&gt;</span> {
                     <span class="kw">if</span> <span class="ident">bcount</span> <span class="op">&lt;</span> <span class="ident">value</span>.<span class="ident">char_len</span>() {
                         <span class="kw">let</span> (<span class="ident">a_left</span>, <span class="ident">a_right</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">split_at</span>(<span class="ident">bcount</span>);
-                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddChars</span>(<span class="ident">a_left</span>, <span class="ident">styles</span>.<span class="ident">clone</span>()));
-                        <span class="ident">a</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">AddChars</span>(<span class="ident">a_right</span>, <span class="ident">styles</span>));
+                        <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddText</span>(<span class="ident">styles</span>.<span class="ident">clone</span>(), <span class="ident">a_left</span>));
+                        <span class="ident">a</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">AddText</span>(<span class="ident">styles</span>, <span class="ident">a_right</span>));
                         <span class="ident">b</span>.<span class="ident">next</span>();
                     } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">bcount</span> <span class="op">&gt;</span> <span class="ident">value</span>.<span class="ident">char_len</span>() {
                         <span class="ident">res</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>());
@@ -1227,8 +1252,8 @@
                 <span class="ident">b</span>.<span class="ident">next</span>();
             }
             <span class="ident">AddWithGroup</span>(<span class="kw-2">ref</span> <span class="ident">bspan</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">a</span>.<span class="ident">get_head</span>() {
-                <span class="ident">AddChars</span>(..) <span class="op">=&gt;</span> {
-                    <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Cannot compose AddWithGroup with AddChars&quot;</span>);
+                <span class="ident">AddText</span>(..) <span class="op">=&gt;</span> {
+                    <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Cannot compose AddWithGroup with AddText&quot;</span>);
                 }
                 <span class="ident">AddStyles</span>(..) <span class="op">=&gt;</span> {
                     <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Cannot compose AddWithGroup with AddStyles&quot;</span>);
@@ -1256,7 +1281,10 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compose_add_add</span>(<span class="ident">avec</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span>, <span class="ident">bvec</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span>) <span class="op">-&gt;</span> <span class="ident">AddSpan</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compose_add_add</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(
+    <span class="ident">avec</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">bvec</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+) <span class="op">-&gt;</span> <span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">avec</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">bvec</span>.<span class="ident">len</span>());
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">AddStepper</span>::<span class="ident">new</span>(<span class="ident">avec</span>);
@@ -1277,9 +1305,12 @@
     <span class="ident">res</span>
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compose_add_del</span>(<span class="ident">avec</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span>, <span class="ident">bvec</span>: <span class="kw-2">&amp;</span><span class="ident">DelSpan</span>) <span class="op">-&gt;</span> <span class="ident">Op</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">delres</span>: <span class="ident">DelSpan</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">avec</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">bvec</span>.<span class="ident">len</span>());
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addres</span>: <span class="ident">AddSpan</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">avec</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">bvec</span>.<span class="ident">len</span>());
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compose_add_del</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(
+    <span class="ident">avec</span>: <span class="kw-2">&amp;</span><span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, 
+    <span class="ident">bvec</span>: <span class="kw-2">&amp;</span><span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+) <span class="op">-&gt;</span> <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">delres</span>: <span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">avec</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">bvec</span>.<span class="ident">len</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addres</span>: <span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">avec</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">bvec</span>.<span class="ident">len</span>());
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">AddStepper</span>::<span class="ident">new</span>(<span class="ident">avec</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">DelStepper</span>::<span class="ident">new</span>(<span class="ident">bvec</span>);
@@ -1305,23 +1336,23 @@
     (<span class="ident">delres</span>, <span class="ident">addres</span>)
 }
 
-<span class="kw">fn</span> <span class="ident">compose_add_del_inner</span>(
-    <span class="ident">delres</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelSpan</span>,
-    <span class="ident">addres</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">AddSpan</span>,
-    <span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">AddStepper</span>,
-    <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelStepper</span>,
+<span class="kw">fn</span> <span class="ident">compose_add_del_inner</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(
+    <span class="ident">delres</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">addres</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">AddSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">AddStepper</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DelStepper</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
 ) {
     <span class="kw">while</span> <span class="op">!</span><span class="ident">b</span>.<span class="ident">is_done</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">a</span>.<span class="ident">is_done</span>() {
         <span class="kw">match</span> <span class="ident">b</span>.<span class="ident">get_head</span>() {
-            <span class="ident">DelChars</span>(<span class="ident">bcount</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">a</span>.<span class="ident">get_head</span>() {
-                <span class="ident">AddChars</span>(<span class="ident">avalue</span>, <span class="ident">a_styles</span>) <span class="op">=&gt;</span> {
+            <span class="ident">DelText</span>(<span class="ident">bcount</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">a</span>.<span class="ident">get_head</span>() {
+                <span class="ident">AddText</span>(<span class="ident">a_styles</span>, <span class="ident">avalue</span>) <span class="op">=&gt;</span> {
                     <span class="kw">if</span> <span class="ident">bcount</span> <span class="op">&lt;</span> <span class="ident">avalue</span>.<span class="ident">char_len</span>() {
                         <span class="kw">let</span> (<span class="ident">_a_left</span>, <span class="ident">a_right</span>) <span class="op">=</span> <span class="ident">avalue</span>.<span class="ident">split_at</span>(<span class="ident">bcount</span>);
-                        <span class="ident">a</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">AddChars</span>(<span class="ident">a_right</span>, <span class="ident">a_styles</span>));
+                        <span class="ident">a</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">AddText</span>(<span class="ident">a_styles</span>, <span class="ident">a_right</span>));
                         <span class="ident">b</span>.<span class="ident">next</span>();
                     } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">bcount</span> <span class="op">&gt;</span> <span class="ident">avalue</span>.<span class="ident">char_len</span>() {
                         <span class="ident">a</span>.<span class="ident">next</span>();
-                        <span class="ident">b</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="ident">bcount</span> <span class="op">-</span> <span class="ident">avalue</span>.<span class="ident">char_len</span>()));
+                        <span class="ident">b</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="ident">bcount</span> <span class="op">-</span> <span class="ident">avalue</span>.<span class="ident">char_len</span>()));
                     } <span class="kw">else</span> {
                         <span class="ident">a</span>.<span class="ident">next</span>();
                         <span class="ident">b</span>.<span class="ident">next</span>();
@@ -1333,8 +1364,8 @@
                         <span class="ident">delres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>());
                     } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">bcount</span> <span class="op">&gt;</span> <span class="ident">acount</span> {
                         <span class="ident">a</span>.<span class="ident">next</span>();
-                        <span class="ident">delres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelChars</span>(<span class="ident">acount</span>));
-                        <span class="ident">b</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelChars</span>(<span class="ident">bcount</span> <span class="op">-</span> <span class="ident">acount</span>));
+                        <span class="ident">delres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelText</span>(<span class="ident">acount</span>));
+                        <span class="ident">b</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelText</span>(<span class="ident">bcount</span> <span class="op">-</span> <span class="ident">acount</span>));
                     } <span class="kw">else</span> {
                         <span class="ident">a</span>.<span class="ident">next</span>();
                         <span class="ident">delres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>());
@@ -1345,32 +1376,29 @@
                 }
             },
             <span class="ident">DelStyles</span>(<span class="ident">b_count</span>, <span class="ident">b_styles</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">a</span>.<span class="ident">get_head</span>() {
-                <span class="ident">AddChars</span>(<span class="ident">a_value</span>, <span class="kw-2">mut</span> <span class="ident">a_styles</span>) <span class="op">=&gt;</span> {
+                <span class="ident">AddText</span>(<span class="kw-2">mut</span> <span class="ident">a_styles</span>, <span class="ident">a_value</span>) <span class="op">=&gt;</span> {
                     <span class="kw">if</span> <span class="ident">b_count</span> <span class="op">&lt;</span> <span class="ident">a_value</span>.<span class="ident">char_len</span>() {
                         <span class="kw">let</span> (<span class="ident">a_left</span>, <span class="ident">a_right</span>) <span class="op">=</span> <span class="ident">a_value</span>.<span class="ident">split_at</span>(<span class="ident">b_count</span>);
                         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a_left_styles</span> <span class="op">=</span> <span class="ident">a_styles</span>.<span class="ident">clone</span>();
                         <span class="ident">a_left_styles</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">b_styles</span>);
-                        <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddChars</span>(<span class="ident">a_left</span>, <span class="ident">a_left_styles</span>));
-                        <span class="ident">a</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">AddChars</span>(<span class="ident">a_right</span>, <span class="ident">a_styles</span>));
+                        <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddText</span>(<span class="ident">a_left_styles</span>, <span class="ident">a_left</span>));
+                        <span class="ident">a</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">AddText</span>(<span class="ident">a_styles</span>, <span class="ident">a_right</span>));
                         <span class="ident">b</span>.<span class="ident">next</span>();
                     } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">b_count</span> <span class="op">&gt;</span> <span class="ident">a_value</span>.<span class="ident">char_len</span>() {
                         <span class="ident">a_styles</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">b_styles</span>);
                         <span class="ident">b</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">DelSkip</span>(<span class="ident">b_count</span> <span class="op">-</span> <span class="ident">a_value</span>.<span class="ident">char_len</span>()));
-                        <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddChars</span>(<span class="ident">a_value</span>, <span class="ident">a_styles</span>));
+                        <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddText</span>(<span class="ident">a_styles</span>, <span class="ident">a_value</span>));
                     } <span class="kw">else</span> {
                         <span class="ident">a_styles</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">b_styles</span>);
-                        <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddChars</span>(<span class="ident">a_value</span>, <span class="ident">a_styles</span>));
+                        <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddText</span>(<span class="ident">a_styles</span>, <span class="ident">a_value</span>));
                         <span class="ident">a</span>.<span class="ident">next</span>();
                         <span class="ident">b</span>.<span class="ident">next</span>();
                     }
                 }
                 <span class="ident">AddStyles</span>(<span class="ident">a_count</span>, <span class="ident">a_styles</span>) <span class="op">=&gt;</span> {
                     <span class="comment">// a_styles - b_styles</span>
-                    <span class="kw">let</span> <span class="ident">combined_styles</span> <span class="op">=</span> <span class="ident">a_styles</span>
-                        .<span class="ident">clone</span>()
-                        .<span class="ident">drain</span>()
-                        .<span class="ident">filter</span>(<span class="op">|</span>(<span class="ident">k</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="op">!</span><span class="ident">b_styles</span>.<span class="ident">contains</span>(<span class="ident">k</span>))
-                        .<span class="ident">collect</span>();
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">combined_styles</span> <span class="op">=</span> <span class="ident">a_styles</span>.<span class="ident">clone</span>();
+                    <span class="ident">combined_styles</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">b_styles</span>);
 
                     <span class="comment">// res.push(AddStyles(cmp::min(a_count, b_count), both_styles));</span>
                     <span class="kw">if</span> <span class="ident">a_count</span> <span class="op">&gt;</span> <span class="ident">b_count</span> {
@@ -1410,11 +1438,11 @@
                 }
             },
             <span class="ident">DelSkip</span>(<span class="ident">bcount</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">a</span>.<span class="ident">get_head</span>() {
-                <span class="ident">AddChars</span>(<span class="ident">avalue</span>, <span class="ident">a_styles</span>) <span class="op">=&gt;</span> {
+                <span class="ident">AddText</span>(<span class="ident">a_styles</span>, <span class="ident">avalue</span>) <span class="op">=&gt;</span> {
                     <span class="kw">if</span> <span class="ident">bcount</span> <span class="op">&lt;</span> <span class="ident">avalue</span>.<span class="ident">char_len</span>() {
                         <span class="kw">let</span> (<span class="ident">a_left</span>, <span class="ident">a_right</span>) <span class="op">=</span> <span class="ident">avalue</span>.<span class="ident">split_at</span>(<span class="ident">bcount</span>);
-                        <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddChars</span>(<span class="ident">a_left</span>, <span class="ident">a_styles</span>.<span class="ident">clone</span>()));
-                        <span class="ident">a</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">AddChars</span>(<span class="ident">a_right</span>, <span class="ident">a_styles</span>));
+                        <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddText</span>(<span class="ident">a_styles</span>.<span class="ident">clone</span>(), <span class="ident">a_left</span>));
+                        <span class="ident">a</span>.<span class="ident">head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">AddText</span>(<span class="ident">a_styles</span>, <span class="ident">a_right</span>));
                         <span class="ident">b</span>.<span class="ident">next</span>();
                     } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">bcount</span> <span class="op">&gt;</span> <span class="ident">avalue</span>.<span class="ident">char_len</span>() {
                         <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>());
@@ -1475,8 +1503,8 @@
                 }
             },
             <span class="ident">DelWithGroup</span>(<span class="ident">span</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">a</span>.<span class="ident">get_head</span>() {
-                <span class="ident">AddChars</span>(..) <span class="op">=&gt;</span> {
-                    <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;DelWithGroup by AddChars is ILLEGAL&quot;</span>);
+                <span class="ident">AddText</span>(..) <span class="op">=&gt;</span> {
+                    <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;DelWithGroup by AddText is ILLEGAL&quot;</span>);
                 }
                 <span class="ident">AddStyles</span>(..) <span class="op">=&gt;</span> {
                     <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;DelWithGroup by AddStyles is ILLEGAL&quot;</span>);
@@ -1509,8 +1537,8 @@
             },
             <span class="ident">DelGroup</span>(<span class="ident">span</span>) <span class="op">=&gt;</span> {
                 <span class="kw">match</span> <span class="ident">a</span>.<span class="ident">get_head</span>() {
-                    <span class="ident">AddChars</span>(..) <span class="op">=&gt;</span> {
-                        <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;DelGroup by AddChars is ILLEGAL&quot;</span>);
+                    <span class="ident">AddText</span>(..) <span class="op">=&gt;</span> {
+                        <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;DelGroup by AddText is ILLEGAL&quot;</span>);
                     }
                     <span class="ident">AddStyles</span>(..) <span class="op">=&gt;</span> {
                         <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;DelGroup by AddStyles is ILLEGAL&quot;</span>);
@@ -1585,10 +1613,10 @@
               <span class="comment">// }</span>
               <span class="comment">// DelMany(bcount) =&gt; {</span>
               <span class="comment">//     match a.get_head() {</span>
-              <span class="comment">//         AddChars(avalue) =&gt; {</span>
+              <span class="comment">//         AddText(avalue) =&gt; {</span>
               <span class="comment">//             let alen = avalue.chars().count();</span>
               <span class="comment">//             if bcount &lt; alen {</span>
-              <span class="comment">//                 a.head = Some(AddChars(avalue.chars().skip(bcount).collect()));</span>
+              <span class="comment">//                 a.head = Some(AddText(avalue.chars().skip(bcount).collect()));</span>
               <span class="comment">//                 b.next();</span>
               <span class="comment">//             } else if bcount &gt; alen {</span>
               <span class="comment">//                 a.next();</span>
@@ -1635,8 +1663,8 @@
               <span class="comment">// }</span>
               <span class="comment">// DelGroupAll =&gt; {</span>
               <span class="comment">//     match a.get_head() {</span>
-              <span class="comment">//         AddChars(avalue) =&gt; {</span>
-              <span class="comment">//             panic!(&quot;DelGroupAll by AddChars is ILLEGAL&quot;);</span>
+              <span class="comment">//         AddText(avalue) =&gt; {</span>
+              <span class="comment">//             panic!(&quot;DelGroupAll by AddText is ILLEGAL&quot;);</span>
               <span class="comment">//         }</span>
               <span class="comment">//         AddSkip(acount) =&gt; {</span>
               <span class="comment">//             delres.place(&amp;b.next().unwrap());</span>
@@ -1660,7 +1688,7 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compose</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">Op</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">Op</span>) <span class="op">-&gt;</span> <span class="ident">Op</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compose</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">adel</span>, <span class="kw-2">ref</span> <span class="ident">ains</span>) <span class="op">=</span> <span class="ident">a</span>;
     <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">bdel</span>, <span class="kw-2">ref</span> <span class="ident">bins</span>) <span class="op">=</span> <span class="ident">b</span>;
 
