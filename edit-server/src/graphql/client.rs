@@ -107,7 +107,6 @@ mutation ($id: String!, $default: String!) {
         .unwrap()
         .to_string();
 
-    println!("what {:?}", doc_string);
     Ok(oatie::deserialize::doc_ron(&doc_string).or(oatie::deserialize::doc_json(&doc_string))?)
 }
 

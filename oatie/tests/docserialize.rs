@@ -2,7 +2,7 @@ use oatie::doc::*;
 use oatie::rtf::*;
 use oatie::*;
 use serde_json;
-use oatie::deserialize::v1;
+use oatie::deserialize::{v1, v2};
 
 #[test]
 fn test_docserialize_roundtrip_ron() {
@@ -51,14 +51,20 @@ fn test_docserialize_roundtrip_json() {
 }
 
 #[test]
-fn test_docserialize_legacy() {
+fn test_docserialize_v2() {
     let input = r#"[DocGroup({"tag":"h1",},[DocChars(["dsdfsdno",],[Normie,],),],)]"#;
-    let _res: DocSpan<RtfSchema> = v1::docspan_ron(input).unwrap();
+    let _res: DocSpan<RtfSchema> = v2::docspan_ron(input).unwrap();
 
     let input = r#"[DocChars("dsdfsdno"),]"#;
-    let _res: DocSpan<RtfSchema> = v1::docspan_ron(&input).unwrap();
+    let _res: DocSpan<RtfSchema> = v2::docspan_ron(&input).unwrap();
 
     let input = r#"[DocGroup({"tag":"h1",},[DocChars("home"),],),DocGroup({"tag":"p",},[DocChars("SANDBOX"),],),]"#;
+    let _res: DocSpan<RtfSchema> = v2::docspan_ron(&input).unwrap();
+}
+
+#[test]
+fn test_docserialize_v1() {
+    let input = r#"[DocGroup({"tag":"h1",},[DocChars( [  "hey!",{Normie:None,},]),],)]"#;
     let _res: DocSpan<RtfSchema> = v1::docspan_ron(&input).unwrap();
 }
 
