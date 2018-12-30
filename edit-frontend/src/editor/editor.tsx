@@ -539,11 +539,28 @@ export class Editor extends React.Component {
   
   _highlightOwnCarets() {
     // Highlight our own caret.
+    let carets: Array<Node> = [];
     this.el.querySelectorAll(
       `div[data-tag="caret"][data-client=${JSON.stringify(this.props.editorID)}]`,
     ).forEach(caret => {
       caret.classList.add("current");
+      carets.push(caret);
     });
+
+    // Create selected span.
+    if (carets.length >= 2) {
+      let range = document.createRange();
+      range.setStartBefore(carets[0]);
+      range.setEndBefore(carets[1]);
+      let root = range.commonAncestorContainer as HTMLElement;
+      // TODO assert(root.contains(start));
+      for (let start = carets[0] as HTMLElement; start != root; start = start.parentNode! as HTMLElement) {
+        start.classList.add('selection-start');
+      }
+      for (let end = carets[1] as HTMLElement; end != root; end = end.parentNode! as HTMLElement) {
+        end.classList.add('selection-end');
+      }
+    }
   }
 
   componentDidMount() {

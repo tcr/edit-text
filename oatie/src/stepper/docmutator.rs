@@ -233,8 +233,6 @@ impl<'a, S: Schema> DocMutator<S> for RecordingDocMutator<'a, S> {
         if self.flush_chars() {
             count -= 1;
         }
-        
-        console_log!("advance elements: {:?}", count);
 
         for _ in 0..count {
             self.bc.place(Bytecode::AdvanceElements(1));

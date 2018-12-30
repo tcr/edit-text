@@ -416,15 +416,15 @@ body.theme-column {
         background: #349;
     }
 
-    // div[data-tag="caret"] ~ span {
-    //     color: white;
-    //     background: #349;
-    // }
+    .selection-start ~ span, .selection-start ~ * span {
+        color: white;
+        background: #349;
+    }
 
-    // div[data-tag="caret"] ~ div[data-tag="caret"] ~ span {
-    //     color: inherit;
-    //     background: inherit;
-    // }
+    .selection-end ~ span, .selection-end ~ * span {
+        color: inherit;
+        background: transparent;
+    }
 
     span.Link {
         color: #05d;
