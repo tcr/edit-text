@@ -13,6 +13,7 @@ use edit_common::{
 use failure::Error;
 use oatie::{self, OT};
 use oatie::doc::*;
+use oatie::rtf::*;
 use oatie::validate::validate_doc;
 use serde_json;
 use std::char::from_u32;
@@ -180,55 +181,55 @@ pub fn button_handlers<C: ClientController>(
         }};
     }
 
-    let is_bold = state.as_ref().map(|x| x.styles.contains(&Style::Bold)).unwrap_or(false);
-    let is_italic = state.as_ref().map(|x| x.styles.contains(&Style::Italic)).unwrap_or(false);
+    let is_bold = state.as_ref().map(|x| x.styles.contains(&RtfStyle::Bold)).unwrap_or(false);
+    let is_italic = state.as_ref().map(|x| x.styles.contains(&RtfStyle::Italic)).unwrap_or(false);
 
     let ui = vec![
         Ui::ButtonGroup(vec![
             Ui::Button(
                 "Text".to_string(),
-                callback!(|client| client.client_op(|doc| replace_block(doc, "p"))),
+                callback!(|client| client.client_op(|doc| replace_block(doc, Attrs::Para))),
                 state.as_ref().map(|x| x.block == "p").unwrap_or(false),
             ),
             Ui::Button(
                 "H1".to_string(),
-                callback!(|client| client.client_op(|doc| replace_block(doc, "h1"))),
+                callback!(|client| client.client_op(|doc| replace_block(doc, Attrs::Header(1)))),
                 // TODO i wish we could match on strings, use matches! here
                 state.as_ref().map(|x| x.block == "h1").unwrap_or(false),
             ),
             Ui::Button(
                 "H2".to_string(),
-                callback!(|client| client.client_op(|doc| replace_block(doc, "h2"))),
+                callback!(|client| client.client_op(|doc| replace_block(doc, Attrs::Header(2)))),
                 state.as_ref().map(|x| x.block == "h2").unwrap_or(false),
             ),
             Ui::Button(
                 "H3".to_string(),
-                callback!(|client| client.client_op(|doc| replace_block(doc, "h3"))),
+                callback!(|client| client.client_op(|doc| replace_block(doc, Attrs::Header(3)))),
                 state.as_ref().map(|x| x.block == "h3").unwrap_or(false),
             ),
             Ui::Button(
                 "H4".to_string(),
-                callback!(|client| client.client_op(|doc| replace_block(doc, "h4"))),
+                callback!(|client| client.client_op(|doc| replace_block(doc, Attrs::Header(4)))),
                 state.as_ref().map(|x| x.block == "h4").unwrap_or(false),
             ),
             Ui::Button(
                 "H5".to_string(),
-                callback!(|client| client.client_op(|doc| replace_block(doc, "h5"))),
+                callback!(|client| client.client_op(|doc| replace_block(doc, Attrs::Header(5)))),
                 state.as_ref().map(|x| x.block == "h5").unwrap_or(false),
             ),
             Ui::Button(
                 "H6".to_string(),
-                callback!(|client| client.client_op(|doc| replace_block(doc, "h6"))),
+                callback!(|client| client.client_op(|doc| replace_block(doc, Attrs::Header(6)))),
                 state.as_ref().map(|x| x.block == "h6").unwrap_or(false),
             ),
             Ui::Button(
                 "Code".to_string(),
-                callback!(|client| client.client_op(|doc| replace_block(doc, "pre"))),
+                callback!(|client| client.client_op(|doc| replace_block(doc, Attrs::Code))),
                 state.as_ref().map(|x| x.block == "pre").unwrap_or(false),
             ),
             Ui::Button(
                 "HTML".to_string(),
-                callback!(|client| client.client_op(|doc| replace_block(doc, "html"))),
+                callback!(|client| client.client_op(|doc| replace_block(doc, Attrs::Html))),
                 state.as_ref().map(|x| x.block == "html").unwrap_or(false),
             ),
         ]),
@@ -247,9 +248,9 @@ pub fn button_handlers<C: ClientController>(
                 "Bold".to_string(),
                 callback!(move |client| client.client_op(|doc| {
                     if is_bold {
-                        remove_styles(doc, hashset![Style::Bold])
+                        remove_styles(doc, StyleSet::from(hashset![RtfStyle::Bold]))
                     } else {
-                        apply_style(doc, Style::Bold, None)
+                        apply_style(doc, RtfStyle::Bold, None)
                     }
                 })),
                 is_bold,
@@ -258,9 +259,9 @@ pub fn button_handlers<C: ClientController>(
                 "Italic".to_string(),
                 callback!(move |client| client.client_op(|doc| {
                     if is_italic {
-                        remove_styles(doc, hashset![Style::Italic])
+                        remove_styles(doc, StyleSet::from(hashset![RtfStyle::Italic]))
                     } else {
-                        apply_style(doc, Style::Italic, None)
+                        apply_style(doc, RtfStyle::Italic, None)
                     }
                 })),
                 is_italic,
@@ -276,8 +277,9 @@ fn controller_command<C: ClientController>(
     req: ControllerCommand,
 ) -> Result<(), Error> {
     match req {
-        ControllerCommand::RenameGroup { tag, curspan: _ } => {
-            client.client_op(|doc| replace_block(doc, &tag))?;
+        ControllerCommand::RenameGroup { tag: _, curspan: _ } => {
+            unimplemented!();
+            // client.client_op(|doc| replace_block(doc, &tag))?;
         }
         ControllerCommand::Button { button: index } => {
             // Find which button handler to respond to this command.
@@ -327,17 +329,18 @@ fn controller_command<C: ClientController>(
             match (focus, anchor) {
                 (Some(focus), Some(anchor)) => {
                     client.client_op(|mut ctx| {
-                        let op = cur_to_caret(ctx.clone(), &focus, Pos::Focus)?;
-                        ctx.doc = Op::apply(&ctx.doc, &op);
-                        let op2 = cur_to_caret(ctx, &anchor, Pos::Anchor)?;
-                        Ok(Op::compose(&op, &op2))
+                        let op = cur_to_caret(&ctx, &focus, Pos::Focus)?;
+                        ctx = ctx.apply(&op)?;
+                        let op2 = cur_to_caret(&ctx, &anchor, Pos::Anchor)?;
+                        ctx = ctx.apply(&op2)?;
+                        Ok(ctx.result())
                     })?;
                 }
                 (Some(focus), None) => {
-                    client.client_op(|doc| cur_to_caret(doc, &focus, Pos::Focus))?;
+                    client.client_op(|ctx| cur_to_caret(&ctx, &focus, Pos::Focus))?;
                 }
                 (None, Some(anchor)) => {
-                    client.client_op(|doc| cur_to_caret(doc, &anchor, Pos::Anchor))?;
+                    client.client_op(|ctx| cur_to_caret(&ctx, &anchor, Pos::Anchor))?;
                 }
                 (None, None) => {} // ???
             }
@@ -427,7 +430,7 @@ pub trait ClientController {
 
                     value = Task::ControllerCommand(ControllerCommand::Cursor {
                         focus: Some(cursors[idx].clone()),
-                        anchor: None,
+                        anchor: Some(cursors[idx].clone()),
                     });
                 }
 
@@ -568,7 +571,7 @@ pub trait ClientController {
         }
     }
 
-    fn upload(&mut self, local_op: Op) -> Result<(), Error> {
+    fn upload(&mut self, local_op: Op<RtfSchema>) -> Result<(), Error> {
         log_wasm!(Debug("CLIENTOP".to_string()));
         let client_id = self.state().client_doc.client_id.clone();
         let version = self.state().client_doc.version;
@@ -588,7 +591,7 @@ pub trait ClientController {
 
     fn client_op<C>(&mut self, callback: C) -> Result<(), Error>
     where
-        C: Fn(ActionContext) -> Result<Op, Error>,
+        C: Fn(ActionContext) -> Result<Op<RtfSchema>, Error>,
         Self: Sized,
     {
         // Apply operation.

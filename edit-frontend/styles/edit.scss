@@ -239,8 +239,26 @@ body.theme-column {
         margin-left: -1px;
         margin-right: -1px;
         content: '\200c' !important; // zero width non-joiner Unicode code point
-        animation: fadein 0.3s;
         pointer-events: none;
+        animation: blink-animation 2s linear infinite;
+    }
+
+    @keyframes blink-animation {
+        0% {
+            opacity: 1.0;
+        }
+        43% {
+            opacity: 1.0;
+        }
+        50% {
+            opacity: 0.0;
+        }
+        93% {
+            opacity: 0.0;
+        }
+        100% {
+            opacity: 1.0;
+        }
     }
 
     div[data-tag="caret"][data-focus="false"] {
@@ -251,6 +269,7 @@ body.theme-column {
         border-left: 2px $color_curcaret solid;
         z-index: 100;
         position: relative;
+        animation: blink-animation 1s linear infinite;
     }
 
     // TODO the overlapping dashed cursors isn't working well
@@ -397,15 +416,15 @@ body.theme-column {
         background: #349;
     }
 
-    // div[data-tag="caret"] ~ span {
-    //     color: white;
-    //     background: #349;
-    // }
+    .selection-start ~ span, .selection-start ~ * span {
+        color: white;
+        background: #349;
+    }
 
-    // div[data-tag="caret"] ~ div[data-tag="caret"] ~ span {
-    //     color: inherit;
-    //     background: inherit;
-    // }
+    .selection-end ~ span, .selection-end ~ * span {
+        color: inherit;
+        background: transparent;
+    }
 
     span.Link {
         color: #05d;
@@ -426,17 +445,6 @@ body.theme-column {
         font-weight: normal;
         padding: 2px 5px;
         color: white;
-    }
-
-    // fancy font
-    span:not(.Normie) {
-        color: yellow;
-        -webkit-text-stroke: 3px #f00;
-        paint-order: stroke fill;
-        -webkit-text-fill-color: yellow;
-        text-shadow:
-            2px 2px 0 #000,
-            3px 3px 0 #000;
     }
 
     // for debugging

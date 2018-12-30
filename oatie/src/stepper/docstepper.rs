@@ -1,26 +1,27 @@
 use crate::stepper::*;
+pub use super::charcursor::*;
 
 // DocStepper
 
 // Where we define the impl on.
 #[derive(Clone, Debug)]
-pub struct DocStepper<'a> {
-    pub(crate) char_cursor: Option<CharCursor>,
-    pub(crate) stack: Vec<(isize, &'a [DocElement])>,
+pub struct DocStepper<'a, S: Schema> {
+    pub(crate) char_cursor: Option<CharCursor<S>>,
+    pub(crate) stack: Vec<(isize, &'a [DocElement<S>])>,
 }
 
 // DocStepper impls
 
-impl<'a> PartialEq for DocStepper<'a> {
-    fn eq(&self, b: &DocStepper<'a>) -> bool {
+impl<'a, S: Schema> PartialEq for DocStepper<'a, S> {
+    fn eq(&self, b: &DocStepper<'a, S>) -> bool {
         let a = self;
         (a.char_cursor.as_ref().map(|c| c.value()) == b.char_cursor.as_ref().map(|c| c.value())
             && a.stack == b.stack)
     }
 }
 
-impl<'a> DocStepper<'a> {
-    pub fn new<'b>(span: &'b [DocElement]) -> DocStepper<'b> {
+impl<'a, S: Schema> DocStepper<'a, S> {
+    pub fn new<'b>(span: &'b [DocElement<S>]) -> DocStepper<'b, S> {
         let mut stepper = DocStepper {
             char_cursor: None,
             stack: Vec::with_capacity(8),
@@ -36,7 +37,7 @@ impl<'a> DocStepper<'a> {
     // TODO rename char_cursor_reset ?
     // TODO Make this pub(crate) once walkers.rs doesn't repend on it.
     pub fn char_cursor_update(&mut self) {
-        self.char_cursor = if let Some(&DocChars(ref text, ref styles)) = self.head_raw() {
+        self.char_cursor = if let Some(&DocText(ref styles, ref text)) = self.head_raw() {
             Some(CharCursor::from_docstring(text, styles.to_owned()))
         } else {
             None
@@ -53,7 +54,7 @@ impl<'a> DocStepper<'a> {
     /// cursor if we've reached a group.
     pub(crate) fn char_cursor_update_prev(&mut self) {
         let cursor = match self.head() {
-            Some(DocChars(ref text, ref styles)) => {
+            Some(DocText(ref styles, ref text)) => {
                 let mut cursor = CharCursor::from_docstring_end(text, styles.to_owned());
                 cursor.value_sub(1);
                 Some(cursor)
@@ -63,7 +64,7 @@ impl<'a> DocStepper<'a> {
         self.char_cursor = cursor;
     }
 
-    pub fn char_cursor_expect(&self) -> &CharCursor {
+    pub fn char_cursor_expect(&self) -> &CharCursor<S> {
         self.char_cursor
             .as_ref()
             .expect("Expected a generated char cursor")
@@ -93,13 +94,13 @@ impl<'a> DocStepper<'a> {
 
     // Current row in the stack is a DocSpan reference and an index.
     // What DocElement the index points to is the "head". If the head points
-    // to a DocChars, we also create a char_cursor to index into the string.
+    // to a DocText, we also create a char_cursor to index into the string.
 
-    pub(crate) fn current<'h>(&'h self) -> &'h (isize, &'a [DocElement]) {
+    pub(crate) fn current<'h>(&'h self) -> &'h (isize, &'a [DocElement<S>]) {
         self.stack.last().unwrap()
     }
 
-    pub fn parent_attrs(&self) -> &Attrs {
+    pub fn parent_attrs(&self) -> &S::GroupProperties {
         let (index, ref list) = &self.stack[self.stack.len() - 2];
         if let DocGroup(ref attrs, ..) = &list[*index as usize] {
             attrs
@@ -122,11 +123,11 @@ impl<'a> DocStepper<'a> {
         self.char_cursor_update();
     }
 
-    pub(crate) fn head_raw<'h>(&'h self) -> Option<&'a DocElement> {
+    pub(crate) fn head_raw<'h>(&'h self) -> Option<&'a DocElement<S>> {
         self.current().1.get(self.head_index())
     }
 
-    pub(crate) fn unhead_raw<'h>(&'h self) -> Option<&'a DocElement> {
+    pub(crate) fn unhead_raw<'h>(&'h self) -> Option<&'a DocElement<S>> {
         // If we've split a string, don't modify the index.
         if self
             .char_cursor
@@ -153,9 +154,9 @@ impl<'a> DocStepper<'a> {
         self.char_cursor_update_prev();
     }
 
-    pub fn head<'h>(&'h self) -> Option<&'h DocElement> {
+    pub fn head<'h>(&'h self) -> Option<&'h DocElement<S>> {
         match self.head_raw() {
-            Some(&DocChars(..)) => {
+            Some(&DocText(..)) => {
                 // Expect cursor is at a string of length 1 at least
                 // (meaning cursor has not passed to the end of the string)
                 Some(
@@ -169,8 +170,8 @@ impl<'a> DocStepper<'a> {
         }
     }
 
-    pub fn unhead<'h>(&'h self) -> Option<&'h DocElement> {
-        if let Some(&DocChars(..)) = self.head_raw() {
+    pub fn unhead<'h>(&'h self) -> Option<&'h DocElement<S>> {
+        if let Some(&DocText(..)) = self.head_raw() {
             // .left may be empty, so allow fall-through (don't .unwrap())
             if let Some(docstring) = self.char_cursor_expect().left_element() {
                 return Some(docstring);
@@ -180,9 +181,9 @@ impl<'a> DocStepper<'a> {
         self.current().1.get((self.head_index() - 1) as usize)
     }
 
-    pub fn peek(&self) -> Option<DocElement> {
+    pub fn peek(&self) -> Option<DocElement<S>> {
         match self.current().1.get((self.head_index() + 1) as usize) {
-            Some(text @ &DocChars(..)) => {
+            Some(text @ &DocText(..)) => {
                 // Pass along new text node
                 Some(text.clone())
             }
@@ -194,7 +195,7 @@ impl<'a> DocStepper<'a> {
     pub fn unskip(&mut self, mut skip: usize) {
         while skip > 0 {
             match self.head_raw() {
-                Some(DocChars(..)) => {
+                Some(DocText(..)) => {
                     if self.char_cursor_expect().value() > 0 {
                         self.char_cursor_expect_sub(1);
                         skip -= 1;
@@ -233,7 +234,7 @@ impl<'a> DocStepper<'a> {
             };
 
             match head {
-                DocChars(ref text, _) => {
+                DocText(_, ref text) => {
                     let remaining = text.char_len();
                     if skip >= remaining {
                         skip -= remaining;
@@ -299,7 +300,7 @@ impl<'a> DocStepper<'a> {
         self.next();
     }
 
-    pub(crate) fn exit_with_attrs(&mut self) -> Attrs {
+    pub(crate) fn exit_with_attrs(&mut self) -> S::GroupProperties {
         self.unenter();
         let attrs = if let Some(&DocGroup(ref attrs, ..)) = self.head_raw() {
             attrs.clone()
@@ -314,12 +315,12 @@ impl<'a> DocStepper<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::style::*;
+    use crate::rtf::*;
 
-    fn test_doc_0() -> DocSpan {
+    fn test_doc_0() -> DocSpan<RtfSchema> {
         doc_span![
-            DocGroup({"tag": "h1"}, [
-                DocChars("Cool"),
+            DocGroup(Attrs::Header(1), [
+                DocText("Cool"),
             ]),
         ]
     }
@@ -332,7 +333,7 @@ mod tests {
         stepper.skip(2);
         assert_eq!(
             stepper.head().unwrap(),
-            &DocChars(DocString::from_str("ol"), OpaqueStyleMap::new())
+            &DocText(StyleSet::new(), DocString::from_str("ol"))
         );
     }
 

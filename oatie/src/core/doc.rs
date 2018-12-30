@@ -1,52 +1,41 @@
 //! Defines document types, operation types, and cursor types.
 
-use serde::{
-    Deserialize,
-    Serialize,
-};
-use std::collections::HashMap;
-use crate::style::OpaqueStyleMap;
+use serde::{Deserialize, Serialize};
 
 // Re-exports
 pub use super::place::*;
 pub use crate::string::*;
+pub use crate::core::schema::*;
 
-pub type Attrs = HashMap<String, String>;
-
-pub type DocSpan = Vec<DocElement>;
-pub type DelSpan = Vec<DelElement>;
-pub type AddSpan = Vec<AddElement>;
+pub type DocSpan<S> = Vec<DocElement<S>>;
+pub type DelSpan<S> = Vec<DelElement<S>>;
+pub type AddSpan<S> = Vec<AddElement<S>>;
 pub type CurSpan = Vec<CurElement>;
 
-pub type Op = (DelSpan, AddSpan);
-
-/// Returns true if the style map can be omitted.
-fn is_stylemap_empty(map: &OpaqueStyleMap) -> bool {
-    map.iter().count() == 0
-}
+pub type Op<S> = (DelSpan<S>, AddSpan<S>);
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub enum DocElement {
-    DocChars(DocString, #[serde(default, skip_serializing_if = "is_stylemap_empty")] OpaqueStyleMap),
-    DocGroup(Attrs, DocSpan),
+pub enum DocElement<S: Schema> {
+    DocText(S::CharsProperties, DocString),
+    DocGroup(S::GroupProperties, DocSpan<S>),
 }
 
 pub use self::DocElement::*;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct Doc(pub Vec<DocElement>);
+pub struct Doc<S: Schema>(pub Vec<DocElement<S>>);
 
 
 
-// [DocChars("birds snakes and aeroplanes",[Bold,],),]
+// [DocText("birds snakes and aeroplanes",[Bold,],),]
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub enum DelElement {
+pub enum DelElement<S: Schema> {
     DelSkip(usize),
-    DelWithGroup(DelSpan),
-    DelChars(usize),
-    DelGroup(DelSpan),
-    DelStyles(usize, StyleSet),
+    DelWithGroup(DelSpan<S>),
+    DelText(usize),
+    DelGroup(DelSpan<S>),
+    DelStyles(usize, S::CharsProperties),
     // TODO Implement these
     // DelGroupAll,
     // DelMany(usize),
@@ -57,12 +46,12 @@ pub use self::DelElement::*;
 
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub enum AddElement {
+pub enum AddElement<S: Schema> {
     AddSkip(usize),
-    AddWithGroup(AddSpan),
-    AddChars(DocString, #[serde(default, skip_serializing_if = "is_stylemap_empty")] OpaqueStyleMap),
-    AddGroup(Attrs, AddSpan),
-    AddStyles(usize, StyleMap),
+    AddWithGroup(AddSpan<S>),
+    AddText(S::CharsProperties, DocString),
+    AddGroup(S::GroupProperties, AddSpan<S>),
+    AddStyles(usize, S::CharsProperties),
 }
 
 pub use self::AddElement::*;

@@ -5,23 +5,24 @@ use oatie::doc::*;
 use oatie::stepper::*;
 use oatie::writer::*;
 use take_mut;
+use oatie::rtf::RtfSchema;
 pub use self::caretstepper::*;
 
 #[derive(Debug, Clone)]
 pub struct Walker<'a> {
-    original_doc: Doc,
+    original_doc: Doc<RtfSchema>,
     pub stepper: CaretStepper<'a>,
 }
 
 impl<'a> Walker<'a> {
-    pub fn new(doc: &'a Doc) -> Walker<'a> {
+    pub fn new(doc: &'a Doc<RtfSchema>) -> Walker<'a> {
         Walker {
             original_doc: doc.clone(),
             stepper: CaretStepper::new(DocStepper::new(&doc.0)),
         }
     }
 
-    pub fn doc(&self) -> &'a DocStepper<'_> {
+    pub fn doc(&self) -> &'a DocStepper<'_, RtfSchema> {
         &self.stepper.doc
     }
 
@@ -69,7 +70,7 @@ impl<'a> Walker<'a> {
         });
     }
 
-    pub fn to_caret(doc: &'a Doc, client_id: &str, position: Pos) -> Result<Walker<'a>, Error> {
+    pub fn to_caret(doc: &'a Doc<RtfSchema>, client_id: &str, position: Pos) -> Result<Walker<'a>, Error> {
         let mut stepper = CaretStepper::new(DocStepper::new(&doc.0));
 
         // Iterate until we match the cursor.
@@ -126,7 +127,7 @@ impl<'a> Walker<'a> {
         }
     }
 
-    pub fn to_cursor(doc: &'a Doc, cur: &CurSpan) -> Walker<'a> {
+    pub fn to_cursor(doc: &'a Doc<RtfSchema>, cur: &CurSpan) -> Walker<'a> {
         let mut stepper = CaretStepper::new(DocStepper::new(&doc.0));
 
         let mut match_cur = CurStepper::new(cur);
@@ -414,7 +415,7 @@ impl<'a> Walker<'a> {
         };
     }
 
-    pub fn to_writer(&self) -> OpWriter {
+    pub fn to_writer(&self) -> OpWriter<RtfSchema> {
         let mut del = DelWriter::new();
         let mut add = AddWriter::new();
 
@@ -431,7 +432,7 @@ impl<'a> Walker<'a> {
             // console_log!("head stack len ---> {:?}", doc_stepper.stack().len());
             // console_log!("head stack ---> {:?}", doc_stepper.stack());
             match doc_stepper.head() {
-                Some(DocChars(ref text, _)) => {
+                Some(DocText(_, ref text)) => {
                     let text_len = text.char_len();
                     del.place(&DelSkip(text_len));
                     add.place(&AddSkip(text_len));
@@ -465,7 +466,7 @@ impl<'a> Walker<'a> {
         OpWriter { del, add }
     }
 
-    pub fn stepper(&self) -> &'a DocStepper<'_> {
+    pub fn stepper(&self) -> &'a DocStepper<'_, RtfSchema> {
         &self.stepper.doc
     }
 }

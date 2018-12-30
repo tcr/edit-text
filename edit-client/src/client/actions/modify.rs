@@ -1,9 +1,11 @@
+//! Actions that edit the document structure. Modify blocks or characters.
+
 use super::*;
 use crate::walkers::*;
 use failure::Error;
 use oatie::doc::*;
 use oatie::OT;
-use oatie::style::OpaqueStyleMap;
+use oatie::rtf::*;
 
 // Insert a string at the user's caret position.
 pub fn add_string(ctx: ActionContext, input: &str) -> Result<ActionContext, Error> {
@@ -14,26 +16,22 @@ pub fn add_string(ctx: ActionContext, input: &str) -> Result<ActionContext, Erro
             let walker = ctx.get_walker(Pos::Start)?;
 
             // Clone styles of hte previous text node, or use default styles.
-            let mut styles = hashmap!{ Style::Normie => None };
+            let mut styles = hashset!{};
             let mut char_walker = walker.clone();
             char_walker.back_char();
-            if let Some(DocChars(_, ref prefix_styles)) = char_walker.doc().head() {
-                styles.extend(
-                    prefix_styles
-                        .iter()
-                        .map(|(a, b)| (a.to_owned(), b.to_owned())),
-                );
+            if let Some(DocText(ref prefix_styles, _)) = char_walker.doc().head() {
+                styles.extend(prefix_styles.styles());
             }
 
             // Insert new character.
             let mut writer = walker.to_writer();
-            let step = AddChars(DocString::from_str(input), OpaqueStyleMap::from(styles));
+            let step = AddText(StyleSet::from(styles), DocString::from_str(input));
             writer.add.place(&step);
             ctx.apply(&writer.exit_result())
         })
 }
 
-pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
+pub fn toggle_list(ctx: ActionContext) -> Result<Op<RtfSchema>, Error> {
     // Create a walker that points to the beginning of the block the caret
     // is currently in.
     let mut walker = ctx.get_walker(Pos::Focus).expect("Expected a Focus caret");
@@ -43,7 +41,7 @@ pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
     let mut parent_walker = walker.clone();
     if parent_walker.parent() {
         if let Some(DocGroup(ref attrs, ref span)) = parent_walker.doc().head() {
-            if attrs["tag"] == "bullet" {
+            if let Attrs::ListItem = attrs {
                 // Delete the bullet group.
                 let mut writer = parent_walker.to_writer();
                 writer
@@ -58,7 +56,7 @@ pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
     Ok({
         let mut writer = walker.to_writer();
         writer.add.place(&AddGroup(
-            hashmap! { "tag".to_string() => "bullet".to_string() },
+            Attrs::ListItem,
             add_span![AddSkip(1)],
         ));
         writer.exit_result()
@@ -66,7 +64,7 @@ pub fn toggle_list(ctx: ActionContext) -> Result<Op, Error> {
 }
 
 /// Replaces the current block with a new block.
-pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
+pub fn replace_block(ctx: ActionContext, attrs: Attrs) -> Result<Op<RtfSchema>, Error> {
     // Create a walker that points to the beginning of the block the caret
     // is currently in.
     let mut walker = ctx.get_walker(Pos::Focus).expect("Expected a Focus caret");
@@ -85,7 +83,7 @@ pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
             del_span![DelSkip(len)],
         ));
         writer.add.place_all(&add_span![AddGroup(
-            {"tag": tag.to_string()},
+            attrs,
             [AddSkip(len)],
         )]);
         writer.exit_result()
@@ -95,7 +93,7 @@ pub fn replace_block(ctx: ActionContext, tag: &str) -> Result<Op, Error> {
 /// Hit backspace at the beginning of a block.
 fn combine_with_previous_block(
     walker: Walker<'_>,
-) -> Result<Op, Error> {
+) -> Result<Op<RtfSchema>, Error> {
     // Check for first block in a list item.
     let mut parent_walker = walker.clone();
     assert!(parent_walker.back_block());
@@ -107,7 +105,7 @@ fn combine_with_previous_block(
     let mut list_item_skip_len = 1;
     if parent_walker.doc().unhead() == None && parent_walker.parent() {
         if let Some(DocGroup(ref attrs_2, ref span_2)) = parent_walker.doc().head() {
-            if attrs_2["tag"] == "bullet" {
+            if let Attrs::ListItem = attrs_2 {
                 // We are at the start of a block inside of a list item.
                 is_list_item = true;
                 list_item_skip_len = span_2.skip_len();
@@ -122,7 +120,7 @@ fn combine_with_previous_block(
     //    group spanning its contents and our block.
     // contents of both list items.
     if let Some(DocGroup(ref attrs, ref span)) = parent_walker.doc().unhead() {
-        if attrs["tag"] == "bullet" {
+        if let Attrs::ListItem = attrs {
             // Create local copies of attributes and span length of the previous
             // bullet group.
             let attrs = attrs.to_owned();
@@ -194,7 +192,7 @@ fn combine_with_previous_block(
 
     // If previous block is an "hr", delete it.
     if let Some(DocGroup(ref attrs, _)) = block_walker.doc().head() {
-        if attrs["tag"] == "hr" {
+        if let Attrs::Rule = attrs {
             // Remove horizontal rule.
             return Ok({
                 let mut writer = block_walker.to_writer();
@@ -240,7 +238,7 @@ fn combine_with_previous_block(
 }
 
 // Deletes backward once from a provided walker position.
-fn delete_char_inner(mut walker: Walker<'_>) -> Result<Op, Error> {
+fn delete_char_inner(mut walker: Walker<'_>) -> Result<Op<RtfSchema>, Error> {
     // See if we can collapse this and the previous block or list item.
     if walker.at_start_of_block() {
         return combine_with_previous_block(walker);
@@ -254,13 +252,13 @@ fn delete_char_inner(mut walker: Walker<'_>) -> Result<Op, Error> {
     // known normalization about which position the caret will be in respect
     // to other carets.
     while let Some(DocGroup(ref attrs, _)) = walker.doc().head() {
-        if attrs["tag"] == "caret" {
+        if let Attrs::Caret { .. } = attrs {
             walker.stepper.doc.next();
         }
     }
 
     // Check that we precede a character.
-    if let Some(DocChars(..)) = walker.doc().head() {
+    if let Some(DocText(..)) = walker.doc().head() {
         // fallthrough
     } else {
         unreachable!();
@@ -268,7 +266,7 @@ fn delete_char_inner(mut walker: Walker<'_>) -> Result<Op, Error> {
 
     // Delete the character we skipped over.
     let mut writer = walker.to_writer();
-    writer.del.place(&DelChars(1));
+    writer.del.place(&DelText(1));
     Ok(writer.exit_result())
 }
 
@@ -286,7 +284,7 @@ fn delete_selection(ctx: ActionContext) -> Result<(bool, ActionContext), Error> 
             // cursors is 0.
             // TODO: This is incredibly inefficient.
             //  1. Dont' recurse infinitely, do this in a loop.
-            //  2. Skip entire DocChars components instead of one character at a time.
+            //  2. Skip entire DocText components instead of one character at a time.
             Ok(
                 if delta != 0 {
                     // Get real weird with it.
@@ -305,7 +303,7 @@ fn delete_selection(ctx: ActionContext) -> Result<(bool, ActionContext), Error> 
 }
 
 /// Backspace.
-pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
+pub fn delete_char(ctx: ActionContext) -> Result<Op<RtfSchema>, Error> {
     // Bail early if we delete a selection.
     let (success, ctx) = delete_selection(ctx)?;
     if success {
@@ -318,15 +316,15 @@ pub fn delete_char(ctx: ActionContext) -> Result<Op, Error> {
 }
 
 // Splits the current block at the position of the user's caret.
-pub fn split_block(ctx: ActionContext, add_hr: bool) -> Result<Op, Error> {
+pub fn split_block(ctx: ActionContext, add_hr: bool) -> Result<Op<RtfSchema>, Error> {
     let walker = ctx.get_walker(Pos::Start)?;
     let skip = walker.doc().skip_len();
 
     // Identify the tag of the block we're splitting.
     let mut prev_walker = walker.clone();
     assert!(prev_walker.back_block());
-    let previous_block = if let Some(DocGroup(attrs, _)) = prev_walker.doc().head() {
-        attrs["tag"].to_string()
+    let previous_block_attrs = if let Some(DocGroup(attrs, _)) = prev_walker.doc().head() {
+        attrs.clone()
     } else {
         unreachable!();
     };
@@ -336,7 +334,7 @@ pub fn split_block(ctx: ActionContext, add_hr: bool) -> Result<Op, Error> {
     let mut nested_bullet = false;
     if parent_walker.parent() {
         if let Some(DocGroup(ref attrs, _)) = parent_walker.doc().head() {
-            if attrs["tag"] == "bullet" {
+            if let Attrs::ListItem = attrs {
                 nested_bullet = true;
             }
         }
@@ -353,28 +351,22 @@ pub fn split_block(ctx: ActionContext, add_hr: bool) -> Result<Op, Error> {
             writer.del.close();
         }
 
-        writer
-            .add
-            .close(hashmap! { "tag".into() => previous_block });
+        writer.add.close(previous_block_attrs);
         if nested_bullet {
-            writer
-                .add
-                .close(hashmap! { "tag".into() => "bullet".into() });
+            writer.add.close(Attrs::ListItem);
             writer.add.begin();
         }
         if add_hr {
             writer.add.begin();
-            writer.add.close(hashmap! { "tag".into() => "hr".into() });
+            writer.add.close(Attrs::Rule);
         }
         writer.add.begin();
         if skip > 0 {
             writer.add.place(&AddSkip(skip));
         }
-        writer.add.close(hashmap! { "tag".into() => "p".into() });
+        writer.add.close(Attrs::Para);
         if nested_bullet {
-            writer
-                .add
-                .close(hashmap! { "tag".into() => "bullet".into() });
+            writer.add.close(Attrs::ListItem);
         }
 
         writer.exit_result()

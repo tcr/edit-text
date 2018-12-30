@@ -12,7 +12,7 @@ pub fn random_add_span(input: &DocSpan) -> AddSpan {
     let mut res: AddSpan = vec![];
     for elem in input {
         match *elem {
-            DocChars(ref value) => {
+            DocText(ref value) => {
                 let mut n = 0;
                 let max = value.chars().count();
 
@@ -27,7 +27,7 @@ pub fn random_add_span(input: &DocSpan) -> AddSpan {
                     if n < max || rng.gen_weighted_bool(2) {
                         if rng.gen_weighted_bool(2) {
                             let len = rng.gen_range(1, 5);
-                            res.place(&AddChars(rng.gen_ascii_chars().take(len).collect()));
+                            res.place(&AddText(rng.gen_ascii_chars().take(len).collect()));
                         } else {
                             res.place(&AddGroup(HashMap::new(), vec![]));
                         }
@@ -47,7 +47,7 @@ pub fn random_add_span(input: &DocSpan) -> AddSpan {
     // 	match rng.gen_range(0, 3) {
     // 		0 => { add_place_any(&mut res, &AddSkip(1)); },
     // 		1 => { add_place_any(&mut res, &AddGroup(HashMap::new(), vec![])); },
-    // 		2 => { add_place_any(&mut res, &AddChars(rng.gen_ascii_chars().take(3).collect())); },
+    // 		2 => { add_place_any(&mut res, &AddText(rng.gen_ascii_chars().take(3).collect())); },
     // 		_ => {},
     // 	}
     // }
@@ -60,7 +60,7 @@ pub fn random_del_span(input: &DocSpan) -> DelSpan {
     let mut res = vec![];
     for elem in input {
         match *elem {
-            DocChars(ref value) => {
+            DocText(ref value) => {
                 let mut n = 0;
                 let max = value.chars().count();
                 while n < max {
@@ -71,12 +71,12 @@ pub fn random_del_span(input: &DocSpan) -> DelSpan {
                         let slice = rng.gen_range(2, max - n + 1);
                         if slice == 2 {
                             res.push(DelSkip(1));
-                            res.push(DelChars(1));
+                            res.push(DelText(1));
                             n += 2;
                         } else {
                             let keep = rng.gen_range(1, slice - 1);
                             res.push(DelSkip(keep));
-                            res.push(DelChars(slice - keep));
+                            res.push(DelText(slice - keep));
                             n += slice;
                         }
                     }

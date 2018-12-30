@@ -2,33 +2,35 @@ use crate::walkers::*;
 use failure::Error;
 use oatie::doc::*;
 use oatie::OT;
+use oatie::rtf::*;
 use oatie::stepper::DocStepper;
 use super::*;
 
 // For function reuse
 #[derive(Debug)]
 pub enum StyleOp {
-    AddStyle(Style, Option<String>),
-    RemoveStyle(Style),
+    AddStyle(RtfStyle, Option<String>),
+    RemoveStyle(RtfStyle),
 }
 
 // TODO consider removing this and just use restyle
-pub fn apply_style(ctx: ActionContext, style: Style, value: Option<String>) -> Result<Op, Error> {
+pub fn apply_style(ctx: ActionContext, style: RtfStyle, value: Option<String>) -> Result<Op<RtfSchema>, Error> {
     restyle(ctx, vec![StyleOp::AddStyle(style, value)])
 }
 
 // TODO consider removing this and just use restyle
-pub fn remove_styles(ctx: ActionContext, mut styles: StyleSet) -> Result<Op, Error> {
+pub fn remove_styles(ctx: ActionContext, styles: StyleSet) -> Result<Op<RtfSchema>, Error> {
     restyle(
         ctx,
         styles
-            .drain()
+            .styles()
+            .into_iter()
             .map(|style| StyleOp::RemoveStyle(style))
             .collect(),
     )
 }
 
-pub fn restyle(ctx: ActionContext, ops: Vec<StyleOp>) -> Result<Op, Error> {
+pub fn restyle(ctx: ActionContext, ops: Vec<StyleOp>) -> Result<Op<RtfSchema>, Error> {
     // Find start and end carets, or return if either are missing.
     let (walker_start, walker_end) = match (
         ctx.get_walker(Pos::Start),
@@ -47,10 +49,10 @@ pub fn restyle(ctx: ActionContext, ops: Vec<StyleOp>) -> Result<Op, Error> {
     }
 
     // Create style sets for adding or removing styles.
-    let mut add_styles = hashmap![];
+    let mut add_styles = hashset![];
     for op in &ops {
-        if let &StyleOp::AddStyle(ref style, ref value) = op {
-            add_styles.insert(style.to_owned(), value.clone());
+        if let &StyleOp::AddStyle(ref style, _) = op {
+            add_styles.insert(style.to_owned());
         }
     }
     let mut remove_styles = hashset![];
@@ -64,18 +66,18 @@ pub fn restyle(ctx: ActionContext, ops: Vec<StyleOp>) -> Result<Op, Error> {
 
     // Remove styles.
     if !remove_styles.is_empty() {
-        let mut doc1: DocStepper = walker_start.doc().to_owned();
-        let doc2: DocStepper = walker_end.doc().to_owned();
+        let mut doc1: DocStepper<RtfSchema> = walker_start.doc().to_owned();
+        let doc2: DocStepper<RtfSchema> = walker_end.doc().to_owned();
         while doc1 != doc2 {
             match doc1.head() {
                 Some(DocGroup(..)) => {
                     writer.del.begin();
                     doc1.enter();
                 }
-                Some(DocChars(ref text, _)) => {
+                Some(DocText(_, ref text)) => {
                     writer
                         .del
-                        .place(&DelStyles(text.char_len(), remove_styles.clone()));
+                        .place(&DelStyles(text.char_len(), StyleSet::from(remove_styles.clone())));
                     doc1.skip(text.char_len());
                 }
                 None => {
@@ -96,10 +98,10 @@ pub fn restyle(ctx: ActionContext, ops: Vec<StyleOp>) -> Result<Op, Error> {
                     writer.add.begin();
                     doc1.enter();
                 }
-                Some(DocChars(ref text, _)) => {
+                Some(DocText(_, ref text)) => {
                     writer
                         .add
-                        .place(&AddStyles(text.char_len(), add_styles.clone()));
+                        .place(&AddStyles(text.char_len(), StyleSet::from(add_styles.clone())));
                     doc1.skip(text.char_len());
                 }
                 None => {

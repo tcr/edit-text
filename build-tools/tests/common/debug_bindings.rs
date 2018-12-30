@@ -1,6 +1,6 @@
-//! Debug interface custom to edit-text.
-//!
-//! See debug.ts for client side impl of DEBUG global.
+//! Debug interface custom to edit-text. See debug.ts for client side impl of
+//! the DEBUG global variable that powers most of this. Code to use this
+//! interface is injected into the browser via WebDriver.
 
 use fantoccini::{
     error::CmdError,

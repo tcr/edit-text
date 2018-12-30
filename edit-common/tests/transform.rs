@@ -1,4 +1,4 @@
-use oatie::schema::RtfSchema;
+use oatie::rtf::*;
 use oatie::transform_test::*;
 // use std::io;
 // use std::io::prelude::*;
@@ -34,7 +34,7 @@ fn main() {
         let value = fs::read_to_string(&file).unwrap();
         println!();
         println!("[{:?}]", file);
-        match run_transform_test::<RtfSchema>(&value) {
+        match run_transform_test(&value) {
             Ok(..) => {
                 println!("all set!");
             }

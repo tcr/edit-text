@@ -1,6 +1,6 @@
 use failure::Error;
 use oatie::doc::*;
-use oatie::style::OpaqueStyleMap;
+use oatie::rtf::*;
 use oatie::writer::DocWriter;
 use pulldown_cmark::{
     Event::{
@@ -20,8 +20,8 @@ use pulldown_cmark::{
 
 struct Ctx<'b, I> {
     iter: I,
-    body: &'b mut DocWriter,
-    styles: StyleMap,
+    body: &'b mut DocWriter<RtfSchema>,
+    styles: StyleSet,
     bare_text: bool,
 }
 
@@ -44,12 +44,12 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                     if self.bare_text {
                         self.body.begin();
                     }
-                    self.body.place(&DocChars(
+                    self.body.place(&DocText(
+                        self.styles.clone(),
                         DocString::from_str(text.as_ref()),
-                        OpaqueStyleMap::from(self.styles.clone()),
                     ));
                     if self.bare_text {
-                        self.body.close(hashmap! { "tag".into() => "p".into() });
+                        self.body.close(Attrs::Para);
                     }
                 }
                 SoftBreak => {
@@ -60,26 +60,27 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                     if self.bare_text {
                         self.body.begin();
                     }
-                    self.body.place(&DocChars(DocString::from_str(" "),
-                        OpaqueStyleMap::from(self.styles.clone()),
+                    self.body.place(&DocText(
+                        self.styles.clone(),
+                        DocString::from_str(" "),
                     ));
                     if self.bare_text {
-                        self.body.close(hashmap! { "tag".into() => "p".into() });
+                        self.body.close(Attrs::Para);
                     }
                 }
                 HardBreak => {
-                    self.body.place(&DocChars(DocString::from_str(
-                        "\n"),
-                        OpaqueStyleMap::from(self.styles.clone()),
+                    self.body.place(&DocText(
+                        self.styles.clone(),
+                        DocString::from_str("\n"),
                     ));
                 }
                 Html(html) => {
                     self.body.begin();
-                    self.body.place(&DocChars(DocString::from_str(
-                        &html),
-                        OpaqueStyleMap::from(hashmap!{ Style::Normie => None }),
+                    self.body.place(&DocText(
+                        StyleSet::new(),
+                        DocString::from_str(&html),
                     ));
-                    self.body.close(hashmap! { "tag".into() => "html".into() });
+                    self.body.close(Attrs::Html);
                 }
 
                 InlineHtml(..) | FootnoteReference(..) => {}
@@ -116,13 +117,14 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
 
             // Spans
             Tag::Link(dest, _title) => {
-                self.styles.insert(Style::Link, Some(dest.to_string()));
+                // TODO link styles
+                // self.styles.insert(Style::Link, Some(dest.to_string()));
             }
             Tag::Strong => {
-                self.styles.insert(Style::Bold, None);
+                self.styles.insert(RtfStyle::Bold);
             }
             Tag::Emphasis => {
-                self.styles.insert(Style::Italic, None);
+                self.styles.insert(RtfStyle::Italic);
             }
 
             Tag::Table(..)
@@ -141,41 +143,40 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
         match tag {
             // Blocks
             Tag::Paragraph => {
-                self.body.close(hashmap! { "tag".into() => "p".into() });
+                self.body.close(Attrs::Para);
                 self.bare_text = true;
             }
             Tag::Header(level) => {
-                let tag = format!("h{}", level);
-                self.body.close(hashmap! { "tag".into() => tag });
+                self.body.close(Attrs::Header(level as u8));
                 self.bare_text = true;
             }
             Tag::CodeBlock(_) => {
-                self.body.close(hashmap! { "tag".into() => "pre".into() });
+                self.body.close(Attrs::Code);
                 self.bare_text = true;
             }
 
             // List items
             Tag::Item => {
-                self.body
-                    .close(hashmap! { "tag".into() => "bullet".into() });
+                self.body.close(Attrs::ListItem);
                 self.bare_text = true;
             }
 
             // Block objects
             Tag::Rule => {
-                self.body.close(hashmap! { "tag".into() => "hr".into() });
+                self.body.close(Attrs::Rule);
             }
             Tag::Image(_, _) => (), // shouldn't happen, handled in start
 
             // Spans
             Tag::Link(..) => {
-                self.styles.remove(&Style::Link);
+                // TODO add link styles
+                // self.styles.remove(&RtfStyle::Link);
             }
             Tag::Strong => {
-                self.styles.remove(&Style::Bold);
+                self.styles.remove(&RtfStyle::Bold);
             }
             Tag::Emphasis => {
-                self.styles.remove(&Style::Italic);
+                self.styles.remove(&RtfStyle::Italic);
             }
 
             Tag::FootnoteDefinition(_)
@@ -190,14 +191,14 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
     }
 }
 
-pub fn markdown_to_doc(input: &str) -> Result<DocSpan, Error> {
+pub fn markdown_to_doc(input: &str) -> Result<DocSpan<RtfSchema>, Error> {
     let parser = Parser::new(input);
     let mut doc_writer = DocWriter::new();
     {
         let mut ctx = Ctx {
             iter: parser,
             body: &mut doc_writer,
-            styles: hashmap!{ Style::Normie => None },
+            styles: StyleSet::new(),
             bare_text: true,
         };
         ctx.run();

@@ -1,142 +1,50 @@
-//! Performs operational transform.
-
-use super::doc::*;
-use super::transform::{
-    Schema,
-    Track,
-};
-use std::borrow::ToOwned;
+use std::fmt::Debug;
+use serde::Serialize;
+use serde::de::DeserializeOwned;
 use std::collections::HashSet;
+use std::hash::Hash;
 
-fn parse_classes(input: &str) -> HashSet<String> {
-    input
-        .split_whitespace()
-        .filter(|x| !x.is_empty())
-        .map(|x| x.to_owned())
-        .collect()
-}
+pub trait Track: Copy + Debug + PartialEq + Sized {
+    // Rename this do close split? if applicable?
+    fn do_split(&self) -> bool;
 
-fn format_classes(set: &HashSet<String>) -> String {
-    let mut classes: Vec<String> = set.iter().cloned().collect();
-    classes.sort();
-    classes.join(" ")
-}
+    // Unsure about this naming
+    fn do_open_split(&self) -> bool;
 
-#[derive(PartialEq, Copy, Clone, Debug)]
-pub enum RtfTrack {
-    ListItems,     // bullet
-    BlockQuotes,   // blockquote
-    Blocks,        // h1, h2, h3, h4, h5, h6, p, pre
-    BlockObjects,  // hr
-    Inlines,       // span
-    InlineObjects, // caret
-}
+    fn supports_text(&self) -> bool;
 
-impl Track for RtfTrack {
-    // TODO Rename this do close split? if applicable? When is this used?
-    fn do_split(&self) -> bool {
-        match *self {
-            _ => true,
-        }
-    }
-
-    // TODO Unsure about this naming
-    fn do_open_split(&self) -> bool {
-        use self::RtfTrack::*;
-        match *self {
-            Inlines => true,
-            _ => false,
-        }
-    }
-
-    fn supports_text(&self) -> bool {
-        use self::RtfTrack::*;
-        match *self {
-            Blocks | Inlines => true,
-            _ => false,
-        }
-    }
-
-    fn allowed_in_root(&self) -> bool {
-        use self::RtfTrack::*;
-        match *self {
-            Blocks | ListItems | BlockObjects => true,
-            _ => false,
-        }
-    }
+    fn allowed_in_root(&self) -> bool;
 
     // TODO is this how this should work
-    fn is_object(&self) -> bool {
-        use self::RtfTrack::*;
-        match *self {
-            BlockObjects | InlineObjects => true,
-            _ => false,
-        }
-    }
+    fn is_object(&self) -> bool;
 
-    #[allow(clippy::match_same_arms)]
-    fn parents(&self) -> Vec<Self> {
-        use self::RtfTrack::*;
-        match *self {
-            ListItems => vec![ListItems, BlockQuotes],
-            BlockQuotes => vec![ListItems, BlockQuotes],
-            Blocks => vec![ListItems, BlockQuotes],
-            BlockObjects => vec![ListItems, BlockQuotes],
-            Inlines | InlineObjects => vec![Blocks],
-        }
-    }
+    fn parents(&self) -> Vec<Self>;
 
     // TODO extrapolate this from parents()
-    #[allow(clippy::match_same_arms)]
-    fn ancestors(&self) -> Vec<Self> {
-        use self::RtfTrack::*;
-        match *self {
-            ListItems => vec![ListItems, BlockQuotes],
-            BlockQuotes => vec![ListItems, BlockQuotes],
-            Blocks => vec![ListItems, BlockObjects],
-            BlockObjects => vec![ListItems, BlockQuotes],
-            Inlines | InlineObjects => vec![ListItems, BlockQuotes, Blocks],
-        }
-    }
+    fn ancestors(&self) -> Vec<Self>;
 }
 
-#[derive(Clone, Debug)]
-pub struct RtfSchema;
+pub trait Schema: Clone + Debug + PartialEq {
+    type Track: Track + Sized;
 
-impl Schema for RtfSchema {
-    type Track = RtfTrack;
+    type GroupProperties: Sized + Clone + Debug + Serialize + PartialEq + DeserializeOwned;
+    type CharsProperties: Sized + Clone + Debug + Serialize + PartialEq + DeserializeOwned + Default + StyleTrait;
 
-    fn attrs_eq(a: &Attrs, b: &Attrs) -> bool {
-        // TODO normalize?
-        a == b
-    }
+    /// Determines if two sets of Attrs are equal.
+    fn attrs_eq(a: &Self::GroupProperties, b: &Self::GroupProperties) -> bool;
 
-    fn merge_attrs(a: &Attrs, b: &Attrs) -> Option<Attrs> {
-        if a.get("tag") == b.get("tag") && a.get("tag").map(|x| x == "span").unwrap_or(false) {
-            let c_a: String = a.get("class").unwrap_or(&"".to_string()).clone();
-            let c_b: String = b.get("class").unwrap_or(&"".to_string()).clone();
+    /// Get the track type from this Attrs.
+    fn track_type_from_attrs(attrs: &Self::GroupProperties) -> Option<Self::Track>;
 
-            let mut c = parse_classes(&c_a);
-            c.extend(parse_classes(&c_b));
-            Some(hashmap! {
-                "tag".to_string() => "span".to_string(),
-                "class".to_string() => format_classes(&c),
-            })
-        } else {
-            None
-        }
-    }
+    /// Combine two Attrs into a new definition.
+    fn merge_attrs(a: &Self::GroupProperties, b: &Self::GroupProperties) -> Option<Self::GroupProperties>;
+}
 
-    fn track_type_from_attrs(attrs: &Attrs) -> Option<Self::Track> {
-        match &*attrs["tag"] {
-            "bullet" => Some(RtfTrack::ListItems),
-            "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "pre" | "html" => {
-                Some(RtfTrack::Blocks)
-            }
-            "span" => Some(RtfTrack::Inlines),
-            "caret" => Some(RtfTrack::InlineObjects),
-            "hr" => Some(RtfTrack::BlockObjects),
-            _ => None,
-        }
-    }
+pub trait StyleTrait: Sized {
+    type Style: Sized + Clone + PartialEq + Hash;
+
+    fn styles(&self) -> HashSet<Self::Style>;
+    fn is_empty(&self) -> bool;
+    fn extend(&mut self, set: &Self);
+    fn remove(&mut self, set: &Self);
 }

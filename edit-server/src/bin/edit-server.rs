@@ -5,22 +5,18 @@
 
 #[macro_use]
 extern crate oatie;
-
 #[macro_use]
 extern crate rouille;
-
 #[macro_use]
 extern crate failure;
+#[macro_use]
+extern crate serde_json;
 
 use md5;
 use reqwest;
 use crypto::md5::Md5;
 use crypto::digest::Digest;
 use yansi::Paint;
-
-#[macro_use]
-extern crate serde_json;
-
 use edit_common::{
     doc_as_html,
     markdown::{
@@ -36,6 +32,7 @@ use handlebars::Handlebars;
 use include_dir_macro::include_dir;
 use mime_guess::guess_mime_type;
 use oatie::doc::*;
+use oatie::rtf::*;
 use oatie::validate::validate_doc;
 use rand::thread_rng;
 use rouille::Response;
@@ -136,7 +133,7 @@ impl Dir for LocalDir {
     }
 }
 
-pub fn default_doc() -> Doc {
+pub fn default_doc() -> Doc<RtfSchema> {
     const INPUT: &'static str = r#"
 
 # Welcome
@@ -270,8 +267,8 @@ fn run_http_server(port: u16, client_proxy: bool) {
                                 Err(err) => {
                                     eprintln!("Error decoding document: {:?}", err);
                                     Doc(doc_span![
-                                        DocGroup({"tag": "pre"}, [
-                                            DocChars("Error decoding document.", {Style::Normie => None}),
+                                        DocGroup(Attrs::Code, [
+                                            DocText("Error decoding document."),
                                         ]),
                                     ])
                                 }
@@ -284,8 +281,8 @@ fn run_http_server(port: u16, client_proxy: bool) {
                                 Err(err) => {
                                     eprintln!("Error decoding document: {:?}", err);
                                     Doc(doc_span![
-                                        DocGroup({"tag": "pre"}, [
-                                            DocChars("Error decoding document.", {Style::Normie => None}),
+                                        DocGroup(Attrs::Code, [
+                                            DocText("Error decoding document."),
                                         ]),
                                     ])
                                 }
@@ -414,7 +411,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 let body: String = doc_to_markdown(
                     &get_or_create_page_graphql(
                         &id,
-                        &Doc(doc_span![DocGroup({"tag": "h1"}, [DocChars(&id)])]),
+                        &Doc(doc_span![DocGroup(Attrs::Header(1), [DocText(&id)])]),
                     ).expect("Received malformed content from db, aborting").0
                 ).unwrap();
 
@@ -444,8 +441,8 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 let body: String = doc_as_html(
                     &get_or_create_page_graphql(
                         &id,
-                        &Doc(doc_span![DocGroup({"tag": "h1"}, [
-                            DocChars(&id, { Style::Normie => None }),
+                        &Doc(doc_span![DocGroup(Attrs::Header(1), [
+                            DocText(&id),
                         ])]),
                     ).unwrap().0
                 );

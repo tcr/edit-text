@@ -18,7 +18,7 @@ You do a DelGroup on a Group, but when transformed against any of these elements
 
 TODO: This section
 
-* DelGroup x DelChars
+* DelGroup x DelText
 * DelGroup x DelWithGroup
 * DelGroup x DelGroup
 
@@ -58,13 +58,13 @@ Next, Client A forward-deletes everything that existed in the second paragraph (
 ```rust,noplaypen
 // This operation:
 Op([
-    DelWithGroup([DelSkip(8), DelChars(7)]),
+    DelWithGroup([DelSkip(8), DelText(7)]),
 ], [
 ])
 
 // Composed operations:
 Op([
-    DelGroup([DelSkip(7)]), DelGroup([DelSkip(1), DelChars(7)]),
+    DelGroup([DelSkip(7)]), DelGroup([DelSkip(1), DelText(7)]),
 ], [
     AddGroup({"tag": "h1"}, [AddSkip(15)]),
 ])
@@ -85,7 +85,7 @@ Op([
 
 // Composed operations:
 Op([
-    DelGroup([DelSkip(7)]), DelGroup([DelGroup([]), DelChars(7)]),
+    DelGroup([DelSkip(7)]), DelGroup([DelGroup([]), DelText(7)]),
 ], [
     AddGroup({"tag": "h1"}, [AddGroup({"tag": "caret", "client": "A"}), AddSkip(14)]),
 ])
@@ -117,13 +117,13 @@ Then Client B hits backspace:
 ```rust,noplaypen
 // This operation:
 Op([
-    DelSkip(1), DelWithGroup([DelSkip(7), DelChars(1)]),
+    DelSkip(1), DelWithGroup([DelSkip(7), DelText(1)]),
 ], [
 ])
 
 // Cumulative operation:
 Op([
-    DelGroup([DelGroup([]), DelSkip(7)]), DelWithGroup([DelSkip(7), DelChars(1)]),
+    DelGroup([DelGroup([]), DelSkip(7)]), DelWithGroup([DelSkip(7), DelText(1)]),
 ], [
     AddSkip(1), AddWithGroup([AddSkip(8), AddGroup({"tag": "caret", "client": "B"}, [])]),
 ])
@@ -140,14 +140,14 @@ In the end of this hypothetical, we are now transforming these two operations:
 ```rust,noplaypen
 // Client A
 Op([
-    DelGroup([DelSkip(7)]), DelGroup([DelGroup([]), DelChars(7)]),
+    DelGroup([DelSkip(7)]), DelGroup([DelGroup([]), DelText(7)]),
 ], [
     AddGroup({"tag": "h1"}, [AddGroup({"tag": "caret", "client": "A"}), AddSkip(14)]),
 ])
 
 // Client B
 Op([
-    DelGroup([DelGroup([]), DelSkip(7)]), DelWithGroup([DelSkip(7), DelChars(1)]),
+    DelGroup([DelGroup([]), DelSkip(7)]), DelWithGroup([DelSkip(7), DelText(1)]),
 ], [
     AddSkip(1), AddWithGroup([AddSkip(8), AddGroup({"tag": "caret", "client": "B"}, [])]),
 ])
@@ -174,14 +174,14 @@ But when transforming, by design, we avoid needing knowledge of what the documen
 In particular, we want to look at how the paragraph, `" world!"`, is modified. Client A has deleted it entirely, whereas Client B deleted a character and inserted its caret:
 
 ```
-Op([DelGroup([DelGroup([]), DelChars(7)])], [])
-Op([DelWithGroup([DelSkip(7), DelChars(1)])], [AddWithGroup([AddSkip(8), AddGroup({"tag": "caret", "client": "B"}, [])])])
+Op([DelGroup([DelGroup([]), DelText(7)])], [])
+Op([DelWithGroup([DelSkip(7), DelText(1)])], [AddWithGroup([AddSkip(8), AddGroup({"tag": "caret", "client": "B"}, [])])])
 ```
 
 We can take the union of the deletions and since there is only one addition component, select it. When we transform the two, our result looks like this:
 
 ```
-Op([DelGroup([DelGroup([]), DelChars(7)])], [AddGroup({"tag": "caret", "client": "B"}, [])])
+Op([DelGroup([DelGroup([]), DelText(7)])], [AddGroup({"tag": "caret", "client": "B"}, [])])
 ```
 
 If you imagine a document consisting of only this element, and we see that one client has deleted the entire element, we accidentally wind up with a client's caret being in the root element (instead of block element). See [Splitting image](./diary-markdown.md].

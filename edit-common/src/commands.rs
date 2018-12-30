@@ -1,4 +1,5 @@
 use oatie::doc::*;
+use oatie::rtf::RtfSchema;
 use wasm_bindgen::prelude::*;
 use wasm_typescript_definition::*;
 
@@ -7,7 +8,7 @@ use wasm_typescript_definition::*;
 #[serde(tag = "tag", content = "fields")]
 pub enum ServerCommand {
     // Connect(String),
-    Commit(String, Op, usize),
+    Commit(String, Op<RtfSchema>, usize),
     Log(String),
     TerminateProxy,
 }
@@ -17,10 +18,10 @@ pub enum ServerCommand {
 #[serde(tag = "tag", content = "fields")]
 pub enum ClientCommand {
     // Client id assignment, initial doc, initial version
-    Init(String, DocSpan, usize),
+    Init(String, DocSpan<RtfSchema>, usize),
 
     // New document, version, client-id, operation
-    Update(usize, String, Op),
+    Update(usize, String, Op<RtfSchema>),
 
     ServerDisconnect,
 }
@@ -71,7 +72,7 @@ pub enum FrontendCommand {
     Controls(Controls),
     PromptString(String, String, ControllerCommand),
     // Bytecode, Op
-    RenderDelta(String, Op),
+    RenderDelta(String, Op<RtfSchema>),
     // HTML
     RenderFull(String),
     Error(String),

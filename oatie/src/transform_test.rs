@@ -15,9 +15,33 @@ use super::OT;
 use failure::Error;
 use regex::Regex;
 use yansi::Paint;
+use serde::Serialize;
+use crate::rtf::RtfSchema;
 
-fn op_transform_compare<T: Schema>(a: &Op, b: &Op) -> (Op, Op, Op, Op) {
-    let (a_, b_) = transform::<T>(a, b);
+/// TestSpec defines the different types of tests we can run. It can be
+/// serialized to ron and output to a file, and loaded an run via this file.
+#[derive(Serialize, Deserialize, Debug)]
+enum TestSpec<S: Schema> {
+    TransformTest {
+        a: Op<S>,
+        b: Op<S>,
+        doc: DocSpan<S>,
+    },
+    TransformTestConfigurable { // legacy test definitions
+        a: Op<S>,
+        b: Op<S>,
+        doc: Option<DocSpan<S>>,
+        op_a: Option<Op<S>>,
+    },
+}
+
+use self::TestSpec::*;
+
+fn op_transform_compare<S: Schema>(
+    a: &Op<S>,
+    b: &Op<S>,
+) -> (Op<S>, Op<S>, Op<S>, Op<S>) {
+    let (a_, b_) = transform::<S>(a, b);
 
     println!();
     println!(" --> a \n{:?}", a);
@@ -43,31 +67,14 @@ fn op_transform_compare<T: Schema>(a: &Op, b: &Op) -> (Op, Op, Op, Op) {
     (a_, b_, a_res, b_res)
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-enum TestSpec {
-    TransformTest { doc: DocSpan, a: Op, b: Op },
-}
 
-pub fn run_transform_test<T: Schema>(input: &str) -> Result<(), Error> {
-    let mut test: HashMap<String, String> = HashMap::new();
-
-    // ron-defined test specs
-    if input.find("TransformTest").is_some() {
-        match ron::de::from_str::<TestSpec>(input)? {
-            TestSpec::TransformTest {
-                ref doc,
-                ref a,
-                ref b,
-            } => {
-                test.insert("doc".into(), ron::ser::to_string(&doc)?);
-                test.insert("a_del".into(), ron::ser::to_string(&a.0)?);
-                test.insert("a_add".into(), ron::ser::to_string(&a.1)?);
-                test.insert("b_del".into(), ron::ser::to_string(&b.0)?);
-                test.insert("b_add".into(), ron::ser::to_string(&b.1)?);
-            }
-        }
-    // line by line
+fn parse_transform_test(input: &str) -> Result<TestSpec<RtfSchema>, Error> {
+    Ok(if input.find("TransformTest").is_some() {
+        // ron-defined test specs
+        ron::de::from_str::<TestSpec<RtfSchema>>(input)?
     } else {
+        // line by line
+        let mut test: HashMap<String, String> = HashMap::new();
         let re = Regex::new(r"(\n|^)(\w+):([\n\w\W]+?)(\n(?:\w)|(\n\]))").unwrap();
         let res: HashMap<String, String> = re
             .captures_iter(&input)
@@ -79,137 +86,174 @@ pub fn run_transform_test<T: Schema>(input: &str) -> Result<(), Error> {
             })
             .collect();
         test.extend(res);
-    }
 
-    // Attempt old-style transform test which matches by line.
-    if test.len() == 0 {
-        let four = input.lines().filter(|x| !x.is_empty()).collect::<Vec<_>>();
-        if four.len() != 4 && four.len() != 6 {
-            bail!("Needed four or six lines as input");
+        // Attempt old-style transform test which matches by line.
+        if test.len() == 0 {
+            let four = input.lines().filter(|x| !x.is_empty()).collect::<Vec<_>>();
+            if four.len() != 4 && four.len() != 6 {
+                bail!("Needed four or six lines as input");
+            }
+
+            test.insert("a_del".into(), four[0].into());
+            test.insert("a_add".into(), four[1].into());
+
+            test.insert("b_del".into(), four[2].into());
+            test.insert("b_add".into(), four[3].into());
+
+            // Check validating lines
+            if four.len() == 6 {
+                test.insert("op_del".into(), four[4].into());
+                test.insert("op_add".into(), four[5].into());
+            }
         }
 
-        test.insert("a_del".into(), four[0].into());
-        test.insert("a_add".into(), four[1].into());
+        println!("entries {:?}", test.keys().collect::<Vec<_>>());
 
-        test.insert("b_del".into(), four[2].into());
-        test.insert("b_add".into(), four[3].into());
+        // Extract test entries.
+        let a = (
+            crate::deserialize::v1::delspan_ron(&test["a_del"])?,
+            crate::deserialize::v1::addspan_ron(&test["a_add"])?,
+        );
+        let b = (
+            crate::deserialize::v1::delspan_ron(&test["b_del"])?,
+            crate::deserialize::v1::addspan_ron(&test["b_add"])?,
+        );
+        let op_a = if test.contains_key("op_del") || test.contains_key("op_add") {
+            Some((
+                crate::deserialize::v1::delspan_ron(&test["op_del"])?,
+                crate::deserialize::v1::addspan_ron(&test["op_add"])?,
+            ))
+        } else {
+            None
+        };
+        let doc = if test.contains_key("doc") {
+            Some(crate::deserialize::v1::docspan_ron(&test["doc"])?)
+        } else {
+            None
+        };
 
-        // Check validating lines
-        if four.len() == 6 {
-            test.insert("op_del".into(), four[4].into());
-            test.insert("op_add".into(), four[5].into());
+        TransformTestConfigurable {
+            a,
+            b,
+            doc,
+            op_a,
         }
+    })
+}
+
+
+// TODO this method should take a generic Schema type
+pub fn run_transform_test(input: &str) -> Result<(), Error> {
+    let mut test = parse_transform_test(input)?;
+
+    eprintln!("\ntest: {:?}\n", test);
+    
+    match test {
+        TransformTest { a, b, doc } => {
+            // Rewrite as configurable test.
+            test = TransformTestConfigurable {
+                a,
+                b,
+                doc: Some(doc),
+                op_a: None,
+            };
+        }
+        _ => {}
     }
 
-    println!("entries {:?}", test.keys().collect::<Vec<_>>());
+    match test {
+        TransformTestConfigurable { a, b, doc, op_a } => {
+            // Check that transforms produce identical operations when composed.
+            println!(
+                "{}",
+                Paint::red("(!) comparing transform operation results...")
+            );
+            let (a_, b_, a_res, _b_res) = op_transform_compare::<RtfSchema>(&a, &b);
+            println!("ok");
+            println!();
 
-    // Extract test entries.
-    let a = (
-        ron::de::from_str::<DelSpan>(&test["a_del"])?,
-        ron::de::from_str::<AddSpan>(&test["a_add"])?,
-    );
-    let b = (
-        ron::de::from_str::<DelSpan>(&test["b_del"])?,
-        ron::de::from_str::<AddSpan>(&test["b_add"])?,
-    );
-    let check = if test.contains_key("op_del") || test.contains_key("op_add") {
-        Some((
-            ron::de::from_str::<DelSpan>(&test["op_del"])?,
-            ron::de::from_str::<AddSpan>(&test["op_add"])?,
-        ))
-    } else {
-        None
-    };
+            // Check validating lines.
+            if let Some(check) = op_a {
+                println!(
+                    "{}",
+                    Paint::red("(!) validating client A against provided 'check' op...")
+                );
+                assert_eq!(a_res, check);
+                println!("ok");
+                println!();
+            }
 
-    // Check that transforms produce identical operations when composed.
-    println!(
-        "{}",
-        Paint::red("(!) comparing transform operation results...")
-    );
-    let (a_, b_, a_res, _b_res) = op_transform_compare::<T>(&a, &b);
-    println!("ok");
-    println!();
+            // Check against provided document.
+            if let Some(doc) = doc {
+                let doc = Doc(doc);
 
-    // Check validating lines.
-    if let Some(check) = check {
-        println!(
-            "{}",
-            Paint::red("(!) validating client A against provided 'check' op...")
-        );
-        assert_eq!(a_res, check);
-        println!("ok");
-        println!();
+                println!("{}", Paint::red("(!) validating docs..."));
+
+                println!("original document: {:?}", doc);
+                validate_doc_span(&mut ValidateContext::new(), &doc.0)?;
+                println!();
+
+                // First test original operations can be applied against the doc.
+                // (This should always pass.)
+                println!("{}", Paint::red("(!) applying first ops..."));
+                println!(" ---> doc a : a");
+                let doc_a = Op::apply(&doc, &a);
+                println!("{:?}", doc_a);
+                println!();
+                println!(" ---> doc b : b");
+                let doc_b = Op::apply(&doc, &b);
+                println!("{:?}", doc_b);
+                println!();
+                println!("ok");
+                println!();
+
+                // Next apply the transformed ops.
+                println!("{}", Paint::red("(!) applying transformed ops..."));
+                println!(" ---> doc a : a : a'");
+                let doc_a = Op::apply(&doc_a, &a_);
+                println!("{:?}", doc_a);
+                validate_doc_span(&mut ValidateContext::new(), &doc_a.0)?;
+                println!(" ---> doc b : b : b'");
+                let doc_b = Op::apply(&doc_b, &b_);
+                println!("{:?}", doc_b);
+                validate_doc_span(&mut ValidateContext::new(), &doc_b.0)?;
+                println!();
+                println!("ok");
+                println!();
+
+                // Next test them composed.
+                println!(
+                    "{}",
+                    Paint::red("(!) testing op composed (double check)...")
+                );
+                println!(" ---> doc a : (a : a')");
+                let doc_a_cmp = Op::apply(&doc, &Op::compose(&a, &a_));
+                println!("{}", debug_pretty(&doc));
+                println!();
+                println!("{}", debug_pretty(&Op::compose(&a, &a_)));
+                println!("{}", debug_pretty(&doc_a_cmp));
+                validate_doc_span(&mut ValidateContext::new(), &doc_a_cmp.0)?;
+                println!(" ---> doc b : (b : b')");
+                let doc_b_cmp = Op::apply(&doc, &Op::compose(&a, &a_));
+                println!("{}", debug_pretty(&doc_b_cmp));
+                validate_doc_span(&mut ValidateContext::new(), &doc_b_cmp.0)?;
+                println!();
+                println!("ok");
+                println!();
+
+                // Next test transforms can produce identical documents.
+                // TODO
+            }
+
+            // ALSO CHECK THE REVERSE
+            // The result may be different, so we don't care it to
+            // that, but we can check that the transform is at least normalized.
+            // let _ = op_transform_compare(&b, &a);
+
+            println!("{}", Paint::green("(!) done."));
+
+            Ok(())
+        }
+        _ => unreachable!(),
     }
-
-    // Check against provided document.
-    if let Some(doc) = test.get("doc") {
-        println!("{}", Paint::red("(!) validating docs..."));
-
-        println!("\n\n\n{:?}\n\n\n", doc);
-
-        let doc = Doc(ron::de::from_str::<DocSpan>(doc)?);
-        println!("original document: {:?}", doc);
-        validate_doc_span(&mut ValidateContext::new(), &doc.0)?;
-        println!();
-
-        // First test original operations can be applied against the doc.
-        // (This should always pass.)
-        println!("{}", Paint::red("(!) applying first ops..."));
-        println!(" ---> doc a : a");
-        let doc_a = Op::apply(&doc, &a);
-        println!("{:?}", doc_a);
-        println!();
-        println!(" ---> doc b : b");
-        let doc_b = Op::apply(&doc, &b);
-        println!("{:?}", doc_b);
-        println!();
-        println!("ok");
-        println!();
-
-        // Next apply the transformed ops.
-        println!("{}", Paint::red("(!) applying transformed ops..."));
-        println!(" ---> doc a : a : a'");
-        let doc_a = Op::apply(&doc_a, &a_);
-        println!("{:?}", doc_a);
-        validate_doc_span(&mut ValidateContext::new(), &doc_a.0)?;
-        println!(" ---> doc b : b : b'");
-        let doc_b = Op::apply(&doc_b, &b_);
-        println!("{:?}", doc_b);
-        validate_doc_span(&mut ValidateContext::new(), &doc_b.0)?;
-        println!();
-        println!("ok");
-        println!();
-
-        // Next test them composed.
-        println!(
-            "{}",
-            Paint::red("(!) testing op composed (double check)...")
-        );
-        println!(" ---> doc a : (a : a')");
-        let doc_a_cmp = Op::apply(&doc, &Op::compose(&a, &a_));
-        println!("{}", debug_pretty(&doc));
-        println!();
-        println!("{}", debug_pretty(&Op::compose(&a, &a_)));
-        println!("{}", debug_pretty(&doc_a_cmp));
-        validate_doc_span(&mut ValidateContext::new(), &doc_a_cmp.0)?;
-        println!(" ---> doc b : (b : b')");
-        let doc_b_cmp = Op::apply(&doc, &Op::compose(&a, &a_));
-        println!("{}", debug_pretty(&doc_b_cmp));
-        validate_doc_span(&mut ValidateContext::new(), &doc_b_cmp.0)?;
-        println!();
-        println!("ok");
-        println!();
-
-        // Next test transforms can produce identical documents.
-        // TODO
-    }
-
-    // ALSO CHECK THE REVERSE
-    // The result may be different, so we don't care it to
-    // that, but we can check that the transform is at least normalized.
-    // let _ = op_transform_compare(&b, &a);
-
-    println!("{}", Paint::green("(!) done."));
-
-    Ok(())
 }
