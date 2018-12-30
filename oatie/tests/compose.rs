@@ -192,20 +192,20 @@ fn test_compose() {
 
     assert_eq!(
         normalize::<RtfSchema>(compose(
-            &op_span!([], [AddGroup(Attrs::Text, [AddSkip(6)]),]),
+            &op_span!([], [AddGroup(Attrs::Para, [AddSkip(6)]),]),
             &op_span!(
                 [DelGroup([DelSkip(6)])],
                 [
-                    AddGroup(Attrs::Text, [AddSkip(4)]),
-                    AddGroup(Attrs::Text, [AddSkip(2)]),
+                    AddGroup(Attrs::Para, [AddSkip(4)]),
+                    AddGroup(Attrs::Para, [AddSkip(2)]),
                 ]
             ),
         )),
         op_span!(
             [],
             [
-                AddGroup(Attrs::Text, [AddSkip(4)]),
-                AddGroup(Attrs::Text, [AddSkip(2)]),
+                AddGroup(Attrs::Para, [AddSkip(4)]),
+                AddGroup(Attrs::Para, [AddSkip(2)]),
             ]
         )
     );

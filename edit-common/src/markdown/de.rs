@@ -49,7 +49,7 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                         DocString::from_str(text.as_ref()),
                     ));
                     if self.bare_text {
-                        self.body.close(Attrs::Text);
+                        self.body.close(Attrs::Para);
                     }
                 }
                 SoftBreak => {
@@ -65,7 +65,7 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                         DocString::from_str(" "),
                     ));
                     if self.bare_text {
-                        self.body.close(Attrs::Text);
+                        self.body.close(Attrs::Para);
                     }
                 }
                 HardBreak => {
@@ -143,7 +143,7 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
         match tag {
             // Blocks
             Tag::Paragraph => {
-                self.body.close(Attrs::Text);
+                self.body.close(Attrs::Para);
                 self.bare_text = true;
             }
             Tag::Header(level) => {

@@ -87,7 +87,7 @@ pub fn identify_block(ctx: ActionContext) -> Result<CaretState, Error> {
             Attrs::Code => format!("pre"),
             Attrs::Rule => format!("hr"),
             Attrs::Caret { .. } => format!("caret"),
-            Attrs::Text => format!("p"),
+            Attrs::Para => format!("p"),
             Attrs::ListItem => format!("bullet"),
         };
         let mut in_list = false;

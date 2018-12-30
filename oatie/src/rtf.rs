@@ -9,7 +9,7 @@ use serde::{Serialize, Deserialize, Serializer, Deserializer};
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum Attrs {
     Header(u8),
-    Text,
+    Para,
     Code,
     Html,
     ListItem,
@@ -218,7 +218,7 @@ impl Schema for RtfSchema {
     fn track_type_from_attrs(attrs: &Attrs) -> Option<Self::Track> {
         match attrs {
             Attrs::ListItem => Some(RtfTrack::ListItems),
-            Attrs::Text | Attrs::Header(..) | Attrs::Code | Attrs::Html => {
+            Attrs::Para | Attrs::Header(..) | Attrs::Code | Attrs::Html => {
                 Some(RtfTrack::Blocks)
             }
             // "span" => Some(RtfTrack::Inlines),

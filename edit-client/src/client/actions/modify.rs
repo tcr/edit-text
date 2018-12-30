@@ -364,7 +364,7 @@ pub fn split_block(ctx: ActionContext, add_hr: bool) -> Result<Op<RtfSchema>, Er
         if skip > 0 {
             writer.add.place(&AddSkip(skip));
         }
-        writer.add.close(Attrs::Text);
+        writer.add.close(Attrs::Para);
         if nested_bullet {
             writer.add.close(Attrs::ListItem);
         }

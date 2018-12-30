@@ -61,3 +61,16 @@ fn test_docserialize_legacy() {
     let input = r#"[DocGroup({"tag":"h1",},[DocChars("home"),],),DocGroup({"tag":"p",},[DocChars("SANDBOX"),],),]"#;
     let _res: DocSpan<RtfSchema> = v1::docspan_ron(&input).unwrap();
 }
+
+
+#[test]
+fn test_docserialize_modern() {
+    let input = r#"Doc([DocGroup(Header(1),[DocText([],"dsdfsdno"),],)])"#;
+    let _res: Doc<RtfSchema> = ron::de::from_str(input).unwrap();
+
+    let input = r#"[{"DocGroup":[{"Header":1},[{"DocText":[[],"dsdfsdno"]}]]}]"#;
+    let _res: Doc<RtfSchema> = serde_json::from_str(&input).unwrap();
+
+    let input = r#"[{"DocGroup":["Para",[{"DocText":[["Bold"],"dsdfsdno"]}]]}]"#;
+    let _res: Doc<RtfSchema> = serde_json::from_str(&input).unwrap();
+}

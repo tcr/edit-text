@@ -1,13 +1,16 @@
 use crate::db::*;
-
 use diesel::{
     self,
+    prelude::*,
     sqlite::SqliteConnection,
 };
 use oatie::rtf::*;
+use oatie::doc::*;
 use failure::Error;
 use std::collections::HashMap;
 
+/// Retry a SQLite method, if a "database is locked" error is thrown, repeating
+/// it until it is successful (or another type of error is thrown).
 fn lock_retry<T, F>(mut f: F) -> Result<T, diesel::result::Error>
 where
     F: FnMut() -> Result<T, diesel::result::Error>,
@@ -30,7 +33,7 @@ where
 pub fn create_page<'a>(conn: &SqliteConnection, id: &'a str, doc: &Doc<RtfSchema>) -> usize {
     use super::schema::posts;
 
-    let body = ::ron::ser::to_string(&doc.0).unwrap();
+    let body = serde_json::to_string(doc).unwrap();
 
     let new_post = NewPost {
         id: id,
@@ -63,17 +66,11 @@ pub fn get_single_page(db: &SqliteConnection, input_id: &str) -> Option<Doc<RtfS
     let post = lock_retry(|| posts.filter(id.eq(input_id)).first::<Post>(db));
 
     post.map_err::<Error, _>(|x| x.into())
-        // HACK strip null bytes that have snuck into the database
-        .map(|x| {
-            if x.body.find(r"\u{0}").is_some() {
-                eprintln!("(!) Stripped NUL byte from doc.");
-                x.body.replace(r"\u{0}", "")
-            } else {
-                x.body.to_string()
-            }
-        })
-        .and_then(|x| Ok(oatie::deserialize::docspan_ron(&x)?))
-        .map(|d| Doc(d))
+        .map(|x| x.body.to_string())
+        .and_then(|x| Ok(
+                oatie::deserialize::doc_ron(&x)
+                    .or(serde_json::from_str::<Doc<RtfSchema>>(&x))?
+            ))
         .ok()
 }
 

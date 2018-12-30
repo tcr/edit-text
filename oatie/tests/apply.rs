@@ -67,13 +67,13 @@ fn try_this() {
     assert_eq!(
         apply_add::<RtfSchema>(
             &vec![
-                DocGroup(Attrs::Text, vec![]),
+                DocGroup(Attrs::Para, vec![]),
                 DocText(StyleSet::new(), DocString::from_str("World!")),
             ],
             &vec![AddSkip(1), AddText(StyleSet::new(), DocString::from_str("Hello "))],
         ),
         vec![
-            DocGroup(Attrs::Text, vec![]),
+            DocGroup(Attrs::Para, vec![]),
             DocText(StyleSet::new(), DocString::from_str("Hello World!")),
         ]
     );
@@ -81,13 +81,13 @@ fn try_this() {
     assert_eq!(
         apply_delete::<RtfSchema>(
             &vec![DocGroup(
-                Attrs::Text,
+                Attrs::Para,
                 vec![DocText(StyleSet::new(), DocString::from_str("Hello Damned World!"))],
             )],
             &vec![DelWithGroup(vec![DelSkip(6), DelText(7)])],
         ),
         vec![DocGroup(
-            Attrs::Text,
+            Attrs::Para,
             vec![DocText(StyleSet::new(), DocString::from_str("Hello World!"))],
         )]
     );
@@ -95,7 +95,7 @@ fn try_this() {
     assert_eq!(
         apply_add::<RtfSchema>(
             &vec![DocGroup(
-                Attrs::Text,
+                Attrs::Para,
                 vec![DocText(StyleSet::new(), DocString::from_str("Hello!"))],
             )],
             &vec![AddWithGroup(vec![
@@ -104,7 +104,7 @@ fn try_this() {
             ])],
         ),
         vec![DocGroup(
-            Attrs::Text,
+            Attrs::Para,
             vec![DocText(StyleSet::new(), DocString::from_str("Hello World!"))],
         )]
     );
@@ -141,7 +141,7 @@ fn test_lib_op() {
         apply_operation::<RtfSchema>(
             &vec![
                 DocText(StyleSet::new(), DocString::from_str("Heo")),
-                DocGroup(Attrs::Text, vec![]),
+                DocGroup(Attrs::Para, vec![]),
                 DocText(StyleSet::new(), DocString::from_str("!")),
             ],
             &(
@@ -151,7 +151,7 @@ fn test_lib_op() {
         ),
         vec![
             DocText(StyleSet::new(), DocString::from_str("Ho")),
-            DocGroup(Attrs::Text, vec![]),
+            DocGroup(Attrs::Para, vec![]),
             DocText(StyleSet::new(), DocString::from_str("!")),
         ]
     );

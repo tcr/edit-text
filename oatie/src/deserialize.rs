@@ -1,6 +1,7 @@
 //! Update legacy serialization formats to a modern format.
 
 use failure::Error;
+use crate::doc::*;
 
 // Decoding "v1" docs, which used an ad-hoc serde format as the data types
 // evolved. There's no specification for this, just compatibility with old
@@ -121,7 +122,7 @@ pub mod v1 {
                         focus: input.get("focus").map(|x| x == "true").unwrap_or(true),
                     }
                 }
-                "p" | _ => crate::rtf::Attrs::Text,
+                "p" | _ => crate::rtf::Attrs::Para,
             },
         )
     }
@@ -226,14 +227,15 @@ pub mod v1 {
     }
 }
 
-pub fn docspan_ron(input: &str) -> Result<crate::doc::DocSpan<crate::rtf::RtfSchema>, Error> {
-    match ron::de::from_str::<crate::doc::DocSpan<crate::rtf::RtfSchema>>(input) {
+pub fn doc_ron(input: &str) -> Result<crate::doc::Doc<crate::rtf::RtfSchema>, Error> {
+    // V2
+    match ron::de::from_str::<crate::doc::Doc<crate::rtf::RtfSchema>>(input) {
         Ok(value) => Ok(value),
         Err(err) => {
             // Try V1 encoding.
             // Throw original ron error if error is encountered.
-            if let Ok(value) = v1::docspan_ron(input) {
-                Ok(value)
+            if let Ok(value) = v1::docspan_ron(&input) {
+                Ok(Doc(value))
             } else {
                 Err(err.into())
             }
@@ -241,14 +243,14 @@ pub fn docspan_ron(input: &str) -> Result<crate::doc::DocSpan<crate::rtf::RtfSch
     }
 }
 
-pub fn docspan_json(input: &str) -> Result<crate::doc::DocSpan<crate::rtf::RtfSchema>, Error> {
-    match ron::de::from_str::<crate::doc::DocSpan<crate::rtf::RtfSchema>>(input) {
+pub fn doc_json(input: &str) -> Result<crate::doc::Doc<crate::rtf::RtfSchema>, Error> {
+    match serde_json::from_str::<crate::doc::Doc<crate::rtf::RtfSchema>>(&input) {
         Ok(value) => Ok(value),
         Err(err) => {
             // Try V1 encoding.
             // Throw original ron error if error is encountered.
-            if let Ok(value) = v1::docspan_json(input) {
-                Ok(value)
+            if let Ok(value) = v1::docspan_json(&input) {
+                Ok(Doc(value))
             } else {
                 Err(err.into())
             }

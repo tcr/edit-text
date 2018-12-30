@@ -33,7 +33,7 @@ impl<'a, 'b> Iterator for DocToMarkdown<'a, 'b> {
         match self.doc_stepper.head() {
             Some(DocGroup(ref attrs, ref body)) => {
                 let res = Some(match attrs {
-                    Attrs::Text => Event::Start(Tag::Paragraph),
+                    Attrs::Para => Event::Start(Tag::Paragraph),
                     Attrs::Header(level) => {
                         Event::Start(Tag::Header(*level as i32))
                     }
@@ -101,7 +101,7 @@ impl<'a, 'b> Iterator for DocToMarkdown<'a, 'b> {
                     };
                     self.doc_stepper.exit();
                     Some(match attrs {
-                        Attrs::Text => Event::End(Tag::Paragraph),
+                        Attrs::Para => Event::End(Tag::Paragraph),
                         Attrs::Header(level) => {
                             Event::End(Tag::Header(level as i32))
                         }

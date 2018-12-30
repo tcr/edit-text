@@ -37,7 +37,7 @@ pub fn doc_as_html(
         match elem {
             &DocGroup(ref attrs, ref span) => {
                 out.push_str(&match attrs {
-                    Attrs::Text => html_start_tag("div", hashmap!{ "data-tag".into() => "p".into() }),
+                    Attrs::Para => html_start_tag("div", hashmap!{ "data-tag".into() => "p".into() }),
                     Attrs::Code => html_start_tag("div", hashmap!{ "data-tag".into() => "pre".into() }),
                     Attrs::Html => html_start_tag("div", hashmap!{ "data-tag".into() => "html".into() }),
                     Attrs::Header(level) => {

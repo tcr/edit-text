@@ -43,7 +43,7 @@ graphql_object!(Page: () |&self| {
     }
 
     field markdown() -> String {
-        let doc = Doc(oatie::deserialize::docspan_ron(&self.doc).unwrap());
+        let doc = oatie::deserialize::doc_ron(&self.doc).unwrap();
         doc_to_markdown(&doc.0).unwrap()
     }
 });

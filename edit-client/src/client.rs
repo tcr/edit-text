@@ -188,7 +188,7 @@ pub fn button_handlers<C: ClientController>(
         Ui::ButtonGroup(vec![
             Ui::Button(
                 "Text".to_string(),
-                callback!(|client| client.client_op(|doc| replace_block(doc, Attrs::Text))),
+                callback!(|client| client.client_op(|doc| replace_block(doc, Attrs::Para))),
                 state.as_ref().map(|x| x.block == "p").unwrap_or(false),
             ),
             Ui::Button(
