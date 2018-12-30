@@ -19,12 +19,14 @@ use oatie::doc::*;
 use std::collections::{HashMap};
 use oatie::rtf::*;
 
+/// Formats a tag and a list of attributes into an HTML tag.
 fn html_start_tag(tag: &str, attrs: HashMap<String, String>) -> String {
     format!("<{} {}>", tag, attrs.into_iter().map(|(k, v)| {
         format!("{}={}", k, serde_json::to_string(&v).unwrap_or("".to_string()))
     }).collect::<Vec<String>>().join(" "))
 }
 
+// TODO this should take a Doc, not DocSpan (probably)
 /// Converts a DocSpan to an HTML string.
 pub fn doc_as_html(
     doc: &DocSpan<RtfSchema>,
@@ -37,14 +39,24 @@ pub fn doc_as_html(
         match elem {
             &DocGroup(ref attrs, ref span) => {
                 out.push_str(&match attrs {
-                    Attrs::Para => html_start_tag("div", hashmap!{ "data-tag".into() => "p".into() }),
-                    Attrs::Code => html_start_tag("div", hashmap!{ "data-tag".into() => "pre".into() }),
-                    Attrs::Html => html_start_tag("div", hashmap!{ "data-tag".into() => "html".into() }),
+                    Attrs::Para => {
+                        html_start_tag("div", hashmap!{ "data-tag".into() => "p".into() })
+                    }
+                    Attrs::Code => {
+                        html_start_tag("div", hashmap!{ "data-tag".into() => "pre".into() })
+                    }
+                    Attrs::Html => {
+                        html_start_tag("div", hashmap!{ "data-tag".into() => "html".into() })
+                    }
                     Attrs::Header(level) => {
                         html_start_tag("div", hashmap!{ "data-tag".into() => format!("h{}", level) })
                     },
-                    Attrs::ListItem => html_start_tag("div", hashmap!{ "data-tag".into() => "bullet".into() }),
-                    Attrs::Rule => html_start_tag("div", hashmap!{ "data-tag".into() => "hr".into() }),
+                    Attrs::ListItem => {
+                        html_start_tag("div", hashmap!{ "data-tag".into() => "bullet".into() })
+                    }
+                    Attrs::Rule => {
+                        html_start_tag("div", hashmap!{ "data-tag".into() => "hr".into() })
+                    }
                     Attrs::Caret { ref client_id, ref focus } => {
                         html_start_tag("div", hashmap!{
                             "data-tag".into() => "caret".to_string(),
@@ -62,24 +74,12 @@ pub fn doc_as_html(
                 let classes = styles.styles();
 
                 out.push_str(&format!(
-                    r#"<span class="{}" {}>"#,
+                    r#"<span class="{}">"#,
                     classes
                         .into_iter()
                         .map(|e| e.to_string())
                         .collect::<Vec<_>>()
                         .join(" "),
-                    // FIXME
-                    // styles
-                    //     .styles()
-                    //     .iter()
-                    //     .map(|(k, v)| format!(
-                    //         "data-style-{k}={v}",
-                    //         k = k,
-                    //         v = serde_json::to_string(&v).unwrap()
-                    //     ))
-                    //     .collect::<Vec<String>>()
-                    //     .join(" "),
-                    "",
                 ));
                 out.push_str(&encode_minimal(text.as_str()));
                 out.push_str(r"</span>");

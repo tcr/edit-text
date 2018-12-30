@@ -482,7 +482,7 @@ fn run() -> Result<(), Error> {
 
                 let mut b = Bindgen::new();
                 b.input_path("./target/wasm32-unknown-unknown/release/edit_client.wasm")
-                    .debug(!release) // Preserve debug symbols in non --release mode
+                    // .debug(!release) Unsure if debug generates too much content.
                     .typescript(true);
                 b.generate("./edit-frontend/src/bindgen")?;
 

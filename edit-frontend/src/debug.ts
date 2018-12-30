@@ -108,6 +108,10 @@ const DEBUG = {
         document.dispatchEvent(event);
     },
 
+    root: (): HTMLElement => {
+        return document.querySelector('.edit-text')! as HTMLElement;
+    },
+
     userCarets: (): Array<Attr> => {
         return Array.from(document.querySelectorAll('.edit-text [data-tag=caret]'))
             .map(x => x as HTMLElement)

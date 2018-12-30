@@ -6,7 +6,7 @@
   - [System Overview](./intro-system.md)
   - [Build with ./tools](./intro-x.md)
   - [Tests](./intro-testing.md)
-    - [Writing an integration test](#)
+    - [Writing an integration test](./writing-an-integration-test.md)
 - [Editor Basics](./editor-basics.md)
   - [Documents](./working-with-documents.md)
   - [Operations](./working-with-operations.md)
