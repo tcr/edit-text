@@ -492,6 +492,13 @@ export class Editor extends React.Component {
       return;
     }
 
+    console.log({
+      key_code: e.keyCode,
+      meta_key: e.metaKey,
+      shift_key: e.shiftKey,
+      alt_key: e.altKey,
+    });
+
     // Forward the keypress to the controller.
     this.props.controller.sendCommand({
       'tag': 'Keypress',
