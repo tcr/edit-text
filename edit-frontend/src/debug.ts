@@ -83,6 +83,18 @@ const DEBUG = {
         int = null;
     },
 
+    selectAll: () => {
+        // cmd + a
+        let KeyboardEventAny = KeyboardEvent as any;
+        let evt = new KeyboardEventAny("keydown", {
+            bubbles: true,
+            cancelable: true,
+            keyCode: 'A'.charCodeAt(0),
+            metaKey: true,
+        });
+        document.dispatchEvent(evt);
+    },
+
     asMarkdown: () => {
         if (globalClientBindings == null) {
             throw new Error('Bindings not assigned');
