@@ -10,8 +10,8 @@ extern crate tokio;
 
 mod common;
 
-use failure::Error;
 use self::common::*;
+use failure::Error;
 
 /// Basic test that moves the cursor to the end of the line, types a Ghost emoji,
 /// waits for the dust to settle, then sees if we get two Ghost emoji on both clients.
@@ -89,7 +89,10 @@ paragraph text
     individual_editing(markdown, async move |mut debug, test_id, mut checkpoint| {
         // (font-weight, font-style, background)
         type ComputedStyle = (u64, String, String);
-        async fn get_style(debug: &mut DebugClient, selector: String) -> Result<ComputedStyle, Error> {
+        async fn get_style(
+            debug: &mut DebugClient,
+            selector: String,
+        ) -> Result<ComputedStyle, Error> {
             Ok(serde_json::from_value(await!(debug.js(&format!(r#"
                 let style = window.getComputedStyle({});
                 return [Number(style.fontWeight), String(style.fontStyle), String(style.backgroundColor)];
@@ -97,32 +100,50 @@ paragraph text
         }
 
         // Normal text pararaph.
-        let (weight, style, _) = await!(get_style(&mut debug, "DEBUG.root().querySelectorAll('span')[0]".to_string()))?;
+        let (weight, style, _) = await!(get_style(
+            &mut debug,
+            "DEBUG.root().querySelectorAll('span')[0]".to_string()
+        ))?;
         assert_eq!(weight, 400, "Font weight is 400 (normal)");
         assert_ne!(style, "italic", "Font style is not italic");
 
         // Bold paragraph.
-        let (weight, style, _) = await!(get_style(&mut debug, "DEBUG.root().querySelectorAll('span')[1]".to_string()))?;
+        let (weight, style, _) = await!(get_style(
+            &mut debug,
+            "DEBUG.root().querySelectorAll('span')[1]".to_string()
+        ))?;
         assert!(weight > 400, "Font weight is greater than 400 (normal)");
         assert_ne!(style, "italic", "Font style is not italic");
 
         // Italic paragraph.
-        let (weight, style, _) = await!(get_style(&mut debug, "DEBUG.root().querySelectorAll('span')[2]".to_string()))?;
+        let (weight, style, _) = await!(get_style(
+            &mut debug,
+            "DEBUG.root().querySelectorAll('span')[2]".to_string()
+        ))?;
         assert_eq!(weight, 400, "Font weight is 400 (normal)");
         assert_eq!(style, "italic", "Font style is italic");
 
         // Bold and italic paragraph.
-        let (weight, style, _) = await!(get_style(&mut debug, "DEBUG.root().querySelectorAll('span')[3]".to_string()))?;
+        let (weight, style, _) = await!(get_style(
+            &mut debug,
+            "DEBUG.root().querySelectorAll('span')[3]".to_string()
+        ))?;
         assert!(weight > 400, "Font weight is greater than 400 (normal)");
         assert_eq!(style, "italic", "Font style is italic");
 
         // No selection.
-        let (_, _, bg) = await!(get_style(&mut debug, "DEBUG.root().querySelectorAll('span')[0]".to_string()))?;
+        let (_, _, bg) = await!(get_style(
+            &mut debug,
+            "DEBUG.root().querySelectorAll('span')[0]".to_string()
+        ))?;
         assert_eq!(bg, "rgba(0, 0, 0, 0)", "Background is transparent");
 
         // Select all, check that selection changes background.
         await!(debug.js("DEBUG.selectAll()"));
-        let (_, _, bg) = await!(get_style(&mut debug, "DEBUG.root().querySelectorAll('span')[0]".to_string()))?;
+        let (_, _, bg) = await!(get_style(
+            &mut debug,
+            "DEBUG.root().querySelectorAll('span')[0]".to_string()
+        ))?;
         assert_ne!(bg, "rgba(0, 0, 0, 0)", "Selection is not transparent");
 
         Ok(true)

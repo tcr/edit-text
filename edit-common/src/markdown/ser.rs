@@ -34,9 +34,7 @@ impl<'a, 'b> Iterator for DocToMarkdown<'a, 'b> {
             Some(DocGroup(ref attrs, ref body)) => {
                 let res = Some(match attrs {
                     Attrs::Para => Event::Start(Tag::Paragraph),
-                    Attrs::Header(level) => {
-                        Event::Start(Tag::Header(*level as i32))
-                    }
+                    Attrs::Header(level) => Event::Start(Tag::Header(*level as i32)),
                     Attrs::Code => Event::Start(Tag::CodeBlock("".into())),
                     Attrs::Html => {
                         let mut out = String::new();
@@ -102,9 +100,7 @@ impl<'a, 'b> Iterator for DocToMarkdown<'a, 'b> {
                     self.doc_stepper.exit();
                     Some(match attrs {
                         Attrs::Para => Event::End(Tag::Paragraph),
-                        Attrs::Header(level) => {
-                            Event::End(Tag::Header(level as i32))
-                        }
+                        Attrs::Header(level) => Event::End(Tag::Header(level as i32)),
                         Attrs::Code => {
                             self.queue.push(Event::End(Tag::CodeBlock("".into())));
                             Event::Text("\n".to_string().into())

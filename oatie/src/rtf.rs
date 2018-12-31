@@ -2,9 +2,14 @@
 //! tree can contain. This code should live outside of `oatie`.
 
 use super::schema::*;
-use std::fmt;
+use serde::{
+    Deserialize,
+    Deserializer,
+    Serialize,
+    Serializer,
+};
 use std::collections::HashSet;
-use serde::{Serialize, Deserialize, Serializer, Deserializer};
+use std::fmt;
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum Attrs {
@@ -14,10 +19,7 @@ pub enum Attrs {
     Html,
     ListItem,
     Rule,
-    Caret {
-        client_id: String,
-        focus: bool,
-    },
+    Caret { client_id: String, focus: bool },
 }
 
 #[repr(u8)]
@@ -39,8 +41,6 @@ impl fmt::Display for RtfStyle {
         fmt::Debug::fmt(self, f)
     }
 }
-
-
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StyleSet(HashSet<RtfStyle>);
@@ -87,10 +87,11 @@ impl<'de> Deserialize<'de> for StyleSet {
     where
         D: Deserializer<'de>,
     {
-        Ok(StyleSet(<HashSet<RtfStyle> as Deserialize>::deserialize(deserializer)?))
+        Ok(StyleSet(<HashSet<RtfStyle> as Deserialize>::deserialize(
+            deserializer,
+        )?))
     }
 }
-
 
 impl StyleTrait for StyleSet {
     type Style = RtfStyle;
@@ -115,9 +116,6 @@ impl StyleTrait for StyleSet {
         }
     }
 }
-
-
-
 
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum RtfTrack {
@@ -218,9 +216,7 @@ impl Schema for RtfSchema {
     fn track_type_from_attrs(attrs: &Attrs) -> Option<Self::Track> {
         match attrs {
             Attrs::ListItem => Some(RtfTrack::ListItems),
-            Attrs::Para | Attrs::Header(..) | Attrs::Code | Attrs::Html => {
-                Some(RtfTrack::Blocks)
-            }
+            Attrs::Para | Attrs::Header(..) | Attrs::Code | Attrs::Html => Some(RtfTrack::Blocks),
             // "span" => Some(RtfTrack::Inlines),
             Attrs::Caret { .. } => Some(RtfTrack::InlineObjects),
             Attrs::Rule => Some(RtfTrack::BlockObjects),

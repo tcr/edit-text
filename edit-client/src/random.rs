@@ -1,7 +1,7 @@
 use failure::Error;
 use oatie::doc::*;
-use oatie::writer::CurWriter;
 use oatie::rtf::*;
+use oatie::writer::CurWriter;
 
 pub struct RandomCursorContext {
     cur: CurWriter,
@@ -17,7 +17,10 @@ impl Default for RandomCursorContext {
     }
 }
 
-pub fn random_cursor_span(ctx: &mut RandomCursorContext, span: &DocSpan<RtfSchema>) -> Result<(), Error> {
+pub fn random_cursor_span(
+    ctx: &mut RandomCursorContext,
+    span: &DocSpan<RtfSchema>,
+) -> Result<(), Error> {
     for elem in span {
         match *elem {
             DocGroup(_, ref span) => {

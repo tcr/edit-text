@@ -11,13 +11,14 @@ use edit_common::{
     doc_as_html,
 };
 use failure::Error;
-use oatie::{self, OT};
 use oatie::doc::*;
 use oatie::rtf::*;
 use oatie::validate::validate_doc;
-use serde_json;
 use std::char::from_u32;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{
+    AtomicBool,
+    Ordering,
+};
 use std::sync::Arc;
 
 // Shorthandler
@@ -50,7 +51,6 @@ fn key_handlers<C: ClientController>() -> Vec<KeyHandler<C>> {
             false,
             Box::new(|client| client.client_op(|doc| delete_char(doc))),
         ),
-
         // left
         KeyHandler(
             37,
@@ -67,7 +67,6 @@ fn key_handlers<C: ClientController>() -> Vec<KeyHandler<C>> {
             false,
             Box::new(|client| client.client_op(|doc| caret_move(doc, true, false))),
         ),
-
         // shift + left
         KeyHandler(
             37,
@@ -84,7 +83,6 @@ fn key_handlers<C: ClientController>() -> Vec<KeyHandler<C>> {
             false,
             Box::new(|client| client.client_op(|doc| caret_move(doc, true, true))),
         ),
-
         // opt + shift + left
         KeyHandler(
             37,
@@ -101,7 +99,6 @@ fn key_handlers<C: ClientController>() -> Vec<KeyHandler<C>> {
             true,
             Box::new(|client| client.client_op(|doc| caret_word_move(doc, true, true))),
         ),
-
         // up
         KeyHandler(
             38,
@@ -132,7 +129,9 @@ fn key_handlers<C: ClientController>() -> Vec<KeyHandler<C>> {
             false,
             true,
             false,
-            Box::new(|client| client.client_op(|doc| add_string(doc, "\n").map(|ctx| ctx.result()))),
+            Box::new(|client| {
+                client.client_op(|doc| add_string(doc, "\n").map(|ctx| ctx.result()))
+            }),
         ),
         // tab
         KeyHandler(
@@ -181,8 +180,14 @@ pub fn button_handlers<C: ClientController>(
         }};
     }
 
-    let is_bold = state.as_ref().map(|x| x.styles.contains(&RtfStyle::Bold)).unwrap_or(false);
-    let is_italic = state.as_ref().map(|x| x.styles.contains(&RtfStyle::Italic)).unwrap_or(false);
+    let is_bold = state
+        .as_ref()
+        .map(|x| x.styles.contains(&RtfStyle::Bold))
+        .unwrap_or(false);
+    let is_italic = state
+        .as_ref()
+        .map(|x| x.styles.contains(&RtfStyle::Italic))
+        .unwrap_or(false);
 
     let ui = vec![
         Ui::ButtonGroup(vec![
@@ -246,23 +251,19 @@ pub fn button_handlers<C: ClientController>(
         Ui::ButtonGroup(vec![
             Ui::Button(
                 "Bold".to_string(),
-                callback!(move |client| client.client_op(|doc| {
-                    if is_bold {
-                        remove_styles(doc, StyleSet::from(hashset![RtfStyle::Bold]))
-                    } else {
-                        apply_style(doc, RtfStyle::Bold, None)
-                    }
+                callback!(move |client| client.client_op(|doc| if is_bold {
+                    remove_styles(doc, StyleSet::from(hashset![RtfStyle::Bold]))
+                } else {
+                    apply_style(doc, RtfStyle::Bold, None)
                 })),
                 is_bold,
             ),
             Ui::Button(
                 "Italic".to_string(),
-                callback!(move |client| client.client_op(|doc| {
-                    if is_italic {
-                        remove_styles(doc, StyleSet::from(hashset![RtfStyle::Italic]))
-                    } else {
-                        apply_style(doc, RtfStyle::Italic, None)
-                    }
+                callback!(move |client| client.client_op(|doc| if is_italic {
+                    remove_styles(doc, StyleSet::from(hashset![RtfStyle::Italic]))
+                } else {
+                    apply_style(doc, RtfStyle::Italic, None)
                 })),
                 is_italic,
             ),
@@ -435,7 +436,10 @@ pub trait ClientController {
                 }
 
                 if !delay_log {
-                    log_wasm!(Task(self.state().client_doc.client_id.clone(), value.clone()));
+                    log_wasm!(Task(
+                        self.state().client_doc.client_id.clone(),
+                        value.clone()
+                    ));
                 }
 
                 match value.clone() {
@@ -553,7 +557,10 @@ pub trait ClientController {
                 }
 
                 if delay_log {
-                    log_wasm!(Task(self.state().client_doc.client_id.clone(), value.clone()));
+                    log_wasm!(Task(
+                        self.state().client_doc.client_id.clone(),
+                        value.clone()
+                    ));
                 }
 
                 Ok(())
@@ -612,8 +619,8 @@ pub trait ClientController {
         //         // println!("  {} 1️⃣: let op_right = op_span!{:?};", name, op);
         //         check_op_a = Op::compose(&check_op_a, &op);
         //         // println!("  {} 1️⃣: let res = op_span!{:?};", name, check_op_a);
-        //         // println!("  {} 1️⃣: let original = doc_span!{:?};", name, client.original_doc);
-        //         // println!("  {} 1️⃣: let latest_doc = doc_span!{:?};", name, client.doc);
+        //         // println!("  {} 1️⃣: let original = doc!{:?};", name, client.original_doc);
+        //         // println!("  {} 1️⃣: let latest_doc = doc!{:?};", name, client.doc);
         //         let _ = Op::apply(&client.original_doc, &check_op_a);
         //     }
 

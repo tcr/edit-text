@@ -11,8 +11,8 @@ use oatie::doc::AddElement::*;
 use oatie::doc::DelElement::*;
 use oatie::doc::DocElement::*;
 use oatie::doc::*;
-use oatie::*;
 use oatie::rtf::*;
+use oatie::*;
 
 pub fn test_start() {
     if let Ok(_) = env_logger::init() {
@@ -50,7 +50,10 @@ fn try_this() {
 
     assert_eq!(
         apply_delete::<RtfSchema>(
-            &vec![DocText(StyleSet::new(), DocString::from_str("Hello World!"))],
+            &vec![DocText(
+                StyleSet::new(),
+                DocString::from_str("Hello World!")
+            )],
             &vec![DelText(6)],
         ),
         vec![DocText(StyleSet::new(), DocString::from_str("World!"))]
@@ -61,7 +64,10 @@ fn try_this() {
             &vec![DocText(StyleSet::new(), DocString::from_str("World!"))],
             &vec![AddText(StyleSet::new(), DocString::from_str("Hello "))],
         ),
-        vec![DocText(StyleSet::new(), DocString::from_str("Hello World!"))],
+        vec![DocText(
+            StyleSet::new(),
+            DocString::from_str("Hello World!")
+        )],
     );
 
     assert_eq!(
@@ -70,7 +76,10 @@ fn try_this() {
                 DocGroup(Attrs::Para, vec![]),
                 DocText(StyleSet::new(), DocString::from_str("World!")),
             ],
-            &vec![AddSkip(1), AddText(StyleSet::new(), DocString::from_str("Hello "))],
+            &vec![
+                AddSkip(1),
+                AddText(StyleSet::new(), DocString::from_str("Hello "))
+            ],
         ),
         vec![
             DocGroup(Attrs::Para, vec![]),
@@ -82,13 +91,19 @@ fn try_this() {
         apply_delete::<RtfSchema>(
             &vec![DocGroup(
                 Attrs::Para,
-                vec![DocText(StyleSet::new(), DocString::from_str("Hello Damned World!"))],
+                vec![DocText(
+                    StyleSet::new(),
+                    DocString::from_str("Hello Damned World!")
+                )],
             )],
             &vec![DelWithGroup(vec![DelSkip(6), DelText(7)])],
         ),
         vec![DocGroup(
             Attrs::Para,
-            vec![DocText(StyleSet::new(), DocString::from_str("Hello World!"))],
+            vec![DocText(
+                StyleSet::new(),
+                DocString::from_str("Hello World!")
+            )],
         )]
     );
 
@@ -105,31 +120,46 @@ fn try_this() {
         ),
         vec![DocGroup(
             Attrs::Para,
-            vec![DocText(StyleSet::new(), DocString::from_str("Hello World!"))],
+            vec![DocText(
+                StyleSet::new(),
+                DocString::from_str("Hello World!")
+            )],
         )]
     );
 
     assert_eq!(
         apply_operation::<RtfSchema>(
-            &vec![DocText(StyleSet::new(), DocString::from_str("Goodbye World!"))],
-            &(
+            &vec![DocText(
+                StyleSet::new(),
+                DocString::from_str("Goodbye World!")
+            )],
+            &Op(
                 vec![DelText(7)],
                 vec![AddText(StyleSet::new(), DocString::from_str("Hello"))],
             )
         ),
-        vec![DocText(StyleSet::new(), DocString::from_str("Hello World!"))]
+        vec![DocText(
+            StyleSet::new(),
+            DocString::from_str("Hello World!")
+        )]
     );
 
     assert_eq!(
         apply_add::<RtfSchema>(
-            &vec![DocText(StyleSet::new(), DocString::from_str("Hello world!"))],
+            &vec![DocText(
+                StyleSet::new(),
+                DocString::from_str("Hello world!")
+            )],
             &vec![
                 AddSkip(10),
                 AddText(StyleSet::new(), DocString::from_str("dd49")),
                 AddSkip(2),
             ],
         ),
-        vec![DocText(StyleSet::new(), DocString::from_str("Hello worldd49d!"))]
+        vec![DocText(
+            StyleSet::new(),
+            DocString::from_str("Hello worldd49d!")
+        )]
     );
 }
 
@@ -144,7 +174,7 @@ fn test_lib_op() {
                 DocGroup(Attrs::Para, vec![]),
                 DocText(StyleSet::new(), DocString::from_str("!")),
             ],
-            &(
+            &Op(
                 vec![DelSkip(1), DelText(1), DelSkip(2), DelSkip(1)],
                 vec![AddSkip(3)],
             ),
@@ -163,9 +193,12 @@ fn apply_ghost() {
 
     assert_eq!(
         apply_operation::<RtfSchema>(
-            &doc_span![DocText(" stop crying, little hip hop")],
-            &op_span![[], [AddText("\u{01f47b}")]],
+            &doc![DocText(" stop crying, little hip hop")].0,
+            &op!([], [AddText("\u{01f47b}")]),
         ),
-        doc_span![DocText("\u{01f47b} stop crying, little hip hop")]
+        vec![DocText(
+            StyleSet::new(),
+            DocString::from_str("\u{01f47b} stop crying, little hip hop")
+        )],
     );
 }

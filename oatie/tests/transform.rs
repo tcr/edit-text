@@ -1,7 +1,4 @@
-use oatie::rtf::*;
 use oatie::transform_test::*;
-// use std::io;
-// use std::io::prelude::*;
 use std::fs;
 
 #[test]

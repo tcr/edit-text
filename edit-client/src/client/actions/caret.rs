@@ -3,7 +3,6 @@ use crate::walkers::*;
 use failure::Error;
 use oatie::doc::*;
 use oatie::rtf::*;
-use oatie::OT;
 
 pub fn init_caret(ctx: ActionContext) -> Result<Op<RtfSchema>, Error> {
     let mut walker = Walker::new(&ctx.doc);
@@ -40,30 +39,33 @@ pub fn caret_move(
             let mut walker = ctx.get_walker(Pos::Focus)?;
 
             // Remove focus caret and move it to next position.
-            let op = Op::transform_advance(&{
-                // First operation removes the caret.
-                let mut writer = walker.to_writer();
-                writer.del.begin();
-                writer.del.close();
-                writer.exit_result()
-            }, &{
-                // Move the walker to the new position.
-                if increase {
-                    walker.next_char();
-                } else {
-                    walker.back_char();
-                }
+            let op = Op::transform_advance(
+                &{
+                    // First operation removes the caret.
+                    let mut writer = walker.to_writer();
+                    writer.del.begin();
+                    writer.del.close();
+                    writer.exit_result()
+                },
+                &{
+                    // Move the walker to the new position.
+                    if increase {
+                        walker.next_char();
+                    } else {
+                        walker.back_char();
+                    }
 
-                // Insert the carets.
-                let mut writer = walker.to_writer();
-                if !preserve_select {
+                    // Insert the carets.
+                    let mut writer = walker.to_writer();
+                    if !preserve_select {
+                        writer.add.begin();
+                        writer.add.close(caret_attrs(&ctx.client_id, false));
+                    }
                     writer.add.begin();
-                    writer.add.close(caret_attrs(&ctx.client_id, false));
-                }
-                writer.add.begin();
-                writer.add.close(caret_attrs(&ctx.client_id, true));
-                writer.exit_result()
-            });
+                    writer.add.close(caret_attrs(&ctx.client_id, true));
+                    writer.exit_result()
+                },
+            );
 
             ctx.apply(&op)
         })
@@ -163,35 +165,44 @@ pub fn caret_word_move(
 }
 
 pub fn caret_select_all(ctx: ActionContext) -> Result<Op<RtfSchema>, Error> {
-    Ok(Op::transform_advance(&{
-        Op::transform_advance(&{
-            // Delete focus caret.
-            caret_clear(&ctx, Pos::Focus).unwrap_or_else(|_| Op::empty())
-        }, &{
-            // Delete anchor caret.
-            caret_clear(&ctx, Pos::Anchor).unwrap_or_else(|_| Op::empty())
-        })
-    }, &{
-        Op::transform_advance(&{
-            // Insert anchor caret at start.
-            let mut start = Walker::new(&ctx.doc);
-            start.goto_pos(0);
+    Ok(Op::transform_advance(
+        &{
+            Op::transform_advance(
+                &{
+                    // Delete focus caret.
+                    caret_clear(&ctx, Pos::Focus).unwrap_or_else(|_| Op::empty())
+                },
+                &{
+                    // Delete anchor caret.
+                    caret_clear(&ctx, Pos::Anchor).unwrap_or_else(|_| Op::empty())
+                },
+            )
+        },
+        &{
+            Op::transform_advance(
+                &{
+                    // Insert anchor caret at start.
+                    let mut start = Walker::new(&ctx.doc);
+                    start.goto_pos(0);
 
-            let mut writer = start.to_writer();
-            writer.add.begin();
-            writer.add.close(caret_attrs(&ctx.client_id, false));
-            writer.exit_result()
-        }, &{
-            // Insert focus caret at end.
-            let mut end = Walker::new(&ctx.doc);
-            end.goto_end();
+                    let mut writer = start.to_writer();
+                    writer.add.begin();
+                    writer.add.close(caret_attrs(&ctx.client_id, false));
+                    writer.exit_result()
+                },
+                &{
+                    // Insert focus caret at end.
+                    let mut end = Walker::new(&ctx.doc);
+                    end.goto_end();
 
-            let mut writer = end.to_writer();
-            writer.add.begin();
-            writer.add.close(caret_attrs(&ctx.client_id, true));
-            writer.exit_result()
-        })
-    }))
+                    let mut writer = end.to_writer();
+                    writer.add.begin();
+                    writer.add.close(caret_attrs(&ctx.client_id, true));
+                    writer.exit_result()
+                },
+            )
+        },
+    ))
 }
 
 pub fn caret_block_move(ctx: ActionContext, increase: bool) -> Result<Op<RtfSchema>, Error> {
@@ -206,7 +217,7 @@ pub fn caret_block_move(ctx: ActionContext, increase: bool) -> Result<Op<RtfSche
     // Second operation inserts the new caret.
     if increase {
         if !walker.next_block() {
-            return Ok(op_span!([], []));
+            return Ok(op!([], []));
         }
     } else {
         assert!(walker.back_block());
@@ -239,15 +250,21 @@ pub fn caret_clear(ctx: &ActionContext, position: Pos) -> Result<Op<RtfSchema>, 
 }
 
 pub fn cur_to_caret(ctx: &ActionContext, cur: &CurSpan, pos: Pos) -> Result<Op<RtfSchema>, Error> {
-    Ok(Op::transform_advance(&{
-        // First operation removes the caret.
-        caret_clear(ctx, pos).unwrap_or_else(|_| Op::empty())
-    }, &{
-        // Second operation inserts a new caret.
-        let walker = Walker::to_cursor(&ctx.doc, cur);
-        let mut writer = walker.to_writer();
-        writer.add.begin();
-        writer.add.close(caret_attrs(&ctx.client_id, if pos == Pos::Focus { true } else { false }));
-        writer.exit_result()
-    }))
+    Ok(Op::transform_advance(
+        &{
+            // First operation removes the caret.
+            caret_clear(ctx, pos).unwrap_or_else(|_| Op::empty())
+        },
+        &{
+            // Second operation inserts a new caret.
+            let walker = Walker::to_cursor(&ctx.doc, cur);
+            let mut writer = walker.to_writer();
+            writer.add.begin();
+            writer.add.close(caret_attrs(
+                &ctx.client_id,
+                if pos == Pos::Focus { true } else { false },
+            ));
+            writer.exit_result()
+        },
+    ))
 }

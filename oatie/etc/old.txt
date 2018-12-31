@@ -1,7 +1,7 @@
 // Old code that can be thrown out
 
 fn () {
-    // Doc(doc_span![
+    // Doc(doc![
     //     DocGroup({"tag": "h1"}, [
     //         // DocGroup({"tag": "caret", "client": "left"}, []),
     //         // DocGroup({"tag": "caret", "client": "right"}, []),

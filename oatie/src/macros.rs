@@ -1,7 +1,7 @@
 //! Macros for more easily creating operations and documents in code.
 
 #[macro_export]
-macro_rules! doc_span {
+macro_rules! doc {
     ( @str_literal $e:expr ) => { $e };
     ( @kind DocText $b:expr $(,)* ) => {
         DocText($crate::rtf::StyleSet::new(), $crate::doc::DocString::from_str($b))
@@ -12,21 +12,24 @@ macro_rules! doc_span {
             $(
                 map.insert($e);
             )*
-            DocText($crate::rtf::StyleSet::from(map), $crate::doc::DocString::from_str($b))
+            $crate::doc::DocText($crate::rtf::StyleSet::from(map), $crate::doc::DocString::from_str($b))
         }
     };
     ( @kind DocGroup $b:expr , [ $( $v:tt )* ] $(,)* ) => {
         {
-            DocGroup($b, doc_span![ $( $v )* ])
+            $crate::doc::DocGroup($b, doc![ @span $( $v )* ])
         }
     };
-    ( ) => {
-        vec![]
-    };
-    ( $( $i:ident ( $( $b:tt )+ ) ),+ $(,)* ) => {
+    ( @span $( $i:ident ( $( $v:tt )+ ) ),+ $(,)* ) => {
         vec![
-            $( doc_span!(@kind $i $( $b )* , ) ),*
+            $( doc!(@kind $i $( $v )* , ) ),*
         ]
+    };
+    ( ) => {
+        $crate::doc::Doc(vec![])
+    };
+    ( $( $v:tt )+ ) => {
+        $crate::doc::Doc(doc![ @span $( $v )* ])
     };
 }
 
@@ -100,9 +103,9 @@ macro_rules! del_span {
 }
 
 #[macro_export]
-macro_rules! op_span {
+macro_rules! op {
     ( [ $( $d:tt )* ], [ $( $a:tt )* ] $(,)* ) => {
-        (
+        $crate::doc::Op(
             del_span![ $( $d )* ],
             add_span![ $( $a )* ],
         )

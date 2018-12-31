@@ -20,7 +20,7 @@ fn main() {
 
 fn run() -> Result<(), Error> {
 
-    let doc = Doc(doc_span![
+    let doc = Doc(doc![
         DocGroup({"tag": "h2"}, [
             DocText("12")
         ]),
@@ -146,7 +146,7 @@ fn main() {
 
 // let input_op = op_span!([DelWithGroup([DelGroup([DelSkip(2)]), DelGroup([DelSkip(2), DelText(2), DelSkip(2), DelText(2), DelSkip(1), DelText(2), DelGroup([]), DelText(1)])]), DelWithGroup([DelGroup([DelText(1), DelGroup([]), DelText(1)]), DelWithGroup([DelSkip(1)])]), DelWithGroup([DelSkip(1), DelWithGroup([])]), DelSkip(1)], [AddWithGroup([AddGroup({"tag": "pre"}, [AddText("A"), AddSkip(1), AddGroup({"tag": "caret", "client": "a"}, []), AddSkip(6), AddText("i ")])]), AddWithGroup([AddWithGroup([AddSkip(1)])]), AddWithGroup([AddSkip(1), AddWithGroup([])]), AddSkip(1)]);
 
-// let doc = Doc(doc_span![DocGroup({"tag": "bullet"}, [DocGroup({"tag": "pre"}, [DocText("Av"), DocGroup({"client": "a", "tag": "caret"}, []), DocText("B20 W7i ")])]), DocGroup({"tag": "bullet"}, [DocGroup({"tag": "h3"}, [DocText("2")])]), DocGroup({"tag": "h3"}, [DocText("8"), DocGroup({"tag": "caret", "client": "c"}, [])]), DocGroup({"tag": "h1"}, [DocText("0pos Mercutio, a rich text editor.")])]);
+// let doc = Doc(doc![DocGroup({"tag": "bullet"}, [DocGroup({"tag": "pre"}, [DocText("Av"), DocGroup({"client": "a", "tag": "caret"}, []), DocText("B20 W7i ")])]), DocGroup({"tag": "bullet"}, [DocGroup({"tag": "h3"}, [DocText("2")])]), DocGroup({"tag": "h3"}, [DocText("8"), DocGroup({"tag": "caret", "client": "c"}, [])]), DocGroup({"tag": "h1"}, [DocText("0pos Mercutio, a rich text editor.")])]);
 
 
 

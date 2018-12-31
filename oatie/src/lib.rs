@@ -41,97 +41,16 @@ pub mod wasm;
 
 // Then import & re-export core items.
 mod core;
-pub use self::core::*;
-
+mod parse;
+mod string;
+mod ot;
+pub mod deserialize;
 pub mod normalize;
+pub mod rtf;
 pub mod stepper;
 pub mod transform_test;
 pub mod validate;
 pub mod writer;
-pub mod rtf;
-pub mod deserialize;
-mod parse;
-mod string;
 
-use crate::apply::*;
-use crate::compose::*;
-use crate::doc::*;
-use crate::transform::transform;
-pub use crate::transform::{
-    Schema,
-    Track,
-};
-
-/// A type that can have operational transform applied to it.
-/// The `OT` trait is implemented on an operation object, and its
-/// associated type `Doc` is what the operation should operate on.
-pub trait OT<S: Schema>
-where
-    Self: Sized,
-{
-    type Doc;
-
-    /// Applies an operation to a `Self::Doc`, returning the modified `Self::Doc`.
-    fn apply(doc: &Self::Doc, op: &Self) -> Self::Doc;
-
-    /// Returns an empty operation.
-    fn empty() -> Self;
-
-    /// Composes two operations, returning a single operation encapsulating them
-    /// both.
-    fn compose(a: &Self, b: &Self) -> Self;
-
-    /// Composes an iterator of operations into a single operation.
-    /// If no operations are returned from the iterator, the Op::empty() should be
-    /// returned.
-    fn compose_iter<'a, I>(iter: I) -> Self
-    where
-        I: Iterator<Item = &'a Self>,
-        Self: 'a;
-
-    /// Transform a document given the corresponding Schema trait.
-    fn transform(a: &Self, b: &Self) -> (Self, Self);
-
-    /// Utility function to transform an operation against a competing one,
-    /// returning the results of composing them both.
-    fn transform_advance(a: &Self, b: &Self) -> Self;
-}
-
-impl<S: Schema> OT<S> for Op<S> {
-    type Doc = Doc<S>;
-
-    fn apply(doc: &Self::Doc, op: &Self) -> Self::Doc {
-        Doc(apply_operation(&doc.0, op))
-    }
-
-    fn empty() -> Self {
-        (vec![], vec![])
-    }
-
-    fn compose(a: &Self, b: &Self) -> Self {
-        compose(a, b)
-    }
-
-    fn compose_iter<'a, I>(iter: I) -> Self
-    where
-        I: Iterator<Item = &'a Self>, S: 'a
-    {
-        let mut base = Self::empty();
-        for item in iter {
-            base = Self::compose(&base, item);
-        }
-        base
-    }
-
-    fn transform(a: &Self, b: &Self) -> (Self, Self) {
-        transform::<S>(&a, &b)
-    }
-
-    fn transform_advance(a: &Self, b: &Self) -> Self {
-        let (a_transform, _b_transform) = Self::transform(a, b);
-        let a_res = Self::compose(a, &a_transform);
-        // let b_res = Self::compose(b, &b_transform);
-        // assert_eq!(a_res, b_res);
-        a_res
-    }
-}
+// Re-export core items.
+pub use self::core::*;

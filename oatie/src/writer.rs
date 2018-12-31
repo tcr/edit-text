@@ -150,7 +150,7 @@ impl<S: Schema> OpWriter<S> {
     }
 
     pub fn result(self) -> Op<S> {
-        (self.del.result(), self.add.result())
+        Op(self.del.result(), self.add.result())
     }
 }
 

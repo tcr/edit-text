@@ -4,9 +4,9 @@ use diesel::{
     prelude::*,
     sqlite::SqliteConnection,
 };
-use oatie::rtf::*;
-use oatie::doc::*;
 use failure::Error;
+use oatie::doc::*;
+use oatie::rtf::*;
 use std::collections::HashMap;
 
 /// Retry a SQLite method, if a "database is locked" error is thrown, repeating
@@ -67,10 +67,9 @@ pub fn get_single_page(db: &SqliteConnection, input_id: &str) -> Option<Doc<RtfS
 
     post.map_err::<Error, _>(|x| x.into())
         .map(|x| x.body.to_string())
-        .and_then(|x| Ok(
-                oatie::deserialize::doc_ron(&x)
-                    .or(serde_json::from_str::<Doc<RtfSchema>>(&x))?
-            ))
+        .and_then(|x| {
+            Ok(oatie::deserialize::doc_ron(&x).or(serde_json::from_str::<Doc<RtfSchema>>(&x))?)
+        })
         .ok()
 }
 

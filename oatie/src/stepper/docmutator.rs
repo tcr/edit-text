@@ -1,6 +1,6 @@
 use super::*;
-use wasm_bindgen::prelude::*;
 use serde_json::json;
+use wasm_bindgen::prelude::*;
 
 impl Program {
     pub fn new() -> Program {
@@ -174,7 +174,8 @@ impl<'a, S: Schema> RecordingDocMutator<'a, S> {
                 let partial = self.stepper.char_cursor_expect().right().expect("hey now");
                 // console_log!("🏟 {:?}", partial);
                 if let Some(&DocText(ref styles, ref _text)) = self.stepper.head_raw() {
-                    self.bc.place(Bytecode::InsertDocString(partial.clone(), json!(styles)));
+                    self.bc
+                        .place(Bytecode::InsertDocString(partial.clone(), json!(styles)));
                     self.writer.place(&DocText(styles.clone(), partial.clone()));
                 } else {
                     unreachable!();
@@ -276,7 +277,8 @@ impl<'a, S: Schema> DocMutator<S> for RecordingDocMutator<'a, S> {
     }
 
     fn InsertDocString(&mut self, docstring: DocString, styles: S::CharsProperties) {
-        self.bc.place(Bytecode::InsertDocString(docstring.clone(), json!(styles)));
+        self.bc
+            .place(Bytecode::InsertDocString(docstring.clone(), json!(styles)));
 
         // No-op stepper
 
@@ -330,7 +332,7 @@ impl<'a, S: Schema> DocMutator<S> for RecordingDocMutator<'a, S> {
                         } else {
                             unreachable!();
                         }
-                                                            // The right part of the string is added WHEN
+                        // The right part of the string is added WHEN
                         return;
                     } else {
                         // Partial advancement

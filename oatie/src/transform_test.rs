@@ -1,7 +1,5 @@
 //! Helper methods for performing transform tests.
 
-use ron;
-use std::collections::HashMap;
 use super::compose;
 use super::doc::*;
 use super::normalize::*;
@@ -11,12 +9,13 @@ use super::validate::{
     validate_doc_span,
     ValidateContext,
 };
-use super::OT;
+use crate::rtf::RtfSchema;
 use failure::Error;
 use regex::Regex;
-use yansi::Paint;
+use ron;
 use serde::Serialize;
-use crate::rtf::RtfSchema;
+use std::collections::HashMap;
+use yansi::Paint;
 
 /// TestSpec defines the different types of tests we can run. It can be
 /// serialized to ron and output to a file, and loaded an run via this file.
@@ -27,7 +26,8 @@ enum TestSpec<S: Schema> {
         b: Op<S>,
         doc: DocSpan<S>,
     },
-    TransformTestConfigurable { // legacy test definitions
+    TransformTestConfigurable {
+        // legacy test definitions
         a: Op<S>,
         b: Op<S>,
         doc: Option<DocSpan<S>>,
@@ -37,10 +37,7 @@ enum TestSpec<S: Schema> {
 
 use self::TestSpec::*;
 
-fn op_transform_compare<S: Schema>(
-    a: &Op<S>,
-    b: &Op<S>,
-) -> (Op<S>, Op<S>, Op<S>, Op<S>) {
+fn op_transform_compare<S: Schema>(a: &Op<S>, b: &Op<S>) -> (Op<S>, Op<S>, Op<S>, Op<S>) {
     let (a_, b_) = transform::<S>(a, b);
 
     println!();
@@ -66,7 +63,6 @@ fn op_transform_compare<S: Schema>(
 
     (a_, b_, a_res, b_res)
 }
-
 
 fn parse_transform_test(input: &str) -> Result<TestSpec<RtfSchema>, Error> {
     Ok(if input.find("TransformTest").is_some() {
@@ -110,16 +106,16 @@ fn parse_transform_test(input: &str) -> Result<TestSpec<RtfSchema>, Error> {
         println!("entries {:?}", test.keys().collect::<Vec<_>>());
 
         // Extract test entries.
-        let a = (
+        let a = Op(
             crate::deserialize::v1::delspan_ron(&test["a_del"])?,
             crate::deserialize::v1::addspan_ron(&test["a_add"])?,
         );
-        let b = (
+        let b = Op(
             crate::deserialize::v1::delspan_ron(&test["b_del"])?,
             crate::deserialize::v1::addspan_ron(&test["b_add"])?,
         );
         let op_a = if test.contains_key("op_del") || test.contains_key("op_add") {
-            Some((
+            Some(Op(
                 crate::deserialize::v1::delspan_ron(&test["op_del"])?,
                 crate::deserialize::v1::addspan_ron(&test["op_add"])?,
             ))
@@ -132,22 +128,16 @@ fn parse_transform_test(input: &str) -> Result<TestSpec<RtfSchema>, Error> {
             None
         };
 
-        TransformTestConfigurable {
-            a,
-            b,
-            doc,
-            op_a,
-        }
+        TransformTestConfigurable { a, b, doc, op_a }
     })
 }
-
 
 // TODO this method should take a generic Schema type
 pub fn run_transform_test(input: &str) -> Result<(), Error> {
     let mut test = parse_transform_test(input)?;
 
     eprintln!("\ntest: {:?}\n", test);
-    
+
     match test {
         TransformTest { a, b, doc } => {
             // Rewrite as configurable test.

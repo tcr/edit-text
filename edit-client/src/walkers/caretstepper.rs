@@ -1,6 +1,6 @@
 use oatie::doc::*;
-use oatie::stepper::*;
 use oatie::rtf::*;
+use oatie::stepper::*;
 use take_mut;
 
 pub fn is_block(attrs: &Attrs) -> bool {
@@ -13,7 +13,11 @@ pub fn is_block_object(attrs: &Attrs) -> bool {
 }
 
 pub fn is_caret(attrs: &Attrs, client_id: Option<&str>, focus: bool) -> bool {
-    if let Attrs::Caret { client_id: caret_client_id, focus: caret_focus } = attrs {
+    if let Attrs::Caret {
+        client_id: caret_client_id,
+        focus: caret_focus,
+    } = attrs
+    {
         client_id == Some(caret_client_id) && *caret_focus == focus
     } else {
         false

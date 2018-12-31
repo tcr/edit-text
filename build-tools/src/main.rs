@@ -126,7 +126,7 @@ enum Cli {
     ServerRun {
         #[structopt(long = "log", help = "Export a log")]
         log: bool,
-        
+
         #[structopt(long = "open", help = "Opens the server in your browser")]
         open: bool,
 
@@ -269,35 +269,40 @@ fn run() -> Result<(), Error> {
             .collect())
     };
 
-    let cargo_args_for_crate = |name: &str, deps: &[&str], additional_features: &[&str]| -> Result<Vec<String>, Error> {
-        let mut enabled_features = additional_features.iter().map(|x| x.to_string()).collect::<Vec<_>>();
+    let cargo_args_for_crate =
+        |name: &str, deps: &[&str], additional_features: &[&str]| -> Result<Vec<String>, Error> {
+            let mut enabled_features = additional_features
+                .iter()
+                .map(|x| x.to_string())
+                .collect::<Vec<_>>();
 
-        enabled_features.extend(features_for_crate(name)?);
-        for dep in deps {
-            enabled_features.extend(
-                features_for_crate(dep)?
-                    .into_iter()
-                    .map(|feature| format!("{}/{}", dep, feature))
-                    .collect::<Vec<String>>(),
-            );
-        }
+            enabled_features.extend(features_for_crate(name)?);
+            for dep in deps {
+                enabled_features.extend(
+                    features_for_crate(dep)?
+                        .into_iter()
+                        .map(|feature| format!("{}/{}", dep, feature))
+                        .collect::<Vec<String>>(),
+                );
+            }
 
-        Ok(if enabled_features.is_empty() {
-            vec![]
-        } else {
-            vec![
-                "--features".to_string(),
-                enabled_features.into_iter().collect::<Vec<_>>().join(","),
-            ]
-        })
-    };
+            Ok(if enabled_features.is_empty() {
+                vec![]
+            } else {
+                vec![
+                    "--features".to_string(),
+                    enabled_features.into_iter().collect::<Vec<_>>().join(","),
+                ]
+            })
+        };
 
     #[allow(non_snake_case)]
     let CARGO_ARGS_EDIT_CLIENT = cargo_args_for_crate("edit-client", &["oatie"], &[])?;
     #[allow(non_snake_case)]
     let CARGO_ARGS_EDIT_SERVER = cargo_args_for_crate("edit-server", &["oatie"], &[])?;
     #[allow(non_snake_case)]
-    let CARGO_ARGS_EDIT_SERVER_STANDALONE = cargo_args_for_crate("edit-server", &["oatie"], &["standalone"])?;
+    let CARGO_ARGS_EDIT_SERVER_STANDALONE =
+        cargo_args_for_crate("edit-server", &["oatie"], &["standalone"])?;
     #[allow(non_snake_case)]
     let CARGO_ARGS_OATIE = cargo_args_for_crate("oatie", &[], &[])?;
 
@@ -309,7 +314,7 @@ fn run() -> Result<(), Error> {
     // used to set the color output and release mode flags for all invocations
     // to `cargo` that the build script performs. But repeating each of these
     // arguments each time cargo is called is verbose and error-prone.
-    // 
+    //
     // There's already a function that is called to generate arguments to be
     // passed on to cargo, `cargo_args_for_crate`, which is used right now to
     // load features options from the Configuration.toml file. If the logic for

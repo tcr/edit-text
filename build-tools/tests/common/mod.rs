@@ -173,7 +173,11 @@ where
         .unwrap();
     let target_url = response.url().to_string();
 
-    let j1 = spawn_test_thread(target_url.clone(), Checkpoint::generate(1).remove(0), runner_test);
+    let j1 = spawn_test_thread(
+        target_url.clone(),
+        Checkpoint::generate(1).remove(0),
+        runner_test,
+    );
 
     let ret1 = j1.join().unwrap().expect("Program failed:");
 
@@ -181,7 +185,6 @@ where
 
     eprintln!("test successful.");
 }
-
 
 pub fn concurrent_editing<T>(markdown: &str, runner_test: fn(DebugClient, String, Checkpoint) -> T)
 where

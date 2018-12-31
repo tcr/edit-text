@@ -1,10 +1,9 @@
+use super::*;
 use crate::walkers::*;
 use failure::Error;
 use oatie::doc::*;
-use oatie::OT;
 use oatie::rtf::*;
 use oatie::stepper::DocStepper;
-use super::*;
 
 // For function reuse
 #[derive(Debug)]
@@ -14,7 +13,11 @@ pub enum StyleOp {
 }
 
 // TODO consider removing this and just use restyle
-pub fn apply_style(ctx: ActionContext, style: RtfStyle, value: Option<String>) -> Result<Op<RtfSchema>, Error> {
+pub fn apply_style(
+    ctx: ActionContext,
+    style: RtfStyle,
+    value: Option<String>,
+) -> Result<Op<RtfSchema>, Error> {
     restyle(ctx, vec![StyleOp::AddStyle(style, value)])
 }
 
@@ -32,10 +35,7 @@ pub fn remove_styles(ctx: ActionContext, styles: StyleSet) -> Result<Op<RtfSchem
 
 pub fn restyle(ctx: ActionContext, ops: Vec<StyleOp>) -> Result<Op<RtfSchema>, Error> {
     // Find start and end carets, or return if either are missing.
-    let (walker_start, walker_end) = match (
-        ctx.get_walker(Pos::Start),
-        ctx.get_walker(Pos::End),
-    ) {
+    let (walker_start, walker_end) = match (ctx.get_walker(Pos::Start), ctx.get_walker(Pos::End)) {
         (Ok(walker_start), Ok(walker_end)) => (walker_start, walker_end),
         _ => {
             return Ok(Op::empty());
@@ -75,9 +75,10 @@ pub fn restyle(ctx: ActionContext, ops: Vec<StyleOp>) -> Result<Op<RtfSchema>, E
                     doc1.enter();
                 }
                 Some(DocText(_, ref text)) => {
-                    writer
-                        .del
-                        .place(&DelStyles(text.char_len(), StyleSet::from(remove_styles.clone())));
+                    writer.del.place(&DelStyles(
+                        text.char_len(),
+                        StyleSet::from(remove_styles.clone()),
+                    ));
                     doc1.skip(text.char_len());
                 }
                 None => {
@@ -99,9 +100,10 @@ pub fn restyle(ctx: ActionContext, ops: Vec<StyleOp>) -> Result<Op<RtfSchema>, E
                     doc1.enter();
                 }
                 Some(DocText(_, ref text)) => {
-                    writer
-                        .add
-                        .place(&AddStyles(text.char_len(), StyleSet::from(add_styles.clone())));
+                    writer.add.place(&AddStyles(
+                        text.char_len(),
+                        StyleSet::from(add_styles.clone()),
+                    ));
                     doc1.skip(text.char_len());
                 }
                 None => {

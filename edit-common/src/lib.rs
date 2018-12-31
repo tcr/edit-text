@@ -13,24 +13,32 @@ pub mod markdown;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod simple_ws;
 
-use serde_json;
 use htmlescape::encode_minimal;
 use oatie::doc::*;
-use std::collections::{HashMap};
 use oatie::rtf::*;
+use serde_json;
+use std::collections::HashMap;
 
 /// Formats a tag and a list of attributes into an HTML tag.
 fn html_start_tag(tag: &str, attrs: HashMap<String, String>) -> String {
-    format!("<{} {}>", tag, attrs.into_iter().map(|(k, v)| {
-        format!("{}={}", k, serde_json::to_string(&v).unwrap_or("".to_string()))
-    }).collect::<Vec<String>>().join(" "))
+    format!(
+        "<{} {}>",
+        tag,
+        attrs
+            .into_iter()
+            .map(|(k, v)| format!(
+                "{}={}",
+                k,
+                serde_json::to_string(&v).unwrap_or("".to_string())
+            ))
+            .collect::<Vec<String>>()
+            .join(" ")
+    )
 }
 
 // TODO this should take a Doc, not DocSpan (probably)
 /// Converts a DocSpan to an HTML string.
-pub fn doc_as_html(
-    doc: &DocSpan<RtfSchema>,
-) -> String {
+pub fn doc_as_html(doc: &DocSpan<RtfSchema>) -> String {
     use oatie::doc::*;
 
     // let mut select_active = false;

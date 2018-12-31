@@ -1,8 +1,8 @@
 //! Composes two operations together.
 
 use super::doc::*;
-use std::cmp;
 use crate::stepper::*;
+use std::cmp;
 
 fn compose_del_del_inner<S: Schema>(
     res: &mut DelSpan<S>,
@@ -223,10 +223,7 @@ fn compose_del_del_inner<S: Schema>(
     }
 }
 
-pub fn compose_del_del<S: Schema>(
-    avec: &DelSpan<S>,
-    bvec: &DelSpan<S>,
-) -> DelSpan<S> {
+pub fn compose_del_del<S: Schema>(avec: &DelSpan<S>, bvec: &DelSpan<S>) -> DelSpan<S> {
     let mut res = Vec::with_capacity(avec.len() + bvec.len());
 
     let mut a = DelStepper::new(avec);
@@ -423,10 +420,7 @@ fn compose_add_add_inner<S: Schema>(
     }
 }
 
-pub fn compose_add_add<S: Schema>(
-    avec: &AddSpan<S>,
-    bvec: &AddSpan<S>,
-) -> AddSpan<S> {
+pub fn compose_add_add<S: Schema>(avec: &AddSpan<S>, bvec: &AddSpan<S>) -> AddSpan<S> {
     let mut res = Vec::with_capacity(avec.len() + bvec.len());
 
     let mut a = AddStepper::new(avec);
@@ -447,10 +441,7 @@ pub fn compose_add_add<S: Schema>(
     res
 }
 
-pub fn compose_add_del<S: Schema>(
-    avec: &AddSpan<S>, 
-    bvec: &DelSpan<S>,
-) -> Op<S> {
+pub fn compose_add_del<S: Schema>(avec: &AddSpan<S>, bvec: &DelSpan<S>) -> Op<S> {
     let mut delres: DelSpan<S> = Vec::with_capacity(avec.len() + bvec.len());
     let mut addres: AddSpan<S> = Vec::with_capacity(avec.len() + bvec.len());
 
@@ -475,7 +466,7 @@ pub fn compose_add_del<S: Schema>(
         addres.place_all(&rest);
     }
 
-    (delres, addres)
+    Op(delres, addres)
 }
 
 fn compose_add_del_inner<S: Schema>(
@@ -664,7 +655,7 @@ fn compose_add_del_inner<S: Schema>(
                     a.next();
                     b.next();
 
-                    let (del, ins) = compose_add_del(&insspan, &span);
+                    let Op(del, ins) = compose_add_del(&insspan, &span);
                     delres.place(&DelWithGroup(del));
                     addres.place(&AddWithGroup(ins));
                 }
@@ -672,7 +663,7 @@ fn compose_add_del_inner<S: Schema>(
                     a.next();
                     b.next();
 
-                    let (del, ins) = compose_add_del(&insspan, &span);
+                    let Op(del, ins) = compose_add_del(&insspan, &span);
                     addres.place(&AddGroup(attr, ins));
                     delres.place_all(&del);
                 }
@@ -700,7 +691,7 @@ fn compose_add_del_inner<S: Schema>(
                         a.next();
                         b.next();
 
-                        let (del, ins) = compose_add_del(&insspan, &span);
+                        let Op(del, ins) = compose_add_del(&insspan, &span);
                         delres.place(&DelGroup(del));
                         addres.place_all(&ins[..]);
 
@@ -732,7 +723,7 @@ fn compose_add_del_inner<S: Schema>(
                         a.next();
                         b.next();
 
-                        let (del, ins) = compose_add_del(&insspan, &span);
+                        let Op(del, ins) = compose_add_del(&insspan, &span);
                         delres.place_all(&del[..]);
                         addres.place_all(&ins[..]);
                     }
@@ -831,13 +822,13 @@ fn compose_add_del_inner<S: Schema>(
 }
 
 pub fn compose<S: Schema>(a: &Op<S>, b: &Op<S>) -> Op<S> {
-    let &(ref adel, ref ains) = a;
-    let &(ref bdel, ref bins) = b;
+    let &Op(ref adel, ref ains) = a;
+    let &Op(ref bdel, ref bins) = b;
 
     log_compose!("`````````````` >(compose)<");
     log_compose!("``````````````a_ins {:?}", ains);
     log_compose!("``````````````b_del {:?}", bdel);
-    let (mdel, mins) = compose_add_del(ains, bdel);
+    let Op(mdel, mins) = compose_add_del(ains, bdel);
     log_compose!("``````````````  a=> {:?}", mdel);
     log_compose!("``````````````  b=> {:?}", mins);
 
@@ -853,5 +844,5 @@ pub fn compose<S: Schema>(a: &Op<S>, b: &Op<S>) -> Op<S> {
     log_compose!();
     log_compose!();
 
-    (a_, b_)
+    Op(a_, b_)
 }

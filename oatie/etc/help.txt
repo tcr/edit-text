@@ -5,7 +5,7 @@ use oatie::Operation;
 use oatie::{OT, debug_pretty};
 
 fn main() {
-    let op_left = op_span!(
+    let op_left = op!(
         [
             DelWithGroup([
                 DelWithGroup([]),
@@ -22,14 +22,14 @@ fn main() {
             ])
         ]
     );
-    let op_right = op_span!(
+    let op_right = op!(
         [DelGroup([DelSkip(32)])],
         [AddGroup({"tag": "pre"}, [AddSkip(32)])]
     );
     
     let res = op_span!([DelGroup([DelWithGroup([]), DelSkip(2), DelGroup([]), DelSkip(25)])], [AddGroup({"tag": "pre"}, [AddWithGroup([]), AddSkip(2), AddChars("  5"), AddGroup({"client": "left", "tag": "caret"}, []), AddSkip(25)])]);
     
-    let original = Doc(doc_span![
+    let original = Doc(doc![
         DocGroup({"tag": "h2"}, [
             DocGroup({"tag": "caret", "client": "right"}, []),
             DocChars(" X"),
@@ -39,7 +39,7 @@ fn main() {
             DocChars("1  N3vXHello world!")
         ]), DocGroup({"tag": "h2"}, [DocChars("D0G231m G8WC YJ 5hat\'s up with you?")])]);
     
-    let latest_doc = Doc(doc_span![
+    let latest_doc = Doc(doc![
         DocGroup({"tag": "h2"}, [
             DocGroup({"tag": "caret", "client": "right"}, []),
             DocChars(" X  5"),

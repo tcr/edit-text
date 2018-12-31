@@ -45,9 +45,7 @@ impl Scheduler {
     where
         F: Fn() -> ControllerCommand + 'static,
     {
-        use crate::wasm::{
-            setTimeout,
-        };
+        use crate::wasm::setTimeout;
 
         use ::wbg_rand::{
             wasm_rng,
@@ -84,7 +82,7 @@ impl Scheduler {
                         let task_object = task();
                         let _task_str =
                             serde_json::to_string(&Task::ControllerCommand(task_object)).unwrap();
-                        
+
                         // FIXME This needs to send the task to the controller,
                         // but somehow that needs to be routed through the
                         // frontend?

@@ -5,14 +5,13 @@ use oatie::{
     doc::*,
     rtf::*,
     validate::validate_doc,
-    OT,
 };
 use std::collections::HashMap;
 
 pub struct SyncState {
     pub version: usize,
     pub clients: HashMap<String, usize>, // client_id -> client_version
-    pub history: HashMap<usize, Op<RtfSchema>>,     // version -> op
+    pub history: HashMap<usize, Op<RtfSchema>>, // version -> op
     pub doc: Doc<RtfSchema>,
 }
 
@@ -50,7 +49,12 @@ impl SyncState {
         Ok(op)
     }
 
-    pub fn commit(&mut self, client_id: &str, op: Op<RtfSchema>, input_version: usize) -> Result<Op<RtfSchema>, Error> {
+    pub fn commit(
+        &mut self,
+        client_id: &str,
+        op: Op<RtfSchema>,
+        input_version: usize,
+    ) -> Result<Op<RtfSchema>, Error> {
         let target_version = self.version;
 
         // Update the operation so we can apply it to the document.

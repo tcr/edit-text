@@ -43,11 +43,7 @@ const INITIAL_SYNC_VERSION: usize = 100; // Arbitrarily select version 100
 const PAGE_TITLE_LEN: usize = 100; // 100 chars is the limit
 
 pub fn default_new_doc(id: &str) -> Doc<RtfSchema> {
-    Doc(doc_span![
-        DocGroup(Attrs::Header(1), [
-            DocText(id),
-        ])
-    ])
+    doc![DocGroup(Attrs::Header(1), [DocText(id),])]
 }
 
 pub fn valid_page_id(input: &str) -> bool {
@@ -367,12 +363,10 @@ impl PageMaster {
 
             // Retrieve from database, or use a default generic document.
             let conn = self.db_pool.get().unwrap();
-            let inner_doc =
-                get_single_page(&conn, page_id)
-                    .unwrap_or_else(|| {
-                        eprintln!("warning: could not find page {:?}, using default.", page_id);
-                        default_new_doc(page_id)
-                    });
+            let inner_doc = get_single_page(&conn, page_id).unwrap_or_else(|| {
+                eprintln!("warning: could not find page {:?}, using default.", page_id);
+                default_new_doc(page_id)
+            });
 
             let (tx_notify, rx_notify) = unbounded();
             self.pages.insert(page_id.to_string(), tx_notify.clone());

@@ -167,7 +167,7 @@ fn test_compose_add_del() {
                 DelText(1),
             ],
         ),
-        (
+        Op(
             vec![
                 DelSkip(1),
                 DelText(1),
@@ -192,8 +192,8 @@ fn test_compose() {
 
     assert_eq!(
         normalize::<RtfSchema>(compose(
-            &op_span!([], [AddGroup(Attrs::Para, [AddSkip(6)]),]),
-            &op_span!(
+            &op!([], [AddGroup(Attrs::Para, [AddSkip(6)]),]),
+            &op!(
                 [DelGroup([DelSkip(6)])],
                 [
                     AddGroup(Attrs::Para, [AddSkip(4)]),
@@ -201,7 +201,7 @@ fn test_compose() {
                 ]
             ),
         )),
-        op_span!(
+        op!(
             [],
             [
                 AddGroup(Attrs::Para, [AddSkip(4)]),
@@ -212,7 +212,7 @@ fn test_compose() {
 
     assert_eq!(
         compose::<RtfSchema>(
-            &op_span!(
+            &op!(
                 [DelWithGroup([DelSkip(5), DelWithGroup([]), DelSkip(1)])],
                 [AddWithGroup([
                     AddSkip(5),
@@ -227,9 +227,9 @@ fn test_compose() {
                     )
                 ])],
             ),
-            &op_span!([DelWithGroup([DelSkip(5), DelGroup([])])], []),
+            &op!([DelWithGroup([DelSkip(5), DelGroup([])])], []),
         ),
-        op_span!(
+        op!(
             [DelWithGroup([DelSkip(5), DelGroup([]), DelSkip(1)])],
             [AddWithGroup([
                 AddSkip(6),

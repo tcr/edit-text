@@ -1,7 +1,7 @@
-use std::fmt::Debug;
-use serde::Serialize;
 use serde::de::DeserializeOwned;
+use serde::Serialize;
 use std::collections::HashSet;
+use std::fmt::Debug;
 use std::hash::Hash;
 
 pub trait Track: Copy + Debug + PartialEq + Sized {
@@ -28,7 +28,14 @@ pub trait Schema: Clone + Debug + PartialEq {
     type Track: Track + Sized;
 
     type GroupProperties: Sized + Clone + Debug + Serialize + PartialEq + DeserializeOwned;
-    type CharsProperties: Sized + Clone + Debug + Serialize + PartialEq + DeserializeOwned + Default + StyleTrait;
+    type CharsProperties: Sized
+        + Clone
+        + Debug
+        + Serialize
+        + PartialEq
+        + DeserializeOwned
+        + Default
+        + StyleTrait;
 
     /// Determines if two sets of Attrs are equal.
     fn attrs_eq(a: &Self::GroupProperties, b: &Self::GroupProperties) -> bool;
@@ -37,7 +44,10 @@ pub trait Schema: Clone + Debug + PartialEq {
     fn track_type_from_attrs(attrs: &Self::GroupProperties) -> Option<Self::Track>;
 
     /// Combine two Attrs into a new definition.
-    fn merge_attrs(a: &Self::GroupProperties, b: &Self::GroupProperties) -> Option<Self::GroupProperties>;
+    fn merge_attrs(
+        a: &Self::GroupProperties,
+        b: &Self::GroupProperties,
+    ) -> Option<Self::GroupProperties>;
 }
 
 pub trait StyleTrait: Sized {
