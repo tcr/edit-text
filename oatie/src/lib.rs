@@ -42,8 +42,6 @@ pub mod wasm;
 // Then import & re-export core items.
 mod core;
 mod parse;
-mod string;
-mod ot;
 pub mod deserialize;
 pub mod normalize;
 pub mod rtf;
