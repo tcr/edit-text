@@ -4,7 +4,6 @@ use serde::{
     Deserialize,
     Serialize,
 };
-use crate::ot::*;
 use crate::apply::*;
 use crate::compose::*;
 use crate::transform::transform;
@@ -13,11 +12,7 @@ use crate::transform::transform;
 pub use super::place::*;
 pub use crate::core::schema::*;
 pub use crate::string::*;
-
-pub type DocSpan<S> = Vec<DocElement<S>>;
-pub type DelSpan<S> = Vec<DelElement<S>>;
-pub type AddSpan<S> = Vec<AddElement<S>>;
-pub type CurSpan = Vec<CurElement>;
+pub use crate::ot::OT;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Op<S: Schema>(pub DelSpan<S>, pub AddSpan<S>);
@@ -109,3 +104,9 @@ pub enum CurElement {
 }
 
 pub use self::CurElement::*;
+
+// Span definitions.
+pub type DocSpan<S> = Vec<DocElement<S>>;
+pub type DelSpan<S> = Vec<DelElement<S>>;
+pub type AddSpan<S> = Vec<AddElement<S>>;
+pub type CurSpan = Vec<CurElement>;

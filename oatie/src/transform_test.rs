@@ -9,7 +9,6 @@ use super::validate::{
     validate_doc_span,
     ValidateContext,
 };
-use super::OT;
 use crate::rtf::RtfSchema;
 use failure::Error;
 use regex::Regex;

@@ -41,8 +41,6 @@ pub mod wasm;
 
 // Then import & re-export core items.
 mod core;
-pub use self::core::*;
-
 mod parse;
 mod string;
 mod ot;
@@ -54,10 +52,5 @@ pub mod transform_test;
 pub mod validate;
 pub mod writer;
 
-// TODO Can these re-exports be removed so thing is exported from this file
-// except modules?
-pub use self::ot::*;
-pub use self::transform::{
-    Schema,
-    Track,
-};
+// Re-export core items.
+pub use self::core::*;

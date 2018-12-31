@@ -1,7 +1,7 @@
 //! Validates a document matches a given Schema.
 
 use super::doc::*;
-use super::{
+use super::schema::{
     Schema,
     Track,
 };

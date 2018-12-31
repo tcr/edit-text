@@ -5,7 +5,6 @@ use oatie::{
     doc::*,
     rtf::*,
     validate::validate_doc,
-    OT,
 };
 use std::collections::HashMap;
 

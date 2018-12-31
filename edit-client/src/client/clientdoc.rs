@@ -3,7 +3,6 @@
 use oatie::doc::*;
 use oatie::rtf::RtfSchema;
 use oatie::validate::validate_doc;
-use oatie::OT;
 use std::mem;
 
 #[derive(Debug)]

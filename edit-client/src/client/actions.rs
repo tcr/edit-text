@@ -11,7 +11,6 @@ use crate::walkers::*;
 use failure::Error;
 use oatie::doc::*;
 use oatie::rtf::*;
-use oatie::OT;
 
 fn is_boundary_char(c: char) -> bool {
     c.is_whitespace() || c == '-' || c == '_'

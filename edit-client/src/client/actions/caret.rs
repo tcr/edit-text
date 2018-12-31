@@ -3,7 +3,6 @@ use crate::walkers::*;
 use failure::Error;
 use oatie::doc::*;
 use oatie::rtf::*;
-use oatie::OT;
 
 pub fn init_caret(ctx: ActionContext) -> Result<Op<RtfSchema>, Error> {
     let mut walker = Walker::new(&ctx.doc);

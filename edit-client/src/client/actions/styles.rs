@@ -4,7 +4,6 @@ use failure::Error;
 use oatie::doc::*;
 use oatie::rtf::*;
 use oatie::stepper::DocStepper;
-use oatie::OT;
 
 // For function reuse
 #[derive(Debug)]

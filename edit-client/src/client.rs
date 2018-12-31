@@ -14,11 +14,6 @@ use failure::Error;
 use oatie::doc::*;
 use oatie::rtf::*;
 use oatie::validate::validate_doc;
-use oatie::{
-    self,
-    OT,
-};
-use serde_json;
 use std::char::from_u32;
 use std::sync::atomic::{
     AtomicBool,

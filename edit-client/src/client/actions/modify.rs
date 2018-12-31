@@ -5,7 +5,6 @@ use crate::walkers::*;
 use failure::Error;
 use oatie::doc::*;
 use oatie::rtf::*;
-use oatie::OT;
 
 // Insert a string at the user's caret position.
 pub fn add_string(ctx: ActionContext, input: &str) -> Result<ActionContext, Error> {
