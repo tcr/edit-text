@@ -22,7 +22,7 @@ pub type CurSpan = Vec<CurElement>;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Op<S: Schema>(pub DelSpan<S>, pub AddSpan<S>);
 
-impl<S: Schema> OT<S> for Op<S> {
+impl<S: Schema> OT for Op<S> {
     type Doc = Doc<S>;
 
     fn apply(doc: &Self::Doc, op: &Self) -> Self::Doc {
