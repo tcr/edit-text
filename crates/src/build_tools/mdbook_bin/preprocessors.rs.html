@@ -68,13 +68,33 @@
 <span id="68">68</span>
 <span id="69">69</span>
 <span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Svgbob preprocessing</span>
 
-<span class="kw">use</span> <span class="ident">regex</span>::{<span class="ident">Regex</span>, <span class="ident">Captures</span>};
-<span class="kw">use</span> <span class="ident">mdbook</span>::<span class="ident">book</span>::{<span class="ident">Book</span>, <span class="ident">BookItem</span>};
-<span class="kw">use</span> <span class="ident">mdbook</span>::<span class="ident">preprocess</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">mdbook</span>::<span class="ident">book</span>::{
+    <span class="ident">Book</span>,
+    <span class="ident">BookItem</span>,
+};
 <span class="kw">use</span> <span class="ident">mdbook</span>::<span class="ident">errors</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="ident">mdbook</span>::<span class="ident">preprocess</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">regex</span>::{
+    <span class="ident">Captures</span>,
+    <span class="ident">Regex</span>,
+};
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SvgbobPreprocessor</span>;
 
@@ -122,17 +142,25 @@
         <span class="kw">for</span> <span class="ident">section</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">book</span>.<span class="ident">sections</span> {
             <span class="kw">if</span> <span class="kw">let</span> <span class="ident">BookItem</span>::<span class="ident">Chapter</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">chapter</span>) <span class="op">=</span> <span class="ident">section</span> {
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">chapter</span>.<span class="ident">sub_items</span>.<span class="ident">is_empty</span>() {
-                    <span class="kw">let</span> <span class="ident">toc</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">chapter</span>.<span class="ident">sub_items</span>.<span class="ident">iter</span>()
+                    <span class="kw">let</span> <span class="ident">toc</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">chapter</span>
+                        .<span class="ident">sub_items</span>
+                        .<span class="ident">iter</span>()
                         .<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">sub_item</span><span class="op">|</span> {
                             <span class="kw">if</span> <span class="kw">let</span> <span class="ident">BookItem</span>::<span class="ident">Chapter</span>(<span class="kw-2">ref</span> <span class="ident">chapter</span>) <span class="op">=</span> <span class="ident">sub_item</span> {
-                                <span class="prelude-val">Some</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;1. [{}]({})&quot;</span>, <span class="ident">chapter</span>.<span class="ident">name</span>, <span class="ident">chapter</span>.<span class="ident">path</span>.<span class="ident">to_string_lossy</span>()))
+                                <span class="prelude-val">Some</span>(<span class="macro">format</span><span class="macro">!</span>(
+                                    <span class="string">&quot;1. [{}]({})&quot;</span>,
+                                    <span class="ident">chapter</span>.<span class="ident">name</span>,
+                                    <span class="ident">chapter</span>.<span class="ident">path</span>.<span class="ident">to_string_lossy</span>()
+                                ))
                             } <span class="kw">else</span> {
                                 <span class="prelude-val">None</span>
                             }
                         })
                         .<span class="ident">collect</span>();
-                    
-                    <span class="ident">chapter</span>.<span class="ident">content</span> <span class="op">=</span> <span class="ident">chapter</span>.<span class="ident">content</span>.<span class="ident">replace</span>(<span class="string">&quot;{{#toc}}&quot;</span>, <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;\n\n{}\n\n&quot;</span>, <span class="ident">toc</span>.<span class="ident">join</span>(<span class="string">&quot;\n&quot;</span>)));
+
+                    <span class="ident">chapter</span>.<span class="ident">content</span> <span class="op">=</span> <span class="ident">chapter</span>
+                        .<span class="ident">content</span>
+                        .<span class="ident">replace</span>(<span class="string">&quot;{{#toc}}&quot;</span>, <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;\n\n{}\n\n&quot;</span>, <span class="ident">toc</span>.<span class="ident">join</span>(<span class="string">&quot;\n&quot;</span>)));
                 }
             }
         }

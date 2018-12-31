@@ -199,12 +199,6 @@
 <span id="199">199</span>
 <span id="200">200</span>
 <span id="201">201</span>
-<span id="202">202</span>
-<span id="203">203</span>
-<span id="204">204</span>
-<span id="205">205</span>
-<span id="206">206</span>
-<span id="207">207</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Error</span>;
 <span class="kw">use</span> <span class="ident">oatie</span>::<span class="ident">doc</span>::<span class="kw-2">*</span>;
@@ -268,26 +262,20 @@
                     <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bare_text</span> {
                         <span class="self">self</span>.<span class="ident">body</span>.<span class="ident">begin</span>();
                     }
-                    <span class="self">self</span>.<span class="ident">body</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(
-                        <span class="self">self</span>.<span class="ident">styles</span>.<span class="ident">clone</span>(),
-                        <span class="ident">DocString</span>::<span class="ident">from_str</span>(<span class="string">&quot; &quot;</span>),
-                    ));
+                    <span class="self">self</span>.<span class="ident">body</span>
+                        .<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="self">self</span>.<span class="ident">styles</span>.<span class="ident">clone</span>(), <span class="ident">DocString</span>::<span class="ident">from_str</span>(<span class="string">&quot; &quot;</span>)));
                     <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bare_text</span> {
                         <span class="self">self</span>.<span class="ident">body</span>.<span class="ident">close</span>(<span class="ident">Attrs</span>::<span class="ident">Para</span>);
                     }
                 }
                 <span class="ident">HardBreak</span> <span class="op">=&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">body</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(
-                        <span class="self">self</span>.<span class="ident">styles</span>.<span class="ident">clone</span>(),
-                        <span class="ident">DocString</span>::<span class="ident">from_str</span>(<span class="string">&quot;\n&quot;</span>),
-                    ));
+                    <span class="self">self</span>.<span class="ident">body</span>
+                        .<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="self">self</span>.<span class="ident">styles</span>.<span class="ident">clone</span>(), <span class="ident">DocString</span>::<span class="ident">from_str</span>(<span class="string">&quot;\n&quot;</span>)));
                 }
                 <span class="ident">Html</span>(<span class="ident">html</span>) <span class="op">=&gt;</span> {
                     <span class="self">self</span>.<span class="ident">body</span>.<span class="ident">begin</span>();
-                    <span class="self">self</span>.<span class="ident">body</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(
-                        <span class="ident">StyleSet</span>::<span class="ident">new</span>(),
-                        <span class="ident">DocString</span>::<span class="ident">from_str</span>(<span class="kw-2">&amp;</span><span class="ident">html</span>),
-                    ));
+                    <span class="self">self</span>.<span class="ident">body</span>
+                        .<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DocText</span>(<span class="ident">StyleSet</span>::<span class="ident">new</span>(), <span class="ident">DocString</span>::<span class="ident">from_str</span>(<span class="kw-2">&amp;</span><span class="ident">html</span>)));
                     <span class="self">self</span>.<span class="ident">body</span>.<span class="ident">close</span>(<span class="ident">Attrs</span>::<span class="ident">Html</span>);
                 }
 

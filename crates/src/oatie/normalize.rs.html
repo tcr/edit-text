@@ -144,7 +144,7 @@
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">normalize</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(<span class="ident">op</span>: <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
     <span class="comment">// TODO all</span>
-    (
+    <span class="ident">Op</span>(
         <span class="ident">normalize_del_span</span>(<span class="ident">op</span>.<span class="number">0</span>, <span class="bool-val">true</span>),
         <span class="ident">normalize_add_span</span>(<span class="ident">op</span>.<span class="number">1</span>, <span class="bool-val">true</span>),
     )

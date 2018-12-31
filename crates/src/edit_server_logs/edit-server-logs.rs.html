@@ -46,11 +46,11 @@
 <span id="46">46</span>
 <span id="47">47</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">serde_json</span>;
-<span class="kw">use</span> <span class="ident">failure</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">edit_server</span>::<span class="ident">db</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">structopt</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">diesel</span>::<span class="ident">connection</span>::<span class="ident">Connection</span>;
+<span class="kw">use</span> <span class="ident">edit_server</span>::<span class="ident">db</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">failure</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">serde_json</span>;
+<span class="kw">use</span> <span class="ident">structopt</span>::<span class="kw-2">*</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">StructOpt</span>)]</span>
 <span class="kw">enum</span> <span class="ident">Cli</span> {

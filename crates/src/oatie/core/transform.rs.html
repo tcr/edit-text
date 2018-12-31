@@ -2095,16 +2095,24 @@
 <span id="2095">2095</span>
 <span id="2096">2096</span>
 <span id="2097">2097</span>
+<span id="2098">2098</span>
+<span id="2099">2099</span>
+<span id="2100">2100</span>
+<span id="2101">2101</span>
+<span id="2102">2102</span>
+<span id="2103">2103</span>
+<span id="2104">2104</span>
+<span id="2105">2105</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Performs operational transform on a Doc.</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cmp</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">compose</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">doc</span>::<span class="kw-2">*</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">schema</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">stepper</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">writer</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cmp</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">schema</span>::<span class="kw-2">*</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">struct</span> <span class="ident">TrackState</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span> {
@@ -2231,7 +2239,8 @@
                         .<span class="ident">or</span>(<span class="ident">last</span>.<span class="ident">tag_real</span>.<span class="ident">as_ref</span>())
                         .<span class="ident">or</span>(<span class="ident">last</span>.<span class="ident">tag_b</span>.<span class="ident">as_ref</span>())
                         .<span class="ident">unwrap</span>(),
-                ) {
+                )
+            {
                 <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot;-----&gt; UGH {:?}&quot;</span>, <span class="ident">last</span>);
                 <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Should not have consecutive similar tracks.&quot;</span>);
             }
@@ -2258,7 +2267,13 @@
     }
 
     <span class="comment">// Close the topmost track.</span>
-    <span class="kw">fn</span> <span class="ident">abort</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">GroupProperties</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">GroupProperties</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">GroupProperties</span><span class="op">&gt;</span>) {
+    <span class="kw">fn</span> <span class="ident">abort</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+    ) <span class="op">-&gt;</span> (
+        <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">GroupProperties</span><span class="op">&gt;</span>,
+        <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">GroupProperties</span><span class="op">&gt;</span>,
+        <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">GroupProperties</span><span class="op">&gt;</span>,
+    ) {
         <span class="kw">let</span> <span class="ident">track</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tracks</span>.<span class="ident">pop</span>().<span class="ident">unwrap</span>();
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">real</span>) <span class="op">=</span> <span class="ident">track</span>.<span class="ident">tag_real</span> {
@@ -2630,8 +2645,8 @@
             }
         }
         (
-            (<span class="ident">a_del</span>.<span class="ident">result</span>(), <span class="ident">a_add</span>.<span class="ident">result</span>()),
-            (<span class="ident">b_del</span>.<span class="ident">result</span>(), <span class="ident">b_add</span>.<span class="ident">result</span>()),
+            <span class="ident">Op</span>(<span class="ident">a_del</span>.<span class="ident">result</span>(), <span class="ident">a_add</span>.<span class="ident">result</span>()),
+            <span class="ident">Op</span>(<span class="ident">b_del</span>.<span class="ident">result</span>(), <span class="ident">b_add</span>.<span class="ident">result</span>()),
         )
     }
 
@@ -2779,7 +2794,8 @@
                                 .<span class="ident">iter</span>()
                                 .<span class="ident">any</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> {
                                     <span class="kw-2">*</span><span class="ident">x</span> <span class="op">==</span> <span class="ident">S</span>::<span class="ident">track_type_from_attrs</span>(<span class="ident">b_tag</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>()
-                                })) {
+                                }))
+                    {
                         <span class="comment">// t.interrupt(a_tag);</span>
                         <span class="ident">a</span>.<span class="ident">exit</span>();
                         <span class="ident">t</span>.<span class="ident">close_a</span>();
@@ -3128,7 +3144,7 @@
                     <span class="ident">t</span>.<span class="ident">skip_a</span>(<span class="ident">cmp</span>::<span class="ident">min</span>(<span class="ident">a_count</span>, <span class="ident">b_count</span>));
                     <span class="ident">t</span>.<span class="ident">style_b</span>(<span class="ident">cmp</span>::<span class="ident">min</span>(<span class="ident">a_count</span>, <span class="ident">b_count</span>), <span class="ident">a_styles</span>);
                 }
-                <span class="op">|</span> (<span class="prelude-val">Some</span>(<span class="ident">AddSkip</span>(..)), <span class="prelude-val">Some</span>(<span class="ident">AddText</span>(<span class="ident">b_styles</span>, <span class="ident">b_chars</span>)))
+                (<span class="prelude-val">Some</span>(<span class="ident">AddSkip</span>(..)), <span class="prelude-val">Some</span>(<span class="ident">AddText</span>(<span class="ident">b_styles</span>, <span class="ident">b_chars</span>)))
                 <span class="op">|</span> (<span class="prelude-val">Some</span>(<span class="ident">AddStyles</span>(..)), <span class="prelude-val">Some</span>(<span class="ident">AddText</span>(<span class="ident">b_styles</span>, <span class="ident">b_chars</span>))) <span class="op">=&gt;</span> {
                     <span class="ident">t</span>.<span class="ident">regenerate</span>();
 
@@ -3841,7 +3857,7 @@
                     <span class="ident">a</span>.<span class="ident">next</span>();
                     <span class="ident">b</span>.<span class="ident">next</span>();
 
-                    <span class="kw">let</span> (<span class="ident">del</span>, <span class="ident">ins</span>) <span class="op">=</span> <span class="ident">transform_add_del</span>(<span class="kw-2">&amp;</span><span class="ident">insspan</span>, <span class="kw-2">&amp;</span><span class="ident">span</span>);
+                    <span class="kw">let</span> <span class="ident">Op</span>(<span class="ident">del</span>, <span class="ident">ins</span>) <span class="op">=</span> <span class="ident">transform_add_del</span>(<span class="kw-2">&amp;</span><span class="ident">insspan</span>, <span class="kw-2">&amp;</span><span class="ident">span</span>);
                     <span class="ident">delres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelWithGroup</span>(<span class="ident">del</span>));
                     <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddWithGroup</span>(<span class="ident">ins</span>));
                 }
@@ -3985,8 +4001,8 @@
                         <span class="comment">// type?</span>
                         <span class="comment">// FIXME I&#39;m not sure what to do here so I&#39;m doing this</span>
                         <span class="comment">// if !(addres_inner.skip_post_len() == 0 &amp;&amp; attrs == Attrs::ListItem) {</span>
-                            <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddGroup</span>(<span class="ident">attrs</span>, <span class="ident">addres_inner</span>));
-                            <span class="ident">delres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelWithGroup</span>(<span class="ident">delres_inner</span>));
+                        <span class="ident">addres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">AddGroup</span>(<span class="ident">attrs</span>, <span class="ident">addres_inner</span>));
+                        <span class="ident">delres</span>.<span class="ident">place</span>(<span class="kw-2">&amp;</span><span class="ident">DelWithGroup</span>(<span class="ident">delres_inner</span>));
                         <span class="comment">// } else {</span>
                         <span class="comment">//     delres.place(&amp;DelGroup(delres_inner));</span>
                         <span class="comment">// }</span>
@@ -4112,7 +4128,7 @@
         <span class="ident">addres</span>.<span class="ident">place_all</span>(<span class="kw-2">&amp;</span><span class="ident">rest</span>);
     }
 
-    (<span class="ident">delres</span>, <span class="ident">addres</span>)
+    <span class="ident">Op</span>(<span class="ident">delres</span>, <span class="ident">addres</span>)
 }
 
 <span class="doccomment">/// Transform two operations according to a schema.</span>
@@ -4135,7 +4151,7 @@
     <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot; a_ins   {:?}&quot;</span>, <span class="ident">a</span>.<span class="number">1</span>);
     <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot; a_del_0 {:?}&quot;</span>, <span class="ident">a_del_0</span>);
     <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot; ~ transform_add_del()&quot;</span>);
-    <span class="kw">let</span> (<span class="ident">a_del_1</span>, <span class="ident">a_ins_1</span>) <span class="op">=</span> <span class="ident">transform_add_del</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="number">1</span>, <span class="kw-2">&amp;</span><span class="ident">a_del_0</span>);
+    <span class="kw">let</span> <span class="ident">Op</span>(<span class="ident">a_del_1</span>, <span class="ident">a_ins_1</span>) <span class="op">=</span> <span class="ident">transform_add_del</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="number">1</span>, <span class="kw-2">&amp;</span><span class="ident">a_del_0</span>);
     <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot; == a_del_1 {:?}&quot;</span>, <span class="ident">a_del_1</span>);
     <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot; == a_ins_1 {:?}&quot;</span>, <span class="ident">a_ins_1</span>);
     <span class="macro">log_transform</span><span class="macro">!</span>();
@@ -4144,7 +4160,7 @@
     <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot; b_ins   {:?}&quot;</span>, <span class="ident">b</span>.<span class="number">1</span>);
     <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot; b_del_0 {:?}&quot;</span>, <span class="ident">b_del_0</span>);
     <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot; ~ transform_add_del()&quot;</span>);
-    <span class="kw">let</span> (<span class="ident">b_del_1</span>, <span class="ident">b_ins_1</span>) <span class="op">=</span> <span class="ident">transform_add_del</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="number">1</span>, <span class="kw-2">&amp;</span><span class="ident">b_del_0</span>);
+    <span class="kw">let</span> <span class="ident">Op</span>(<span class="ident">b_del_1</span>, <span class="ident">b_ins_1</span>) <span class="op">=</span> <span class="ident">transform_add_del</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="number">1</span>, <span class="kw-2">&amp;</span><span class="ident">b_del_0</span>);
     <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot; == b_del_1 {:?}&quot;</span>, <span class="ident">b_del_1</span>);
     <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot; == b_ins_1 {:?}&quot;</span>, <span class="ident">b_ins_1</span>);
     <span class="macro">log_transform</span><span class="macro">!</span>();
@@ -4156,7 +4172,7 @@
     <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot; # transform[4] transform_insertions&quot;</span>);
     <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot; a_ins_1 {:?}&quot;</span>, <span class="ident">a_ins_1</span>);
     <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot; b_ins_1 {:?}&quot;</span>, <span class="ident">b_ins_1</span>);
-    <span class="kw">let</span> ((<span class="ident">a_del_2</span>, <span class="ident">a_ins_2</span>), (<span class="ident">b_del_2</span>, <span class="ident">b_ins_2</span>)) <span class="op">=</span> <span class="ident">transform_insertions</span>::<span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">a_ins_1</span>, <span class="kw-2">&amp;</span><span class="ident">b_ins_1</span>);
+    <span class="kw">let</span> (<span class="ident">Op</span>(<span class="ident">a_del_2</span>, <span class="ident">a_ins_2</span>), <span class="ident">Op</span>(<span class="ident">b_del_2</span>, <span class="ident">b_ins_2</span>)) <span class="op">=</span> <span class="ident">transform_insertions</span>::<span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">a_ins_1</span>, <span class="kw-2">&amp;</span><span class="ident">b_ins_1</span>);
     <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot; == a_del_2 {:?}&quot;</span>, <span class="ident">a_del_2</span>);
     <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot; == a_ins_2 {:?}&quot;</span>, <span class="ident">a_ins_2</span>);
     <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot; == b_del_2 {:?}&quot;</span>, <span class="ident">b_del_2</span>);
@@ -4191,7 +4207,7 @@
     <span class="macro">log_transform</span><span class="macro">!</span>(<span class="string">&quot; =b_ins_2  {:?}&quot;</span>, <span class="ident">b_ins_2</span>);
     <span class="macro">log_transform</span><span class="macro">!</span>();
 
-    ((<span class="ident">a_del_3</span>, <span class="ident">a_ins_2</span>), (<span class="ident">b_del_3</span>, <span class="ident">b_ins_2</span>))
+    (<span class="ident">Op</span>(<span class="ident">a_del_3</span>, <span class="ident">a_ins_2</span>), <span class="ident">Op</span>(<span class="ident">b_del_3</span>, <span class="ident">b_ins_2</span>))
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><aside id="help" class="hidden"><div><h1 class="hidden">Help</h1><div class="shortcuts"><h2>Keyboard Shortcuts</h2><dl><dt><kbd>?</kbd></dt><dd>Show this help dialog</dd><dt><kbd>S</kbd></dt><dd>Focus the search field</dd><dt><kbd>↑</kbd></dt><dd>Move up in search results</dd><dt><kbd>↓</kbd></dt><dd>Move down in search results</dd><dt><kbd>↹</kbd></dt><dd>Switch tab</dd><dt><kbd>&#9166;</kbd></dt><dd>Go to active search result</dd><dt><kbd>+</kbd></dt><dd>Expand all sections</dd><dt><kbd>-</kbd></dt><dd>Collapse all sections</dd></dl></div><div class="infos"><h2>Search Tricks</h2><p>Prefix searches with a type followed by a colon (e.g. <code>fn:</code>) to restrict the search to a given type.</p><p>Accepted types are: <code>fn</code>, <code>mod</code>, <code>struct</code>, <code>enum</code>, <code>trait</code>, <code>type</code>, <code>macro</code>, and <code>const</code>.</p><p>Search functions by type signature (e.g. <code>vec -> usize</code> or <code>* -> vec</code>)</p><p>Search multiple things at once by splitting your query with comma (e.g. <code>str,u8</code> or <code>String,struct:Vec,test</code>)</p></div></div></aside><script>window.rootPath = "../../../";window.currentCrate = "oatie";</script><script src="../../../aliases.js"></script><script src="../../../main.js"></script><script src="../../../source-files.js"></script><script src="../../../source-script.js"></script><script defer src="../../../search-index.js"></script></body></html>

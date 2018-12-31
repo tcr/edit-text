@@ -411,7 +411,7 @@
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">result</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-        (<span class="self">self</span>.<span class="ident">del</span>.<span class="ident">result</span>(), <span class="self">self</span>.<span class="ident">add</span>.<span class="ident">result</span>())
+        <span class="ident">Op</span>(<span class="self">self</span>.<span class="ident">del</span>.<span class="ident">result</span>(), <span class="self">self</span>.<span class="ident">add</span>.<span class="ident">result</span>())
     }
 }
 

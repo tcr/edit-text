@@ -211,9 +211,9 @@
 }
 
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">op_span</span> {
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">op</span> {
     ( [ $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">d</span>:<span class="ident">tt</span> )<span class="op">*</span> ], [ $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>:<span class="ident">tt</span> )<span class="op">*</span> ] $(,)<span class="op">*</span> ) <span class="op">=&gt;</span> {
-        (
+        <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">doc</span>::<span class="ident">Op</span>(
             <span class="macro">del_span</span><span class="macro">!</span>[ $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">d</span> )<span class="op">*</span> ],
             <span class="macro">add_span</span><span class="macro">!</span>[ $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span> )<span class="op">*</span> ],
         )

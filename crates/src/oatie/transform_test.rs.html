@@ -248,20 +248,9 @@
 <span id="248">248</span>
 <span id="249">249</span>
 <span id="250">250</span>
-<span id="251">251</span>
-<span id="252">252</span>
-<span id="253">253</span>
-<span id="254">254</span>
-<span id="255">255</span>
-<span id="256">256</span>
-<span id="257">257</span>
-<span id="258">258</span>
-<span id="259">259</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Helper methods for performing transform tests.</span>
 
-<span class="kw">use</span> <span class="ident">ron</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">compose</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">doc</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">normalize</span>::<span class="kw-2">*</span>;
@@ -272,11 +261,13 @@
     <span class="ident">ValidateContext</span>,
 };
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">OT</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">rtf</span>::<span class="ident">RtfSchema</span>;
 <span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Error</span>;
 <span class="kw">use</span> <span class="ident">regex</span>::<span class="ident">Regex</span>;
-<span class="kw">use</span> <span class="ident">yansi</span>::<span class="ident">Paint</span>;
+<span class="kw">use</span> <span class="ident">ron</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::<span class="ident">Serialize</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">rtf</span>::<span class="ident">RtfSchema</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
+<span class="kw">use</span> <span class="ident">yansi</span>::<span class="ident">Paint</span>;
 
 <span class="doccomment">/// TestSpec defines the different types of tests we can run. It can be</span>
 <span class="doccomment">/// serialized to ron and output to a file, and loaded an run via this file.</span>
@@ -287,7 +278,8 @@
         <span class="ident">b</span>: <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
         <span class="ident">doc</span>: <span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
     },
-    <span class="ident">TransformTestConfigurable</span> { <span class="comment">// legacy test definitions</span>
+    <span class="ident">TransformTestConfigurable</span> {
+        <span class="comment">// legacy test definitions</span>
         <span class="ident">a</span>: <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
         <span class="ident">b</span>: <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
         <span class="ident">doc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;&gt;</span>,
@@ -297,10 +289,7 @@
 
 <span class="kw">use</span> <span class="self">self</span>::<span class="ident">TestSpec</span>::<span class="kw-2">*</span>;
 
-<span class="kw">fn</span> <span class="ident">op_transform_compare</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(
-    <span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
-    <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
-) <span class="op">-&gt;</span> (<span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) {
+<span class="kw">fn</span> <span class="ident">op_transform_compare</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> (<span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">Op</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) {
     <span class="kw">let</span> (<span class="ident">a_</span>, <span class="ident">b_</span>) <span class="op">=</span> <span class="ident">transform</span>::<span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">a</span>, <span class="ident">b</span>);
 
     <span class="macro">println</span><span class="macro">!</span>();
@@ -326,7 +315,6 @@
 
     (<span class="ident">a_</span>, <span class="ident">b_</span>, <span class="ident">a_res</span>, <span class="ident">b_res</span>)
 }
-
 
 <span class="kw">fn</span> <span class="ident">parse_transform_test</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TestSpec</span><span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="prelude-val">Ok</span>(<span class="kw">if</span> <span class="ident">input</span>.<span class="ident">find</span>(<span class="string">&quot;TransformTest&quot;</span>).<span class="ident">is_some</span>() {
@@ -370,16 +358,16 @@
         <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;entries {:?}&quot;</span>, <span class="ident">test</span>.<span class="ident">keys</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;&gt;</span>());
 
         <span class="comment">// Extract test entries.</span>
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> (
+        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Op</span>(
             <span class="kw">crate</span>::<span class="ident">deserialize</span>::<span class="ident">v1</span>::<span class="ident">delspan_ron</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>[<span class="string">&quot;a_del&quot;</span>])<span class="question-mark">?</span>,
             <span class="kw">crate</span>::<span class="ident">deserialize</span>::<span class="ident">v1</span>::<span class="ident">addspan_ron</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>[<span class="string">&quot;a_add&quot;</span>])<span class="question-mark">?</span>,
         );
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> (
+        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">Op</span>(
             <span class="kw">crate</span>::<span class="ident">deserialize</span>::<span class="ident">v1</span>::<span class="ident">delspan_ron</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>[<span class="string">&quot;b_del&quot;</span>])<span class="question-mark">?</span>,
             <span class="kw">crate</span>::<span class="ident">deserialize</span>::<span class="ident">v1</span>::<span class="ident">addspan_ron</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>[<span class="string">&quot;b_add&quot;</span>])<span class="question-mark">?</span>,
         );
         <span class="kw">let</span> <span class="ident">op_a</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">test</span>.<span class="ident">contains_key</span>(<span class="string">&quot;op_del&quot;</span>) <span class="op">||</span> <span class="ident">test</span>.<span class="ident">contains_key</span>(<span class="string">&quot;op_add&quot;</span>) {
-            <span class="prelude-val">Some</span>((
+            <span class="prelude-val">Some</span>(<span class="ident">Op</span>(
                 <span class="kw">crate</span>::<span class="ident">deserialize</span>::<span class="ident">v1</span>::<span class="ident">delspan_ron</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>[<span class="string">&quot;op_del&quot;</span>])<span class="question-mark">?</span>,
                 <span class="kw">crate</span>::<span class="ident">deserialize</span>::<span class="ident">v1</span>::<span class="ident">addspan_ron</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>[<span class="string">&quot;op_add&quot;</span>])<span class="question-mark">?</span>,
             ))
@@ -392,22 +380,16 @@
             <span class="prelude-val">None</span>
         };
 
-        <span class="ident">TransformTestConfigurable</span> {
-            <span class="ident">a</span>,
-            <span class="ident">b</span>,
-            <span class="ident">doc</span>,
-            <span class="ident">op_a</span>,
-        }
+        <span class="ident">TransformTestConfigurable</span> { <span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">doc</span>, <span class="ident">op_a</span> }
     })
 }
-
 
 <span class="comment">// TODO this method should take a generic Schema type</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run_transform_test</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">test</span> <span class="op">=</span> <span class="ident">parse_transform_test</span>(<span class="ident">input</span>)<span class="question-mark">?</span>;
 
     <span class="macro">eprintln</span><span class="macro">!</span>(<span class="string">&quot;\ntest: {:?}\n&quot;</span>, <span class="ident">test</span>);
-    
+
     <span class="kw">match</span> <span class="ident">test</span> {
         <span class="ident">TransformTest</span> { <span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">doc</span> } <span class="op">=&gt;</span> {
             <span class="comment">// Rewrite as configurable test.</span>

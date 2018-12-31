@@ -85,7 +85,6 @@
 <span id="85">85</span>
 <span id="86">86</span>
 <span id="87">87</span>
-<span id="88">88</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Validates a document matches a given Schema.</span>
 
@@ -113,15 +112,18 @@
 }
 
 <span class="comment">// TODO caret-specific validation should be moved out to the schema!</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validate_doc_span</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ValidateContext</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">span</span>: <span class="kw-2">&amp;</span><span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validate_doc_span</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Schema</span><span class="op">&gt;</span>(
+    <span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ValidateContext</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">span</span>: <span class="kw-2">&amp;</span><span class="ident">DocSpan</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="kw">for</span> <span class="ident">elem</span> <span class="kw">in</span> <span class="ident">span</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">elem</span> {
             <span class="ident">DocGroup</span>(<span class="kw-2">ref</span> <span class="ident">attrs</span>, <span class="kw-2">ref</span> <span class="ident">span</span>) <span class="op">=&gt;</span> {
                 <span class="comment">// if let Attrs::Caret { .. } == attrs {</span>
-                    <span class="comment">// TODO Allow validation that only one caret exists per document.</span>
-                    <span class="comment">// if !ctx.carets.insert(attrs[&quot;client&quot;].clone()) {</span>
-                    <span class="comment">//     bail!(&quot;Multiple carets for {:?} exist&quot;, attrs[&quot;client&quot;]);</span>
-                    <span class="comment">// }</span>
+                <span class="comment">// TODO Allow validation that only one caret exists per document.</span>
+                <span class="comment">// if !ctx.carets.insert(attrs[&quot;client&quot;].clone()) {</span>
+                <span class="comment">//     bail!(&quot;Multiple carets for {:?} exist&quot;, attrs[&quot;client&quot;]);</span>
+                <span class="comment">// }</span>
                 <span class="comment">// }</span>
 
                 <span class="comment">// TODO This is disabled with the removal of attribute</span>
@@ -145,9 +147,7 @@
                 } <span class="kw">else</span> {
                     <span class="comment">// Top-level blocks</span>
                     <span class="macro">ensure</span><span class="macro">!</span>(
-                        <span class="ident">S</span>::<span class="ident">track_type_from_attrs</span>(<span class="ident">attrs</span>)
-                            .<span class="ident">unwrap</span>()
-                            .<span class="ident">allowed_in_root</span>(),
+                        <span class="ident">S</span>::<span class="ident">track_type_from_attrs</span>(<span class="ident">attrs</span>).<span class="ident">unwrap</span>().<span class="ident">allowed_in_root</span>(),
                         <span class="string">&quot;Root block has incorrect parent&quot;</span>
                     );
                 }
@@ -157,9 +157,7 @@
 
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">block</span>) <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">stack</span>.<span class="ident">last</span>() {
                     <span class="macro">ensure</span><span class="macro">!</span>(
-                        <span class="ident">S</span>::<span class="ident">track_type_from_attrs</span>(<span class="ident">block</span>)
-                            .<span class="ident">unwrap</span>()
-                            .<span class="ident">supports_text</span>(),
+                        <span class="ident">S</span>::<span class="ident">track_type_from_attrs</span>(<span class="ident">block</span>).<span class="ident">unwrap</span>().<span class="ident">supports_text</span>(),
                         <span class="string">&quot;Char found outside block&quot;</span>
                     );
                 } <span class="kw">else</span> {
