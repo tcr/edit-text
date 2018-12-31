@@ -3,18 +3,20 @@
 Let's assume we have the following document in edit-text's document structure:
 
 ```
-DocGroup({"tag": "bullet"}, [
-    DocGroup({"tag": "p"}, [DocText("Item 1")]),
-])
-DocGroup({"tag": "bullet"}, [
-    DocGroup({"tag": "p"}, [DocText("Item 2")]),
-])
-DocGroup({"tag": "bullet"}, [
-    DocGroup({"tag": "p"}, [DocText("Item 3...")]),
-])
+let doc = doc_span![
+    DocGroup(Attrs::ListItem, [
+        DocGroup(Attrs::Para, [DocText("Item 1")]),
+    ]),
+    DocGroup(Attrs::ListItem, [
+        DocGroup(Attrs::Para, [DocText("Item 2")]),
+    ]),
+    DocGroup(Attrs::ListItem, [
+        DocGroup(Attrs::Para, [DocText("Item 3...")]),
+    ]),
+];
 ```
 
-We can trivially define a mapping from edit-text's document model to HTML. (Conversion from a doc group to HTML can be done with `doc_as_html` in `edit-common/lib.rs`. There's no inverse method.) The result is an unordered list:
+We can trivially define a mapping from edit-text's document model to HTML. (Conversion from a doc group to HTML can be done with [doc_as_html](http://docs.edit.io/crates/edit_common/fn.doc_as_html.html). There is no method to do the inverse.) The result of converting this document to HTML could generate the equivalent of an unordered list:
 
 ```
 <ul>
