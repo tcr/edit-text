@@ -1,3 +1,7 @@
+/// Defines `DocString`, an abstraction over `String` that stores its value in
+/// an `Arc` so clones do not incur a large overhead. Copies can be truncated at
+/// either end, so creating an owned slice of a string is cheap.
+
 use serde::de::{
     self,
     SeqAccess,
@@ -13,8 +17,6 @@ use std::fmt;
 use std::ops::Range;
 use std::sync::Arc;
 
-/// Abstraction for String that has better performance by restricting its API.
-/// It can also be styled using the Style enum.
 #[derive(Clone, Debug)]
 pub struct DocString {
     string: Arc<String>,
