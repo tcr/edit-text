@@ -320,11 +320,11 @@
                     <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=&gt;</span> {
                         <span class="macro">eprintln</span><span class="macro">!</span>(<span class="string">&quot;Error in doc: {:?}&quot;</span>, <span class="ident">doc</span>);
                         <span class="macro">eprintln</span><span class="macro">!</span>(<span class="string">&quot;Error decoding document: {:?}&quot;</span>, <span class="ident">err</span>);
-                        <span class="ident">Doc</span>(<span class="macro">doc_span</span><span class="macro">!</span>[
+                        <span class="macro">doc</span><span class="macro">!</span>[
                             <span class="ident">DocGroup</span>(<span class="ident">Attrs</span>::<span class="ident">Code</span>, [
                                 <span class="ident">DocText</span>(<span class="string">&quot;Error decoding document.&quot;</span>),
                             ]),
-                        ])
+                        ]
                     }
                 }
             }

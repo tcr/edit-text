@@ -167,17 +167,19 @@
                     <main>
                         <a class="header" href="#markdown" id="markdown"><h1>Markdown</h1></a>
 <p>Let's assume we have the following document in edit-text's document structure:</p>
-<pre><code>DocGroup({&quot;tag&quot;: &quot;bullet&quot;}, [
-    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocText(&quot;Item 1&quot;)]),
-])
-DocGroup({&quot;tag&quot;: &quot;bullet&quot;}, [
-    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocText(&quot;Item 2&quot;)]),
-])
-DocGroup({&quot;tag&quot;: &quot;bullet&quot;}, [
-    DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocText(&quot;Item 3...&quot;)]),
-])
+<pre><code>let doc = doc_span![
+    DocGroup(Attrs::ListItem, [
+        DocGroup(Attrs::Para, [DocText(&quot;Item 1&quot;)]),
+    ]),
+    DocGroup(Attrs::ListItem, [
+        DocGroup(Attrs::Para, [DocText(&quot;Item 2&quot;)]),
+    ]),
+    DocGroup(Attrs::ListItem, [
+        DocGroup(Attrs::Para, [DocText(&quot;Item 3...&quot;)]),
+    ]),
+];
 </code></pre>
-<p>We can trivially define a mapping from edit-text's document model to HTML. (Conversion from a doc group to HTML can be done with <code>doc_as_html</code> in <code>edit-common/lib.rs</code>. There's no inverse method.) The result is an unordered list:</p>
+<p>We can trivially define a mapping from edit-text's document model to HTML. (Conversion from a doc group to HTML can be done with <a href="http://docs.edit.io/crates/edit_common/fn.doc_as_html.html">doc_as_html</a>. There is no method to do the inverse.) The result of converting this document to HTML could generate the equivalent of an unordered list:</p>
 <pre><code>&lt;ul&gt;
   &lt;li&gt;&lt;p&gt;Item 1&lt;/p&gt;&lt;/li&gt;
   &lt;li&gt;&lt;p&gt;Item 2&lt;/p&gt;&lt;/li&gt;

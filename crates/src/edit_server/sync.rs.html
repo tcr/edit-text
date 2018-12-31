@@ -489,7 +489,7 @@
 <span class="kw">const</span> <span class="ident">PAGE_TITLE_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">100</span>; <span class="comment">// 100 chars is the limit</span>
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">default_new_doc</span>(<span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="ident">Doc</span><span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span> {
-    <span class="ident">Doc</span>(<span class="macro">doc_span</span><span class="macro">!</span>[<span class="ident">DocGroup</span>(<span class="ident">Attrs</span>::<span class="ident">Header</span>(<span class="number">1</span>), [<span class="ident">DocText</span>(<span class="ident">id</span>),])])
+    <span class="macro">doc</span><span class="macro">!</span>[<span class="ident">DocGroup</span>(<span class="ident">Attrs</span>::<span class="ident">Header</span>(<span class="number">1</span>), [<span class="ident">DocText</span>(<span class="ident">id</span>),])]
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">valid_page_id</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {

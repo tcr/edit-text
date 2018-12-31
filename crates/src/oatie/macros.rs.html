@@ -108,11 +108,14 @@
 <span id="108">108</span>
 <span id="109">109</span>
 <span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Macros for more easily creating operations and documents in code.</span>
 
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">doc_span</span> {
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">doc</span> {
     ( @<span class="ident">str_literal</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">e</span>:<span class="ident">expr</span> ) <span class="op">=&gt;</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">e</span> };
     ( @<span class="ident">kind</span> <span class="ident">DocText</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>:<span class="ident">expr</span> $(,)<span class="op">*</span> ) <span class="op">=&gt;</span> {
         <span class="ident">DocText</span>(<span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">rtf</span>::<span class="ident">StyleSet</span>::<span class="ident">new</span>(), <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">doc</span>::<span class="ident">DocString</span>::<span class="ident">from_str</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>))
@@ -123,21 +126,24 @@
             $(
                 <span class="ident">map</span>.<span class="ident">insert</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">e</span>);
             )<span class="op">*</span>
-            <span class="ident">DocText</span>(<span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">rtf</span>::<span class="ident">StyleSet</span>::<span class="ident">from</span>(<span class="ident">map</span>), <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">doc</span>::<span class="ident">DocString</span>::<span class="ident">from_str</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>))
+            <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">doc</span>::<span class="ident">DocText</span>(<span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">rtf</span>::<span class="ident">StyleSet</span>::<span class="ident">from</span>(<span class="ident">map</span>), <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">doc</span>::<span class="ident">DocString</span>::<span class="ident">from_str</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>))
         }
     };
     ( @<span class="ident">kind</span> <span class="ident">DocGroup</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>:<span class="ident">expr</span> , [ $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">v</span>:<span class="ident">tt</span> )<span class="op">*</span> ] $(,)<span class="op">*</span> ) <span class="op">=&gt;</span> {
         {
-            <span class="ident">DocGroup</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>, <span class="macro">doc_span</span><span class="macro">!</span>[ $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">v</span> )<span class="op">*</span> ])
+            <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">doc</span>::<span class="ident">DocGroup</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>, <span class="macro">doc</span><span class="macro">!</span>[ @<span class="ident">span</span> $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">v</span> )<span class="op">*</span> ])
         }
     };
-    ( ) <span class="op">=&gt;</span> {
-        <span class="macro">vec</span><span class="macro">!</span>[]
-    };
-    ( $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">i</span>:<span class="ident">ident</span> ( $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>:<span class="ident">tt</span> )<span class="op">+</span> ) ),<span class="op">+</span> $(,)<span class="op">*</span> ) <span class="op">=&gt;</span> {
+    ( @<span class="ident">span</span> $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">i</span>:<span class="ident">ident</span> ( $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">v</span>:<span class="ident">tt</span> )<span class="op">+</span> ) ),<span class="op">+</span> $(,)<span class="op">*</span> ) <span class="op">=&gt;</span> {
         <span class="macro">vec</span><span class="macro">!</span>[
-            $( <span class="macro">doc_span</span><span class="macro">!</span>(@<span class="ident">kind</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">i</span> $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span> )<span class="op">*</span> , ) ),<span class="op">*</span>
+            $( <span class="macro">doc</span><span class="macro">!</span>(@<span class="ident">kind</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">i</span> $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">v</span> )<span class="op">*</span> , ) ),<span class="op">*</span>
         ]
+    };
+    ( ) <span class="op">=&gt;</span> {
+        <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">doc</span>::<span class="ident">Doc</span>(<span class="macro">vec</span><span class="macro">!</span>[])
+    };
+    ( $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">v</span>:<span class="ident">tt</span> )<span class="op">+</span> ) <span class="op">=&gt;</span> {
+        <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">doc</span>::<span class="ident">Doc</span>(<span class="macro">doc</span><span class="macro">!</span>[ @<span class="ident">span</span> $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">v</span> )<span class="op">*</span> ])
     };
 }
 

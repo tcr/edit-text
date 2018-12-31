@@ -191,7 +191,7 @@ looks like the following in Markdown:</p>
 Body
 </code></pre>
 <p>And would have the following document representation:</p>
-<pre><code class="language-rust noplaypen">let doc = doc_span![
+<pre><code class="language-rust noplaypen">let doc = doc![
     DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [DocText(&quot;Title&quot;)]),
     DocGroup({&quot;tag&quot;: &quot;p&quot;}, [DocText(&quot;Body&quot;)]),
 ];
@@ -208,7 +208,7 @@ which spans the content of both blocks.</p>
 
 assert_eq!(
     Op::apply_deletion(&amp;doc, &amp;deletion),
-    doc_span![DocText(&quot;TitleBody&quot;)],
+    doc![DocText(&quot;TitleBody&quot;)],
 );
 </code></pre>
 <p>The result is just the characters &quot;TitleBody&quot;. In edit-text, you are not allowed to have top-level textual content that is not contained inside of a group. So in order to produce a valid document, we now have to wrap the contents of both groups inside of a new group:</p>
@@ -220,7 +220,7 @@ assert_eq!(
 
 assert_eq!(
     Op::apply_addition(&amp;Op::apply_deletion(&amp;doc, &amp;deletion), &amp;addition),
-    doc_span![
+    doc![
         DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [DocText(&quot;TitleBody&quot;)]),
     ];
 );
@@ -240,7 +240,7 @@ let valid_op: Op = (
 
 assert_eq!(
     Op::apply(&amp;doc, &amp;valid_op),
-    doc_span![
+    doc![
         DocGroup({&quot;tag&quot;: &quot;h1&quot;}, [DocText(&quot;TitleBody&quot;)]),
     ];
 );
