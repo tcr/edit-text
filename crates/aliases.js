@@ -7,4 +7,3 @@ ALIASES['edit_replay'] = {};
 ALIASES['edit_server'] = {};
 ALIASES['edit_server_logs'] = {};
 ALIASES['oatie'] = {};
-ALIASES['oatie_transform'] = {};
