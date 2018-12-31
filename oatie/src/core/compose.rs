@@ -1,8 +1,8 @@
 //! Composes two operations together.
 
 use super::doc::*;
-use std::cmp;
 use crate::stepper::*;
+use std::cmp;
 
 fn compose_del_del_inner<S: Schema>(
     res: &mut DelSpan<S>,
@@ -223,10 +223,7 @@ fn compose_del_del_inner<S: Schema>(
     }
 }
 
-pub fn compose_del_del<S: Schema>(
-    avec: &DelSpan<S>,
-    bvec: &DelSpan<S>,
-) -> DelSpan<S> {
+pub fn compose_del_del<S: Schema>(avec: &DelSpan<S>, bvec: &DelSpan<S>) -> DelSpan<S> {
     let mut res = Vec::with_capacity(avec.len() + bvec.len());
 
     let mut a = DelStepper::new(avec);
@@ -423,10 +420,7 @@ fn compose_add_add_inner<S: Schema>(
     }
 }
 
-pub fn compose_add_add<S: Schema>(
-    avec: &AddSpan<S>,
-    bvec: &AddSpan<S>,
-) -> AddSpan<S> {
+pub fn compose_add_add<S: Schema>(avec: &AddSpan<S>, bvec: &AddSpan<S>) -> AddSpan<S> {
     let mut res = Vec::with_capacity(avec.len() + bvec.len());
 
     let mut a = AddStepper::new(avec);
@@ -447,10 +441,7 @@ pub fn compose_add_add<S: Schema>(
     res
 }
 
-pub fn compose_add_del<S: Schema>(
-    avec: &AddSpan<S>, 
-    bvec: &DelSpan<S>,
-) -> Op<S> {
+pub fn compose_add_del<S: Schema>(avec: &AddSpan<S>, bvec: &DelSpan<S>) -> Op<S> {
     let mut delres: DelSpan<S> = Vec::with_capacity(avec.len() + bvec.len());
     let mut addres: AddSpan<S> = Vec::with_capacity(avec.len() + bvec.len());
 

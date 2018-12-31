@@ -1,8 +1,8 @@
-use serde_json;
-use failure::*;
-use edit_server::db::*;
-use structopt::*;
 use diesel::connection::Connection;
+use edit_server::db::*;
+use failure::*;
+use serde_json;
+use structopt::*;
 
 #[derive(Debug, StructOpt)]
 enum Cli {

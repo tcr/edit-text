@@ -14,7 +14,10 @@ pub(crate) fn can_element_join<S: Schema>(left: &DocElement<S>, right: &DocEleme
 
 pub(crate) fn try_element_join<S: Schema>(left: &mut DocElement<S>, right: &DocElement<S>) -> bool {
     match (left, right) {
-        (&mut DocText(ref prefix_styles, ref mut prefix), &DocText(ref suffix_styles, ref suffix)) => {
+        (
+            &mut DocText(ref prefix_styles, ref mut prefix),
+            &DocText(ref suffix_styles, ref suffix),
+        ) => {
             if prefix_styles == suffix_styles {
                 prefix.push_str(suffix.as_str());
                 return true;

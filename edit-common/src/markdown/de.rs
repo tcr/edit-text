@@ -60,26 +60,20 @@ impl<'a, 'b, I: Iterator<Item = Event<'a>>> Ctx<'b, I> {
                     if self.bare_text {
                         self.body.begin();
                     }
-                    self.body.place(&DocText(
-                        self.styles.clone(),
-                        DocString::from_str(" "),
-                    ));
+                    self.body
+                        .place(&DocText(self.styles.clone(), DocString::from_str(" ")));
                     if self.bare_text {
                         self.body.close(Attrs::Para);
                     }
                 }
                 HardBreak => {
-                    self.body.place(&DocText(
-                        self.styles.clone(),
-                        DocString::from_str("\n"),
-                    ));
+                    self.body
+                        .place(&DocText(self.styles.clone(), DocString::from_str("\n")));
                 }
                 Html(html) => {
                     self.body.begin();
-                    self.body.place(&DocText(
-                        StyleSet::new(),
-                        DocString::from_str(&html),
-                    ));
+                    self.body
+                        .place(&DocText(StyleSet::new(), DocString::from_str(&html)));
                     self.body.close(Attrs::Html);
                 }
 

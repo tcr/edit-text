@@ -24,12 +24,18 @@ pub struct DocString {
 impl DocString {
     pub fn from_string(input: String) -> DocString {
         let range = 0..input.len();
-        DocString{ string: Arc::new(input), range }
+        DocString {
+            string: Arc::new(input),
+            range,
+        }
     }
 
     pub fn from_str(input: &str) -> DocString {
         let range = 0..input.len();
-        DocString { string: Arc::new(input.to_owned()), range }
+        DocString {
+            string: Arc::new(input.to_owned()),
+            range,
+        }
     }
 
     // TODO audit use of this
@@ -50,7 +56,11 @@ impl DocString {
         let start = self.range.start;
         let end = self.range.end;
 
-        let byte_index = &self.string[start..].char_indices().nth(char_boundary).unwrap().0;
+        let byte_index = &self.string[start..]
+            .char_indices()
+            .nth(char_boundary)
+            .unwrap()
+            .0;
 
         (
             DocString {
@@ -151,9 +161,9 @@ impl<'de> Deserialize<'de> for DocString {
                 V: SeqAccess<'de>,
             {
                 // Deserialize the one we care about.
-                let ret: String = seq.next_element()?
-                            .ok_or_else(|| de::Error::invalid_length(1, &self))?;
-                
+                let ret: String = seq
+                    .next_element()?
+                    .ok_or_else(|| de::Error::invalid_length(1, &self))?;
 
                 Ok(DocString::from_string(ret))
             }

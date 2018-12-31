@@ -4,8 +4,8 @@ use super::*;
 use crate::walkers::*;
 use failure::Error;
 use oatie::doc::*;
-use oatie::OT;
 use oatie::rtf::*;
+use oatie::OT;
 
 // Insert a string at the user's caret position.
 pub fn add_string(ctx: ActionContext, input: &str) -> Result<ActionContext, Error> {
@@ -16,7 +16,7 @@ pub fn add_string(ctx: ActionContext, input: &str) -> Result<ActionContext, Erro
             let walker = ctx.get_walker(Pos::Start)?;
 
             // Clone styles of hte previous text node, or use default styles.
-            let mut styles = hashset!{};
+            let mut styles = hashset! {};
             let mut char_walker = walker.clone();
             char_walker.back_char();
             if let Some(DocText(ref prefix_styles, _)) = char_walker.doc().head() {
@@ -55,10 +55,9 @@ pub fn toggle_list(ctx: ActionContext) -> Result<Op<RtfSchema>, Error> {
     // Wrap current block with a bullet group.
     Ok({
         let mut writer = walker.to_writer();
-        writer.add.place(&AddGroup(
-            Attrs::ListItem,
-            add_span![AddSkip(1)],
-        ));
+        writer
+            .add
+            .place(&AddGroup(Attrs::ListItem, add_span![AddSkip(1)]));
         writer.exit_result()
     })
 }
@@ -79,21 +78,16 @@ pub fn replace_block(ctx: ActionContext, attrs: Attrs) -> Result<Op<RtfSchema>, 
     // Delete the current block, and the wrap its contents with a new block.
     Ok({
         let mut writer = walker.to_writer();
-        writer.del.place(&DelGroup(
-            del_span![DelSkip(len)],
-        ));
-        writer.add.place_all(&add_span![AddGroup(
-            attrs,
-            [AddSkip(len)],
-        )]);
+        writer.del.place(&DelGroup(del_span![DelSkip(len)]));
+        writer
+            .add
+            .place_all(&add_span![AddGroup(attrs, [AddSkip(len)],)]);
         writer.exit_result()
     })
 }
 
 /// Hit backspace at the beginning of a block.
-fn combine_with_previous_block(
-    walker: Walker<'_>,
-) -> Result<Op<RtfSchema>, Error> {
+fn combine_with_previous_block(walker: Walker<'_>) -> Result<Op<RtfSchema>, Error> {
     // Check for first block in a list item.
     let mut parent_walker = walker.clone();
     assert!(parent_walker.back_block());
@@ -149,9 +143,7 @@ fn combine_with_previous_block(
 
                 writer.add.begin();
                 if skip_len + list_item_skip_len > 0 {
-                    writer
-                        .add
-                        .place(&AddSkip(skip_len + list_item_skip_len));
+                    writer.add.place(&AddSkip(skip_len + list_item_skip_len));
                 }
                 writer.add.close(attrs);
 
@@ -273,33 +265,30 @@ fn delete_char_inner(mut walker: Walker<'_>) -> Result<Op<RtfSchema>, Error> {
 /// Deletes the contents of the current selection. Returns a modified context
 /// and a boolean indicating if a selection existed to delete.
 fn delete_selection(ctx: ActionContext) -> Result<(bool, ActionContext), Error> {
-    Ok(ctx)
-        .and_then(|ctx| {
-            let start = ctx.get_walker(Pos::Start)?;
-            let end = ctx.get_walker(Pos::End)?;
-            let delta = end.delta(&start).unwrap_or(0) as usize;
+    Ok(ctx).and_then(|ctx| {
+        let start = ctx.get_walker(Pos::Start)?;
+        let end = ctx.get_walker(Pos::End)?;
+        let delta = end.delta(&start).unwrap_or(0) as usize;
 
-            // If we found a selection, delete every character in the selection.
-            // We implement this by looping until the caret distance between our
-            // cursors is 0.
-            // TODO: This is incredibly inefficient.
-            //  1. Dont' recurse infinitely, do this in a loop.
-            //  2. Skip entire DocText components instead of one character at a time.
-            Ok(
-                if delta != 0 {
-                    // Get real weird with it.
-                    let op = delete_char_inner(end)?;
-                    let ctx = ctx.apply(&op)?;
-                    if delta > 1 {
-                        delete_selection(ctx)?
-                    } else {
-                        (true, ctx)
-                    }
-                } else {
-                    (false, ctx)
-                }
-            )
+        // If we found a selection, delete every character in the selection.
+        // We implement this by looping until the caret distance between our
+        // cursors is 0.
+        // TODO: This is incredibly inefficient.
+        //  1. Dont' recurse infinitely, do this in a loop.
+        //  2. Skip entire DocText components instead of one character at a time.
+        Ok(if delta != 0 {
+            // Get real weird with it.
+            let op = delete_char_inner(end)?;
+            let ctx = ctx.apply(&op)?;
+            if delta > 1 {
+                delete_selection(ctx)?
+            } else {
+                (true, ctx)
+            }
+        } else {
+            (false, ctx)
         })
+    })
 }
 
 /// Backspace.

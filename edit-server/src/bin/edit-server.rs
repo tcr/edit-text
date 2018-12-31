@@ -12,11 +12,8 @@ extern crate failure;
 #[macro_use]
 extern crate serde_json;
 
-use md5;
-use reqwest;
-use crypto::md5::Md5;
 use crypto::digest::Digest;
-use yansi::Paint;
+use crypto::md5::Md5;
 use edit_common::{
     doc_as_html,
     markdown::{
@@ -30,11 +27,13 @@ use edit_server::{
 };
 use handlebars::Handlebars;
 use include_dir_macro::include_dir;
+use md5;
 use mime_guess::guess_mime_type;
 use oatie::doc::*;
 use oatie::rtf::*;
 use oatie::validate::validate_doc;
 use rand::thread_rng;
+use reqwest;
 use rouille::Response;
 use std::fs::File;
 use std::io::prelude::*;
@@ -51,6 +50,7 @@ use std::{
     env,
 };
 use structopt::StructOpt;
+use yansi::Paint;
 
 trait Dir: Sync + Send {
     fn get(&self, path: &Path) -> Option<Vec<u8>>;
@@ -184,14 +184,19 @@ fn run_http_server(port: u16, client_proxy: bool) {
 
     // Build dist folder if it doesn't exist.
     if dist_dir.get(Path::new("edit.js")).is_none() {
-        eprintln!("{}", Paint::yellow(r"
+        eprintln!(
+            "{}",
+            Paint::yellow(
+                r"
 =======================================================
   WARNING!
   The file edit-frontend/dist/edit.js does not exist.  
   You should generate the frontend code by running   
   `./tools frontend-build` from a terminal window.        
 =======================================================
-"));
+"
+            )
+        );
     }
 
     println!(
@@ -215,11 +220,11 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 &format!(
                     "CONFIG = {}",
                     serde_json::to_string(&json!({
-                    "configured": true,
-                    "wasm": !client_proxy,
-                    "title": &edit_title,
-                    "console_command_log": cfg!(feature = "console_command_log"),
-                }))
+                        "configured": true,
+                        "wasm": !client_proxy,
+                        "title": &edit_title,
+                        "console_command_log": cfg!(feature = "console_command_log"),
+                    }))
                     .unwrap()
                 ),
             );

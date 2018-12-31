@@ -1,11 +1,14 @@
 //! Defines document types, operation types, and cursor types.
 
-use serde::{Deserialize, Serialize};
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 // Re-exports
 pub use super::place::*;
-pub use crate::string::*;
 pub use crate::core::schema::*;
+pub use crate::string::*;
 
 pub type DocSpan<S> = Vec<DocElement<S>>;
 pub type DelSpan<S> = Vec<DelElement<S>>;
@@ -25,10 +28,6 @@ pub use self::DocElement::*;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Doc<S: Schema>(pub Vec<DocElement<S>>);
 
-
-
-// [DocText("birds snakes and aeroplanes",[Bold,],),]
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum DelElement<S: Schema> {
     DelSkip(usize),
@@ -43,7 +42,6 @@ pub enum DelElement<S: Schema> {
 }
 
 pub use self::DelElement::*;
-
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum AddElement<S: Schema> {

@@ -43,15 +43,15 @@ pub mod wasm;
 mod core;
 pub use self::core::*;
 
+pub mod deserialize;
 pub mod normalize;
+mod parse;
+pub mod rtf;
 pub mod stepper;
+mod string;
 pub mod transform_test;
 pub mod validate;
 pub mod writer;
-pub mod rtf;
-pub mod deserialize;
-mod parse;
-mod string;
 
 use crate::apply::*;
 use crate::compose::*;
@@ -114,7 +114,8 @@ impl<S: Schema> OT<S> for Op<S> {
 
     fn compose_iter<'a, I>(iter: I) -> Self
     where
-        I: Iterator<Item = &'a Self>, S: 'a
+        I: Iterator<Item = &'a Self>,
+        S: 'a,
     {
         let mut base = Self::empty();
         for item in iter {

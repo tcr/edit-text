@@ -1,9 +1,15 @@
 //! Svgbob preprocessing
 
-use regex::{Regex, Captures};
-use mdbook::book::{Book, BookItem};
-use mdbook::preprocess::*;
+use mdbook::book::{
+    Book,
+    BookItem,
+};
 use mdbook::errors::Error;
+use mdbook::preprocess::*;
+use regex::{
+    Captures,
+    Regex,
+};
 
 pub struct SvgbobPreprocessor;
 
@@ -51,17 +57,25 @@ impl Preprocessor for TOCPreprocessor {
         for section in &mut book.sections {
             if let BookItem::Chapter(ref mut chapter) = section {
                 if !chapter.sub_items.is_empty() {
-                    let toc: Vec<String> = chapter.sub_items.iter()
+                    let toc: Vec<String> = chapter
+                        .sub_items
+                        .iter()
                         .filter_map(|sub_item| {
                             if let BookItem::Chapter(ref chapter) = sub_item {
-                                Some(format!("1. [{}]({})", chapter.name, chapter.path.to_string_lossy()))
+                                Some(format!(
+                                    "1. [{}]({})",
+                                    chapter.name,
+                                    chapter.path.to_string_lossy()
+                                ))
                             } else {
                                 None
                             }
                         })
                         .collect();
-                    
-                    chapter.content = chapter.content.replace("{{#toc}}", &format!("\n\n{}\n\n", toc.join("\n")));
+
+                    chapter.content = chapter
+                        .content
+                        .replace("{{#toc}}", &format!("\n\n{}\n\n", toc.join("\n")));
                 }
             }
         }

@@ -1,12 +1,12 @@
 //! Performs operational transform on a Doc.
 
-use std::cmp;
 use super::compose;
 use super::doc::*;
+pub use super::schema::*;
 use crate::stepper::*;
 use crate::writer::*;
+use std::cmp;
 use std::marker::PhantomData;
-pub use super::schema::*;
 
 #[derive(Clone, Debug)]
 struct TrackState<S: Schema> {
@@ -133,7 +133,8 @@ impl<S: Schema> Transform<S> {
                         .or(last.tag_real.as_ref())
                         .or(last.tag_b.as_ref())
                         .unwrap(),
-                ) {
+                )
+            {
                 log_transform!("-----> UGH {:?}", last);
                 panic!("Should not have consecutive similar tracks.");
             }
@@ -160,7 +161,13 @@ impl<S: Schema> Transform<S> {
     }
 
     // Close the topmost track.
-    fn abort(&mut self) -> (Option<S::GroupProperties>, Option<S::GroupProperties>, Option<S::GroupProperties>) {
+    fn abort(
+        &mut self,
+    ) -> (
+        Option<S::GroupProperties>,
+        Option<S::GroupProperties>,
+        Option<S::GroupProperties>,
+    ) {
         let track = self.tracks.pop().unwrap();
 
         if let Some(ref real) = track.tag_real {
@@ -681,7 +688,8 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan<S>, bvec: &AddSpan<S>) -> 
                                 .iter()
                                 .any(|x| {
                                     *x == S::track_type_from_attrs(b_tag.as_ref().unwrap()).unwrap()
-                                })) {
+                                }))
+                    {
                         // t.interrupt(a_tag);
                         a.exit();
                         t.close_a();
@@ -1030,7 +1038,7 @@ pub fn transform_insertions<S: Schema>(avec: &AddSpan<S>, bvec: &AddSpan<S>) -> 
                     t.skip_a(cmp::min(a_count, b_count));
                     t.style_b(cmp::min(a_count, b_count), a_styles);
                 }
-                | (Some(AddSkip(..)), Some(AddText(b_styles, b_chars)))
+                (Some(AddSkip(..)), Some(AddText(b_styles, b_chars)))
                 | (Some(AddStyles(..)), Some(AddText(b_styles, b_chars))) => {
                     t.regenerate();
 
@@ -1887,8 +1895,8 @@ pub fn transform_add_del_inner<S: Schema>(
                         // type?
                         // FIXME I'm not sure what to do here so I'm doing this
                         // if !(addres_inner.skip_post_len() == 0 && attrs == Attrs::ListItem) {
-                            addres.place(&AddGroup(attrs, addres_inner));
-                            delres.place(&DelWithGroup(delres_inner));
+                        addres.place(&AddGroup(attrs, addres_inner));
+                        delres.place(&DelWithGroup(delres_inner));
                         // } else {
                         //     delres.place(&DelGroup(delres_inner));
                         // }

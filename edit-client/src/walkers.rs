@@ -1,12 +1,12 @@
 mod caretstepper;
 
+pub use self::caretstepper::*;
 use failure::Error;
 use oatie::doc::*;
+use oatie::rtf::RtfSchema;
 use oatie::stepper::*;
 use oatie::writer::*;
 use take_mut;
-use oatie::rtf::RtfSchema;
-pub use self::caretstepper::*;
 
 #[derive(Debug, Clone)]
 pub struct Walker<'a> {
@@ -70,7 +70,11 @@ impl<'a> Walker<'a> {
         });
     }
 
-    pub fn to_caret(doc: &'a Doc<RtfSchema>, client_id: &str, position: Pos) -> Result<Walker<'a>, Error> {
+    pub fn to_caret(
+        doc: &'a Doc<RtfSchema>,
+        client_id: &str,
+        position: Pos,
+    ) -> Result<Walker<'a>, Error> {
         let mut stepper = CaretStepper::new(DocStepper::new(&doc.0));
 
         // Iterate until we match the cursor.
@@ -412,7 +416,7 @@ impl<'a> Walker<'a> {
             if stepper.next().is_none() {
                 return None;
             }
-        };
+        }
     }
 
     pub fn to_writer(&self) -> OpWriter<RtfSchema> {

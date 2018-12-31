@@ -46,7 +46,7 @@ fn remove_carets_op_span(
                         continue;
                     }
                 }
-                
+
                 // else
                 writer.begin();
                 remove_carets_op_span(writer, span, filter)?;

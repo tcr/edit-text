@@ -1,8 +1,8 @@
 #![allow(warnings)]
 
+pub mod preprocessors;
 pub mod serve;
 pub mod watch;
-pub mod preprocessors;
 
 use mdbook::MDBook;
 

@@ -1,8 +1,8 @@
 //! Enables stepping through a span operation.
 
+pub mod charcursor;
 mod docmutator;
 mod docstepper;
-pub mod charcursor;
 
 use crate::doc::*;
 use crate::place::can_element_join;

@@ -211,20 +211,14 @@ fn apply_add_outer<M: DocMutator<S>, S: Schema>(
     res
 }
 
-pub fn apply_add<S: Schema>(
-    spanvec: &DocSpan<S>,
-    add: &AddSpan<S>,
-) -> DocSpan<S> {
+pub fn apply_add<S: Schema>(spanvec: &DocSpan<S>, add: &AddSpan<S>) -> DocSpan<S> {
     let mut mutator = NullDocMutator {};
     let ret = apply_add_outer(&mut mutator, spanvec, add);
     ret
 }
 
 // TODO what does this do, why doe sit exist, for creating BC for frontend??
-pub fn apply_add_bc<S: Schema>(
-    spanvec: &DocSpan<S>,
-    addvec: &AddSpan<S>,
-) -> (Doc<S>, Program) {
+pub fn apply_add_bc<S: Schema>(spanvec: &DocSpan<S>, addvec: &AddSpan<S>) -> (Doc<S>, Program) {
     let mut mutator = RecordingDocMutator::new(DocStepper::new(spanvec));
     let output_doc = apply_add_outer(&mut mutator, spanvec, addvec);
 
@@ -400,20 +394,14 @@ fn apply_del_inner<M: DocMutator<S>, S: Schema>(
     res
 }
 
-pub fn apply_delete<S: Schema>(
-    spanvec: &DocSpan<S>,
-    delvec: &DelSpan<S>,
-) -> DocSpan<S> {
+pub fn apply_delete<S: Schema>(spanvec: &DocSpan<S>, delvec: &DelSpan<S>) -> DocSpan<S> {
     let mut mutator = NullDocMutator {};
     let ret = apply_del_inner(&mut mutator, spanvec, delvec);
     ret
 }
 
 // TODO what does this do, why doe sit exist, for creating BC for frontend??
-pub fn apply_del_bc<S: Schema>(
-    spanvec: &DocSpan<S>,
-    del: &DelSpan<S>,
-) -> (DocSpan<S>, Program) {
+pub fn apply_del_bc<S: Schema>(spanvec: &DocSpan<S>, del: &DelSpan<S>) -> (DocSpan<S>, Program) {
     let mut mutator = RecordingDocMutator::new(DocStepper::new(spanvec));
     let output_doc = apply_del_inner(&mut mutator, spanvec, del);
 
@@ -439,10 +427,7 @@ pub fn apply_del_bc<S: Schema>(
     (output_doc, bc)
 }
 
-pub fn apply_op_bc<S: Schema>(
-    spanvec: &DocSpan<S>,
-    op: &Op<S>,
-) -> Vec<Program> {
+pub fn apply_op_bc<S: Schema>(spanvec: &DocSpan<S>, op: &Op<S>) -> Vec<Program> {
     // console_log!("\n\n\n\n\naaaaaaa\n\n\n\n\n\n\n");
     let &(ref delvec, ref addvec) = op;
     // console_log!("👻👻  1  👻👻");
@@ -454,10 +439,7 @@ pub fn apply_op_bc<S: Schema>(
     vec![del_program, add_program]
 }
 
-pub fn apply_operation<S: Schema>(
-    spanvec: &DocSpan<S>,
-    op: &Op<S>,
-) -> DocSpan<S> {
+pub fn apply_operation<S: Schema>(spanvec: &DocSpan<S>, op: &Op<S>) -> DocSpan<S> {
     let &(ref delvec, ref addvec) = op;
     // println!("------> @1 {:?}", spanvec);
     // println!("------> @2 {:?}", delvec);

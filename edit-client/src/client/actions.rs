@@ -1,12 +1,12 @@
-mod styles;
 mod caret;
-mod modify;
 mod identify;
+mod modify;
+mod styles;
 
-pub use self::styles::*;
 pub use self::caret::*;
-pub use self::modify::*;
 pub use self::identify::*;
+pub use self::modify::*;
+pub use self::styles::*;
 use crate::walkers::*;
 use failure::Error;
 use oatie::doc::*;

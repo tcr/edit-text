@@ -1,7 +1,7 @@
 //! Update legacy serialization formats to a modern format.
 
-use failure::Error;
 use crate::doc::*;
+use failure::Error;
 
 // ISSUE Deduplicate v1 and v2 parsing logic
 //
@@ -129,12 +129,13 @@ pub mod v1 {
                 "html" => crate::rtf::Attrs::Html,
                 "hr" => crate::rtf::Attrs::Rule,
                 "bullet" => crate::rtf::Attrs::ListItem,
-                "caret" => {
-                    crate::rtf::Attrs::Caret {
-                        client_id: input.get("client").map(|x| x.to_owned()).unwrap_or("unnamed".to_string()),
-                        focus: input.get("focus").map(|x| x == "true").unwrap_or(true),
-                    }
-                }
+                "caret" => crate::rtf::Attrs::Caret {
+                    client_id: input
+                        .get("client")
+                        .map(|x| x.to_owned())
+                        .unwrap_or("unnamed".to_string()),
+                    focus: input.get("focus").map(|x| x == "true").unwrap_or(true),
+                },
                 "p" | _ => crate::rtf::Attrs::Para,
             },
         )
@@ -204,9 +205,7 @@ pub mod v1 {
                 DelElement::DelSkip(skip) => crate::doc::DelSkip(skip),
                 DelElement::DelWithGroup(span) => crate::doc::DelWithGroup(update_delspan(span)?),
                 DelElement::DelChars(skip) => crate::doc::DelText(skip),
-                DelElement::DelGroup(span) => {
-                    crate::doc::DelGroup(update_delspan(span)?)
-                }
+                DelElement::DelGroup(span) => crate::doc::DelGroup(update_delspan(span)?),
                 DelElement::DelStyles(skip, styles) => {
                     crate::doc::DelStyles(skip, update_styles(styles)?)
                 }
@@ -239,7 +238,6 @@ pub mod v1 {
         update_addspan(serde_json::from_str(input)?)
     }
 }
-
 
 /// Decoding "v2" docs, which used an ad-hoc serde format as the data types
 /// evolved. There's no specification for this, just compatibility with old
@@ -354,12 +352,13 @@ pub mod v2 {
                 "html" => crate::rtf::Attrs::Html,
                 "hr" => crate::rtf::Attrs::Rule,
                 "bullet" => crate::rtf::Attrs::ListItem,
-                "caret" => {
-                    crate::rtf::Attrs::Caret {
-                        client_id: input.get("client").map(|x| x.to_owned()).unwrap_or("unnamed".to_string()),
-                        focus: input.get("focus").map(|x| x == "true").unwrap_or(true),
-                    }
-                }
+                "caret" => crate::rtf::Attrs::Caret {
+                    client_id: input
+                        .get("client")
+                        .map(|x| x.to_owned())
+                        .unwrap_or("unnamed".to_string()),
+                    focus: input.get("focus").map(|x| x == "true").unwrap_or(true),
+                },
                 "p" | _ => crate::rtf::Attrs::Para,
             },
         )
@@ -429,9 +428,7 @@ pub mod v2 {
                 DelElement::DelSkip(skip) => crate::doc::DelSkip(skip),
                 DelElement::DelWithGroup(span) => crate::doc::DelWithGroup(update_delspan(span)?),
                 DelElement::DelChars(skip) => crate::doc::DelText(skip),
-                DelElement::DelGroup(span) => {
-                    crate::doc::DelGroup(update_delspan(span)?)
-                }
+                DelElement::DelGroup(span) => crate::doc::DelGroup(update_delspan(span)?),
                 DelElement::DelStyles(skip, styles) => {
                     crate::doc::DelStyles(skip, update_styles(styles)?)
                 }
@@ -464,7 +461,6 @@ pub mod v2 {
         update_addspan(serde_json::from_str(input)?)
     }
 }
-
 
 pub fn doc_ron(input: &str) -> Result<crate::doc::Doc<crate::rtf::RtfSchema>, Error> {
     // V3

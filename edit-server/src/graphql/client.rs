@@ -82,7 +82,10 @@ pub fn graphql_request(
     Ok(serde_json::from_str(&text)?)
 }
 
-pub fn get_or_create_page_graphql(input_id: &str, doc: &Doc<RtfSchema>) -> Result<Doc<RtfSchema>, Error> {
+pub fn get_or_create_page_graphql(
+    input_id: &str,
+    doc: &Doc<RtfSchema>,
+) -> Result<Doc<RtfSchema>, Error> {
     let ret = graphql_request(
         r#"
 

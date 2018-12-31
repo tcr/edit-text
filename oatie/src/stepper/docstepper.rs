@@ -1,5 +1,5 @@
-use crate::stepper::*;
 pub use super::charcursor::*;
+use crate::stepper::*;
 
 // DocStepper
 
@@ -318,11 +318,7 @@ mod tests {
     use crate::rtf::*;
 
     fn test_doc_0() -> DocSpan<RtfSchema> {
-        doc_span![
-            DocGroup(Attrs::Header(1), [
-                DocText("Cool"),
-            ]),
-        ]
+        doc_span![DocGroup(Attrs::Header(1), [DocText("Cool"),]),]
     }
 
     #[test]

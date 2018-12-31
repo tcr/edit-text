@@ -1,9 +1,12 @@
+use super::*;
 use crate::walkers::*;
 use failure::Error;
 use oatie::doc::*;
+use oatie::rtf::{
+    Attrs,
+    RtfSchema,
+};
 use oatie::stepper::DocStepper;
-use oatie::rtf::{RtfSchema, Attrs};
-use super::*;
 use std::collections::HashSet;
 
 #[derive(Debug, Clone)]
@@ -15,15 +18,13 @@ pub struct CaretState {
 
 pub fn identify_styles(ctx: &ActionContext) -> Result<StyleSet, Error> {
     // Find start and end carets, or return if either are missing.
-    let (mut walker_start, walker_end) = match (
-        ctx.get_walker(Pos::Start),
-        ctx.get_walker(Pos::End),
-    ) {
-        (Ok(walker_start), Ok(walker_end)) => (walker_start, walker_end),
-        _ => {
-            return Ok(StyleSet::new());
-        }
-    };
+    let (mut walker_start, walker_end) =
+        match (ctx.get_walker(Pos::Start), ctx.get_walker(Pos::End)) {
+            (Ok(walker_start), Ok(walker_end)) => (walker_start, walker_end),
+            _ => {
+                return Ok(StyleSet::new());
+            }
+        };
 
     // If we have a collapsed selection (delta of 0), identify the style of the
     // previous text element.

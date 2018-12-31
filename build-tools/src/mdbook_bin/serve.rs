@@ -1,6 +1,5 @@
 /// Copied from https://raw.githubusercontent.com/rust-lang-nursery/mdBook/3688f73052454bf510a5acc85cf55aae450c6e46/src/cmd/serve.rs
 /// from commit 3688f73 on https://github.com/rust-lang-nursery/mdBook/
-
 extern crate iron;
 extern crate staticfile;
 extern crate ws;

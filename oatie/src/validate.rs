@@ -24,15 +24,18 @@ impl<S: Schema> ValidateContext<S> {
 }
 
 // TODO caret-specific validation should be moved out to the schema!
-pub fn validate_doc_span<S: Schema>(ctx: &mut ValidateContext<S>, span: &DocSpan<S>) -> Result<(), Error> {
+pub fn validate_doc_span<S: Schema>(
+    ctx: &mut ValidateContext<S>,
+    span: &DocSpan<S>,
+) -> Result<(), Error> {
     for elem in span {
         match *elem {
             DocGroup(ref attrs, ref span) => {
                 // if let Attrs::Caret { .. } == attrs {
-                    // TODO Allow validation that only one caret exists per document.
-                    // if !ctx.carets.insert(attrs["client"].clone()) {
-                    //     bail!("Multiple carets for {:?} exist", attrs["client"]);
-                    // }
+                // TODO Allow validation that only one caret exists per document.
+                // if !ctx.carets.insert(attrs["client"].clone()) {
+                //     bail!("Multiple carets for {:?} exist", attrs["client"]);
+                // }
                 // }
 
                 // TODO This is disabled with the removal of attribute
@@ -56,9 +59,7 @@ pub fn validate_doc_span<S: Schema>(ctx: &mut ValidateContext<S>, span: &DocSpan
                 } else {
                     // Top-level blocks
                     ensure!(
-                        S::track_type_from_attrs(attrs)
-                            .unwrap()
-                            .allowed_in_root(),
+                        S::track_type_from_attrs(attrs).unwrap().allowed_in_root(),
                         "Root block has incorrect parent"
                     );
                 }
@@ -68,9 +69,7 @@ pub fn validate_doc_span<S: Schema>(ctx: &mut ValidateContext<S>, span: &DocSpan
 
                 if let Some(block) = ctx.stack.last() {
                     ensure!(
-                        S::track_type_from_attrs(block)
-                            .unwrap()
-                            .supports_text(),
+                        S::track_type_from_attrs(block).unwrap().supports_text(),
                         "Char found outside block"
                     );
                 } else {
