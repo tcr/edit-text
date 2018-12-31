@@ -101,11 +101,11 @@ graphql_object!(Mutations: Ctx |&self| {
                     Err(err) => {
                         eprintln!("Error in doc: {:?}", doc);
                         eprintln!("Error decoding document: {:?}", err);
-                        Doc(doc_span![
+                        doc![
                             DocGroup(Attrs::Code, [
                                 DocText("Error decoding document."),
                             ]),
-                        ])
+                        ]
                     }
                 }
             }

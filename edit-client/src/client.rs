@@ -624,8 +624,8 @@ pub trait ClientController {
         //         // println!("  {} 1️⃣: let op_right = op_span!{:?};", name, op);
         //         check_op_a = Op::compose(&check_op_a, &op);
         //         // println!("  {} 1️⃣: let res = op_span!{:?};", name, check_op_a);
-        //         // println!("  {} 1️⃣: let original = doc_span!{:?};", name, client.original_doc);
-        //         // println!("  {} 1️⃣: let latest_doc = doc_span!{:?};", name, client.doc);
+        //         // println!("  {} 1️⃣: let original = doc!{:?};", name, client.original_doc);
+        //         // println!("  {} 1️⃣: let latest_doc = doc!{:?};", name, client.doc);
         //         let _ = Op::apply(&client.original_doc, &check_op_a);
         //     }
 

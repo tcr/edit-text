@@ -193,9 +193,12 @@ fn apply_ghost() {
 
     assert_eq!(
         apply_operation::<RtfSchema>(
-            &doc_span![DocText(" stop crying, little hip hop")],
+            &doc![DocText(" stop crying, little hip hop")].0,
             &op!([], [AddText("\u{01f47b}")]),
         ),
-        doc_span![DocText("\u{01f47b} stop crying, little hip hop")]
+        vec![DocText(
+            StyleSet::new(),
+            DocString::from_str("\u{01f47b} stop crying, little hip hop")
+        )],
     );
 }

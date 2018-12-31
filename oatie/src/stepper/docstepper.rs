@@ -317,14 +317,14 @@ mod tests {
     use super::*;
     use crate::rtf::*;
 
-    fn test_doc_0() -> DocSpan<RtfSchema> {
-        doc_span![DocGroup(Attrs::Header(1), [DocText("Cool"),]),]
+    fn test_doc_0() -> Doc<RtfSchema> {
+        doc![DocGroup(Attrs::Header(1), [DocText("Cool"),]),]
     }
 
     #[test]
     fn docstepper_middle() {
         let doc = test_doc_0();
-        let mut stepper = DocStepper::new(&doc);
+        let mut stepper = DocStepper::new(&doc.0);
         stepper.enter();
         stepper.skip(2);
         assert_eq!(
@@ -337,7 +337,7 @@ mod tests {
     #[should_panic]
     fn docstepper_peek_too_far_0() {
         let doc = test_doc_0();
-        let mut stepper = DocStepper::new(&doc);
+        let mut stepper = DocStepper::new(&doc.0);
         stepper.enter();
         stepper.skip(2);
         stepper.peek().unwrap();
@@ -347,7 +347,7 @@ mod tests {
     #[should_panic]
     fn docstepper_peek_too_far_1() {
         let doc = test_doc_0();
-        let mut stepper = DocStepper::new(&doc);
+        let mut stepper = DocStepper::new(&doc.0);
         stepper.enter();
         stepper.skip(4);
         stepper.peek().unwrap();
@@ -357,7 +357,7 @@ mod tests {
     #[should_panic]
     fn docstepper_peek_too_far_2() {
         let doc = test_doc_0();
-        let mut stepper = DocStepper::new(&doc);
+        let mut stepper = DocStepper::new(&doc.0);
         stepper.enter();
         stepper.peek().unwrap();
     }
@@ -365,7 +365,7 @@ mod tests {
     #[test]
     fn docstepper_deep_0() {
         let doc = test_doc_0();
-        let mut stepper = DocStepper::new(&doc);
+        let mut stepper = DocStepper::new(&doc.0);
         stepper.enter();
         stepper.skip(3);
         stepper.unskip(3);

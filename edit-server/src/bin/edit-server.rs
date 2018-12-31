@@ -271,11 +271,11 @@ fn run_http_server(port: u16, client_proxy: bool) {
                                 Ok(_) => doc,
                                 Err(err) => {
                                     eprintln!("Error decoding document: {:?}", err);
-                                    Doc(doc_span![
+                                    doc![
                                         DocGroup(Attrs::Code, [
                                             DocText("Error decoding document."),
                                         ]),
-                                    ])
+                                    ]
                                 }
                             })
                         } else {
@@ -285,11 +285,11 @@ fn run_http_server(port: u16, client_proxy: bool) {
                                 Ok(_) => doc,
                                 Err(err) => {
                                     eprintln!("Error decoding document: {:?}", err);
-                                    Doc(doc_span![
+                                    doc![
                                         DocGroup(Attrs::Code, [
                                             DocText("Error decoding document."),
                                         ]),
-                                    ])
+                                    ]
                                 }
                             })
                         }
@@ -416,7 +416,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 let body: String = doc_to_markdown(
                     &get_or_create_page_graphql(
                         &id,
-                        &Doc(doc_span![DocGroup(Attrs::Header(1), [DocText(&id)])]),
+                        &doc![DocGroup(Attrs::Header(1), [DocText(&id)])],
                     ).expect("Received malformed content from db, aborting").0
                 ).unwrap();
 
@@ -446,9 +446,9 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 let body: String = doc_as_html(
                     &get_or_create_page_graphql(
                         &id,
-                        &Doc(doc_span![DocGroup(Attrs::Header(1), [
+                        &doc![DocGroup(Attrs::Header(1), [
                             DocText(&id),
-                        ])]),
+                        ])],
                     ).unwrap().0
                 );
 

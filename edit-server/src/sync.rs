@@ -43,7 +43,7 @@ const INITIAL_SYNC_VERSION: usize = 100; // Arbitrarily select version 100
 const PAGE_TITLE_LEN: usize = 100; // 100 chars is the limit
 
 pub fn default_new_doc(id: &str) -> Doc<RtfSchema> {
-    Doc(doc_span![DocGroup(Attrs::Header(1), [DocText(id),])])
+    doc![DocGroup(Attrs::Header(1), [DocText(id),])]
 }
 
 pub fn valid_page_id(input: &str) -> bool {

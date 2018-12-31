@@ -7,7 +7,7 @@ The contents of a page is stored as a **Document** object. For example, the foll
 May be created and manipulated in Rust:
 
 ```rust,noplaypen
-let document = doc_span![
+let document = doc![
     DocGroup({"tag": "h1"}, ["Hello world!"]),
     DocGroup({"tag": "p"}, ["This is a document."]),
 ];
@@ -33,10 +33,10 @@ enum DocElement {
 }
 ```
 
-You can use the `oatie::macros::doc_span!` macro to conveniently create `DocSpan` objects:
+You can use the `oatie::macros::doc!` macro to conveniently create `DocSpan` objects:
 
 ```rust,noplaypen
-doc_span![
+doc![
     DocGroup({"tag": "h1"}, ["Title"]),
     DocGroup({"tag": "bullet"}, [
         DocGroup({"tag": "p"}, ["Groups can be nested."]),

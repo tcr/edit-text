@@ -9,17 +9,17 @@ use serde_json;
 
 #[test]
 fn test_docserialize_roundtrip_ron() {
-    let start = doc_span![DocText("birds snakes and aeroplanes")];
+    let start = doc![DocText("birds snakes and aeroplanes")];
     let res = ron::ser::to_string(&start).unwrap();
     println!("re {:?}", res);
-    let res2: Vec<DocElement<RtfSchema>> = ron::de::from_str(&res).unwrap();
+    let res2: Doc<RtfSchema> = ron::de::from_str(&res).unwrap();
     println!("re {:?}", res2);
     assert_eq!(start, res2);
     // assert_eq!(res, "[DocText(\"birds snakes and aeroplanes\"),]");
     eprintln!();
 
     // TODO test link serialization
-    let start = doc_span![DocText(
+    let start = doc![DocText(
         {
             RtfStyle::Bold /*, Style::Link => Some("Wow".to_string()) */
         },
@@ -27,7 +27,7 @@ fn test_docserialize_roundtrip_ron() {
     )];
     let res = ron::ser::to_string(&start).unwrap();
     println!("re {:?}", res);
-    let res2: Vec<DocElement<RtfSchema>> = ron::de::from_str(&res).unwrap();
+    let res2: Doc<RtfSchema> = ron::de::from_str(&res).unwrap();
     assert_eq!(start, res2);
     println!("re {:?}", res2);
     // assert_eq!(res, "[DocText((\"birds snakes and aeroplanes\",[Bold,],)),]");
@@ -36,17 +36,17 @@ fn test_docserialize_roundtrip_ron() {
 
 #[test]
 fn test_docserialize_roundtrip_json() {
-    let start = doc_span![DocText("birds snakes and aeroplanes")];
+    let start = doc![DocText("birds snakes and aeroplanes")];
     let res = serde_json::to_string(&start).unwrap();
     println!("re.....: {:?}", res);
 
-    let res2: Vec<DocElement<RtfSchema>> = serde_json::from_str(&res).unwrap();
+    let res2: Doc<RtfSchema> = serde_json::from_str(&res).unwrap();
     println!("re {:?}", res2);
     assert_eq!(start, res2);
     eprintln!();
 
     // TODO test link serialization
-    let start = doc_span![DocText(
+    let start = doc![DocText(
         {
             RtfStyle::Bold /*, Style::Link => Some("Wow".to_string()) */
         },
@@ -54,7 +54,7 @@ fn test_docserialize_roundtrip_json() {
     )];
     let res = serde_json::to_string(&start).unwrap();
     println!("re {:?}", res);
-    let res2: DocSpan<RtfSchema> = serde_json::from_str(&res).unwrap();
+    let res2: Doc<RtfSchema> = serde_json::from_str(&res).unwrap();
     assert_eq!(start, res2);
     println!("re {:?}", res2);
 }

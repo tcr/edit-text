@@ -40,7 +40,7 @@ Body
 And would have the following document representation:
 
 ```rust,noplaypen
-let doc = doc_span![
+let doc = doc![
     DocGroup({"tag": "h1"}, [DocText("Title")]),
     DocGroup({"tag": "p"}, [DocText("Body")]),
 ];
@@ -62,7 +62,7 @@ let deletion = del_span![
 
 assert_eq!(
     Op::apply_deletion(&doc, &deletion),
-    doc_span![DocText("TitleBody")],
+    doc![DocText("TitleBody")],
 );
 ```
 
@@ -77,7 +77,7 @@ let addition = del_span![
 
 assert_eq!(
     Op::apply_addition(&Op::apply_deletion(&doc, &deletion), &addition),
-    doc_span![
+    doc![
         DocGroup({"tag": "h1"}, [DocText("TitleBody")]),
     ];
 );
@@ -100,7 +100,7 @@ let valid_op: Op = (
 
 assert_eq!(
     Op::apply(&doc, &valid_op),
-    doc_span![
+    doc![
         DocGroup({"tag": "h1"}, [DocText("TitleBody")]),
     ];
 );

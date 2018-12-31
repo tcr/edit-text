@@ -1,5 +1,3 @@
-use crate::schema::*;
-
 /// A type that can have operational transform applied to it.
 /// The `OT` trait is implemented on an operation object, and its
 /// associated type `Doc` is what the operation should operate on.
