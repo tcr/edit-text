@@ -429,7 +429,7 @@ pub fn apply_del_bc<S: Schema>(spanvec: &DocSpan<S>, del: &DelSpan<S>) -> (DocSp
 
 pub fn apply_op_bc<S: Schema>(spanvec: &DocSpan<S>, op: &Op<S>) -> Vec<Program> {
     // console_log!("\n\n\n\n\naaaaaaa\n\n\n\n\n\n\n");
-    let &(ref delvec, ref addvec) = op;
+    let &Op(ref delvec, ref addvec) = op;
     // console_log!("👻👻  1  👻👻");
     let (postdel, del_program) = apply_del_bc(spanvec, delvec);
     // console_log!("👻👻  2  👻👻");
@@ -440,7 +440,7 @@ pub fn apply_op_bc<S: Schema>(spanvec: &DocSpan<S>, op: &Op<S>) -> Vec<Program> 
 }
 
 pub fn apply_operation<S: Schema>(spanvec: &DocSpan<S>, op: &Op<S>) -> DocSpan<S> {
-    let &(ref delvec, ref addvec) = op;
+    let &Op(ref delvec, ref addvec) = op;
     // println!("------> @1 {:?}", spanvec);
     // println!("------> @2 {:?}", delvec);
     let postdel = apply_delete(spanvec, delvec);

@@ -68,7 +68,7 @@ fn normalize_del_span<S: Schema>(del: DelSpan<S>, trim_last: bool) -> DelSpan<S>
 
 pub fn normalize<S: Schema>(op: Op<S>) -> Op<S> {
     // TODO all
-    (
+    Op(
         normalize_del_span(op.0, true),
         normalize_add_span(op.1, true),
     )

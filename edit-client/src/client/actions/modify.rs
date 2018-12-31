@@ -179,7 +179,7 @@ fn combine_with_previous_block(walker: Walker<'_>) -> Result<Op<RtfSchema>, Erro
 
     // Move to previous block to join it (or bail if we can't find it).
     if !block_walker.back_block_or_block_object() {
-        return Ok(op_span!([], []));
+        return Ok(op!([], []));
     }
 
     // If previous block is an "hr", delete it.

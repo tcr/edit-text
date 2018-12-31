@@ -5,7 +5,7 @@ use oatie::Operation;
 use oatie::{OT, debug_pretty};
 
 fn main() {
-    let op_left = op_span!(
+    let op_left = op!(
         [
             DelWithGroup([
                 DelWithGroup([]),
@@ -22,7 +22,7 @@ fn main() {
             ])
         ]
     );
-    let op_right = op_span!(
+    let op_right = op!(
         [DelGroup([DelSkip(32)])],
         [AddGroup({"tag": "pre"}, [AddSkip(32)])]
     );

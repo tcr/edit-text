@@ -107,16 +107,16 @@ fn parse_transform_test(input: &str) -> Result<TestSpec<RtfSchema>, Error> {
         println!("entries {:?}", test.keys().collect::<Vec<_>>());
 
         // Extract test entries.
-        let a = (
+        let a = Op(
             crate::deserialize::v1::delspan_ron(&test["a_del"])?,
             crate::deserialize::v1::addspan_ron(&test["a_add"])?,
         );
-        let b = (
+        let b = Op(
             crate::deserialize::v1::delspan_ron(&test["b_del"])?,
             crate::deserialize::v1::addspan_ron(&test["b_add"])?,
         );
         let op_a = if test.contains_key("op_del") || test.contains_key("op_add") {
-            Some((
+            Some(Op(
                 crate::deserialize::v1::delspan_ron(&test["op_del"])?,
                 crate::deserialize::v1::addspan_ron(&test["op_add"])?,
             ))

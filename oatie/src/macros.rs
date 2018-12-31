@@ -100,9 +100,9 @@ macro_rules! del_span {
 }
 
 #[macro_export]
-macro_rules! op_span {
+macro_rules! op {
     ( [ $( $d:tt )* ], [ $( $a:tt )* ] $(,)* ) => {
-        (
+        $crate::doc::Op(
             del_span![ $( $d )* ],
             add_span![ $( $a )* ],
         )

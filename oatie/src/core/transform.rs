@@ -539,8 +539,8 @@ impl<S: Schema> Transform<S> {
             }
         }
         (
-            (a_del.result(), a_add.result()),
-            (b_del.result(), b_add.result()),
+            Op(a_del.result(), a_add.result()),
+            Op(b_del.result(), b_add.result()),
         )
     }
 
@@ -1751,7 +1751,7 @@ pub fn transform_add_del_inner<S: Schema>(
                     a.next();
                     b.next();
 
-                    let (del, ins) = transform_add_del(&insspan, &span);
+                    let Op(del, ins) = transform_add_del(&insspan, &span);
                     delres.place(&DelWithGroup(del));
                     addres.place(&AddWithGroup(ins));
                 }
@@ -2022,7 +2022,7 @@ pub fn transform_add_del<S: Schema>(avec: &AddSpan<S>, bvec: &DelSpan<S>) -> Op<
         addres.place_all(&rest);
     }
 
-    (delres, addres)
+    Op(delres, addres)
 }
 
 /// Transform two operations according to a schema.
@@ -2045,7 +2045,7 @@ pub fn transform<S: Schema>(a: &Op<S>, b: &Op<S>) -> (Op<S>, Op<S>) {
     log_transform!(" a_ins   {:?}", a.1);
     log_transform!(" a_del_0 {:?}", a_del_0);
     log_transform!(" ~ transform_add_del()");
-    let (a_del_1, a_ins_1) = transform_add_del(&a.1, &a_del_0);
+    let Op(a_del_1, a_ins_1) = transform_add_del(&a.1, &a_del_0);
     log_transform!(" == a_del_1 {:?}", a_del_1);
     log_transform!(" == a_ins_1 {:?}", a_ins_1);
     log_transform!();
@@ -2054,7 +2054,7 @@ pub fn transform<S: Schema>(a: &Op<S>, b: &Op<S>) -> (Op<S>, Op<S>) {
     log_transform!(" b_ins   {:?}", b.1);
     log_transform!(" b_del_0 {:?}", b_del_0);
     log_transform!(" ~ transform_add_del()");
-    let (b_del_1, b_ins_1) = transform_add_del(&b.1, &b_del_0);
+    let Op(b_del_1, b_ins_1) = transform_add_del(&b.1, &b_del_0);
     log_transform!(" == b_del_1 {:?}", b_del_1);
     log_transform!(" == b_ins_1 {:?}", b_ins_1);
     log_transform!();
@@ -2066,7 +2066,7 @@ pub fn transform<S: Schema>(a: &Op<S>, b: &Op<S>) -> (Op<S>, Op<S>) {
     log_transform!(" # transform[4] transform_insertions");
     log_transform!(" a_ins_1 {:?}", a_ins_1);
     log_transform!(" b_ins_1 {:?}", b_ins_1);
-    let ((a_del_2, a_ins_2), (b_del_2, b_ins_2)) = transform_insertions::<S>(&a_ins_1, &b_ins_1);
+    let (Op(a_del_2, a_ins_2), Op(b_del_2, b_ins_2)) = transform_insertions::<S>(&a_ins_1, &b_ins_1);
     log_transform!(" == a_del_2 {:?}", a_del_2);
     log_transform!(" == a_ins_2 {:?}", a_ins_2);
     log_transform!(" == b_del_2 {:?}", b_del_2);
@@ -2101,5 +2101,5 @@ pub fn transform<S: Schema>(a: &Op<S>, b: &Op<S>) -> (Op<S>, Op<S>) {
     log_transform!(" =b_ins_2  {:?}", b_ins_2);
     log_transform!();
 
-    ((a_del_3, a_ins_2), (b_del_3, b_ins_2))
+    (Op(a_del_3, a_ins_2), Op(b_del_3, b_ins_2))
 }

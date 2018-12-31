@@ -15,7 +15,8 @@ pub type DelSpan<S> = Vec<DelElement<S>>;
 pub type AddSpan<S> = Vec<AddElement<S>>;
 pub type CurSpan = Vec<CurElement>;
 
-pub type Op<S> = (DelSpan<S>, AddSpan<S>);
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Op<S: Schema>(pub DelSpan<S>, pub AddSpan<S>);
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum DocElement<S: Schema> {

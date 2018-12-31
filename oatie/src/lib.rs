@@ -105,7 +105,7 @@ impl<S: Schema> OT<S> for Op<S> {
     }
 
     fn empty() -> Self {
-        (vec![], vec![])
+        Op(vec![], vec![])
     }
 
     fn compose(a: &Self, b: &Self) -> Self {

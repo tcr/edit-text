@@ -466,7 +466,7 @@ pub fn compose_add_del<S: Schema>(avec: &AddSpan<S>, bvec: &DelSpan<S>) -> Op<S>
         addres.place_all(&rest);
     }
 
-    (delres, addres)
+    Op(delres, addres)
 }
 
 fn compose_add_del_inner<S: Schema>(
@@ -655,7 +655,7 @@ fn compose_add_del_inner<S: Schema>(
                     a.next();
                     b.next();
 
-                    let (del, ins) = compose_add_del(&insspan, &span);
+                    let Op(del, ins) = compose_add_del(&insspan, &span);
                     delres.place(&DelWithGroup(del));
                     addres.place(&AddWithGroup(ins));
                 }
@@ -663,7 +663,7 @@ fn compose_add_del_inner<S: Schema>(
                     a.next();
                     b.next();
 
-                    let (del, ins) = compose_add_del(&insspan, &span);
+                    let Op(del, ins) = compose_add_del(&insspan, &span);
                     addres.place(&AddGroup(attr, ins));
                     delres.place_all(&del);
                 }
@@ -691,7 +691,7 @@ fn compose_add_del_inner<S: Schema>(
                         a.next();
                         b.next();
 
-                        let (del, ins) = compose_add_del(&insspan, &span);
+                        let Op(del, ins) = compose_add_del(&insspan, &span);
                         delres.place(&DelGroup(del));
                         addres.place_all(&ins[..]);
 
@@ -723,7 +723,7 @@ fn compose_add_del_inner<S: Schema>(
                         a.next();
                         b.next();
 
-                        let (del, ins) = compose_add_del(&insspan, &span);
+                        let Op(del, ins) = compose_add_del(&insspan, &span);
                         delres.place_all(&del[..]);
                         addres.place_all(&ins[..]);
                     }
@@ -822,13 +822,13 @@ fn compose_add_del_inner<S: Schema>(
 }
 
 pub fn compose<S: Schema>(a: &Op<S>, b: &Op<S>) -> Op<S> {
-    let &(ref adel, ref ains) = a;
-    let &(ref bdel, ref bins) = b;
+    let &Op(ref adel, ref ains) = a;
+    let &Op(ref bdel, ref bins) = b;
 
     log_compose!("`````````````` >(compose)<");
     log_compose!("``````````````a_ins {:?}", ains);
     log_compose!("``````````````b_del {:?}", bdel);
-    let (mdel, mins) = compose_add_del(ains, bdel);
+    let Op(mdel, mins) = compose_add_del(ains, bdel);
     log_compose!("``````````````  a=> {:?}", mdel);
     log_compose!("``````````````  b=> {:?}", mins);
 
@@ -844,5 +844,5 @@ pub fn compose<S: Schema>(a: &Op<S>, b: &Op<S>) -> Op<S> {
     log_compose!();
     log_compose!();
 
-    (a_, b_)
+    Op(a_, b_)
 }

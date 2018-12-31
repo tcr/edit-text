@@ -133,7 +133,7 @@ fn try_this() {
                 StyleSet::new(),
                 DocString::from_str("Goodbye World!")
             )],
-            &(
+            &Op(
                 vec![DelText(7)],
                 vec![AddText(StyleSet::new(), DocString::from_str("Hello"))],
             )
@@ -174,7 +174,7 @@ fn test_lib_op() {
                 DocGroup(Attrs::Para, vec![]),
                 DocText(StyleSet::new(), DocString::from_str("!")),
             ],
-            &(
+            &Op(
                 vec![DelSkip(1), DelText(1), DelSkip(2), DelSkip(1)],
                 vec![AddSkip(3)],
             ),
@@ -194,7 +194,7 @@ fn apply_ghost() {
     assert_eq!(
         apply_operation::<RtfSchema>(
             &doc_span![DocText(" stop crying, little hip hop")],
-            &op_span![[], [AddText("\u{01f47b}")]],
+            &op!([], [AddText("\u{01f47b}")]),
         ),
         doc_span![DocText("\u{01f47b} stop crying, little hip hop")]
     );

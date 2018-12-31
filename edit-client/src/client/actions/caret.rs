@@ -218,7 +218,7 @@ pub fn caret_block_move(ctx: ActionContext, increase: bool) -> Result<Op<RtfSche
     // Second operation inserts the new caret.
     if increase {
         if !walker.next_block() {
-            return Ok(op_span!([], []));
+            return Ok(op!([], []));
         }
     } else {
         assert!(walker.back_block());

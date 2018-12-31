@@ -64,5 +64,5 @@ fn remove_carets_op_span(
 pub fn remove_carets_op(doc: &Doc<RtfSchema>, filter: Vec<String>) -> Result<Op<RtfSchema>, Error> {
     let mut writer = DelWriter::new();
     remove_carets_op_span(&mut writer, &doc.0, &filter)?;
-    Ok((writer.result(), vec![]))
+    Ok(Op(writer.result(), vec![]))
 }
