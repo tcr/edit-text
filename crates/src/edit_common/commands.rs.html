@@ -93,6 +93,9 @@
 <span id="93">93</span>
 <span id="94">94</span>
 <span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">oatie</span>::<span class="ident">doc</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">oatie</span>::<span class="ident">rtf</span>::<span class="ident">RtfSchema</span>;
@@ -151,6 +154,9 @@
     <span class="ident">Cursor</span> {
         <span class="ident">focus</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CurSpan</span><span class="op">&gt;</span>,
         <span class="ident">anchor</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CurSpan</span><span class="op">&gt;</span>,
+    },
+    <span class="ident">CursorSelectWord</span> {
+        <span class="ident">focus</span>: <span class="ident">CurSpan</span>,
     },
     <span class="ident">RandomTarget</span> {
         <span class="ident">position</span>: <span class="ident">f64</span>,

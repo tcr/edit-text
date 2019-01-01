@@ -732,6 +732,7 @@ content.</p>
 <p>There is an additional API exposed as GraphQL for non-synchronization tasks. This exposes mutations like updating a page with Markdown, downloading and renaming pages, and other page-editing features.# Server APIs</p>
 <a class="header" href="#storage" id="storage"><h1>Storage</h1></a>
 <p>edit-text uses a local SQLite database for storage.</p>
+<p>A file called <code>edit-server/edit.sqlite3</code> will be created when you first run <code>./tools server</code>. This file can be copied or deleted, and a new version will be cated for you.</p>
 <a class="header" href="#frontend" id="frontend"><h1>Frontend</h1></a>
 <p>The Frontend is written in TypeScript and communicates with a WebAssembly
 component containing the Client and Controller.</p>
