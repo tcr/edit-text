@@ -346,6 +346,9 @@ fn controller_command<C: ClientController>(
                 (None, None) => {} // ???
             }
         }
+        ControllerCommand::CursorSelectWord { focus } => {
+            client.client_op(|ctx| caret_word_select(&ctx, &focus))?;
+        }
         ControllerCommand::Monkey { enabled: setting } => {
             println!("received monkey setting: {:?}", setting);
             client.state().monkey.store(setting, Ordering::Relaxed);

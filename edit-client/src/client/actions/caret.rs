@@ -72,6 +72,99 @@ pub fn caret_move(
         .map(|ctx| ctx.result())
 }
 
+// TODO make walker_left_word and walker_right_word methods of Walker itself?
+
+// Find the next walker position after the current word.
+fn walker_right_word(walker: &mut Walker<'_>) {
+    walker.next_char();
+    loop {
+        match walker.doc().head() {
+            Some(DocText(_, ref text)) => {
+                if is_boundary_char(text.as_str().chars().next().unwrap()) {
+                    break;
+                } else {
+                    walker.next_char();
+                }
+            }
+            Some(DocGroup(ref attrs, _)) => {
+                if let Attrs::Caret { .. } = attrs {
+                    // guess we'll stop
+                    break;
+                }
+            }
+            None => {
+                // guess we'll stop
+                break;
+            }
+        }
+    }
+}
+
+// Find the last walker position before the current word.
+fn walker_left_word(walker: &mut Walker<'_>) {
+    walker.back_char();
+    loop {
+        match walker.doc().unhead() {
+            Some(DocText(_, ref text)) => {
+                if is_boundary_char(text.as_str().chars().rev().next().unwrap()) {
+                    break;
+                } else {
+                    walker.back_char();
+                }
+            }
+            Some(DocGroup(ref attrs, _)) => {
+                if let Attrs::Caret { .. } = attrs {
+                    // guess we'll stop
+                    break;
+                }
+            }
+            None => {
+                // guess we'll stop
+                break;
+            }
+        }
+    }
+}
+
+pub fn caret_word_select(
+    ctx: &ActionContext,
+    cur: &CurSpan,
+) -> Result<Op<RtfSchema>, Error> {
+    Ok(Op::transform_advance(
+        &Op::transform_advance(
+            &caret_clear(ctx, Pos::Anchor).unwrap_or_else(|_| Op::empty()),
+            &caret_clear(ctx, Pos::Focus).unwrap_or_else(|_| Op::empty()),
+        ),
+        &Op::transform_advance(
+            &{
+                // Insert anchor before word.
+                let mut walker = Walker::to_cursor(&ctx.doc, cur);
+                walker_left_word(&mut walker);
+                let mut writer = walker.to_writer();
+                writer.add.begin();
+                writer.add.close(caret_attrs(
+                    &ctx.client_id,
+                    false
+                ));
+                writer.exit_result()
+            },
+            &{
+                // Insert focus after word.
+                let mut walker = Walker::to_cursor(&ctx.doc, cur);
+                walker_right_word(&mut walker);
+                let mut writer = walker.to_writer();
+                writer.add.begin();
+                writer.add.close(caret_attrs(
+                    &ctx.client_id,
+                    true
+                ));
+                writer.exit_result()
+            }
+        ),
+    ))
+}
+
+
 pub fn caret_word_move(
     ctx: ActionContext,
     increase: bool,
@@ -97,54 +190,11 @@ pub fn caret_word_move(
             writer.del.close();
             let op_1 = writer.exit_result();
 
-            // Find the next walker position after the current word.
+            // Walk backward to start or forward to end of word.
             if increase {
-                walker.next_char();
-                loop {
-                    match walker.doc().head() {
-                        Some(DocText(_, ref text)) => {
-                            if is_boundary_char(text.as_str().chars().next().unwrap()) {
-                                break;
-                            } else {
-                                walker.next_char();
-                            }
-                        }
-                        Some(DocGroup(ref attrs, _)) => {
-                            if let Attrs::Caret { .. } = attrs {
-                                // guess we'll stop
-                                break;
-                            }
-                        }
-                        None => {
-                            // guess we'll stop
-                            break;
-                        }
-                    }
-                }
+                walker_right_word(&mut walker);
             } else {
-                // Move backward.
-                walker.back_char();
-                loop {
-                    match walker.doc().unhead() {
-                        Some(DocText(_, ref text)) => {
-                            if is_boundary_char(text.as_str().chars().rev().next().unwrap()) {
-                                break;
-                            } else {
-                                walker.back_char();
-                            }
-                        }
-                        Some(DocGroup(ref attrs, _)) => {
-                            if let Attrs::Caret { .. } = attrs {
-                                // guess we'll stop
-                                break;
-                            }
-                        }
-                        None => {
-                            // guess we'll stop
-                            break;
-                        }
-                    }
-                }
+                walker_left_word(&mut walker);
             }
 
             // Second operation inserts the new caret.

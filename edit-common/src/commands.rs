@@ -56,6 +56,9 @@ pub enum ControllerCommand {
         focus: Option<CurSpan>,
         anchor: Option<CurSpan>,
     },
+    CursorSelectWord {
+        focus: CurSpan,
+    },
     RandomTarget {
         position: f64,
     },
