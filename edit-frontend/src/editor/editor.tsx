@@ -284,6 +284,41 @@ function caretScan(
   return null;
 }
 
+function getCursorFromPoint(root: Element, x: number, y: number): any {
+  // Get the boundaries of the root element. Any coordinate we're looking at that exist
+  // outside of those boundaries, we snap back to the closest edge of the boundary.
+  let boundary = root.getBoundingClientRect();
+  // console.info('(m) Snapping x', x, 'y', y, 'to boundary');
+  // console.info('(m)', boundary);
+  if (x < boundary.left) {
+    x = boundary.left;
+  }
+  if (y < boundary.top) {
+    y = boundary.top;
+  }
+  if (x > boundary.right) {
+    x = boundary.right - 1;
+  }
+  if (y > boundary.bottom) {
+    y = boundary.bottom - 1;
+  }
+  // console.info('(m) Snapped x', x, 'y', y, 'to boundary.');
+
+  // Check whether we selected a text node or a block element, and create a
+  // cursor for it Only select blocks which are empty.
+  // TODO merge textNodeAtPoint and caretPositionFromPoint !
+  let text = util.textNodeAtPoint(x, y);
+  let element = util.caretPositionFromPoint(x, y);
+  let target = document.elementFromPoint(x, y);
+  return text !== null
+    ? resolveCursorFromPosition(text.textNode, text.offset)
+    : (element !== null
+      ? resolveCursorFromPositionInner(element.textNode.childNodes[element.offset - 1], element.textNode)
+      : (isEmptyBlock(target)
+        ? curto(target as any)
+        : null));
+}
+
 export class Editor extends React.Component {
   props: {
     content: string,
@@ -296,6 +331,8 @@ export class Editor extends React.Component {
   el: HTMLElement;
   mouseDown = false;
 
+  lastClickTime = 0;
+
   onClick(e: MouseEvent) {
     let option = e.ctrlKey || e.metaKey;
     let isAnchor = e.target ? util.matchesSelector(e.target as Node, '[data-style-Link]') : false;
@@ -306,6 +343,28 @@ export class Editor extends React.Component {
   }
 
   onMouseDown(e: MouseEvent) {
+    // Skip if we already handled mousedown. This might be triggered when
+    // rewriting the underlying HTML, it's also a good sanity check.
+    if (this.mouseDown) {
+      return;
+    }
+
+    // Manually detect doubleclick.
+    if (Date.now() - this.lastClickTime < 400) {
+      let destCursor = getCursorFromPoint(this.el, e.clientX, e.clientY);
+      if (destCursor !== null) {
+        this.props.controller.sendCommand({
+          'tag': 'CursorSelectWord',
+          'fields': {
+            'focus': destCursor,
+          },
+        });
+        this.mouseDown = true;
+        return;
+      }
+    }
+    this.lastClickTime = Date.now();
+
     let option = e.ctrlKey || e.metaKey;
     if (option) {
       // Ignore, handle this in onClick
@@ -337,40 +396,8 @@ export class Editor extends React.Component {
   }
 
   moveCursorToPoint(x: number, y: number, dropAnchor: boolean = false): CurSpan | null {
-    // Get the boundaries of the root element. Any coordinate we're looking at that exist
-    // outside of those boundaries, we snap back to the closest edge of the boundary.
-    let boundary = this.el.getBoundingClientRect();
-    // console.info('(m) Snapping x', x, 'y', y, 'to boundary');
-    // console.info('(m)', boundary);
-    if (x < boundary.left) {
-      x = boundary.left;
-    }
-    if (y < boundary.top) {
-      y = boundary.top;
-    }
-    if (x > boundary.right) {
-      x = boundary.right - 1;
-    }
-    if (y > boundary.bottom) {
-      y = boundary.bottom - 1;
-    }
-    // console.info('(m) Snapped x', x, 'y', y, 'to boundary.');
-
-    // Check whether we selected a text node or a block element, and create a cursor for it. 
-    // Only select blocks which are empty.
-    // TODO merge textNodeAtPoint and caretPositionFromPoint !
-    let text = util.textNodeAtPoint(x, y);
-    let element = util.caretPositionFromPoint(x, y);
-    let target = document.elementFromPoint(x, y);
-    let destCursor = text !== null
-      ? resolveCursorFromPosition(text.textNode, text.offset)
-      : (element !== null
-        ? resolveCursorFromPositionInner(element.textNode.childNodes[element.offset - 1], element.textNode)
-        : (isEmptyBlock(target)
-          ? curto(target as any)
-          : null));
-
     // Send the command to the client.
+    let destCursor = getCursorFromPoint(this.el, x, y);
     if (destCursor !== null) {
       this.props.controller.sendCommand({
         'tag': 'Cursor',
@@ -492,12 +519,12 @@ export class Editor extends React.Component {
       return;
     }
 
-    console.log({
-      key_code: e.keyCode,
-      meta_key: e.metaKey,
-      shift_key: e.shiftKey,
-      alt_key: e.altKey,
-    });
+    // console.log({
+    //   key_code: e.keyCode,
+    //   meta_key: e.metaKey,
+    //   shift_key: e.shiftKey,
+    //   alt_key: e.altKey,
+    // });
 
     // Forward the keypress to the controller.
     this.props.controller.sendCommand({
