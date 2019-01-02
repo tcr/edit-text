@@ -12,6 +12,9 @@ mod common;
 
 use self::common::*;
 use failure::Error;
+use fantoccini::Locator;
+
+/*
 
 /// Basic test that moves the cursor to the end of the line, types a Ghost emoji,
 /// waits for the dust to settle, then sees if we get two Ghost emoji on both clients.
@@ -145,6 +148,29 @@ paragraph text
             "DEBUG.root().querySelectorAll('span')[0]".to_string()
         ))?;
         assert_ne!(bg, "rgba(0, 0, 0, 0)", "Selection is not transparent");
+
+        Ok(true)
+    });
+}
+*/
+
+/// Checks that the load/save Markdown dialog works.
+#[test]
+fn integration_styles() {
+    let markdown = r#"
+# Header Text
+
+Body Text
+    "#.trim();
+
+    individual_editing(markdown, async move |mut debug, test_id, mut checkpoint| {
+        let button = await!(debug.client.find(Locator::XPath("//*[@id = 'toolbar']//button[text()='Load/Save']")))?;
+        await!(button.click())?;
+
+        let mut textarea = await!(debug.client.wait_for_find(Locator::Css("#modal-dialog textarea")))?;
+        let value = await!(textarea.prop("value"))?;
+        
+        eprintln!("button {:?}", value);
 
         Ok(true)
     });
