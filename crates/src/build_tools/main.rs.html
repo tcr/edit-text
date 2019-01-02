@@ -960,8 +960,6 @@
 <span id="960">960</span>
 <span id="961">961</span>
 <span id="962">962</span>
-<span id="963">963</span>
-<span id="964">964</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Don&#39;t add additional noise to the build tools.</span>
 <span class="comment">// #![deny(warnings)]</span>
@@ -1609,19 +1607,17 @@
                     <span class="comment">// Spawn the server for the integration test</span>
                     <span class="macro">eprintln</span><span class="macro">!</span>();
                     <span class="macro">eprintln</span><span class="macro">!</span>(<span class="string">&quot;[launching persistent edit-text server]&quot;</span>);
-                    <span class="kw">let</span> <span class="ident">_server_guard</span> <span class="op">=</span> <span class="prelude-val">Some</span>(
-                        <span class="macro">command</span><span class="macro">!</span>(
+                    <span class="kw">let</span> <span class="ident">_server_guard</span> <span class="op">=</span> <span class="macro">command</span><span class="macro">!</span>(
                             <span class="string">r&quot;
-                            {self_path} server {args}
-                        &quot;</span>,
+                                {self_path} server {args}
+                            &quot;</span>,
                             <span class="ident">self_path</span> <span class="op">=</span> <span class="ident">SELF_PATH</span>,
                             <span class="ident">args</span> <span class="op">=</span> <span class="ident">args</span>,
                         )<span class="question-mark">?</span>
                         .<span class="ident">scoped_spawn</span>()
-                        .<span class="ident">unwrap</span>(),
-                    );
+                        .<span class="ident">unwrap</span>();
                     <span class="comment">// Sleep for 3s after server boots.</span>
-                    ::<span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">sleep</span>(::<span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">3000</span>));
+                    <span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">sleep</span>(::<span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">3000</span>));
 
                     <span class="comment">// Run integration tests</span>
                     <span class="macro">eprintln</span><span class="macro">!</span>();
