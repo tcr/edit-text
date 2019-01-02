@@ -68,6 +68,7 @@ pub fn get_single_page(db: &SqliteConnection, input_id: &str) -> Option<Doc<RtfS
     post.map_err::<Error, _>(|x| x.into())
         .map(|x| x.body.to_string())
         .and_then(|x| {
+            eprintln!("loading... {:?}", x);
             Ok(oatie::deserialize::doc_ron(&x).or(serde_json::from_str::<Doc<RtfSchema>>(&x))?)
         })
         .ok()

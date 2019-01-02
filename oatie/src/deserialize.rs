@@ -467,18 +467,23 @@ pub fn doc_ron(input: &str) -> Result<crate::doc::Doc<crate::rtf::RtfSchema>, Er
     match ron::de::from_str::<crate::doc::Doc<crate::rtf::RtfSchema>>(input) {
         Ok(value) => Ok(value),
         Err(err) => {
+            // V3a Possibly a DocSpan not a Doc?
+            if let Ok(value) = ron::de::from_str::<crate::doc::DocSpan<crate::rtf::RtfSchema>>(input) {
+                return Ok(Doc(value));
+            }
+
             // Try V2 encoding.
             if let Ok(value) = v2::docspan_ron(&input) {
-                Ok(Doc(value))
-            } else {
-                // Try V1 encoding.
-                if let Ok(value) = v1::docspan_ron(&input) {
-                    Ok(Doc(value))
-                } else {
-                    // Throw original ron error if error is encountered.
-                    Err(err.into())
-                }
+                return Ok(Doc(value));
             }
+
+            // Try V1 encoding.
+            if let Ok(value) = v1::docspan_ron(&input) {
+                return Ok(Doc(value));
+            }
+
+            // Throw original ron error if error is encountered.
+            Err(err.into())
         }
     }
 }
@@ -489,16 +494,16 @@ pub fn doc_json(input: &str) -> Result<crate::doc::Doc<crate::rtf::RtfSchema>, E
         Err(err) => {
             // Try V2 encoding.
             if let Ok(value) = v2::docspan_json(&input) {
-                Ok(Doc(value))
-            } else {
-                // Try V1 encoding.
-                if let Ok(value) = v1::docspan_json(&input) {
-                    Ok(Doc(value))
-                } else {
-                    // Throw original ron error if error is encountered.
-                    Err(err.into())
-                }
+                return Ok(Doc(value));
             }
+
+            // Try V1 encoding.
+            if let Ok(value) = v1::docspan_json(&input) {
+                return Ok(Doc(value));
+            }
+            
+            // Throw original ron error if error is encountered.
+            Err(err.into())
         }
     }
 }
