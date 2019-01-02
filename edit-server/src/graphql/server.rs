@@ -43,7 +43,8 @@ graphql_object!(Page: () |&self| {
     }
 
     field markdown() -> String {
-        let doc = oatie::deserialize::doc_ron(&self.doc).unwrap();
+        let doc = oatie::deserialize::doc_ron(&self.doc)
+            .or(serde_json::from_str::<Doc<RtfSchema>>(&self.doc)).unwrap();
         doc_to_markdown(&doc.0).unwrap()
     }
 });

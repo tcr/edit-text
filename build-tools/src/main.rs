@@ -644,19 +644,17 @@ fn run() -> Result<(), Error> {
                     // Spawn the server for the integration test
                     eprintln!();
                     eprintln!("[launching persistent edit-text server]");
-                    let _server_guard = Some(
-                        command!(
+                    let _server_guard = command!(
                             r"
-                            {self_path} server {args}
-                        ",
+                                {self_path} server {args}
+                            ",
                             self_path = SELF_PATH,
                             args = args,
                         )?
                         .scoped_spawn()
-                        .unwrap(),
-                    );
+                        .unwrap();
                     // Sleep for 3s after server boots.
-                    ::std::thread::sleep(::std::time::Duration::from_millis(3000));
+                    std::thread::sleep(::std::time::Duration::from_millis(3000));
 
                     // Run integration tests
                     eprintln!();

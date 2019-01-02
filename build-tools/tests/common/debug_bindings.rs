@@ -10,7 +10,7 @@ use futures::future::Future;
 use serde_json::value::Value;
 
 pub struct DebugClient {
-    client: Client,
+    pub client: Client,
 }
 
 #[allow(unused)]
