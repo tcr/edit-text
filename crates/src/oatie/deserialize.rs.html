@@ -502,6 +502,11 @@
 <span id="502">502</span>
 <span id="503">503</span>
 <span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Update legacy serialization formats to a modern format.</span>
 
@@ -972,18 +977,23 @@
     <span class="kw">match</span> <span class="ident">ron</span>::<span class="ident">de</span>::<span class="ident">from_str</span>::<span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">doc</span>::<span class="ident">Doc</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">rtf</span>::<span class="ident">RtfSchema</span><span class="op">&gt;&gt;</span>(<span class="ident">input</span>) {
         <span class="prelude-val">Ok</span>(<span class="ident">value</span>) <span class="op">=&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">value</span>),
         <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=&gt;</span> {
+            <span class="comment">// V3a Possibly a DocSpan not a Doc?</span>
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">ron</span>::<span class="ident">de</span>::<span class="ident">from_str</span>::<span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">doc</span>::<span class="ident">DocSpan</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">rtf</span>::<span class="ident">RtfSchema</span><span class="op">&gt;&gt;</span>(<span class="ident">input</span>) {
+                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Doc</span>(<span class="ident">value</span>));
+            }
+
             <span class="comment">// Try V2 encoding.</span>
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">v2</span>::<span class="ident">docspan_ron</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>) {
-                <span class="prelude-val">Ok</span>(<span class="ident">Doc</span>(<span class="ident">value</span>))
-            } <span class="kw">else</span> {
-                <span class="comment">// Try V1 encoding.</span>
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">v1</span>::<span class="ident">docspan_ron</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>) {
-                    <span class="prelude-val">Ok</span>(<span class="ident">Doc</span>(<span class="ident">value</span>))
-                } <span class="kw">else</span> {
-                    <span class="comment">// Throw original ron error if error is encountered.</span>
-                    <span class="prelude-val">Err</span>(<span class="ident">err</span>.<span class="ident">into</span>())
-                }
+                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Doc</span>(<span class="ident">value</span>));
             }
+
+            <span class="comment">// Try V1 encoding.</span>
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">v1</span>::<span class="ident">docspan_ron</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>) {
+                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Doc</span>(<span class="ident">value</span>));
+            }
+
+            <span class="comment">// Throw original ron error if error is encountered.</span>
+            <span class="prelude-val">Err</span>(<span class="ident">err</span>.<span class="ident">into</span>())
         }
     }
 }
@@ -994,16 +1004,16 @@
         <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=&gt;</span> {
             <span class="comment">// Try V2 encoding.</span>
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">v2</span>::<span class="ident">docspan_json</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>) {
-                <span class="prelude-val">Ok</span>(<span class="ident">Doc</span>(<span class="ident">value</span>))
-            } <span class="kw">else</span> {
-                <span class="comment">// Try V1 encoding.</span>
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">v1</span>::<span class="ident">docspan_json</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>) {
-                    <span class="prelude-val">Ok</span>(<span class="ident">Doc</span>(<span class="ident">value</span>))
-                } <span class="kw">else</span> {
-                    <span class="comment">// Throw original ron error if error is encountered.</span>
-                    <span class="prelude-val">Err</span>(<span class="ident">err</span>.<span class="ident">into</span>())
-                }
+                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Doc</span>(<span class="ident">value</span>));
             }
+
+            <span class="comment">// Try V1 encoding.</span>
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">v1</span>::<span class="ident">docspan_json</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>) {
+                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Doc</span>(<span class="ident">value</span>));
+            }
+            
+            <span class="comment">// Throw original ron error if error is encountered.</span>
+            <span class="prelude-val">Err</span>(<span class="ident">err</span>.<span class="ident">into</span>())
         }
     }
 }
