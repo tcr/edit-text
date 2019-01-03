@@ -79,7 +79,7 @@ where
     let (port, _webdriver_guard) = launch_webdriver().unwrap();
 
     // Wait for webdriver startup.
-    await!(sleep_ms(3_000));
+    let _ = await!(sleep_ms(3_000));
 
     // Connect to the browser driver from Rust.
     let client = await!(Client::with_capabilities(
@@ -158,6 +158,9 @@ where
     })
 }
 
+// TODO Remove this "checkpoint" argment from runner_test, by making it possible
+// to use spawn_test_thead to invoke a function that may or may not have a
+// checkpoint. Maybe by making spawn_test_thread take closure?
 pub fn individual_editing<T>(markdown: &str, runner_test: fn(DebugClient, String, Checkpoint) -> T)
 where
     T: std::future::Future<Output = Result<bool, Error>> + Send + 'static,
