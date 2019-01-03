@@ -323,18 +323,18 @@ fn controller_command<C: ClientController>(
             client.client_op(|doc| add_string(doc, &text).map(|ctx| ctx.result()))?;
         }
         ControllerCommand::RandomTarget { .. } => {
-            // TODO this should never happen, because we rewrite RandomTarget beforehand
+            // This should never happen! We rewrite RandomTarget beforehand in
+            // the method handle_task.
             unreachable!();
         }
         ControllerCommand::Cursor { focus, anchor } => {
             match (focus, anchor) {
                 (Some(focus), Some(anchor)) => {
-                    client.client_op(|mut ctx| {
-                        let op = cur_to_caret(&ctx, &focus, Pos::Focus)?;
-                        ctx = ctx.apply(&op)?;
-                        let op2 = cur_to_caret(&ctx, &anchor, Pos::Anchor)?;
-                        ctx = ctx.apply(&op2)?;
-                        Ok(ctx.result())
+                    client.client_op(|ctx| -> Result<Op<RtfSchema>, Error> {
+                        Ok(Op::transform_advance(
+                            &cur_to_caret(&ctx, &focus, Pos::Focus)?,
+                            &cur_to_caret(&ctx, &anchor, Pos::Anchor)?,
+                        ))
                     })?;
                 }
                 (Some(focus), None) => {
@@ -430,11 +430,12 @@ pub trait ClientController {
                     value
                 {
                     let cursors = random_cursor(&self.state().client_doc.doc)?;
-                    let idx = (pos * (cursors.len() as f64)) as usize;
 
+                    let idx = (pos * (cursors.len() as f64)) as usize;
+                    let cursor = cursors[idx].clone();
                     value = Task::ControllerCommand(ControllerCommand::Cursor {
-                        focus: Some(cursors[idx].clone()),
-                        anchor: Some(cursors[idx].clone()),
+                        focus: Some(cursor.clone()),
+                        anchor: Some(cursor),
                     });
                 }
 
