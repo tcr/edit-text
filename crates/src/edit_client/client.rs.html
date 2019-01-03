@@ -657,6 +657,7 @@
 <span id="657">657</span>
 <span id="658">658</span>
 <span id="659">659</span>
+<span id="660">660</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">mod</span> <span class="ident">actions</span>;
 <span class="kw">mod</span> <span class="ident">clientdoc</span>;
@@ -983,18 +984,18 @@
             <span class="ident">client</span>.<span class="ident">client_op</span>(<span class="op">|</span><span class="ident">doc</span><span class="op">|</span> <span class="ident">add_string</span>(<span class="ident">doc</span>, <span class="kw-2">&amp;</span><span class="ident">text</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">ctx</span><span class="op">|</span> <span class="ident">ctx</span>.<span class="ident">result</span>()))<span class="question-mark">?</span>;
         }
         <span class="ident">ControllerCommand</span>::<span class="ident">RandomTarget</span> { .. } <span class="op">=&gt;</span> {
-            <span class="comment">// TODO this should never happen, because we rewrite RandomTarget beforehand</span>
+            <span class="comment">// This should never happen! We rewrite RandomTarget beforehand in</span>
+            <span class="comment">// the method handle_task.</span>
             <span class="macro">unreachable</span><span class="macro">!</span>();
         }
         <span class="ident">ControllerCommand</span>::<span class="ident">Cursor</span> { <span class="ident">focus</span>, <span class="ident">anchor</span> } <span class="op">=&gt;</span> {
             <span class="kw">match</span> (<span class="ident">focus</span>, <span class="ident">anchor</span>) {
                 (<span class="prelude-val">Some</span>(<span class="ident">focus</span>), <span class="prelude-val">Some</span>(<span class="ident">anchor</span>)) <span class="op">=&gt;</span> {
-                    <span class="ident">client</span>.<span class="ident">client_op</span>(<span class="op">|</span><span class="kw-2">mut</span> <span class="ident">ctx</span><span class="op">|</span> {
-                        <span class="kw">let</span> <span class="ident">op</span> <span class="op">=</span> <span class="ident">cur_to_caret</span>(<span class="kw-2">&amp;</span><span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">focus</span>, <span class="ident">Pos</span>::<span class="ident">Focus</span>)<span class="question-mark">?</span>;
-                        <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">apply</span>(<span class="kw-2">&amp;</span><span class="ident">op</span>)<span class="question-mark">?</span>;
-                        <span class="kw">let</span> <span class="ident">op2</span> <span class="op">=</span> <span class="ident">cur_to_caret</span>(<span class="kw-2">&amp;</span><span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">anchor</span>, <span class="ident">Pos</span>::<span class="ident">Anchor</span>)<span class="question-mark">?</span>;
-                        <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">apply</span>(<span class="kw-2">&amp;</span><span class="ident">op2</span>)<span class="question-mark">?</span>;
-                        <span class="prelude-val">Ok</span>(<span class="ident">ctx</span>.<span class="ident">result</span>())
+                    <span class="ident">client</span>.<span class="ident">client_op</span>(<span class="op">|</span><span class="ident">ctx</span><span class="op">|</span> <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Op</span><span class="op">&lt;</span><span class="ident">RtfSchema</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+                        <span class="prelude-val">Ok</span>(<span class="ident">Op</span>::<span class="ident">transform_advance</span>(
+                            <span class="kw-2">&amp;</span><span class="ident">cur_to_caret</span>(<span class="kw-2">&amp;</span><span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">focus</span>, <span class="ident">Pos</span>::<span class="ident">Focus</span>)<span class="question-mark">?</span>,
+                            <span class="kw-2">&amp;</span><span class="ident">cur_to_caret</span>(<span class="kw-2">&amp;</span><span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">anchor</span>, <span class="ident">Pos</span>::<span class="ident">Anchor</span>)<span class="question-mark">?</span>,
+                        ))
                     })<span class="question-mark">?</span>;
                 }
                 (<span class="prelude-val">Some</span>(<span class="ident">focus</span>), <span class="prelude-val">None</span>) <span class="op">=&gt;</span> {
@@ -1090,11 +1091,12 @@
                     <span class="ident">value</span>
                 {
                     <span class="kw">let</span> <span class="ident">cursors</span> <span class="op">=</span> <span class="ident">random_cursor</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">state</span>().<span class="ident">client_doc</span>.<span class="ident">doc</span>)<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">idx</span> <span class="op">=</span> (<span class="ident">pos</span> <span class="op">*</span> (<span class="ident">cursors</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">f64</span>)) <span class="kw">as</span> <span class="ident">usize</span>;
 
+                    <span class="kw">let</span> <span class="ident">idx</span> <span class="op">=</span> (<span class="ident">pos</span> <span class="op">*</span> (<span class="ident">cursors</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">f64</span>)) <span class="kw">as</span> <span class="ident">usize</span>;
+                    <span class="kw">let</span> <span class="ident">cursor</span> <span class="op">=</span> <span class="ident">cursors</span>[<span class="ident">idx</span>].<span class="ident">clone</span>();
                     <span class="ident">value</span> <span class="op">=</span> <span class="ident">Task</span>::<span class="ident">ControllerCommand</span>(<span class="ident">ControllerCommand</span>::<span class="ident">Cursor</span> {
-                        <span class="ident">focus</span>: <span class="prelude-val">Some</span>(<span class="ident">cursors</span>[<span class="ident">idx</span>].<span class="ident">clone</span>()),
-                        <span class="ident">anchor</span>: <span class="prelude-val">Some</span>(<span class="ident">cursors</span>[<span class="ident">idx</span>].<span class="ident">clone</span>()),
+                        <span class="ident">focus</span>: <span class="prelude-val">Some</span>(<span class="ident">cursor</span>.<span class="ident">clone</span>()),
+                        <span class="ident">anchor</span>: <span class="prelude-val">Some</span>(<span class="ident">cursor</span>),
                     });
                 }
 
