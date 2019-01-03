@@ -339,7 +339,7 @@ export class EditorFrame extends React.Component {
         {this.state.modal}
         <div id="root-layout" className={modalClass}>
           <div id="toolbar">
-            <a href="/" id="logo">{CONFIG.title}</a>
+            <a href="/" id="logo" className={CONFIG.release_mode}>{CONFIG.title}</a>
             <NativeButtons
               editor={this}
               buttons={this.state.buttons}

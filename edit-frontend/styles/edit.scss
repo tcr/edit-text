@@ -61,7 +61,18 @@ body {
             font-size: 10px;
             margin-left: 10px;
             padding: 4px 5px 3px;
+            text-decoration: none !important;
+        }
 
+        &.debug::after {
+            content: "DEBUG" !important;
+            background: repeating-linear-gradient(
+                135deg,
+                #60bc6d,
+                #60bc6d 10px,
+                #469852 10px,
+                #469852 20px
+            );
         }
     }
 
