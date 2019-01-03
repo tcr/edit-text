@@ -224,6 +224,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                         "wasm": !client_proxy,
                         "title": &edit_title,
                         "console_command_log": cfg!(feature = "console_command_log"),
+                        "release_mode": if cfg!(debug_assertions) { "debug" } else { "release" },
                     }))
                     .unwrap()
                 ),
@@ -457,6 +458,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                     "id": id,
                     "stylesheet": &stylesheet,
                     "title": &edit_title,
+                    "release_mode": if cfg!(debug_assertions) { "debug" } else { "release" }, 
                 })).unwrap();
 
                 return Response::from_data(

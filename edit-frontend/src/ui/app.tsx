@@ -339,7 +339,7 @@ export class EditorFrame extends React.Component {
         {this.state.modal}
         <div id="root-layout" className={modalClass}>
           <div id="toolbar">
-            <a href="/" id="logo">{CONFIG.title}</a>
+            <a href="/" id="logo" className={CONFIG.release_mode}>{CONFIG.title}</a>
             <NativeButtons
               editor={this}
               buttons={this.state.buttons}
@@ -381,15 +381,15 @@ export class EditorFrame extends React.Component {
         </div>
         <div id="footer">
           <div id="debug-row">
-            <div id="debug-content" onClick={(e) => (e.target as any).classList.toggle('expanded')}>
+            <div id="debug-content" onClick={(e) => document.querySelector('#debug-content')!.classList.toggle('expanded')}>
               <div id="debug-button">🐞</div>
               <div id="debug-buttons">
-                <b>DEBUG MENU</b>
-                &nbsp;
+                <b>DEBUG</b>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <span style={{background: '#6f9', borderRadius: '3px'}}>
                   Client: <kbd tabIndex={0}>{this.state.editorID}</kbd>
                 </span>
-                &nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <span><button onClick={() => alert('good job')}>test alert()</button></span>
               </div>
             </div>
@@ -523,7 +523,7 @@ export class EditorFrame extends React.Component {
 
       case 'ServerDisconnect': {
         this.showNotification({
-          element: <div>The editor has disconnected from the server. We're sorry. You can <a href="?">refresh your browser</a>, or we'll refresh once the server is reachable.</div>,
+          element: <div>The editor has disconnected from the server. Sorry. This page will automatically reload, or you can manually <button onClick={(e) => { window.location.reload(); }}>Refresh the page</button></div>,
           level: 'error',
         });
 
