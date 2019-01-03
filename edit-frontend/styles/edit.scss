@@ -191,17 +191,23 @@ body.theme-column {
     
     // Shadow and box styling.
     #edit-outer {
+        box-sizing: border-box;
         font-size: 16px;
-        padding-top: 10px;
-        padding-bottom: 30px;
         max-width: 60em;
         margin: 26px auto 70px;
         background: #fff;
         border: 1px solid #ddd;
         box-shadow: 4px 4px 7px #ccc;
-        min-height: 40em;
-        padding: 10px 35px 50px; // + bottom padding for footer
+        min-height: calc(100% - 100px);
+        padding: 10px 35px 30px; // + bottom padding for footer
         cursor: text;
+    }
+}
+
+// Else
+body:not(.theme-column) {
+    #edit-outer {
+        padding: 10px 35px 30px; // + bottom padding for footer
     }
 }
 
@@ -458,11 +464,6 @@ body.theme-column {
         padding: 2px 5px;
         color: white;
     }
-
-    // for debugging
-    span + span {
-        // outline: thin solid #32a1ce;
-    }
 }
 
 // Multi client
@@ -581,24 +582,12 @@ body#multi {
     }
 }
 
-// TODO ??
+// TODO Can this be enabled? How to detect editing-blurred?
 // body.editing-blurred div[data-tag="caret"]::before {
 //     filter: grayscale(100%);
 // }
 
-// Debugging
-
-.edit-text {
-    // exclusionary set of adjacent spans that should NOT be adjacent
-
-    span.Normie:not(.Link):not(.Bold):not(.Italic) + span.Normie:not(.Link):not(.Bold):not(.Italic),
-    span.Normie.Link:not(.Bold):not(.Italic) + span.Normie.Link:not(.Bold):not(.Italic),
-    span.Normie:not(.Link).Bold:not(.Italic) + span.Normie:not(.Link).Bold:not(.Italic),
-    span.Normie:not(.Link):not(.Bold).Italic + span.Normie:not(.Link):not(.Bold).Italic {
-        outline: 1px orange dashed;
-        background: #f55;
-    }
-}
+// Debug Tools
 
 #debug-row {
     display: flex;
@@ -659,4 +648,11 @@ body#multi {
         // margin-left: 10px;
         box-sizing: border-box;
     }
+}
+
+// Debugging
+
+// Spans should never be successive.
+.edit-text span + span {
+    outline: thin solid #32a1ce;
 }
