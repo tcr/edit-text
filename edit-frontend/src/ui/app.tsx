@@ -282,37 +282,39 @@ export class EditorFrame extends React.Component {
       });
     };
 
-    // Update watcher.
-    // TODO move this to a better location.
-    let cachedEtag: null | string = null;
-    let refreshNotification = false;
-    let intervalId = setInterval(() => {
-      fetch(new Request('/$/edit.js'), {
-        method: 'GET',
-        mode: 'same-origin',
-        cache: 'default',
-      }).then(res => {
-        if (res.ok) {
-          let etag = res.headers.get('etag');
-          if (etag) {
-            if (!cachedEtag) {
-              cachedEtag = etag;
-            } else {
-              if (cachedEtag != etag) {
-                if (!refreshNotification) {
-                  refreshNotification = true;
-                  this.showNotification({
-                    level: 'notice',
-                    element: <div>A newer version of edit-text is available. <button onClick={() => window.location.reload()}>Refresh the page</button></div>,
-                  });
-                }
-                clearInterval(intervalId);
-              }
-            }
-          }
-        }
-      });
-    }, 3000);
+    // Update source code watcher to be notified of a newer browser version.
+    // TODO This should really just be webpack's auto-reload functionality or
+    // something equivalent. This version causes the file to just be reloaded
+    // every two minutes. Impractical.
+    // let cachedEtag: null | string = null;
+    // let refreshNotification = false;
+    // let intervalId = setInterval(() => {
+    //   fetch(new Request('/$/edit.js'), {
+    //     method: 'GET',
+    //     mode: 'same-origin',
+    //     cache: 'default',
+    //   }).then(res => {
+    //     if (res.ok) {
+    //       let etag = res.headers.get('etag');
+    //       if (etag) {
+    //         if (!cachedEtag) {
+    //           cachedEtag = etag;
+    //         } else {
+    //           if (cachedEtag != etag) {
+    //             if (!refreshNotification) {
+    //               refreshNotification = true;
+    //               this.showNotification({
+    //                 level: 'notice',
+    //                 element: <div>A newer version of edit-text is available. <button onClick={() => window.location.reload()}>Refresh the page</button></div>,
+    //               });
+    //             }
+    //             clearInterval(intervalId);
+    //           }
+    //         }
+    //       }
+    //     }
+    //   });
+    // }, 3000);
 
     this.state = {
       body: this.props.body,
