@@ -24,6 +24,7 @@ body {
 
     #edit-layout {
         flex: 1;
+        overflow: auto;
     }
 }
 
@@ -597,7 +598,7 @@ body#multi {
 
 #debug-content {
     display: block;
-    padding: 10px;
+    padding: 8px;
     box-sizing: border-box;
     transition: all 0.3s linear, background-color 0.1s linear, border 0.1s linear;
     border: 1px solid transparent;
@@ -606,14 +607,6 @@ body#multi {
     display: flex;
     box-shadow: 0 0 0px rgba(0, 0, 0, 0.0);
     pointer-events: auto;
-
-    #debug-button {
-        pointer-events: none;
-        filter: grayscale(1.0);
-        opacity: 0.5;
-        width: 1.4em;
-        height: 1.4em;
-    }
 
     &.expanded, &:hover {
         background: #fff;
@@ -627,6 +620,24 @@ body#multi {
         }
     }
 
+    &.expanded {
+        flex: 1;
+
+        // #debug-buttons {
+        //     width: auto;
+        // }
+    }
+
+    #debug-button {
+        pointer-events: none;
+        filter: grayscale(1.0);
+        opacity: 0.5;
+        width: 1.4em;
+        height: 1.4em;
+        text-align: center;
+        align-self: center;
+    }
+
     #debug-buttons {
         flex: 1;
         overflow: hidden;
@@ -634,15 +645,7 @@ body#multi {
         flex-basis: 0px;
         width: 0;
         transition: all 0.3s linear;
-        margin-left: 10px;
+        // margin-left: 10px;
         box-sizing: border-box;
-    }
-
-    &.expanded {
-        flex: 1;
-
-        // #debug-buttons {
-        //     width: auto;
-        // }
     }
 }
