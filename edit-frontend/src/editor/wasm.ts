@@ -1,7 +1,7 @@
 
 import 'react';
 
-import * as route from '../ui/route';
+import * as route from '../app/route';
 import * as index from '..';
 import { WasmClientController as WasmClientModule, FrontendCommand, ControllerCommand } from '../bindgen/edit_client';
 import { getWasmModule } from '../index';

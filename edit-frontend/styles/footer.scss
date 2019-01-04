@@ -1,0 +1,51 @@
+#footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+    z-index: 2000;
+
+    .footer-bar {
+        box-sizing: border-box;
+        border-top: 1px solid #cb9;
+        background: #fff3bb;
+        padding: 7px 10px 8px;
+        z-index: 100;
+        padding-left: 34px;
+        position: relative;
+        pointer-events: auto;
+
+        // Close button
+        span {
+            opacity: 0.3;
+            position: absolute;
+            top: 2px;
+            left: 12px;
+            font-size: 20px;
+            cursor: pointer;
+            user-select: none;
+
+            &:hover {
+                opacity: 1.0;
+            }
+        }
+
+        button {
+            font: inherit;
+        }
+
+        text-shadow: none;
+
+        &.error {
+            border-top-color: #a55;
+            background: #cc3333;
+            color: white;
+            text-shadow: 1px 1px 0px rgba(0.0, 0.0, 0.0, 0.3);
+
+            span {
+                opacity: 0.5;
+            }
+        }
+    }
+}

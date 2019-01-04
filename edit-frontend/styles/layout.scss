@@ -1,0 +1,169 @@
+$layout-shadow: 4px 4px 7px rgba(0, 0, 0, 0.15);
+
+// page content and modal layer (.fullpage) is fullsized
+html, body, #content, .fullpage {
+    display: block;
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    width: 100%;
+}
+
+body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.42857143;
+}
+
+#root-layout {
+    display: flex !important;
+    flex-direction: column;
+    height: 100%;
+
+    #edit-layout {
+        flex: 1;
+        display: flex;
+        flex-direction: row;
+
+        #edit-sidebar {
+            width: 0;
+            display: flex;
+            overflow: visible;
+            flex-direction: column;
+
+            // When expanded, expand #edit-sidebar-inner.
+            &.expanded {
+                #edit-sidebar-inner {
+                    width: 300px;
+                }
+            }
+
+            #edit-sidebar-inner {
+                transition: all 0.2s ease;
+                box-shadow: $layout-shadow;
+                overflow: hidden;
+                background: #eee;
+                z-index: 1000;
+                border-right: 1px #999 solid;
+                display: flex;
+                flex: 1;
+                flex-direction: column;
+
+                width: 0;
+
+                #edit-sidebar-inner-inner {
+                    box-sizing: border-box;
+                    width: 300px;
+                    display: flex;
+                    flex: 1;
+                    flex-direction: column;
+
+                    #recently-viewed {
+                        padding: 1px 20px;
+                        flex: 1;
+                        overflow: auto;
+                    }
+
+                    #edit-sidebar-footer {
+                        flex: 0;
+                        margin: 0 15px;
+                    }
+                }
+            }
+
+            #edit-sidebar-footer {
+                border-top: 1px solid #ccc;
+                padding: 9px 10px 17px;
+                text-align: center;
+                font-size: 0.9em;
+                opacity: 0.6;
+            }
+
+            #recently-viewed {
+                p {
+                    font-size: 1.2em;
+                    margin: 1.3em 0 0.5em;
+                    font-weight: 500;
+                    color: #444;
+                }
+
+                #edit-sidebar-new {
+                    float: right;
+                    margin-top: -4px;
+                    
+                    button {
+                        border: 1px solid #aaa;
+                        background: #fff;
+                        font-size: 12px;
+                        padding: 5px 10px;
+                        text-transform: uppercase;
+                        box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.1);
+                        cursor: pointer;
+                    }
+                }
+
+                #recently-viewed-list:empty::after {
+                    content: 'No documents to display.';
+                }
+
+                #recently-viewed-list > * {
+                    a { text-decoration: none; }
+                    &:hover a { text-decoration: underline; }
+
+                    a {
+                        display: block;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                        overflow: hidden;
+
+                        padding: 0.5em 0 0.25em 0.4em;
+
+                        font-size: 18px;
+                        &:not(:hover) {
+                            color: #000000;
+                        }
+                    }
+
+                    a::before {
+                        content: '\01F4CB';
+                        margin-right: 13px;
+                        filter: grayscale(60%) contrast(130%);
+                        opacity: 0.8;
+                    }
+                }
+            }
+        }
+
+        #edit-outer {
+            flex: 1;
+            overflow: auto;
+        }
+    }
+}
+
+
+// When in a "page" like view
+body.theme-column {
+    background: #eee;
+    
+    // Shadow and box styling.
+    #edit-page {
+        box-sizing: border-box;
+        font-size: 16px;
+        max-width: 60em;
+        margin: 26px auto 70px;
+        background: #fff;
+        border: 1px solid #ddd;
+        box-shadow: $layout-shadow;
+        min-height: calc(100% - 100px);
+        padding: 10px 35px 30px; // + bottom padding for footer
+        cursor: text;
+    }
+}
+
+// Else
+body:not(.theme-column) {
+    #edit-page {
+        padding: 10px 35px 30px; // + bottom padding for footer
+    }
+}

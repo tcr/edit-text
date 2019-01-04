@@ -1,0 +1,63 @@
+
+// Debug Tools
+
+#debug-row {
+    display: flex;
+    padding: 20px;
+    justify-content: flex-end;
+    pointer-events: none;
+}
+
+#debug-content {
+    display: block;
+    padding: 8px;
+    box-sizing: border-box;
+    transition: all 0.3s linear, background-color 0.1s linear, border 0.1s linear;
+    border: 1px solid transparent;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    box-shadow: 0 0 0px rgba(0, 0, 0, 0.0);
+    pointer-events: auto;
+
+    &.expanded, &:hover {
+        background: #fff;
+        border: 1px solid #888;
+        box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.1);
+        filter: grayscale(0.0);
+
+        #debug-button {
+            filter: grayscale(0.0);
+            opacity: 1.0;
+        }
+    }
+
+    &.expanded {
+        flex: 1;
+
+        // #debug-buttons {
+        //     width: auto;
+        // }
+    }
+
+    #debug-button {
+        pointer-events: none;
+        filter: grayscale(1.0);
+        opacity: 0.5;
+        width: 1.4em;
+        height: 1.4em;
+        text-align: center;
+        align-self: center;
+    }
+
+    #debug-buttons {
+        flex: 1;
+        overflow: hidden;
+        white-space: pre;
+        flex-basis: 0px;
+        width: 0;
+        transition: all 0.3s linear;
+        // margin-left: 10px;
+        box-sizing: border-box;
+    }
+}

@@ -107,7 +107,8 @@ impl SimpleSocket for ClientSocket {
         let page_id = if valid_page_id(&path[1..]) {
             path[1..].to_string()
         } else {
-            // TODO actually bail out, how?
+            // TODO We should actually terminate the socket at this point rather
+            // than rewriting this silently to a random page (here, 'home')
             "home".to_string()
         };
 
