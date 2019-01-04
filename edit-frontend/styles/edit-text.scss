@@ -1,0 +1,262 @@
+/* everything inside .edit-text */
+
+& {
+    margin: 0;
+
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    outline: none;
+
+    font-size: 16px; // TODO make variable, share with #edit-text-outer
+    cursor: text;
+    white-space: pre-wrap;
+    font-kerning: none; // For caret wrapping with zero-width non-joiner
+    font-family: 'TeX Gyre Heros', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    letter-spacing: 0.05pt;
+}
+
+* {
+    clear: both;
+}
+
+// Carets
+
+div[data-tag="caret"] {
+    display: inline;
+    font-size: inherit;
+    vertical-align: bottom;
+    line-height: inherit;
+}
+
+@keyframes fadein {
+    from { opacity: 1; } //TODO 0
+    to   { opacity: 1; }
+}
+
+$color_curcaret: rgb(233, 15, 124);
+$color_caret: #089;
+
+div[data-tag="caret"]::before {
+    border-left: 2px $color_caret solid;
+    margin-left: -1px;
+    margin-right: -1px;
+    content: '\200c' !important; // zero width non-joiner Unicode code point
+    pointer-events: none;
+    animation: blink-animation 2s linear infinite;
+}
+
+@keyframes blink-animation {
+    0% {
+        opacity: 1.0;
+    }
+    43% {
+        opacity: 1.0;
+    }
+    50% {
+        opacity: 0.0;
+    }
+    93% {
+        opacity: 0.0;
+    }
+    100% {
+        opacity: 1.0;
+    }
+}
+
+div[data-tag="caret"][data-focus="false"] {
+    display: none;
+}
+
+div[data-tag="caret"].current::before {
+    border-left: 2px $color_curcaret solid;
+    z-index: 100;
+    position: relative;
+    animation: blink-animation 1s linear infinite;
+}
+
+// TODO the overlapping dashed cursors isn't working well
+
+// div[data-tag="caret"] +
+// div[data-tag="caret"].current::before {
+//     border-left-style: dashed !important;
+//     border-right-style: dashed !important;
+// }
+
+// div[data-tag="caret"].current +
+// div[data-tag="caret"]::before {
+//     border-left-style: dashed !important;
+//     border-right-style: dashed !important;
+//     z-index: 1001;
+//     position: relative;
+// }
+
+// @keyframes caret {
+//     0% {
+//         border-left-width: 1px;
+//         border-right-width: 1px;
+//         // margin-right: -2px;
+//         // margin-left: -1px;
+//     }
+//     50% {
+//         border-left-width: 0;
+//         border-right-width: 0;
+//     }
+//   }
+
+// Blocks
+
+// All blocks.
+div[data-tag="h1"],
+div[data-tag="h2"],
+div[data-tag="h3"],
+div[data-tag="h4"],
+div[data-tag="h5"],
+div[data-tag="h6"],
+div[data-tag="p"],
+div[data-tag="pre"],
+div[data-tag="html"], {
+    margin: 12px 0;
+    position: relative;
+
+    // All blocks should be minimum the height of one char.
+    &:empty::after {
+        content: " ";
+    }
+}
+
+div[data-tag="hr"] {
+    margin: 16px 0;
+    height: 2px;
+    min-height: 0 !important;
+    border-bottom: 1px solid #eee;
+    background: #ccc;
+}
+
+div[data-tag="h1"] {
+    font-size: 2.0em;
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+div[data-tag="h2"] {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-top: 16px;
+}
+
+div[data-tag="h3"] {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+div[data-tag="h4"] {
+    font-size: 1.1em;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+div[data-tag="h5"] {
+    font-size: 1.0em;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+div[data-tag="h6"] {
+    font-size: 0.9em;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+div[data-tag="pre"] {
+    font-family: monospace;
+    padding: 5px 8px;
+    font-size: 0.9em;
+    background: #eee;
+}
+
+div[data-tag="html"] {
+    font-family: monospace;
+    padding: 5px 8px;
+    font-size: 0.9em;
+    border: 1px solid #aa5;
+    background: #eea;
+}
+
+// We don't use list-style because we need the element to overlap
+// the entire margin in order for caret resolution to work.
+
+div[data-tag="bullet"]::before {
+    content: "\25CF";
+    position: absolute;
+    vertical-align: bottom;
+    left: 8px;
+    font-size: 0.95em;
+    top: 1px;
+}
+
+div[data-tag="bullet"] {
+    padding-left: 25px;
+    position: relative;
+}
+
+div[data-tag="bullet"] + div[data-tag="bullet"] {
+    margin-top: -5px;
+}
+
+// Spans.
+
+span.Bold {
+    font-weight: bold;
+}
+
+span.Italic {
+    font-style: italic;
+}
+
+span.Selected {
+    color: white;
+    background: #349;
+}
+
+.selection-start ~ span, .selection-start ~ * span {
+    color: white;
+    background: #349;
+}
+
+.selection-end ~ span, .selection-end ~ * span {
+    color: inherit;
+    background: transparent;
+}
+
+span.Link {
+    color: #05d;
+    text-decoration: underline;
+}
+
+span.Link.Selected {
+    color: white !important;
+}
+
+span.Link:hover::before {
+    background: black;
+    content: "Command-click or ctrl-click to open this link.";
+    position: absolute;
+    top: 1.6em;
+    
+    font-size: 0.8em;
+    font-weight: normal;
+    padding: 2px 5px;
+    color: white;
+}
+
+// Debugging
+
+// Spans should never be successive.
+span + span {
+    outline: thin solid #32a1ce;
+}

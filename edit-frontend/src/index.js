@@ -12,7 +12,7 @@ export function getWasmModule() {
 Raven.config('https://c221eba12d7b4e279b01764577063af1@sentry.io/1227661').install();
 
 // Launch the application.
-import * as app from './ui/app';
+import * as app from './app/app';
 import DEBUG from './debug';
 
 DEBUG.measureTime('wasm-request');

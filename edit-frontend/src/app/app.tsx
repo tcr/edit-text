@@ -22,6 +22,38 @@ if (!CONFIG.configured) {
   alert('The window.CONFIG variable was not configured by the server!')
 }
 
+function recentlyViewedPush(path: string) {
+  let recent = recentlyViewed();
+  recent.splice(0, 0, {path});
+  recentlyViewedWrite(recent.slice(0, 100)); // Keep to >= 100 items.
+}
+
+function recentlyViewedWrite(input: Array<{path: string}>) {
+  localStorage.setItem('v1:recently-viewed', JSON.stringify(input));
+}
+
+function recentlyViewed(): Array<{path: string}> {
+  try {
+    let storage = JSON.parse(localStorage.getItem('v1:recently-viewed') || '[]');
+    let storageArray: Array<any> = Array.from(storage);
+    for (let item of storageArray) {
+      if (!('path' in item)) {
+        throw new Error('Path not found in ' + JSON.stringify(item));
+      }
+      if (typeof item.path != 'string') {
+        throw new Error('Expected string path in ' + JSON.stringify(item));
+      }
+    }
+
+    // Filter out redundant items.
+    var t: any;
+    return storageArray.filter((t={},e=>!(t[e.path]=++t[e.path]|0))) ;
+  } catch (e) {
+    console.error('error loading "v1:recently-viewed" from localStorage:', e);
+    return [];
+  }
+}
+
 function UiElement(
   props: {
     editor: EditorFrame,
@@ -249,6 +281,7 @@ export class EditorFrame extends React.Component {
     editorID: string,
     modal: React.ReactNode,
     notices: Array<NoticeProps>,
+    sidebarExpanded: boolean,
   };
 
   KEY_WHITELIST: any;
@@ -281,6 +314,21 @@ export class EditorFrame extends React.Component {
         element: <div>edit-text encountered an exception. Please reload this page to continue. (Error thrown from WebAssembly)</div>
       });
     };
+
+    // TODO need a better location to do this type of initialization
+
+    // Push self editor into the recently viewed stack
+    let match = window.location.pathname.match(/^\/([^\/]+)/);
+    if (match) {
+      let path = match[1];
+      recentlyViewedPush(path);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.keyCode == 27) {
+        document.querySelector('#edit-sidebar')!.classList.toggle('expanded');
+      }
+    });
 
     // Update source code watcher to be notified of a newer browser version.
     // TODO This should really just be webpack's auto-reload functionality or
@@ -322,6 +370,7 @@ export class EditorFrame extends React.Component {
       editorID: '$$$$$$',
       modal: null,
       notices: [],
+      sidebarExpanded: false,
     };
   }
 
@@ -339,7 +388,17 @@ export class EditorFrame extends React.Component {
         {this.state.modal}
         <div id="root-layout" className={modalClass}>
           <div id="toolbar">
-            <a href="/" id="logo" className={CONFIG.release_mode}>{CONFIG.title}</a>
+            <a
+              href="/"
+              id="logo"
+              className={CONFIG.release_mode}
+              onClick={(e) => {
+                this.setState({
+                  sidebarExpanded: !this.state.sidebarExpanded,
+                });
+                e.preventDefault();
+              }}
+            >{CONFIG.title}</a>
             <NativeButtons
               editor={this}
               buttons={this.state.buttons}
@@ -355,27 +414,49 @@ export class EditorFrame extends React.Component {
           </div>
 
           <div id="edit-layout">
-            <div
-              id="edit-outer"
-              ref={r => editBoundary = r}
-              onMouseDown={e => {
-                this.editor!.onMouseDown(e as any);
-              }}
-              onMouseUp={e => {
-                this.editor!.onMouseUp(e as any);
-              }}
-              onMouseMove={e => {
-                this.editor!.onMouseMove(e as any);
-              }}
-            >
-              <Editor 
-                controller={this.props.client} 
-                KEY_WHITELIST={this.KEY_WHITELIST}
-                content={this.state.body}
-                editorID={this.state.editorID}
-                disabled={!!this.state.modal}
-                ref={r => this.editor = r}
-              />
+            <div id="edit-sidebar" className={this.state.sidebarExpanded ? 'expanded' : ''}>
+              <div id="edit-sidebar-inner">
+                <div id="edit-sidebar-inner-inner">
+                  <div id="recently-viewed">
+                    <p><span id="edit-sidebar-new"><button onClick={_ => {
+                      window.location.href = '/?from='; // TODO this is a hack
+                    }}>New</button></span>Recently Viewed</p>
+                    <div id="recently-viewed-list">{
+                      recentlyViewed().map((doc) => (
+                        <div><a href={doc.path} title={'/' + doc.path}>{doc.path}</a></div>
+                      ))
+                    }</div>
+                    <div id="edit-sidebar-inner-inner"></div>
+                  </div>
+                  <div id="edit-sidebar-footer">
+                    Read more at <a href="http://docs.edit.io">docs.edit.io</a>.<br />Or contribute to <a href="http://github.com/tcr/edit-text">edit-text on Github</a>.
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="edit-outer">
+              <div
+                id="edit-page"
+                ref={r => editBoundary = r}
+                onMouseDown={e => {
+                  this.editor!.onMouseDown(e as any);
+                }}
+                onMouseUp={e => {
+                  this.editor!.onMouseUp(e as any);
+                }}
+                onMouseMove={e => {
+                  this.editor!.onMouseMove(e as any);
+                }}
+              >
+                <Editor 
+                  controller={this.props.client} 
+                  KEY_WHITELIST={this.KEY_WHITELIST}
+                  content={this.state.body}
+                  editorID={this.state.editorID}
+                  disabled={!!this.state.modal}
+                  ref={r => this.editor = r}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -749,17 +830,6 @@ export function start() {
     />,
     document.querySelector('#content')!,
     () => {
-      // NUX notification.
-      // if (!sessionStorage.getItem("its-only-funny-once")) {
-      //   editorFrame!.showNotification({
-      //     element: (<div>
-      //       Check out <a href="http://github.com/tcr/edit-text">edit-text</a> on Github for more information.
-      //     </div>),
-      //     level: 'notice',
-      //   });
-      //   sessionStorage.setItem("its-only-funny-once", 'true');
-      // }
-
       // Connect client.
       DEBUG.measureTime('connect-client');
       client.connect();

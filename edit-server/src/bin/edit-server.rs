@@ -281,7 +281,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
                             })
                         } else {
                             // Interpret as a Markdown document
-                            let doc = Doc(markdown_to_doc(&from)?);
+                            let doc = Doc(markdown_to_doc(&if from.trim().is_empty() { format!( "# {}", id) } else { from })?);
                             Ok(match validate_doc(&doc) {
                                 Ok(_) => doc,
                                 Err(err) => {
@@ -409,6 +409,7 @@ fn run_http_server(port: u16, client_proxy: bool) {
             },
 
             (GET) ["/{id}/presentation", id: String] => {
+                // TODO check id validity as in "/{id}"
                 let mut template = String::from_utf8_lossy(&update_config_var(
                     &template_dir.get(Path::new("presentation.hbs")).unwrap(),
                 )).to_owned().to_string();
@@ -431,10 +432,21 @@ fn run_http_server(port: u16, client_proxy: bool) {
                 );
             },
             (GET) ["/{id}/presentation/", id: String] => {
+                // TODO check id validity as in "/{id}"
                 return Response::redirect_302(format!("/{}/presentation", id));
             },
 
             (GET) ["/{id}", id: String] => {
+                // Check id validity.
+                if !valid_page_id(&id) {
+                    // Redirect to /welcome-{remote ip}
+                    let mut id = format!(
+                        "welcome-{}",
+                        format!("{}", request.header("X-Forwarded-For").unwrap_or("127.0.0.1")).replace(":", "-").replace(".", "-"),
+                    );
+                    return Response::redirect_302(format!("/{}", id));
+                }
+
                 // Inline the stylesheet.
                 let stylesheet = dist_dir.get(Path::new("edit.css")).unwrap();
                 let stylesheet = String::from_utf8_lossy(&stylesheet).to_string();
