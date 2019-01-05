@@ -19,11 +19,13 @@ body {
     display: flex !important;
     flex-direction: column;
     height: 100%;
+    overflow: hidden;
 
     #edit-layout {
         flex: 1;
         display: flex;
         flex-direction: row;
+        overflow: auto;
 
         #edit-sidebar {
             width: 0;
@@ -34,14 +36,18 @@ body {
             // When expanded, expand #edit-sidebar-inner.
             &.expanded {
                 #edit-sidebar-inner {
-                    width: 300px;
+                    width: 320px;
+                    // TODO why 320px? Where is this number derived from. When
+                    // the menu is open there should be no horizontal scrollbar,
+                    // and setting this to 320px instead of 300px fixes it, but
+                    // this seems like a bug.
                 }
             }
 
             #edit-sidebar-inner {
                 transition: all 0.2s ease;
                 box-shadow: $layout-shadow;
-                overflow: hidden;
+                overflow: auto;
                 background: #eee;
                 z-index: 1000;
                 border-right: 1px #999 solid;
