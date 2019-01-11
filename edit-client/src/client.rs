@@ -352,7 +352,7 @@ fn controller_command<C: ClientController>(
             client.client_op(|ctx| caret_word_select(&ctx, &focus))?;
         }
         ControllerCommand::Monkey { enabled: setting } => {
-            console_log!("received monkey setting: {:?}", setting);
+            // console_log!("received monkey setting: {:?}", setting);
             client.state().monkey.store(setting, Ordering::Relaxed);
         }
     }
@@ -434,7 +434,7 @@ pub trait ClientController {
                     let cursors = random_cursor(&self.state().client_doc.doc)?;
 
                     let idx = (pos * (cursors.len() as f64)) as usize;
-                    console_log!("WHAT {:?} {:?} {:?}", pos, cursors.len(), idx);
+                    // console_log!("WHAT {:?} {:?} {:?}", pos, cursors.len(), idx);
                     let cursor = cursors[idx].clone();
                     value = Task::ControllerCommand(ControllerCommand::Cursor {
                         focus: Some(cursor.clone()),
