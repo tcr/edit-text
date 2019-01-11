@@ -128,7 +128,7 @@ pub fn execute(args: &ArgMatches, book_dir: &Path) -> Result<()> {
         info!("File changed: {:?}", path);
         info!("Building book...");
 
-        // FIXME: This area is really ugly because we need to re-set livereload :(
+        // This area is really ugly because we need to re-set livereload :(
 
         let result = MDBook::load(&book_dir)
             .and_then(|mut b| {

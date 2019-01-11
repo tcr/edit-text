@@ -1,4 +1,4 @@
-import { WasmClientController as WasmClientModule } from './bindgen/edit_client';
+import { WasmClientController as WasmClientModule, ControllerCommand } from './bindgen/edit_client';
 
 declare var window: any;
 
@@ -179,6 +179,18 @@ const DEBUG = {
         } else {
             throw new Error('No caret found.');
         }
+    },
+
+    monkey: (enabled: boolean) => {
+        let command: ControllerCommand = {
+            'tag': 'Monkey',
+            'fields': {
+                enabled,
+            },
+        };
+        globalClientBindings!.command(JSON.stringify({
+            ControllerCommand: command,
+        }));
     },
 
     drawMarker(x: number, y: number): Element {

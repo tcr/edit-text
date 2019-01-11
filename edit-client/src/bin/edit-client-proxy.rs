@@ -222,8 +222,7 @@ fn setup_client(
     let (tx_client, rx_client) = unbounded();
     spawn_send_to_client(rx_client, out);
 
-    let mut client = ProxyClientController {
-        state: Rc::new(RefCell::new(Client {
+    let mut state = Rc::new(RefCell::new(Client {
             client_doc: ClientDoc::new(name.to_owned()),
             last_controls: None,
             last_caret_state: None,
@@ -231,7 +230,12 @@ fn setup_client(
             monkey: monkey.clone(),
             alive: alive.clone(),
             task_count: 0,
-        })),
+        }));
+
+    
+
+    let mut client = ProxyClientController {
+        state: state.clone(),
 
         tx_client,
         tx_sync: tx_sync.clone(),
@@ -243,7 +247,7 @@ fn setup_client(
     let (tx_task, rx_task) = unbounded();
 
     // Setup monkey tasks.
-    setup_monkey::<ProxyClientController>(Scheduler::new(
+    setup_monkey::<ProxyClientController>(state.clone(), Scheduler::new(
         tx_task.clone(),
         alive.clone(),
         monkey.clone(),

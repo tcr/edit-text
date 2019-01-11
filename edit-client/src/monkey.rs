@@ -20,22 +20,32 @@ use wasm_bindgen::closure::Closure;
 use wasm_bindgen::prelude::*;
 use wbg_rand::Rng;
 
+
+
+
+
+
+
+#[cfg(target_arch = "wasm32")]
+use crate::wasm::WasmClientController;
+
 #[cfg(target_arch = "wasm32")]
 pub struct Scheduler {
-    // tx: Sender<Task>,
+    controller: WasmClientController,
     alive: Arc<AtomicBool>,
     monkey: Arc<AtomicBool>,
 }
 
+
 #[cfg(target_arch = "wasm32")]
 impl Scheduler {
     pub fn new(
-        // tx: Sender<Task>,
+        controller: WasmClientController,
         alive: Arc<AtomicBool>,
         monkey: Arc<AtomicBool>,
     ) -> Self {
         Self {
-            // tx,
+            controller,
             alive,
             monkey,
         }
@@ -52,7 +62,7 @@ impl Scheduler {
             Rng,
         };
 
-        // let tx = self.tx.clone();
+        let controller = self.controller.clone();
         let alive = self.alive.clone();
         let monkey = self.monkey.clone();
 
@@ -60,7 +70,7 @@ impl Scheduler {
         let load_it: Rc<RefCell<Option<Box<dyn Fn()>>>> = Rc::new(RefCell::new(None));
         let load_it_clone = load_it.clone();
         *load_it.borrow_mut() = Some(Box::new(move || {
-            // let tx = tx.clone();
+            let mut controller = controller.clone();
             let alive = alive.clone();
             let monkey = monkey.clone();
             let task = task.clone();
@@ -80,13 +90,10 @@ impl Scheduler {
 
                     if alive.load(Ordering::Relaxed) && monkey.load(Ordering::Relaxed) {
                         let task_object = task();
-                        let _task_str =
+                        let task_str =
                             serde_json::to_string(&Task::ControllerCommand(task_object)).unwrap();
 
-                        // FIXME This needs to send the task to the controller,
-                        // but somehow that needs to be routed through the
-                        // frontend?
-                        // forwardWasmTask(&task_str);
+                        controller.command(&task_str);
                     }
                 })
             };
@@ -103,6 +110,18 @@ impl Scheduler {
         ::std::mem::forget(load_it);
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 #[cfg(not(target_arch = "wasm32"))]
 pub struct Scheduler {
@@ -144,6 +163,21 @@ impl Scheduler {
     }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 pub type MonkeyParam = (u64, u64);
 
 // "Human-like"
@@ -177,9 +211,7 @@ fn local_rng() -> impl Rng {
 }
 
 #[allow(unused)]
-pub fn setup_monkey<C: ClientController + Sized>(mut scheduler: Scheduler) {
-    // let mut scheduler = Scheduler::new(alive, monkey);
-
+pub fn setup_monkey<C: ClientController + Sized>(client: Rc<RefCell<crate::client::Client>>, mut scheduler: Scheduler) {
     scheduler.schedule_random(MONKEY_BUTTON, || {
         let mut rng = local_rng();
         let index = rng.gen_range(0, button_handlers::<C>(None).0.len() as u32);
@@ -198,16 +230,16 @@ pub fn setup_monkey<C: ClientController + Sized>(mut scheduler: Scheduler) {
         ControllerCommand::Character { char_code: c }
     });
 
-    scheduler.schedule_random(MONKEY_ARROW, || {
-        let mut rng = local_rng();
-        let key_code = *rng.choose(&[37, 39, 37, 39, 37, 39, 38, 40]).unwrap();
-        ControllerCommand::Keypress {
-            key_code,
-            meta_key: false,
-            shift_key: false,
-            alt_key: false,
-        }
-    });
+    // scheduler.schedule_random(MONKEY_ARROW, || {
+    //     let mut rng = local_rng();
+    //     let key_code = *rng.choose(&[37, 39, 37, 39, 37, 39, 38, 40]).unwrap();
+    //     ControllerCommand::Keypress {
+    //         key_code,
+    //         meta_key: false,
+    //         shift_key: false,
+    //         alt_key: false,
+    //     }
+    // });
 
     scheduler.schedule_random(MONKEY_BACKSPACE, || ControllerCommand::Keypress {
         key_code: 8,

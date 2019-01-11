@@ -328,6 +328,8 @@ fn controller_command<C: ClientController>(
             unreachable!();
         }
         ControllerCommand::Cursor { focus, anchor } => {
+            // FIXME Why is random click failing?
+            // console_log!("cursor ------> {:?} {:?}", focus, anchor);
             match (focus, anchor) {
                 (Some(focus), Some(anchor)) => {
                     client.client_op(|ctx| -> Result<Op<RtfSchema>, Error> {
@@ -350,7 +352,7 @@ fn controller_command<C: ClientController>(
             client.client_op(|ctx| caret_word_select(&ctx, &focus))?;
         }
         ControllerCommand::Monkey { enabled: setting } => {
-            println!("received monkey setting: {:?}", setting);
+            console_log!("received monkey setting: {:?}", setting);
             client.state().monkey.store(setting, Ordering::Relaxed);
         }
     }
@@ -432,6 +434,7 @@ pub trait ClientController {
                     let cursors = random_cursor(&self.state().client_doc.doc)?;
 
                     let idx = (pos * (cursors.len() as f64)) as usize;
+                    console_log!("WHAT {:?} {:?} {:?}", pos, cursors.len(), idx);
                     let cursor = cursors[idx].clone();
                     value = Task::ControllerCommand(ControllerCommand::Cursor {
                         focus: Some(cursor.clone()),
