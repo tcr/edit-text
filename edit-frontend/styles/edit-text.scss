@@ -253,10 +253,3 @@ span.Link:hover::before {
     padding: 2px 5px;
     color: white;
 }
-
-// Debugging
-
-// Spans should never be successive.
-span + span {
-    outline: thin solid #32a1ce;
-}
