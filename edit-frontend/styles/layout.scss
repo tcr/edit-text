@@ -21,21 +21,24 @@ body {
     height: 100%;
 
     #edit-layout {
-        flex: 1;
         display: flex;
         flex-direction: row;
+        overflow: auto;
+        flex-grow: 1;
 
         #edit-sidebar {
             width: 0;
             display: flex;
             overflow: visible;
             flex-direction: column;
+            align-self: stretch;
 
             // When expanded, expand #edit-sidebar-inner.
-            &.expanded {
-                #edit-sidebar-inner {
-                    width: 300px;
-                }
+            #edit-sidebar-inner {
+                width: 0;
+            }
+            &.expanded #edit-sidebar-inner {
+                width: 300px;
             }
 
             #edit-sidebar-inner {
@@ -45,29 +48,26 @@ body {
                 background: #eee;
                 z-index: 1000;
                 border-right: 1px #999 solid;
+
                 display: flex;
-                flex: 1;
                 flex-direction: column;
+                height: 100%;
 
-                width: 0;
-
-                #edit-sidebar-inner-inner {
-                    box-sizing: border-box;
+                #edit-sidebar-inner-scrollable {
                     width: 300px;
-                    display: flex;
-                    flex: 1;
-                    flex-direction: column;
+                    overflow: auto;
+                    flex-grow: 1;
 
                     #recently-viewed {
                         padding: 1px 20px;
-                        flex: 1;
-                        overflow: auto;
+                        margin-bottom: 20px;
                     }
+                }
 
-                    #edit-sidebar-footer {
-                        flex: 0;
-                        margin: 0 15px;
-                    }
+                #edit-sidebar-footer {
+                    width: 270px;
+                    flex: 0;
+                    margin: 0 15px;
                 }
             }
 
