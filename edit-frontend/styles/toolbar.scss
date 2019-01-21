@@ -1,13 +1,29 @@
-
 #toolbar {
+    $left-width: 46px;
+
     display: flex;
     flex-direction: row;
     background: #ddd;
     border-bottom: 2px solid #aaa;
-    padding: 5px 20px 8px;
+    padding: 5px 20px 8px $left-width;
     cursor: auto;
     min-height: 44px;
     flex-wrap: wrap;
+    position: relative;
+
+    .hamburger:before {
+        content: "☰";
+        font-size: 30px;
+        line-height: 40px;
+        vertical-align: center;
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: $left-width;
+        text-align: center;
+        opacity: 0.5;
+    }
 
     #logo {
         content: "edit-text";
@@ -30,7 +46,7 @@
             font-weight: bold;
             border-radius: 4px;
             font-size: 10px;
-            margin-left: 10px;
+            margin-left: 8px;
             padding: 4px 5px 3px;
             text-decoration: none !important;
         }
@@ -49,6 +65,11 @@
         &:hover {
             color: #888;
             text-shadow: 1px 1px 1px #fff;
+
+            &::after {
+                opacity: 0.7;
+            }
+                
         }
     }
 

@@ -398,7 +398,7 @@ export class EditorFrame extends React.Component {
                 });
                 e.preventDefault();
               }}
-            >{CONFIG.title}</a>
+            ><span className="hamburger"></span> {CONFIG.title}</a>
             <NativeButtons
               editor={this}
               buttons={this.state.buttons}
