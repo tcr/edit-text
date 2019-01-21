@@ -424,7 +424,7 @@ export class EditorFrame extends React.Component {
                       }}>New</button></span>Recently Viewed</p>
                       <div id="recently-viewed-list">{
                         recentlyViewed().map((doc) => (
-                          <div><a href={doc.path} title={'/' + doc.path}>{doc.path}</a></div>
+                          <div key={doc.path}><a href={doc.path} title={'/' + doc.path}>{doc.path}</a></div>
                         ))
                       }</div>
                     </div>
@@ -751,7 +751,7 @@ class EditText extends React.Component {
       .connect()
       .then(() => {
         console.log('Loading static editor.');
-        this.props.client.clientBindings.command(JSON.stringify({
+        this.props.client.clientBindings!.command(JSON.stringify({
           ClientCommand: {
             Init: ["$local", convertMarkdownToDoc(this.props.markdown), 100],
           } 

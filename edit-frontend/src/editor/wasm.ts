@@ -59,7 +59,7 @@ export class WasmController implements ControllerImpl {
   onError: (err: any) => void | null;
 
   // TODO refactor wasmClient, remove Module
-  clientBindings: WasmClientModule;
+  clientBindings: WasmClientModule | null;
 
   sendCommand(command: ControllerCommand) {
     if (CONFIG.console_command_log) {
@@ -69,9 +69,13 @@ export class WasmController implements ControllerImpl {
     }
 
     try {
-      this.clientBindings.command(JSON.stringify({
-        ControllerCommand: command,
-      }));
+      if (!this.clientBindings) {
+        console.error('Tried to send message to controller before WebAssembly initialized.');
+      } else {
+        this.clientBindings.command(JSON.stringify({
+          ControllerCommand: command,
+        }));
+      }
     } catch (e) {
       this.onError ? this.onError(e) : null;
       throw e;
