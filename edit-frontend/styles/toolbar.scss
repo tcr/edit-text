@@ -53,13 +53,22 @@
 
         &.debug::after {
             content: "DEBUG" !important;
-            background: repeating-linear-gradient(
-                135deg,
-                #60bc6d,
+            background-image: 
+              repeating-linear-gradient(
+                -45deg, 
+                #60bc6d, 
                 #60bc6d 10px,
                 #469852 10px,
-                #469852 20px
-            );
+                #469852 20px,
+              );
+            background-size: 200% 200%;
+            animation: barberpole 10s linear infinite;
+        }
+
+        @keyframes barberpole {
+            100% {
+                background-position: 100% 100%;
+            }
         }
         
         &:hover {

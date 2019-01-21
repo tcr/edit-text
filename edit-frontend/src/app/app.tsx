@@ -420,7 +420,7 @@ export class EditorFrame extends React.Component {
                   <div id="edit-sidebar-scrollable">
                     <div id="recently-viewed">
                       <p><span id="edit-sidebar-new"><button onClick={_ => {
-                        window.location.href = '/?from='; // TODO this is a hack
+                        window.location.href = '/?from=%23 New page'; // TODO this is a hack
                       }}>New</button></span>Recently Viewed</p>
                       <div id="recently-viewed-list">{
                         recentlyViewed().map((doc) => (
