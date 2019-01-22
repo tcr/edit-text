@@ -6,6 +6,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import axios from 'axios';
 import * as Raven from 'raven-js';
+import * as MobileDetect from 'mobile-detect';
 import * as route from './route';
 import { Editor } from '../editor/editor';
 import { ProxyController } from './proxy';
@@ -791,8 +792,11 @@ export function start_standalone() {
 
 export function start() {
 // export function start_app() {
-
-  if (/*is mobile*/ true && !document.location.search.match(/\bforce\b/)) {
+  console.log('---->', MobileDetect);
+  let md = new MobileDetect(window.navigator.userAgent);
+  let isMobile = md.mobile();
+  let isForce = document.location.search.match(/\bforce\b/);
+  if (isMobile && !isForce) {
     (window as any).mobileWarning = function () {
       if (!confirm(`
         edit-text doesn't support touch input yet. Your device may not be able
