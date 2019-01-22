@@ -3,12 +3,17 @@
 #edit-sidebar {
     #edit-sidebar-footer {
         flex: 0;
-        margin: 0 15px;
         border-top: 1px solid #ccc;
-        padding: 9px 10px 17px;
+        padding: 12px 10px 16px;
         text-align: center;
-        font-size: 0.9em;
-        opacity: 0.6;
+        font-size: 1em;
+        line-height: 1.8;
+        color: #666;
+        transition: color 0.2s linear;
+
+        &:hover {
+            color: #333;
+        }
     }
 
     #edit-sidebar-scrollable {

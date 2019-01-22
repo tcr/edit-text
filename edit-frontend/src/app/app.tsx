@@ -95,7 +95,7 @@ function NativeButtons(
 ) {
   if (!props.buttons.length) {
     return (
-      <div id="native-buttons">Loading...</div>
+      <div id="native-buttons"><span style={{lineHeight: '30px'}}>Connecting...</span></div>
     );
   }
   return (
@@ -430,7 +430,7 @@ export class EditorFrame extends React.Component {
                     </div>
                   </div>
                   <div id="edit-sidebar-footer">
-                    Read more at <a href="http://docs.edit.io">docs.edit.io</a>.<br />Or contribute to <a href="http://github.com/tcr/edit-text">edit-text on Github</a>.
+                    Read more at <a href="http://docs.edit.io">docs.edit.io</a>.<br />Or contribute to edit-text <a href="http://github.com/tcr/edit-text">on Github</a>.
                   </div>
                 </div>
               </div>
@@ -791,6 +791,25 @@ export function start_standalone() {
 
 export function start() {
 // export function start_app() {
+
+  if (/*is mobile*/ true && !document.location.search.match(/\bforce\b/)) {
+    (window as any).mobileWarning = function () {
+      if (!confirm(`
+        edit-text doesn't support touch input yet. Your device may not be able
+        to edit documents. Hit "OK" to return to the read-only version of this
+        document, or "Cancel" to load the full user interface in spite of this
+        grave warning.
+      `)) {
+        window.location.search = '&force';
+      }
+    };
+
+    document.querySelector('#native-buttons')!.innerHTML = `
+      <button style="background: yellow" onclick="window.mobileWarning()">⚠️ Device Unsupported</button>
+    `;
+    return;
+  }
+
   let client: ControllerImpl;
 
   // Wasm and Proxy implementations

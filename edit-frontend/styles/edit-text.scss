@@ -3,13 +3,6 @@
 & {
     margin: 0;
 
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-
     outline: none;
 
     font-size: 16px; // TODO make variable, share with #edit-text-outer
@@ -18,6 +11,15 @@
     font-kerning: none; // For caret wrapping with zero-width non-joiner
     font-family: 'TeX Gyre Heros', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     letter-spacing: 0.05pt;
+}
+
+.active {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 * {
@@ -47,8 +49,15 @@ div[data-tag="caret"]::before {
     margin-right: -1px;
     content: '\200c' !important; // zero width non-joiner Unicode code point
     pointer-events: none;
-    animation: blink-animation 2s linear infinite;
 }
+
+div[data-tag="caret"].current::before {
+    border-left: 2px $color_curcaret solid;
+    z-index: 100;
+    position: relative;
+    animation: blink-animation 1s linear infinite;
+}
+
 
 @keyframes blink-animation {
     0% {
@@ -70,13 +79,6 @@ div[data-tag="caret"]::before {
 
 div[data-tag="caret"][data-focus="false"] {
     display: none;
-}
-
-div[data-tag="caret"].current::before {
-    border-left: 2px $color_curcaret solid;
-    z-index: 100;
-    position: relative;
-    animation: blink-animation 1s linear infinite;
 }
 
 // TODO the overlapping dashed cursors isn't working well

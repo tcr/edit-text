@@ -11,6 +11,8 @@
     flex-wrap: wrap;
     position: relative;
 
+    $appear-length: 0.7s;
+
     .hamburger:before {
         content: "☰";
         font-size: 30px;
@@ -22,7 +24,17 @@
         bottom: 0;
         width: $left-width;
         text-align: center;
-        opacity: 0.5;
+        color: #999;
+        animation: appear $appear-length ease;
+    }
+
+    @keyframes appear {
+        0% {
+            opacity: 0;
+        }
+        100% {
+            opacity: 1.0;
+        }
     }
 
     #logo {
@@ -62,12 +74,15 @@
                 #469852 20px,
               );
             background-size: 200% 200%;
-            animation: barberpole 10s linear infinite;
+            animation: barberpole 20s linear infinite;
         }
 
         @keyframes barberpole {
-            100% {
+            50% {
                 background-position: 100% 100%;
+            }
+            100% {
+                background-position: 0% 0%;
             }
         }
         
@@ -78,12 +93,13 @@
             &::after {
                 opacity: 0.7;
             }
-                
         }
     }
 
     #native-buttons {
         flex: 1;
+        animation: appear $appear-length ease-in;
+        z-index: 5000; // Needs to appear over sidebar (why?)
     }
 
     kbd {
