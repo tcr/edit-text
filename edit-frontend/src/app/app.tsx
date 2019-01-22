@@ -398,7 +398,7 @@ export class EditorFrame extends React.Component {
                 });
                 e.preventDefault();
               }}
-            >{CONFIG.title}</a>
+            ><span className="hamburger"></span> {CONFIG.title}</a>
             <NativeButtons
               editor={this}
               buttons={this.state.buttons}
@@ -417,16 +417,17 @@ export class EditorFrame extends React.Component {
             <div id="edit-sidebar" className={this.state.sidebarExpanded ? 'expanded' : ''}>
               <div id="edit-sidebar-inner">
                 <div id="edit-sidebar-inner-inner">
-                  <div id="recently-viewed">
-                    <p><span id="edit-sidebar-new"><button onClick={_ => {
-                      window.location.href = '/?from='; // TODO this is a hack
-                    }}>New</button></span>Recently Viewed</p>
-                    <div id="recently-viewed-list">{
-                      recentlyViewed().map((doc) => (
-                        <div><a href={doc.path} title={'/' + doc.path}>{doc.path}</a></div>
-                      ))
-                    }</div>
-                    <div id="edit-sidebar-inner-inner"></div>
+                  <div id="edit-sidebar-scrollable">
+                    <div id="recently-viewed">
+                      <p><span id="edit-sidebar-new"><button onClick={_ => {
+                        window.location.href = '/?from=%23 New page'; // TODO this is a hack
+                      }}>New</button></span>Recently Viewed</p>
+                      <div id="recently-viewed-list">{
+                        recentlyViewed().map((doc) => (
+                          <div key={doc.path}><a href={doc.path} title={'/' + doc.path}>{doc.path}</a></div>
+                        ))
+                      }</div>
+                    </div>
                   </div>
                   <div id="edit-sidebar-footer">
                     Read more at <a href="http://docs.edit.io">docs.edit.io</a>.<br />Or contribute to <a href="http://github.com/tcr/edit-text">edit-text on Github</a>.
@@ -750,7 +751,7 @@ class EditText extends React.Component {
       .connect()
       .then(() => {
         console.log('Loading static editor.');
-        this.props.client.clientBindings.command(JSON.stringify({
+        this.props.client.clientBindings!.command(JSON.stringify({
           ClientCommand: {
             Init: ["$local", convertMarkdownToDoc(this.props.markdown), 100],
           } 

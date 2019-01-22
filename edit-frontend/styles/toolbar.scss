@@ -1,17 +1,33 @@
-
 #toolbar {
+    $left-width: 46px;
+
     display: flex;
     flex-direction: row;
     background: #ddd;
-    border-bottom: 2px solid #aaa;
-    padding: 5px 20px 8px;
+    border-bottom: 1px solid #aaa;
+    padding: 5px 20px 8px $left-width;
     cursor: auto;
     min-height: 44px;
     flex-wrap: wrap;
+    position: relative;
+
+    .hamburger:before {
+        content: "☰";
+        font-size: 30px;
+        line-height: 40px;
+        vertical-align: center;
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: $left-width;
+        text-align: center;
+        opacity: 0.5;
+    }
 
     #logo {
         content: "edit-text";
-        margin: 3px 20px 0 0;
+        margin: 3px 22px 0 0;
         font-family: Helvetica, Arial, sans-serif;
         color: #444;
         font-size: 20px;
@@ -37,18 +53,32 @@
 
         &.debug::after {
             content: "DEBUG" !important;
-            background: repeating-linear-gradient(
-                135deg,
-                #60bc6d,
+            background-image: 
+              repeating-linear-gradient(
+                -45deg, 
+                #60bc6d, 
                 #60bc6d 10px,
                 #469852 10px,
-                #469852 20px
-            );
+                #469852 20px,
+              );
+            background-size: 200% 200%;
+            animation: barberpole 10s linear infinite;
+        }
+
+        @keyframes barberpole {
+            100% {
+                background-position: 100% 100%;
+            }
         }
         
         &:hover {
             color: #888;
             text-shadow: 1px 1px 1px #fff;
+
+            &::after {
+                opacity: 0.7;
+            }
+                
         }
     }
 
