@@ -6,6 +6,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import axios from 'axios';
 import * as Raven from 'raven-js';
+import * as MobileDetect from 'mobile-detect';
 import * as route from './route';
 import { Editor } from '../editor/editor';
 import { ProxyController } from './proxy';
@@ -95,7 +96,7 @@ function NativeButtons(
 ) {
   if (!props.buttons.length) {
     return (
-      <div id="native-buttons">Loading...</div>
+      <div id="native-buttons"><span style={{lineHeight: '30px'}}>Connecting...</span></div>
     );
   }
   return (
@@ -398,7 +399,7 @@ export class EditorFrame extends React.Component {
                 });
                 e.preventDefault();
               }}
-            >{CONFIG.title}</a>
+            ><span className="hamburger"></span> {CONFIG.title}</a>
             <NativeButtons
               editor={this}
               buttons={this.state.buttons}
@@ -417,19 +418,20 @@ export class EditorFrame extends React.Component {
             <div id="edit-sidebar" className={this.state.sidebarExpanded ? 'expanded' : ''}>
               <div id="edit-sidebar-inner">
                 <div id="edit-sidebar-inner-inner">
-                  <div id="recently-viewed">
-                    <p><span id="edit-sidebar-new"><button onClick={_ => {
-                      window.location.href = '/?from='; // TODO this is a hack
-                    }}>New</button></span>Recently Viewed</p>
-                    <div id="recently-viewed-list">{
-                      recentlyViewed().map((doc) => (
-                        <div><a href={doc.path} title={'/' + doc.path}>{doc.path}</a></div>
-                      ))
-                    }</div>
-                    <div id="edit-sidebar-inner-inner"></div>
+                  <div id="edit-sidebar-scrollable">
+                    <div id="recently-viewed">
+                      <p><span id="edit-sidebar-new"><button onClick={_ => {
+                        window.location.href = '/?from=%23 New page'; // TODO this is a hack
+                      }}>New</button></span>Recently Viewed</p>
+                      <div id="recently-viewed-list">{
+                        recentlyViewed().map((doc) => (
+                          <div key={doc.path}><a href={doc.path} title={'/' + doc.path}>{doc.path}</a></div>
+                        ))
+                      }</div>
+                    </div>
                   </div>
                   <div id="edit-sidebar-footer">
-                    Read more at <a href="http://docs.edit.io">docs.edit.io</a>.<br />Or contribute to <a href="http://github.com/tcr/edit-text">edit-text on Github</a>.
+                    Read more at <a href="http://docs.edit.io">docs.edit.io</a>.<br />Or contribute to edit-text <a href="http://github.com/tcr/edit-text">on Github</a>.
                   </div>
                 </div>
               </div>
@@ -750,7 +752,7 @@ class EditText extends React.Component {
       .connect()
       .then(() => {
         console.log('Loading static editor.');
-        this.props.client.clientBindings.command(JSON.stringify({
+        this.props.client.clientBindings!.command(JSON.stringify({
           ClientCommand: {
             Init: ["$local", convertMarkdownToDoc(this.props.markdown), 100],
           } 
@@ -790,6 +792,28 @@ export function start_standalone() {
 
 export function start() {
 // export function start_app() {
+  console.log('---->', MobileDetect);
+  let md = new MobileDetect(window.navigator.userAgent);
+  let isMobile = md.mobile();
+  let isForce = document.location.search.match(/\bforce\b/);
+  if (isMobile && !isForce) {
+    (window as any).mobileWarning = function () {
+      if (!confirm(`
+        edit-text doesn't support touch input yet. Your device may not be able
+        to edit documents. Hit "OK" to return to the read-only version of this
+        document, or "Cancel" to load the full user interface in spite of this
+        grave warning.
+      `)) {
+        window.location.search = '&force';
+      }
+    };
+
+    document.querySelector('#native-buttons')!.innerHTML = `
+      <button style="background: yellow" onclick="window.mobileWarning()">⚠️ Device Unsupported</button>
+    `;
+    return;
+  }
+
   let client: ControllerImpl;
 
   // Wasm and Proxy implementations

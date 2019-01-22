@@ -1,0 +1,82 @@
+// Sidebar styling. Also see layout.scss
+
+#edit-sidebar {
+    #edit-sidebar-footer {
+        flex: 0;
+        border-top: 1px solid #ccc;
+        padding: 12px 10px 16px;
+        text-align: center;
+        font-size: 1em;
+        line-height: 1.8;
+        color: #666;
+        transition: color 0.2s linear;
+
+        &:hover {
+            color: #333;
+        }
+    }
+
+    #edit-sidebar-scrollable {
+        overflow: auto;
+        flex-grow: 1;
+
+        #recently-viewed {
+            padding: 1px 20px;
+            margin-bottom: 20px;
+
+            p {
+                font-size: 1.2em;
+                margin: 1.3em 0 0.5em;
+                font-weight: 500;
+                color: #444;
+            }
+
+            #edit-sidebar-new {
+                float: right;
+                margin-top: -4px;
+                
+                button {
+                    border: 1px solid #aaa;
+                    background: #fff;
+                    font-size: 12px;
+                    color: #333;
+                    font-weight: bold;
+                    padding: 5px 10px;
+                    text-transform: uppercase;
+                    box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.1);
+                    cursor: pointer;
+                }
+            }
+
+            #recently-viewed-list:empty::after {
+                content: 'No documents to display.';
+            }
+
+            #recently-viewed-list > * {
+                a { text-decoration: none; }
+                &:hover a { text-decoration: underline; }
+
+                a {
+                    display: block;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    overflow: hidden;
+
+                    padding: 0.5em 0 0.25em 0.4em;
+
+                    font-size: 17px;
+                    &:not(:hover) {
+                        color: #000000;
+                    }
+                }
+
+                a::before {
+                    content: '\01F4CB';
+                    margin-right: 13px;
+                    filter: grayscale(60%) contrast(130%);
+                    opacity: 0.8;
+                }
+            }
+        }
+    }
+}

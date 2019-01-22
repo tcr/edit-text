@@ -21,21 +21,26 @@ body {
     height: 100%;
 
     #edit-layout {
-        flex: 1;
         display: flex;
         flex-direction: row;
+        overflow: auto;
+        flex-grow: 1;
 
         #edit-sidebar {
             width: 0;
             display: flex;
             overflow: visible;
             flex-direction: column;
+            align-self: stretch;
 
             // When expanded, expand #edit-sidebar-inner.
-            &.expanded {
-                #edit-sidebar-inner {
-                    width: 300px;
-                }
+            #edit-sidebar-inner {
+                width: 0;
+                border-right: none;
+            }
+            &.expanded #edit-sidebar-inner {
+                width: 300px;
+                border-right: 1px #999 solid;
             }
 
             #edit-sidebar-inner {
@@ -44,92 +49,21 @@ body {
                 overflow: hidden;
                 background: #eee;
                 z-index: 1000;
-                border-right: 1px #999 solid;
+
                 display: flex;
-                flex: 1;
                 flex-direction: column;
+                height: 100%;
 
-                width: 0;
-
+                // To fix all contents at 300px even when animating the drawer
+                // opening, this inner item re-fixes the width at 300px.
                 #edit-sidebar-inner-inner {
-                    box-sizing: border-box;
                     width: 300px;
                     display: flex;
                     flex: 1;
                     flex-direction: column;
+                    overflow: auto;
 
-                    #recently-viewed {
-                        padding: 1px 20px;
-                        flex: 1;
-                        overflow: auto;
-                    }
-
-                    #edit-sidebar-footer {
-                        flex: 0;
-                        margin: 0 15px;
-                    }
-                }
-            }
-
-            #edit-sidebar-footer {
-                border-top: 1px solid #ccc;
-                padding: 9px 10px 17px;
-                text-align: center;
-                font-size: 0.9em;
-                opacity: 0.6;
-            }
-
-            #recently-viewed {
-                p {
-                    font-size: 1.2em;
-                    margin: 1.3em 0 0.5em;
-                    font-weight: 500;
-                    color: #444;
-                }
-
-                #edit-sidebar-new {
-                    float: right;
-                    margin-top: -4px;
-                    
-                    button {
-                        border: 1px solid #aaa;
-                        background: #fff;
-                        font-size: 12px;
-                        padding: 5px 10px;
-                        text-transform: uppercase;
-                        box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.1);
-                        cursor: pointer;
-                    }
-                }
-
-                #recently-viewed-list:empty::after {
-                    content: 'No documents to display.';
-                }
-
-                #recently-viewed-list > * {
-                    a { text-decoration: none; }
-                    &:hover a { text-decoration: underline; }
-
-                    a {
-                        display: block;
-                        text-overflow: ellipsis;
-                        white-space: nowrap;
-                        overflow: hidden;
-
-                        padding: 0.5em 0 0.25em 0.4em;
-
-                        font-size: 18px;
-                        &:not(:hover) {
-                            color: #000000;
-                        }
-                    }
-
-                    a::before {
-                        content: '\01F4CB';
-                        margin-right: 13px;
-                        filter: grayscale(60%) contrast(130%);
-                        opacity: 0.8;
-                    }
+                    // Scrollable contents inside here.
                 }
             }
         }

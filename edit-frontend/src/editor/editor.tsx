@@ -615,7 +615,7 @@ export class Editor extends React.Component {
   render() {
     return (
       <div
-        className="edit-text theme-mock"
+        className="edit-text theme-mock active"
         tabIndex={0}
         ref={(el) => { if (el) this.el = el;}}
         onClick={this.onClick.bind(this)}
