@@ -2,7 +2,7 @@ fn to_strings(input: &[&str]) -> Vec<String> {
     input.iter().map(|x| x.to_string()).collect()
 }
 
-pub fn watchexec_args(cmd: &str, ignores: &[&str]) -> watchexec::cli::Args {
+pub fn watchexec_args(cmd: &str, paths: &[&str], ignores: &[&str]) -> watchexec::cli::Args {
     let src_default_ignores = &["*/.DS_Store", "*/.git/**", "*/.svn/**", "*/target/**"][..];
 
     watchexec::cli::Args {
@@ -11,7 +11,7 @@ pub fn watchexec_args(cmd: &str, ignores: &[&str]) -> watchexec::cli::Args {
         debug: false,
 
         // Mostly defaults from cargo-watch.
-        paths: to_strings(&["."]),
+        paths: to_strings(paths),
         filters: to_strings(&[]),
         run_initially: true,
         clear_screen: false,

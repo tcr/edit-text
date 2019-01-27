@@ -119,6 +119,12 @@ enum Cli {
     )]
     FrontendWatch { args: Vec<String> },
 
+    #[structopt(
+        name = "watch",
+        about = "Watch the server and frontend code, building continuously."
+    )]
+    Watch { args: Vec<String> },
+
     #[structopt(name = "logs", about = "Dump database logs.")]
     Logs { args: Vec<String> },
 
@@ -135,6 +141,9 @@ enum Cli {
 
     #[structopt(name = "server-build", about = "Build the edit-text server.")]
     ServerBuild { args: Vec<String> },
+
+    #[structopt(name = "server-watch", about = "Watch and rebuild the server.")]
+    ServerWatch { args: Vec<String> },
 
     #[structopt(
         name = "oatie-build",
@@ -346,7 +355,7 @@ fn run() -> Result<(), Error> {
     // Commands that invoke cargo-watch interfere with commandspec cleanup
     // or env_logger.
     match cli {
-        Cli::WasmWatch { .. } => {}
+        Cli::WasmWatch { .. } | Cli::ServerWatch { .. } => {}
         _ => {
             commandspec::cleanup_on_ctrlc();
             env_logger::Builder::from_default_env()
@@ -454,8 +463,9 @@ fn run() -> Result<(), Error> {
             let _ = no_vendor; // TODO
 
             watchexec::run(watchexec_args(
-                "echo [Starting build.] && cargo run --bin build-tools --quiet -- wasm-build && echo [Build complete.]",
-                &["edit-frontend/**", "build-tools/**"],
+                "echo [Building wasm.] && cargo run --bin build-tools --quiet -- wasm-build && echo [Build of wasm complete.]",
+                &["edit-client/", "edit-common/", "oatie/"],
+                &[],
             ))?;
         }
 
@@ -540,6 +550,16 @@ fn run() -> Result<(), Error> {
                 cargo_args = CARGO_ARGS_OATIE,
                 args = args,
             )?;
+        }
+
+        Cli::ServerWatch { args } => {
+            let _ = args; // TODO
+
+            watchexec::run(watchexec_args(
+                "echo [Running server.] && cargo run --bin build-tools --quiet -- server && echo [Run of server complete.]",
+                &["edit-server/", "edit-common/", "oatie/"],
+                &[],
+            ))?;
         }
 
         Cli::ServerRun { log, args, open } => {
@@ -786,6 +806,25 @@ fn run() -> Result<(), Error> {
             execute!(
                 r"
                     {self_path} wasm-watch
+                ",
+                self_path = SELF_PATH,
+            )?;
+        }
+
+        Cli::Watch { args } => {
+            // Watch frontend
+            let _handle = command!(
+                r"
+                    {self_path} frontend-watch
+                ",
+                self_path = SELF_PATH,
+            )?
+            .scoped_spawn();
+
+            // Watch server
+            execute!(
+                r"
+                    {self_path} server-watch
                 ",
                 self_path = SELF_PATH,
             )?;
