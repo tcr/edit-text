@@ -251,6 +251,12 @@ fn run_http_server(port: u16, client_proxy: bool) {
                     format!("{}", request.header("X-Forwarded-For").unwrap_or("127.0.0.1")).replace(":", "-").replace(".", "-"),
                 );
 
+                if request.get_param("new").is_some() {
+                    id = random_id_alpha();
+
+                    let load_doc = default_doc();
+                }
+
                 // Upload files using /?from={url}
                 let load_doc = request.get_param("from")
                     .ok_or(format_err!("no from parameter to download from")) // TODO what is this line for
